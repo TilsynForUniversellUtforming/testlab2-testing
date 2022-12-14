@@ -15,7 +15,7 @@
     <packaging>pom</packaging>
     <description>testlab2-core</description>
     <properties>
-        <java.version>17</java.version>
+        <java.version>18</java.version>
         <kotlin.version>1.7.21</kotlin.version>
     </properties>
     <dependencies>
@@ -49,11 +49,19 @@
             <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
-            <version>${kotlin.version}</version>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-boot-starter</artifactId>
+            <version>3.0.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+
 
     </dependencies>
 
@@ -122,6 +130,23 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <source>17</source>
+                    <target>17</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.22.8</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                            <version>1.15.0</version>
+                            <style>GOOGLE</style>
+                        </googleJavaFormat>
+                    </java>
+                </configuration>
             </plugin>
         </plugins>
     </build>
