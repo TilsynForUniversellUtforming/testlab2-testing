@@ -31,9 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
-/testmotor/mvnw
-/testmotor/mvnw.cmd
-/mvnw
-/mvnw.cmd
-/.mvn/wrapper/
-/testmotor/.mvn/wrapper/
+
+### MacOS ###
+.DS_Store
