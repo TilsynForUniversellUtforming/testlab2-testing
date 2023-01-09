@@ -6,8 +6,8 @@ import org.springframework.jdbc.core.JdbcTemplate
 
 class TestingDao(val jdbcTemplate: JdbcTemplate) {
 
-    private final val listTestingSql = "select * from test"
+  private final val listTestingSql = "select * from test"
 
-    fun listTesting(): List<Test> =
-        jdbcTemplate.query(listTestingSql, DataClassRowMapper.newInstance(Test::class.java))
+  fun listTesting(): List<Test> =
+    jdbcTemplate.query(listTestingSql, DataClassRowMapper.newInstance(Test::class.java))
 }
