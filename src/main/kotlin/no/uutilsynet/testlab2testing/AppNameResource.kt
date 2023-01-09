@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class AppNameResource {
-    @GetMapping("/app-name")
-    fun appName():String = "testlab2-testing"
+    @GetMapping("/")
+    fun appName():AppName = AppName("testlab2-testing")
+
+    data class AppName(val appName: String)
 }
