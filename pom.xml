@@ -17,6 +17,7 @@
 		<java.version>17</java.version>
 		<kotlin.version>1.7.22</kotlin.version>
 		<spotless.version>2.29.0</spotless.version>
+		<docker.image.prefix>acrddtprod.azurecr.io</docker.image.prefix>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -100,12 +101,19 @@
 				</dependencies>
 			</plugin>
 			<plugin>
+				<groupId>io.github.git-commit-id</groupId>
+				<artifactId>git-commit-id-maven-plugin</artifactId>
+				<version>5.0.0</version>
+			</plugin>
+			<plugin>
 				<groupId>com.google.cloud.tools</groupId>
 				<artifactId>jib-maven-plugin</artifactId>
 				<version>3.3.1</version>
 				<configuration>
 					<to>
-						<image>testlab2-krav</image>
+						<!--suppress UnresolvedMavenProperty -->
+						<image>${docker.image.prefix}/${project.artifactId}:${git.commit.id}</image>
+						<tags>latest</tags>
 					</to>
 					<container>
 						<ports>
