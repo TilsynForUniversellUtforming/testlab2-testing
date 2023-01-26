@@ -66,7 +66,18 @@ class AutoTesterAdapter(
     val output: List<TestResultat>?
   )
 
-  data class TestResultat(val _samsvar: Boolean, val _idTestregel: String)
+  data class TestResultat(
+    val _idSuksesskriterium: String,
+    val _idTestregel: String,
+    val _sideUtfall: String,
+    val _brot: Boolean,
+    val _samsvar: Boolean,
+    val _ikkjeForekomst: Boolean,
+    val _side: String,
+    val _elementUtfall: String,
+    val _idLoeysing: Int,
+    val _idMaaling: Int
+  )
 
   // Se
   // https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-instance-management?tabs=csharp#query-instances
