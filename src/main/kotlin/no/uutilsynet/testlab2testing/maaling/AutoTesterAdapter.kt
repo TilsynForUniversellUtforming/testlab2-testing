@@ -75,9 +75,12 @@ class AutoTesterAdapter(
     val _ikkjeForekomst: Boolean,
     val _side: String,
     val _elementUtfall: String,
+    val _element: ACTElement,
     val _idLoeysing: Int,
     val _idMaaling: Int
   )
+
+  data class ACTElement(val htmlCode: String, val pointer: String, val accessibleName: String?)
 
   // Se
   // https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-instance-management?tabs=csharp#query-instances
