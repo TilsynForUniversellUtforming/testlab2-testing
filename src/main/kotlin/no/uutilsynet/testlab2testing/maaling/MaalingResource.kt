@@ -22,6 +22,11 @@ class MaalingResource(val maalingDAO: MaalingDAO) {
         { exception -> handleErrors(exception, dto) })
   }
 
+  @GetMapping
+  fun list(): List<MaalingV1> {
+    return maalingDAO.getMaalinger()
+  }
+
   @GetMapping("{id}")
   fun getMaaling(@PathVariable id: Int): ResponseEntity<MaalingV1> =
     maalingDAO.getMaaling(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity.notFound().build()
