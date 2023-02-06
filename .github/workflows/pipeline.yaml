@@ -41,6 +41,7 @@ jobs:
           SPRING_DATASOURCE_PASSWORD: postgres
 
   deploy-to-azure:
+    needs: build-and-test
     runs-on: ubuntu-latest
 
     steps:
