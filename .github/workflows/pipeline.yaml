@@ -40,7 +40,7 @@ jobs:
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: postgres
 
-  deploy to azure:
+  deploy-to-azure:
     runs-on: ubuntu-latest
 
     steps:
