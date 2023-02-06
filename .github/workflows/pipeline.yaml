@@ -1,6 +1,6 @@
 name: Java CI
 
-on: [push]
+on: [ push ]
 
 jobs:
   build-and-test:
@@ -39,3 +39,20 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/postgres
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: postgres
+
+  deploy to azure:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Deploy new version
+        uses: azure/CLI@v1
+        with:
+          inlinescript: |
+            az containerapp update \
+            -n ca-ddt-testlab2-test-testing \
+            -g rg-ddt-testlab \
+            --image acrddtprod.azurecr.io/testlab2-testing:${{ github.sha }}
