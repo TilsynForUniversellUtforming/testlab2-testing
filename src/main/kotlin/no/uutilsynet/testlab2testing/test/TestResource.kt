@@ -15,14 +15,14 @@ class TestResource(val maalingDAO: MaalingDAO, val autoTesterAdapter: AutoTester
 
   @PostMapping
   fun createNewTest(
-    @RequestBody testInput: TestInput
+      @RequestBody testInput: TestInput
   ): ResponseEntity<AutoTesterAdapter.AutoTesterResponse> {
     val maaling = maalingDAO.getMaaling(testInput.maalingId)
     if (maaling == null) return ResponseEntity.notFound().build()
     return autoTesterAdapter
-      .runTests(listOf(maaling.url))
-      .fold(
-        { response -> ResponseEntity.ok(response) },
-        { ResponseEntity.internalServerError().build() })
+        .runTests(listOf(maaling.url))
+        .fold(
+            { response -> ResponseEntity.ok(response) },
+            { ResponseEntity.internalServerError().build() })
   }
 }

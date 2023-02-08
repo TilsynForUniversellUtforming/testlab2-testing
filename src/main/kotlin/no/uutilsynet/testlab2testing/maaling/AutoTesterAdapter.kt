@@ -16,14 +16,14 @@ data class AutoTesterProperties(val url: String, val code: String)
 
 @Component
 class AutoTesterAdapter(
-  restTemplateBuilder: RestTemplateBuilder,
-  val autoTesterProperties: AutoTesterProperties
+    restTemplateBuilder: RestTemplateBuilder,
+    val autoTesterProperties: AutoTesterProperties
 ) {
   private val restTemplate = makeRestTemplate(restTemplateBuilder)
 
   private fun makeRestTemplate(restTemplateBuilder: RestTemplateBuilder): RestTemplate {
     val objectMapper =
-      jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     val mappingJackson2HttpMessageConverter = MappingJackson2HttpMessageConverter()
     mappingJackson2HttpMessageConverter.objectMapper = objectMapper
     return restTemplateBuilder.messageConverters(mappingJackson2HttpMessageConverter).build()
@@ -36,7 +36,7 @@ class AutoTesterAdapter(
       val url = "${autoTesterProperties.url}?code=${autoTesterProperties.code}"
       val statusUris = restTemplate.postForObject(url, requestData, StatusUris::class.java)
       if (statusUris?.statusQueryGetUri == null)
-        throw RuntimeException("mangler statusQueryGetUri i responsen")
+          throw RuntimeException("mangler statusQueryGetUri i responsen")
 
       waitForResponse(statusUris.statusQueryGetUri)
     }
@@ -44,8 +44,8 @@ class AutoTesterAdapter(
 
   private fun waitForResponse(statusQueryGetUri: URI): AutoTesterResponse {
     val response =
-      restTemplate.getForObject(statusQueryGetUri, AutoTesterResponse::class.java)
-        ?: throw RuntimeException("ingen data i responsen fra autotester")
+        restTemplate.getForObject(statusQueryGetUri, AutoTesterResponse::class.java)
+            ?: throw RuntimeException("ingen data i responsen fra autotester")
     return when (response.runtimeStatus) {
       RuntimeStatus.Pending,
       RuntimeStatus.Running -> {
@@ -61,23 +61,23 @@ class AutoTesterAdapter(
   data class StatusUris(val statusQueryGetUri: URI)
 
   data class AutoTesterResponse(
-    val instanceId: String,
-    val runtimeStatus: RuntimeStatus,
-    val output: List<TestResultat>?
+      val instanceId: String,
+      val runtimeStatus: RuntimeStatus,
+      val output: List<TestResultat>?
   )
 
   data class TestResultat(
-    val _idSuksesskriterium: String,
-    val _idTestregel: String,
-    val _sideUtfall: String,
-    val _brot: Boolean,
-    val _samsvar: Boolean,
-    val _ikkjeForekomst: Boolean,
-    val _side: String,
-    val _elementUtfall: String,
-    val _element: ACTElement,
-    val _idLoeysing: Int,
-    val _idMaaling: Int
+      val _idSuksesskriterium: String,
+      val _idTestregel: String,
+      val _sideUtfall: String,
+      val _brot: Boolean,
+      val _samsvar: Boolean,
+      val _ikkjeForekomst: Boolean,
+      val _side: String,
+      val _elementUtfall: String,
+      val _element: ACTElement,
+      val _idLoeysing: Int,
+      val _idMaaling: Int
   )
 
   data class ACTElement(val htmlCode: String, val pointer: String, val accessibleName: String?)
