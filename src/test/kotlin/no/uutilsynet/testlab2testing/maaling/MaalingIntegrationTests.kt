@@ -20,7 +20,8 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
   fun postNewMaaling() {
     val locationPattern = """/v1/maalinger/\d+"""
     val location =
-      restTemplate.postForLocation("/v1/maalinger", mapOf("url" to "https://www.uutilsynet.no"))
+        restTemplate.postForLocation(
+            "/v1/maalinger", mapOf("navn" to "tes≤tmåling", "url" to "https://www.uutilsynet.no"))
     assertThat(location.toString(), matchesPattern(locationPattern))
   }
 
@@ -28,7 +29,9 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
   @DisplayName("en måling som finnes i databasen skal vi klare å finne")
   fun getMaaling() {
     val url = URL("https://www.digdir.no")
-    val location = restTemplate.postForLocation("/v1/maalinger", mapOf("url" to url.toString()))
+    val location =
+        restTemplate.postForLocation(
+            "/v1/maalinger", mapOf("navn" to "Digdir", "url" to url.toString()))
 
     val (id, urlFromApi) = restTemplate.getForObject(location, MaalingV1::class.java)
 
@@ -40,8 +43,8 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
   @DisplayName("en måling som ikke finnes i databasen skal returnere 404")
   fun getNonExisting() {
     val entity =
-      restTemplate.exchange(
-        "/v1/maalinger/0", HttpMethod.GET, HttpEntity.EMPTY, MaalingV1::class.java)
+        restTemplate.exchange(
+            "/v1/maalinger/0", HttpMethod.GET, HttpEntity.EMPTY, MaalingV1::class.java)
     assertThat(entity.statusCode, equalTo(HttpStatus.NOT_FOUND))
   }
 }
