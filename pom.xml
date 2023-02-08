@@ -126,7 +126,10 @@
                 <version>${spotless.version}</version>
                 <configuration>
                     <kotlin>
-                        <ktfmt/>
+                        <ktfmt>
+                            <style>DEFAULT</style>
+                            <continuationIndent>4</continuationIndent>
+                        </ktfmt>
                     </kotlin>
                     <pom/>
                 </configuration>
