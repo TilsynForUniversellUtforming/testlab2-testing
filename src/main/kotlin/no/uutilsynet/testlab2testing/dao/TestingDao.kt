@@ -9,5 +9,5 @@ class TestingDao(val jdbcTemplate: JdbcTemplate) {
   private final val listTestingSql = "select * from test"
 
   fun listTesting(): List<Test> =
-    jdbcTemplate.query(listTestingSql, DataClassRowMapper.newInstance(Test::class.java))
+      jdbcTemplate.query(listTestingSql, DataClassRowMapper.newInstance(Test::class.java))
 }
