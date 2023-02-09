@@ -12,39 +12,32 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("v1/testreglar")
-class TestregelResource(val testregelDAO: TestregelDAO): TestregelApi {
+class TestregelResource(val testregelDAO: TestregelDAO) : TestregelApi {
 
-    @GetMapping
-    override fun listTestreglar(): List<Testregel> =
-        testregelDAO.listTestreglar()
+  @GetMapping override fun listTestreglar(): List<Testregel> = testregelDAO.listTestreglar()
 
-    @GetMapping("regelsett")
-    override fun listRegelsett(): List<Regelsett> =
-        testregelDAO.listRegelsett()
+  @GetMapping("regelsett")
+  override fun listRegelsett(): List<Regelsett> = testregelDAO.listRegelsett()
 
-    override fun createTestregel(testregel: Testregel): List<Testregel> {
-        TODO("Not yet implemented")
-    }
+  override fun createTestregel(testregel: Testregel): List<Testregel> {
+    TODO("Not yet implemented")
+  }
 
-    @PostMapping("regelsett")
-    override fun createRegelsett(@RequestBody regelsettRequest: RegelsettRequest): List<Regelsett> =
-        testregelDAO.createRegelsett(regelsettRequest)
+  @PostMapping("regelsett")
+  override fun createRegelsett(@RequestBody regelsettRequest: RegelsettRequest): List<Regelsett> =
+      testregelDAO.createRegelsett(regelsettRequest)
 
-    override fun updateTestregel(testregel: Testregel): Testregel {
-        TODO("Not yet implemented")
-    }
+  override fun updateTestregel(testregel: Testregel): Testregel {
+    TODO("Not yet implemented")
+  }
 
-    override fun updateRegelsett(regelsett: Regelsett): Regelsett {
-        TODO("Not yet implemented")
-    }
+  override fun updateRegelsett(regelsett: Regelsett): Regelsett {
+    TODO("Not yet implemented")
+  }
 
-    @DeleteMapping("{id}")
-    override fun deleteTestregel(@PathVariable id: Int) =
-        testregelDAO.deleteTestregel(id)
+  @DeleteMapping("{id}")
+  override fun deleteTestregel(@PathVariable id: Int) = testregelDAO.deleteTestregel(id)
 
-    @DeleteMapping("regelsett/{id}")
-    override fun deleteRegelsett(@PathVariable id: Int) =
-        testregelDAO.deleteRegelsett(id)
-
-
+  @DeleteMapping("regelsett/{id}")
+  override fun deleteRegelsett(@PathVariable id: Int) = testregelDAO.deleteRegelsett(id)
 }
