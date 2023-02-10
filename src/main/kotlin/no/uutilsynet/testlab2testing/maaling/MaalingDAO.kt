@@ -7,7 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert
 import org.springframework.stereotype.Component
 
-data class MaalingV1(val id: Int, val url: URL)
+data class MaalingV1(val id: Int, val navn: String, val url: URL)
 
 @Component
 class MaalingDAO(val jdbcTemplate: JdbcTemplate) {
@@ -17,7 +17,7 @@ class MaalingDAO(val jdbcTemplate: JdbcTemplate) {
             .withTableName("MaalingV1")
             .usingGeneratedKeyColumns("id")
             .executeAndReturnKey(mapOf("navn" to navn, "url" to url.toString()))
-    return MaalingV1(id.toInt(), url)
+    return MaalingV1(id.toInt(), navn, url)
   }
 
   fun getMaaling(id: Int): MaalingV1? {
@@ -27,7 +27,7 @@ class MaalingDAO(val jdbcTemplate: JdbcTemplate) {
   }
 
   private fun maalingFromResultSet(rs: ResultSet) =
-      MaalingV1(rs.getInt("id"), URL(rs.getString("url")))
+      MaalingV1(rs.getInt("id"), rs.getString("navn"), URL(rs.getString("url")))
 
   fun getMaalinger(): List<MaalingV1> {
     return jdbcTemplate.query("select * from MaalingV1", { rs, _ -> maalingFromResultSet(rs) })
