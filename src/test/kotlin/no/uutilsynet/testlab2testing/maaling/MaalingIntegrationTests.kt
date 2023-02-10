@@ -8,9 +8,11 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
@@ -33,10 +35,30 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
         restTemplate.postForLocation(
             "/v1/maalinger", mapOf("navn" to "Digdir", "url" to url.toString()))
 
-    val (id, urlFromApi) = restTemplate.getForObject(location, MaalingV1::class.java)
+    val (id, navn, urlFromApi) = restTemplate.getForObject(location, MaalingV1::class.java)
 
     assertThat(id, instanceOf(Int::class.java))
+    assertThat(navn, equalTo("Digdir"))
     assertThat(urlFromApi, equalTo(url))
+  }
+
+  @Test
+  @DisplayName("en måling som finnes i databasen skal kunne finnes med utlisting")
+  fun listMaalinger() {
+    val url = URL("https://www.example.com")
+    val location =
+        restTemplate.postForLocation(
+            "/v1/maalinger", mapOf("navn" to "example", "url" to url.toString()))
+    val (id) = restTemplate.getForObject(location, MaalingV1::class.java)
+    val maalingList = object : ParameterizedTypeReference<List<MaalingV1>>() {}
+
+    val maalinger: ResponseEntity<List<MaalingV1>> =
+        restTemplate.exchange("/v1/maalinger", HttpMethod.GET, HttpEntity.EMPTY, maalingList)!!
+    val thisMaaling = maalinger.body?.find { it.id == id }!!
+
+    assertThat(thisMaaling.id, equalTo(id))
+    assertThat(thisMaaling.navn, equalTo("example"))
+    assertThat(thisMaaling.url, equalTo(url))
   }
 
   @Test
