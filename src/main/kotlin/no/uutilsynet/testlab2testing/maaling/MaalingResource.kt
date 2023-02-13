@@ -25,13 +25,26 @@ class MaalingResource(val maalingDAO: MaalingDAO) {
               { exception -> handleErrors(exception, dto) })
 
   @GetMapping
-  fun list(): List<MaalingV1> {
-    return maalingDAO.getMaalinger()
+  fun list(): List<GetMaalingDTO> {
+    return maalingDAO.getMaalinger().map { GetMaalingDTO.from(it) }
+  }
+
+  data class GetMaalingDTO(val id: Int, val navn: String, val url: String, val status: String) {
+    companion object {
+      fun from(maaling: Maaling): GetMaalingDTO {
+        val status =
+            when (maaling) {
+              is Maaling.IkkeStartet -> "ikke_startet"
+            }
+        return GetMaalingDTO(maaling.id, maaling.navn, maaling.url.toString(), status)
+      }
+    }
   }
 
   @GetMapping("{id}")
-  fun getMaaling(@PathVariable id: Int): ResponseEntity<MaalingV1> =
-      maalingDAO.getMaaling(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity.notFound().build()
+  fun getMaaling(@PathVariable id: Int): ResponseEntity<GetMaalingDTO> =
+      maalingDAO.getMaaling(id)?.let { ResponseEntity.ok(GetMaalingDTO.from(it)) }
+          ?: ResponseEntity.notFound().build()
 
   private fun handleErrors(exception: Throwable, dto: NyMaalingDTO): ResponseEntity<Any> =
       when (exception) {
