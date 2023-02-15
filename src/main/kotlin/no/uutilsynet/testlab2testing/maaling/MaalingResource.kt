@@ -34,7 +34,7 @@ class MaalingResource(val maalingDAO: MaalingDAO) {
       fun from(maaling: Maaling): GetMaalingDTO {
         val status =
             when (maaling) {
-              is Maaling.IkkeStartet -> "ikke_startet"
+              is Maaling.Planlegging -> "planlegging"
             }
         return GetMaalingDTO(maaling.id, maaling.navn, maaling.url.toString(), status)
       }

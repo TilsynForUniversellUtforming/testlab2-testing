@@ -38,7 +38,7 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
             "/v1/maalinger", mapOf("navn" to "Digdir", "url" to url.toString()))
 
     val (id, navn, urlFromApi) =
-        restTemplate.getForObject(location, Maaling.IkkeStartet::class.java)
+        restTemplate.getForObject(location, Maaling.Planlegging::class.java)
 
     assertThat(id, instanceOf(Int::class.java))
     assertThat(navn, equalTo("Digdir"))
@@ -52,10 +52,10 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
     val location =
         restTemplate.postForLocation(
             "/v1/maalinger", mapOf("navn" to "example", "url" to url.toString()))
-    val (id) = restTemplate.getForObject(location, Maaling.IkkeStartet::class.java)
-    val maalingList = object : ParameterizedTypeReference<List<Maaling.IkkeStartet>>() {}
+    val (id) = restTemplate.getForObject(location, Maaling.Planlegging::class.java)
+    val maalingList = object : ParameterizedTypeReference<List<Maaling.Planlegging>>() {}
 
-    val maalinger: ResponseEntity<List<Maaling.IkkeStartet>> =
+    val maalinger: ResponseEntity<List<Maaling.Planlegging>> =
         restTemplate.exchange("/v1/maalinger", HttpMethod.GET, HttpEntity.EMPTY, maalingList)!!
     val thisMaaling = maalinger.body?.find { it.id == id }!!
 
@@ -69,7 +69,7 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
   fun getNonExisting() {
     val entity =
         restTemplate.exchange(
-            "/v1/maalinger/0", HttpMethod.GET, HttpEntity.EMPTY, Maaling.IkkeStartet::class.java)
+            "/v1/maalinger/0", HttpMethod.GET, HttpEntity.EMPTY, Maaling.Planlegging::class.java)
     assertThat(entity.statusCode, equalTo(HttpStatus.NOT_FOUND))
   }
 
@@ -86,7 +86,7 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
     val responseData = restTemplate.getForObject(location, String::class.java)
     val maaling = JSONObject(responseData)
 
-    assertThat(maaling["status"], equalTo("ikke_startet"))
+    assertThat(maaling["status"], equalTo("planlegging"))
   }
 
   @Test
@@ -103,7 +103,7 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
     val jsonArray = JSONArray(response)
     for (i in 0 until jsonArray.length()) {
       val item = jsonArray.getJSONObject(i)
-      assertThat(item["status"], equalTo("ikke_startet"))
+      assertThat(item["status"], equalTo("planlegging"))
     }
   }
 }
