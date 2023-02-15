@@ -2,17 +2,26 @@ package no.uutilsynet.testlab2testing.testreglar
 
 import no.uutilsynet.testlab2testing.dto.Regelsett
 import no.uutilsynet.testlab2testing.dto.Testregel
+import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.deleteRegelsettParameters
 import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.deleteRegelsettSql
+import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.deleteRegelsettTestregelParameters
+import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.deleteRegelsettTestregelSql
 import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.deleteTestregelParameters
 import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.deleteTestregelSql
 import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.insertRegelsett
 import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.insertRegelsettParameters
 import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.insertRegelsettTestregel
 import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.insertRegelsettTestregelParameters
+import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.insertTestregelParameters
+import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.insertTestregelSql
 import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.listRegelsettSql
 import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.listTestreglarSql
 import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.regelsettListDAORowmapper
 import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.testregelRowmapper
+import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.updateRegelsettNameParameters
+import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.updateRegelsettNameSql
+import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.updateTestregelParameters
+import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.updateTestregelSql
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
@@ -30,7 +39,7 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
       val regelsettNamn: String,
       val testregelId: Int,
       val testregelKravId: Int?,
-      val testregelReferanseAct: String,
+      val testregelReferanseAct: String?,
       val testregelKravTilSamsvar: String,
       val testregelType: String,
       val testregelStatus: String,
@@ -41,6 +50,7 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
     val testregelRowmapper = DataClassRowMapper.newInstance(Testregel::class.java)
     val regelsettListDAORowmapper = DataClassRowMapper.newInstance(RegelsettListDTO::class.java)
 
+    /* listTestreglar */
     val listTestreglarSql =
         """
             select
@@ -53,9 +63,11 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
             k.tittel as kravTittel
             from testregel tr
                 left join testlab2_krav.krav k on tr.kravid = k.id
+            order by tr.id
         """
             .trimIndent()
 
+    /* listRegelsett */
     val listRegelsettSql =
         """
             select 
@@ -72,11 +84,21 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
             join regelsetttestregel trt on rs.id = trt.idregelsett
             join testregel tr on trt.idtestregel = tr.id
                 left join testlab2_krav.krav k on tr.kravid = k.id
+            order by rs.id, tr.id
         """
             .trimIndent()
 
-    val insertTestregel = ""
+    /* createTestregel  */
+    val insertTestregelSql =
+        "insert into testregel (kravId, referanseAct, kravTilSamsvar, status, type) values (:kravId, :referanseAct, :kravTilSamsvar, :status, :type)"
+    fun insertTestregelParameters(testregelRequest: TestregelRequest) =
+        MapSqlParameterSource("kravId", testregelRequest.kravId)
+            .addValue("referanseAct", testregelRequest.referanseAct)
+            .addValue("kravTilSamsvar", testregelRequest.kravTilSamsvar)
+            .addValue("status", testregelRequest.status)
+            .addValue("type", testregelRequest.type)
 
+    /* createRegelsett */
     val insertRegelsett = "insert into regelsett (namn) values (:namn)"
     fun insertRegelsettParameters(namn: String) = MapSqlParameterSource("namn", namn)
 
@@ -85,12 +107,40 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
     fun insertRegelsettTestregelParameters(idRegelsett: Int, idTestregel: Int) =
         MapSqlParameterSource("idRegelsett", idRegelsett).addValue("idTestregel", idTestregel)
 
-    val updateTestregelSql = ""
-    val updateRegelsettSql = ""
+    /* updateTestregel */
+    val updateTestregelSql =
+        """
+        update testregel set 
+            kravId = :kravId,
+            referanseAct = :referanseAct,
+            kravTilSamsvar = :kravTilSamsvar,
+            status = :status,
+            type = :type
+        where id = :id
+    """
+            .trimIndent()
+    fun updateTestregelParameters(testregel: Testregel) =
+        MapSqlParameterSource("kravId", testregel.kravId)
+            .addValue("referanseAct", testregel.referanseAct)
+            .addValue("kravTilSamsvar", testregel.kravTilSamsvar)
+            .addValue("status", testregel.status)
+            .addValue("type", testregel.type)
+            .addValue("id", testregel.id)
 
+    /* updateRegelsett */
+    val updateRegelsettNameSql = "update regelsett set namn = :namn where id = :id"
+    fun updateRegelsettNameParameters(namn: String, id: Int) =
+        MapSqlParameterSource("namn", namn).addValue("id", id)
+    val deleteRegelsettTestregelSql =
+        "delete from regelsetttestregel where idregelsett = :idregelsett"
+    fun deleteRegelsettTestregelParameters(idregelsett: Int) =
+        MapSqlParameterSource("idregelsett", idregelsett)
+
+    /* deleteTestregel */
     val deleteTestregelSql = "delete from testregel where id = :id"
     fun deleteTestregelParameters(id: Int) = MapSqlParameterSource("id", id)
 
+    /* deleteRegelsett */
     val deleteRegelsettSql = "delete from regelsett where id = :id"
     fun deleteRegelsettParameters(id: Int) = MapSqlParameterSource("id", id)
   }
@@ -120,12 +170,17 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
                     .toList())
           }
 
-  override fun createTestregel(testregel: Testregel): List<Testregel> {
-    TODO("Not yet implemented")
+  @Transactional
+  override fun createTestregel(testregelRequest: TestregelRequest): Int {
+    val keyHolder: KeyHolder = GeneratedKeyHolder()
+
+    jdbcTemplate.update(
+        insertTestregelSql, insertTestregelParameters(testregelRequest), keyHolder, arrayOf("id"))
+    return keyHolder.key!!.toInt()
   }
 
   @Transactional
-  override fun createRegelsett(regelsettRequest: RegelsettRequest): List<Regelsett> {
+  override fun createRegelsett(regelsettRequest: RegelsettRequest): Int {
     val keyHolder: KeyHolder = GeneratedKeyHolder()
 
     jdbcTemplate.update(
@@ -137,34 +192,27 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
           insertRegelsettTestregel, insertRegelsettTestregelParameters(regelsettId, id))
     }
 
-    return jdbcTemplate
-        .query(listRegelsettSql, regelsettListDAORowmapper)
-        .groupBy { it.regelsettId to it.regelsettNamn }
-        .map {
-          Regelsett(
-              it.key.first,
-              it.key.second,
-              it.value
-                  .map { tr ->
-                    Testregel(
-                        tr.testregelId,
-                        tr.testregelKravId,
-                        tr.testregelReferanseAct,
-                        tr.testregelKravTilSamsvar,
-                        tr.testregelType,
-                        tr.testregelStatus,
-                        tr.kravTittel)
-                  }
-                  .toList())
-        }
+    return regelsettId
   }
 
+  @Transactional
   override fun updateTestregel(testregel: Testregel): Testregel {
-    TODO("Not yet implemented")
+    jdbcTemplate.update(updateTestregelSql, updateTestregelParameters(testregel))
+    return testregel
   }
 
+  @Transactional
   override fun updateRegelsett(regelsett: Regelsett): Regelsett {
-    TODO("Not yet implemented")
+    val (id, namn) = regelsett
+    val testRegelIdList = regelsett.testregelList.map { it.id }
+    jdbcTemplate.update(updateRegelsettNameSql, updateRegelsettNameParameters(namn, id))
+    jdbcTemplate.update(deleteRegelsettTestregelSql, deleteRegelsettTestregelParameters(id))
+    for (idTestRegel in testRegelIdList) {
+      jdbcTemplate.update(
+          insertRegelsettTestregel, insertRegelsettTestregelParameters(id, idTestRegel))
+    }
+
+    return regelsett
   }
 
   @Transactional
@@ -174,6 +222,6 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
 
   @Transactional
   override fun deleteRegelsett(id: Int) {
-    jdbcTemplate.update(deleteRegelsettSql, deleteTestregelParameters(id))
+    jdbcTemplate.update(deleteRegelsettSql, deleteRegelsettParameters(id))
   }
 }
