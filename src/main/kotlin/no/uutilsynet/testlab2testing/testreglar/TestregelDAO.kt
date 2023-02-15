@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.testreglar
 
 import no.uutilsynet.testlab2testing.dto.Regelsett
-import no.uutilsynet.testlab2testing.dto.Testregel
+import no.uutilsynet.testlab2testing.dto.TestregelDTO
 import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.deleteRegelsettParameters
 import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.deleteRegelsettSql
 import no.uutilsynet.testlab2testing.testreglar.TestregelDAO.TestregelParams.deleteRegelsettTestregelParameters
@@ -43,11 +43,10 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
       val testregelKravTilSamsvar: String,
       val testregelType: String,
       val testregelStatus: String,
-      val kravTittel: String?
   )
 
   object TestregelParams {
-    val testregelRowmapper = DataClassRowMapper.newInstance(Testregel::class.java)
+    val testregelRowmapper = DataClassRowMapper.newInstance(TestregelDTO::class.java)
     val regelsettListDAORowmapper = DataClassRowMapper.newInstance(RegelsettListDTO::class.java)
 
     /* listTestreglar */
@@ -59,10 +58,8 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
             tr.referanseAct,
             tr.kravTilSamsvar,
             tr.type,
-            tr.status,
-            k.tittel as kravTittel
+            tr.status
             from testregel tr
-                left join testlab2_krav.krav k on tr.kravid = k.id
             order by tr.id
         """
             .trimIndent()
@@ -78,12 +75,10 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
               tr.referanseAct as testregelReferanseAct,
               tr.kravTilSamsvar as testregelKravTilSamsvar,
               tr.type as testregelType,
-              tr.status as testregelStatus,
-              k.tittel as kravTittel
+              tr.status as testregelStatus
             from regelsett rs
             join regelsetttestregel trt on rs.id = trt.idregelsett
             join testregel tr on trt.idtestregel = tr.id
-                left join testlab2_krav.krav k on tr.kravid = k.id
             order by rs.id, tr.id
         """
             .trimIndent()
@@ -119,7 +114,7 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
         where id = :id
     """
             .trimIndent()
-    fun updateTestregelParameters(testregel: Testregel) =
+    fun updateTestregelParameters(testregel: TestregelDTO) =
         MapSqlParameterSource("kravId", testregel.kravId)
             .addValue("referanseAct", testregel.referanseAct)
             .addValue("kravTilSamsvar", testregel.kravTilSamsvar)
@@ -145,7 +140,7 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
     fun deleteRegelsettParameters(id: Int) = MapSqlParameterSource("id", id)
   }
 
-  override fun listTestreglar(): List<Testregel> =
+  override fun listTestreglar(): List<TestregelDTO> =
       jdbcTemplate.query(listTestreglarSql, testregelRowmapper)
 
   override fun listRegelsett(): List<Regelsett> =
@@ -158,14 +153,14 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
                 it.key.second,
                 it.value
                     .map { tr ->
-                      Testregel(
+                      TestregelDTO(
                           tr.testregelId,
                           tr.testregelKravId,
                           tr.testregelReferanseAct,
                           tr.testregelKravTilSamsvar,
                           tr.testregelType,
-                          tr.testregelStatus,
-                          tr.kravTittel)
+                          tr.testregelStatus
+                      )
                     }
                     .toList())
           }
@@ -196,7 +191,7 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
   }
 
   @Transactional
-  override fun updateTestregel(testregel: Testregel): Testregel {
+  override fun updateTestregel(testregel: TestregelDTO): TestregelDTO {
     jdbcTemplate.update(updateTestregelSql, updateTestregelParameters(testregel))
     return testregel
   }

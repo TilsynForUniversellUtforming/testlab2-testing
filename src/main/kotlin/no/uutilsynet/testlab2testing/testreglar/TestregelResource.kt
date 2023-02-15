@@ -1,7 +1,8 @@
 package no.uutilsynet.testlab2testing.testreglar
 
 import no.uutilsynet.testlab2testing.dto.Regelsett
-import no.uutilsynet.testlab2testing.dto.Testregel
+import no.uutilsynet.testlab2testing.dto.RegelsettDTO
+import no.uutilsynet.testlab2testing.dto.TestregelDTO
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -15,10 +16,10 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("v1/testreglar")
 class TestregelResource(val testregelDAO: TestregelDAO) : TestregelApi {
 
-  @GetMapping override fun listTestreglar(): List<Testregel> = testregelDAO.listTestreglar()
+  @GetMapping override fun listTestreglar(): List<TestregelDTO> = testregelDAO.listTestreglar()
 
   @GetMapping("regelsett")
-  override fun listRegelsett(): List<Regelsett> = testregelDAO.listRegelsett()
+  override fun listRegelsett(): List<RegelsettDTO> = testregelDAO.listRegelsett()
 
   @PostMapping
   override fun createTestregel(@RequestBody testregelRequest: TestregelRequest): Int =
@@ -29,7 +30,7 @@ class TestregelResource(val testregelDAO: TestregelDAO) : TestregelApi {
       testregelDAO.createRegelsett(regelsettRequest)
 
   @PutMapping
-  override fun updateTestregel(@RequestBody testregel: Testregel): Testregel =
+  override fun updateTestregel(@RequestBody testregel: TestregelDTO): TestregelDTO =
       testregelDAO.updateTestregel(testregel)
 
   @PutMapping("regelsett")

@@ -1,10 +1,10 @@
 package no.uutilsynet.testlab2testing.dto
 
-abstract class TestregelDTO {
-  abstract val id: Int
-  abstract val kravId: Int?
-  abstract val referanseAct: String?
-  abstract val kravTilSamsvar: String
-  abstract val type: String
-  abstract val status: String
-}
+data class TestregelDTO (
+  val id: Int,
+  val kravId: Int?,
+  val referanseAct: String?,
+  val kravTilSamsvar: String,
+  val type: String,
+  val status: String
+)
