@@ -1,10 +1,10 @@
-package no.uutilsynet.testlab2testing.dao
+package no.uutilsynet.testlab2testing.test
 
 import no.uutilsynet.testlab2testing.dto.Test
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.JdbcTemplate
 
-class TestingDao(val jdbcTemplate: JdbcTemplate) {
+class TestingDAO(val jdbcTemplate: JdbcTemplate) {
 
   private final val listTestingSql = "select * from test"
 
