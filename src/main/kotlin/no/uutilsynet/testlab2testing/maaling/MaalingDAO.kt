@@ -19,7 +19,7 @@ class MaalingDAO(val jdbcTemplate: JdbcTemplate) {
             .withTableName("MaalingV1")
             .usingGeneratedKeyColumns("id")
             .executeAndReturnKey(
-                mapOf("navn" to navn, "url" to url.toString(), "status" to "ikke_startet"))
+                mapOf("navn" to navn, "url" to url.toString(), "status" to "planlegging"))
     return Maaling.Planlegging(id.toInt(), navn, url)
   }
 
