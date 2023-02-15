@@ -159,8 +159,7 @@ class TestregelDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) : Te
                           tr.testregelReferanseAct,
                           tr.testregelKravTilSamsvar,
                           tr.testregelType,
-                          tr.testregelStatus
-                      )
+                          tr.testregelStatus)
                     }
                     .toList())
           }
