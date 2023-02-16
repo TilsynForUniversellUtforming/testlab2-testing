@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
 import java.net.MalformedURLException
-import java.net.URI
 import java.net.URL
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -19,26 +18,15 @@ class MaalingResource(val maalingDAO: MaalingDAO) {
             maalingDAO.createMaaling(navn, url)
           }
           .fold(
-              { maalingV1 ->
-                ResponseEntity.created(URI.create("/v1/maalinger/${maalingV1.id}")).build()
+              { id ->
+                val location = locationForId(id)
+                ResponseEntity.created(location).build()
               },
               { exception -> handleErrors(exception, dto) })
 
   @GetMapping
   fun list(): List<GetMaalingDTO> {
     return maalingDAO.getMaalinger().map { GetMaalingDTO.from(it) }
-  }
-
-  data class GetMaalingDTO(val id: Int, val navn: String, val url: String, val status: String) {
-    companion object {
-      fun from(maaling: Maaling): GetMaalingDTO {
-        val status =
-            when (maaling) {
-              is Maaling.Planlegging -> "planlegging"
-            }
-        return GetMaalingDTO(maaling.id, maaling.navn, maaling.url.toString(), status)
-      }
-    }
   }
 
   @GetMapping("{id}")
@@ -53,6 +41,25 @@ class MaalingResource(val maalingDAO: MaalingDAO) {
         is NullPointerException -> ResponseEntity.badRequest().body(exception.message)
         else -> ResponseEntity.internalServerError().body(exception.message)
       }
+}
+
+data class GetMaalingDTO(
+    val id: Int,
+    val navn: String,
+    val url: String,
+    val status: String,
+    val aksjoner: List<Aksjon>
+) {
+  companion object {
+    fun from(maaling: Maaling): GetMaalingDTO {
+      val status =
+          when (maaling) {
+            is Maaling.Planlegging -> "planlegging"
+          }
+      return GetMaalingDTO(
+          maaling.id, maaling.navn, maaling.url.toString(), status, maaling.aksjoner)
+    }
+  }
 }
 
 fun validateURL(s: String): Result<URL> = runCatching { URL(s) }

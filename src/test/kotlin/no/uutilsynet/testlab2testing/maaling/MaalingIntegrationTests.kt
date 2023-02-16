@@ -34,8 +34,8 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
   @Nested
   @DisplayName("gitt at det finnes en måling i databasen")
   inner class DatabaseHasAtLeastOneMaaling(@Autowired val restTemplate: TestRestTemplate) {
-    var location: URI
-    val url = URL("https://www.example.com")
+    private var location: URI
+    private val url = URL("https://www.example.com")
 
     init {
       location =
@@ -46,27 +46,26 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
     @Test
     @DisplayName("så skal vi klare å hente den ut")
     fun getMaaling() {
-      val (id, navn, urlFromApi) =
-          restTemplate.getForObject(location, Maaling.Planlegging::class.java)
+      val (id, navn, urlFromApi) = restTemplate.getForObject(location, GetMaalingDTO::class.java)
 
       assertThat(id, instanceOf(Int::class.java))
       assertThat(navn, equalTo("example"))
-      assertThat(urlFromApi, equalTo(url))
+      assertThat(urlFromApi, equalTo(url.toString()))
     }
 
     @Test
-    @DisplayName("så skal vi kunne finne din i lista over alle målinger")
+    @DisplayName("så skal vi kunne finne den i lista over alle målinger")
     fun listMaalinger() {
-      val (id) = restTemplate.getForObject(location, Maaling.Planlegging::class.java)
-      val maalingList = object : ParameterizedTypeReference<List<Maaling.Planlegging>>() {}
+      val (id) = restTemplate.getForObject(location, GetMaalingDTO::class.java)
+      val maalingList = object : ParameterizedTypeReference<List<GetMaalingDTO>>() {}
 
-      val maalinger: ResponseEntity<List<Maaling.Planlegging>> =
+      val maalinger: ResponseEntity<List<GetMaalingDTO>> =
           restTemplate.exchange("/v1/maalinger", HttpMethod.GET, HttpEntity.EMPTY, maalingList)!!
       val thisMaaling = maalinger.body?.find { it.id == id }!!
 
       assertThat(thisMaaling.id, equalTo(id))
       assertThat(thisMaaling.navn, equalTo("example"))
-      assertThat(thisMaaling.url, equalTo(url))
+      assertThat(thisMaaling.url, equalTo(url.toString()))
     }
 
     @Test
@@ -87,6 +86,28 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
         val item = jsonArray.getJSONObject(i)
         assertThat(item["status"], equalTo("planlegging"))
       }
+    }
+
+    @Test
+    @DisplayName("så skal den ha en liste med overganger til gyldige tilstander")
+    fun listTransitions() {
+      val maaling = restTemplate.getForObject(location, GetMaalingDTO::class.java)
+      assertThat(maaling.aksjoner.size, greaterThan(0))
+    }
+
+    @Test
+    @DisplayName(
+        "når målingen har status 'planlegging', så skal det være en aksjon for å gå til 'crawling'")
+    fun actionFromPlanlegging() {
+      val maaling = restTemplate.getForObject(location, GetMaalingDTO::class.java)
+      assert(maaling.status == "planlegging")
+      val expectedData = mapOf("status" to "crawling")
+
+      val aksjon = maaling.aksjoner.first()
+      assertThat(aksjon, instanceOf(Aksjon.StartCrawling::class.java))
+      assertThat(aksjon.metode, equalTo(Metode.PATCH))
+      assertThat((aksjon as Aksjon.StartCrawling).href, equalTo(location))
+      assertThat(aksjon.data, equalTo(expectedData))
     }
   }
 
