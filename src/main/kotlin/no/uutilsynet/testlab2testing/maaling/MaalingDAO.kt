@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
+import java.net.URI
 import java.net.URL
 import java.sql.ResultSet
 import org.springframework.dao.support.DataAccessUtils
@@ -27,11 +28,12 @@ class MaalingDAO(val jdbcTemplate: JdbcTemplate) {
 
   private fun maalingFromResultSet(rs: ResultSet): Maaling.Planlegging {
     val id = rs.getInt("id")
+    val aksjonHref = URI("${locationForId(id)}/status")
     return Maaling.Planlegging(
         id,
         rs.getString("navn"),
         URL(rs.getString("url")),
-        listOf(Aksjon.StartCrawling(locationForId(id))))
+        listOf(Aksjon.StartCrawling(aksjonHref)))
   }
 
   fun getMaalinger(): List<Maaling> {
