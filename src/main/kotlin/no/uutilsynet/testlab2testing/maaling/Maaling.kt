@@ -19,14 +19,17 @@ sealed class Maaling {
   abstract val loeysingList: List<Loeysing>
 
   data class Planlegging(
-    override val id: Int,
-    override val navn: String,
-    override val loeysingList: List<Loeysing>,
-    val aksjoner: List<Aksjon>
+      override val id: Int,
+      override val navn: String,
+      override val loeysingList: List<Loeysing>,
+      val aksjoner: List<Aksjon>
   ) : Maaling()
 
-  data class Crawling(override val id: Int, override val navn: String, override val loeysingList: List<Loeysing>) :
-      Maaling()
+  data class Crawling(
+      override val id: Int,
+      override val navn: String,
+      override val loeysingList: List<Loeysing>
+  ) : Maaling()
 
   companion object {
     fun status(maaling: Maaling): String =

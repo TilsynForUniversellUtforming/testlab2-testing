@@ -109,7 +109,8 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
   @DisplayName("gitt en måling med status 'planlegging'")
   inner class Transitions {
     private var location: URI = restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
-    private val maaling: GetMaalingDTO = restTemplate.getForObject(location, GetMaalingDTO::class.java)
+    private val maaling: GetMaalingDTO =
+        restTemplate.getForObject(location, GetMaalingDTO::class.java)
 
     init {
       assert(maaling.status == "planlegging")

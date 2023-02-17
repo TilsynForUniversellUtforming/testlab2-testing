@@ -42,23 +42,23 @@ class MaalingResource(val maalingDAO: MaalingDAO) {
 
   @PutMapping("{id}/status")
   fun putNewStatus(
-    @PathVariable id: Int,
-    @RequestBody data: Map<String, String>
+      @PathVariable id: Int,
+      @RequestBody data: Map<String, String>
   ): ResponseEntity<Void> {
     return runCatching<ResponseEntity<Void>> {
-      val maaling = maalingDAO.getMaaling(id)!!
-      val newStatus = validateStatus(data["status"]).getOrThrow()
-      val updated = Maaling.updateStatus(maaling, newStatus).getOrThrow()
-      maalingDAO.save(updated).getOrThrow()
-      ResponseEntity.ok().build()
-    }
-      .getOrElse { exception ->
-        when (exception) {
-          is NullPointerException -> ResponseEntity.notFound().build()
-          is IllegalArgumentException -> ResponseEntity.badRequest().build()
-          else -> ResponseEntity.internalServerError().build()
+          val maaling = maalingDAO.getMaaling(id)!!
+          val newStatus = validateStatus(data["status"]).getOrThrow()
+          val updated = Maaling.updateStatus(maaling, newStatus).getOrThrow()
+          maalingDAO.save(updated).getOrThrow()
+          ResponseEntity.ok().build()
         }
-      }
+        .getOrElse { exception ->
+          when (exception) {
+            is NullPointerException -> ResponseEntity.notFound().build()
+            is IllegalArgumentException -> ResponseEntity.badRequest().build()
+            else -> ResponseEntity.internalServerError().build()
+          }
+        }
   }
 
   private fun handleErrors(exception: Throwable): ResponseEntity<Any> =
@@ -70,20 +70,20 @@ class MaalingResource(val maalingDAO: MaalingDAO) {
 }
 
 data class GetMaalingDTO(
-  val id: Int,
-  val navn: String,
-  val loeysingList: List<Loeysing>,
-  val status: String,
-  val aksjoner: List<Aksjon>
+    val id: Int,
+    val navn: String,
+    val loeysingList: List<Loeysing>,
+    val status: String,
+    val aksjoner: List<Aksjon>
 ) {
   companion object {
     fun from(maaling: Maaling): GetMaalingDTO {
       return GetMaalingDTO(
-        maaling.id,
-        maaling.navn,
-        maaling.loeysingList,
-        Maaling.status(maaling),
-        Maaling.aksjoner(maaling))
+          maaling.id,
+          maaling.navn,
+          maaling.loeysingList,
+          Maaling.status(maaling),
+          Maaling.aksjoner(maaling))
     }
   }
 }
