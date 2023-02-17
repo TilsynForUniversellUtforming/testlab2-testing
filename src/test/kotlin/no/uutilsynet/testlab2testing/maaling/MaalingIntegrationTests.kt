@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URI
+import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingRequestBody
 import org.hamcrest.MatcherAssert.assertThat
@@ -40,7 +41,7 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
     @DisplayName("så skal vi klare å hente den ut")
     fun getMaaling() {
       val (id, navn, loeysingListFromApi) =
-          restTemplate.getForObject(location, GetMaalingDTO::class.java)
+          restTemplate.getForObject(location, MaalingDTO::class.java)
 
       assertThat(id, instanceOf(Int::class.java))
       assertThat(navn, equalTo("example"))
@@ -50,10 +51,10 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
     @Test
     @DisplayName("så skal vi kunne finne den i lista over alle målinger")
     fun listMaalinger() {
-      val (id) = restTemplate.getForObject(location, GetMaalingDTO::class.java)
-      val maalingList = object : ParameterizedTypeReference<List<GetMaalingDTO>>() {}
+      val (id) = restTemplate.getForObject(location, MaalingDTO::class.java)
+      val maalingList = object : ParameterizedTypeReference<List<MaalingDTO>>() {}
 
-      val maalinger: ResponseEntity<List<GetMaalingDTO>> =
+      val maalinger: ResponseEntity<List<MaalingDTO>> =
           restTemplate.exchange("/v1/maalinger", HttpMethod.GET, HttpEntity.EMPTY, maalingList)!!
       val thisMaaling = maalinger.body?.find { it.id == id }!!
 
@@ -85,7 +86,7 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
     @Test
     @DisplayName("så skal den ha en liste med overganger til gyldige tilstander")
     fun listTransitions() {
-      val maaling = restTemplate.getForObject(location, GetMaalingDTO::class.java)
+      val maaling = restTemplate.getForObject(location, MaalingDTO::class.java)
       assertThat(maaling.aksjoner.size, greaterThan(0))
     }
 
@@ -93,7 +94,7 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
     @DisplayName(
         "når målingen har status 'planlegging', så skal det være en aksjon for å gå til 'crawling'")
     fun actionFromPlanlegging() {
-      val maaling = restTemplate.getForObject(location, GetMaalingDTO::class.java)
+      val maaling = restTemplate.getForObject(location, MaalingDTO::class.java)
       assert(maaling.status == "planlegging")
       val expectedData = mapOf("status" to "crawling")
 
@@ -109,8 +110,7 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
   @DisplayName("gitt en måling med status 'planlegging'")
   inner class Transitions {
     private var location: URI = restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
-    private val maaling: GetMaalingDTO =
-        restTemplate.getForObject(location, GetMaalingDTO::class.java)
+    private val maaling: MaalingDTO = restTemplate.getForObject(location, MaalingDTO::class.java)
 
     init {
       assert(maaling.status == "planlegging")
@@ -129,7 +129,7 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
 
       assertTrue(entity.statusCode.is2xxSuccessful)
 
-      val oppdatertMaaling = restTemplate.getForObject(location, GetMaalingDTO::class.java)
+      val oppdatertMaaling = restTemplate.getForObject(location, MaalingDTO::class.java)
 
       assertThat(oppdatertMaaling.status, equalTo("crawling"))
     }
@@ -140,7 +140,15 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
   fun getNonExisting() {
     val entity =
         restTemplate.exchange(
-            "/v1/maalinger/0", HttpMethod.GET, HttpEntity.EMPTY, Maaling.Planlegging::class.java)
+            "/v1/maalinger/0", HttpMethod.GET, HttpEntity.EMPTY, MaalingDTO::class.java)
     assertThat(entity.statusCode, equalTo(HttpStatus.NOT_FOUND))
   }
 }
+
+data class MaalingDTO(
+    val id: Int,
+    val navn: String,
+    val loeysingList: List<Loeysing>,
+    val status: String,
+    val aksjoner: List<Aksjon>
+)

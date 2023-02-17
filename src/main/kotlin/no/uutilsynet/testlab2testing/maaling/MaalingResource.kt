@@ -2,13 +2,7 @@ package no.uutilsynet.testlab2testing.maaling
 
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController()
 @RequestMapping("v1/maalinger")
@@ -31,14 +25,13 @@ class MaalingResource(val maalingDAO: MaalingDAO) {
               { exception -> handleErrors(exception) })
 
   @GetMapping
-  fun list(): List<GetMaalingDTO> {
-    return maalingDAO.getMaalingList().map { GetMaalingDTO.from(it) }
+  fun list(): List<Maaling> {
+    return maalingDAO.getMaalingList()
   }
 
   @GetMapping("{id}")
-  fun getMaaling(@PathVariable id: Int): ResponseEntity<GetMaalingDTO> =
-      maalingDAO.getMaaling(id)?.let { ResponseEntity.ok(GetMaalingDTO.from(it)) }
-          ?: ResponseEntity.notFound().build()
+  fun getMaaling(@PathVariable id: Int): ResponseEntity<Maaling> =
+      maalingDAO.getMaaling(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity.notFound().build()
 
   @PutMapping("{id}/status")
   fun putNewStatus(
@@ -67,23 +60,4 @@ class MaalingResource(val maalingDAO: MaalingDAO) {
         is NullPointerException -> ResponseEntity.badRequest().body(exception.message)
         else -> ResponseEntity.internalServerError().body(exception.message)
       }
-}
-
-data class GetMaalingDTO(
-    val id: Int,
-    val navn: String,
-    val loeysingList: List<Loeysing>,
-    val status: String,
-    val aksjoner: List<Aksjon>
-) {
-  companion object {
-    fun from(maaling: Maaling): GetMaalingDTO {
-      return GetMaalingDTO(
-          maaling.id,
-          maaling.navn,
-          maaling.loeysingList,
-          Maaling.status(maaling),
-          Maaling.aksjoner(maaling))
-    }
-  }
 }

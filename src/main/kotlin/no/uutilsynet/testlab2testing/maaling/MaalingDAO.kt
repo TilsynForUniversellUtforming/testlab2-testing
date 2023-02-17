@@ -91,12 +91,10 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   private fun MaalingDTO.toMaaling(): Maaling {
     val loeysingList =
         jdbcTemplate.query(maalingLoeysingSql, MapSqlParameterSource("id", id), loysingRowmapper)
-    val aksjonHref = URI("${locationForId(id)}/status")
+    URI("${locationForId(id)}/status")
 
     return when (this.status) {
-      "planlegging" ->
-          Maaling.Planlegging(
-              this.id, this.navn, loeysingList, listOf(Aksjon.StartCrawling(aksjonHref)))
+      "planlegging" -> Maaling.Planlegging(this.id, this.navn, loeysingList)
       "crawling" -> Maaling.Crawling(this.id, this.navn, loeysingList)
       else ->
           throw RuntimeException("Målingen med id = $id er lagret med en ugyldig status: $status")
