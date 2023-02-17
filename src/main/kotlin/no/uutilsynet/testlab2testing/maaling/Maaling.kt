@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.databind.DatabindContext
 import com.fasterxml.jackson.databind.JavaType
@@ -8,19 +9,62 @@ import com.fasterxml.jackson.databind.jsontype.impl.TypeIdResolverBase
 import java.net.URI
 import java.net.URL
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "status")
+@JsonSubTypes(
+    JsonSubTypes.Type(Maaling.Planlegging::class, name = "planlegging"),
+    JsonSubTypes.Type(Maaling.Crawling::class, name = "crawling"))
 sealed class Maaling {
-  data class Planlegging(val id: Int, val navn: String, val url: URL, val aksjoner: List<Aksjon>) :
+  abstract val navn: String
+  abstract val id: Int
+  abstract val url: URL
+
+  data class Planlegging(
+      override val id: Int,
+      override val navn: String,
+      override val url: URL,
+      val aksjoner: List<Aksjon>
+  ) : Maaling()
+  data class Crawling(override val id: Int, override val navn: String, override val url: URL) :
       Maaling()
+
+  companion object {
+    fun status(maaling: Maaling): String =
+        when (maaling) {
+          is Planlegging -> "planlegging"
+          is Crawling -> "crawling"
+        }
+
+    fun aksjoner(maaling: Maaling): List<Aksjon> =
+        when (maaling) {
+          is Planlegging -> listOf(Aksjon.StartCrawling(URI("${locationForId(maaling.id)}/status")))
+          is Crawling -> listOf()
+        }
+
+    fun updateStatus(maaling: Maaling, newStatus: String): Result<Maaling> {
+      return when (maaling) {
+        is Planlegging ->
+            when (newStatus) {
+              "crawling" -> Result.success(Crawling(maaling.id, maaling.navn, maaling.url))
+              else ->
+                  Result.failure(
+                      IllegalArgumentException("kan ikke gå fra planlegging til $newStatus"))
+            }
+        else ->
+            Result.failure(
+                IllegalArgumentException("ingen gyldige overganger fra ${status(maaling)}"))
+      }
+    }
+  }
 }
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "id")
 @JsonTypeIdResolver(AksjonTypeIdResolver::class)
 sealed class Aksjon(val metode: Metode, val data: Map<String, String>) {
-  data class StartCrawling(val href: URI) : Aksjon(Metode.POST, mapOf("status" to "crawling"))
+  data class StartCrawling(val href: URI) : Aksjon(Metode.PUT, mapOf("status" to "crawling"))
 }
 
 enum class Metode {
-  POST
+  PUT
 }
 
 fun locationForId(id: Number): URI = URI.create("/v1/maalinger/${id}")
@@ -31,7 +75,7 @@ private class AksjonTypeIdResolver : TypeIdResolverBase() {
   override fun idFromValueAndType(value: Any, suggestedType: Class<*>): String =
       when (value) {
         is Aksjon.StartCrawling -> "start_crawling"
-        else -> throw RuntimeException("ukjent type: ${suggestedType}")
+        else -> throw RuntimeException("ukjent type: $suggestedType")
       }
 
   override fun getMechanism(): JsonTypeInfo.Id = JsonTypeInfo.Id.NAME
@@ -40,8 +84,25 @@ private class AksjonTypeIdResolver : TypeIdResolverBase() {
     val subtype =
         when (id) {
           "start_crawling" -> Aksjon.StartCrawling::class.java
-          else -> throw RuntimeException("ukjent id: ${id}")
+          else -> throw RuntimeException("ukjent id: $id")
         }
     return context.constructType(subtype)
   }
 }
+
+fun validateURL(s: String): Result<URL> = runCatching { URL(s) }
+
+fun validateNavn(s: String): Result<String> = runCatching {
+  if (s == "") {
+    throw IllegalArgumentException("mangler navn")
+  } else {
+    s
+  }
+}
+
+fun validateStatus(s: String?): Result<String> =
+    if (s == "crawling") {
+      Result.success(s)
+    } else {
+      Result.failure(IllegalArgumentException("$s er ikke en gyldig status"))
+    }
