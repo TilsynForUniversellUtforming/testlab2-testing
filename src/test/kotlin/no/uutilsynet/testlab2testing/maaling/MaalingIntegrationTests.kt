@@ -1,7 +1,8 @@
 package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URI
-import java.net.URL
+import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
+import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingRequestBody
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.json.JSONArray
@@ -26,32 +27,24 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
   @DisplayName("det er mulig å opprette nye målinger")
   fun postNewMaaling() {
     val locationPattern = """/v1/maalinger/\d+"""
-    val location =
-        restTemplate.postForLocation(
-            "/v1/maalinger", mapOf("navn" to "testmåling", "url" to "https://www.uutilsynet.no"))
+    val location = restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
     assertThat(location.toString(), matchesPattern(locationPattern))
   }
 
   @Nested
   @DisplayName("gitt at det finnes en måling i databasen")
   inner class DatabaseHasAtLeastOneMaaling(@Autowired val restTemplate: TestRestTemplate) {
-    private var location: URI
-    private val url = URL("https://www.example.com")
-
-    init {
-      location =
-          restTemplate.postForLocation(
-              "/v1/maalinger", mapOf("navn" to "example", "url" to url.toString()))
-    }
+    private var location: URI = restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
 
     @Test
     @DisplayName("så skal vi klare å hente den ut")
     fun getMaaling() {
-      val (id, navn, urlFromApi) = restTemplate.getForObject(location, GetMaalingDTO::class.java)
+      val (id, navn, loeysingListFromApi) =
+          restTemplate.getForObject(location, GetMaalingDTO::class.java)
 
       assertThat(id, instanceOf(Int::class.java))
       assertThat(navn, equalTo("example"))
-      assertThat(urlFromApi, equalTo(url.toString()))
+      assertThat(loeysingListFromApi, equalTo(loeysingList))
     }
 
     @Test
@@ -66,7 +59,7 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
 
       assertThat(thisMaaling.id, equalTo(id))
       assertThat(thisMaaling.navn, equalTo("example"))
-      assertThat(thisMaaling.url, equalTo(url.toString()))
+      assertThat(thisMaaling.loeysingList, equalTo(loeysingList))
     }
 
     @Test
@@ -115,15 +108,10 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
   @Nested
   @DisplayName("gitt en måling med status 'planlegging'")
   inner class Transitions {
-    private var location: URI
-    private val url = URL("https://www.example.com")
-    private val maaling: GetMaalingDTO
+    private var location: URI = restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
+    private val maaling: GetMaalingDTO = restTemplate.getForObject(location, GetMaalingDTO::class.java)
 
     init {
-      location =
-          restTemplate.postForLocation(
-              "/v1/maalinger", mapOf("navn" to "example", "url" to url.toString()))
-      maaling = restTemplate.getForObject(location, GetMaalingDTO::class.java)
       assert(maaling.status == "planlegging")
     }
 

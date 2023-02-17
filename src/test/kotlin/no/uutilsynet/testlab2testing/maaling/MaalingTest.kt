@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URI
-import java.net.URL
+import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Assertions
@@ -18,7 +18,7 @@ class MaalingTest {
                 Maaling.Planlegging(
                     1,
                     "testmåling",
-                    URL("https://www.example.com"),
+                    loeysingList,
                     listOf(Aksjon.StartCrawling(URI("/maalinger/1/status")))),
                 "crawling")
             .getOrThrow()

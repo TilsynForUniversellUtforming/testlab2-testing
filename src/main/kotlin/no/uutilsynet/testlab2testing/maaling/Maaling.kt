@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver
 import com.fasterxml.jackson.databind.jsontype.impl.TypeIdResolverBase
 import java.net.URI
-import java.net.URL
+import no.uutilsynet.testlab2testing.dto.Loeysing
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "status")
 @JsonSubTypes(
@@ -16,15 +16,16 @@ import java.net.URL
 sealed class Maaling {
   abstract val navn: String
   abstract val id: Int
-  abstract val url: URL
+  abstract val loeysingList: List<Loeysing>
 
   data class Planlegging(
-      override val id: Int,
-      override val navn: String,
-      override val url: URL,
-      val aksjoner: List<Aksjon>
+    override val id: Int,
+    override val navn: String,
+    override val loeysingList: List<Loeysing>,
+    val aksjoner: List<Aksjon>
   ) : Maaling()
-  data class Crawling(override val id: Int, override val navn: String, override val url: URL) :
+
+  data class Crawling(override val id: Int, override val navn: String, override val loeysingList: List<Loeysing>) :
       Maaling()
 
   companion object {
@@ -44,7 +45,7 @@ sealed class Maaling {
       return when (maaling) {
         is Planlegging ->
             when (newStatus) {
-              "crawling" -> Result.success(Crawling(maaling.id, maaling.navn, maaling.url))
+              "crawling" -> Result.success(Crawling(maaling.id, maaling.navn, maaling.loeysingList))
               else ->
                   Result.failure(
                       IllegalArgumentException("kan ikke gå fra planlegging til $newStatus"))
@@ -89,8 +90,6 @@ private class AksjonTypeIdResolver : TypeIdResolverBase() {
     return context.constructType(subtype)
   }
 }
-
-fun validateURL(s: String): Result<URL> = runCatching { URL(s) }
 
 fun validateNavn(s: String): Result<String> = runCatching {
   if (s == "") {
