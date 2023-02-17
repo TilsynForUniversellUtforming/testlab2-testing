@@ -105,8 +105,8 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
 
       val aksjon = maaling.aksjoner.first()
       assertThat(aksjon, instanceOf(Aksjon.StartCrawling::class.java))
-      assertThat(aksjon.metode, equalTo(Metode.PATCH))
-      assertThat((aksjon as Aksjon.StartCrawling).href, equalTo(location))
+      assertThat(aksjon.metode, equalTo(Metode.POST))
+      assertThat((aksjon as Aksjon.StartCrawling).href, equalTo(URI("${location}/status")))
       assertThat(aksjon.data, equalTo(expectedData))
     }
   }

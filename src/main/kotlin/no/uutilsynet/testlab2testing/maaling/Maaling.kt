@@ -16,11 +16,11 @@ sealed class Maaling {
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "id")
 @JsonTypeIdResolver(AksjonTypeIdResolver::class)
 sealed class Aksjon(val metode: Metode, val data: Map<String, String>) {
-  data class StartCrawling(val href: URI) : Aksjon(Metode.PATCH, mapOf("status" to "crawling"))
+  data class StartCrawling(val href: URI) : Aksjon(Metode.POST, mapOf("status" to "crawling"))
 }
 
 enum class Metode {
-  PATCH
+  POST
 }
 
 fun locationForId(id: Number): URI = URI.create("/v1/maalinger/${id}")
