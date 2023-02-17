@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
 import java.net.MalformedURLException
-import java.net.URL
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -34,6 +33,27 @@ class MaalingResource(val maalingDAO: MaalingDAO) {
       maalingDAO.getMaaling(id)?.let { ResponseEntity.ok(GetMaalingDTO.from(it)) }
           ?: ResponseEntity.notFound().build()
 
+  @PutMapping("{id}/status")
+  fun putNewStatus(
+      @PathVariable id: Int,
+      @RequestBody data: Map<String, String>
+  ): ResponseEntity<Void> {
+    return runCatching<ResponseEntity<Void>> {
+          val maaling = maalingDAO.getMaaling(id)!!
+          val newStatus = validateStatus(data["status"]).getOrThrow()
+          val updated = Maaling.updateStatus(maaling, newStatus).getOrThrow()
+          maalingDAO.save(updated).getOrThrow()
+          ResponseEntity.ok().build()
+        }
+        .getOrElse { exception ->
+          when (exception) {
+            is NullPointerException -> ResponseEntity.notFound().build()
+            is IllegalArgumentException -> ResponseEntity.badRequest().build()
+            else -> ResponseEntity.internalServerError().build()
+          }
+        }
+  }
+
   private fun handleErrors(exception: Throwable, dto: NyMaalingDTO): ResponseEntity<Any> =
       when (exception) {
         is MalformedURLException ->
@@ -52,22 +72,12 @@ data class GetMaalingDTO(
 ) {
   companion object {
     fun from(maaling: Maaling): GetMaalingDTO {
-      val status =
-          when (maaling) {
-            is Maaling.Planlegging -> "planlegging"
-          }
       return GetMaalingDTO(
-          maaling.id, maaling.navn, maaling.url.toString(), status, maaling.aksjoner)
+          maaling.id,
+          maaling.navn,
+          maaling.url.toString(),
+          Maaling.status(maaling),
+          Maaling.aksjoner(maaling))
     }
-  }
-}
-
-fun validateURL(s: String): Result<URL> = runCatching { URL(s) }
-
-fun validateNavn(s: String): Result<String> = runCatching {
-  if (s == "") {
-    throw IllegalArgumentException("mangler navn")
-  } else {
-    s
   }
 }

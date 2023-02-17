@@ -6,6 +6,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.json.JSONArray
 import org.json.JSONObject
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -84,7 +85,7 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
       val jsonArray = JSONArray(response)
       for (i in 0 until jsonArray.length()) {
         val item = jsonArray.getJSONObject(i)
-        assertThat(item["status"], equalTo("planlegging"))
+        assertThat(item["status"], oneOf("planlegging", "crawling"))
       }
     }
 
@@ -105,9 +106,43 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
 
       val aksjon = maaling.aksjoner.first()
       assertThat(aksjon, instanceOf(Aksjon.StartCrawling::class.java))
-      assertThat(aksjon.metode, equalTo(Metode.POST))
+      assertThat(aksjon.metode, equalTo(Metode.PUT))
       assertThat((aksjon as Aksjon.StartCrawling).href, equalTo(URI("${location}/status")))
       assertThat(aksjon.data, equalTo(expectedData))
+    }
+  }
+
+  @Nested
+  @DisplayName("gitt en måling med status 'planlegging'")
+  inner class Transitions {
+    private var location: URI
+    private val url = URL("https://www.example.com")
+    private val maaling: GetMaalingDTO
+
+    init {
+      location =
+          restTemplate.postForLocation(
+              "/v1/maalinger", mapOf("navn" to "example", "url" to url.toString()))
+      maaling = restTemplate.getForObject(location, GetMaalingDTO::class.java)
+      assert(maaling.status == "planlegging")
+    }
+
+    @Test
+    @DisplayName("så skal det gå an å starte crawling")
+    fun startCrawling() {
+      val aksjon = maaling.aksjoner.find { it is Aksjon.StartCrawling } as Aksjon.StartCrawling
+      val entity =
+          when (aksjon.metode) {
+            Metode.PUT ->
+                restTemplate.exchange(
+                    aksjon.href, HttpMethod.PUT, HttpEntity(aksjon.data), Void::class.java)
+          }
+
+      assertTrue(entity.statusCode.is2xxSuccessful)
+
+      val oppdatertMaaling = restTemplate.getForObject(location, GetMaalingDTO::class.java)
+
+      assertThat(oppdatertMaaling.status, equalTo("crawling"))
     }
   }
 

@@ -26,17 +26,38 @@ class MaalingDAO(val jdbcTemplate: JdbcTemplate) {
             "select * from MaalingV1 where id = ?", { rs, _ -> maalingFromResultSet(rs) }, id))
   }
 
-  private fun maalingFromResultSet(rs: ResultSet): Maaling.Planlegging {
+  private fun maalingFromResultSet(rs: ResultSet): Maaling {
     val id = rs.getInt("id")
     val aksjonHref = URI("${locationForId(id)}/status")
-    return Maaling.Planlegging(
-        id,
-        rs.getString("navn"),
-        URL(rs.getString("url")),
-        listOf(Aksjon.StartCrawling(aksjonHref)))
+    val status = rs.getString("status")
+    val navn = rs.getString("navn")
+    val url = URL(rs.getString("url"))
+    return when (status) {
+      "planlegging" -> {
+        Maaling.Planlegging(id, navn, url, listOf(Aksjon.StartCrawling(aksjonHref)))
+      }
+      "crawling" -> Maaling.Crawling(id, navn, url)
+      else ->
+          throw RuntimeException("Målingen med id = $id er lagret med en ugyldig status: $status")
+    }
   }
 
   fun getMaalinger(): List<Maaling> {
     return jdbcTemplate.query("select * from MaalingV1", { rs, _ -> maalingFromResultSet(rs) })
+  }
+
+  fun save(maaling: Maaling): Result<Maaling> {
+    val numberOfRows =
+        jdbcTemplate.update(
+            "update MaalingV1 set navn = ?, status = ? where id = ?",
+            maaling.navn,
+            Maaling.status(maaling),
+            maaling.id)
+    return if (numberOfRows == 0) {
+      Result.failure(
+          IllegalArgumentException("måling med id = ${maaling.id} finnes ikke i databasen"))
+    } else {
+      Result.success(maaling)
+    }
   }
 }
