@@ -172,3 +172,7 @@ insert into regelsetttestregel (idregelsett, idtestregel)
 select currval('regelsett_id_seq') as idregelsett, t.id as idtestregel
 from testregel t
 where t.referanseact is not null;
+
+insert into Loeysing (namn, url) values
+    ('Harstad Kommune', 'https://www.harstad.kommune.no/'),
+    ('Spring', 'https://spring.io/');
