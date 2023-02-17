@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.maaling
 
-import java.net.URI
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -14,13 +13,7 @@ class MaalingTest {
   @DisplayName("vi skal kunne oppdatere status fra planlegging til crawling")
   fun updateStatus() {
     val result =
-        Maaling.updateStatus(
-                Maaling.Planlegging(
-                    1,
-                    "testmåling",
-                    loeysingList,
-                    listOf(Aksjon.StartCrawling(URI("/maalinger/1/status")))),
-                "crawling")
+        Maaling.updateStatus(Maaling.Planlegging(1, "testmåling", loeysingList), "crawling")
             .getOrThrow()
 
     Assertions.assertTrue(result is Maaling.Crawling)

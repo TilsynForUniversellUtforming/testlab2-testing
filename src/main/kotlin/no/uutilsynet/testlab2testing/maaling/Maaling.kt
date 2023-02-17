@@ -17,19 +17,25 @@ sealed class Maaling {
   abstract val navn: String
   abstract val id: Int
   abstract val loeysingList: List<Loeysing>
+  abstract val aksjoner: List<Aksjon>
 
   data class Planlegging(
       override val id: Int,
       override val navn: String,
       override val loeysingList: List<Loeysing>,
-      val aksjoner: List<Aksjon>
-  ) : Maaling()
+  ) : Maaling() {
+    override val aksjoner: List<Aksjon>
+      get() = listOf(Aksjon.StartCrawling(URI("${locationForId(id)}/status")))
+  }
 
   data class Crawling(
       override val id: Int,
       override val navn: String,
       override val loeysingList: List<Loeysing>
-  ) : Maaling()
+  ) : Maaling() {
+    override val aksjoner: List<Aksjon>
+      get() = listOf()
+  }
 
   companion object {
     fun status(maaling: Maaling): String =
