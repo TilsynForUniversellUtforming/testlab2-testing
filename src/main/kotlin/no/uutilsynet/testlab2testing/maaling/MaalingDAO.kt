@@ -44,21 +44,23 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     fun createMaalingLoysingParams(idMaaling: Int, idLoeysing: Int) =
         MapSqlParameterSource("idMaaling", idMaaling).addValue("idLoeysing", idLoeysing)
 
-    val selectMaalingSql ="select id, navn, status from Maalingv1"
+    val selectMaalingSql = "select id, navn, status from Maalingv1"
     val selectMaalingByIdSql = "$selectMaalingSql where id = :id"
 
-    val maalingLoeysingSql = """ 
+    val maalingLoeysingSql =
+        """ 
       select l.id, l.namn, l.url 
       from MaalingLoeysing ml 
         join loeysing l on ml.idLoeysing = l.id
       where ml.idMaaling = :id
-      """.trimIndent()
+      """
+            .trimIndent()
 
     val saveMaalingSql = "update MaalingV1 set navn = :navn, status = :status where id = :id"
     fun saveMaalingParams(maaling: Maaling) =
-      MapSqlParameterSource("navn", maaling.navn)
-        .addValue("status", Maaling.status(maaling))
-        .addValue("id", maaling.id)
+        MapSqlParameterSource("navn", maaling.navn)
+            .addValue("status", Maaling.status(maaling))
+            .addValue("id", maaling.id)
   }
 
   @Transactional
@@ -75,36 +77,31 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun getMaaling(id: Int): Maaling? {
-    val maaling = DataAccessUtils.singleResult(
-      jdbcTemplate.query(selectMaalingByIdSql,
-        MapSqlParameterSource("id", id),
-        maalingRowmapper))
+    val maaling =
+        DataAccessUtils.singleResult(
+            jdbcTemplate.query(
+                selectMaalingByIdSql, MapSqlParameterSource("id", id), maalingRowmapper))
 
     return maaling?.toMaaling()
   }
 
   fun getMaalingList(): List<Maaling> =
-    jdbcTemplate.query(selectMaalingSql, maalingRowmapper)
-      .map {
-        it.toMaaling()
-      }
+      jdbcTemplate.query(selectMaalingSql, maalingRowmapper).map { it.toMaaling() }
 
   private fun MaalingDTO.toMaaling(): Maaling {
-    val loeysingList = jdbcTemplate.query(maalingLoeysingSql, MapSqlParameterSource("id", id), loysingRowmapper)
+    val loeysingList =
+        jdbcTemplate.query(maalingLoeysingSql, MapSqlParameterSource("id", id), loysingRowmapper)
     val aksjonHref = URI("${locationForId(id)}/status")
 
     return when (this.status) {
-      "planlegging" -> Maaling.Planlegging (
-        this.id,
-        this.navn,
-        loeysingList,
-        listOf(Aksjon.StartCrawling(aksjonHref))
-      )
+      "planlegging" ->
+          Maaling.Planlegging(
+              this.id, this.navn, loeysingList, listOf(Aksjon.StartCrawling(aksjonHref)))
       "crawling" -> Maaling.Crawling(this.id, this.navn, loeysingList)
-      else -> throw RuntimeException("Målingen med id = $id er lagret med en ugyldig status: $status")
+      else ->
+          throw RuntimeException("Målingen med id = $id er lagret med en ugyldig status: $status")
     }
   }
-
 
   fun save(maaling: Maaling): Result<Maaling> {
     val numberOfRows = jdbcTemplate.update(saveMaalingSql, saveMaalingParams(maaling))

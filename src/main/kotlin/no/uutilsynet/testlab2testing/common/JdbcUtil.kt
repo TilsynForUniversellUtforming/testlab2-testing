@@ -1,9 +1,9 @@
 package no.uutilsynet.testlab2testing.common
 
+import java.sql.Array as SqlArray
 import java.sql.SQLDataException
 import kotlin.Array
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import java.sql.Array as SqlArray
 
 object JdbcUtil {
   fun <T> NamedParameterJdbcTemplate.getPgArrayVarchar(list: List<T>): SqlArray {
