@@ -8,10 +8,8 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.json.JSONArray
 import org.json.JSONObject
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -109,16 +107,20 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
   @Nested
   @DisplayName("gitt en måling med status 'planlegging'")
   inner class Transitions {
-    private var location: URI = restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
-    private val maaling: MaalingDTO = restTemplate.getForObject(location, MaalingDTO::class.java)
-
-    init {
+    fun createMaaling(): Pair<MaalingDTO, URI> {
+      val location = restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
+      val maaling: MaalingDTO = restTemplate.getForObject(location, MaalingDTO::class.java)
       assert(maaling.status == "planlegging")
+      return Pair(maaling, location)
     }
 
     @Test
     @DisplayName("så skal det gå an å starte crawling")
+    @Disabled(
+        "skrudd av mens jeg finner en bedre måte å teste dette på, som ikke crawler nettsider for hver gang testen kjører")
     fun startCrawling() {
+      val (maaling, location) = createMaaling()
+
       val aksjon = maaling.aksjoner.find { it is Aksjon.StartCrawling } as Aksjon.StartCrawling
       val entity =
           when (aksjon.metode) {
@@ -132,6 +134,14 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
       val oppdatertMaaling = restTemplate.getForObject(location, MaalingDTO::class.java)
 
       assertThat(oppdatertMaaling.status, equalTo("crawling"))
+      val crawlResultat = oppdatertMaaling.crawlResultat
+      assertThat(crawlResultat, hasSize(2))
+      crawlResultat?.forEach { etCrawlResultat ->
+        when (etCrawlResultat) {
+          is CrawlResultat.IkkeFerdig -> assertThat(etCrawlResultat.statusUrl, notNullValue())
+          else -> fail { "crawlresultatet hadde en uventet status" }
+        }
+      }
     }
   }
 
@@ -160,7 +170,8 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
 data class MaalingDTO(
     val id: Int,
     val navn: String,
-    val loeysingList: List<Loeysing>,
+    val loeysingList: List<Loeysing>?, // hvis status er 'planlegging'
+    val crawlResultat: List<CrawlResultat>?, // hvis status er 'crawling'
     val status: String,
     val aksjoner: List<Aksjon>
 )

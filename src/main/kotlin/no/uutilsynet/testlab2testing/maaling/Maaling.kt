@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver
 import com.fasterxml.jackson.databind.jsontype.impl.TypeIdResolverBase
 import java.net.URI
+import java.net.URL
 import no.uutilsynet.testlab2testing.dto.Loeysing
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "status")
@@ -16,13 +17,12 @@ import no.uutilsynet.testlab2testing.dto.Loeysing
 sealed class Maaling {
   abstract val navn: String
   abstract val id: Int
-  abstract val loeysingList: List<Loeysing>
   abstract val aksjoner: List<Aksjon>
 
   data class Planlegging(
       override val id: Int,
       override val navn: String,
-      override val loeysingList: List<Loeysing>,
+      val loeysingList: List<Loeysing>,
   ) : Maaling() {
     override val aksjoner: List<Aksjon>
       get() = listOf(Aksjon.StartCrawling(URI("${locationForId(id)}/status")))
@@ -31,7 +31,7 @@ sealed class Maaling {
   data class Crawling(
       override val id: Int,
       override val navn: String,
-      override val loeysingList: List<Loeysing>
+      val crawlResultat: List<CrawlResultat>
   ) : Maaling() {
     override val aksjoner: List<Aksjon>
       get() = listOf()
@@ -44,17 +44,15 @@ sealed class Maaling {
           is Crawling -> "crawling"
         }
 
-    fun aksjoner(maaling: Maaling): List<Aksjon> =
-        when (maaling) {
-          is Planlegging -> listOf(Aksjon.StartCrawling(URI("${locationForId(maaling.id)}/status")))
-          is Crawling -> listOf()
-        }
-
-    fun updateStatus(maaling: Maaling, newStatus: String): Result<Maaling> {
+    fun updateStatus(
+        maaling: Maaling,
+        newStatus: String,
+        crawlResultat: List<CrawlResultat>
+    ): Result<Maaling> {
       return when (maaling) {
         is Planlegging ->
             when (newStatus) {
-              "crawling" -> Result.success(Crawling(maaling.id, maaling.navn, maaling.loeysingList))
+              "crawling" -> Result.success(Crawling(maaling.id, maaling.navn, crawlResultat))
               else ->
                   Result.failure(
                       IllegalArgumentException("kan ikke gå fra planlegging til $newStatus"))
@@ -65,6 +63,15 @@ sealed class Maaling {
       }
     }
   }
+}
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes(JsonSubTypes.Type(CrawlResultat.IkkeFerdig::class, name = "ikke_ferdig"))
+sealed class CrawlResultat {
+  abstract val loeysing: Loeysing
+
+  data class IkkeFerdig(val statusUrl: URL, override val loeysing: Loeysing) : CrawlResultat()
+  data class Feilet(val feilmelding: String, override val loeysing: Loeysing) : CrawlResultat()
 }
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "id")
