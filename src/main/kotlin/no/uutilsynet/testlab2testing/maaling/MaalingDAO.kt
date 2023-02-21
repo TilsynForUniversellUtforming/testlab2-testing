@@ -6,6 +6,7 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaal
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingSql
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.loeysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.loysingRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingLoeysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingRowmapper
@@ -61,6 +62,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         MapSqlParameterSource("navn", maaling.navn)
             .addValue("status", Maaling.status(maaling))
             .addValue("id", maaling.id)
+
+    val loeysingSql = "select id, namn, url from loeysing"
   }
 
   @Transactional
@@ -110,4 +113,6 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       Result.success(maaling)
     }
   }
+
+  fun getLoeysingarList(): List<Loeysing> = jdbcTemplate.query(loeysingSql, loysingRowmapper)
 }

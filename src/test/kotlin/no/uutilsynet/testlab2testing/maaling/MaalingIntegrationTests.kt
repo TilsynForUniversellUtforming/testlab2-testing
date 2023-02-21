@@ -124,7 +124,7 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
           when (aksjon.metode) {
             Metode.PUT ->
                 restTemplate.exchange(
-                    aksjon.href, HttpMethod.PUT, HttpEntity(aksjon.data), Void::class.java)
+                    aksjon.href, HttpMethod.PUT, HttpEntity(aksjon.data), Unit::class.java)
           }
 
       assertTrue(entity.statusCode.is2xxSuccessful)
@@ -142,6 +142,18 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
         restTemplate.exchange(
             "/v1/maalinger/0", HttpMethod.GET, HttpEntity.EMPTY, MaalingDTO::class.java)
     assertThat(entity.statusCode, equalTo(HttpStatus.NOT_FOUND))
+  }
+
+  @Test
+  @DisplayName("Skal hente ut listen med løsninger")
+  fun fetchLoesyingList() {
+    val responseType = object : ParameterizedTypeReference<List<Loeysing>>() {}
+
+    val entity =
+        restTemplate.exchange(
+            "/v1/maalinger/loeysingar", HttpMethod.GET, HttpEntity.EMPTY, responseType)
+
+    assertThat(entity.body!![0], equalTo(loeysingList[0]))
   }
 }
 

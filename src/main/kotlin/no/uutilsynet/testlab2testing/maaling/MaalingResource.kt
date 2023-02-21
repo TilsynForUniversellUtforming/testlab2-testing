@@ -4,7 +4,7 @@ import no.uutilsynet.testlab2testing.dto.Loeysing
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
-@RestController()
+@RestController
 @RequestMapping("v1/maalinger")
 class MaalingResource(val maalingDAO: MaalingDAO) {
   data class NyMaalingDTO(val navn: String, val loeysingList: List<Loeysing>)
@@ -37,8 +37,8 @@ class MaalingResource(val maalingDAO: MaalingDAO) {
   fun putNewStatus(
       @PathVariable id: Int,
       @RequestBody data: Map<String, String>
-  ): ResponseEntity<Void> {
-    return runCatching<ResponseEntity<Void>> {
+  ): ResponseEntity<Unit> {
+    return runCatching<ResponseEntity<Unit>> {
           val maaling = maalingDAO.getMaaling(id)!!
           val newStatus = validateStatus(data["status"]).getOrThrow()
           val updated = Maaling.updateStatus(maaling, newStatus).getOrThrow()
@@ -53,6 +53,8 @@ class MaalingResource(val maalingDAO: MaalingDAO) {
           }
         }
   }
+
+  @GetMapping("loeysingar") fun getLoeysingarList(): List<Loeysing> = maalingDAO.getLoeysingarList()
 
   private fun handleErrors(exception: Throwable): ResponseEntity<Any> =
       when (exception) {
