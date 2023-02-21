@@ -1,13 +1,9 @@
 package no.uutilsynet.testlab2testing.maaling
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import java.net.URL
 import java.time.Duration.ofSeconds
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.web.client.RestTemplateBuilder
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 
@@ -16,18 +12,9 @@ data class AutoTesterProperties(val url: String, val code: String)
 
 @Component
 class AutoTesterAdapter(
-    restTemplateBuilder: RestTemplateBuilder,
+    val restTemplate: RestTemplate,
     val autoTesterProperties: AutoTesterProperties
 ) {
-  private val restTemplate = makeRestTemplate(restTemplateBuilder)
-
-  private fun makeRestTemplate(restTemplateBuilder: RestTemplateBuilder): RestTemplate {
-    val objectMapper =
-        jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    val mappingJackson2HttpMessageConverter = MappingJackson2HttpMessageConverter()
-    mappingJackson2HttpMessageConverter.objectMapper = objectMapper
-    return restTemplateBuilder.messageConverters(mappingJackson2HttpMessageConverter).build()
-  }
 
   fun runTests(urls: List<URL>): Result<AutoTesterResponse> {
     return runCatching {

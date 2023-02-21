@@ -1,14 +1,17 @@
 package no.uutilsynet.testlab2testing.maaling
 
 import no.uutilsynet.testlab2testing.dto.Loeysing
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("v1/maalinger")
-class MaalingResource(val maalingDAO: MaalingDAO) {
+class MaalingResource(val maalingDAO: MaalingDAO, val crawler: Crawler) {
   data class NyMaalingDTO(val navn: String, val loeysingList: List<Loeysing>)
   class InvalidUrlException(message: String) : Exception(message)
+
+  private val logger = LoggerFactory.getLogger(MaalingResource::class.java)
 
   @PostMapping
   fun nyMaaling(@RequestBody dto: NyMaalingDTO): ResponseEntity<Any> =
@@ -37,19 +40,25 @@ class MaalingResource(val maalingDAO: MaalingDAO) {
   fun putNewStatus(
       @PathVariable id: Int,
       @RequestBody data: Map<String, String>
-  ): ResponseEntity<Unit> {
-    return runCatching<ResponseEntity<Unit>> {
+  ): ResponseEntity<Any> {
+    return runCatching<ResponseEntity<Any>> {
           val maaling = maalingDAO.getMaaling(id)!!
           val newStatus = validateStatus(data["status"]).getOrThrow()
-          val updated = Maaling.updateStatus(maaling, newStatus).getOrThrow()
-          maalingDAO.save(updated).getOrThrow()
-          ResponseEntity.ok().build()
+          if (newStatus == "crawling" && maaling is Maaling.Planlegging) {
+            val crawlResultat = crawler.start(maaling)
+            val updated = Maaling.updateStatus(maaling, newStatus, crawlResultat).getOrThrow()
+            maalingDAO.save(updated).getOrThrow()
+            ResponseEntity.ok().build()
+          } else {
+            ResponseEntity.badRequest().build()
+          }
         }
         .getOrElse { exception ->
+          logger.error(exception.message)
           when (exception) {
             is NullPointerException -> ResponseEntity.notFound().build()
             is IllegalArgumentException -> ResponseEntity.badRequest().build()
-            else -> ResponseEntity.internalServerError().build()
+            else -> ResponseEntity.internalServerError().body(exception.message)
           }
         }
   }

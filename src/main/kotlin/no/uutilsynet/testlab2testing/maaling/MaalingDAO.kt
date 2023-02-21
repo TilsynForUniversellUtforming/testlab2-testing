@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
-import java.net.URI
+import java.net.URL
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingSql
@@ -10,8 +10,6 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.loeysingSq
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.loysingRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingLoeysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingRowmapper
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.saveMaalingParams
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.saveMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByIdSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingSql
 import org.springframework.dao.support.DataAccessUtils
@@ -92,25 +90,83 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       jdbcTemplate.query(selectMaalingSql, maalingRowmapper).map { it.toMaaling() }
 
   private fun MaalingDTO.toMaaling(): Maaling {
-    val loeysingList =
-        jdbcTemplate.query(maalingLoeysingSql, MapSqlParameterSource("id", id), loysingRowmapper)
-    URI("${locationForId(id)}/status")
 
     return when (this.status) {
-      "planlegging" -> Maaling.Planlegging(this.id, this.navn, loeysingList)
-      "crawling" -> Maaling.Crawling(this.id, this.navn, loeysingList)
+      "planlegging" -> {
+        val loeysingList =
+            jdbcTemplate.query(
+                maalingLoeysingSql, MapSqlParameterSource("id", id), loysingRowmapper)
+        Maaling.Planlegging(this.id, this.navn, loeysingList)
+      }
+      "crawling" -> {
+        val crawlResultat =
+            jdbcTemplate.query(
+                buildString {
+                  appendLine("select cr.status_url, l.id, l.namn, l.url")
+                  appendLine("from crawlresultat cr ")
+                  appendLine("join loeysing l on cr.loeysingid = l.id")
+                  appendLine("where maaling_id = :maalingId")
+                  appendLine("and status = 'ikke_ferdig'")
+                },
+                mapOf("maalingId" to this.id)) { rs, _ ->
+                  CrawlResultat.IkkeFerdig(
+                      URL(rs.getString("status_url")),
+                      Loeysing(rs.getInt("id"), rs.getString("namn"), URL(rs.getString("url"))))
+                }
+        Maaling.Crawling(this.id, this.navn, crawlResultat)
+      }
       else ->
           throw RuntimeException("Målingen med id = $id er lagret med en ugyldig status: $status")
     }
   }
 
-  fun save(maaling: Maaling): Result<Maaling> {
-    val numberOfRows = jdbcTemplate.update(saveMaalingSql, saveMaalingParams(maaling))
-    return if (numberOfRows == 0) {
-      Result.failure(
-          IllegalArgumentException("måling med id = ${maaling.id} finnes ikke i databasen"))
-    } else {
-      Result.success(maaling)
+  @Transactional
+  fun save(maaling: Maaling): Result<Maaling> =
+      runCatching {
+            when (maaling) {
+              is Maaling.Planlegging -> {
+                jdbcTemplate.update(
+                    "update MaalingV1 set navn = :navn, status = :status where id = :id",
+                    mapOf(
+                        "navn" to maaling.navn,
+                        "status" to Maaling.status(maaling),
+                        "id" to maaling.id))
+              }
+              is Maaling.Crawling -> {
+                jdbcTemplate.update(
+                    "update MaalingV1 set navn = :navn, status = :status where id = :id",
+                    mapOf(
+                        "navn" to maaling.navn,
+                        "status" to Maaling.status(maaling),
+                        "id" to maaling.id))
+                for (crawlResultat in maaling.crawlResultat) {
+                  saveCrawlResultat(crawlResultat, maaling)
+                }
+              }
+            }
+          }
+          .map { maaling }
+
+  @Transactional
+  fun saveCrawlResultat(crawlResultat: CrawlResultat, maaling: Maaling) {
+    when (crawlResultat) {
+      is CrawlResultat.IkkeFerdig -> {
+        jdbcTemplate.update(
+            "insert into crawlresultat (loeysingid, status, status_url, maaling_id) values (:loeysingid, :status, :status_url, :maaling_id)",
+            mapOf(
+                "loeysingid" to crawlResultat.loeysing.id,
+                "status" to "ikke_ferdig",
+                "status_url" to crawlResultat.statusUrl.toString(),
+                "maaling_id" to maaling.id))
+      }
+      is CrawlResultat.Feilet -> {
+        jdbcTemplate.update(
+            buildString {
+              appendLine("insert into crawlresultat (loeysingid, status, maaling_id)")
+              appendLine("values (:loeysingid, 'feilet', :maaling_id)")
+            },
+            mapOf("loeysingid" to crawlResultat.loeysing.id, "maaling_id" to maaling.id))
+      }
     }
   }
 

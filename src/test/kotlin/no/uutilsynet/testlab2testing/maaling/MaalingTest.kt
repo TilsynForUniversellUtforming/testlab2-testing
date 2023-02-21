@@ -13,7 +13,8 @@ class MaalingTest {
   @DisplayName("vi skal kunne oppdatere status fra planlegging til crawling")
   fun updateStatus() {
     val result =
-        Maaling.updateStatus(Maaling.Planlegging(1, "testmåling", loeysingList), "crawling")
+        Maaling.updateStatus(
+                Maaling.Planlegging(1, "testmåling", loeysingList), "crawling", listOf())
             .getOrThrow()
 
     Assertions.assertTrue(result is Maaling.Crawling)
