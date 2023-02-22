@@ -36,33 +36,6 @@ sealed class Maaling {
     override val aksjoner: List<Aksjon>
       get() = listOf()
   }
-
-  companion object {
-    fun status(maaling: Maaling): String =
-        when (maaling) {
-          is Planlegging -> "planlegging"
-          is Crawling -> "crawling"
-        }
-
-    fun updateStatus(
-        maaling: Maaling,
-        newStatus: String,
-        crawlResultat: List<CrawlResultat>
-    ): Result<Maaling> {
-      return when (maaling) {
-        is Planlegging ->
-            when (newStatus) {
-              "crawling" -> Result.success(Crawling(maaling.id, maaling.navn, crawlResultat))
-              else ->
-                  Result.failure(
-                      IllegalArgumentException("kan ikke gå fra planlegging til $newStatus"))
-            }
-        else ->
-            Result.failure(
-                IllegalArgumentException("ingen gyldige overganger fra ${status(maaling)}"))
-      }
-    }
-  }
 }
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
@@ -115,9 +88,14 @@ fun validateNavn(s: String): Result<String> = runCatching {
   }
 }
 
-fun validateStatus(s: String?): Result<String> =
+enum class Status {
+  Planlegging,
+  Crawling
+}
+
+fun validateStatus(s: String?): Result<Status> =
     if (s == "crawling") {
-      Result.success(s)
+      Result.success(Status.Crawling)
     } else {
       Result.failure(IllegalArgumentException("$s er ikke en gyldig status"))
     }

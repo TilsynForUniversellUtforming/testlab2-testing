@@ -44,13 +44,16 @@ class MaalingResource(val maalingDAO: MaalingDAO, val crawler: Crawler) {
     return runCatching<ResponseEntity<Any>> {
           val maaling = maalingDAO.getMaaling(id)!!
           val newStatus = validateStatus(data["status"]).getOrThrow()
-          if (newStatus == "crawling" && maaling is Maaling.Planlegging) {
-            val crawlResultat = crawler.start(maaling)
-            val updated = Maaling.updateStatus(maaling, newStatus, crawlResultat).getOrThrow()
-            maalingDAO.save(updated).getOrThrow()
-            ResponseEntity.ok().build()
-          } else {
-            ResponseEntity.badRequest().build()
+          when {
+            newStatus == Status.Crawling && maaling is Maaling.Planlegging -> {
+              val crawlResultat = crawler.start(maaling)
+              val updated = Maaling.Crawling(maaling.id, maaling.navn, crawlResultat)
+              maalingDAO.save(updated).getOrThrow()
+              ResponseEntity.ok().build()
+            }
+            else -> {
+              ResponseEntity.badRequest().build()
+            }
           }
         }
         .getOrElse { exception ->

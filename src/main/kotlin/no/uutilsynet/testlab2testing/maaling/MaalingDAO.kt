@@ -2,6 +2,8 @@ package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URL
 import no.uutilsynet.testlab2testing.dto.Loeysing
+import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
+import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
@@ -10,6 +12,8 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.loeysingSq
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.loysingRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingLoeysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingRowmapper
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.saveMaalingParams
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.saveMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByIdSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingSql
 import org.springframework.dao.support.DataAccessUtils
@@ -56,10 +60,14 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .trimIndent()
 
     val saveMaalingSql = "update MaalingV1 set navn = :navn, status = :status where id = :id"
-    fun saveMaalingParams(maaling: Maaling) =
-        MapSqlParameterSource("navn", maaling.navn)
-            .addValue("status", Maaling.status(maaling))
-            .addValue("id", maaling.id)
+    fun saveMaalingParams(maaling: Maaling): Map<String, Any> {
+      val status =
+          when (maaling) {
+            is Planlegging -> "planlegging"
+            is Crawling -> "crawling"
+          }
+      return mapOf("navn" to maaling.navn, "status" to status, "id" to maaling.id)
+    }
 
     val loeysingSql = "select id, namn, url from loeysing"
   }
@@ -125,20 +133,10 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       runCatching {
             when (maaling) {
               is Maaling.Planlegging -> {
-                jdbcTemplate.update(
-                    "update MaalingV1 set navn = :navn, status = :status where id = :id",
-                    mapOf(
-                        "navn" to maaling.navn,
-                        "status" to Maaling.status(maaling),
-                        "id" to maaling.id))
+                jdbcTemplate.update(saveMaalingSql, saveMaalingParams(maaling))
               }
               is Maaling.Crawling -> {
-                jdbcTemplate.update(
-                    "update MaalingV1 set navn = :navn, status = :status where id = :id",
-                    mapOf(
-                        "navn" to maaling.navn,
-                        "status" to Maaling.status(maaling),
-                        "id" to maaling.id))
+                jdbcTemplate.update(saveMaalingSql, saveMaalingParams(maaling))
                 for (crawlResultat in maaling.crawlResultat) {
                   saveCrawlResultat(crawlResultat, maaling)
                 }
