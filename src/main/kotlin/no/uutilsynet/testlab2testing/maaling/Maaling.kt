@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver
 import com.fasterxml.jackson.databind.jsontype.impl.TypeIdResolverBase
 import java.net.URI
-import java.net.URL
 import no.uutilsynet.testlab2testing.dto.Loeysing
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "status")
@@ -36,15 +35,6 @@ sealed class Maaling {
     override val aksjoner: List<Aksjon>
       get() = listOf()
   }
-}
-
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes(JsonSubTypes.Type(CrawlResultat.IkkeFerdig::class, name = "ikke_ferdig"))
-sealed class CrawlResultat {
-  abstract val loeysing: Loeysing
-
-  data class IkkeFerdig(val statusUrl: URL, override val loeysing: Loeysing) : CrawlResultat()
-  data class Feilet(val feilmelding: String, override val loeysing: Loeysing) : CrawlResultat()
 }
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "id")
