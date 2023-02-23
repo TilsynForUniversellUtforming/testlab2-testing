@@ -9,7 +9,6 @@ import org.hamcrest.Matchers.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -101,47 +100,6 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
       assertThat(aksjon.metode, equalTo(Metode.PUT))
       assertThat((aksjon as Aksjon.StartCrawling).href, equalTo(URI("${location}/status")))
       assertThat(aksjon.data, equalTo(expectedData))
-    }
-  }
-
-  @Nested
-  @DisplayName("gitt en måling med status 'planlegging'")
-  inner class Transitions {
-    fun createMaaling(): Pair<MaalingDTO, URI> {
-      val location = restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
-      val maaling: MaalingDTO = restTemplate.getForObject(location, MaalingDTO::class.java)
-      assert(maaling.status == "planlegging")
-      return Pair(maaling, location)
-    }
-
-    @Test
-    @DisplayName("så skal det gå an å starte crawling")
-    @Disabled(
-        "skrudd av mens jeg finner en bedre måte å teste dette på, som ikke crawler nettsider for hver gang testen kjører")
-    fun startCrawling() {
-      val (maaling, location) = createMaaling()
-
-      val aksjon = maaling.aksjoner.find { it is Aksjon.StartCrawling } as Aksjon.StartCrawling
-      val entity =
-          when (aksjon.metode) {
-            Metode.PUT ->
-                restTemplate.exchange(
-                    aksjon.href, HttpMethod.PUT, HttpEntity(aksjon.data), Unit::class.java)
-          }
-
-      assertTrue(entity.statusCode.is2xxSuccessful)
-
-      val oppdatertMaaling = restTemplate.getForObject(location, MaalingDTO::class.java)
-
-      assertThat(oppdatertMaaling.status, equalTo("crawling"))
-      val crawlResultat = oppdatertMaaling.crawlResultat
-      assertThat(crawlResultat, hasSize(2))
-      crawlResultat?.forEach { etCrawlResultat ->
-        when (etCrawlResultat) {
-          is CrawlResultat.IkkeFerdig -> assertThat(etCrawlResultat.statusUrl, notNullValue())
-          else -> fail { "crawlresultatet hadde en uventet status" }
-        }
-      }
     }
   }
 
