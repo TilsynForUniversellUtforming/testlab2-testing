@@ -92,10 +92,11 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
         "når målingen har status 'planlegging', så skal det være en aksjon for å gå til 'crawling'")
     fun actionFromPlanlegging() {
       val maaling = restTemplate.getForObject(location, MaalingDTO::class.java)
+      restTemplate.getForObject(location, Map::class.java)
       assert(maaling.status == "planlegging")
       val expectedData = mapOf("status" to "crawling")
-
       val aksjon = maaling.aksjoner.first()
+
       assertThat(aksjon, instanceOf(Aksjon.StartCrawling::class.java))
       assertThat(aksjon.metode, equalTo(Metode.PUT))
       assertThat((aksjon as Aksjon.StartCrawling).href, equalTo(URI("${location}/status")))
