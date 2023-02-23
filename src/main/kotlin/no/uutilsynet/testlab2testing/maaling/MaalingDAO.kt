@@ -104,7 +104,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         val loeysingList =
             jdbcTemplate.query(
                 maalingLoeysingSql, MapSqlParameterSource("id", id), loysingRowmapper)
-        Maaling.Planlegging(this.id, this.navn, loeysingList)
+        Planlegging(this.id, this.navn, loeysingList)
       }
       "crawling" -> {
         val crawlResultat =
@@ -127,7 +127,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                         Loeysing(rs.getInt("id"), rs.getString("namn"), URL(rs.getString("url"))))
                   }
                 }
-        Maaling.Crawling(this.id, this.navn, crawlResultat)
+        Crawling(this.id, this.navn, crawlResultat)
       }
       else ->
           throw RuntimeException("Målingen med id = $id er lagret med en ugyldig status: $status")
@@ -138,10 +138,10 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun save(maaling: Maaling): Result<Maaling> =
       runCatching {
             when (maaling) {
-              is Maaling.Planlegging -> {
+              is Planlegging -> {
                 jdbcTemplate.update(saveMaalingSql, saveMaalingParams(maaling))
               }
-              is Maaling.Crawling -> {
+              is Crawling -> {
                 jdbcTemplate.update(saveMaalingSql, saveMaalingParams(maaling))
                 for (crawlResultat in maaling.crawlResultat) {
                   saveCrawlResultat(crawlResultat, maaling)

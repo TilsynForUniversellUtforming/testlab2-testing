@@ -2,10 +2,6 @@ package no.uutilsynet.testlab2testing.maaling
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.databind.DatabindContext
-import com.fasterxml.jackson.databind.JavaType
-import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver
-import com.fasterxml.jackson.databind.jsontype.impl.TypeIdResolverBase
 import java.net.URI
 import no.uutilsynet.testlab2testing.dto.Loeysing
 
@@ -38,7 +34,7 @@ sealed class Maaling {
 }
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "id")
-@JsonTypeIdResolver(AksjonTypeIdResolver::class)
+@JsonSubTypes(JsonSubTypes.Type(value = Aksjon.StartCrawling::class, name = "start_crawling"))
 sealed class Aksjon(val metode: Metode, val data: Map<String, String>) {
   data class StartCrawling(val href: URI) : Aksjon(Metode.PUT, mapOf("status" to "crawling"))
 }
@@ -48,27 +44,6 @@ enum class Metode {
 }
 
 fun locationForId(id: Number): URI = URI.create("/v1/maalinger/${id}")
-
-private class AksjonTypeIdResolver : TypeIdResolverBase() {
-  override fun idFromValue(value: Any): String = idFromValueAndType(value, value::class.java)
-
-  override fun idFromValueAndType(value: Any, suggestedType: Class<*>): String =
-      when (value) {
-        is Aksjon.StartCrawling -> "start_crawling"
-        else -> throw RuntimeException("ukjent type: $suggestedType")
-      }
-
-  override fun getMechanism(): JsonTypeInfo.Id = JsonTypeInfo.Id.NAME
-
-  override fun typeFromId(context: DatabindContext, id: String): JavaType {
-    val subtype =
-        when (id) {
-          "start_crawling" -> Aksjon.StartCrawling::class.java
-          else -> throw RuntimeException("ukjent id: $id")
-        }
-    return context.constructType(subtype)
-  }
-}
 
 fun validateNavn(s: String): Result<String> = runCatching {
   if (s == "") {
