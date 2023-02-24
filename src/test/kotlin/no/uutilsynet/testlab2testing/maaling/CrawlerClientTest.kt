@@ -15,17 +15,17 @@ import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 
-@RestClientTest(Crawler::class, CrawlerProperties::class)
+@RestClientTest(CrawlerClient::class, CrawlerProperties::class)
 @DisplayName("Crawler test")
-class CrawlerTest {
+class CrawlerClientTest {
   @Autowired private lateinit var server: MockRestServiceServer
-  @Autowired private lateinit var crawler: Crawler
+  @Autowired private lateinit var crawlerClient: CrawlerClient
 
   @Test
   @DisplayName("når vi kaller crawleren, så får vi en liste med crawlresultater i retur")
   fun testStartCrawl() {
     server
-        .expect(manyTimes(), requestTo(startsWith(crawler.crawlerProperties.url)))
+        .expect(manyTimes(), requestTo(startsWith(crawlerClient.crawlerProperties.url)))
         .andRespond(withSuccess(successBody(), MediaType.APPLICATION_JSON))
 
     val loeysingList =
@@ -33,7 +33,7 @@ class CrawlerTest {
             Loeysing(1, "uutilsynet", URL("https://www.uutilsynet.no")),
             Loeysing(2, "digdir", URL("https://www.digdir.no")))
     val maaling = Maaling.Planlegging(1, "testmåling", loeysingList)
-    val oppdatertMaaling = crawler.start(maaling)
+    val oppdatertMaaling = crawlerClient.start(maaling)
 
     assertThat(oppdatertMaaling.crawlResultat).hasSize(2)
     assertThat(oppdatertMaaling.crawlResultat)

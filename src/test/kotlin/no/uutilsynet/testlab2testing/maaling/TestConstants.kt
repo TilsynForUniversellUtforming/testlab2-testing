@@ -8,5 +8,6 @@ object TestConstants {
   val digdirLoeysing = Loeysing(2, "Digdir", URL("https://www.digdir.no/"))
   val loeysingList = listOf(uutilsynetLoeysing, digdirLoeysing)
 
-  val maalingRequestBody = mapOf("navn" to "example", "loeysingList" to loeysingList)
+  val maalingRequestBody =
+      mapOf("navn" to "example", "loeysingIdList" to loeysingList.map { it.id })
 }
