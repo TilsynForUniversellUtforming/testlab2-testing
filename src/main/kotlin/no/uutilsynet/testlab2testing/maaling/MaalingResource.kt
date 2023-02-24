@@ -46,8 +46,7 @@ class MaalingResource(val maalingDAO: MaalingDAO, val crawler: Crawler) {
           val newStatus = validateStatus(data["status"]).getOrThrow()
           when {
             newStatus == Status.Crawling && maaling is Maaling.Planlegging -> {
-              val crawlResultat = crawler.start(maaling)
-              val updated = Maaling.Crawling(maaling.id, maaling.navn, crawlResultat)
+              val updated = crawler.start(maaling)
               maalingDAO.save(updated).getOrThrow()
               ResponseEntity.ok().build()
             }

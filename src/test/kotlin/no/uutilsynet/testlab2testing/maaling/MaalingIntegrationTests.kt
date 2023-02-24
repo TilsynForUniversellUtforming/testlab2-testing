@@ -1,9 +1,12 @@
 package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URI
+import java.net.URL
+import java.time.Instant
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingRequestBody
+import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.json.JSONArray
@@ -19,7 +22,10 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
+class MaalingIntegrationTests(
+    @Autowired val restTemplate: TestRestTemplate,
+    @Autowired val maalingDAO: MaalingDAO
+) {
 
   @Test
   @DisplayName("det er mulig å opprette nye målinger")
@@ -123,6 +129,29 @@ class MaalingIntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
             "/v1/maalinger/loeysingar", HttpMethod.GET, HttpEntity.EMPTY, responseType)
 
     assertThat(entity.body!![0], equalTo(loeysingList[0]))
+  }
+
+  @Nested
+  @DisplayName("gitt at det finnes en måling som har status 'crawling'")
+  inner class Crawling {
+    @Test
+    @DisplayName("så har alle crawlresultatene et tidspunkt det ble oppdatert på")
+    fun hasTidspunkt() {
+      val key = maalingDAO.createMaaling("testmåling", listOf(1))
+      val planlagtMaaling = Maaling.Planlegging(key, "testmåling", listOf(uutilsynetLoeysing))
+      val sistOppdatert = Instant.now()
+      val crawlingMaaling =
+          Maaling.toCrawling(
+              planlagtMaaling,
+              listOf(
+                  CrawlResultat.IkkeFerdig(
+                      URL("https://status.uri"), uutilsynetLoeysing, sistOppdatert)))
+      maalingDAO.save(crawlingMaaling).getOrThrow()
+
+      val maalingFraApi = restTemplate.getForObject("/v1/maalinger/$key", MaalingDTO::class.java)
+
+      assertThat(maalingFraApi.crawlResultat?.first()?.sistOppdatert, equalTo(sistOppdatert))
+    }
   }
 }
 

@@ -31,6 +31,11 @@ sealed class Maaling {
     override val aksjoner: List<Aksjon>
       get() = listOf()
   }
+
+  companion object {
+    fun toCrawling(planlagtMaaling: Planlegging, crawlResultat: List<CrawlResultat>): Crawling =
+        Crawling(planlagtMaaling.id, planlagtMaaling.navn, crawlResultat)
+  }
 }
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "id")
