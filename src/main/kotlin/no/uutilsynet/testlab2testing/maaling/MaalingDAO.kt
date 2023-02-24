@@ -3,8 +3,7 @@ package no.uutilsynet.testlab2testing.maaling
 import java.net.URL
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.dto.Loeysing
-import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
-import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
+import no.uutilsynet.testlab2testing.maaling.Maaling.*
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
@@ -66,6 +65,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           when (maaling) {
             is Planlegging -> "planlegging"
             is Crawling -> "crawling"
+            is Kvalitetssikring -> "kvalitetssikring"
           }
       return mapOf("navn" to maaling.navn, "status" to status, "id" to maaling.id)
     }
@@ -98,65 +98,82 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getMaalingList(): List<Maaling> =
       jdbcTemplate.query(selectMaalingSql, maalingRowmapper).map { it.toMaaling() }
 
-  private fun MaalingDTO.toMaaling(): Maaling {
-
-    return when (this.status) {
-      "planlegging" -> {
-        val loeysingList =
-            jdbcTemplate.query(
-                maalingLoeysingSql, MapSqlParameterSource("id", id), loysingRowmapper)
-        Planlegging(this.id, this.navn, loeysingList)
-      }
-      "crawling" -> {
-        val crawlResultat =
-            jdbcTemplate.query(
-                buildString {
-                  appendLine(
-                      "select cr.status, cr.status_url, cr.sist_oppdatert, l.id, l.namn, l.url")
-                  appendLine("from crawlresultat cr ")
-                  appendLine("join loeysing l on cr.loeysingid = l.id")
-                  appendLine("where maaling_id = :maalingId")
-                },
-                mapOf("maalingId" to this.id)) { rs, _ ->
-                  val status = rs.getString("status")
-                  if (status == "ikke_ferdig") {
-                    CrawlResultat.IkkeFerdig(
-                        URL(rs.getString("status_url")),
-                        Loeysing(rs.getInt("id"), rs.getString("namn"), URL(rs.getString("url"))),
-                        rs.getTimestamp("sist_oppdatert").toInstant())
-                  } else {
-                    CrawlResultat.Feilet(
-                        "",
-                        Loeysing(rs.getInt("id"), rs.getString("namn"), URL(rs.getString("url"))),
-                        rs.getTimestamp("sist_oppdatert").toInstant())
+  private fun MaalingDTO.toMaaling(): Maaling =
+      when (status) {
+        "planlegging" -> {
+          val loeysingList =
+              jdbcTemplate.query(
+                  maalingLoeysingSql, MapSqlParameterSource("id", id), loysingRowmapper)
+          Planlegging(id, navn, loeysingList)
+        }
+        "crawling",
+        "kvalitetssikring" -> {
+          val crawlResultat =
+              jdbcTemplate.query(
+                  buildString {
+                    appendLine(
+                        "select cr.status, cr.status_url, cr.sist_oppdatert, cr.feilmelding, l.id, l.namn, l.url")
+                    appendLine("from crawlresultat cr ")
+                    appendLine("join loeysing l on cr.loeysingid = l.id")
+                    appendLine("where maaling_id = :maalingId")
+                  },
+                  mapOf("maalingId" to this.id)) { rs, _ ->
+                    val loeysing =
+                        Loeysing(rs.getInt("id"), rs.getString("namn"), URL(rs.getString("url")))
+                    val sistOppdatert = rs.getTimestamp("sist_oppdatert").toInstant()
+                    when (rs.getString("status")) {
+                      "ikke_ferdig" -> {
+                        CrawlResultat.IkkeFerdig(
+                            URL(rs.getString("status_url")), loeysing, sistOppdatert)
+                      }
+                      "ferdig" -> {
+                        CrawlResultat.Ferdig(
+                            listOf(), URL(rs.getString("status_url")), loeysing, sistOppdatert)
+                      }
+                      else -> {
+                        CrawlResultat.Feilet(rs.getString("feilmelding"), loeysing, sistOppdatert)
+                      }
+                    }
                   }
-                }
-        Crawling(this.id, this.navn, crawlResultat)
+          if (status == "crawling") {
+            Crawling(this.id, this.navn, crawlResultat)
+          } else {
+            Kvalitetssikring(id, navn, crawlResultat)
+          }
+        }
+        else ->
+            throw RuntimeException("Målingen med id = $id er lagret med en ugyldig status: $status")
       }
-      else ->
-          throw RuntimeException("Målingen med id = $id er lagret med en ugyldig status: $status")
-    }
+
+  @Transactional
+  fun save(maaling: Maaling): Result<Maaling> {
+    fun updateMaaling() = jdbcTemplate.update(saveMaalingSql, saveMaalingParams(maaling))
+    fun updateCrawlResultat(crawlResultat: List<CrawlResultat>) =
+        crawlResultat.forEach { saveCrawlResultat(it, maaling) }
+
+    return runCatching {
+          when (maaling) {
+            is Planlegging -> {
+              updateMaaling()
+            }
+            is Crawling -> {
+              updateMaaling()
+              updateCrawlResultat(maaling.crawlResultat)
+            }
+            is Kvalitetssikring -> {
+              updateMaaling()
+              updateCrawlResultat(maaling.crawlResultat)
+            }
+          }
+        }
+        .map { maaling }
   }
 
   @Transactional
-  fun save(maaling: Maaling): Result<Maaling> =
-      runCatching {
-            when (maaling) {
-              is Planlegging -> {
-                jdbcTemplate.update(saveMaalingSql, saveMaalingParams(maaling))
-              }
-              is Crawling -> {
-                jdbcTemplate.update(saveMaalingSql, saveMaalingParams(maaling))
-                for (crawlResultat in maaling.crawlResultat) {
-                  saveCrawlResultat(crawlResultat, maaling)
-                }
-              }
-            }
-          }
-          .map { maaling }
-
-  @Transactional
   fun saveCrawlResultat(crawlResultat: CrawlResultat, maaling: Maaling) {
+    jdbcTemplate.update(
+        "delete from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id",
+        mapOf("loeysingid" to crawlResultat.loeysing.id, "maaling_id" to maaling.id))
     when (crawlResultat) {
       is CrawlResultat.IkkeFerdig -> {
         jdbcTemplate.update(
@@ -171,10 +188,26 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       is CrawlResultat.Feilet -> {
         jdbcTemplate.update(
             buildString {
-              appendLine("insert into crawlresultat (loeysingid, status, maaling_id)")
-              appendLine("values (:loeysingid, 'feilet', :maaling_id)")
+              appendLine(
+                  "insert into crawlresultat (loeysingid, status, maaling_id, sist_oppdatert, feilmelding)")
+              appendLine(
+                  "values (:loeysingid, 'feilet', :maaling_id, :sist_oppdatert, :feilmelding)")
             },
-            mapOf("loeysingid" to crawlResultat.loeysing.id, "maaling_id" to maaling.id))
+            mapOf(
+                "loeysingid" to crawlResultat.loeysing.id,
+                "maaling_id" to maaling.id,
+                "sist_oppdatert" to Timestamp.from(crawlResultat.sistOppdatert),
+                "feilmelding" to crawlResultat.feilmelding))
+      }
+      is CrawlResultat.Ferdig -> {
+        jdbcTemplate.update(
+            "insert into crawlresultat (loeysingid, status, status_url, maaling_id, sist_oppdatert) values (:loeysingid, :status, :status_url, :maaling_id, :sist_oppdatert)",
+            mapOf(
+                "loeysingid" to crawlResultat.loeysing.id,
+                "status" to "ferdig",
+                "status_url" to crawlResultat.statusUrl.toString(),
+                "maaling_id" to maaling.id,
+                "sist_oppdatert" to Timestamp.from(crawlResultat.sistOppdatert)))
       }
     }
   }

@@ -8,7 +8,8 @@ import no.uutilsynet.testlab2testing.dto.Loeysing
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "status")
 @JsonSubTypes(
     JsonSubTypes.Type(Maaling.Planlegging::class, name = "planlegging"),
-    JsonSubTypes.Type(Maaling.Crawling::class, name = "crawling"))
+    JsonSubTypes.Type(Maaling.Crawling::class, name = "crawling"),
+    JsonSubTypes.Type(Maaling.Kvalitetssikring::class, name = "kvalitetssikring"))
 sealed class Maaling {
   abstract val navn: String
   abstract val id: Int
@@ -32,9 +33,25 @@ sealed class Maaling {
       get() = listOf()
   }
 
+  data class Kvalitetssikring(
+      override val id: Int,
+      override val navn: String,
+      val crawlResultat: List<CrawlResultat>
+  ) : Maaling() {
+    override val aksjoner: List<Aksjon>
+      get() = listOf()
+  }
+
   companion object {
     fun toCrawling(planlagtMaaling: Planlegging, crawlResultat: List<CrawlResultat>): Crawling =
         Crawling(planlagtMaaling.id, planlagtMaaling.navn, crawlResultat)
+
+    fun toKvalitetssikring(crawlingMaaling: Crawling): Kvalitetssikring? =
+        if (crawlingMaaling.crawlResultat.any { it is CrawlResultat.IkkeFerdig }) {
+          null
+        } else {
+          Kvalitetssikring(crawlingMaaling.id, crawlingMaaling.navn, crawlingMaaling.crawlResultat)
+        }
   }
 }
 
@@ -59,7 +76,6 @@ fun validateNavn(s: String): Result<String> = runCatching {
 }
 
 enum class Status {
-  Planlegging,
   Crawling
 }
 

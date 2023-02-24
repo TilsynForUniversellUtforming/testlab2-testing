@@ -1,14 +1,16 @@
 package no.uutilsynet.testlab2testing.maaling
 
+import java.util.concurrent.TimeUnit.SECONDS
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("v1/maalinger")
-class MaalingResource(val maalingDAO: MaalingDAO, val crawler: Crawler) {
-  data class NyMaalingDTO(val navn: String, val loeysingList: List<Loeysing>)
+class MaalingResource(val maalingDAO: MaalingDAO, val crawlerClient: CrawlerClient) {
+  data class NyMaalingDTO(val navn: String, val loeysingIdList: List<Int>)
   class InvalidUrlException(message: String) : Exception(message)
 
   private val logger = LoggerFactory.getLogger(MaalingResource::class.java)
@@ -16,9 +18,8 @@ class MaalingResource(val maalingDAO: MaalingDAO, val crawler: Crawler) {
   @PostMapping
   fun nyMaaling(@RequestBody dto: NyMaalingDTO): ResponseEntity<Any> =
       runCatching {
-            val ids = dto.loeysingList.map { it.id }
             val navn = validateNavn(dto.navn).getOrThrow()
-            maalingDAO.createMaaling(navn, ids)
+            maalingDAO.createMaaling(navn, dto.loeysingIdList)
           }
           .fold(
               { id ->
@@ -46,7 +47,7 @@ class MaalingResource(val maalingDAO: MaalingDAO, val crawler: Crawler) {
           val newStatus = validateStatus(data["status"]).getOrThrow()
           when {
             newStatus == Status.Crawling && maaling is Maaling.Planlegging -> {
-              val updated = crawler.start(maaling)
+              val updated = crawlerClient.start(maaling)
               maalingDAO.save(updated).getOrThrow()
               ResponseEntity.ok().build()
             }
@@ -67,10 +68,41 @@ class MaalingResource(val maalingDAO: MaalingDAO, val crawler: Crawler) {
 
   @GetMapping("loeysingar") fun getLoeysingarList(): List<Loeysing> = maalingDAO.getLoeysingarList()
 
+  @Scheduled(fixedDelay = 30, timeUnit = SECONDS)
+  fun updateCrawlingStatus(): Result<List<Maaling>> = runCatching {
+    logger.debug("oppdaterer status på målinger med status=crawling")
+    val maalinger = maalingDAO.getMaalingList().filterIsInstance<Maaling.Crawling>()
+    val oppdaterteMaalinger =
+        maalinger.map { updateCrawlingStatus(it) }.toSingleResult().getOrThrow()
+    oppdaterteMaalinger.map { maalingDAO.save(it) }.toSingleResult().getOrThrow()
+  }
+
+  private fun updateCrawlingStatus(maaling: Maaling): Result<Maaling> =
+      when (maaling) {
+        is Maaling.Crawling -> {
+          runCatching {
+            val oppdaterteResultater =
+                maaling.crawlResultat
+                    .map {
+                      crawlerClient.getStatus(it).map { newStatus -> updateStatus(it, newStatus) }
+                    }
+                    .toSingleResult()
+                    .getOrThrow()
+            val oppdatertMaaling = maaling.copy(crawlResultat = oppdaterteResultater)
+            Maaling.toKvalitetssikring(oppdatertMaaling) ?: oppdatertMaaling
+          }
+        }
+        else -> Result.success(maaling)
+      }
+
   private fun handleErrors(exception: Throwable): ResponseEntity<Any> =
       when (exception) {
         is InvalidUrlException,
         is NullPointerException -> ResponseEntity.badRequest().body(exception.message)
         else -> ResponseEntity.internalServerError().body(exception.message)
       }
+}
+
+private fun <E> List<Result<E>>.toSingleResult(): Result<List<E>> = runCatching {
+  this.map { it.getOrThrow() }
 }

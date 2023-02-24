@@ -1,10 +1,8 @@
 package no.uutilsynet.testlab2testing.maaling
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import java.net.URL
 import java.time.Instant
 import no.uutilsynet.testlab2testing.dto.Loeysing
+import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
@@ -13,7 +11,9 @@ import org.springframework.web.client.RestTemplate
 data class CrawlerProperties(val url: String, val code: String)
 
 @Component
-class Crawler(val crawlerProperties: CrawlerProperties, val restTemplate: RestTemplate) {
+class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: RestTemplate) {
+
+  private val logger = LoggerFactory.getLogger(CrawlerClient::class.java)
 
   fun start(maaling: Maaling.Planlegging): Maaling.Crawling {
     val crawlResultat = maaling.loeysingList.map { start(it) }
@@ -34,27 +34,36 @@ class Crawler(val crawlerProperties: CrawlerProperties, val restTemplate: RestTe
             CrawlResultat.IkkeFerdig(statusUris.statusQueryGetUri.toURL(), loeysing, Instant.now())
           }
           .getOrElse { exception ->
+            logger.error(
+                "feilet da jeg forsøkte å starte crawling for løysing ${loeysing.id}", exception)
             CrawlResultat.Feilet(
                 exception.message ?: "start crawling feilet", loeysing, Instant.now())
           }
+
+  fun getStatus(crawlResultat: CrawlResultat): Result<CrawlStatus> =
+      when (crawlResultat) {
+        is CrawlResultat.IkkeFerdig -> {
+          data class StatusDTO(val runtimeStatus: String)
+
+          runCatching {
+                val response =
+                    restTemplate.getForObject(
+                        crawlResultat.statusUrl.toURI(), StatusDTO::class.java)!!
+                return Result.success(CrawlStatus.valueOf(response.runtimeStatus))
+              }
+              .getOrElse {
+                logger.warn("problemer med å hente status for et crawlresultat", it)
+                Result.failure(it)
+              }
+        }
+        is CrawlResultat.Feilet -> Result.success(CrawlStatus.Failed)
+        else -> Result.success(CrawlStatus.Completed)
+      }
 }
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes(
-    JsonSubTypes.Type(CrawlResultat.IkkeFerdig::class, name = "ikke_ferdig"),
-    JsonSubTypes.Type(CrawlResultat.Feilet::class, name = "feilet"))
-sealed class CrawlResultat {
-  abstract val loeysing: Loeysing
-  abstract val sistOppdatert: Instant
-
-  data class IkkeFerdig(
-      val statusUrl: URL,
-      override val loeysing: Loeysing,
-      override val sistOppdatert: Instant
-  ) : CrawlResultat()
-  data class Feilet(
-      val feilmelding: String,
-      override val loeysing: Loeysing,
-      override val sistOppdatert: Instant
-  ) : CrawlResultat()
+enum class CrawlStatus {
+  Pending,
+  Running,
+  Completed,
+  Failed
 }
