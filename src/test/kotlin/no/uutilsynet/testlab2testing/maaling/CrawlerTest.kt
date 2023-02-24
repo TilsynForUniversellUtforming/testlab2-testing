@@ -33,10 +33,11 @@ class CrawlerTest {
             Loeysing(1, "uutilsynet", URL("https://www.uutilsynet.no")),
             Loeysing(2, "digdir", URL("https://www.digdir.no")))
     val maaling = Maaling.Planlegging(1, "testmåling", loeysingList)
-    val crawlResultat = crawler.start(maaling)
+    val oppdatertMaaling = crawler.start(maaling)
 
-    assertThat(crawlResultat).hasSize(2)
-    assertThat(crawlResultat).hasOnlyElementsOfType(CrawlResultat.IkkeFerdig::class.java)
+    assertThat(oppdatertMaaling.crawlResultat).hasSize(2)
+    assertThat(oppdatertMaaling.crawlResultat)
+        .hasOnlyElementsOfType(CrawlResultat.IkkeFerdig::class.java)
   }
 
   private fun successBody(): String =

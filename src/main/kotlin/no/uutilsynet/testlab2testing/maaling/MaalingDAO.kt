@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URL
+import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
 import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
@@ -110,7 +111,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         val crawlResultat =
             jdbcTemplate.query(
                 buildString {
-                  appendLine("select cr.status, cr.status_url, l.id, l.namn, l.url")
+                  appendLine(
+                      "select cr.status, cr.status_url, cr.sist_oppdatert, l.id, l.namn, l.url")
                   appendLine("from crawlresultat cr ")
                   appendLine("join loeysing l on cr.loeysingid = l.id")
                   appendLine("where maaling_id = :maalingId")
@@ -120,11 +122,13 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   if (status == "ikke_ferdig") {
                     CrawlResultat.IkkeFerdig(
                         URL(rs.getString("status_url")),
-                        Loeysing(rs.getInt("id"), rs.getString("namn"), URL(rs.getString("url"))))
+                        Loeysing(rs.getInt("id"), rs.getString("namn"), URL(rs.getString("url"))),
+                        rs.getTimestamp("sist_oppdatert").toInstant())
                   } else {
                     CrawlResultat.Feilet(
                         "",
-                        Loeysing(rs.getInt("id"), rs.getString("namn"), URL(rs.getString("url"))))
+                        Loeysing(rs.getInt("id"), rs.getString("namn"), URL(rs.getString("url"))),
+                        rs.getTimestamp("sist_oppdatert").toInstant())
                   }
                 }
         Crawling(this.id, this.navn, crawlResultat)
@@ -156,12 +160,13 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     when (crawlResultat) {
       is CrawlResultat.IkkeFerdig -> {
         jdbcTemplate.update(
-            "insert into crawlresultat (loeysingid, status, status_url, maaling_id) values (:loeysingid, :status, :status_url, :maaling_id)",
+            "insert into crawlresultat (loeysingid, status, status_url, maaling_id, sist_oppdatert) values (:loeysingid, :status, :status_url, :maaling_id, :sist_oppdatert)",
             mapOf(
                 "loeysingid" to crawlResultat.loeysing.id,
                 "status" to "ikke_ferdig",
                 "status_url" to crawlResultat.statusUrl.toString(),
-                "maaling_id" to maaling.id))
+                "maaling_id" to maaling.id,
+                "sist_oppdatert" to Timestamp.from(crawlResultat.sistOppdatert)))
       }
       is CrawlResultat.Feilet -> {
         jdbcTemplate.update(
