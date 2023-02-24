@@ -110,16 +110,22 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         val crawlResultat =
             jdbcTemplate.query(
                 buildString {
-                  appendLine("select cr.status_url, l.id, l.namn, l.url")
+                  appendLine("select cr.status, cr.status_url, l.id, l.namn, l.url")
                   appendLine("from crawlresultat cr ")
                   appendLine("join loeysing l on cr.loeysingid = l.id")
                   appendLine("where maaling_id = :maalingId")
-                  appendLine("and status = 'ikke_ferdig'")
                 },
                 mapOf("maalingId" to this.id)) { rs, _ ->
-                  CrawlResultat.IkkeFerdig(
-                      URL(rs.getString("status_url")),
-                      Loeysing(rs.getInt("id"), rs.getString("namn"), URL(rs.getString("url"))))
+                  val status = rs.getString("status")
+                  if (status == "ikke_ferdig") {
+                    CrawlResultat.IkkeFerdig(
+                        URL(rs.getString("status_url")),
+                        Loeysing(rs.getInt("id"), rs.getString("namn"), URL(rs.getString("url"))))
+                  } else {
+                    CrawlResultat.Feilet(
+                        "",
+                        Loeysing(rs.getInt("id"), rs.getString("namn"), URL(rs.getString("url"))))
+                  }
                 }
         Maaling.Crawling(this.id, this.navn, crawlResultat)
       }
