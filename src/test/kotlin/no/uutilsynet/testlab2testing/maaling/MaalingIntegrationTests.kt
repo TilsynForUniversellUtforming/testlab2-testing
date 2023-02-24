@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URI
 import java.net.URL
+import java.time.Duration
 import java.time.Instant
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
@@ -150,7 +151,12 @@ class MaalingIntegrationTests(
 
       val maalingFraApi = restTemplate.getForObject("/v1/maalinger/$key", MaalingDTO::class.java)
 
-      assertThat(maalingFraApi.crawlResultat?.first()?.sistOppdatert, equalTo(sistOppdatert))
+      // Vi mister noe nøyaktighet i noen tilfeller når vi har lagret tidspunktet i databasen og
+      // hentet det tilbake. Derfor sjekker vi at differansen er liten, i stedet for å sjekke om de
+      // to tidspunktene er like.
+      val difference =
+          Duration.between(maalingFraApi.crawlResultat?.first()?.sistOppdatert, sistOppdatert)
+      assertThat(difference.toMillis(), lessThan(100))
     }
   }
 }
