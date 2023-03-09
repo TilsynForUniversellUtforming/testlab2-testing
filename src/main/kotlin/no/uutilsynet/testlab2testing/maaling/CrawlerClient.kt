@@ -27,8 +27,9 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
                     "${crawlerProperties.url}?code=${crawlerProperties.code}",
                     mapOf(
                         "startUrl" to loeysing.url,
-                        "maxLenker" to 100,
-                        "talLenker" to 30,
+                        "maxLenker" to 10,
+                        "talLenker" to 10,
+                        "idLoeysing" to loeysing.id,
                         "domene" to loeysing.url),
                     AutoTesterAdapter.StatusUris::class.java)!!
             CrawlResultat.IkkeFerdig(statusUris.statusQueryGetUri.toURL(), loeysing, Instant.now())
