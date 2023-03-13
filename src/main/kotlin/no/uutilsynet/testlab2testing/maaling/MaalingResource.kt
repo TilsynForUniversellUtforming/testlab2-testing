@@ -69,15 +69,15 @@ class MaalingResource(val maalingDAO: MaalingDAO, val crawlerClient: CrawlerClie
   @GetMapping("loeysingar") fun getLoeysingarList(): List<Loeysing> = maalingDAO.getLoeysingarList()
 
   @Scheduled(fixedDelay = 30, timeUnit = SECONDS)
-  fun updateCrawlingStatus(): Result<List<Maaling>> = runCatching {
+  fun updateAllCrawlingStatuses(): Result<List<Maaling>> = runCatching {
     logger.debug("oppdaterer status på målinger med status=crawling")
     val maalinger = maalingDAO.getMaalingList().filterIsInstance<Maaling.Crawling>()
     val oppdaterteMaalinger =
-        maalinger.map { updateCrawlingStatus(it) }.toSingleResult().getOrThrow()
+        maalinger.map { updateCrawlingStatuses(it) }.toSingleResult().getOrThrow()
     oppdaterteMaalinger.map { maalingDAO.save(it) }.toSingleResult().getOrThrow()
   }
 
-  private fun updateCrawlingStatus(maaling: Maaling): Result<Maaling> =
+  private fun updateCrawlingStatuses(maaling: Maaling): Result<Maaling> =
       when (maaling) {
         is Maaling.Crawling -> {
           runCatching {
