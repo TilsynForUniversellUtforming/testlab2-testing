@@ -37,16 +37,19 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
     when (crawlResultat) {
       is CrawlResultat.IkkeFerdig -> {
         when (newStatus) {
-          CrawlStatus.Completed ->
+          is CrawlStatus.Completed ->
               CrawlResultat.Ferdig(
-                  listOf(), crawlResultat.statusUrl, crawlResultat.loeysing, Instant.now())
-          CrawlStatus.Failed ->
+                  newStatus.nettsider,
+                  crawlResultat.statusUrl,
+                  crawlResultat.loeysing,
+                  Instant.now())
+          is CrawlStatus.Failed ->
               CrawlResultat.Feilet(
                   "Crawling av ${crawlResultat.loeysing.url} feilet.",
                   crawlResultat.loeysing,
                   Instant.now())
-          CrawlStatus.Running,
-          CrawlStatus.Pending -> crawlResultat
+          is CrawlStatus.Running,
+          is CrawlStatus.Pending -> crawlResultat
         }
       }
       else -> crawlResultat

@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
+import java.net.URL
 import java.time.Instant
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import org.slf4j.LoggerFactory
@@ -44,27 +45,33 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
   fun getStatus(crawlResultat: CrawlResultat): Result<CrawlStatus> =
       when (crawlResultat) {
         is CrawlResultat.IkkeFerdig -> {
-          data class StatusDTO(val runtimeStatus: String)
+          data class StatusDTO(val runtimeStatus: String, val output: List<String>?)
 
           runCatching {
-                val response =
-                    restTemplate.getForObject(
-                        crawlResultat.statusUrl.toURI(), StatusDTO::class.java)!!
-                return Result.success(CrawlStatus.valueOf(response.runtimeStatus))
+            val response =
+                restTemplate.getForObject(crawlResultat.statusUrl.toURI(), StatusDTO::class.java)!!
+            when (response.runtimeStatus) {
+              "Pending" -> CrawlStatus.Pending
+              "Running" -> CrawlStatus.Running
+              "Completed" -> {
+                val nettsider =
+                    response.output?.map { URL(it) }
+                        ?: throw RuntimeException("`output` fra crawler er `null`")
+                CrawlStatus.Completed(nettsider)
               }
-              .getOrElse {
-                logger.warn("problemer med å hente status for et crawlresultat", it)
-                Result.failure(it)
-              }
+              "Failed" -> CrawlStatus.Failed
+              else -> throw RuntimeException("ukjent status: ${response.runtimeStatus}")
+            }
+          }
         }
         is CrawlResultat.Feilet -> Result.success(CrawlStatus.Failed)
-        else -> Result.success(CrawlStatus.Completed)
+        is CrawlResultat.Ferdig -> Result.success(CrawlStatus.Completed(crawlResultat.nettsider))
       }
 }
 
-enum class CrawlStatus {
-  Pending,
-  Running,
-  Completed,
-  Failed
+sealed class CrawlStatus {
+  object Pending : CrawlStatus()
+  object Running : CrawlStatus()
+  data class Completed(val nettsider: List<URL>) : CrawlStatus()
+  object Failed : CrawlStatus()
 }
