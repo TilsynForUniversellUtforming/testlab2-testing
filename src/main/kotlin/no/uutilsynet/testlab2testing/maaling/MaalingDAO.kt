@@ -111,16 +111,16 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         "kvalitetssikring" -> {
           val crawlResultat =
               jdbcTemplate.query(
-                  buildString {
-                    appendLine(
-                        "select cr.id as crid, cr.status, cr.status_url, cr.sist_oppdatert, cr.feilmelding, " +
-                            "l.id as lid, l.namn, l.url, " +
-                            "n.url as nettside_url")
-                    appendLine("from crawlresultat cr ")
-                    appendLine("join loeysing l on cr.loeysingid = l.id")
-                    appendLine("left join nettside n on cr.id = n.crawlresultat_id")
-                    appendLine("where maaling_id = :maalingId")
-                  },
+                  """
+                    select cr.id as crid, cr.status, cr.status_url, cr.sist_oppdatert, cr.feilmelding,
+                    l.id as lid, l.namn, l.url,
+                    n.url as nettside_url
+                    from crawlresultat cr
+                    join loeysing l on cr.loeysingid = l.id
+                    left join nettside n on cr.id = n.crawlresultat_id
+                    where maaling_id = :maalingId
+                  """
+                      .trimIndent(),
                   mapOf("maalingId" to this.id),
                   fun(rs: ResultSet): List<CrawlResultat> {
                     val result = mutableListOf<CrawlResultat>()
@@ -210,12 +210,11 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       }
       is CrawlResultat.Feilet -> {
         jdbcTemplate.update(
-            buildString {
-              appendLine(
-                  "insert into crawlresultat (loeysingid, status, maaling_id, sist_oppdatert, feilmelding)")
-              appendLine(
-                  "values (:loeysingid, 'feilet', :maaling_id, :sist_oppdatert, :feilmelding)")
-            },
+            """
+              insert into crawlresultat (loeysingid, status, maaling_id, sist_oppdatert, feilmelding)
+              values (:loeysingid, 'feilet', :maaling_id, :sist_oppdatert, :feilmelding)
+            """
+                .trimIndent(),
             mapOf(
                 "loeysingid" to crawlResultat.loeysing.id,
                 "maaling_id" to maaling.id,
