@@ -2,7 +2,6 @@ package no.uutilsynet.testlab2testing.common
 
 import java.sql.Array as SqlArray
 import java.sql.SQLDataException
-import kotlin.Array
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
 object JdbcUtil {
@@ -18,5 +17,5 @@ object JdbcUtil {
         ?: throw SQLDataException()
   }
 
-  fun <T> SqlArray.asList(): List<T> = (this.array as Array<T>).toList()
+  @Suppress("UNCHECKED_CAST") fun <T> SqlArray.asList(): List<T> = (this.array as Array<T>).toList()
 }
