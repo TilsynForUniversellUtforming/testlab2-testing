@@ -155,8 +155,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           "feilet" -> {
             CrawlResultat.Feilet(rs.getString("feilmelding"), loeysing, sistOppdatert)
           }
-          else -> {
-            // status = "ferdig"
+          "ferdig" -> {
             val nettsider = mutableListOf<URL>()
             val id = rs.getInt("crid")
             while (rs.getInt("crid") == id) {
@@ -166,6 +165,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             CrawlResultat.Ferdig(
                 nettsider.toList(), URL(rs.getString("status_url")), loeysing, sistOppdatert)
           }
+          else -> throw RuntimeException("ukjent status lagret i databasen: $status")
         }
     return crawlResultat
   }
