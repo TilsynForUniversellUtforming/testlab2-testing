@@ -127,8 +127,9 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   mapOf("maalingId" to this.id),
                   fun(rs: ResultSet): List<CrawlResultat> {
                     val result = mutableListOf<CrawlResultat>()
+                    rs.next()
 
-                    while (rs.next()) {
+                    while (!rs.isAfterLast) {
                       result.add(toCrawlResultat(rs))
                     }
 
@@ -150,6 +151,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val loeysing = Loeysing(rs.getInt("lid"), rs.getString("namn"), URL(rs.getString("url")))
     val sistOppdatert = rs.getTimestamp("sist_oppdatert").toInstant()
     val status = rs.getString("status")
+    val id = rs.getInt("crid")
+
     val crawlResultat =
         when (status) {
           "ikke_ferdig" -> {
@@ -160,8 +163,9 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           }
           "ferdig" -> {
             val nettsider = mutableListOf<URL>()
-            val id = rs.getInt("crid")
-            while (rs.getInt("crid") == id) {
+            val statusUrl = rs.getString("status_url")
+
+            while (isSameCrawlResultat(rs, id)) {
               val nettside = rs.getString("nettside_url")
               if (nettside != null) {
                 nettsider.add(URL(nettside))
@@ -170,13 +174,20 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               }
               rs.next()
             }
-            CrawlResultat.Ferdig(
-                nettsider.toList(), URL(rs.getString("status_url")), loeysing, sistOppdatert)
+            CrawlResultat.Ferdig(nettsider.toList(), URL(statusUrl), loeysing, sistOppdatert)
           }
           else -> throw RuntimeException("ukjent status lagret i databasen: $status")
         }
+
+    if (isSameCrawlResultat(rs, id)) {
+      rs.next()
+    }
+
     return crawlResultat
   }
+
+  private fun isSameCrawlResultat(rs: ResultSet, id: Int) =
+      !rs.isAfterLast && rs.getInt("crid") == id
 
   @Transactional
   fun save(maaling: Maaling): Result<Maaling> {
