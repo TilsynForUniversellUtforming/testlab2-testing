@@ -17,6 +17,7 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.saveMaalin
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.saveMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByIdSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingSql
+import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
@@ -28,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional
 
 @Component
 class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+
+  private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
 
   data class MaalingDTO(
       val id: Int,
@@ -159,7 +162,12 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             val nettsider = mutableListOf<URL>()
             val id = rs.getInt("crid")
             while (rs.getInt("crid") == id) {
-              nettsider.add(URL(rs.getString("nettside_url")))
+              val nettside = rs.getString("nettside_url")
+              if (nettside != null) {
+                nettsider.add(URL(nettside))
+              } else {
+                logger.warn("nettside mangler for crawlresultat $id med status `ferdig`.")
+              }
               rs.next()
             }
             CrawlResultat.Ferdig(
