@@ -100,7 +100,10 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun getMaalingList(): List<Maaling> =
-      jdbcTemplate.query(selectMaalingSql, maalingRowmapper).map { it.toMaaling() }
+      jdbcTemplate
+          .query(selectMaalingSql, maalingRowmapper)
+          .map { it.toMaaling() }
+          .also { logger.info("hentet ${it.size} målinger fra databasen") }
 
   private fun MaalingDTO.toMaaling(): Maaling =
       when (status) {
