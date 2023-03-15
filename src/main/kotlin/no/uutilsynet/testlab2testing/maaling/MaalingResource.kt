@@ -66,6 +66,34 @@ class MaalingResource(val maalingDAO: MaalingDAO, val crawlerClient: CrawlerClie
         }
   }
 
+  @PutMapping("{id}/{loeysingId}")
+  fun restartCrawlForMaalingLoeysing(
+      @PathVariable id: Int,
+      @PathVariable loeysingId: Int,
+  ): ResponseEntity<Any> =
+      runCatching<ResponseEntity<Any>> {
+            val maaling = maalingDAO.getMaaling(id)!!
+            when {
+              maaling is Maaling.Kvalitetssikring &&
+                  maaling.crawlResultat.any { it.loeysing.id == loeysingId } -> {
+                val updated = crawlerClient.restart(maaling, loeysingId)
+                maalingDAO.save(updated).getOrThrow()
+                ResponseEntity.ok().build()
+              }
+              else -> {
+                ResponseEntity.badRequest().build()
+              }
+            }
+          }
+          .getOrElse { exception ->
+            logger.error(exception.message)
+            when (exception) {
+              is NullPointerException -> ResponseEntity.notFound().build()
+              is IllegalArgumentException -> ResponseEntity.badRequest().build()
+              else -> ResponseEntity.internalServerError().body(exception.message)
+            }
+          }
+
   @GetMapping("loeysingar") fun getLoeysingarList(): List<Loeysing> = maalingDAO.getLoeysingarList()
 
   @Scheduled(fixedDelay = 30, timeUnit = SECONDS)
