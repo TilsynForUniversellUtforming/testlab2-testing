@@ -21,6 +21,12 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
     return Maaling.toCrawling(maaling, crawlResultat)
   }
 
+  fun restart(maaling: Maaling.Kvalitetssikring, loeysingId: Int): Maaling.Crawling {
+    val crawlResultat =
+        maaling.crawlResultat.map { if (it.loeysing.id == loeysingId) start(it.loeysing) else it }
+    return Maaling.Crawling(id = maaling.id, navn = maaling.navn, crawlResultat = crawlResultat)
+  }
+
   private fun start(loeysing: Loeysing): CrawlResultat =
       runCatching {
             val statusUris =
