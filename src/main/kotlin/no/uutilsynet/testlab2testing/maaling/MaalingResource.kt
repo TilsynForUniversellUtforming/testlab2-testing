@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.maaling
 import java.util.concurrent.TimeUnit.SECONDS
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import org.slf4j.LoggerFactory
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.web.bind.annotation.*
@@ -38,16 +39,19 @@ class MaalingResource(val maalingDAO: MaalingDAO, val crawlerClient: CrawlerClie
       maalingDAO.getMaaling(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity.notFound().build()
 
   @PutMapping("{id}/status")
-  fun putNewStatus(
-      @PathVariable id: Int,
-      @RequestBody data: Map<String, String>
-  ): ResponseEntity<Any> {
+  fun putNewStatus(@PathVariable id: Int, @RequestBody statusDTO: StatusDTO): ResponseEntity<Any> {
     return runCatching<ResponseEntity<Any>> {
           val maaling = maalingDAO.getMaaling(id)!!
-          val newStatus = validateStatus(data["status"]).getOrThrow()
+          val newStatus = validateStatus(statusDTO.status).getOrThrow()
           when {
             newStatus == Status.Crawling && maaling is Maaling.Planlegging -> {
               val updated = crawlerClient.start(maaling)
+              maalingDAO.save(updated).getOrThrow()
+              ResponseEntity.ok().build()
+            }
+            newStatus == Status.Crawling && maaling is Maaling.Kvalitetssikring -> {
+              val loeysingIdList = validateLoeysingIdList(statusDTO.loeysingIdList).getOrThrow()
+              val updated = crawlerClient.restart(maaling, loeysingIdList)
               maalingDAO.save(updated).getOrThrow()
               ResponseEntity.ok().build()
             }
@@ -60,39 +64,16 @@ class MaalingResource(val maalingDAO: MaalingDAO, val crawlerClient: CrawlerClie
           logger.error(exception.message)
           when (exception) {
             is NullPointerException -> ResponseEntity.notFound().build()
-            is IllegalArgumentException -> ResponseEntity.badRequest().build()
+            is IllegalArgumentException ->
+                ResponseEntity.badRequest()
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(exception.message)
             else -> ResponseEntity.internalServerError().body(exception.message)
           }
         }
   }
 
-  @PutMapping("{id}/{loeysingId}")
-  fun restartCrawlForMaalingLoeysing(
-      @PathVariable id: Int,
-      @PathVariable loeysingId: Int,
-  ): ResponseEntity<Any> =
-      runCatching<ResponseEntity<Any>> {
-            val maaling = maalingDAO.getMaaling(id)!!
-            when {
-              maaling is Maaling.Kvalitetssikring &&
-                  maaling.crawlResultat.any { it.loeysing.id == loeysingId } -> {
-                val updated = crawlerClient.restart(maaling, loeysingId)
-                maalingDAO.save(updated).getOrThrow()
-                ResponseEntity.ok().build()
-              }
-              else -> {
-                ResponseEntity.badRequest().build()
-              }
-            }
-          }
-          .getOrElse { exception ->
-            logger.error(exception.message)
-            when (exception) {
-              is NullPointerException -> ResponseEntity.notFound().build()
-              is IllegalArgumentException -> ResponseEntity.badRequest().build()
-              else -> ResponseEntity.internalServerError().body(exception.message)
-            }
-          }
+  data class StatusDTO(val status: String, val loeysingIdList: List<Int>?)
 
   @GetMapping("loeysingar") fun getLoeysingarList(): List<Loeysing> = maalingDAO.getLoeysingarList()
 
