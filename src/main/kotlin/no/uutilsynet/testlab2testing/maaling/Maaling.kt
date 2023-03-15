@@ -39,7 +39,7 @@ sealed class Maaling {
       val crawlResultat: List<CrawlResultat>
   ) : Maaling() {
     override val aksjoner: List<Aksjon>
-      get() = listOf()
+      get() = listOf(Aksjon.RestartCrawling(URI("${locationForId(id)}/status")))
   }
 
   companion object {
@@ -56,9 +56,13 @@ sealed class Maaling {
 }
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "id")
-@JsonSubTypes(JsonSubTypes.Type(value = Aksjon.StartCrawling::class, name = "start_crawling"))
+@JsonSubTypes(
+    JsonSubTypes.Type(value = Aksjon.StartCrawling::class, name = "start_crawling"),
+    JsonSubTypes.Type(value = Aksjon.RestartCrawling::class, name = "restart_crawling"))
 sealed class Aksjon(val metode: Metode, val data: Map<String, String>) {
   data class StartCrawling(val href: URI) : Aksjon(Metode.PUT, mapOf("status" to "crawling"))
+  data class RestartCrawling(val href: URI) :
+      Aksjon(Metode.PUT, mapOf("status" to "crawling", "loeysingIdList" to "[]"))
 }
 
 enum class Metode {
@@ -85,3 +89,11 @@ fun validateStatus(s: String?): Result<Status> =
     } else {
       Result.failure(IllegalArgumentException("$s er ikke en gyldig status"))
     }
+
+fun validateLoeysingIdList(list: List<Int>?): Result<List<Int>> = runCatching {
+  if (list.isNullOrEmpty()) {
+    throw IllegalArgumentException(
+        "Eg forventa eit parameter `loeysingIdList` som skulle inneholde ei liste med id-ar, men han var tom.")
+  }
+  list
+}
