@@ -72,6 +72,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             is Planlegging -> "planlegging"
             is Crawling -> "crawling"
             is Kvalitetssikring -> "kvalitetssikring"
+            is Maaling.Testing -> "testing"
           }
       return mapOf("navn" to maaling.navn, "status" to status, "id" to maaling.id)
     }
@@ -148,6 +149,9 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             Kvalitetssikring(id, navn, crawlResultat)
           }
         }
+        "testing" -> {
+          Maaling.Testing(id, navn)
+        }
         else ->
             throw RuntimeException("Målingen med id = $id er lagret med en ugyldig status: $status")
       }
@@ -211,6 +215,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               updateMaaling()
               maaling.crawlResultat.forEach { saveCrawlResultat(it, maaling) }
             }
+            is Maaling.Testing -> updateMaaling()
           }
         }
         .map { maaling }

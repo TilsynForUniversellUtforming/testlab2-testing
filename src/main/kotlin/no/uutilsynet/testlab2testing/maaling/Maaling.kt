@@ -9,10 +9,11 @@ import no.uutilsynet.testlab2testing.dto.Loeysing
 @JsonSubTypes(
     JsonSubTypes.Type(Maaling.Planlegging::class, name = "planlegging"),
     JsonSubTypes.Type(Maaling.Crawling::class, name = "crawling"),
-    JsonSubTypes.Type(Maaling.Kvalitetssikring::class, name = "kvalitetssikring"))
+    JsonSubTypes.Type(Maaling.Kvalitetssikring::class, name = "kvalitetssikring"),
+    JsonSubTypes.Type(Maaling.Testing::class, name = "testing"))
 sealed class Maaling {
-  abstract val navn: String
   abstract val id: Int
+  abstract val navn: String
   abstract val aksjoner: List<Aksjon>
 
   data class Planlegging(
@@ -43,6 +44,12 @@ sealed class Maaling {
               Aksjon.StartTesting(URI("${locationForId(id)}/status")))
   ) : Maaling()
 
+  data class Testing(
+      override val id: Int,
+      override val navn: String,
+      override val aksjoner: List<Aksjon> = listOf()
+  ) : Maaling()
+
   companion object {
     fun toCrawling(planlagtMaaling: Planlegging, crawlResultat: List<CrawlResultat>): Crawling =
         Crawling(planlagtMaaling.id, planlagtMaaling.navn, crawlResultat)
@@ -53,6 +60,10 @@ sealed class Maaling {
         } else {
           Kvalitetssikring(crawlingMaaling.id, crawlingMaaling.navn, crawlingMaaling.crawlResultat)
         }
+
+    fun toTesting(maaling: Kvalitetssikring): Testing {
+      return Testing(maaling.id, maaling.navn)
+    }
   }
 }
 

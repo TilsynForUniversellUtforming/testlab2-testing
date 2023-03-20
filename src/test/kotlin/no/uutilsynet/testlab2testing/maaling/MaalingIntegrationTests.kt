@@ -82,7 +82,7 @@ class MaalingIntegrationTests(
       val jsonArray = JSONArray(response)
       for (i in 0 until jsonArray.length()) {
         val item = jsonArray.getJSONObject(i)
-        assertThat(item["status"], oneOf("planlegging", "crawling", "kvalitetssikring"))
+        assertThat(item["status"], oneOf("planlegging", "crawling", "kvalitetssikring", "testing"))
       }
     }
 
@@ -161,22 +161,26 @@ class MaalingIntegrationTests(
       }
     }
 
-    @DisplayName("så kan du gå til `testing`")
+    @DisplayName("så kan du gå til `testing`, og statusen blir lagret")
     @Test
     fun goToTesting() {
-      val (key, _) = createMaaling()
+      val (id, _) = createMaaling()
       val responseEntity =
           restTemplate.exchange(
-              "/v1/maalinger/$key/status",
+              "/v1/maalinger/$id/status",
               HttpMethod.PUT,
               HttpEntity(mapOf("status" to "testing")),
               Unit::class.java)
       assertTrue(responseEntity.statusCode.is2xxSuccessful)
+
+      val maaling = restTemplate.getForObject("/v1/maalinger/$id", MaalingDTO::class.java)
+
+      assertThat(maaling.status, equalTo("testing"))
     }
 
     private fun createMaaling(): Pair<Int, Instant> {
-      val key = maalingDAO.createMaaling("testmåling", listOf(1))
-      val planlagtMaaling = Maaling.Planlegging(key, "testmåling", listOf(uutilsynetLoeysing))
+      val id = maalingDAO.createMaaling("testmåling", listOf(1))
+      val planlagtMaaling = Maaling.Planlegging(id, "testmåling", listOf(uutilsynetLoeysing))
       val sistOppdatert = Instant.now()
       val crawlingMaaling =
           Maaling.toCrawling(
@@ -189,7 +193,7 @@ class MaalingIntegrationTests(
                       sistOppdatert)))
       val kvalitetssikring = Maaling.toKvalitetssikring(crawlingMaaling)!!
       maalingDAO.save(kvalitetssikring).getOrThrow()
-      return Pair(key, sistOppdatert)
+      return Pair(id, sistOppdatert)
     }
   }
 }
