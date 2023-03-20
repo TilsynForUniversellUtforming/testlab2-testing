@@ -14,6 +14,7 @@ import org.hamcrest.Matchers.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -136,7 +137,7 @@ class MaalingIntegrationTests(
     @Test
     @DisplayName("så har alle crawlresultatene et tidspunkt det ble oppdatert på")
     fun hasTidspunkt() {
-      val (key, sistOppdatert) = opprettMaaling()
+      val (key, sistOppdatert) = createMaaling()
 
       val maalingFraApi = restTemplate.getForObject("/v1/maalinger/$key", MaalingDTO::class.java)
 
@@ -150,8 +151,8 @@ class MaalingIntegrationTests(
 
     @DisplayName("så har denne målingen en aksjon for å gå til `testing`")
     @Test
-    fun toTesting() {
-      val (key, _) = opprettMaaling()
+    fun hasTestingAction() {
+      val (key, _) = createMaaling()
 
       val actual = restTemplate.getForObject("/v1/maalinger/$key", MaalingDTO::class.java)
 
@@ -160,7 +161,20 @@ class MaalingIntegrationTests(
       }
     }
 
-    private fun opprettMaaling(): Pair<Int, Instant> {
+    @DisplayName("så kan du gå til `testing`")
+    @Test
+    fun goToTesting() {
+      val (key, _) = createMaaling()
+      val responseEntity =
+          restTemplate.exchange(
+              "/v1/maalinger/$key/status",
+              HttpMethod.PUT,
+              HttpEntity(mapOf("status" to "testing")),
+              Unit::class.java)
+      assertTrue(responseEntity.statusCode.is2xxSuccessful)
+    }
+
+    private fun createMaaling(): Pair<Int, Instant> {
       val key = maalingDAO.createMaaling("testmåling", listOf(1))
       val planlagtMaaling = Maaling.Planlegging(key, "testmåling", listOf(uutilsynetLoeysing))
       val sistOppdatert = Instant.now()

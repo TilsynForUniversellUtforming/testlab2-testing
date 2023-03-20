@@ -55,6 +55,9 @@ class MaalingResource(val maalingDAO: MaalingDAO, val crawlerClient: CrawlerClie
               maalingDAO.save(updated).getOrThrow()
               ResponseEntity.ok().build()
             }
+            newStatus == Status.Testing && maaling is Maaling.Kvalitetssikring -> {
+              ResponseEntity.ok().build()
+            }
             else -> {
               ResponseEntity.badRequest().build()
             }

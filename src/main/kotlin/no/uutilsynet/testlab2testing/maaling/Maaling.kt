@@ -83,14 +83,15 @@ fun validateNavn(s: String): Result<String> = runCatching {
 }
 
 enum class Status {
-  Crawling
+  Crawling,
+  Testing
 }
 
 fun validateStatus(s: String?): Result<Status> =
-    if (s == "crawling") {
-      Result.success(Status.Crawling)
-    } else {
-      Result.failure(IllegalArgumentException("$s er ikke en gyldig status"))
+    when (s) {
+      "crawling" -> Result.success(Status.Crawling)
+      "testing" -> Result.success(Status.Testing)
+      else -> Result.failure(IllegalArgumentException("$s er ikke en gyldig status"))
     }
 
 fun validateLoeysingIdList(list: List<Int>?): Result<List<Int>> = runCatching {
