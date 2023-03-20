@@ -36,14 +36,12 @@ sealed class Maaling {
   data class Kvalitetssikring(
       override val id: Int,
       override val navn: String,
-      val crawlResultat: List<CrawlResultat>
-  ) : Maaling() {
-    override val aksjoner: List<Aksjon>
-      get() =
+      val crawlResultat: List<CrawlResultat>,
+      override val aksjoner: List<Aksjon> =
           listOf(
               Aksjon.RestartCrawling(URI("${locationForId(id)}/status")),
               Aksjon.StartTesting(URI("${locationForId(id)}/status")))
-  }
+  ) : Maaling()
 
   companion object {
     fun toCrawling(planlagtMaaling: Planlegging, crawlResultat: List<CrawlResultat>): Crawling =

@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.maaling
 
 import java.util.concurrent.TimeUnit.SECONDS
+import no.uutilsynet.testlab2testing.Features
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
@@ -10,7 +11,11 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("v1/maalinger")
-class MaalingResource(val maalingDAO: MaalingDAO, val crawlerClient: CrawlerClient) {
+class MaalingResource(
+    val maalingDAO: MaalingDAO,
+    val crawlerClient: CrawlerClient,
+    val features: Features
+) {
   data class NyMaalingDTO(val navn: String, val loeysingIdList: List<Int>)
   class InvalidUrlException(message: String) : Exception(message)
 
@@ -31,12 +36,13 @@ class MaalingResource(val maalingDAO: MaalingDAO, val crawlerClient: CrawlerClie
 
   @GetMapping
   fun list(): List<Maaling> {
-    return maalingDAO.getMaalingList()
+    return maalingDAO.getMaalingList().map { applyFeatures(it, features) }
   }
 
   @GetMapping("{id}")
   fun getMaaling(@PathVariable id: Int): ResponseEntity<Maaling> =
-      maalingDAO.getMaaling(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity.notFound().build()
+      maalingDAO.getMaaling(id)?.let { applyFeatures(it, features) }?.let { ResponseEntity.ok(it) }
+          ?: ResponseEntity.notFound().build()
 
   @PutMapping("{id}/status")
   fun putNewStatus(@PathVariable id: Int, @RequestBody statusDTO: StatusDTO): ResponseEntity<Any> {
@@ -56,7 +62,11 @@ class MaalingResource(val maalingDAO: MaalingDAO, val crawlerClient: CrawlerClie
               ResponseEntity.ok().build()
             }
             newStatus == Status.Testing && maaling is Maaling.Kvalitetssikring -> {
-              ResponseEntity.ok().build()
+              if (!features.startTesting) {
+                ResponseEntity.badRequest().build()
+              } else {
+                ResponseEntity.ok().build()
+              }
             }
             else -> {
               ResponseEntity.badRequest().build()
@@ -117,6 +127,20 @@ class MaalingResource(val maalingDAO: MaalingDAO, val crawlerClient: CrawlerClie
         else -> ResponseEntity.internalServerError().body(exception.message)
       }
 }
+
+fun applyFeatures(maaling: Maaling, features: Features): Maaling =
+    when (maaling) {
+      is Maaling.Kvalitetssikring -> {
+        if (!features.startTesting) {
+          val aksjonerUtenStartTesting = maaling.aksjoner.filterNot { it is Aksjon.StartTesting }
+          Maaling.Kvalitetssikring(
+              maaling.id, maaling.navn, maaling.crawlResultat, aksjoner = aksjonerUtenStartTesting)
+        } else {
+          maaling
+        }
+      }
+      else -> maaling
+    }
 
 private fun <E> List<Result<E>>.toSingleResult(): Result<List<E>> = runCatching {
   this.map { it.getOrThrow() }
