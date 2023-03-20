@@ -8,6 +8,7 @@ import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingRequestBody
 import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
+import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.json.JSONArray
@@ -102,7 +103,7 @@ class MaalingIntegrationTests(
       val aksjon = maaling.aksjoner.first()
 
       assertThat(aksjon, instanceOf(Aksjon.StartCrawling::class.java))
-      assertThat(aksjon.metode, equalTo(Metode.PUT))
+      assertThat(aksjon.metode, equalTo("PUT"))
       assertThat((aksjon as Aksjon.StartCrawling).href, equalTo(URI("${location}/status")))
       assertThat(aksjon.data, equalTo(expectedData))
     }
@@ -130,21 +131,12 @@ class MaalingIntegrationTests(
   }
 
   @Nested
-  @DisplayName("gitt at det finnes en måling som har status 'crawling'")
-  inner class Crawling {
+  @DisplayName("gitt at det finnes en måling som har status 'kvalitetssikring'")
+  inner class StatusKvalitetssikring {
     @Test
     @DisplayName("så har alle crawlresultatene et tidspunkt det ble oppdatert på")
     fun hasTidspunkt() {
-      val key = maalingDAO.createMaaling("testmåling", listOf(1))
-      val planlagtMaaling = Maaling.Planlegging(key, "testmåling", listOf(uutilsynetLoeysing))
-      val sistOppdatert = Instant.now()
-      val crawlingMaaling =
-          Maaling.toCrawling(
-              planlagtMaaling,
-              listOf(
-                  CrawlResultat.IkkeFerdig(
-                      URL("https://status.uri"), uutilsynetLoeysing, sistOppdatert)))
-      maalingDAO.save(crawlingMaaling).getOrThrow()
+      val (key, sistOppdatert) = opprettMaaling()
 
       val maalingFraApi = restTemplate.getForObject("/v1/maalinger/$key", MaalingDTO::class.java)
 
@@ -154,6 +146,36 @@ class MaalingIntegrationTests(
           maalingFraApi.crawlResultat?.first()?.sistOppdatert?.truncatedTo(ChronoUnit.SECONDS)
       val expected = sistOppdatert.truncatedTo(ChronoUnit.SECONDS)
       assertThat(actual, equalTo(expected))
+    }
+
+    @DisplayName("så har denne målingen en aksjon for å gå til `testing`")
+    @Test
+    fun toTesting() {
+      val (key, _) = opprettMaaling()
+
+      val actual = restTemplate.getForObject("/v1/maalinger/$key", MaalingDTO::class.java)
+
+      Assertions.assertThat(actual.aksjoner).anyMatch { aksjon ->
+        aksjon.data["status"] == "testing"
+      }
+    }
+
+    private fun opprettMaaling(): Pair<Int, Instant> {
+      val key = maalingDAO.createMaaling("testmåling", listOf(1))
+      val planlagtMaaling = Maaling.Planlegging(key, "testmåling", listOf(uutilsynetLoeysing))
+      val sistOppdatert = Instant.now()
+      val crawlingMaaling =
+          Maaling.toCrawling(
+              planlagtMaaling,
+              listOf(
+                  CrawlResultat.Ferdig(
+                      listOf(URL(uutilsynetLoeysing.url, "/")),
+                      URL("https://status.uri"),
+                      uutilsynetLoeysing,
+                      sistOppdatert)))
+      val kvalitetssikring = Maaling.toKvalitetssikring(crawlingMaaling)!!
+      maalingDAO.save(kvalitetssikring).getOrThrow()
+      return Pair(key, sistOppdatert)
     }
   }
 }

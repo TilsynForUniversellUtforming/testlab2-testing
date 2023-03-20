@@ -39,7 +39,10 @@ sealed class Maaling {
       val crawlResultat: List<CrawlResultat>
   ) : Maaling() {
     override val aksjoner: List<Aksjon>
-      get() = listOf(Aksjon.RestartCrawling(URI("${locationForId(id)}/status")))
+      get() =
+          listOf(
+              Aksjon.RestartCrawling(URI("${locationForId(id)}/status")),
+              Aksjon.StartTesting(URI("${locationForId(id)}/status")))
   }
 
   companion object {
@@ -58,15 +61,15 @@ sealed class Maaling {
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "id")
 @JsonSubTypes(
     JsonSubTypes.Type(value = Aksjon.StartCrawling::class, name = "start_crawling"),
-    JsonSubTypes.Type(value = Aksjon.RestartCrawling::class, name = "restart_crawling"))
-sealed class Aksjon(val metode: Metode, val data: Map<String, String>) {
-  data class StartCrawling(val href: URI) : Aksjon(Metode.PUT, mapOf("status" to "crawling"))
-  data class RestartCrawling(val href: URI) :
-      Aksjon(Metode.PUT, mapOf("status" to "crawling", "loeysingIdList" to "[]"))
-}
+    JsonSubTypes.Type(value = Aksjon.RestartCrawling::class, name = "restart_crawling"),
+    JsonSubTypes.Type(value = Aksjon.StartTesting::class, name = "start_testing"))
+sealed class Aksjon(val data: Map<String, String>) {
+  val metode = "PUT"
 
-enum class Metode {
-  PUT
+  data class StartCrawling(val href: URI) : Aksjon(mapOf("status" to "crawling"))
+  data class RestartCrawling(val href: URI) :
+      Aksjon(mapOf("status" to "crawling", "loeysingIdList" to "[]"))
+  data class StartTesting(val href: URI) : Aksjon(mapOf("status" to "testing"))
 }
 
 fun locationForId(id: Number): URI = URI.create("/v1/maalinger/${id}")
