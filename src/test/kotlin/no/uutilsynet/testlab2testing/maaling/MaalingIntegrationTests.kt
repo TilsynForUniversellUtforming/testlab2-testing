@@ -2,8 +2,8 @@ package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URI
 import java.net.URL
-import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingRequestBody
@@ -149,11 +149,11 @@ class MaalingIntegrationTests(
       val maalingFraApi = restTemplate.getForObject("/v1/maalinger/$key", MaalingDTO::class.java)
 
       // Vi mister noe nøyaktighet i noen tilfeller når vi har lagret tidspunktet i databasen og
-      // hentet det tilbake. Derfor sjekker vi at differansen er liten, i stedet for å sjekke om de
-      // to tidspunktene er like.
-      val difference =
-          Duration.between(maalingFraApi.crawlResultat?.first()?.sistOppdatert, sistOppdatert)
-      assertThat(difference.toMillis(), lessThan(100))
+      // hentet det tilbake. Derfor kutter vi nøyaktigheten til sekunder, som er godt nok her.
+      val actual =
+          maalingFraApi.crawlResultat?.first()?.sistOppdatert?.truncatedTo(ChronoUnit.SECONDS)
+      val expected = sistOppdatert.truncatedTo(ChronoUnit.SECONDS)
+      assertThat(actual, equalTo(expected))
     }
   }
 }
