@@ -12,9 +12,22 @@ class MaalingTest {
   @DisplayName("validering av status")
   inner class ValidateStatus {
     @Test
-    @DisplayName("'crawling' er en gyldig ny status")
+    @DisplayName("'crawling' er en gyldig status")
     fun crawlingIsOk() {
       assertThat(validateStatus("crawling"), equalTo(Result.success(Status.Crawling)))
+    }
+
+    @Test
+    @DisplayName("'testing' er en gyldig status")
+    fun testingIsOk() {
+      assertThat(validateStatus("testing"), equalTo(Result.success(Status.Testing)))
+    }
+
+    @Test
+    @DisplayName("en ugyldig status skal feile")
+    fun invalidStatus() {
+      val s = "lvgifulgkn"
+      assertThat(validateStatus(s).isFailure, equalTo(true))
     }
   }
 
