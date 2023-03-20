@@ -65,6 +65,8 @@ class MaalingResource(
               if (!features.startTesting) {
                 ResponseEntity.badRequest().build()
               } else {
+                val updated = Maaling.toTesting(maaling)
+                maalingDAO.save(updated).getOrThrow()
                 ResponseEntity.ok().build()
               }
             }
