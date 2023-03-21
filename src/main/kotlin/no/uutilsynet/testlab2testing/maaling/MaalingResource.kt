@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
+import java.time.Instant
 import java.util.concurrent.TimeUnit.SECONDS
 import no.uutilsynet.testlab2testing.Features
 import no.uutilsynet.testlab2testing.dto.Loeysing
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*
 class MaalingResource(
     val maalingDAO: MaalingDAO,
     val crawlerClient: CrawlerClient,
+    val autoTesterClient: AutoTesterClient,
     val features: Features
 ) {
   data class NyMaalingDTO(val navn: String, val loeysingIdList: List<Int>)
@@ -65,7 +67,25 @@ class MaalingResource(
               if (!features.startTesting) {
                 ResponseEntity.badRequest().build()
               } else {
-                val updated = Maaling.toTesting(maaling)
+                val testKoeyringar =
+                    maaling.crawlResultat
+                        .filterIsInstance<CrawlResultat.Ferdig>()
+                        .map {
+                          val result = autoTesterClient.startTesting(maaling.id, it)
+                          Pair(it, result)
+                        }
+                        .map { (crawlResultat, result) ->
+                          result.fold(
+                              { statusURL -> TestKoeyring.from(crawlResultat.loeysing, statusURL) },
+                              { exception ->
+                                val feilmelding =
+                                    exception.message
+                                        ?: "eg klarte ikkje å starte testing for ei løysing, og feilmeldinga manglar"
+                                TestKoeyring.Feila(
+                                    crawlResultat.loeysing, feilmelding, Instant.now())
+                              })
+                        }
+                val updated = Maaling.toTesting(maaling, testKoeyringar)
                 maalingDAO.save(updated).getOrThrow()
                 ResponseEntity.ok().build()
               }

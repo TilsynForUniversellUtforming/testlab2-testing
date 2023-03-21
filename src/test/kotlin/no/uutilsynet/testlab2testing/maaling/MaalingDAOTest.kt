@@ -32,6 +32,15 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     }
   }
 
+  @DisplayName(
+      "når vi lagrer ei måling med status `testing`, så skal alle testkøyringene også lagrast")
+  @Test
+  fun lagreTestkoeyringar() {
+    val id = saveMaalingWithStatusTesting()
+    val maaling = maalingDAO.getMaaling(id) as Maaling.Testing
+    assertThat(maaling.testKoeyringar).isNotEmpty
+  }
+
   private fun saveMaalingWithStatusKvalitetssikring(): Int {
     val id = maalingDAO.createMaaling("testmåling", loeysingList.map { it.id })
     val maaling = maalingDAO.getMaaling(id) as Maaling.Planlegging
@@ -45,6 +54,27 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
         }
     val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
     maalingDAO.save(kvalitetssikring).getOrThrow()
+    return id
+  }
+
+  private fun saveMaalingWithStatusTesting(): Int {
+    val id = maalingDAO.createMaaling("testmåling", loeysingList.map { it.id })
+    val maaling = maalingDAO.getMaaling(id) as Maaling.Planlegging
+    val crawlResultat =
+        maaling.loeysingList.map {
+          CrawlResultat.Ferdig(
+              listOf(URL(it.url, "/"), URL(it.url, "/underside/1"), URL(it.url, "/underside/2")),
+              URL("https://status.uri"),
+              it,
+              Instant.now())
+        }
+    val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
+    val testKoeyringar =
+        crawlResultat.map {
+          TestKoeyring.IkkjeStarta(it.loeysing, URL("https://teststatus.url"), Instant.now())
+        }
+    val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
+    maalingDAO.save(testing).getOrThrow()
     return id
   }
 }

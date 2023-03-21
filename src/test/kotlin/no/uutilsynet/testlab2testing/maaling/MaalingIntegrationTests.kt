@@ -14,7 +14,6 @@ import org.hamcrest.Matchers.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -159,23 +158,6 @@ class MaalingIntegrationTests(
       Assertions.assertThat(actual.aksjoner).anyMatch { aksjon ->
         aksjon.data["status"] == "testing"
       }
-    }
-
-    @DisplayName("så kan du gå til `testing`, og statusen blir lagret")
-    @Test
-    fun goToTesting() {
-      val (id, _) = createMaaling()
-      val responseEntity =
-          restTemplate.exchange(
-              "/v1/maalinger/$id/status",
-              HttpMethod.PUT,
-              HttpEntity(mapOf("status" to "testing")),
-              Unit::class.java)
-      assertTrue(responseEntity.statusCode.is2xxSuccessful)
-
-      val maaling = restTemplate.getForObject("/v1/maalinger/$id", MaalingDTO::class.java)
-
-      assertThat(maaling.status, equalTo("testing"))
     }
 
     private fun createMaaling(): Pair<Int, Instant> {

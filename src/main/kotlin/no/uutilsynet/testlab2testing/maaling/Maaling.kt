@@ -47,7 +47,8 @@ sealed class Maaling {
   data class Testing(
       override val id: Int,
       override val navn: String,
-      override val aksjoner: List<Aksjon> = listOf()
+      val testKoeyringar: List<TestKoeyring>,
+      override val aksjoner: List<Aksjon> = listOf(),
   ) : Maaling()
 
   companion object {
@@ -61,8 +62,8 @@ sealed class Maaling {
           Kvalitetssikring(crawlingMaaling.id, crawlingMaaling.navn, crawlingMaaling.crawlResultat)
         }
 
-    fun toTesting(maaling: Kvalitetssikring): Testing {
-      return Testing(maaling.id, maaling.navn)
+    fun toTesting(maaling: Kvalitetssikring, testKoeyringar: List<TestKoeyring>): Testing {
+      return Testing(maaling.id, maaling.navn, testKoeyringar)
     }
   }
 }
