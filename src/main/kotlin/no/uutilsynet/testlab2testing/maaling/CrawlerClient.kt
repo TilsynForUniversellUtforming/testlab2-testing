@@ -40,7 +40,7 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
                         "talLenker" to 10,
                         "idLoeysing" to loeysing.id,
                         "domene" to loeysing.url),
-                    AutoTesterAdapter.StatusUris::class.java)!!
+                    AutoTesterClient.StatusUris::class.java)!!
             CrawlResultat.IkkeFerdig(statusUris.statusQueryGetUri.toURL(), loeysing, Instant.now())
           }
           .getOrElse { exception ->

@@ -4,9 +4,7 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.dto.Loeysing
-import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
-import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
-import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
+import no.uutilsynet.testlab2testing.maaling.Maaling.*
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
@@ -72,7 +70,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             is Planlegging -> "planlegging"
             is Crawling -> "crawling"
             is Kvalitetssikring -> "kvalitetssikring"
-            is Maaling.Testing -> "testing"
+            is Testing -> "testing"
           }
       return mapOf("navn" to maaling.navn, "status" to status, "id" to maaling.id)
     }
@@ -150,7 +148,35 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           }
         }
         "testing" -> {
-          Maaling.Testing(id, navn)
+          val testKoeyringar =
+              jdbcTemplate.query(
+                  """
+                select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, l.namn as loeysing_namn, l.url as loeysing_url
+                from testkoeyring t
+                join loeysing l on l.id = t.loeysing_id
+                where maaling_id = :maaling_id
+              """
+                      .trimIndent(),
+                  mapOf("maaling_id" to id),
+                  fun(rs: ResultSet, _: Int): TestKoeyring {
+                    val status = rs.getString("status")
+                    val loeysing =
+                        Loeysing(
+                            rs.getInt("loeysing_id"),
+                            rs.getString("loeysing_namn"),
+                            URL(rs.getString("loeysing_url")))
+                    val sistOppdatert = rs.getTimestamp("sist_oppdatert").toInstant()
+                    return when (status) {
+                      "ikkje_starta" -> {
+                        TestKoeyring.IkkjeStarta(
+                            loeysing, URL(rs.getString("status_url")), sistOppdatert)
+                      }
+                      "feila" ->
+                          TestKoeyring.Feila(loeysing, rs.getString("feilmelding"), sistOppdatert)
+                      else -> throw RuntimeException("ukjent status $status")
+                    }
+                  })
+          Testing(id, navn, testKoeyringar)
         }
         else ->
             throw RuntimeException("Målingen med id = $id er lagret med en ugyldig status: $status")
@@ -215,11 +241,51 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               updateMaaling()
               maaling.crawlResultat.forEach { saveCrawlResultat(it, maaling) }
             }
-            is Maaling.Testing -> updateMaaling()
+            is Testing -> {
+              updateMaaling()
+              maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling) }
+            }
           }
         }
         .map { maaling }
   }
+
+  @Transactional
+  fun saveTestKoeyring(testKoeyring: TestKoeyring, maaling: Testing) {
+    jdbcTemplate.update(
+        """delete from testkoeyring where maaling_id = :maaling_id and loeysing_id = :loeysing_id""",
+        mapOf("maaling_id" to maaling.id, "loeysing_id" to testKoeyring.loeysing.id))
+    jdbcTemplate.update(
+        """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding) 
+                values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :feilmelding)
+            """
+            .trimMargin(),
+        mapOf(
+            "maaling_id" to maaling.id,
+            "loeysing_id" to testKoeyring.loeysing.id,
+            "status" to status(testKoeyring),
+            "status_url" to statusURL(testKoeyring),
+            "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
+            "feilmelding" to feilmelding(testKoeyring)))
+  }
+
+  private fun status(testKoeyring: TestKoeyring): String =
+      when (testKoeyring) {
+        is TestKoeyring.IkkjeStarta -> "ikkje_starta"
+        is TestKoeyring.Feila -> "feila"
+      }
+
+  private fun feilmelding(testKoeyring: TestKoeyring): String? =
+      when (testKoeyring) {
+        is TestKoeyring.Feila -> testKoeyring.feilmelding
+        else -> null
+      }
+
+  private fun statusURL(testKoeyring: TestKoeyring): String? =
+      when (testKoeyring) {
+        is TestKoeyring.IkkjeStarta -> testKoeyring.statusURL.toString()
+        is TestKoeyring.Feila -> null
+      }
 
   @Transactional
   fun saveCrawlResultat(crawlResultat: CrawlResultat, maaling: Maaling) {

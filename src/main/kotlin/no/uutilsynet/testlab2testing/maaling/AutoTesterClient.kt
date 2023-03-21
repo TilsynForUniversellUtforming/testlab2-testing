@@ -2,7 +2,6 @@ package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URI
 import java.net.URL
-import java.time.Duration.ofSeconds
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
@@ -11,37 +10,22 @@ import org.springframework.web.client.RestTemplate
 data class AutoTesterProperties(val url: String, val code: String)
 
 @Component
-class AutoTesterAdapter(
+class AutoTesterClient(
     val restTemplate: RestTemplate,
     val autoTesterProperties: AutoTesterProperties
 ) {
 
-  fun runTests(urls: List<URL>): Result<AutoTesterResponse> {
+  fun startTesting(maalingId: Int, crawlResultat: CrawlResultat.Ferdig): Result<URL> {
     return runCatching {
-      val requestData = mapOf("urls" to urls, "idMaaling" to 1, "idLoeysing" to 2)
-
       val url = "${autoTesterProperties.url}?code=${autoTesterProperties.code}"
+      val requestData =
+          mapOf(
+              "urls" to crawlResultat.nettsider,
+              "idMaaling" to maalingId,
+              "idLoeysing" to crawlResultat.loeysing.id)
       val statusUris = restTemplate.postForObject(url, requestData, StatusUris::class.java)
-      if (statusUris?.statusQueryGetUri == null)
-          throw RuntimeException("mangler statusQueryGetUri i responsen")
-
-      waitForResponse(statusUris.statusQueryGetUri)
-    }
-  }
-
-  private fun waitForResponse(statusQueryGetUri: URI): AutoTesterResponse {
-    val response =
-        restTemplate.getForObject(statusQueryGetUri, AutoTesterResponse::class.java)
-            ?: throw RuntimeException("ingen data i responsen fra autotester")
-    return when (response.runtimeStatus) {
-      RuntimeStatus.Pending,
-      RuntimeStatus.Running -> {
-        Thread.sleep(ofSeconds(1).toMillis())
-        waitForResponse(statusQueryGetUri)
-      }
-      RuntimeStatus.Completed -> {
-        response
-      }
+      statusUris?.statusQueryGetUri?.toURL()
+          ?: throw RuntimeException("mangler statusQueryGetUri i responsen")
     }
   }
 
