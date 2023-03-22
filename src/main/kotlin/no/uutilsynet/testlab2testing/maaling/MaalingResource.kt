@@ -82,7 +82,7 @@ class MaalingResource(
                                     exception.message
                                         ?: "eg klarte ikkje å starte testing for ei løysing, og feilmeldinga manglar"
                                 TestKoeyring.Feila(
-                                    crawlResultat.loeysing, feilmelding, Instant.now())
+                                    crawlResultat.loeysing, Instant.now(), feilmelding)
                               })
                         }
                 val updated = Maaling.toTesting(maaling, testKoeyringar)
@@ -113,15 +113,30 @@ class MaalingResource(
   @GetMapping("loeysingar") fun getLoeysingarList(): List<Loeysing> = maalingDAO.getLoeysingarList()
 
   @Scheduled(fixedDelay = 30, timeUnit = SECONDS)
-  fun updateAllCrawlingStatuses() {
+  fun updateStatuses() {
+    val alleMaalinger = maalingDAO.getMaalingList()
+
     runCatching {
-          val maalinger = maalingDAO.getMaalingList().filterIsInstance<Maaling.Crawling>()
+          val statusCrawling = alleMaalinger.filterIsInstance<Maaling.Crawling>()
           val oppdaterteMaalinger =
-              maalinger.map { updateCrawlingStatuses(it) }.toSingleResult().getOrThrow()
+              statusCrawling.map { updateCrawlingStatuses(it) }.toSingleResult().getOrThrow()
           oppdaterteMaalinger.map { maalingDAO.save(it) }.toSingleResult().getOrThrow()
-          logger.info("oppdaterte status for ${maalinger.size} målinger med status `crawling`")
+          logger.info("oppdaterte status for ${statusCrawling.size} målinger med status `crawling`")
         }
-        .getOrElse { logger.error("klarte ikke å oppdatere status for målinger", it) }
+        .getOrElse {
+          logger.error("klarte ikke å oppdatere status for målinger med status `crawling`", it)
+        }
+
+    runCatching {
+          val statusTesting = alleMaalinger.filterIsInstance<Maaling.Testing>()
+          val oppdaterteMaalinger =
+              statusTesting.map { updateTestingStatuses(it) }.toSingleResult().getOrThrow()
+          oppdaterteMaalinger.map { maalingDAO.save(it) }.toSingleResult().getOrThrow()
+          logger.info("oppdaterte status for ${statusTesting.size} målinger med status `testing`")
+        }
+        .getOrElse {
+          logger.error("klarte ikke å oppdatere status for målinger med status `testing`", it)
+        }
   }
 
   private fun updateCrawlingStatuses(maaling: Maaling): Result<Maaling> =
@@ -141,6 +156,15 @@ class MaalingResource(
         }
         else -> Result.success(maaling)
       }
+
+  private fun updateTestingStatuses(maaling: Maaling.Testing): Result<Maaling> = runCatching {
+    val oppdaterteTestKoeyringar =
+        maaling.testKoeyringar
+            .map { testKoeyring -> autoTesterClient.updateStatus(testKoeyring) }
+            .toSingleResult()
+            .getOrThrow()
+    maaling.copy(testKoeyringar = oppdaterteTestKoeyringar)
+  }
 
   private fun handleErrors(exception: Throwable): ResponseEntity<Any> =
       when (exception) {

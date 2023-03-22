@@ -29,13 +29,38 @@ class AutoTesterClient(
     }
   }
 
+  fun updateStatus(testKoeyring: TestKoeyring): Result<TestKoeyring> =
+      when (testKoeyring) {
+        is TestKoeyring.IkkjeStarta ->
+            runCatching {
+              val response =
+                  restTemplate.getForObject(testKoeyring.statusURL.toURI(), Response::class.java)!!
+              TestKoeyring.updateStatus(testKoeyring, response)
+            }
+        is TestKoeyring.Starta ->
+            runCatching {
+              val response =
+                  restTemplate.getForObject(testKoeyring.statusURL.toURI(), Response::class.java)!!
+              TestKoeyring.updateStatus(testKoeyring, response)
+            }
+        is TestKoeyring.Feila -> Result.success(testKoeyring)
+      }
+
   data class StatusUris(val statusQueryGetUri: URI)
 
-  data class AutoTesterResponse(
-      val instanceId: String,
+  data class Response(
       val runtimeStatus: RuntimeStatus,
-      val output: List<TestResultat>?
   )
+
+  enum class RuntimeStatus {
+    Pending,
+    Running,
+    Completed,
+    ContinuedAsNew,
+    Failed,
+    Terminated,
+    Suspended
+  }
 
   data class TestResultat(
       val _idSuksesskriterium: String,
@@ -52,13 +77,4 @@ class AutoTesterClient(
   )
 
   data class ACTElement(val htmlCode: String, val pointer: String, val accessibleName: String?)
-
-  // Se
-  // https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-instance-management?tabs=csharp#query-instances
-  // for alle statuser.
-  enum class RuntimeStatus {
-    Pending,
-    Running,
-    Completed
-  }
 }
