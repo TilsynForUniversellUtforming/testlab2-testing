@@ -274,6 +274,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         is TestKoeyring.IkkjeStarta -> "ikkje_starta"
         is TestKoeyring.Starta -> "starta"
         is TestKoeyring.Feila -> "feila"
+        is TestKoeyring.Ferdig -> "ferdig"
       }
 
   private fun feilmelding(testKoeyring: TestKoeyring): String? =
@@ -285,8 +286,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   private fun statusURL(testKoeyring: TestKoeyring): String? =
       when (testKoeyring) {
         is TestKoeyring.IkkjeStarta -> testKoeyring.statusURL.toString()
-        is TestKoeyring.Starta -> null
-        is TestKoeyring.Feila -> null
+        is TestKoeyring.Starta -> testKoeyring.statusURL.toString()
+        else -> null
       }
 
   @Transactional
