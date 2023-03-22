@@ -171,8 +171,13 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                         TestKoeyring.IkkjeStarta(
                             loeysing, sistOppdatert, URL(rs.getString("status_url")))
                       }
+                      "starta" -> {
+                        TestKoeyring.Starta(
+                            loeysing, sistOppdatert, URL(rs.getString("status_url")))
+                      }
                       "feila" ->
                           TestKoeyring.Feila(loeysing, sistOppdatert, rs.getString("feilmelding"))
+                      "ferdig" -> TestKoeyring.Ferdig(loeysing, sistOppdatert)
                       else -> throw RuntimeException("ukjent status $status")
                     }
                   })
