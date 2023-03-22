@@ -169,10 +169,10 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     return when (status) {
                       "ikkje_starta" -> {
                         TestKoeyring.IkkjeStarta(
-                            loeysing, URL(rs.getString("status_url")), sistOppdatert)
+                            loeysing, sistOppdatert, URL(rs.getString("status_url")))
                       }
                       "feila" ->
-                          TestKoeyring.Feila(loeysing, rs.getString("feilmelding"), sistOppdatert)
+                          TestKoeyring.Feila(loeysing, sistOppdatert, rs.getString("feilmelding"))
                       else -> throw RuntimeException("ukjent status $status")
                     }
                   })
@@ -272,6 +272,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   private fun status(testKoeyring: TestKoeyring): String =
       when (testKoeyring) {
         is TestKoeyring.IkkjeStarta -> "ikkje_starta"
+        is TestKoeyring.Starta -> "starta"
         is TestKoeyring.Feila -> "feila"
       }
 
@@ -284,6 +285,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   private fun statusURL(testKoeyring: TestKoeyring): String? =
       when (testKoeyring) {
         is TestKoeyring.IkkjeStarta -> testKoeyring.statusURL.toString()
+        is TestKoeyring.Starta -> null
         is TestKoeyring.Feila -> null
       }
 

@@ -71,7 +71,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
     val testKoeyringar =
         crawlResultat.map {
-          TestKoeyring.IkkjeStarta(it.loeysing, URL("https://teststatus.url"), Instant.now())
+          TestKoeyring.IkkjeStarta(it.loeysing, Instant.now(), URL("https://teststatus.url"))
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     maalingDAO.save(testing).getOrThrow()
