@@ -43,6 +43,7 @@ class AutoTesterClient(
                   restTemplate.getForObject(testKoeyring.statusURL.toURI(), Response::class.java)!!
               TestKoeyring.updateStatus(testKoeyring, response)
             }
+        is TestKoeyring.Ferdig -> Result.success(testKoeyring)
         is TestKoeyring.Feila -> Result.success(testKoeyring)
       }
 
@@ -50,6 +51,7 @@ class AutoTesterClient(
 
   data class Response(
       val runtimeStatus: RuntimeStatus,
+      val output: Any? = null // denne kan ha forskjellige typer avhengig av hva statusen er
   )
 
   enum class RuntimeStatus {
