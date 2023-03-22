@@ -11,6 +11,7 @@ import no.uutilsynet.testlab2testing.dto.Loeysing
 @JsonSubTypes(
     Type(TestKoeyring.IkkjeStarta::class, name = "ikkje_starta"),
     Type(TestKoeyring.Starta::class, name = "starta"),
+    Type(TestKoeyring.Ferdig::class, name = "ferdig"),
     Type(TestKoeyring.Feila::class, name = "feila"))
 sealed class TestKoeyring {
   abstract val loeysing: Loeysing
