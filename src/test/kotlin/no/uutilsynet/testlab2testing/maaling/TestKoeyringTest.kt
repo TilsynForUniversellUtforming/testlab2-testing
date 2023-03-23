@@ -49,7 +49,8 @@ class TestKoeyringTest {
   @ParameterizedTest
   @ValueSource(strings = ["Pending", "Running", "Completed", "Failed"])
   fun testUpdateStatusFromFerdig(response: String) {
-    val testKoeyring = TestKoeyring.Ferdig(uutilsynetLoeysing, Instant.now())
+    val testKoeyring =
+        TestKoeyring.Ferdig(uutilsynetLoeysing, Instant.now(), URL("https://status.url"))
     val actual =
         TestKoeyring.updateStatus(
             testKoeyring,

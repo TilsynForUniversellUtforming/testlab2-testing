@@ -29,8 +29,11 @@ sealed class TestKoeyring {
       val statusURL: URL
   ) : TestKoeyring()
 
-  data class Ferdig(override val loeysing: Loeysing, override val sistOppdatert: Instant) :
-      TestKoeyring()
+  data class Ferdig(
+      override val loeysing: Loeysing,
+      override val sistOppdatert: Instant,
+      val statusURL: URL
+  ) : TestKoeyring()
 
   data class Feila(
       override val loeysing: Loeysing,
@@ -52,7 +55,7 @@ sealed class TestKoeyring {
                 AutoTesterClient.RuntimeStatus.Running ->
                     Starta(testKoeyring.loeysing, Instant.now(), testKoeyring.statusURL)
                 AutoTesterClient.RuntimeStatus.Completed ->
-                    Ferdig(testKoeyring.loeysing, Instant.now())
+                    Ferdig(testKoeyring.loeysing, Instant.now(), testKoeyring.statusURL)
                 AutoTesterClient.RuntimeStatus.Failed ->
                     Feila(testKoeyring.loeysing, Instant.now(), response.output.toString())
                 else -> testKoeyring
@@ -62,7 +65,7 @@ sealed class TestKoeyring {
               AutoTesterClient.RuntimeStatus.Pending ->
                   IkkjeStarta(testKoeyring.loeysing, Instant.now(), testKoeyring.statusURL)
               AutoTesterClient.RuntimeStatus.Completed ->
-                  Ferdig(testKoeyring.loeysing, Instant.now())
+                  Ferdig(testKoeyring.loeysing, Instant.now(), testKoeyring.statusURL)
               AutoTesterClient.RuntimeStatus.Failed ->
                   Feila(testKoeyring.loeysing, Instant.now(), response.output.toString())
               else -> testKoeyring
