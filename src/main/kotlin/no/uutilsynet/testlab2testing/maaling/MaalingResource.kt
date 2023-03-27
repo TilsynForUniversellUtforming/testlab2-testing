@@ -51,48 +51,22 @@ class MaalingResource(
     return runCatching<ResponseEntity<Any>> {
           val maaling = maalingDAO.getMaaling(id)!!
           val newStatus = validateStatus(statusDTO.status).getOrThrow()
-          when {
-            newStatus == Status.Crawling && maaling is Maaling.Planlegging -> {
-              val updated = crawlerClient.start(maaling)
-              maalingDAO.save(updated).getOrThrow()
-              ResponseEntity.ok().build()
-            }
-            newStatus == Status.Crawling && maaling is Maaling.Kvalitetssikring -> {
-              val loeysingIdList = validateLoeysingIdList(statusDTO.loeysingIdList).getOrThrow()
-              val updated = crawlerClient.restart(maaling, loeysingIdList)
-              maalingDAO.save(updated).getOrThrow()
-              ResponseEntity.ok().build()
-            }
-            newStatus == Status.Testing && maaling is Maaling.Kvalitetssikring -> {
-              if (!features.startTesting) {
-                ResponseEntity.badRequest().build()
-              } else {
-                val testKoeyringar =
-                    maaling.crawlResultat
-                        .filterIsInstance<CrawlResultat.Ferdig>()
-                        .map {
-                          val result = autoTesterClient.startTesting(maaling.id, it)
-                          Pair(it, result)
-                        }
-                        .map { (crawlResultat, result) ->
-                          result.fold(
-                              { statusURL -> TestKoeyring.from(crawlResultat.loeysing, statusURL) },
-                              { exception ->
-                                val feilmelding =
-                                    exception.message
-                                        ?: "eg klarte ikkje å starte testing for ei løysing, og feilmeldinga manglar"
-                                TestKoeyring.Feila(
-                                    crawlResultat.loeysing, Instant.now(), feilmelding)
-                              })
-                        }
-                val updated = Maaling.toTesting(maaling, testKoeyringar)
-                maalingDAO.save(updated).getOrThrow()
-                ResponseEntity.ok().build()
+          val badRequest = ResponseEntity.badRequest().build<Any>()
+
+          when (maaling) {
+            is Maaling.Planlegging -> {
+              when (newStatus) {
+                Status.Crawling -> startCrawling(maaling)
+                else -> badRequest
               }
             }
-            else -> {
-              ResponseEntity.badRequest().build()
+            is Maaling.Kvalitetssikring -> {
+              when (newStatus) {
+                Status.Crawling -> restartCrawling(statusDTO, maaling)
+                Status.Testing -> startTesting(maaling)
+              }
             }
+            else -> badRequest
           }
         }
         .getOrElse { exception ->
@@ -107,6 +81,48 @@ class MaalingResource(
           }
         }
   }
+
+  private fun restartCrawling(
+      statusDTO: StatusDTO,
+      maaling: Maaling.Kvalitetssikring
+  ): ResponseEntity<Any> {
+    val loeysingIdList = validateLoeysingIdList(statusDTO.loeysingIdList).getOrThrow()
+    val updated = crawlerClient.restart(maaling, loeysingIdList)
+    maalingDAO.save(updated).getOrThrow()
+    return ResponseEntity.ok().build()
+  }
+
+  private fun startCrawling(maaling: Maaling.Planlegging): ResponseEntity<Any> {
+    val updated = crawlerClient.start(maaling)
+    maalingDAO.save(updated).getOrThrow()
+    return ResponseEntity.ok().build()
+  }
+
+  private fun startTesting(maaling: Maaling.Kvalitetssikring): ResponseEntity<Any> =
+      if (!features.startTesting) {
+        ResponseEntity.badRequest().build()
+      } else {
+        val testKoeyringar =
+            maaling.crawlResultat
+                .filterIsInstance<CrawlResultat.Ferdig>()
+                .map {
+                  val result = autoTesterClient.startTesting(maaling.id, it)
+                  Pair(it, result)
+                }
+                .map { (crawlResultat, result) ->
+                  result.fold(
+                      { statusURL -> TestKoeyring.from(crawlResultat.loeysing, statusURL) },
+                      { exception ->
+                        val feilmelding =
+                            exception.message
+                                ?: "eg klarte ikkje å starte testing for ei løysing, og feilmeldinga manglar"
+                        TestKoeyring.Feila(crawlResultat.loeysing, Instant.now(), feilmelding)
+                      })
+                }
+        val updated = Maaling.toTesting(maaling, testKoeyringar)
+        maalingDAO.save(updated).getOrThrow()
+        ResponseEntity.ok().build()
+      }
 
   data class StatusDTO(val status: String, val loeysingIdList: List<Int>?)
 
