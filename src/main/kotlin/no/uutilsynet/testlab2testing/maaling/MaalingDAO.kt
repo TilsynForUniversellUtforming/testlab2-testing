@@ -4,7 +4,11 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.dto.Loeysing
-import no.uutilsynet.testlab2testing.maaling.Maaling.*
+import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
+import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
+import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
+import no.uutilsynet.testlab2testing.maaling.Maaling.Testing
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
@@ -36,22 +40,34 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val id: Int,
       val navn: String,
       val status: String,
+      val maxLinksPerPage: Int,
+      val numLinksToSelect: Int
   )
 
   object MaalingParams {
     val maalingRowmapper = DataClassRowMapper.newInstance(MaalingDTO::class.java)
     val loysingRowmapper = DataClassRowMapper.newInstance(Loeysing::class.java)
+    val crawlParametersRowmapper = DataClassRowMapper.newInstance(CrawlParameters::class.java)
 
-    val createMaalingSql = "insert into Maalingv1 (navn, status) values (:navn, :status)"
-    fun createMaalingParams(navn: String) =
-        MapSqlParameterSource("navn", navn).addValue("status", "planlegging")
+    val createMaalingSql =
+        """
+      insert into Maalingv1 (navn, status, max_links_per_page, num_links_to_select) 
+      values (:navn, :status, :maxLinksPerPage, :numLinksToSelect)
+    """
+            .trimIndent()
+    fun createMaalingParams(navn: String, crawlParameters: CrawlParameters) =
+        MapSqlParameterSource("navn", navn)
+            .addValue("status", "planlegging")
+            .addValue("maxLinksPerPage", crawlParameters.maxLinksPerPage)
+            .addValue("numLinksToSelect", crawlParameters.numLinksToSelect)
 
     val createMaalingLoysingSql =
         "insert into MaalingLoeysing (idMaaling, idLoeysing) values (:idMaaling, :idLoeysing)"
     fun createMaalingLoysingParams(idMaaling: Int, idLoeysing: Int) =
         MapSqlParameterSource("idMaaling", idMaaling).addValue("idLoeysing", idLoeysing)
 
-    val selectMaalingSql = "select id, navn, status from Maalingv1"
+    val selectMaalingSql =
+        "select id, navn, status, max_links_per_page, num_links_to_select from Maalingv1"
     val selectMaalingByIdSql = "$selectMaalingSql where id = :id"
 
     val maalingLoeysingSql =
@@ -79,9 +95,10 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   @Transactional
-  fun createMaaling(navn: String, loyesingIds: List<Int>): Int {
+  fun createMaaling(navn: String, loyesingIds: List<Int>, crawlParameters: CrawlParameters): Int {
     val keyHolder: KeyHolder = GeneratedKeyHolder()
-    jdbcTemplate.update(createMaalingSql, createMaalingParams(navn), keyHolder, arrayOf("id"))
+    jdbcTemplate.update(
+        createMaalingSql, createMaalingParams(navn, crawlParameters), keyHolder, arrayOf("id"))
     val idMaaling = keyHolder.key!!.toInt()
 
     for (idLoysing: Int in loyesingIds) {
@@ -112,7 +129,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           val loeysingList =
               jdbcTemplate.query(
                   maalingLoeysingSql, MapSqlParameterSource("id", id), loysingRowmapper)
-          Planlegging(id, navn, loeysingList)
+          Planlegging(id, navn, loeysingList, CrawlParameters(maxLinksPerPage, numLinksToSelect))
         }
         "crawling",
         "kvalitetssikring" -> {
@@ -188,6 +205,20 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         else ->
             throw RuntimeException("Målingen med id = $id er lagret med en ugyldig status: $status")
       }
+
+  fun getCrawlParameters(maalingId: Int): CrawlParameters =
+      runCatching {
+            jdbcTemplate.queryForObject(
+                "select m.max_links_per_page, m.num_links_to_select from maalingv1 m where m.id = :id",
+                mapOf("id" to maalingId),
+                crawlParametersRowmapper)
+                ?: throw RuntimeException("Fant ikke crawlparametere for maaling $maalingId")
+          }
+          .getOrElse {
+            logger.error(
+                "Kunne ikke hente crawlparametere for maaling $maalingId, velger default parametere")
+            throw it
+          }
 
   private fun toCrawlResultat(rs: ResultSet): CrawlResultat {
     val loeysing = Loeysing(rs.getInt("lid"), rs.getString("namn"), URL(rs.getString("url")))

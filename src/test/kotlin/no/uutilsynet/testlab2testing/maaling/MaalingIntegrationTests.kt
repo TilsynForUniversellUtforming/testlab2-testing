@@ -161,8 +161,10 @@ class MaalingIntegrationTests(
     }
 
     private fun createMaaling(): Pair<Int, Instant> {
-      val id = maalingDAO.createMaaling("testmåling", listOf(1))
-      val planlagtMaaling = Maaling.Planlegging(id, "testmåling", listOf(uutilsynetLoeysing))
+      val crawlParameters = CrawlParameters()
+      val id = maalingDAO.createMaaling("testmåling", listOf(1), crawlParameters)
+      val planlagtMaaling =
+          Maaling.Planlegging(id, "testmåling", listOf(uutilsynetLoeysing), crawlParameters)
       val sistOppdatert = Instant.now()
       val crawlingMaaling =
           Maaling.toCrawling(

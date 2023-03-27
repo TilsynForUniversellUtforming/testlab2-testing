@@ -4,6 +4,7 @@ import java.time.Instant
 import java.util.concurrent.TimeUnit.SECONDS
 import no.uutilsynet.testlab2testing.Features
 import no.uutilsynet.testlab2testing.dto.Loeysing
+import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateParameters
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -18,7 +19,11 @@ class MaalingResource(
     val autoTesterClient: AutoTesterClient,
     val features: Features
 ) {
-  data class NyMaalingDTO(val navn: String, val loeysingIdList: List<Int>)
+  data class NyMaalingDTO(
+      val navn: String,
+      val loeysingIdList: List<Int>,
+      val crawlParameters: CrawlParameters
+  )
   class InvalidUrlException(message: String) : Exception(message)
 
   private val logger = LoggerFactory.getLogger(MaalingResource::class.java)
@@ -27,7 +32,7 @@ class MaalingResource(
   fun nyMaaling(@RequestBody dto: NyMaalingDTO): ResponseEntity<Any> =
       runCatching {
             val navn = validateNavn(dto.navn).getOrThrow()
-            maalingDAO.createMaaling(navn, dto.loeysingIdList)
+            maalingDAO.createMaaling(navn, dto.loeysingIdList, dto.crawlParameters)
           }
           .fold(
               { id ->
@@ -55,6 +60,7 @@ class MaalingResource(
 
           when (maaling) {
             is Maaling.Planlegging -> {
+              maaling.crawlParameters.validateParameters()
               when (newStatus) {
                 Status.Crawling -> startCrawling(maaling)
                 else -> badRequest
@@ -87,7 +93,8 @@ class MaalingResource(
       maaling: Maaling.Kvalitetssikring
   ): ResponseEntity<Any> {
     val loeysingIdList = validateLoeysingIdList(statusDTO.loeysingIdList).getOrThrow()
-    val updated = crawlerClient.restart(maaling, loeysingIdList)
+    val crawlParameters = maalingDAO.getCrawlParameters(maaling.id)
+    val updated = crawlerClient.restart(maaling, loeysingIdList, crawlParameters)
     maalingDAO.save(updated).getOrThrow()
     return ResponseEntity.ok().build()
   }
