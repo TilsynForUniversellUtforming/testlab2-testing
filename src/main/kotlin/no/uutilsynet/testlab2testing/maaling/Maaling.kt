@@ -10,7 +10,8 @@ import no.uutilsynet.testlab2testing.dto.Loeysing
     JsonSubTypes.Type(Maaling.Planlegging::class, name = "planlegging"),
     JsonSubTypes.Type(Maaling.Crawling::class, name = "crawling"),
     JsonSubTypes.Type(Maaling.Kvalitetssikring::class, name = "kvalitetssikring"),
-    JsonSubTypes.Type(Maaling.Testing::class, name = "testing"))
+    JsonSubTypes.Type(Maaling.Testing::class, name = "testing"),
+    JsonSubTypes.Type(Maaling.TestingFerdig::class, name = "testing_ferdig"))
 sealed class Maaling {
   abstract val id: Int
   abstract val navn: String
@@ -51,6 +52,15 @@ sealed class Maaling {
       val testKoeyringar: List<TestKoeyring>,
       override val aksjoner: List<Aksjon> = listOf(),
   ) : Maaling()
+
+  data class TestingFerdig(
+      override val id: Int,
+      override val navn: String,
+      val testKoeyringar: List<TestKoeyring.Ferdig>
+  ) : Maaling() {
+    override val aksjoner: List<Aksjon>
+      get() = listOf()
+  }
 
   companion object {
     fun toCrawling(planlagtMaaling: Planlegging, crawlResultat: List<CrawlResultat>): Crawling =

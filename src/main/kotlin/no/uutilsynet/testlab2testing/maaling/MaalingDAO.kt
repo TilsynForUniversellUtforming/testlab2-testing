@@ -4,10 +4,7 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.dto.Loeysing
-import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
-import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
-import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
-import no.uutilsynet.testlab2testing.maaling.Maaling.Testing
+import no.uutilsynet.testlab2testing.maaling.Maaling.*
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingSql
@@ -87,6 +84,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             is Crawling -> "crawling"
             is Kvalitetssikring -> "kvalitetssikring"
             is Testing -> "testing"
+            is TestingFerdig -> "testing_ferdig"
           }
       return mapOf("navn" to maaling.navn, "status" to status, "id" to maaling.id)
     }
@@ -281,7 +279,11 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             }
             is Testing -> {
               updateMaaling()
-              maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling) }
+              maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling.id) }
+            }
+            is TestingFerdig -> {
+              updateMaaling()
+              maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling.id) }
             }
           }
         }
@@ -289,17 +291,17 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   @Transactional
-  fun saveTestKoeyring(testKoeyring: TestKoeyring, maaling: Testing) {
+  fun saveTestKoeyring(testKoeyring: TestKoeyring, maalingId: Int) {
     jdbcTemplate.update(
         """delete from testkoeyring where maaling_id = :maaling_id and loeysing_id = :loeysing_id""",
-        mapOf("maaling_id" to maaling.id, "loeysing_id" to testKoeyring.loeysing.id))
+        mapOf("maaling_id" to maalingId, "loeysing_id" to testKoeyring.loeysing.id))
     jdbcTemplate.update(
         """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding) 
                 values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :feilmelding)
             """
             .trimMargin(),
         mapOf(
-            "maaling_id" to maaling.id,
+            "maaling_id" to maalingId,
             "loeysing_id" to testKoeyring.loeysing.id,
             "status" to status(testKoeyring),
             "status_url" to statusURL(testKoeyring),
