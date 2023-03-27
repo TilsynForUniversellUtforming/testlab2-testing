@@ -9,5 +9,8 @@ object TestConstants {
   val loeysingList = listOf(uutilsynetLoeysing, digdirLoeysing)
 
   val maalingRequestBody =
-      mapOf("navn" to "example", "loeysingIdList" to loeysingList.map { it.id })
+      mapOf(
+          "navn" to "example",
+          "loeysingIdList" to loeysingList.map { it.id },
+          "crawlParameters" to mapOf("maxLinksPerPage" to 10, "numLinksToSelect" to 10))
 }

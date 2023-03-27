@@ -17,27 +17,31 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
   private val logger = LoggerFactory.getLogger(CrawlerClient::class.java)
 
   fun start(maaling: Maaling.Planlegging): Maaling.Crawling {
-    val crawlResultat = maaling.loeysingList.map { start(it) }
+    val crawlResultat = maaling.loeysingList.map { start(it, maaling.crawlParameters) }
     return Maaling.toCrawling(maaling, crawlResultat)
   }
 
-  fun restart(maaling: Maaling.Kvalitetssikring, loeysingIdList: List<Int>): Maaling.Crawling {
+  fun restart(
+      maaling: Maaling.Kvalitetssikring,
+      loeysingIdList: List<Int>,
+      crawlParameters: CrawlParameters
+  ): Maaling.Crawling {
     val crawlResultat =
         maaling.crawlResultat.map {
-          if (it.loeysing.id in loeysingIdList) start(it.loeysing) else it
+          if (it.loeysing.id in loeysingIdList) start(it.loeysing, crawlParameters) else it
         }
     return Maaling.Crawling(id = maaling.id, navn = maaling.navn, crawlResultat = crawlResultat)
   }
 
-  private fun start(loeysing: Loeysing): CrawlResultat =
+  private fun start(loeysing: Loeysing, crawlParameters: CrawlParameters): CrawlResultat =
       runCatching {
             val statusUris =
                 restTemplate.postForObject(
                     "${crawlerProperties.url}?code=${crawlerProperties.code}",
                     mapOf(
                         "startUrl" to loeysing.url,
-                        "maxLenker" to 10,
-                        "talLenker" to 10,
+                        "maxLenker" to crawlParameters.maxLinksPerPage,
+                        "talLenker" to crawlParameters.numLinksToSelect,
                         "idLoeysing" to loeysing.id,
                         "domene" to loeysing.url),
                     AutoTesterClient.StatusUris::class.java)!!

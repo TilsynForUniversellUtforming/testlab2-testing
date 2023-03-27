@@ -32,7 +32,7 @@ class CrawlerClientTest {
         listOf(
             Loeysing(1, "uutilsynet", URL("https://www.uutilsynet.no")),
             Loeysing(2, "digdir", URL("https://www.digdir.no")))
-    val maaling = Maaling.Planlegging(1, "testmåling", loeysingList)
+    val maaling = Maaling.Planlegging(1, "testmåling", loeysingList, CrawlParameters())
     val oppdatertMaaling = crawlerClient.start(maaling)
 
     assertThat(oppdatertMaaling.crawlResultat).hasSize(2)

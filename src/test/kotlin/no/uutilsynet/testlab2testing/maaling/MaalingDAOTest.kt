@@ -42,7 +42,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
   }
 
   private fun saveMaalingWithStatusKvalitetssikring(): Int {
-    val id = maalingDAO.createMaaling("testmåling", loeysingList.map { it.id })
+    val id = maalingDAO.createMaaling("testmåling", loeysingList.map { it.id }, CrawlParameters())
     val maaling = maalingDAO.getMaaling(id) as Maaling.Planlegging
     val crawlResultat =
         maaling.loeysingList.map {
@@ -58,7 +58,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
   }
 
   private fun saveMaalingWithStatusTesting(): Int {
-    val id = maalingDAO.createMaaling("testmåling", loeysingList.map { it.id })
+    val id = maalingDAO.createMaaling("testmåling", loeysingList.map { it.id }, CrawlParameters())
     val maaling = maalingDAO.getMaaling(id) as Maaling.Planlegging
     val crawlResultat =
         maaling.loeysingList.map {

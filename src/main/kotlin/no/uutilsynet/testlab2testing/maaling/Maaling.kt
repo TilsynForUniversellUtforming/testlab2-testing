@@ -20,6 +20,7 @@ sealed class Maaling {
       override val id: Int,
       override val navn: String,
       val loeysingList: List<Loeysing>,
+      val crawlParameters: CrawlParameters
   ) : Maaling() {
     override val aksjoner: List<Aksjon>
       get() = listOf(Aksjon.StartCrawling(URI("${locationForId(id)}/status")))
