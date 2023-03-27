@@ -47,26 +47,26 @@ sealed class TestKoeyring {
 
     fun updateStatus(
         testKoeyring: TestKoeyring,
-        response: AutoTesterClient.Response
+        response: AutoTesterClient.AzureFunctionResponse
     ): TestKoeyring =
         when (testKoeyring) {
           is IkkjeStarta ->
-              when (response.runtimeStatus) {
-                AutoTesterClient.RuntimeStatus.Running ->
+              when (response) {
+                is AutoTesterClient.AzureFunctionResponse.Running ->
                     Starta(testKoeyring.loeysing, Instant.now(), testKoeyring.statusURL)
-                AutoTesterClient.RuntimeStatus.Completed ->
+                is AutoTesterClient.AzureFunctionResponse.Completed ->
                     Ferdig(testKoeyring.loeysing, Instant.now(), testKoeyring.statusURL)
-                AutoTesterClient.RuntimeStatus.Failed ->
+                is AutoTesterClient.AzureFunctionResponse.Failed ->
                     Feila(testKoeyring.loeysing, Instant.now(), response.output.toString())
                 else -> testKoeyring
               }
           is Starta -> {
-            when (response.runtimeStatus) {
-              AutoTesterClient.RuntimeStatus.Pending ->
+            when (response) {
+              is AutoTesterClient.AzureFunctionResponse.Pending ->
                   IkkjeStarta(testKoeyring.loeysing, Instant.now(), testKoeyring.statusURL)
-              AutoTesterClient.RuntimeStatus.Completed ->
+              is AutoTesterClient.AzureFunctionResponse.Completed ->
                   Ferdig(testKoeyring.loeysing, Instant.now(), testKoeyring.statusURL)
-              AutoTesterClient.RuntimeStatus.Failed ->
+              is AutoTesterClient.AzureFunctionResponse.Failed ->
                   Feila(testKoeyring.loeysing, Instant.now(), response.output.toString())
               else -> testKoeyring
             }

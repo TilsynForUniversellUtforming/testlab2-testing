@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.maaling
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
 import java.net.URL
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -34,49 +36,53 @@ class AutoTesterClient(
         is TestKoeyring.IkkjeStarta ->
             runCatching {
               val response =
-                  restTemplate.getForObject(testKoeyring.statusURL.toURI(), Response::class.java)!!
+                  restTemplate.getForObject(
+                      testKoeyring.statusURL.toURI(), AzureFunctionResponse::class.java)!!
               TestKoeyring.updateStatus(testKoeyring, response)
             }
         is TestKoeyring.Starta ->
             runCatching {
               val response =
-                  restTemplate.getForObject(testKoeyring.statusURL.toURI(), Response::class.java)!!
+                  restTemplate.getForObject(
+                      testKoeyring.statusURL.toURI(), AzureFunctionResponse::class.java)!!
               TestKoeyring.updateStatus(testKoeyring, response)
             }
         is TestKoeyring.Ferdig -> Result.success(testKoeyring)
         is TestKoeyring.Feila -> Result.success(testKoeyring)
       }
 
-  data class StatusUris(val statusQueryGetUri: URI)
-
-  data class Response(
-      val runtimeStatus: RuntimeStatus,
-      val output: Any? = null // denne kan ha forskjellige typer avhengig av hva statusen er
-  )
-
-  enum class RuntimeStatus {
-    Pending,
-    Running,
-    Completed,
-    ContinuedAsNew,
-    Failed,
-    Terminated,
-    Suspended
+  @JsonTypeInfo(
+      use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "runtimeStatus")
+  @JsonSubTypes(
+      JsonSubTypes.Type(value = AzureFunctionResponse.Pending::class, name = "Pending"),
+      JsonSubTypes.Type(value = AzureFunctionResponse.Running::class, name = "Running"),
+      JsonSubTypes.Type(value = AzureFunctionResponse.Completed::class, name = "Completed"),
+      JsonSubTypes.Type(value = AzureFunctionResponse.Failed::class, name = "Failed"),
+      JsonSubTypes.Type(value = AzureFunctionResponse.Other::class, name = "ContinuedAsNew"),
+      JsonSubTypes.Type(value = AzureFunctionResponse.Other::class, name = "Terminated"),
+      JsonSubTypes.Type(value = AzureFunctionResponse.Other::class, name = "Suspended"))
+  sealed class AzureFunctionResponse {
+    object Pending : AzureFunctionResponse()
+    object Running : AzureFunctionResponse()
+    data class Completed(val output: List<TestResultat>) : AzureFunctionResponse()
+    data class Failed(val output: String) : AzureFunctionResponse()
+    data class Other(val output: String?) : AzureFunctionResponse()
   }
 
+  data class StatusUris(val statusQueryGetUri: URI)
+
   data class TestResultat(
-      val _idSuksesskriterium: String,
-      val _idTestregel: String,
-      val _sideUtfall: String,
-      val _brot: Boolean,
-      val _samsvar: Boolean,
-      val _ikkjeForekomst: Boolean,
-      val _side: String,
-      val _elementUtfall: String,
-      val _element: ACTElement,
-      val _idLoeysing: Int,
-      val _idMaaling: Int
+      val suksesskriterium: List<String>,
+      val side: String,
+      val maalingId: Int,
+      val loeysingId: Int,
+      val testregelId: String,
+      val sideNivaa: Int,
+      val testVartUtfoert: String,
+      val elementUtfall: String,
+      val elementResultat: String,
+      val elementOmtale: List<ACTElement>
   )
 
-  data class ACTElement(val htmlCode: String, val pointer: String, val accessibleName: String?)
+  data class ACTElement(val htmlCode: String, val pointer: String)
 }
