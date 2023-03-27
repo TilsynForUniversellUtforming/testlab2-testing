@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import org.junit.jupiter.params.provider.ValueSource
 
 class TestKoeyringTest {
   @Test
@@ -26,7 +25,7 @@ class TestKoeyringTest {
   @MethodSource("pairsOfResponseTilstand")
   @DisplayName(
       "gitt ei testkøyring med tilstand `ikkje starta`, test riktig kombinasjon av respons og ny tilstand")
-  fun testUpdateStatus(response: AutoTesterClient.Response, tilstand: Class<*>) {
+  fun testUpdateStatus(response: AutoTesterClient.AzureFunctionResponse, tilstand: Class<*>) {
     val testKoeyring =
         TestKoeyring.IkkjeStarta(uutilsynetLoeysing, Instant.now(), URL("http://status.url"))
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
@@ -37,7 +36,10 @@ class TestKoeyringTest {
   @MethodSource("pairsOfResponseTilstand")
   @DisplayName(
       "gitt ei testkøyring med tilstand `starta`, test riktig kombinasjon av respons og ny tilstand")
-  fun testUpdateStatusFromStarta(response: AutoTesterClient.Response, tilstand: Class<*>) {
+  fun testUpdateStatusFromStarta(
+      response: AutoTesterClient.AzureFunctionResponse,
+      tilstand: Class<*>
+  ) {
     val testKoeyring =
         TestKoeyring.Starta(uutilsynetLoeysing, Instant.now(), URL("http://status.url"))
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
@@ -47,27 +49,27 @@ class TestKoeyringTest {
   @DisplayName(
       "gitt ei testkøyring med tilstand `ferdig`, så blir ikkje tilstanden endra uansett kva ny tilstand som blir rapportert")
   @ParameterizedTest
-  @ValueSource(strings = ["Pending", "Running", "Completed", "Failed"])
-  fun testUpdateStatusFromFerdig(response: String) {
+  @MethodSource("pairsOfResponseTilstand")
+  fun testUpdateStatusFromFerdig(
+      response: AutoTesterClient.AzureFunctionResponse,
+      tilstand: Class<*>
+  ) {
     val testKoeyring =
         TestKoeyring.Ferdig(uutilsynetLoeysing, Instant.now(), URL("https://status.url"))
-    val actual =
-        TestKoeyring.updateStatus(
-            testKoeyring,
-            AutoTesterClient.Response(AutoTesterClient.RuntimeStatus.valueOf(response)))
+    val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(TestKoeyring.Ferdig::class.java)
   }
 
   @DisplayName(
       "gitt ei testkøyring med tilstand `feila`, så blir ikkje tilstanden endra uansett kva ny tilstand som blir rapportert")
   @ParameterizedTest
-  @ValueSource(strings = ["Pending", "Running", "Completed", "Failed"])
-  fun testUpdateStatusFromFeila(response: String) {
+  @MethodSource("pairsOfResponseTilstand")
+  fun testUpdateStatusFromFeila(
+      response: AutoTesterClient.AzureFunctionResponse,
+      tilstand: Class<*>
+  ) {
     val testKoeyring = TestKoeyring.Feila(uutilsynetLoeysing, Instant.now(), "dette går ikkje")
-    val actual =
-        TestKoeyring.updateStatus(
-            testKoeyring,
-            AutoTesterClient.Response(AutoTesterClient.RuntimeStatus.valueOf(response)))
+    val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(TestKoeyring.Feila::class.java)
   }
 
@@ -76,17 +78,46 @@ class TestKoeyringTest {
     fun pairsOfResponseTilstand(): Stream<Arguments> {
       return Stream.of(
           Arguments.of(
-              AutoTesterClient.Response(AutoTesterClient.RuntimeStatus.Pending),
-              TestKoeyring.IkkjeStarta::class.java),
+              AutoTesterClient.AzureFunctionResponse.Pending, TestKoeyring.IkkjeStarta::class.java),
           Arguments.of(
-              AutoTesterClient.Response(AutoTesterClient.RuntimeStatus.Running),
-              TestKoeyring.Starta::class.java),
+              AutoTesterClient.AzureFunctionResponse.Running, TestKoeyring.Starta::class.java),
           Arguments.of(
-              AutoTesterClient.Response(AutoTesterClient.RuntimeStatus.Completed),
+              AutoTesterClient.AzureFunctionResponse.Completed(testResultater()),
               TestKoeyring.Ferdig::class.java),
           Arguments.of(
-              AutoTesterClient.Response(AutoTesterClient.RuntimeStatus.Failed),
+              AutoTesterClient.AzureFunctionResponse.Failed("401 Unauthorized"),
               TestKoeyring.Feila::class.java))
     }
+
+    private fun testResultater() =
+        listOf(
+            AutoTesterClient.TestResultat(
+                listOf("3.1.1"),
+                "https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160",
+                46,
+                1,
+                "QW-ACT-R5",
+                1,
+                "3/23/2023 11:15:54 AM",
+                "The `lang` attribute has a valid value.",
+                "samsvar",
+                listOf(
+                    AutoTesterClient.ACTElement(
+                        "html",
+                        "PGh0bWwgbGFuZz0ibm4iIGRpcj0ibHRyIiBwcmVmaXg9Im9nOiBodHRwczovL29ncC5tZS9ucyMiIGNsYXNzPSIganMiPjxoZWFkPjwvaGVhZD48Ym9keT53aW5kb3cuZGF0YQ=="))),
+            AutoTesterClient.TestResultat(
+                listOf("4.1.2"),
+                "https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160",
+                46,
+                1,
+                "QW-ACT-R11",
+                1,
+                "3/23/2023 11:15:54 AM",
+                "The test target has an accessible name.",
+                "samsvar",
+                listOf(
+                    AutoTesterClient.ACTElement(
+                        "html > body:nth-child(2) > div:nth-child(2) > div:nth-child(1) > header:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > button:nth-child(1)",
+                        "PGJ1dHRvbiBjbGFzcz0iaGVhZGVyLWJ1dHRvbiBoZWFkZXItYnV0dG9uLS1zZWFyY2ggY29sbGFwc2VkIiBkYXRhLWJzLXRvZ2dsZT0iY29sbGFwc2UiIGRhdGEtYnMtdGFyZw=="))))
   }
 }
