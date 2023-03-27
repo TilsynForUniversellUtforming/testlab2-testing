@@ -186,7 +186,12 @@ class MaalingResource(
             .map { testKoeyring -> autoTesterClient.updateStatus(testKoeyring) }
             .toSingleResult()
             .getOrThrow()
-    maaling.copy(testKoeyringar = oppdaterteTestKoeyringar)
+    val ferdigeTestKoeyringar = oppdaterteTestKoeyringar.filterIsInstance<TestKoeyring.Ferdig>()
+    if (ferdigeTestKoeyringar == oppdaterteTestKoeyringar) {
+      Maaling.TestingFerdig(maaling.id, maaling.navn, ferdigeTestKoeyringar)
+    } else {
+      maaling.copy(testKoeyringar = oppdaterteTestKoeyringar)
+    }
   }
 
   private fun handleErrors(exception: Throwable): ResponseEntity<Any> =
