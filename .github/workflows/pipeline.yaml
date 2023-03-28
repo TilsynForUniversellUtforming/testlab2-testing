@@ -65,4 +65,4 @@ jobs:
         with:
           inlineScript: |
             az config set extension.use_dynamic_install=yes_without_prompt
-            az containerapp update -n ca-ddt-testlab2-test-testing -g RG-DDT-Testlab --image acrddtprod.azurecr.io/testlab2-testing:${{ github.sha }} --subscription ${{ secrets.SUBSCRIPTION_ID }}
+            az containerapp update -n ca-ddt-testlab2-test-testing -g RG-DDT-Testlab --image acrddtprod.azurecr.io/testlab2-testing:${{ github.sha }} --subscription 47609472-33dd-49d1-8f78-0ed39b182ff2
