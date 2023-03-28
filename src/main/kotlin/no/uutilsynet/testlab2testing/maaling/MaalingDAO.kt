@@ -4,7 +4,11 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.dto.Loeysing
-import no.uutilsynet.testlab2testing.maaling.Maaling.*
+import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
+import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
+import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
+import no.uutilsynet.testlab2testing.maaling.Maaling.Testing
+import no.uutilsynet.testlab2testing.maaling.Maaling.TestingFerdig
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingSql
@@ -18,6 +22,11 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.saveMaalin
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.saveMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByIdSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingSql
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.crawling
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.kvalitetssikring
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.planlegging
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing_ferdig
 import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
@@ -36,7 +45,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   data class MaalingDTO(
       val id: Int,
       val navn: String,
-      val status: String,
+      val status: MaalingStatus,
       val maxLinksPerPage: Int,
       val numLinksToSelect: Int
   )
@@ -123,14 +132,14 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   private fun MaalingDTO.toMaaling(): Maaling =
       when (status) {
-        "planlegging" -> {
+        planlegging -> {
           val loeysingList =
               jdbcTemplate.query(
                   maalingLoeysingSql, MapSqlParameterSource("id", id), loysingRowmapper)
           Planlegging(id, navn, loeysingList, CrawlParameters(maxLinksPerPage, numLinksToSelect))
         }
-        "crawling",
-        "kvalitetssikring" -> {
+        crawling,
+        kvalitetssikring -> {
           val crawlResultat =
               jdbcTemplate.query(
                   """
@@ -156,13 +165,14 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   })
                   ?: throw RuntimeException(
                       "fikk `null` da vi forsøkte å hente crawlresultat for måling med id = $id")
-          if (status == "crawling") {
+          if (status == crawling) {
             Crawling(this.id, this.navn, crawlResultat)
           } else {
             Kvalitetssikring(id, navn, crawlResultat)
           }
         }
-        "testing" -> {
+        testing,
+        testing_ferdig -> {
           val testKoeyringar =
               jdbcTemplate.query(
                   """
@@ -200,8 +210,6 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   })
           Testing(id, navn, testKoeyringar)
         }
-        else ->
-            throw RuntimeException("Målingen med id = $id er lagret med en ugyldig status: $status")
       }
 
   fun getCrawlParameters(maalingId: Int): CrawlParameters =
