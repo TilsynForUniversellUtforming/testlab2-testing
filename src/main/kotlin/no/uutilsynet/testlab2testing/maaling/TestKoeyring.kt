@@ -32,7 +32,8 @@ sealed class TestKoeyring {
   data class Ferdig(
       override val loeysing: Loeysing,
       override val sistOppdatert: Instant,
-      val statusURL: URL
+      val statusURL: URL,
+      val testResultat: List<TestResultat>
   ) : TestKoeyring()
 
   data class Feila(
@@ -55,9 +56,13 @@ sealed class TestKoeyring {
                 is AutoTesterClient.AzureFunctionResponse.Running ->
                     Starta(testKoeyring.loeysing, Instant.now(), testKoeyring.statusURL)
                 is AutoTesterClient.AzureFunctionResponse.Completed ->
-                    Ferdig(testKoeyring.loeysing, Instant.now(), testKoeyring.statusURL)
+                    Ferdig(
+                        testKoeyring.loeysing,
+                        Instant.now(),
+                        testKoeyring.statusURL,
+                        response.output)
                 is AutoTesterClient.AzureFunctionResponse.Failed ->
-                    Feila(testKoeyring.loeysing, Instant.now(), response.output.toString())
+                    Feila(testKoeyring.loeysing, Instant.now(), response.output)
                 else -> testKoeyring
               }
           is Starta -> {
@@ -65,7 +70,8 @@ sealed class TestKoeyring {
               is AutoTesterClient.AzureFunctionResponse.Pending ->
                   IkkjeStarta(testKoeyring.loeysing, Instant.now(), testKoeyring.statusURL)
               is AutoTesterClient.AzureFunctionResponse.Completed ->
-                  Ferdig(testKoeyring.loeysing, Instant.now(), testKoeyring.statusURL)
+                  Ferdig(
+                      testKoeyring.loeysing, Instant.now(), testKoeyring.statusURL, response.output)
               is AutoTesterClient.AzureFunctionResponse.Failed ->
                   Feila(testKoeyring.loeysing, Instant.now(), response.output.toString())
               else -> testKoeyring

@@ -70,19 +70,4 @@ class AutoTesterClient(
   }
 
   data class StatusUris(val statusQueryGetUri: URI)
-
-  data class TestResultat(
-      val suksesskriterium: List<String>,
-      val side: String,
-      val maalingId: Int,
-      val loeysingId: Int,
-      val testregelId: String,
-      val sideNivaa: Int,
-      val testVartUtfoert: String,
-      val elementUtfall: String,
-      val elementResultat: String,
-      val elementOmtale: List<ACTElement>
-  )
-
-  data class ACTElement(val htmlCode: String, val pointer: String)
 }
