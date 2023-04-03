@@ -41,6 +41,54 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     assertThat(maaling.testKoeyringar).isNotEmpty
   }
 
+  @DisplayName(
+      "når vi lagrer ei måling med status `testing_ferdig`, så skal alle resultatene også lagres")
+  @Test
+  fun lagreResultater() {
+    val id = saveMaalingWithStatusTestingFerdig()
+    val maaling = maalingDAO.getMaaling(id) as Maaling.TestingFerdig
+    val testResultat = maaling.testKoeyringar.flatMap { it.testResultat }[0]
+    assertThat(testResultat.testregelId).isEqualTo("QW-ACT-R5")
+  }
+
+  private fun saveMaalingWithStatusTestingFerdig(): Int {
+    val id =
+        maalingDAO.createMaaling("testing ferdig", loeysingList.map { it.id }, CrawlParameters())
+    val maaling = maalingDAO.getMaaling(id) as Maaling.Planlegging
+    val crawlResultat =
+        maaling.loeysingList.map {
+          CrawlResultat.Ferdig(
+              listOf(URL(it.url, "/"), URL(it.url, "/underside/1"), URL(it.url, "/underside/2")),
+              URL("https://status.uri"),
+              it,
+              Instant.now())
+        }
+    val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
+    val testKoeyringar =
+        crawlResultat.map {
+          TestKoeyring.Ferdig(
+              it.loeysing,
+              Instant.now(),
+              URL("https://teststatus.url"),
+              listOf(
+                  TestResultat(
+                      listOf("3.1.1"),
+                      it.loeysing.url,
+                      "QW-ACT-R5",
+                      1,
+                      TestResultat.parseLocalDateTime("3/23/2023, 11:15:54 AM"),
+                      "The `lang` attribute has a valid value.",
+                      "samsvar",
+                      TestResultat.ACTElement(
+                          "html",
+                          "PGh0bWwgbGFuZz0ibm4iIGRpcj0ibHRyIiBwcmVmaXg9Im9nOiBodHRwczovL29ncC5tZS9ucyMiIGNsYXNzPSIganMiPjxoZWFkPjwvaGVhZD48Ym9keT53aW5kb3cuZGF0YQ=="))))
+        }
+    val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
+    val testingFerdig = Maaling.toTestingFerdig(testing)!!
+    maalingDAO.save(testingFerdig).getOrThrow()
+    return id
+  }
+
   private fun saveMaalingWithStatusKvalitetssikring(): Int {
     val id = maalingDAO.createMaaling("testmåling", loeysingList.map { it.id }, CrawlParameters())
     val maaling = maalingDAO.getMaaling(id) as Maaling.Planlegging

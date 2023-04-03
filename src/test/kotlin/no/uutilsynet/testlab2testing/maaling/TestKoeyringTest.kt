@@ -55,7 +55,8 @@ class TestKoeyringTest {
       tilstand: Class<*>
   ) {
     val testKoeyring =
-        TestKoeyring.Ferdig(uutilsynetLoeysing, Instant.now(), URL("https://status.url"))
+        TestKoeyring.Ferdig(
+            uutilsynetLoeysing, Instant.now(), URL("https://status.url"), testResultater())
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(TestKoeyring.Ferdig::class.java)
   }
@@ -89,35 +90,29 @@ class TestKoeyringTest {
               TestKoeyring.Feila::class.java))
     }
 
-    private fun testResultater() =
+    fun testResultater() =
         listOf(
-            AutoTesterClient.TestResultat(
+            TestResultat(
                 listOf("3.1.1"),
-                "https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160",
-                46,
-                1,
+                URL("https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160"),
                 "QW-ACT-R5",
                 1,
-                "3/23/2023 11:15:54 AM",
+                TestResultat.parseLocalDateTime("3/23/2023, 11:15:54 AM"),
                 "The `lang` attribute has a valid value.",
                 "samsvar",
-                listOf(
-                    AutoTesterClient.ACTElement(
-                        "html",
-                        "PGh0bWwgbGFuZz0ibm4iIGRpcj0ibHRyIiBwcmVmaXg9Im9nOiBodHRwczovL29ncC5tZS9ucyMiIGNsYXNzPSIganMiPjxoZWFkPjwvaGVhZD48Ym9keT53aW5kb3cuZGF0YQ=="))),
-            AutoTesterClient.TestResultat(
+                TestResultat.ACTElement(
+                    "html",
+                    "PGh0bWwgbGFuZz0ibm4iIGRpcj0ibHRyIiBwcmVmaXg9Im9nOiBodHRwczovL29ncC5tZS9ucyMiIGNsYXNzPSIganMiPjxoZWFkPjwvaGVhZD48Ym9keT53aW5kb3cuZGF0YQ==")),
+            TestResultat(
                 listOf("4.1.2"),
-                "https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160",
-                46,
-                1,
+                URL("https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160"),
                 "QW-ACT-R11",
                 1,
-                "3/23/2023 11:15:54 AM",
+                TestResultat.parseLocalDateTime("3/23/2023, 11:15:54 AM"),
                 "The test target has an accessible name.",
                 "samsvar",
-                listOf(
-                    AutoTesterClient.ACTElement(
-                        "html > body:nth-child(2) > div:nth-child(2) > div:nth-child(1) > header:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > button:nth-child(1)",
-                        "PGJ1dHRvbiBjbGFzcz0iaGVhZGVyLWJ1dHRvbiBoZWFkZXItYnV0dG9uLS1zZWFyY2ggY29sbGFwc2VkIiBkYXRhLWJzLXRvZ2dsZT0iY29sbGFwc2UiIGRhdGEtYnMtdGFyZw=="))))
+                TestResultat.ACTElement(
+                    "html > body:nth-child(2) > div:nth-child(2) > div:nth-child(1) > header:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > button:nth-child(1)",
+                    "PGJ1dHRvbiBjbGFzcz0iaGVhZGVyLWJ1dHRvbiBoZWFkZXItYnV0dG9uLS1zZWFyY2ggY29sbGFwc2VkIiBkYXRhLWJzLXRvZ2dsZT0iY29sbGFwc2UiIGRhdGEtYnMtdGFyZw==")))
   }
 }

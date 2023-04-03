@@ -1,14 +1,13 @@
 package no.uutilsynet.testlab2testing.maaling
 
+import java.net.URL
+import java.time.Instant
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateParameters
+import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
-import org.junit.jupiter.api.assertThrows
 
 class MaalingTest {
   @Nested
@@ -71,6 +70,45 @@ class MaalingTest {
       assertThrows<IllegalArgumentException> { CrawlParameters(2001, 2000).validateParameters() }
       assertThrows<IllegalArgumentException> { CrawlParameters(2000, 2001).validateParameters() }
       assertDoesNotThrow { CrawlParameters(2000, 2000).validateParameters() }
+    }
+  }
+
+  @DisplayName("bytte tilstand fra `testing` til `testing_ferdig`")
+  @Nested
+  inner class TestingFerdigTests {
+    @DisplayName(
+        "når vi prøver å gå til TestingFerdig, og det finnes testkjøringer som ikke er ferdig, så skal det ikke gå")
+    @Test
+    fun toTestingFails() {
+      val maaling =
+          Maaling.Testing(
+              1,
+              "navn",
+              listOf(
+                  TestKoeyring.Starta(
+                      TestConstants.uutilsynetLoeysing,
+                      Instant.now(),
+                      URL("https://www.status.url"))))
+      val result = Maaling.toTestingFerdig(maaling)
+      Assertions.assertThat(result).isNull()
+    }
+
+    @DisplayName(
+        "når vi prøver å gå til `testing_ferdig`, og alle testkjøringer er ferdige, så skal det gå bra")
+    @Test
+    fun toTestingSucceeds() {
+      val maaling =
+          Maaling.Testing(
+              1,
+              "navn",
+              listOf(
+                  TestKoeyring.Ferdig(
+                      TestConstants.uutilsynetLoeysing,
+                      Instant.now(),
+                      URL("https://status.url"),
+                      TestKoeyringTest.testResultater())))
+      val result = Maaling.toTestingFerdig(maaling)
+      Assertions.assertThat(result).isNotNull
     }
   }
 }

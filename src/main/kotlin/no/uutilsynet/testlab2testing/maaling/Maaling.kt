@@ -63,6 +63,15 @@ sealed class Maaling {
   }
 
   companion object {
+    fun toTestingFerdig(maaling: Testing): TestingFerdig? {
+      val ferdigeTestKoeyringar = maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>()
+      return if (maaling.testKoeyringar == ferdigeTestKoeyringar) {
+        TestingFerdig(maaling.id, maaling.navn, ferdigeTestKoeyringar)
+      } else {
+        null
+      }
+    }
+
     fun toCrawling(planlagtMaaling: Planlegging, crawlResultat: List<CrawlResultat>): Crawling =
         Crawling(planlagtMaaling.id, planlagtMaaling.navn, crawlResultat)
 

@@ -25,7 +25,6 @@ class MaalingIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val maalingDAO: MaalingDAO
 ) {
-
   @Test
   @DisplayName("det er mulig å opprette nye målinger")
   fun postNewMaaling() {
@@ -81,7 +80,9 @@ class MaalingIntegrationTests(
       val jsonArray = JSONArray(response)
       for (i in 0 until jsonArray.length()) {
         val item = jsonArray.getJSONObject(i)
-        assertThat(item["status"], oneOf("planlegging", "crawling", "kvalitetssikring", "testing"))
+        assertThat(
+            item["status"],
+            oneOf("planlegging", "crawling", "kvalitetssikring", "testing", "testing_ferdig"))
       }
     }
 

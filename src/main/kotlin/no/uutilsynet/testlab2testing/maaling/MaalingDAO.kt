@@ -4,11 +4,7 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.dto.Loeysing
-import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
-import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
-import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
-import no.uutilsynet.testlab2testing.maaling.Maaling.Testing
-import no.uutilsynet.testlab2testing.maaling.Maaling.TestingFerdig
+import no.uutilsynet.testlab2testing.maaling.Maaling.*
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingSql
@@ -22,11 +18,7 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.saveMaalin
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.saveMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByIdSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingSql
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.crawling
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.kvalitetssikring
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.planlegging
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing_ferdig
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.*
 import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
@@ -202,15 +194,45 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                       }
                       "feila" ->
                           TestKoeyring.Feila(loeysing, sistOppdatert, rs.getString("feilmelding"))
-                      "ferdig" ->
-                          TestKoeyring.Ferdig(
-                              loeysing, sistOppdatert, URL(rs.getString("status_url")))
+                      "ferdig" -> {
+                        val testkoeyringId = rs.getInt("id")
+                        val testResultat: List<TestResultat> = getTestResultat(testkoeyringId)
+                        TestKoeyring.Ferdig(
+                            loeysing, sistOppdatert, URL(rs.getString("status_url")), testResultat)
+                      }
                       else -> throw RuntimeException("ukjent status $status")
                     }
                   })
-          Testing(id, navn, testKoeyringar)
+          if (status == testing) {
+            Testing(id, navn, testKoeyringar)
+          } else {
+            val ferdigeTestKoeyringar = testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>()
+            TestingFerdig(id, navn, ferdigeTestKoeyringar)
+          }
         }
       }
+
+  private fun getTestResultat(testkoeyringId: Int): List<TestResultat> {
+    return jdbcTemplate.query(
+        """
+          select nettside, suksesskriterium, testregel, element_utfall, element_resultat, side_nivaa, test_vart_utfoert, pointer, html_code
+          from testresultat
+          where testkoeyring_id = :testkoeyring_id
+        """
+            .trimIndent(),
+        mapOf("testkoeyring_id" to testkoeyringId),
+        fun(rs: ResultSet, _: Int): TestResultat {
+          return TestResultat(
+              rs.getString("suksesskriterium").split(","),
+              URL(rs.getString("nettside")),
+              rs.getString("testregel"),
+              rs.getInt("side_nivaa"),
+              rs.getTimestamp("test_vart_utfoert").toLocalDateTime(),
+              rs.getString("element_utfall"),
+              rs.getString("element_resultat"),
+              TestResultat.ACTElement(rs.getString("html_code"), rs.getString("pointer")))
+        })
+  }
 
   fun getCrawlParameters(maalingId: Int): CrawlParameters =
       runCatching {
@@ -303,18 +325,44 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     jdbcTemplate.update(
         """delete from testkoeyring where maaling_id = :maaling_id and loeysing_id = :loeysing_id""",
         mapOf("maaling_id" to maalingId, "loeysing_id" to testKoeyring.loeysing.id))
-    jdbcTemplate.update(
-        """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding) 
+    val testKoeyringId =
+        jdbcTemplate.queryForObject(
+            """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding) 
                 values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :feilmelding)
+                returning id
             """
-            .trimMargin(),
+                .trimMargin(),
+            mapOf(
+                "maaling_id" to maalingId,
+                "loeysing_id" to testKoeyring.loeysing.id,
+                "status" to status(testKoeyring),
+                "status_url" to statusURL(testKoeyring),
+                "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
+                "feilmelding" to feilmelding(testKoeyring)),
+            Int::class.java)
+    if (testKoeyring is TestKoeyring.Ferdig) {
+      testKoeyring.testResultat.forEach { saveTestResultat(testKoeyringId!!, it) }
+    }
+  }
+
+  private fun saveTestResultat(testkoeyringId: Int, testResultat: TestResultat) {
+    jdbcTemplate.update(
+        """
+         insert into testresultat (testkoeyring_id, nettside, suksesskriterium, testregel, element_utfall, element_resultat, side_nivaa, test_vart_utfoert, pointer, html_code)
+         values (:testkoeyring_id, :nettside, :suksesskriterium, :testregel, :element_utfall, :element_resultat, :side_nivaa, :test_vart_utfoert, :pointer, :html_code)
+            """
+            .trimIndent(),
         mapOf(
-            "maaling_id" to maalingId,
-            "loeysing_id" to testKoeyring.loeysing.id,
-            "status" to status(testKoeyring),
-            "status_url" to statusURL(testKoeyring),
-            "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
-            "feilmelding" to feilmelding(testKoeyring)))
+            "testkoeyring_id" to testkoeyringId,
+            "nettside" to testResultat.side.toString(),
+            "suksesskriterium" to testResultat.suksesskriterium.joinToString(separator = ","),
+            "testregel" to testResultat.testregelId,
+            "element_utfall" to testResultat.elementUtfall,
+            "element_resultat" to testResultat.elementResultat,
+            "side_nivaa" to testResultat.sideNivaa,
+            "test_vart_utfoert" to Timestamp.valueOf(testResultat.testVartUtfoert),
+            "pointer" to testResultat.elementOmtale.pointer,
+            "html_code" to testResultat.elementOmtale.htmlCode))
   }
 
   private fun status(testKoeyring: TestKoeyring): String =
