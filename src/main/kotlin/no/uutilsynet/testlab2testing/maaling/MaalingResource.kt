@@ -22,7 +22,7 @@ class MaalingResource(
   data class NyMaalingDTO(
       val navn: String,
       val loeysingIdList: List<Int>,
-      val crawlParameters: CrawlParameters
+      val crawlParameters: CrawlParameters?
   )
   class InvalidUrlException(message: String) : Exception(message)
 
@@ -32,7 +32,8 @@ class MaalingResource(
   fun nyMaaling(@RequestBody dto: NyMaalingDTO): ResponseEntity<Any> =
       runCatching {
             val navn = validateNavn(dto.navn).getOrThrow()
-            maalingDAO.createMaaling(navn, dto.loeysingIdList, dto.crawlParameters)
+            maalingDAO.createMaaling(
+                navn, dto.loeysingIdList, dto.crawlParameters ?: CrawlParameters())
           }
           .fold(
               { id ->
