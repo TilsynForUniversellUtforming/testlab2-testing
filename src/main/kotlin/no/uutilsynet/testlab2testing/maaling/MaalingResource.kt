@@ -52,6 +52,19 @@ class MaalingResource(
       maalingDAO.getMaaling(id)?.let { applyFeatures(it, features) }?.let { ResponseEntity.ok(it) }
           ?: ResponseEntity.notFound().build()
 
+  @GetMapping("{id}/testresultat")
+  fun getTestResultatList(@PathVariable id: Int): ResponseEntity<List<TestResultat>> =
+      maalingDAO
+          .getMaaling(id)
+          ?.let {
+            when (it) {
+              is Maaling.TestingFerdig -> it.testKoeyringar.flatMap { it.testResultat }
+              else -> emptyList()
+            }
+          }
+          ?.let { ResponseEntity.ok(it) }
+          ?: ResponseEntity.notFound().build()
+
   @PutMapping("{id}/status")
   fun putNewStatus(@PathVariable id: Int, @RequestBody statusDTO: StatusDTO): ResponseEntity<Any> {
     return runCatching<ResponseEntity<Any>> {
