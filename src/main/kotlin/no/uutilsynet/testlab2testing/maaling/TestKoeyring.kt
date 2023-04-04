@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import com.fasterxml.jackson.annotation.JsonTypeInfo
@@ -33,7 +34,7 @@ sealed class TestKoeyring {
       override val loeysing: Loeysing,
       override val sistOppdatert: Instant,
       val statusURL: URL,
-      val testResultat: List<TestResultat>
+      @JsonIgnore val testResultat: List<TestResultat>
   ) : TestKoeyring()
 
   data class Feila(
