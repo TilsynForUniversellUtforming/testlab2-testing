@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.maaling
 import java.time.Instant
 import java.util.concurrent.TimeUnit.SECONDS
 import no.uutilsynet.testlab2testing.Features
+import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateParameters
 import org.slf4j.LoggerFactory
@@ -24,6 +25,7 @@ class MaalingResource(
       val loeysingIdList: List<Int>,
       val crawlParameters: CrawlParameters?
   )
+
   class InvalidUrlException(message: String) : Exception(message)
 
   private val logger = LoggerFactory.getLogger(MaalingResource::class.java)
@@ -41,6 +43,19 @@ class MaalingResource(
                 ResponseEntity.created(location).build()
               },
               { exception -> handleErrors(exception) })
+
+  @PutMapping
+  fun editMaaling(@RequestBody dto: EditMaalingDTO): ResponseEntity<out Any> =
+      runCatching {
+            val maalingCopy = dto.toMaaling()
+            ResponseEntity.ok(maalingDAO.updateMaaling(maalingCopy))
+          }
+          .getOrElse { exception -> handleErrors(exception) }
+
+  @DeleteMapping("{id}")
+  fun deleteMaaling(@PathVariable id: Int): ResponseEntity<out Any> =
+      runCatching { ResponseEntity.ok(maalingDAO.deleteMaaling(id)) }
+          .getOrElse { exception -> handleErrors(exception) }
 
   @GetMapping
   fun list(): List<Maaling> {
@@ -158,7 +173,10 @@ class MaalingResource(
           val oppdaterteMaalinger =
               statusCrawling.map { updateCrawlingStatuses(it) }.toSingleResult().getOrThrow()
           oppdaterteMaalinger.map { maalingDAO.save(it) }.toSingleResult().getOrThrow()
-          logger.info("oppdaterte status for ${statusCrawling.size} målinger med status `crawling`")
+          if (statusCrawling.isNotEmpty()) {
+            logger.info(
+                "oppdaterte status for ${statusCrawling.size} målinger med status `crawling`")
+          }
         }
         .getOrElse {
           logger.error("klarte ikke å oppdatere status for målinger med status `crawling`", it)
@@ -214,6 +232,27 @@ class MaalingResource(
         is NullPointerException -> ResponseEntity.badRequest().body(exception.message)
         else -> ResponseEntity.internalServerError().body(exception.message)
       }
+
+  private fun EditMaalingDTO.toMaaling(): Maaling {
+    val navn = validateNavn(this.navn).getOrThrow()
+    val maaling =
+        maalingDAO.getMaaling(this.id) ?: throw IllegalArgumentException("Måling finnes ikkje")
+    return when (maaling) {
+      is Maaling.Planlegging -> {
+        val loeysingList =
+            this.loeysingIdList?.let { ll -> getLoeysingarList().filter { ll.contains(it.id) } }
+                ?: throw IllegalArgumentException("Måling må ha løysingar")
+        maaling.copy(
+            navn = navn,
+            loeysingList = loeysingList,
+            crawlParameters = this.crawlParameters ?: maaling.crawlParameters)
+      }
+      is Maaling.Crawling -> maaling.copy(navn = this.navn)
+      is Maaling.Testing -> maaling.copy(navn = this.navn)
+      is Maaling.TestingFerdig -> maaling.copy(navn = this.navn)
+      is Maaling.Kvalitetssikring -> maaling.copy(navn = this.navn)
+    }
+  }
 }
 
 fun applyFeatures(maaling: Maaling, features: Features): Maaling =

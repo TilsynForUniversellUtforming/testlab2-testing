@@ -3,15 +3,27 @@ package no.uutilsynet.testlab2testing.maaling
 import java.net.URL
 import java.time.Instant
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
+import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 
 @DisplayName("Tester for MaalingDAO")
 @SpringBootTest
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
+
+  @AfterAll
+  fun cleanup() {
+    maalingDAO.jdbcTemplate.update(
+        "delete from maalingv1 where navn = :navn", MapSqlParameterSource("navn", maalingTestName))
+  }
 
   @DisplayName(
       "når vi henter en måling fra databasen som har status 'kvalitetssikring', så skal crawlresultatene inneholde en liste med nettsider")
@@ -89,9 +101,20 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     return id
   }
 
+  @DisplayName("Skal kunne oppdatere måling")
+  @Test
+  fun updateMaaling() {
+    val maaling = createTestMaaling()
+    BeanPropertySqlParameterSource(maaling)
+  }
+
+  private fun createTestMaaling(): Maaling.Planlegging =
+      maalingDAO.createMaaling(maalingTestName, loeysingList.map { it.id }, CrawlParameters()).let {
+        maalingDAO.getMaaling(it) as Maaling.Planlegging
+      }
+
   private fun saveMaalingWithStatusKvalitetssikring(): Int {
-    val id = maalingDAO.createMaaling("testmåling", loeysingList.map { it.id }, CrawlParameters())
-    val maaling = maalingDAO.getMaaling(id) as Maaling.Planlegging
+    val maaling = createTestMaaling()
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Ferdig(
@@ -102,12 +125,11 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
         }
     val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
     maalingDAO.save(kvalitetssikring).getOrThrow()
-    return id
+    return maaling.id
   }
 
   private fun saveMaalingWithStatusTesting(): Int {
-    val id = maalingDAO.createMaaling("testmåling", loeysingList.map { it.id }, CrawlParameters())
-    val maaling = maalingDAO.getMaaling(id) as Maaling.Planlegging
+    val maaling = createTestMaaling()
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Ferdig(
@@ -123,6 +145,6 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     maalingDAO.save(testing).getOrThrow()
-    return id
+    return maaling.id
   }
 }

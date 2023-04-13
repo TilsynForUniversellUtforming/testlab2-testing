@@ -7,10 +7,11 @@ object TestConstants {
   val uutilsynetLoeysing = Loeysing(1, "UUTilsynet", URL("https://www.uutilsynet.no/"))
   val digdirLoeysing = Loeysing(2, "Digdir", URL("https://www.digdir.no/"))
   val loeysingList = listOf(uutilsynetLoeysing, digdirLoeysing)
+  val maalingTestName = "test_skal_slettes"
 
   val maalingRequestBody =
       mapOf(
-          "navn" to "example",
+          "navn" to maalingTestName,
           "loeysingIdList" to loeysingList.map { it.id },
           "crawlParameters" to mapOf("maxLinksPerPage" to 10, "numLinksToSelect" to 10))
 }
