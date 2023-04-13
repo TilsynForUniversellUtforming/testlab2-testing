@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingRequestBody
+import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
 import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
@@ -19,8 +20,10 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.*
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MaalingIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val maalingDAO: MaalingDAO
@@ -45,7 +48,7 @@ class MaalingIntegrationTests(
           restTemplate.getForObject(location, MaalingDTO::class.java)
 
       assertThat(id, instanceOf(Int::class.java))
-      assertThat(navn, equalTo("example"))
+      assertThat(navn, equalTo(maalingTestName))
       assertThat(loeysingListFromApi, equalTo(loeysingList))
     }
 
@@ -60,7 +63,7 @@ class MaalingIntegrationTests(
       val thisMaaling = maalinger.body?.find { it.id == id }!!
 
       assertThat(thisMaaling.id, equalTo(id))
-      assertThat(thisMaaling.navn, equalTo("example"))
+      assertThat(thisMaaling.navn, equalTo(maalingTestName))
       assertThat(thisMaaling.loeysingList, equalTo(loeysingList))
     }
 
@@ -108,6 +111,12 @@ class MaalingIntegrationTests(
       assertThat((aksjon as Aksjon.StartCrawling).href, equalTo(URI("${location}/status")))
       assertThat(aksjon.data, equalTo(expectedData))
     }
+  }
+
+  @AfterAll
+  fun cleanup() {
+    maalingDAO.jdbcTemplate.update(
+        "delete from maalingv1 where navn = :navn", MapSqlParameterSource("navn", maalingTestName))
   }
 
   @Test
@@ -163,9 +172,9 @@ class MaalingIntegrationTests(
 
     private fun createMaaling(): Pair<Int, Instant> {
       val crawlParameters = CrawlParameters()
-      val id = maalingDAO.createMaaling("testmåling", listOf(1), crawlParameters)
+      val id = maalingDAO.createMaaling(maalingTestName, listOf(1), crawlParameters)
       val planlagtMaaling =
-          Maaling.Planlegging(id, "testmåling", listOf(uutilsynetLoeysing), crawlParameters)
+          Maaling.Planlegging(id, maalingTestName, listOf(uutilsynetLoeysing), crawlParameters)
       val sistOppdatert = Instant.now()
       val crawlingMaaling =
           Maaling.toCrawling(

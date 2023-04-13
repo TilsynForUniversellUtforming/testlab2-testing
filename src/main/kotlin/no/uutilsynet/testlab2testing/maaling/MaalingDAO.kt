@@ -4,21 +4,32 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.dto.Loeysing
-import no.uutilsynet.testlab2testing.maaling.Maaling.*
+import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
+import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
+import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
+import no.uutilsynet.testlab2testing.maaling.Maaling.Testing
+import no.uutilsynet.testlab2testing.maaling.Maaling.TestingFerdig
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingSql
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.loeysingSql
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.deleteMaalingLoeysingSql
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.deleteMaalingSql
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.getLoeysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.loysingRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingLoeysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingRowmapper
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.saveMaalingParams
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.saveMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByIdSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingSql
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.*
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingParams
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingSql
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingWithCrawlParameters
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.crawling
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.kvalitetssikring
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.planlegging
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing_ferdig
 import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
@@ -59,6 +70,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .addValue("maxLinksPerPage", crawlParameters.maxLinksPerPage)
             .addValue("numLinksToSelect", crawlParameters.numLinksToSelect)
 
+    val deleteMaalingLoeysingSql = "delete from MaalingLoeysing where idMaaling = :idMaaling"
+
     val createMaalingLoysingSql =
         "insert into MaalingLoeysing (idMaaling, idLoeysing) values (:idMaaling, :idLoeysing)"
     fun createMaalingLoysingParams(idMaaling: Int, idLoeysing: Int) =
@@ -77,8 +90,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       """
             .trimIndent()
 
-    val saveMaalingSql = "update MaalingV1 set navn = :navn, status = :status where id = :id"
-    fun saveMaalingParams(maaling: Maaling): Map<String, Any> {
+    val updateMaalingSql = "update MaalingV1 set navn = :navn, status = :status where id = :id"
+    fun updateMaalingParams(maaling: Maaling): Map<String, Any> {
       val status =
           when (maaling) {
             is Planlegging -> "planlegging"
@@ -89,8 +102,12 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           }
       return mapOf("navn" to maaling.navn, "status" to status, "id" to maaling.id)
     }
+    val updateMaalingWithCrawlParameters =
+        "update MaalingV1 set navn = :navn, status = :status, max_links_per_page = :maxLinksPerPage, num_links_to_select = :numLinksToSelect where id = :id"
 
-    val loeysingSql = "select id, namn, url from loeysing"
+    val deleteMaalingSql = "delete from MaalingV1 where id = :id"
+
+    val getLoeysingSql = "select id, namn, url from loeysing"
   }
 
   @Transactional
@@ -115,6 +132,10 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     return maaling?.toMaaling()
   }
+
+  @Transactional
+  fun deleteMaaling(id: Int): Int =
+      jdbcTemplate.update(deleteMaalingSql, MapSqlParameterSource("id", id))
 
   fun getMaalingList(): List<Maaling> =
       jdbcTemplate
@@ -291,33 +312,46 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       !rs.isAfterLast && rs.getInt("crid") == id
 
   @Transactional
-  fun save(maaling: Maaling): Result<Maaling> {
-    fun updateMaaling() = jdbcTemplate.update(saveMaalingSql, saveMaalingParams(maaling))
-
-    return runCatching {
-          when (maaling) {
-            is Planlegging -> {
-              updateMaaling()
-            }
-            is Crawling -> {
-              updateMaaling()
-              maaling.crawlResultat.forEach { saveCrawlResultat(it, maaling) }
-            }
-            is Kvalitetssikring -> {
-              updateMaaling()
-              maaling.crawlResultat.forEach { saveCrawlResultat(it, maaling) }
-            }
-            is Testing -> {
-              updateMaaling()
-              maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling.id) }
-            }
-            is TestingFerdig -> {
-              updateMaaling()
-              maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling.id) }
-            }
+  fun updateMaaling(maaling: Maaling) {
+    if (maaling is Planlegging) {
+      jdbcTemplate.update(
+          updateMaalingWithCrawlParameters,
+          mapOf(
+              "id" to maaling.id,
+              "navn" to maaling.navn,
+              "status" to "planlegging",
+              "maxLinksPerPage" to maaling.crawlParameters.maxLinksPerPage,
+              "numLinksToSelect" to maaling.crawlParameters.numLinksToSelect))
+      jdbcTemplate.update(deleteMaalingLoeysingSql, MapSqlParameterSource("idMaaling", maaling.id))
+      val updateBatchValues =
+          maaling.loeysingList.map {
+            MapSqlParameterSource("idMaaling", maaling.id).addValue("idLoeysing", it.id)
           }
-        }
-        .map { maaling }
+      jdbcTemplate.batchUpdate(createMaalingLoysingSql, updateBatchValues.toTypedArray())
+    } else {
+      jdbcTemplate.update(updateMaalingSql, updateMaalingParams(maaling))
+    }
+  }
+
+  @Transactional
+  fun save(maaling: Maaling): Result<Maaling> = runCatching {
+    updateMaaling(maaling)
+    when (maaling) {
+      is Planlegging -> {}
+      is Crawling -> {
+        maaling.crawlResultat.forEach { saveCrawlResultat(it, maaling) }
+      }
+      is Kvalitetssikring -> {
+        maaling.crawlResultat.forEach { saveCrawlResultat(it, maaling) }
+      }
+      is Testing -> {
+        maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling.id) }
+      }
+      is TestingFerdig -> {
+        maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling.id) }
+      }
+    }
+    maaling
   }
 
   @Transactional
@@ -439,5 +473,5 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
   }
 
-  fun getLoeysingarList(): List<Loeysing> = jdbcTemplate.query(loeysingSql, loysingRowmapper)
+  fun getLoeysingarList(): List<Loeysing> = jdbcTemplate.query(getLoeysingSql, loysingRowmapper)
 }
