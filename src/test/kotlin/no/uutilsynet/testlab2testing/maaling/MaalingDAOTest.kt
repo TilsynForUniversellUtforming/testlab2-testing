@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URL
 import java.time.Instant
+import no.uutilsynet.testlab2testing.maaling.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
 import org.assertj.core.api.Assertions.assertThat
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 
 @DisplayName("Tester for MaalingDAO")
@@ -63,10 +63,53 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     assertThat(testResultat.testregelId).isEqualTo("QW-ACT-R5")
   }
 
+  @DisplayName("Skal kunne oppdatere måling i Planlegging")
+  @Test
+  fun updateMaalingPlanlegging() {
+    val maalingNavnOriginal = "TestMåling"
+    val maalingNavn = maalingTestName
+    val crawlParameters = CrawlParameters(10, 10)
+    val loeysingList = listOf(digdirLoeysing)
+
+    val maaling: Maaling.Planlegging = createTestMaaling(maalingNavnOriginal)
+    maalingDAO.updateMaaling(
+        maaling.copy(
+            navn = maalingTestName, crawlParameters = crawlParameters, loeysingList = loeysingList))
+    val updatedMaaling = maalingDAO.getMaaling(maaling.id) as Maaling.Planlegging
+
+    assertThat(updatedMaaling.navn).isEqualTo(maalingNavn)
+    assertThat(updatedMaaling.crawlParameters).isEqualTo(crawlParameters)
+    assertThat(updatedMaaling.loeysingList).containsExactly(digdirLoeysing)
+  }
+
+  @DisplayName("Skal kunne oppdatere måling i annen status")
+  @Test
+  fun updateMaalingOtherStatus() {
+    val maalingNavnOriginal = "TestMåling"
+    val maalingNavn = maalingTestName
+
+    val id = saveMaalingWithStatusKvalitetssikring(maalingNavnOriginal)
+    val maaling = maalingDAO.getMaaling(id) as Maaling.Kvalitetssikring
+    assertThat(maaling.navn).isEqualTo(maalingNavnOriginal)
+
+    maalingDAO.updateMaaling(maaling.copy(navn = maalingTestName))
+    val updatedMaaling = maalingDAO.getMaaling(maaling.id) as Maaling.Kvalitetssikring
+
+    assertThat(updatedMaaling.navn).isEqualTo(maalingNavn)
+  }
+
+  @DisplayName("Skal kunne slette måling")
+  @Test
+  fun deleteMaaling() {
+    val maaling = createTestMaaling()
+    val deletedRows = maalingDAO.deleteMaaling(maaling.id)
+    assertThat(deletedRows).isEqualTo(1)
+    val nonExistingMaaling = maalingDAO.getMaaling(maaling.id)
+    assertThat(nonExistingMaaling).isNull()
+  }
+
   private fun saveMaalingWithStatusTestingFerdig(): Int {
-    val id =
-        maalingDAO.createMaaling("testing ferdig", loeysingList.map { it.id }, CrawlParameters())
-    val maaling = maalingDAO.getMaaling(id) as Maaling.Planlegging
+    val maaling = createTestMaaling()
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Ferdig(
@@ -98,23 +141,16 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     val testingFerdig = Maaling.toTestingFerdig(testing)!!
     maalingDAO.save(testingFerdig).getOrThrow()
-    return id
+    return maaling.id
   }
 
-  @DisplayName("Skal kunne oppdatere måling")
-  @Test
-  fun updateMaaling() {
-    val maaling = createTestMaaling()
-    BeanPropertySqlParameterSource(maaling)
-  }
-
-  private fun createTestMaaling(): Maaling.Planlegging =
-      maalingDAO.createMaaling(maalingTestName, loeysingList.map { it.id }, CrawlParameters()).let {
+  private fun createTestMaaling(name: String = maalingTestName): Maaling.Planlegging =
+      maalingDAO.createMaaling(name, loeysingList.map { it.id }, CrawlParameters()).let {
         maalingDAO.getMaaling(it) as Maaling.Planlegging
       }
 
-  private fun saveMaalingWithStatusKvalitetssikring(): Int {
-    val maaling = createTestMaaling()
+  private fun saveMaalingWithStatusKvalitetssikring(name: String = maalingTestName): Int {
+    val maaling = createTestMaaling(name)
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Ferdig(

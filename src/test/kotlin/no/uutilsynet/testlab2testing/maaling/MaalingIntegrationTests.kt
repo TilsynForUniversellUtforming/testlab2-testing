@@ -4,6 +4,7 @@ import java.net.URI
 import java.net.URL
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingRequestBody
@@ -28,6 +29,13 @@ class MaalingIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val maalingDAO: MaalingDAO
 ) {
+
+  @AfterAll
+  fun cleanup() {
+    maalingDAO.jdbcTemplate.update(
+        "delete from maalingv1 where navn = :navn", MapSqlParameterSource("navn", maalingTestName))
+  }
+
   @Test
   @DisplayName("det er mulig å opprette nye målinger")
   fun postNewMaaling() {
@@ -113,12 +121,6 @@ class MaalingIntegrationTests(
     }
   }
 
-  @AfterAll
-  fun cleanup() {
-    maalingDAO.jdbcTemplate.update(
-        "delete from maalingv1 where navn = :navn", MapSqlParameterSource("navn", maalingTestName))
-  }
-
   @Test
   @DisplayName("en måling som ikke finnes i databasen skal returnere 404")
   fun getNonExisting() {
@@ -138,6 +140,62 @@ class MaalingIntegrationTests(
             "/v1/maalinger/loeysingar", HttpMethod.GET, HttpEntity.EMPTY, responseType)
 
     assertThat(entity.body!![0], equalTo(loeysingList[0]))
+  }
+
+  @Test
+  @DisplayName("Skal kunne endre måling")
+  fun updateMaaling() {
+    val maaling =
+        maalingDAO.createMaaling("TestMåling", loeysingList.map { it.id }, CrawlParameters()).let {
+          maalingDAO.getMaaling(it) as Maaling.Planlegging
+        }
+
+    restTemplate.exchange(
+        "/v1/maalinger",
+        HttpMethod.PUT,
+        HttpEntity(
+            EditMaalingDTO(
+                id = maaling.id,
+                navn = maalingTestName,
+                loeysingIdList = listOf(maaling.loeysingList[0].id),
+                crawlParameters = null)),
+        Unit::class.java)
+
+    val updatedMaaling =
+        restTemplate.exchange(
+            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY, MaalingDTO::class.java)
+
+    Assertions.assertThat(updatedMaaling?.body).isNotNull
+    Assertions.assertThat(updatedMaaling?.body).isInstanceOf(MaalingDTO::class.java)
+
+    val response: MaalingDTO = updatedMaaling.body!!
+
+    Assertions.assertThat(response.navn).isEqualTo(maalingTestName)
+    Assertions.assertThat(response.loeysingList).containsExactly(uutilsynetLoeysing)
+  }
+
+  @Test
+  @DisplayName("Skal kunne slette måling")
+  fun deleteMaaling() {
+    val maaling =
+        maalingDAO.createMaaling("TestMåling", loeysingList.map { it.id }, CrawlParameters()).let {
+          maalingDAO.getMaaling(it) as Maaling.Planlegging
+        }
+
+    val existingMaaling =
+        restTemplate.exchange(
+            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY, MaalingDTO::class.java)
+
+    Assertions.assertThat(existingMaaling?.body).isNotNull
+    Assertions.assertThat(existingMaaling?.body).isInstanceOf(MaalingDTO::class.java)
+
+    restTemplate.delete("/v1/maalinger/${maaling.id}")
+
+    val nonExistingMaaling =
+        restTemplate.exchange(
+            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY, MaalingDTO::class.java)
+
+    Assertions.assertThat(nonExistingMaaling?.body).isNull()
   }
 
   @Nested

@@ -45,7 +45,7 @@ class MaalingResource(
               { exception -> handleErrors(exception) })
 
   @PutMapping
-  fun editMaaling(@RequestBody dto: EditMaalingDTO): ResponseEntity<out Any> =
+  fun updateMaaling(@RequestBody dto: EditMaalingDTO): ResponseEntity<out Any> =
       runCatching {
             val maalingCopy = dto.toMaaling()
             ResponseEntity.ok(maalingDAO.updateMaaling(maalingCopy))
