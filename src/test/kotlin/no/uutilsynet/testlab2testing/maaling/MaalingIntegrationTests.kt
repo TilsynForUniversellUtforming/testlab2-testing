@@ -131,18 +131,6 @@ class MaalingIntegrationTests(
   }
 
   @Test
-  @DisplayName("Skal hente ut listen med løsninger")
-  fun fetchLoesyingList() {
-    val responseType = object : ParameterizedTypeReference<List<Loeysing>>() {}
-
-    val entity =
-        restTemplate.exchange(
-            "/v1/maalinger/loeysingar", HttpMethod.GET, HttpEntity.EMPTY, responseType)
-
-    assertThat(entity.body!![0], equalTo(loeysingList[0]))
-  }
-
-  @Test
   @DisplayName("Skal kunne endre måling")
   fun updateMaaling() {
     val maaling =

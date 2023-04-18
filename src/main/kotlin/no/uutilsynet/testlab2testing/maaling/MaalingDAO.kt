@@ -4,6 +4,7 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.dto.Loeysing
+import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loysingRowmapper
 import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
 import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
 import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
@@ -16,8 +17,6 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaal
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.deleteMaalingLoeysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.deleteMaalingSql
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.getLoeysingSql
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.loysingRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingLoeysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByIdSql
@@ -55,7 +54,6 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   object MaalingParams {
     val maalingRowmapper = DataClassRowMapper.newInstance(MaalingDTO::class.java)
-    val loysingRowmapper = DataClassRowMapper.newInstance(Loeysing::class.java)
     val crawlParametersRowmapper = DataClassRowMapper.newInstance(CrawlParameters::class.java)
 
     val createMaalingSql =
@@ -106,8 +104,6 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         "update MaalingV1 set navn = :navn, status = :status, max_links_per_page = :maxLinksPerPage, num_links_to_select = :numLinksToSelect where id = :id"
 
     val deleteMaalingSql = "delete from MaalingV1 where id = :id"
-
-    val getLoeysingSql = "select id, namn, url from loeysing"
   }
 
   @Transactional
@@ -472,6 +468,4 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       }
     }
   }
-
-  fun getLoeysingarList(): List<Loeysing> = jdbcTemplate.query(getLoeysingSql, loysingRowmapper)
 }
