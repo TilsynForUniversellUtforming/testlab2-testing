@@ -3,8 +3,9 @@ package no.uutilsynet.testlab2testing.maaling
 import java.time.Instant
 import java.util.concurrent.TimeUnit.SECONDS
 import no.uutilsynet.testlab2testing.Features
+import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
-import no.uutilsynet.testlab2testing.dto.Loeysing
+import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateParameters
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("v1/maalinger")
 class MaalingResource(
     val maalingDAO: MaalingDAO,
+    val loeysingDAO: LoeysingDAO,
     val crawlerClient: CrawlerClient,
     val autoTesterClient: AutoTesterClient,
     val features: Features
@@ -25,8 +27,6 @@ class MaalingResource(
       val loeysingIdList: List<Int>,
       val crawlParameters: CrawlParameters?
   )
-
-  class InvalidUrlException(message: String) : Exception(message)
 
   private val logger = LoggerFactory.getLogger(MaalingResource::class.java)
 
@@ -162,8 +162,6 @@ class MaalingResource(
 
   data class StatusDTO(val status: String, val loeysingIdList: List<Int>?)
 
-  @GetMapping("loeysingar") fun getLoeysingarList(): List<Loeysing> = maalingDAO.getLoeysingarList()
-
   @Scheduled(fixedDelay = 30, timeUnit = SECONDS)
   fun updateStatuses() {
     val alleMaalinger = maalingDAO.getMaalingList()
@@ -226,13 +224,6 @@ class MaalingResource(
     }
   }
 
-  private fun handleErrors(exception: Throwable): ResponseEntity<Any> =
-      when (exception) {
-        is InvalidUrlException,
-        is NullPointerException -> ResponseEntity.badRequest().body(exception.message)
-        else -> ResponseEntity.internalServerError().body(exception.message)
-      }
-
   private fun EditMaalingDTO.toMaaling(): Maaling {
     val navn = validateNavn(this.navn).getOrThrow()
     val maaling =
@@ -240,7 +231,9 @@ class MaalingResource(
     return when (maaling) {
       is Maaling.Planlegging -> {
         val loeysingList =
-            this.loeysingIdList?.let { ll -> getLoeysingarList().filter { ll.contains(it.id) } }
+            this.loeysingIdList?.let { ll ->
+              loeysingDAO.getLoeysingList().filter { ll.contains(it.id) }
+            }
                 ?: throw IllegalArgumentException("Måling må ha løysingar")
         maaling.copy(
             navn = navn,
