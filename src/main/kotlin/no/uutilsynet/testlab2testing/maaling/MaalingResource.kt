@@ -80,6 +80,13 @@ class MaalingResource(
           ?.let { ResponseEntity.ok(it) }
           ?: ResponseEntity.notFound().build()
 
+  @GetMapping("{id}/testresultat/{loeysingId}")
+  fun getTestresultatForMaalingLoeysing(
+      @PathVariable id: Int,
+      @PathVariable loeysingId: Int
+  ): ResponseEntity<List<TestResultat>> =
+      ResponseEntity.ok(maalingDAO.getTestresultatForMaalingLoeysing(id, loeysingId))
+
   @PutMapping("{id}/status")
   fun putNewStatus(@PathVariable id: Int, @RequestBody statusDTO: StatusDTO): ResponseEntity<Any> {
     return runCatching<ResponseEntity<Any>> {

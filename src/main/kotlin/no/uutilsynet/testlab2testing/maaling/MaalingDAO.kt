@@ -21,6 +21,9 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingLoe
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByIdSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingSql
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectTestResultForMaalingLoeysingParams
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectTestResultForMaalingLoeysingSql
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.testResultatRowMapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingWithCrawlParameters
@@ -55,6 +58,17 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   object MaalingParams {
     val maalingRowmapper = DataClassRowMapper.newInstance(MaalingDTO::class.java)
     val crawlParametersRowmapper = DataClassRowMapper.newInstance(CrawlParameters::class.java)
+    val testResultatRowMapper: (ResultSet, Int) -> TestResultat = { rs: ResultSet, _: Int ->
+      TestResultat(
+          rs.getString("suksesskriterium").split(","),
+          URL(rs.getString("nettside")),
+          rs.getString("testregel"),
+          rs.getInt("side_nivaa"),
+          rs.getTimestamp("test_vart_utfoert").toLocalDateTime(),
+          rs.getString("element_utfall"),
+          rs.getString("element_resultat"),
+          TestResultat.ACTElement(rs.getString("html_code"), rs.getString("pointer")))
+    }
 
     val createMaalingSql =
         """
@@ -104,6 +118,18 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         "update MaalingV1 set navn = :navn, status = :status, max_links_per_page = :maxLinksPerPage, num_links_to_select = :numLinksToSelect where id = :id"
 
     val deleteMaalingSql = "delete from MaalingV1 where id = :id"
+
+    val selectTestResultForMaalingLoeysingSql =
+        """
+          select nettside, suksesskriterium, testregel, element_utfall, element_resultat, side_nivaa, test_vart_utfoert, pointer, html_code
+            from testresultat tr
+            join testkoeyring t on tr.testkoeyring_id = t.id
+          where t.maaling_id = :maalingId and t.loeysing_id = :loeysingId
+        """
+            .trimIndent()
+
+    fun selectTestResultForMaalingLoeysingParams(maalingId: Int, loeysingId: Int) =
+        MapSqlParameterSource("maalingId", maalingId).addValue("loeysingId", loeysingId)
   }
 
   @Transactional
@@ -128,6 +154,12 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     return maaling?.toMaaling()
   }
+
+  fun getTestresultatForMaalingLoeysing(maalingId: Int, loeysingId: Int): List<TestResultat> =
+      jdbcTemplate.query(
+          selectTestResultForMaalingLoeysingSql,
+          selectTestResultForMaalingLoeysingParams(maalingId, loeysingId),
+          testResultatRowMapper)
 
   @Transactional
   fun deleteMaaling(id: Int): Int =
@@ -238,17 +270,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         """
             .trimIndent(),
         mapOf("testkoeyring_id" to testkoeyringId),
-        fun(rs: ResultSet, _: Int): TestResultat {
-          return TestResultat(
-              rs.getString("suksesskriterium").split(","),
-              URL(rs.getString("nettside")),
-              rs.getString("testregel"),
-              rs.getInt("side_nivaa"),
-              rs.getTimestamp("test_vart_utfoert").toLocalDateTime(),
-              rs.getString("element_utfall"),
-              rs.getString("element_resultat"),
-              TestResultat.ACTElement(rs.getString("html_code"), rs.getString("pointer")))
-        })
+        testResultatRowMapper)
   }
 
   fun getCrawlParameters(maalingId: Int): CrawlParameters =

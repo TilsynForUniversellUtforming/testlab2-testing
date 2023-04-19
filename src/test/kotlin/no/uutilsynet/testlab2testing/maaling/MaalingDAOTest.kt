@@ -63,6 +63,17 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     assertThat(testResultat.testregelId).isEqualTo("QW-ACT-R5")
   }
 
+  @DisplayName("Skal kunne hente testresultater for måling og løsning")
+  @Test
+  fun getTestresultatForMaalingLoeysing() {
+    val id = saveMaalingWithStatusTestingFerdig()
+    val maaling = maalingDAO.getMaaling(id) as Maaling.TestingFerdig
+    val testResultat =
+        maalingDAO
+            .getTestresultatForMaalingLoeysing(maaling.id, maaling.testKoeyringar[0].loeysing.id)[0]
+    assertThat(testResultat.testregelId).isEqualTo("QW-ACT-R5")
+  }
+
   @DisplayName("Skal kunne oppdatere måling i Planlegging")
   @Test
   fun updateMaalingPlanlegging() {
