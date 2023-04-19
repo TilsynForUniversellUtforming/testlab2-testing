@@ -57,7 +57,8 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
   fun getStatus(crawlResultat: CrawlResultat): Result<CrawlStatus> =
       when (crawlResultat) {
         is CrawlResultat.IkkeFerdig -> {
-          data class StatusDTO(val runtimeStatus: String, val output: List<String>?)
+          data class CrawlerOutput(val url: String, val title: String)
+          data class StatusDTO(val runtimeStatus: String, val output: List<CrawlerOutput>?)
 
           runCatching {
             val response =
@@ -67,7 +68,7 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
               "Running" -> CrawlStatus.Running
               "Completed" -> {
                 val nettsider =
-                    response.output?.map { URL(it) }
+                    response.output?.map { crawlerOutput -> URL(crawlerOutput.url) }
                         ?: throw RuntimeException("`output` fra crawler er `null`")
                 CrawlStatus.Completed(nettsider)
               }
