@@ -96,5 +96,65 @@ sealed class TestKoeyring {
           }
           else -> testKoeyring
         }
+
+    fun aggregerPaaTestregel(
+        testKoeyringar: List<Ferdig>,
+        maalingId: Int,
+        loeysing: Loeysing
+    ): List<AggregertResultat> {
+      val totaltAntallSider =
+          testKoeyringar
+              .map { it.crawlResultat }
+              .filterIsInstance<CrawlResultat.Ferdig>()
+              .flatMap { it.nettsider }
+              .map { it.toString() }
+              .distinct()
+              .count()
+      return testKoeyringar
+          .flatMap { it.testResultat }
+          .groupBy { it.testregelId }
+          .map { entry ->
+            val antallSamsvar = entry.value.count { it.elementResultat == "samsvar" }
+            val antallBrot = entry.value.count { it.elementResultat == "brot" }
+            val antallVarsel = entry.value.count { it.elementResultat == "varsel" }
+            val antallSiderMedSamsvar =
+                entry.value
+                    .groupBy { it.side }
+                    .count {
+                      it.value.all { testResultat -> testResultat.elementResultat == "samsvar" }
+                    }
+            val antallSiderMedBrot =
+                entry.value
+                    .groupBy { it.side }
+                    .count {
+                      it.value.any { testResultat -> testResultat.elementResultat == "brot" }
+                    }
+            val siderTestet = entry.value.map { it.side }.distinct().count()
+            val antallSiderUtenForekomst = totaltAntallSider - siderTestet
+
+            AggregertResultat(
+                maalingId,
+                loeysing,
+                entry.key,
+                antallSamsvar,
+                antallBrot,
+                antallVarsel,
+                antallSiderMedSamsvar,
+                antallSiderMedBrot,
+                antallSiderUtenForekomst)
+          }
+    }
   }
+
+  data class AggregertResultat(
+      val maalingId: Int,
+      val loeysing: Loeysing,
+      val testregelId: String,
+      val antallSamsvar: Int,
+      val antallBrot: Int,
+      val antallVarsel: Int,
+      val antallSiderMedSamsvar: Int,
+      val antallSiderMedBrot: Int,
+      val antallSiderUtenForekomst: Int
+  )
 }
