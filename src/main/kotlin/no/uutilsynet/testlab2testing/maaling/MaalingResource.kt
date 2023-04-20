@@ -192,7 +192,9 @@ class MaalingResource(
           val oppdaterteMaalinger =
               statusTesting.map { updateTestingStatuses(it) }.toSingleResult().getOrThrow()
           oppdaterteMaalinger.map { maalingDAO.save(it) }.toSingleResult().getOrThrow()
-          logger.info("oppdaterte status for ${statusTesting.size} målinger med status `testing`")
+          if (statusTesting.isNotEmpty()) {
+            logger.info("oppdaterte status for ${statusTesting.size} målinger med status `testing`")
+          }
         }
         .getOrElse {
           logger.error("klarte ikke å oppdatere status for målinger med status `testing`", it)
