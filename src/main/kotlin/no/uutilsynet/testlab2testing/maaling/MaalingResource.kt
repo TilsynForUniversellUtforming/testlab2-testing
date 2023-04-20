@@ -205,6 +205,7 @@ class MaalingResource(
           runCatching {
             val oppdaterteResultater =
                 maaling.crawlResultat
+                    .filterIsInstance<CrawlResultat.IkkeFerdig>()
                     .map {
                       crawlerClient.getStatus(it).map { newStatus -> updateStatus(it, newStatus) }
                     }

@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.maaling
 
-import java.net.URL
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.time.Instant
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import org.slf4j.LoggerFactory
@@ -54,37 +55,25 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
                 exception.message ?: "start crawling feilet", loeysing, Instant.now())
           }
 
-  fun getStatus(crawlResultat: CrawlResultat): Result<CrawlStatus> =
-      when (crawlResultat) {
-        is CrawlResultat.IkkeFerdig -> {
-          data class CrawlerOutput(val url: String, val title: String)
-          data class StatusDTO(val runtimeStatus: String, val output: List<CrawlerOutput>?)
-
-          runCatching {
-            val response =
-                restTemplate.getForObject(crawlResultat.statusUrl.toURI(), StatusDTO::class.java)!!
-            when (response.runtimeStatus) {
-              "Pending" -> CrawlStatus.Pending
-              "Running" -> CrawlStatus.Running
-              "Completed" -> {
-                val nettsider =
-                    response.output?.map { crawlerOutput -> URL(crawlerOutput.url) }
-                        ?: throw RuntimeException("`output` fra crawler er `null`")
-                CrawlStatus.Completed(nettsider)
-              }
-              "Failed" -> CrawlStatus.Failed
-              else -> throw RuntimeException("ukjent status: ${response.runtimeStatus}")
-            }
-          }
-        }
-        is CrawlResultat.Feilet -> Result.success(CrawlStatus.Failed)
-        is CrawlResultat.Ferdig -> Result.success(CrawlStatus.Completed(crawlResultat.nettsider))
-      }
+  fun getStatus(crawlResultat: CrawlResultat.IkkeFerdig): Result<CrawlStatus> = runCatching {
+    val response =
+        restTemplate.getForObject(crawlResultat.statusUrl.toURI(), CrawlStatus::class.java)!!
+    response
+  }
 }
 
+data class CrawlerOutput(val url: String, val title: String)
+
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "runtimeStatus")
+@JsonSubTypes(
+    JsonSubTypes.Type(value = CrawlStatus.Pending::class, name = "Pending"),
+    JsonSubTypes.Type(value = CrawlStatus.Running::class, name = "Running"),
+    JsonSubTypes.Type(value = CrawlStatus.Completed::class, name = "Completed"),
+    JsonSubTypes.Type(value = CrawlStatus.Failed::class, name = "Failed"))
 sealed class CrawlStatus {
   object Pending : CrawlStatus()
   object Running : CrawlStatus()
-  data class Completed(val nettsider: List<URL>) : CrawlStatus()
-  object Failed : CrawlStatus()
+  data class Completed(val output: List<CrawlerOutput>) : CrawlStatus()
+  data class Failed(val output: String) : CrawlStatus()
 }
