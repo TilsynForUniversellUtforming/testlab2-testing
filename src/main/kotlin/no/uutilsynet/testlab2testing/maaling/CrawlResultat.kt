@@ -39,7 +39,7 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
         when (newStatus) {
           is CrawlStatus.Completed ->
               CrawlResultat.Ferdig(
-                  newStatus.nettsider,
+                  newStatus.output.map { crawlerOutput -> URL(crawlerOutput.url) },
                   crawlResultat.statusUrl,
                   crawlResultat.loeysing,
                   Instant.now())

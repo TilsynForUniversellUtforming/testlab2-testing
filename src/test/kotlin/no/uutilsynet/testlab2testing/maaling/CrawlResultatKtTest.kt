@@ -16,11 +16,14 @@ class CrawlResultatKtTest {
   fun toFerdig() {
     val ikkeFerdig =
         CrawlResultat.IkkeFerdig(URL("https://status.uri"), uutilsynetLoeysing, Instant.now())
-    val nettsider =
+    val crawlerOutput =
         listOf(
-            URL("https://www.uutilsynet.no/"),
-            URL("https://www.uutilsynet.no/veiledning/tilgjengelighetserklaering/1127"))
-    val updated = updateStatus(ikkeFerdig, CrawlStatus.Completed(nettsider)) as CrawlResultat.Ferdig
-    assertThat(updated.nettsider).containsExactlyElementsOf(nettsider)
+            CrawlerOutput("https://www.uutilsynet.no/", "uutilsynet"),
+            CrawlerOutput(
+                "https://www.uutilsynet.no/veiledning/tilgjengelighetserklaering/1127",
+                "uutilsynet"))
+    val updated =
+        updateStatus(ikkeFerdig, CrawlStatus.Completed(crawlerOutput)) as CrawlResultat.Ferdig
+    assertThat(updated.nettsider).containsExactlyElementsOf(crawlerOutput.map { URL(it.url) })
   }
 }
