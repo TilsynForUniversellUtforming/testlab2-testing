@@ -5,11 +5,7 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loysingRowmapper
-import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
-import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
-import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
-import no.uutilsynet.testlab2testing.maaling.Maaling.Testing
-import no.uutilsynet.testlab2testing.maaling.Maaling.TestingFerdig
+import no.uutilsynet.testlab2testing.maaling.Maaling.*
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingSql
@@ -27,11 +23,7 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.testResult
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingWithCrawlParameters
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.crawling
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.kvalitetssikring
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.planlegging
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing_ferdig
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.*
 import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
@@ -169,7 +161,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       jdbcTemplate
           .query(selectMaalingSql, maalingRowmapper)
           .map { it.toMaaling() }
-          .also { logger.info("hentet ${it.size} målinger fra databasen") }
+          .also { logger.debug("hentet ${it.size} målinger fra databasen") }
 
   private fun MaalingDTO.toMaaling(): Maaling =
       when (status) {
