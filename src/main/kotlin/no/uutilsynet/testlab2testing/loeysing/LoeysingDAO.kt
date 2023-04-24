@@ -15,8 +15,6 @@ import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.jdbc.support.GeneratedKeyHolder
-import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
@@ -24,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional
 class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   object LoeysingParams {
-    val createLoeysingSql = "insert into loeysing (namn, url) values (:namn, :url)"
+    val createLoeysingSql = "insert into loeysing (namn, url) values (:namn, :url) returning id"
     fun createLoeysingParams(namn: String, url: URL) =
         MapSqlParameterSource("namn", namn).addValue("url", url.toString())
 
@@ -50,12 +48,9 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getLoeysingList(): List<Loeysing> = jdbcTemplate.query(getLoeysingListSql, loysingRowmapper)
 
   @Transactional
-  fun createLoeysing(namn: String, url: URL): Int {
-    val keyHolder: KeyHolder = GeneratedKeyHolder()
-    jdbcTemplate.update(
-        createLoeysingSql, createLoeysingParams(namn, url), keyHolder, arrayOf("id"))
-    return keyHolder.key!!.toInt()
-  }
+  fun createLoeysing(namn: String, url: URL): Int =
+      jdbcTemplate.queryForObject(
+          createLoeysingSql, createLoeysingParams(namn, url), Int::class.java)!!
 
   @Transactional
   fun deleteLoeysing(id: Int) = jdbcTemplate.update(deleteLoeysingSql, deleteLoeysingParams(id))

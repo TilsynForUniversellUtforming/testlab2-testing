@@ -24,7 +24,7 @@ class LoeysingResource(val loeysingDAO: LoeysingDAO) {
       val url: String,
   )
 
-  private val locationForId: (Number) -> URI = { id -> URI("/v1/loeysing/${id}") }
+  private val locationForId: (Int) -> URI = { id -> URI("/v1/loeysing/${id}") }
 
   @GetMapping("{id}")
   fun getLoeysing(@PathVariable id: Int): ResponseEntity<Loeysing> =
