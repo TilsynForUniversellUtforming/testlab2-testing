@@ -21,7 +21,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -32,7 +31,7 @@ class LoeysingIntegrationTests(
   @AfterAll
   fun cleanup() {
     loeysingDAO.jdbcTemplate.update(
-        "delete from loeysing where namn = :namn", MapSqlParameterSource("namn", loeysingTestName))
+        "delete from loeysing where namn = :namn", mapOf("namn" to loeysingTestName))
   }
 
   @Test

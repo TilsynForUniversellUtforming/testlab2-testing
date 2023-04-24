@@ -13,7 +13,6 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.updateL
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.updateLoeysingSql
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -24,26 +23,24 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   object LoeysingParams {
     val createLoeysingSql = "insert into loeysing (namn, url) values (:namn, :url) returning id"
     fun createLoeysingParams(namn: String, url: URL) =
-        MapSqlParameterSource("namn", namn).addValue("url", url.toString())
+        mapOf("namn" to namn, "url" to url.toString())
 
     val getLoeysingListSql = "select id, namn, url from loeysing order by id"
     val getLoeysingSql = "select id, namn, url from loeysing where id = :id order by id"
 
     val updateLoeysingSql = "update loeysing set namn = :namn, url = :url where id = :id"
     fun updateLoeysingParams(loeysing: Loeysing) =
-        MapSqlParameterSource("namn", loeysing.namn)
-            .addValue("url", loeysing.url.toString())
-            .addValue("id", loeysing.id)
+        mapOf("namn" to loeysing.namn, "url" to loeysing.url.toString(), "id" to loeysing.id)
 
     val deleteLoeysingSql = "delete from loeysing where id = :id"
-    fun deleteLoeysingParams(id: Int) = MapSqlParameterSource("id", id)
+    fun deleteLoeysingParams(id: Int) = mapOf("id" to id)
 
     val loysingRowmapper = DataClassRowMapper.newInstance(Loeysing::class.java)
   }
 
   fun getLoeysing(id: Int): Loeysing? =
       DataAccessUtils.singleResult(
-          jdbcTemplate.query(getLoeysingSql, MapSqlParameterSource("id", id), loysingRowmapper))
+          jdbcTemplate.query(getLoeysingSql, mapOf("id" to id), loysingRowmapper))
 
   fun getLoeysingList(): List<Loeysing> = jdbcTemplate.query(getLoeysingListSql, loysingRowmapper)
 
