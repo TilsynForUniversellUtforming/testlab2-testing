@@ -13,7 +13,7 @@ class ErrorHandlingUtilTests {
   private val okFunction = { funcId }
   private val npeFunction = { throw NullPointerException(errorMessage) }
   private val otherExFunction = { throw Exception(errorMessage) }
-  private val locationForId = { id: Number -> URI.create("/test/$id") }
+  private val locationForId = { id: Int -> URI.create("/test/$id") }
 
   @Test
   @DisplayName("handleErrors skal returnere 'bad request' for NullPointerException")
