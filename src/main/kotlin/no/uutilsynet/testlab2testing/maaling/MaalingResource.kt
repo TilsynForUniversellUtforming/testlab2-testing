@@ -68,24 +68,22 @@ class MaalingResource(
           ?: ResponseEntity.notFound().build()
 
   @GetMapping("{id}/testresultat")
-  fun getTestResultatList(@PathVariable id: Int): ResponseEntity<List<TestResultat>> =
-      maalingDAO
-          .getMaaling(id)
-          ?.let {
-            when (it) {
-              is Maaling.TestingFerdig -> it.testKoeyringar.flatMap { it.testResultat }
-              else -> emptyList()
+  fun getTestResultatList(
+      @PathVariable id: Int,
+      @RequestParam loeysingId: Int?
+  ): ResponseEntity<List<TestResultat>> =
+      if (loeysingId != null) {
+            maalingDAO.getTestresultatForMaalingLoeysing(id, loeysingId)
+          } else {
+            maalingDAO.getMaaling(id)?.let {
+              when (it) {
+                is Maaling.TestingFerdig -> it.testKoeyringar.flatMap { it.testResultat }
+                else -> emptyList()
+              }
             }
           }
           ?.let { ResponseEntity.ok(it) }
           ?: ResponseEntity.notFound().build()
-
-  @GetMapping("{id}/testresultat/{loeysingId}")
-  fun getTestresultatForMaalingLoeysing(
-      @PathVariable id: Int,
-      @PathVariable loeysingId: Int
-  ): ResponseEntity<List<TestResultat>> =
-      ResponseEntity.ok(maalingDAO.getTestresultatForMaalingLoeysing(id, loeysingId))
 
   @PutMapping("{id}/status")
   fun putNewStatus(@PathVariable id: Int, @RequestBody statusDTO: StatusDTO): ResponseEntity<Any> {

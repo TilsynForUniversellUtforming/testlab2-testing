@@ -11,7 +11,6 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -20,7 +19,7 @@ class LoeysingDAOTest(@Autowired val loeysingDAO: LoeysingDAO) {
   @AfterAll
   fun cleanup() {
     loeysingDAO.jdbcTemplate.update(
-        "delete from loeysing where namn = :namn", MapSqlParameterSource("namn", loeysingTestName))
+        "delete from loeysing where namn = :namn", mapOf("namn" to loeysingTestName))
   }
 
   @Test
