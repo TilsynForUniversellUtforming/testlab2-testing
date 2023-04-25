@@ -185,6 +185,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     join loeysing l on cr.loeysingid = l.id
                     left join nettside n on cr.id = n.crawlresultat_id
                     where maaling_id = :maalingId
+                    order by l.id
                   """
                       .trimIndent(),
                   mapOf("maalingId" to this.id),
