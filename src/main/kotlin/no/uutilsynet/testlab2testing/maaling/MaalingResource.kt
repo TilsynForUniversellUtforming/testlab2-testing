@@ -85,6 +85,21 @@ class MaalingResource(
           ?.let { ResponseEntity.ok(it) }
           ?: ResponseEntity.notFound().build()
 
+  @GetMapping("{id}/crawlresultat")
+  fun getCrawlResultatList(@PathVariable id: Int): ResponseEntity<List<CrawlResultat>> =
+      maalingDAO
+          .getMaaling(id)
+          ?.let { maaling: Maaling ->
+            when (maaling) {
+              is Maaling.Kvalitetssikring -> maaling.crawlResultat
+              is Maaling.Testing -> maaling.testKoeyringar.map { it.crawlResultat }
+              is Maaling.TestingFerdig -> maaling.testKoeyringar.map { it.crawlResultat }
+              else -> emptyList()
+            }
+          }
+          ?.let { ResponseEntity.ok(it) }
+          ?: ResponseEntity.notFound().build()
+
   @PutMapping("{id}/status")
   fun putNewStatus(@PathVariable id: Int, @RequestBody statusDTO: StatusDTO): ResponseEntity<Any> {
     return runCatching<ResponseEntity<Any>> {
