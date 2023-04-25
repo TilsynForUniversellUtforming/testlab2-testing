@@ -12,10 +12,19 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
 class TestKoeyringTest {
+  private val crawlResultat =
+      CrawlResultat.Ferdig(
+          listOf(
+              URL("https://www.uutilsynet.no/"),
+              URL("https://www.uutilsynet.no/underside/1"),
+              URL("https://www.uutilsynet.no/underside/2")),
+          URL("https://status.url"),
+          uutilsynetLoeysing,
+          Instant.now())
   @Test
   @DisplayName("ei ny TestKøyring startar med status `ikkje starta`")
   fun nyTestKoeyring() {
-    val actual = TestKoeyring.from(uutilsynetLoeysing, URL("https://status.url"))
+    val actual = TestKoeyring.from(crawlResultat, URL("https://status.url"))
     assertThat(actual).isInstanceOf(TestKoeyring.IkkjeStarta::class.java)
     assertThat((actual as TestKoeyring.IkkjeStarta).statusURL.toString())
         .isEqualTo("https://status.url")
@@ -27,7 +36,7 @@ class TestKoeyringTest {
       "gitt ei testkøyring med tilstand `ikkje starta`, test riktig kombinasjon av respons og ny tilstand")
   fun testUpdateStatus(response: AutoTesterClient.AzureFunctionResponse, tilstand: Class<*>) {
     val testKoeyring =
-        TestKoeyring.IkkjeStarta(uutilsynetLoeysing, Instant.now(), URL("http://status.url"))
+        TestKoeyring.IkkjeStarta(crawlResultat, Instant.now(), URL("http://status.url"))
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(tilstand)
   }
@@ -40,8 +49,7 @@ class TestKoeyringTest {
       response: AutoTesterClient.AzureFunctionResponse,
       tilstand: Class<*>
   ) {
-    val testKoeyring =
-        TestKoeyring.Starta(uutilsynetLoeysing, Instant.now(), URL("http://status.url"))
+    val testKoeyring = TestKoeyring.Starta(crawlResultat, Instant.now(), URL("http://status.url"))
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(tilstand)
   }
@@ -56,7 +64,7 @@ class TestKoeyringTest {
   ) {
     val testKoeyring =
         TestKoeyring.Ferdig(
-            uutilsynetLoeysing, Instant.now(), URL("https://status.url"), testResultater())
+            crawlResultat, Instant.now(), URL("https://status.url"), testResultater())
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(TestKoeyring.Ferdig::class.java)
   }
@@ -69,7 +77,7 @@ class TestKoeyringTest {
       response: AutoTesterClient.AzureFunctionResponse,
       tilstand: Class<*>
   ) {
-    val testKoeyring = TestKoeyring.Feila(uutilsynetLoeysing, Instant.now(), "dette går ikkje")
+    val testKoeyring = TestKoeyring.Feila(crawlResultat, Instant.now(), "dette går ikkje")
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(TestKoeyring.Feila::class.java)
   }

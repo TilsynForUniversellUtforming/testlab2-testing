@@ -152,12 +152,12 @@ class MaalingResource(
                 }
                 .map { (crawlResultat, result) ->
                   result.fold(
-                      { statusURL -> TestKoeyring.from(crawlResultat.loeysing, statusURL) },
+                      { statusURL -> TestKoeyring.from(crawlResultat, statusURL) },
                       { exception ->
                         val feilmelding =
                             exception.message
                                 ?: "eg klarte ikkje å starte testing for ei løysing, og feilmeldinga manglar"
-                        TestKoeyring.Feila(crawlResultat.loeysing, Instant.now(), feilmelding)
+                        TestKoeyring.Feila(crawlResultat, Instant.now(), feilmelding)
                       })
                 }
         val updated = Maaling.toTesting(maaling, testKoeyringar)

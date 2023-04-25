@@ -76,6 +76,13 @@ class MaalingTest {
   @DisplayName("bytte tilstand fra `testing` til `testing_ferdig`")
   @Nested
   inner class TestingFerdigTests {
+    private val crawlResultatForUUTilsynet =
+        CrawlResultat.Ferdig(
+            listOf(URL("https://www.uutilsynet.no")),
+            URL("https://www.status.url"),
+            TestConstants.uutilsynetLoeysing,
+            Instant.now())
+
     @DisplayName(
         "når vi prøver å gå til TestingFerdig, og det finnes testkjøringer som ikke er ferdig, så skal det ikke gå")
     @Test
@@ -86,9 +93,7 @@ class MaalingTest {
               "navn",
               listOf(
                   TestKoeyring.Starta(
-                      TestConstants.uutilsynetLoeysing,
-                      Instant.now(),
-                      URL("https://www.status.url"))))
+                      crawlResultatForUUTilsynet, Instant.now(), URL("https://www.status.url"))))
       val result = Maaling.toTestingFerdig(maaling)
       Assertions.assertThat(result).isNull()
     }
@@ -103,7 +108,7 @@ class MaalingTest {
               "navn",
               listOf(
                   TestKoeyring.Ferdig(
-                      TestConstants.uutilsynetLoeysing,
+                      crawlResultatForUUTilsynet,
                       Instant.now(),
                       URL("https://status.url"),
                       TestKoeyringTest.testResultater())))

@@ -69,7 +69,8 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     val maaling = maalingDAO.getMaaling(id) as Maaling.TestingFerdig
     val testResultat =
         maalingDAO
-            .getTestresultatForMaalingLoeysing(maaling.id, maaling.testKoeyringar[0].loeysing.id)[0]
+            .getTestresultatForMaalingLoeysing(
+                maaling.id, maaling.testKoeyringar[0].crawlResultat.loeysing.id)[0]
     assertThat(testResultat.testregelId).isEqualTo("QW-ACT-R5")
   }
 
@@ -132,7 +133,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     val testKoeyringar =
         crawlResultat.map {
           TestKoeyring.Ferdig(
-              it.loeysing,
+              it,
               Instant.now(),
               URL("https://teststatus.url"),
               listOf(
@@ -187,7 +188,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
     val testKoeyringar =
         crawlResultat.map {
-          TestKoeyring.IkkjeStarta(it.loeysing, Instant.now(), URL("https://teststatus.url"))
+          TestKoeyring.IkkjeStarta(it, Instant.now(), URL("https://teststatus.url"))
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     maalingDAO.save(testing).getOrThrow()
