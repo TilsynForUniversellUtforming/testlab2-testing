@@ -91,10 +91,11 @@ class MaalingResource(
           .getMaaling(id)
           ?.let { maaling: Maaling ->
             when (maaling) {
+              is Maaling.Planlegging -> emptyList()
               is Maaling.Kvalitetssikring -> maaling.crawlResultat
+              is Maaling.Crawling -> maaling.crawlResultat
               is Maaling.Testing -> maaling.testKoeyringar.map { it.crawlResultat }
               is Maaling.TestingFerdig -> maaling.testKoeyringar.map { it.crawlResultat }
-              else -> emptyList()
             }
           }
           ?.let { ResponseEntity.ok(it) }
