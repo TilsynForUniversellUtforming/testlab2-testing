@@ -180,8 +180,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         if (status == testing) {
           Testing(id, navn, testKoeyringar)
         } else {
-          val ferdigeTestKoeyringar = testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>()
-          TestingFerdig(id, navn, ferdigeTestKoeyringar)
+          TestingFerdig(id, navn, testKoeyringar)
         }
       }
     }

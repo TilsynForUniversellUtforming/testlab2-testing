@@ -79,7 +79,10 @@ class MaalingResource(
           } else {
             maalingDAO.getMaaling(id)?.let {
               when (it) {
-                is Maaling.TestingFerdig -> it.testKoeyringar.flatMap { it.testResultat }
+                is Maaling.TestingFerdig ->
+                    it.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>().flatMap {
+                      it.testResultat
+                    }
                 else -> emptyList()
               }
             }
@@ -244,12 +247,8 @@ class MaalingResource(
             .map { testKoeyring -> autoTesterClient.updateStatus(testKoeyring) }
             .toSingleResult()
             .getOrThrow()
-    val ferdigeTestKoeyringar = oppdaterteTestKoeyringar.filterIsInstance<TestKoeyring.Ferdig>()
-    if (ferdigeTestKoeyringar == oppdaterteTestKoeyringar) {
-      Maaling.TestingFerdig(maaling.id, maaling.navn, ferdigeTestKoeyringar)
-    } else {
-      maaling.copy(testKoeyringar = oppdaterteTestKoeyringar)
-    }
+    val oppdatertMaaling = maaling.copy(testKoeyringar = oppdaterteTestKoeyringar)
+    Maaling.toTestingFerdig(oppdatertMaaling) ?: oppdatertMaaling
   }
 
   private fun EditMaalingDTO.toMaaling(): Maaling {

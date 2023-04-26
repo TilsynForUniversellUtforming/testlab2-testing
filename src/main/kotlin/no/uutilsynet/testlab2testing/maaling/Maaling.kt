@@ -56,7 +56,7 @@ sealed class Maaling {
   data class TestingFerdig(
       override val id: Int,
       override val navn: String,
-      val testKoeyringar: List<TestKoeyring.Ferdig>
+      val testKoeyringar: List<TestKoeyring>,
   ) : Maaling() {
     override val aksjoner: List<Aksjon>
       get() = listOf()
@@ -64,9 +64,10 @@ sealed class Maaling {
 
   companion object {
     fun toTestingFerdig(maaling: Testing): TestingFerdig? {
-      val ferdigeTestKoeyringar = maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>()
-      return if (maaling.testKoeyringar == ferdigeTestKoeyringar) {
-        TestingFerdig(maaling.id, maaling.navn, ferdigeTestKoeyringar)
+      val allAreDone =
+          maaling.testKoeyringar.all { it is TestKoeyring.Ferdig || it is TestKoeyring.Feila }
+      return if (allAreDone) {
+        TestingFerdig(maaling.id, maaling.navn, maaling.testKoeyringar)
       } else {
         null
       }

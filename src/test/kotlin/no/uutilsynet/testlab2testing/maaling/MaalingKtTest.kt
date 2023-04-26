@@ -92,6 +92,12 @@ class MaalingKtTest {
             URL("https://www.status.url"),
             TestConstants.uutilsynetLoeysing,
             Instant.now())
+    private val crawlResultatForDigdir =
+        CrawlResultat.Ferdig(
+            listOf(URL("https://www.digdir.no")),
+            URL("https://www.status.url"),
+            TestConstants.digdirLoeysing,
+            Instant.now())
 
     @DisplayName(
         "når vi prøver å gå til TestingFerdig, og det finnes testkjøringer som ikke er ferdig, så skal det ikke gå")
@@ -122,6 +128,26 @@ class MaalingKtTest {
                       Instant.now(),
                       URL("https://status.url"),
                       TestKoeyringTest.testResultater())))
+      val result = Maaling.toTestingFerdig(maaling)
+      Assertions.assertThat(result).isNotNull
+    }
+
+    @DisplayName(
+        "når vi prøver å gå til `testing_ferdig` med en testkjøring som er ferdig, og en som har feila, så skal det gå bra")
+    @Test
+    fun toTestingFerdigFeila() {
+      val maaling =
+          Maaling.Testing(
+              1,
+              "navn",
+              listOf(
+                  TestKoeyring.Feila(crawlResultatForDigdir, Instant.now(), "autotester krasja"),
+                  TestKoeyring.Ferdig(
+                      crawlResultatForUUTilsynet,
+                      Instant.now(),
+                      URL("https://status.url"),
+                      TestKoeyringTest.testResultater()),
+              ))
       val result = Maaling.toTestingFerdig(maaling)
       Assertions.assertThat(result).isNotNull
     }
