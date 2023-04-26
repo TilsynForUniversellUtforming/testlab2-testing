@@ -6,6 +6,7 @@ import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestUrl
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -83,6 +84,21 @@ class LoeysingDAOTest(@Autowired val loeysingDAO: LoeysingDAO) {
     Assertions.assertThat(updatedLoeysing).isNotNull
     Assertions.assertThat(updatedLoeysing?.namn).isEqualTo(loeysingTestName)
     Assertions.assertThat(updatedLoeysing?.url?.toString()).isEqualTo(loeysingTestUrl)
+  }
+
+  @Nested
+  @DisplayName("getLoeysingIdList")
+  inner class GetLoeysingIdList {
+    @Test
+    @DisplayName(
+        "når vi henter id-lista, så skal den inneholde alle id-ene på løsninger i databasen")
+    fun getIdList() {
+      val id1 = createLoeysing()
+      val id2 = createLoeysing()
+      val id3 = createLoeysing()
+      val idList = loeysingDAO.getLoeysingIdList()
+      Assertions.assertThat(idList).contains(id1, id2, id3)
+    }
   }
 
   private fun createLoeysing(name: String = loeysingTestName, url: String = loeysingTestUrl) =
