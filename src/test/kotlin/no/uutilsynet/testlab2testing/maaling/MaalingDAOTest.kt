@@ -58,7 +58,11 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
   fun lagreResultater() {
     val id = saveMaalingWithStatusTestingFerdig()
     val maaling = maalingDAO.getMaaling(id) as Maaling.TestingFerdig
-    val testResultat = maaling.testKoeyringar.flatMap { it.testResultat }[0]
+    val testResultat =
+        maaling.testKoeyringar
+            .filterIsInstance<TestKoeyring.Ferdig>()
+            .flatMap { it.testResultat }
+            .first()
     assertThat(testResultat.testregelId).isEqualTo("QW-ACT-R5")
   }
 
