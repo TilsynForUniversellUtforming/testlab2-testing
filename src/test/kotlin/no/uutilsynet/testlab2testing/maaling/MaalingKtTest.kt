@@ -9,7 +9,7 @@ import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertTrue
 
-class MaalingTest {
+class MaalingKtTest {
   @Nested
   @DisplayName("validering av status")
   inner class ValidateStatus {
@@ -36,18 +36,28 @@ class MaalingTest {
   @Nested
   @DisplayName("validering av idliste")
   inner class ValidateIdList {
+    private val validIds = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+
     @Test
-    @DisplayName("når input er en liste med id-er, så skal valideringen gi ok")
+    @DisplayName("når input er en liste med gyldige id-er, så skal valideringen gi ok")
     fun ok() {
       val a = listOf(1, 2, 3)
-      val result = validateLoeysingIdList(a)
+      val result = validateLoeysingIdList(a, validIds)
       assertTrue(result.isSuccess)
+    }
+
+    @Test
+    @DisplayName("når input inneholder ugyldige id-er, så skal valideringen feile")
+    fun notOk() {
+      val a = listOf(1, 2, 3, 11)
+      val result = validateLoeysingIdList(a, validIds)
+      assertTrue(result.isFailure)
     }
 
     @Test
     @DisplayName("når input er tom, så skal det feile")
     fun tomInput() {
-      val results = listOf(null, emptyList<Int>()).map { validateLoeysingIdList(it) }
+      val results = listOf(null, emptyList<Int>()).map { validateLoeysingIdList(it, validIds) }
       assertTrue(results[0].isFailure)
       assertTrue(results[1].isFailure)
     }

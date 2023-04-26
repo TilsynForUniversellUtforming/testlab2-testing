@@ -7,6 +7,7 @@ object ErrorHandlingUtil {
   fun handleErrors(exception: Throwable): ResponseEntity<Any> =
       when (exception) {
         is NullPointerException -> ResponseEntity.badRequest().body(exception.message)
+        is IllegalArgumentException -> ResponseEntity.badRequest().body(exception.message)
         else -> ResponseEntity.internalServerError().body(exception.message)
       }
 

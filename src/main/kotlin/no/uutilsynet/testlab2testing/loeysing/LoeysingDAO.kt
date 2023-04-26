@@ -6,6 +6,7 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.createL
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.createLoeysingSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.deleteLoeysingParams
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.deleteLoeysingSql
+import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingIdListSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingListSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loysingRowmapper
@@ -26,6 +27,7 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         mapOf("namn" to namn, "url" to url.toString())
 
     val getLoeysingListSql = "select id, namn, url from loeysing order by id"
+    val getLoeysingIdListSql = "select id from loeysing order by id"
     val getLoeysingSql = "select id, namn, url from loeysing where id = :id order by id"
 
     val updateLoeysingSql = "update loeysing set namn = :namn, url = :url where id = :id"
@@ -55,4 +57,7 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Transactional
   fun updateLoeysing(loeysing: Loeysing) =
       jdbcTemplate.update(updateLoeysingSql, updateLoeysingParams(loeysing))
+
+  fun getLoeysingIdList(): List<Int> =
+      jdbcTemplate.queryForList(getLoeysingIdListSql, emptyMap<String, String>(), Int::class.java)
 }
