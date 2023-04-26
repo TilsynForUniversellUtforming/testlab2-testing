@@ -43,6 +43,14 @@ class MaalingIntegrationTests(
     assertThat(location.toString(), matchesPattern(locationPattern))
   }
 
+  @Test
+  @DisplayName("det er ikke mulig å opprette en ny måling hvis løsningen ikke finnes i databasen")
+  fun postInvalidNewMaaling() {
+    val requestBody = mapOf("navn" to maalingTestName, "loeysingIdList" to listOf(1, 2, 3, 11))
+    val response = restTemplate.postForEntity("/v1/maalinger", requestBody, String::class.java)
+    assertThat(response.statusCode, equalTo(HttpStatus.BAD_REQUEST))
+  }
+
   @Nested
   @DisplayName("gitt at det finnes en måling i databasen")
   inner class DatabaseHasAtLeastOneMaaling(@Autowired val restTemplate: TestRestTemplate) {

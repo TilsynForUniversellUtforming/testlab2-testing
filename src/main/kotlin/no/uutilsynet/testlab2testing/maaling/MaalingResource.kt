@@ -34,8 +34,10 @@ class MaalingResource(
   fun nyMaaling(@RequestBody dto: NyMaalingDTO): ResponseEntity<Any> =
       runCatching {
             val navn = validateNavn(dto.navn).getOrThrow()
-            maalingDAO.createMaaling(
-                navn, dto.loeysingIdList, dto.crawlParameters ?: CrawlParameters())
+            val loeysingIdList =
+                validateLoeysingIdList(dto.loeysingIdList, loeysingDAO.getLoeysingIdList())
+                    .getOrThrow()
+            maalingDAO.createMaaling(navn, loeysingIdList, dto.crawlParameters ?: CrawlParameters())
           }
           .fold(
               { id ->
@@ -142,7 +144,9 @@ class MaalingResource(
       statusDTO: StatusDTO,
       maaling: Maaling.Kvalitetssikring
   ): ResponseEntity<Any> {
-    val loeysingIdList = validateLoeysingIdList(statusDTO.loeysingIdList).getOrThrow()
+    val loeysingIdList =
+        validateLoeysingIdList(statusDTO.loeysingIdList, loeysingDAO.getLoeysingIdList())
+            .getOrThrow()
     val crawlParameters = maalingDAO.getCrawlParameters(maaling.id)
     val updated = crawlerClient.restart(maaling, loeysingIdList, crawlParameters)
     maalingDAO.save(updated).getOrThrow()
