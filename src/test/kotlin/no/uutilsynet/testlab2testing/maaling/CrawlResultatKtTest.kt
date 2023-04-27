@@ -15,7 +15,11 @@ class CrawlResultatKtTest {
   @Test
   fun toFerdig() {
     val ikkeFerdig =
-        CrawlResultat.IkkeFerdig(URL("https://status.uri"), uutilsynetLoeysing, Instant.now())
+        CrawlResultat.IkkeFerdig(
+            URL("https://status.uri"),
+            uutilsynetLoeysing,
+            Instant.now(),
+            CrawlResultat.Framgang(2, 2))
     val crawlerOutput =
         listOf(
             CrawlerOutput("https://www.uutilsynet.no/", "uutilsynet"),
