@@ -49,10 +49,11 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
   fun lagreCrawlResultatMedFramgang() {
     val id = saveMaalingWithStatusCrawling()
     val maaling = maalingDAO.getMaaling(id) as Maaling.Crawling
-    val (lenkerCrawla, maxLenker) =
-        (maaling.crawlResultat.first() as CrawlResultat.IkkeFerdig).framgang
-    assertThat(lenkerCrawla).isEqualTo(10)
-    assertThat(maxLenker).isEqualTo(2000)
+    maaling.crawlResultat.forEach {
+      val (lenkerCrawla, maxLenker) = (it as CrawlResultat.IkkeFerdig).framgang
+      assertThat(lenkerCrawla).isEqualTo(10)
+      assertThat(maxLenker).isEqualTo(2000)
+    }
   }
 
   @DisplayName(

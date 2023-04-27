@@ -68,6 +68,8 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
 
 data class CrawlerOutput(val url: String, val title: String)
 
+data class CustomStatus(val lenkerCrawla: Int, val maxLenker: Int)
+
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "runtimeStatus")
 @JsonSubTypes(
@@ -77,7 +79,7 @@ data class CrawlerOutput(val url: String, val title: String)
     JsonSubTypes.Type(value = CrawlStatus.Failed::class, name = "Failed"))
 sealed class CrawlStatus {
   object Pending : CrawlStatus()
-  object Running : CrawlStatus()
+  data class Running(val customStatus: CustomStatus?) : CrawlStatus()
   data class Completed(val output: List<CrawlerOutput>) : CrawlStatus()
   data class Failed(val output: String) : CrawlStatus()
 }
