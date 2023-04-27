@@ -30,4 +30,19 @@ class CrawlResultatKtTest {
         updateStatus(ikkeFerdig, CrawlStatus.Completed(crawlerOutput)) as CrawlResultat.Ferdig
     assertThat(updated.nettsider).containsExactlyElementsOf(crawlerOutput.map { URL(it.url) })
   }
+
+  @DisplayName("når vi oppdaterer et resultat som ikke er ferdig, så skal framgangen oppdateres")
+  @Test
+  fun updateFramgang() {
+    val ikkeFerdig =
+        CrawlResultat.IkkeFerdig(
+            URL("https://status.uri"),
+            uutilsynetLoeysing,
+            Instant.now(),
+            CrawlResultat.Framgang(2, 100))
+    val updated =
+        updateStatus(ikkeFerdig, CrawlStatus.Running(CustomStatus(23, 100)))
+            as CrawlResultat.IkkeFerdig
+    assertThat(updated.framgang).isEqualTo(CrawlResultat.Framgang(23, 100))
+  }
 }

@@ -15,14 +15,18 @@ sealed class CrawlResultat {
   abstract val loeysing: Loeysing
   abstract val sistOppdatert: Instant
 
-  data class Framgang(val lenkerCrawla: Int, val maxLenker: Int)
+  data class Framgang(val lenkerCrawla: Int, val maxLenker: Int) {
+    companion object {
+      fun from(customStatus: CustomStatus): Framgang =
+          Framgang(customStatus.lenkerCrawla, customStatus.maxLenker)
+    }
+  }
 
   data class IkkeFerdig(
       val statusUrl: URL,
       override val loeysing: Loeysing,
       override val sistOppdatert: Instant,
-      val framgang: Framgang =
-          Framgang(0, 2000), // default verdi fjernes når framgang er ferdig implementert
+      val framgang: Framgang
   ) : CrawlResultat()
 
   data class Ferdig(
@@ -42,6 +46,13 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
     when (crawlResultat) {
       is CrawlResultat.IkkeFerdig -> {
         when (newStatus) {
+          is CrawlStatus.Pending -> crawlResultat
+          is CrawlStatus.Running ->
+              if (newStatus.customStatus == null) {
+                crawlResultat
+              } else {
+                crawlResultat.copy(framgang = CrawlResultat.Framgang.from(newStatus.customStatus))
+              }
           is CrawlStatus.Completed ->
               CrawlResultat.Ferdig(
                   newStatus.output.map { crawlerOutput -> URL(crawlerOutput.url) },
@@ -53,8 +64,6 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
                   "Crawling av ${crawlResultat.loeysing.url} feilet.",
                   crawlResultat.loeysing,
                   Instant.now())
-          is CrawlStatus.Running,
-          is CrawlStatus.Pending -> crawlResultat
         }
       }
       else -> crawlResultat
