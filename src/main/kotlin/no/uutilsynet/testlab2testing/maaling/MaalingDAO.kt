@@ -260,14 +260,21 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   private fun getCrawlResultatForMaaling(maalingId: Int) =
       jdbcTemplate.query(
           """
-                select cr.id as crid, cr.status, cr.status_url, cr.sist_oppdatert, cr.feilmelding,
-                l.id as lid, l.namn, l.url,
-                n.url as nettside_url
-                from crawlresultat cr
-                join loeysing l on cr.loeysingid = l.id
-                left join nettside n on cr.id = n.crawlresultat_id
-                where maaling_id = :maalingId
-                order by l.id
+                select crawlresultat.id as crid,
+                       crawlresultat.status,
+                       crawlresultat.status_url,
+                       crawlresultat.sist_oppdatert,
+                       crawlresultat.feilmelding,
+                       crawlresultat.lenker_crawla, loeysing.id as lid, loeysing.namn,
+                       loeysing.url,
+                       nettside.url as nettside_url,
+                       maaling.max_links_per_page
+                from crawlresultat
+                         join loeysing on crawlresultat.loeysingid = loeysing.id
+                         left join nettside on crawlresultat.id = nettside.crawlresultat_id
+                         join maalingv1 maaling on maaling.id = crawlresultat.maaling_id
+                where crawlresultat.maaling_id = :maalingId
+                order by maaling.id, loeysing.id
               """
               .trimIndent(),
           mapOf("maalingId" to maalingId),
@@ -293,7 +300,10 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val crawlResultat =
         when (status) {
           "ikke_ferdig" -> {
-            CrawlResultat.IkkeFerdig(URL(rs.getString("status_url")), loeysing, sistOppdatert)
+            val framgang =
+                CrawlResultat.Framgang(rs.getInt("lenker_crawla"), rs.getInt("max_links_per_page"))
+            CrawlResultat.IkkeFerdig(
+                URL(rs.getString("status_url")), loeysing, sistOppdatert, framgang)
           }
           "feilet" -> {
             CrawlResultat.Feilet(rs.getString("feilmelding"), loeysing, sistOppdatert)
@@ -443,13 +453,18 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     when (crawlResultat) {
       is CrawlResultat.IkkeFerdig -> {
         jdbcTemplate.update(
-            "insert into crawlresultat (loeysingid, status, status_url, maaling_id, sist_oppdatert) values (:loeysingid, :status, :status_url, :maaling_id, :sist_oppdatert)",
+            """
+              insert into crawlresultat (loeysingid, status, status_url, maaling_id, sist_oppdatert, lenker_crawla) 
+              values (:loeysingid, :status, :status_url, :maaling_id, :sist_oppdatert, :lenker_crawla)
+            """
+                .trimIndent(),
             mapOf(
                 "loeysingid" to crawlResultat.loeysing.id,
                 "status" to "ikke_ferdig",
                 "status_url" to crawlResultat.statusUrl.toString(),
                 "maaling_id" to maalingId,
-                "sist_oppdatert" to Timestamp.from(crawlResultat.sistOppdatert)))
+                "sist_oppdatert" to Timestamp.from(crawlResultat.sistOppdatert),
+                "lenker_crawla" to crawlResultat.framgang.lenkerCrawla))
       }
       is CrawlResultat.Feilet -> {
         jdbcTemplate.update(
