@@ -15,11 +15,16 @@ sealed class CrawlResultat {
   abstract val loeysing: Loeysing
   abstract val sistOppdatert: Instant
 
+  data class Framgang(val lenkerCrawla: Int, val maxLenker: Int)
+
   data class IkkeFerdig(
       val statusUrl: URL,
       override val loeysing: Loeysing,
-      override val sistOppdatert: Instant
+      override val sistOppdatert: Instant,
+      val framgang: Framgang =
+          Framgang(0, 2000), // default verdi fjernes når framgang er ferdig implementert
   ) : CrawlResultat()
+
   data class Ferdig(
       val nettsider: List<URL>,
       val statusUrl: URL,

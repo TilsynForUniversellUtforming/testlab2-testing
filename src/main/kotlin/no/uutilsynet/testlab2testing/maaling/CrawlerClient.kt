@@ -46,7 +46,11 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
                         "idLoeysing" to loeysing.id,
                         "domene" to loeysing.url),
                     AutoTesterClient.StatusUris::class.java)!!
-            CrawlResultat.IkkeFerdig(statusUris.statusQueryGetUri.toURL(), loeysing, Instant.now())
+            CrawlResultat.IkkeFerdig(
+                statusUris.statusQueryGetUri.toURL(),
+                loeysing,
+                Instant.now(),
+                CrawlResultat.Framgang(0, crawlParameters.maxLinksPerPage))
           }
           .getOrElse { exception ->
             logger.error(

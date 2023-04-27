@@ -44,6 +44,18 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
   }
 
   @DisplayName(
+      "når vi lagrer ei måling med status `crawling`, og crawlresultatene ikkje er ferdige, så skal framgangen også lagrast")
+  @Test
+  fun lagreCrawlResultatMedFramgang() {
+    val id = saveMaalingWithStatusCrawling()
+    val maaling = maalingDAO.getMaaling(id) as Maaling.Crawling
+    val (lenkerCrawla, maxLenker) =
+        (maaling.crawlResultat.first() as CrawlResultat.IkkeFerdig).framgang
+    assertThat(lenkerCrawla).isEqualTo(10)
+    assertThat(maxLenker).isEqualTo(2000)
+  }
+
+  @DisplayName(
       "når vi lagrer ei måling med status `testing`, så skal alle testkøyringene også lagrast")
   @Test
   fun lagreTestkoeyringar() {
@@ -176,6 +188,25 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
         }
     val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
     maalingDAO.save(kvalitetssikring).getOrThrow()
+    return maaling.id
+  }
+
+  private fun saveMaalingWithStatusCrawling(name: String = maalingTestName): Int {
+    val maxLinksPerPage = 2000
+    val maaling =
+        maalingDAO
+            .createMaaling(name, loeysingList.map { it.id }, CrawlParameters(maxLinksPerPage, 30))
+            .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
+    val crawlResultat =
+        maaling.loeysingList.map {
+          CrawlResultat.IkkeFerdig(
+              URL("https://status.uri"),
+              it,
+              Instant.now(),
+              CrawlResultat.Framgang(10, maxLinksPerPage))
+        }
+    val crawling = Maaling.toCrawling(maaling, crawlResultat)
+    maalingDAO.save(crawling).getOrThrow()
     return maaling.id
   }
 
