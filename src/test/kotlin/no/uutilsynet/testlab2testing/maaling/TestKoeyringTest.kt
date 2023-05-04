@@ -137,7 +137,7 @@ class TestKoeyringTest {
         val (testregelId, antallSamsvar) = s.split(" ")
         result
             .find { it.testregelId == testregelId }
-            ?.let { assertThat(it.antallSamsvar).isEqualTo(antallSamsvar.toInt()) }
+            ?.let { assertThat(it.talElementSamsvar).isEqualTo(antallSamsvar.toInt()) }
             ?: throw AssertionError("Fant ikke aggregering for testregel $testregelId")
       }
 
@@ -156,7 +156,7 @@ class TestKoeyringTest {
         val (testregelId, antallBrot) = s.split(" ")
         result
             .find { it.testregelId == testregelId }
-            ?.let { assertThat(it.antallBrot).isEqualTo(antallBrot.toInt()) }
+            ?.let { assertThat(it.talElementBrot).isEqualTo(antallBrot.toInt()) }
             ?: throw AssertionError("Fant ikke aggregering for testregel $testregelId")
       }
 
@@ -175,7 +175,7 @@ class TestKoeyringTest {
         val (testregelId, antallVarsel) = s.split(" ")
         result
             .find { it.testregelId == testregelId }
-            ?.let { assertThat(it.antallVarsel).isEqualTo(antallVarsel.toInt()) }
+            ?.let { assertThat(it.talElementVarsel).isEqualTo(antallVarsel.toInt()) }
             ?: throw AssertionError("Fant ikke aggregering for testregel $testregelId")
       }
 
@@ -192,7 +192,7 @@ class TestKoeyringTest {
       @DisplayName("så skal antall sider med samsvar være gitt for hver aggregering")
       fun antallSiderMedSamsvar(s: String) {
         val (testregelId, antallSamsvar) = s.split(" ")
-        assertThat(result.find { it.testregelId == testregelId }?.antallSiderMedSamsvar)
+        assertThat(result.find { it.testregelId == testregelId }?.talSiderSamsvar)
             .isEqualTo(antallSamsvar.toInt())
       }
 
@@ -209,7 +209,7 @@ class TestKoeyringTest {
       @DisplayName("så skal antall sider med samsvar være gitt for hver aggregering")
       fun antallSiderMedBrot(s: String) {
         val (testregelId, antallBrot) = s.split(" ")
-        assertThat(result.find { it.testregelId == testregelId }?.antallSiderMedBrot)
+        assertThat(result.find { it.testregelId == testregelId }?.talSiderBrot)
             .isEqualTo(antallBrot.toInt())
       }
 
@@ -226,8 +226,28 @@ class TestKoeyringTest {
       @DisplayName("så skal antall sider uten forekomst være gitt for hver aggregering")
       fun antallSiderUtenForekomst(s: String) {
         val (testregelId, antallSiderUtenForekomst) = s.split(" ")
-        assertThat(result.find { it.testregelId == testregelId }?.antallSiderUtenForekomst)
+        assertThat(result.find { it.testregelId == testregelId }?.talSiderIkkjeForekomst)
             .isEqualTo(antallSiderUtenForekomst.toInt())
+      }
+
+      @Test
+      @DisplayName(
+          "så skal hver aggregering ha et felt for det første suksesskriteriet, og et felt for resten")
+      fun toFeltForSuksesskriterier() {
+        val testCases =
+            listOf(
+                Triple("QW-ACT-R1", "2.4.2", emptyList()),
+                Triple("QW-ACT-R2", "3.1.1", emptyList()),
+                Triple("QW-ACT-R5", "3.1.1", emptyList()),
+                Triple("QW-ACT-R11", "4.1.2", emptyList()),
+                Triple("QW-ACT-R28", "4.1.2", emptyList()),
+                Triple("QW-ACT-R37", "1.4.3", listOf("1.4.6")))
+
+        testCases.forEach { (testregelId, suksesskriterium, suksesskriterier) ->
+          val aggregeringR1 = result.find { it.testregelId == testregelId }
+          assertThat(aggregeringR1?.suksesskriterium).isEqualTo(suksesskriterium)
+          assertThat(aggregeringR1?.flereSuksesskriterier).isEqualTo(suksesskriterier.toList())
+        }
       }
     }
 
