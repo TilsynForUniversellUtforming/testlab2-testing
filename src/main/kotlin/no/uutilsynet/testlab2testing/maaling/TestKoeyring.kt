@@ -133,15 +133,14 @@ sealed class TestKoeyring {
             val antallSiderUtenForekomst = totaltAntallSider - siderTestet
             // suksesskriterier vil være det samme for alle testresultatene, siden resultatene er
             // gruppert på testregelId
-            val foersteSuksesskriterium = entry.value.first().suksesskriterium.first()
-            val restenAvSuksesskriterier = entry.value.first().suksesskriterium.drop(1)
+            val alleSuksesskriterier = entry.value.first().suksesskriterium
 
             AggregertResultat(
                 maalingId,
                 loeysing,
                 entry.key,
-                foersteSuksesskriterium,
-                restenAvSuksesskriterier,
+                alleSuksesskriterier.first(),
+                alleSuksesskriterier.drop(1),
                 antallSamsvar,
                 antallBrot,
                 antallVarsel,
