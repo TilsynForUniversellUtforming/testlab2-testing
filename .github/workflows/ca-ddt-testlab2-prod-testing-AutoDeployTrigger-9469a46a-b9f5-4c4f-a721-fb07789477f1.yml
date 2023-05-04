@@ -1,0 +1,60 @@
+name: Trigger auto deployment for ca-ddt-testlab2-prod-testing
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - '**'
+    - '.github/workflows/ca-ddt-testlab2-prod-testing-AutoDeployTrigger-9469a46a-b9f5-4c4f-a721-fb07789477f1.yml'
+
+  # Allow mannually trigger 
+  workflow_dispatch:      
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Log in to container registry
+        uses: docker/login-action@v1
+        with:
+          registry: acrddtprod.azurecr.io
+          username: ${{ secrets.CADDTTESTLAB2PRODTESTING_REGISTRY_USERNAME }}
+          password: ${{ secrets.CADDTTESTLAB2PRODTESTING_REGISTRY_PASSWORD }}
+
+      - name: Build and push container image to registry
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: acrddtprod.azurecr.io/ca-ddt-testlab2-prod-testing:${{ github.sha }}
+          file: ./Dockerfile
+          context: ./
+
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.CADDTTESTLAB2PRODTESTING_AZURE_CREDENTIALS }}
+
+
+      - name: Deploy to containerapp
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az config set extension.use_dynamic_install=yes_without_prompt
+            az containerapp registry set -n ca-ddt-testlab2-prod-testing -g RG-DDT-Testlab2-prod --server acrddtprod.azurecr.io --username  ${{ secrets.CADDTTESTLAB2PRODTESTING_REGISTRY_USERNAME }} --password ${{ secrets.CADDTTESTLAB2PRODTESTING_REGISTRY_PASSWORD }}
+            az containerapp update -n ca-ddt-testlab2-prod-testing -g RG-DDT-Testlab2-prod --image acrddtprod.azurecr.io/ca-ddt-testlab2-prod-testing:${{ github.sha }}
