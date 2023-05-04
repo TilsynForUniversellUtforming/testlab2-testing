@@ -131,11 +131,17 @@ sealed class TestKoeyring {
                     }
             val siderTestet = entry.value.map { it.side }.distinct().count()
             val antallSiderUtenForekomst = totaltAntallSider - siderTestet
+            // suksesskriterier vil være det samme for alle testresultatene, siden resultatene er
+            // gruppert på testregelId
+            val foersteSuksesskriterium = entry.value.first().suksesskriterium.first()
+            val restenAvSuksesskriterier = entry.value.first().suksesskriterium.drop(1)
 
             AggregertResultat(
                 maalingId,
                 loeysing,
                 entry.key,
+                foersteSuksesskriterium,
+                restenAvSuksesskriterier,
                 antallSamsvar,
                 antallBrot,
                 antallVarsel,
@@ -150,11 +156,13 @@ sealed class TestKoeyring {
       val maalingId: Int,
       val loeysing: Loeysing,
       val testregelId: String,
-      val antallSamsvar: Int,
-      val antallBrot: Int,
-      val antallVarsel: Int,
-      val antallSiderMedSamsvar: Int,
-      val antallSiderMedBrot: Int,
-      val antallSiderUtenForekomst: Int
+      val suksesskriterium: String,
+      val flereSuksesskriterier: List<String>,
+      val talElementSamsvar: Int,
+      val talElementBrot: Int,
+      val talElementVarsel: Int,
+      val talSiderSamsvar: Int,
+      val talSiderBrot: Int,
+      val talSiderIkkjeForekomst: Int
   )
 }
