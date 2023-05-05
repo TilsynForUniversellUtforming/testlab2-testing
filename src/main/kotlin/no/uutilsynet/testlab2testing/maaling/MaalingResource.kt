@@ -91,24 +91,26 @@ class MaalingResource(
           ?: ResponseEntity.notFound().build()
 
   @GetMapping("{maalingId}/testresultat/aggregering")
-  fun getAggregering(@PathVariable maalingId: Int): ResponseEntity<Any> =
-      maalingDAO.getMaaling(maalingId)?.let { maaling ->
-        when (maaling) {
-          is Maaling.TestingFerdig -> {
-            val testKoeyringList = maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>()
-            val aggregering = TestKoeyring.aggregerPaaTestregel(testKoeyringList, maalingId)
-            if (aggregering.isEmpty()) {
-              // i dette tilfellet har alle testkjøringene feilet
-              ResponseEntity.notFound().build()
-            } else {
-              ResponseEntity.ok(aggregering)
-            }
+  fun getAggregering(@PathVariable maalingId: Int): ResponseEntity<Any> {
+    return maalingDAO.getMaaling(maalingId)?.let { maaling ->
+      when (maaling) {
+        is Maaling.TestingFerdig -> {
+          val testKoeyringList = maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>()
+          val aggregering = TestKoeyring.aggregerPaaTestregel(testKoeyringList, maalingId)
+          if (aggregering.isEmpty()) {
+            // i dette tilfellet har alle testkjøringene feilet
+            ResponseEntity.notFound().build()
+          } else {
+            ResponseEntity.ok(
+                aggregering.sortedBy { it.testregelId.removePrefix("QW-ACT-R").toInt() })
           }
-          else ->
-              ResponseEntity.badRequest().body("${locationForId(maalingId)} er ikke ferdig testet")
         }
+        else ->
+            ResponseEntity.badRequest().body("${locationForId(maalingId)} er ikke ferdig testet")
       }
-          ?: ResponseEntity.notFound().build()
+    }
+        ?: ResponseEntity.notFound().build()
+  }
 
   @GetMapping("{id}/crawlresultat")
   fun getCrawlResultatList(@PathVariable id: Int): ResponseEntity<List<CrawlResultat>> =
