@@ -93,8 +93,7 @@ class TestKoeyringTest {
     @DisplayName("gitt et testresultat for UUTilsynet")
     @Nested
     inner class TestResultatForUUTilsynet {
-      private val result =
-          TestKoeyring.aggregerPaaTestregel(testKoeyringar(), 46, uutilsynetLoeysing)
+      private val result = TestKoeyring.aggregerPaaTestregel(testKoeyringar(), 46)
 
       @Test
       @DisplayName("så skal aggregeringen gi oss en liste med et element per testregel")
@@ -256,7 +255,7 @@ class TestKoeyringTest {
           jacksonObjectMapper()
               .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
               .readValue(testResultatJson, object : TypeReference<List<TestResultat>>() {})
-      val nettsider = testResultat.map { it.side }
+      val nettsider = testResultat.map { it.side }.distinctBy { it.toString() }
       val crawlResultat =
           CrawlResultat.Ferdig(
               nettsider, URL("https://status.url"), uutilsynetLoeysing, Instant.now())

@@ -230,6 +230,11 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               crawlResultat.find { it.loeysing.id == loeysingId }
                   ?: throw RuntimeException(
                       "finner ikkje crawlresultat for loeysing med id = $loeysingId")
+          if (crawlResultatForLoeysing !is CrawlResultat.Ferdig) {
+            throw RuntimeException(
+                "crawlresultat for loeysing med id = $loeysingId er ikkje ferdig")
+          }
+
           val sistOppdatert = rs.getTimestamp("sist_oppdatert").toInstant()
           return when (status) {
             "ikkje_starta" -> {
