@@ -16,11 +16,11 @@ import no.uutilsynet.testlab2testing.dto.Loeysing
     Type(TestKoeyring.Feila::class, name = "feila"))
 sealed class TestKoeyring {
   abstract val loeysing: Loeysing
-  abstract val crawlResultat: CrawlResultat
+  abstract val crawlResultat: CrawlResultat.Ferdig
   abstract val sistOppdatert: Instant
 
   data class IkkjeStarta(
-      @JsonIgnore override val crawlResultat: CrawlResultat,
+      @JsonIgnore override val crawlResultat: CrawlResultat.Ferdig,
       override val sistOppdatert: Instant,
       val statusURL: URL
   ) : TestKoeyring() {
@@ -29,7 +29,7 @@ sealed class TestKoeyring {
   }
 
   data class Starta(
-      @JsonIgnore override val crawlResultat: CrawlResultat,
+      @JsonIgnore override val crawlResultat: CrawlResultat.Ferdig,
       override val sistOppdatert: Instant,
       val statusURL: URL
   ) : TestKoeyring() {
@@ -38,7 +38,7 @@ sealed class TestKoeyring {
   }
 
   data class Ferdig(
-      @JsonIgnore override val crawlResultat: CrawlResultat,
+      @JsonIgnore override val crawlResultat: CrawlResultat.Ferdig,
       override val sistOppdatert: Instant,
       val statusURL: URL,
       @JsonIgnore val testResultat: List<TestResultat>
@@ -48,7 +48,7 @@ sealed class TestKoeyring {
   }
 
   data class Feila(
-      @JsonIgnore override val crawlResultat: CrawlResultat,
+      @JsonIgnore override val crawlResultat: CrawlResultat.Ferdig,
       override val sistOppdatert: Instant,
       val feilmelding: String
   ) : TestKoeyring() {
@@ -57,7 +57,7 @@ sealed class TestKoeyring {
   }
 
   companion object {
-    fun from(crawlResultat: CrawlResultat, statusURL: URL): TestKoeyring =
+    fun from(crawlResultat: CrawlResultat.Ferdig, statusURL: URL): TestKoeyring =
         IkkjeStarta(crawlResultat, Instant.now(), statusURL)
 
     fun updateStatus(
@@ -97,21 +97,12 @@ sealed class TestKoeyring {
           else -> testKoeyring
         }
 
-    fun aggregerPaaTestregel(
-        testKoeyringar: List<Ferdig>,
-        maalingId: Int,
-        loeysing: Loeysing
+    private fun aggregerPaaTestregel(
+        testKoeyring: Ferdig,
+        maalingId: Int
     ): List<AggregertResultat> {
-      val totaltAntallSider =
-          testKoeyringar
-              .map { it.crawlResultat }
-              .filterIsInstance<CrawlResultat.Ferdig>()
-              .flatMap { it.nettsider }
-              .map { it.toString() }
-              .distinct()
-              .count()
-      return testKoeyringar
-          .flatMap { it.testResultat }
+      val antallSider = testKoeyring.crawlResultat.nettsider.size
+      return testKoeyring.testResultat
           .groupBy { it.testregelId }
           .map { entry ->
             val antallSamsvar = entry.value.count { it.elementResultat == "samsvar" }
@@ -130,14 +121,14 @@ sealed class TestKoeyring {
                       it.value.any { testResultat -> testResultat.elementResultat == "brot" }
                     }
             val siderTestet = entry.value.map { it.side }.distinct().count()
-            val antallSiderUtenForekomst = totaltAntallSider - siderTestet
+            val antallSiderUtenForekomst = antallSider - siderTestet
             // suksesskriterier vil være det samme for alle testresultatene, siden resultatene er
             // gruppert på testregelId
             val alleSuksesskriterier = entry.value.first().suksesskriterium
 
             AggregertResultat(
                 maalingId,
-                loeysing,
+                testKoeyring.loeysing,
                 entry.key,
                 alleSuksesskriterier.first(),
                 alleSuksesskriterier.drop(1),
@@ -149,6 +140,11 @@ sealed class TestKoeyring {
                 antallSiderUtenForekomst)
           }
     }
+
+    fun aggregerPaaTestregel(
+        testKoeyringar: List<Ferdig>,
+        maalingId: Int
+    ): List<AggregertResultat> = testKoeyringar.flatMap { aggregerPaaTestregel(it, maalingId) }
   }
 
   data class AggregertResultat(
