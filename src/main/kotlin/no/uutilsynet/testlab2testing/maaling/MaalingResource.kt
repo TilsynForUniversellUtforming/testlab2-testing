@@ -90,6 +90,26 @@ class MaalingResource(
           ?.let { ResponseEntity.ok(it) }
           ?: ResponseEntity.notFound().build()
 
+  @GetMapping("{maalingId}/testresultat/aggregering")
+  fun getAggregering(@PathVariable maalingId: Int): ResponseEntity<Any> =
+      maalingDAO.getMaaling(maalingId)?.let { maaling ->
+        when (maaling) {
+          is Maaling.TestingFerdig -> {
+            val testKoeyringList = maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>()
+            val aggregering = TestKoeyring.aggregerPaaTestregel(testKoeyringList, maalingId)
+            if (aggregering.isEmpty()) {
+              // i dette tilfellet har alle testkjøringene feilet
+              ResponseEntity.notFound().build()
+            } else {
+              ResponseEntity.ok(aggregering)
+            }
+          }
+          else ->
+              ResponseEntity.badRequest().body("${locationForId(maalingId)} er ikke ferdig testet")
+        }
+      }
+          ?: ResponseEntity.notFound().build()
+
   @GetMapping("{id}/crawlresultat")
   fun getCrawlResultatList(@PathVariable id: Int): ResponseEntity<List<CrawlResultat>> =
       maalingDAO
