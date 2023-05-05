@@ -245,7 +245,7 @@ class TestKoeyringTest {
         testCases.forEach { (testregelId, suksesskriterium, suksesskriterier) ->
           val aggregeringR1 = result.find { it.testregelId == testregelId }
           assertThat(aggregeringR1?.suksesskriterium).isEqualTo(suksesskriterium)
-          assertThat(aggregeringR1?.flereSuksesskriterier).isEqualTo(suksesskriterier.toList())
+          assertThat(aggregeringR1?.fleireSuksesskriterium).isEqualTo(suksesskriterier.toList())
         }
       }
     }
