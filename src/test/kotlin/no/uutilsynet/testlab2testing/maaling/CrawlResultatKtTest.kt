@@ -31,6 +31,21 @@ class CrawlResultatKtTest {
     assertThat(updated.nettsider).containsExactlyElementsOf(crawlerOutput.map { URL(it.url) })
   }
 
+  @DisplayName(
+      "når vi oppdaterer et crawlresultat som ikke er ferdig, og output fra crawleren er tom, så skal crawlresultatet bli feilet")
+  @Test
+  fun toFeilet() {
+    val ikkeFerdig =
+        CrawlResultat.IkkeFerdig(
+            URL("https://status.uri"),
+            uutilsynetLoeysing,
+            Instant.now(),
+            CrawlResultat.Framgang(2, 2))
+    val updated =
+        updateStatus(ikkeFerdig, CrawlStatus.Completed(emptyList())) as CrawlResultat.Feilet
+    assertThat(updated).isInstanceOf(CrawlResultat.Feilet::class.java)
+  }
+
   @DisplayName("når vi oppdaterer et resultat som ikke er ferdig, så skal framgangen oppdateres")
   @Test
   fun updateFramgang() {
