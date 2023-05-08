@@ -54,11 +54,18 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
                 crawlResultat.copy(framgang = CrawlResultat.Framgang.from(newStatus.customStatus))
               }
           is CrawlStatus.Completed ->
-              CrawlResultat.Ferdig(
-                  newStatus.output.map { crawlerOutput -> URL(crawlerOutput.url) },
-                  crawlResultat.statusUrl,
-                  crawlResultat.loeysing,
-                  Instant.now())
+              if (newStatus.output.isEmpty()) {
+                CrawlResultat.Feilet(
+                    "Crawling av ${crawlResultat.loeysing.url} feilet. Output fra autotester var en tom liste.",
+                    crawlResultat.loeysing,
+                    Instant.now())
+              } else {
+                CrawlResultat.Ferdig(
+                    newStatus.output.map { crawlerOutput -> URL(crawlerOutput.url) },
+                    crawlResultat.statusUrl,
+                    crawlResultat.loeysing,
+                    Instant.now())
+              }
           is CrawlStatus.Failed ->
               CrawlResultat.Feilet(
                   "Crawling av ${crawlResultat.loeysing.url} feilet.",
