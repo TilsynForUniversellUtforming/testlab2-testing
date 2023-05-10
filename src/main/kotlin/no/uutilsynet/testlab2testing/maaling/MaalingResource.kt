@@ -61,13 +61,12 @@ class MaalingResource(
 
   @GetMapping
   fun list(): List<Maaling> {
-    return maalingDAO.getMaalingList().map { applyFeatures(it, features) }
+    return maalingDAO.getMaalingList()
   }
 
   @GetMapping("{id}")
   fun getMaaling(@PathVariable id: Int): ResponseEntity<Maaling> =
-      maalingDAO.getMaaling(id)?.let { applyFeatures(it, features) }?.let { ResponseEntity.ok(it) }
-          ?: ResponseEntity.notFound().build()
+      maalingDAO.getMaaling(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity.notFound().build()
 
   @GetMapping("{id}/testresultat")
   fun getTestResultatList(
@@ -77,11 +76,12 @@ class MaalingResource(
       if (loeysingId != null) {
             maalingDAO.getTestresultatForMaalingLoeysing(id, loeysingId)
           } else {
-            maalingDAO.getMaaling(id)?.let {
-              when (it) {
+            maalingDAO.getMaaling(id)?.let { maaling ->
+              when (maaling) {
                 is Maaling.TestingFerdig ->
-                    it.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>().flatMap {
-                      it.testResultat
+                    maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>().flatMap {
+                        testkoeyring ->
+                      testkoeyring.testResultat
                     }
                 else -> emptyList()
               }
@@ -119,8 +119,8 @@ class MaalingResource(
           ?.let { maaling: Maaling ->
             when (maaling) {
               is Maaling.Planlegging -> emptyList()
-              is Maaling.Kvalitetssikring -> maaling.crawlResultat
               is Maaling.Crawling -> maaling.crawlResultat
+              is Maaling.Kvalitetssikring -> maaling.crawlResultat
               is Maaling.Testing -> maaling.testKoeyringar.map { it.crawlResultat }
               is Maaling.TestingFerdig -> maaling.testKoeyringar.map { it.crawlResultat }
             }
@@ -296,20 +296,6 @@ class MaalingResource(
     }
   }
 }
-
-fun applyFeatures(maaling: Maaling, features: Features): Maaling =
-    when (maaling) {
-      is Maaling.Kvalitetssikring -> {
-        if (!features.startTesting) {
-          val aksjonerUtenStartTesting = maaling.aksjoner.filterNot { it is Aksjon.StartTesting }
-          Maaling.Kvalitetssikring(
-              maaling.id, maaling.navn, maaling.crawlResultat, aksjoner = aksjonerUtenStartTesting)
-        } else {
-          maaling
-        }
-      }
-      else -> maaling
-    }
 
 private fun <E> List<Result<E>>.toSingleResult(): Result<List<E>> = runCatching {
   this.map { it.getOrThrow() }
