@@ -89,6 +89,9 @@ sealed class Maaling {
   }
 }
 
+// Enkel representasjon av måling som brukes i utlisting av alle målinger.
+data class MaalingListElement(val id: Int, val navn: String, val status: String)
+
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "id")
 @JsonSubTypes(
     JsonSubTypes.Type(value = Aksjon.StartCrawling::class, name = "start_crawling"),

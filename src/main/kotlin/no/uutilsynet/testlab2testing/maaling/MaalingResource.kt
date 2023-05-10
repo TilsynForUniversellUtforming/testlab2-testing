@@ -58,7 +58,7 @@ class MaalingResource(
           .getOrElse { exception -> handleErrors(exception) }
 
   @GetMapping
-  fun list(): List<Maaling> {
+  fun list(): List<MaalingListElement> {
     return maalingDAO.getMaalingList()
   }
 
