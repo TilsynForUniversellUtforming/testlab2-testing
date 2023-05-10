@@ -152,10 +152,10 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Transactional
   fun deleteMaaling(id: Int): Int = jdbcTemplate.update(deleteMaalingSql, mapOf("id" to id))
 
-  fun getMaalingList(): List<Maaling> =
+  fun getMaalingList(): List<MaalingListElement> =
       jdbcTemplate
           .query(selectMaalingSql, maalingRowmapper)
-          .map { it.toMaaling() }
+          .map { MaalingListElement(it.id, it.navn, it.status.status) }
           .also { logger.debug("hentet ${it.size} målinger fra databasen") }
 
   private fun MaalingDTO.toMaaling(): Maaling {

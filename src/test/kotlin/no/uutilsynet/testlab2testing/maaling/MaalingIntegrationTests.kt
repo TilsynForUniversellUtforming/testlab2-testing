@@ -71,15 +71,14 @@ class MaalingIntegrationTests(
     @DisplayName("så skal vi kunne finne den i lista over alle målinger")
     fun listMaalinger() {
       val (id) = restTemplate.getForObject(location, MaalingDTO::class.java)
-      val maalingList = object : ParameterizedTypeReference<List<MaalingDTO>>() {}
+      val maalingList = object : ParameterizedTypeReference<List<MaalingListElement>>() {}
 
-      val maalinger: ResponseEntity<List<MaalingDTO>> =
+      val maalinger: ResponseEntity<List<MaalingListElement>> =
           restTemplate.exchange("/v1/maalinger", HttpMethod.GET, HttpEntity.EMPTY, maalingList)!!
       val thisMaaling = maalinger.body?.find { it.id == id }!!
 
       assertThat(thisMaaling.id, equalTo(id))
       assertThat(thisMaaling.navn, equalTo(maalingTestName))
-      assertThat(thisMaaling.loeysingList, equalTo(loeysingList))
     }
 
     @Test
