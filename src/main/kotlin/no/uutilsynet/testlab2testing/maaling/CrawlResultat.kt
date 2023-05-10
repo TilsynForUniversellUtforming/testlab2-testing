@@ -28,7 +28,6 @@ sealed class CrawlResultat {
       override val sistOppdatert: Instant,
       val framgang: Framgang
   ) : CrawlResultat()
-
   data class Ferdig(
       val nettsider: List<URL>,
       val statusUrl: URL,
@@ -56,7 +55,7 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
           is CrawlStatus.Completed ->
               if (newStatus.output.isEmpty()) {
                 CrawlResultat.Feilet(
-                    "Crawling av ${crawlResultat.loeysing.url} feilet. Output fra autotester var en tom liste.",
+                    "Crawling av ${crawlResultat.loeysing.url} feilet. Output fra crawleren var en tom liste.",
                     crawlResultat.loeysing,
                     Instant.now())
               } else {
