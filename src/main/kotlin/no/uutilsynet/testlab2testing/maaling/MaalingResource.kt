@@ -58,7 +58,7 @@ class MaalingResource(
           .getOrElse { exception -> handleErrors(exception) }
 
   @GetMapping
-  fun list(): List<Maaling> {
+  fun list(): List<MaalingListElement> {
     return maalingDAO.getMaalingList()
   }
 
@@ -209,7 +209,8 @@ class MaalingResource(
 
   @Scheduled(fixedDelay = 30, timeUnit = SECONDS)
   fun updateStatuses() {
-    val alleMaalinger = maalingDAO.getMaalingList()
+    val alleMaalinger: List<Maaling> =
+        maalingDAO.getMaalingListByStatus(listOf(MaalingStatus.crawling, MaalingStatus.testing))
 
     runCatching {
           val statusCrawling = alleMaalinger.filterIsInstance<Maaling.Crawling>()

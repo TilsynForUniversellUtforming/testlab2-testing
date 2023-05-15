@@ -152,11 +152,22 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Transactional
   fun deleteMaaling(id: Int): Int = jdbcTemplate.update(deleteMaalingSql, mapOf("id" to id))
 
-  fun getMaalingList(): List<Maaling> =
+  fun getMaalingList(): List<MaalingListElement> =
       jdbcTemplate
           .query(selectMaalingSql, maalingRowmapper)
-          .map { it.toMaaling() }
+          .map { MaalingListElement(it.id, it.navn, it.status.status) }
           .also { logger.debug("hentet ${it.size} målinger fra databasen") }
+
+  fun getMaalingListByStatus(statusList: List<MaalingStatus>): List<Maaling> {
+    val sql = "$selectMaalingSql where status in (:statusList)"
+    return jdbcTemplate
+        .query(sql, mapOf("statusList" to statusList.map { it.status }), maalingRowmapper)
+        .map { it.toMaaling() }
+        .also {
+          logger.debug(
+              "hentet ${it.size} målinger fra databasen med status 'crawling' eller 'testing'")
+        }
+  }
 
   private fun MaalingDTO.toMaaling(): Maaling {
     return when (status) {
