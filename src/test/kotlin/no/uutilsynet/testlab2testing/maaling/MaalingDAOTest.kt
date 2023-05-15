@@ -66,6 +66,17 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
   }
 
   @DisplayName(
+      "når vi har lagra målingar med status 'crawling' og 'testing', så skal vi kunne finne dei når vi søker på status")
+  @Test
+  fun getMaalingByStatus() {
+    val idCrawling = saveMaalingWithStatusCrawling()
+    val idTesting = saveMaalingWithStatusTesting()
+    val maalingar =
+        maalingDAO.getMaalingListByStatus(listOf(MaalingStatus.crawling, MaalingStatus.testing))
+    assertThat(maalingar.map { it.id }).contains(idCrawling, idTesting)
+  }
+
+  @DisplayName(
       "når vi lagrer ei måling med status `testing_ferdig`, så skal alle resultatene også lagres")
   @Test
   fun lagreResultater() {
