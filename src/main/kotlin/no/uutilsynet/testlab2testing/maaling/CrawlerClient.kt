@@ -3,6 +3,10 @@ package no.uutilsynet.testlab2testing.maaling
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.time.Instant
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -20,6 +24,13 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
   fun start(maaling: Maaling.Planlegging): Maaling.Crawling {
     val crawlResultat = maaling.loeysingList.map { start(it, maaling.crawlParameters) }
     return Maaling.toCrawling(maaling, crawlResultat)
+  }
+
+  suspend fun startAsync(maaling: Maaling.Planlegging): Maaling.Crawling = coroutineScope {
+    val deferreds: List<Deferred<CrawlResultat>> =
+        maaling.loeysingList.map { async { start(it, maaling.crawlParameters) } }
+    val crawlResultatList = deferreds.awaitAll()
+    Maaling.toCrawling(maaling, crawlResultatList)
   }
 
   fun restart(
