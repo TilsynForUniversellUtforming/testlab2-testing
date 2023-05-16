@@ -2,6 +2,8 @@ package no.uutilsynet.testlab2testing.maaling
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit.SECONDS
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
@@ -135,10 +137,12 @@ class MaalingResource(
 
           when (maaling) {
             is Maaling.Planlegging -> {
-              maaling.crawlParameters.validateParameters()
-              when (newStatus) {
-                Status.Crawling -> startCrawling(maaling)
-                else -> badRequest
+              runBlocking(Dispatchers.IO) {
+                maaling.crawlParameters.validateParameters()
+                when (newStatus) {
+                  Status.Crawling -> startCrawling(maaling)
+                  else -> badRequest
+                }
               }
             }
             is Maaling.Kvalitetssikring -> {
@@ -176,8 +180,8 @@ class MaalingResource(
     return ResponseEntity.ok().build()
   }
 
-  private fun startCrawling(maaling: Maaling.Planlegging): ResponseEntity<Any> {
-    val updated = crawlerClient.start(maaling)
+  private suspend fun startCrawling(maaling: Maaling.Planlegging): ResponseEntity<Any> {
+    val updated = crawlerClient.startAsync(maaling)
     maalingDAO.save(updated).getOrThrow()
     return ResponseEntity.ok().build()
   }
