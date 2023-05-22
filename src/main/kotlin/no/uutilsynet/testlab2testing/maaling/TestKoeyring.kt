@@ -31,7 +31,8 @@ sealed class TestKoeyring {
   data class Starta(
       @JsonIgnore override val crawlResultat: CrawlResultat.Ferdig,
       override val sistOppdatert: Instant,
-      val statusURL: URL
+      val statusURL: URL,
+      val framgang: Framgang
   ) : TestKoeyring() {
     override val loeysing: Loeysing
       get() = crawlResultat.loeysing
@@ -68,7 +69,12 @@ sealed class TestKoeyring {
           is IkkjeStarta ->
               when (response) {
                 is AutoTesterClient.AzureFunctionResponse.Running ->
-                    Starta(testKoeyring.crawlResultat, Instant.now(), testKoeyring.statusURL)
+                    Starta(
+                        testKoeyring.crawlResultat,
+                        Instant.now(),
+                        testKoeyring.statusURL,
+                        Framgang.from(
+                            response.customStatus, testKoeyring.crawlResultat.nettsider.size))
                 is AutoTesterClient.AzureFunctionResponse.Completed ->
                     Ferdig(
                         testKoeyring.crawlResultat,

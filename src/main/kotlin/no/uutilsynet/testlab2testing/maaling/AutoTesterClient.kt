@@ -51,6 +51,8 @@ class AutoTesterClient(
         is TestKoeyring.Feila -> Result.success(testKoeyring)
       }
 
+  data class CustomStatus(val testaSider: Int, val talSider: Int)
+
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "runtimeStatus")
   @JsonSubTypes(
@@ -63,7 +65,7 @@ class AutoTesterClient(
       JsonSubTypes.Type(value = AzureFunctionResponse.Other::class, name = "Suspended"))
   sealed class AzureFunctionResponse {
     object Pending : AzureFunctionResponse()
-    object Running : AzureFunctionResponse()
+    data class Running(val customStatus: CustomStatus?) : AzureFunctionResponse()
     data class Completed(val output: List<TestResultat>) : AzureFunctionResponse()
     data class Failed(val output: String) : AzureFunctionResponse()
     data class Other(val output: String?) : AzureFunctionResponse()

@@ -15,13 +15,6 @@ sealed class CrawlResultat {
   abstract val loeysing: Loeysing
   abstract val sistOppdatert: Instant
 
-  data class Framgang(val lenkerCrawla: Int, val maxLenker: Int) {
-    companion object {
-      fun from(customStatus: CustomStatus): Framgang =
-          Framgang(customStatus.lenkerCrawla, customStatus.maxLenker)
-    }
-  }
-
   data class IkkeFerdig(
       val statusUrl: URL,
       override val loeysing: Loeysing,
@@ -50,7 +43,7 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
               if (newStatus.customStatus == null) {
                 crawlResultat
               } else {
-                crawlResultat.copy(framgang = CrawlResultat.Framgang.from(newStatus.customStatus))
+                crawlResultat.copy(framgang = Framgang.from(newStatus.customStatus))
               }
           is CrawlStatus.Completed ->
               if (newStatus.output.isEmpty()) {
