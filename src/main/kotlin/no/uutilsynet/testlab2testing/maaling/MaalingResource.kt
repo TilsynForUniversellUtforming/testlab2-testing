@@ -181,7 +181,7 @@ class MaalingResource(
   }
 
   private suspend fun startCrawling(maaling: Maaling.Planlegging): ResponseEntity<Any> {
-    val updated = crawlerClient.startAsync(maaling)
+    val updated = crawlerClient.start(maaling)
     maalingDAO.save(updated).getOrThrow()
     return ResponseEntity.ok().build()
   }
