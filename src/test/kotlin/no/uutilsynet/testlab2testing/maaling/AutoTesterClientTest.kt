@@ -29,6 +29,13 @@ class AutoTesterClientTest {
         objectMapper.readValue(
             jsonString, AutoTesterClient.AzureFunctionResponse.Running::class.java)
     assertThat(running).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Running::class.java)
+
+    val jsonStringNoStatus = """{"runtimeStatus":"Running", "output": null}"""
+    val runningNoStatus =
+        objectMapper.readValue(
+            jsonStringNoStatus, AutoTesterClient.AzureFunctionResponse.Running::class.java)
+    assertThat(runningNoStatus)
+        .isInstanceOf(AutoTesterClient.AzureFunctionResponse.Running::class.java)
   }
 
   @DisplayName("når responsen fra autotester er `Completed`, så skal det parses til responsklassen")
