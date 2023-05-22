@@ -16,10 +16,7 @@ class CrawlResultatKtTest {
   fun toFerdig() {
     val ikkeFerdig =
         CrawlResultat.IkkeFerdig(
-            URL("https://status.uri"),
-            uutilsynetLoeysing,
-            Instant.now(),
-            CrawlResultat.Framgang(2, 2))
+            URL("https://status.uri"), uutilsynetLoeysing, Instant.now(), Framgang(2, 2))
     val crawlerOutput =
         listOf(
             CrawlerOutput("https://www.uutilsynet.no/", "uutilsynet"),
@@ -37,10 +34,7 @@ class CrawlResultatKtTest {
   fun toFeilet() {
     val ikkeFerdig =
         CrawlResultat.IkkeFerdig(
-            URL("https://status.uri"),
-            uutilsynetLoeysing,
-            Instant.now(),
-            CrawlResultat.Framgang(2, 2))
+            URL("https://status.uri"), uutilsynetLoeysing, Instant.now(), Framgang(2, 2))
     val updated =
         updateStatus(ikkeFerdig, CrawlStatus.Completed(emptyList())) as CrawlResultat.Feilet
     assertThat(updated).isInstanceOf(CrawlResultat.Feilet::class.java)
@@ -51,13 +45,10 @@ class CrawlResultatKtTest {
   fun updateFramgang() {
     val ikkeFerdig =
         CrawlResultat.IkkeFerdig(
-            URL("https://status.uri"),
-            uutilsynetLoeysing,
-            Instant.now(),
-            CrawlResultat.Framgang(2, 100))
+            URL("https://status.uri"), uutilsynetLoeysing, Instant.now(), Framgang(2, 100))
     val updated =
         updateStatus(ikkeFerdig, CrawlStatus.Running(CustomStatus(23, 100)))
             as CrawlResultat.IkkeFerdig
-    assertThat(updated.framgang).isEqualTo(CrawlResultat.Framgang(23, 100))
+    assertThat(updated.framgang).isEqualTo(Framgang(23, 100))
   }
 }

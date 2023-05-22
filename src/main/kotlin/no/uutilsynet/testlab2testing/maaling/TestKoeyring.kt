@@ -19,13 +19,6 @@ sealed class TestKoeyring {
   abstract val crawlResultat: CrawlResultat.Ferdig
   abstract val sistOppdatert: Instant
 
-  data class Framgang(val testaSider: Int, val talSider: Int) {
-    companion object {
-      fun from(customStatus: AutoTesterClient.CustomStatus?, crawledPages: Int): Framgang =
-          Framgang(customStatus?.testaSider ?: 0, customStatus?.talSider ?: crawledPages)
-    }
-  }
-
   data class IkkjeStarta(
       @JsonIgnore override val crawlResultat: CrawlResultat.Ferdig,
       override val sistOppdatert: Instant,

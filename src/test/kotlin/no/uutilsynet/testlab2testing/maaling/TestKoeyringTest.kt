@@ -59,7 +59,7 @@ class TestKoeyringTest {
             crawlResultat,
             Instant.now(),
             URL("http://status.url"),
-            TestKoeyring.Framgang(0, crawlResultat.nettsider.size))
+            Framgang(0, crawlResultat.nettsider.size))
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(tilstand)
   }

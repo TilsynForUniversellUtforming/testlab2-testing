@@ -265,7 +265,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   crawlResultatForLoeysing,
                   sistOppdatert,
                   URL(rs.getString("status_url")),
-                  TestKoeyring.Framgang(rs.getInt("lenker_testa"), crawlResultat.size))
+                  Framgang(rs.getInt("lenker_testa"), crawlResultatForLoeysing.nettsider.size))
             }
             "feila" ->
                 TestKoeyring.Feila(
@@ -327,8 +327,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val crawlResultat =
         when (status) {
           "ikke_ferdig" -> {
-            val framgang =
-                CrawlResultat.Framgang(rs.getInt("lenker_crawla"), rs.getInt("max_links_per_page"))
+            val framgang = Framgang(rs.getInt("lenker_crawla"), rs.getInt("max_links_per_page"))
             CrawlResultat.IkkeFerdig(
                 URL(rs.getString("status_url")), loeysing, sistOppdatert, framgang)
           }
@@ -426,7 +425,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     "status_url" to statusURL(testKoeyring),
                     "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
                     "feilmelding" to feilmelding(testKoeyring),
-                    "lenker_testa" to testKoeyring.framgang.testaSider),
+                    "lenker_testa" to testKoeyring.framgang.prosessert),
                 Int::class.java)
           }
           else -> {
@@ -512,7 +511,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 "status_url" to crawlResultat.statusUrl.toString(),
                 "maaling_id" to maalingId,
                 "sist_oppdatert" to Timestamp.from(crawlResultat.sistOppdatert),
-                "lenker_crawla" to crawlResultat.framgang.lenkerCrawla))
+                "lenker_crawla" to crawlResultat.framgang.prosessert))
       }
       is CrawlResultat.Feilet -> {
         jdbcTemplate.update(
