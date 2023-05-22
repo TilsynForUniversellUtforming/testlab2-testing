@@ -54,7 +54,12 @@ class TestKoeyringTest {
       response: AutoTesterClient.AzureFunctionResponse,
       tilstand: Class<*>
   ) {
-    val testKoeyring = TestKoeyring.Starta(crawlResultat, Instant.now(), URL("http://status.url"))
+    val testKoeyring =
+        TestKoeyring.Starta(
+            crawlResultat,
+            Instant.now(),
+            URL("http://status.url"),
+            Framgang(0, crawlResultat.nettsider.size))
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(tilstand)
   }
@@ -442,7 +447,8 @@ class TestKoeyringTest {
           Arguments.of(
               AutoTesterClient.AzureFunctionResponse.Pending, TestKoeyring.IkkjeStarta::class.java),
           Arguments.of(
-              AutoTesterClient.AzureFunctionResponse.Running, TestKoeyring.Starta::class.java),
+              AutoTesterClient.AzureFunctionResponse.Running(AutoTesterClient.CustomStatus(0, 1)),
+              TestKoeyring.Starta::class.java),
           Arguments.of(
               AutoTesterClient.AzureFunctionResponse.Completed(testResultater()),
               TestKoeyring.Ferdig::class.java),

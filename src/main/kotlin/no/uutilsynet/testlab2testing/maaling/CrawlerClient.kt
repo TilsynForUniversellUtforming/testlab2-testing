@@ -50,7 +50,7 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
                 statusUris.statusQueryGetUri.toURL(),
                 loeysing,
                 Instant.now(),
-                CrawlResultat.Framgang(0, crawlParameters.maxLinksPerPage))
+                Framgang(0, crawlParameters.maxLinksPerPage))
           }
           .getOrElse { exception ->
             logger.error(
