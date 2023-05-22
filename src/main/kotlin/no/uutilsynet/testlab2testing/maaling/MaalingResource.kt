@@ -2,8 +2,7 @@ package no.uutilsynet.testlab2testing.maaling
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit.SECONDS
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
@@ -146,9 +145,11 @@ class MaalingResource(
               }
             }
             is Maaling.Kvalitetssikring -> {
-              when (newStatus) {
-                Status.Crawling -> restartCrawling(statusDTO, maaling)
-                Status.Testing -> startTesting(maaling)
+              runBlocking(Dispatchers.IO) {
+                when (newStatus) {
+                  Status.Crawling -> restartCrawling(statusDTO, maaling)
+                  Status.Testing -> startTesting(maaling)
+                }
               }
             }
             else -> badRequest
@@ -186,28 +187,27 @@ class MaalingResource(
     return ResponseEntity.ok().build()
   }
 
-  private fun startTesting(maaling: Maaling.Kvalitetssikring): ResponseEntity<Any> {
-    val testKoeyringar =
-        maaling.crawlResultat
-            .filterIsInstance<CrawlResultat.Ferdig>()
-            .map {
-              val result = autoTesterClient.startTesting(maaling.id, it)
-              Pair(it, result)
-            }
-            .map { (crawlResultat, result) ->
-              result.fold(
-                  { statusURL -> TestKoeyring.from(crawlResultat, statusURL) },
-                  { exception ->
-                    val feilmelding =
-                        exception.message
-                            ?: "eg klarte ikkje å starte testing for ei løysing, og feilmeldinga manglar"
-                    TestKoeyring.Feila(crawlResultat, Instant.now(), feilmelding)
-                  })
-            }
-    val updated = Maaling.toTesting(maaling, testKoeyringar)
-    maalingDAO.save(updated).getOrThrow()
-    return ResponseEntity.ok().build()
-  }
+  private suspend fun startTesting(maaling: Maaling.Kvalitetssikring): ResponseEntity<Any> =
+      coroutineScope {
+        val testKoeyringar =
+            maaling.crawlResultat
+                .filterIsInstance<CrawlResultat.Ferdig>()
+                .map { async { Pair(it, autoTesterClient.startTesting(maaling.id, it)) } }
+                .awaitAll()
+                .map { (crawlResultat, result) ->
+                  result.fold(
+                      { statusURL -> TestKoeyring.from(crawlResultat, statusURL) },
+                      { exception ->
+                        val feilmelding =
+                            exception.message
+                                ?: "eg klarte ikkje å starte testing for ei løysing, og feilmeldinga manglar"
+                        TestKoeyring.Feila(crawlResultat, Instant.now(), feilmelding)
+                      })
+                }
+        val updated = Maaling.toTesting(maaling, testKoeyringar)
+        maalingDAO.save(updated).getOrThrow()
+        ResponseEntity.ok().build()
+      }
 
   data class StatusDTO(val status: String, val loeysingIdList: List<Int>?)
 
