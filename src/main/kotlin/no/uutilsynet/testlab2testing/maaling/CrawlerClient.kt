@@ -21,14 +21,9 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
 
   private val logger = LoggerFactory.getLogger(CrawlerClient::class.java)
 
-  fun start(maaling: Maaling.Planlegging): Maaling.Crawling {
-    val crawlResultat = maaling.loeysingList.map { start(it, maaling.crawlParameters) }
-    return Maaling.toCrawling(maaling, crawlResultat)
-  }
-
-  suspend fun startAsync(maaling: Maaling.Planlegging): Maaling.Crawling = coroutineScope {
+  suspend fun start(maaling: Maaling.Planlegging): Maaling.Crawling = coroutineScope {
     val deferreds: List<Deferred<CrawlResultat>> =
-        maaling.loeysingList.map { async { start(it, maaling.crawlParameters) } }
+        maaling.loeysingList.map { loeysing -> async { start(loeysing, maaling.crawlParameters) } }
     val crawlResultatList = deferreds.awaitAll()
     Maaling.toCrawling(maaling, crawlResultatList)
   }
