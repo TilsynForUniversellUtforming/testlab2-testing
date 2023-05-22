@@ -23,7 +23,8 @@ class AutoTesterClientTest {
   @DisplayName("når responsen fra autotester er `Running`, så skal det parses til responsklassen")
   @Test
   fun running() {
-    val jsonString = """{"runtimeStatus":"Running", "output": null}"""
+    val jsonString =
+        """{"runtimeStatus":"Running", "output": null, "customStatus":{"testaSider":0, "talSider":0}}"""
     val running =
         objectMapper.readValue(
             jsonString, AutoTesterClient.AzureFunctionResponse.Running::class.java)

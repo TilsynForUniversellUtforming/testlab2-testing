@@ -109,7 +109,10 @@ class MaalingKtTest {
               "navn",
               listOf(
                   TestKoeyring.Starta(
-                      crawlResultatForUUTilsynet, Instant.now(), URL("https://www.status.url"))))
+                      crawlResultatForUUTilsynet,
+                      Instant.now(),
+                      URL("https://www.status.url"),
+                      TestKoeyring.Framgang(0, 0))))
       val result = Maaling.toTestingFerdig(maaling)
       Assertions.assertThat(result).isNull()
     }
