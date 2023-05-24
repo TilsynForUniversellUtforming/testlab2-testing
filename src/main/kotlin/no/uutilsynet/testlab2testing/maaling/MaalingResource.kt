@@ -183,7 +183,7 @@ class MaalingResource(
 
   private suspend fun startCrawling(maaling: Maaling.Planlegging): ResponseEntity<Any> {
     val updated = crawlerClient.start(maaling)
-    maalingDAO.save(updated).getOrThrow()
+    withContext(Dispatchers.IO) { maalingDAO.save(updated) }.getOrThrow()
     return ResponseEntity.ok().build()
   }
 
@@ -205,7 +205,7 @@ class MaalingResource(
                       })
                 }
         val updated = Maaling.toTesting(maaling, testKoeyringar)
-        maalingDAO.save(updated).getOrThrow()
+        withContext(Dispatchers.IO) { maalingDAO.save(updated) }.getOrThrow()
         ResponseEntity.ok().build()
       }
 
