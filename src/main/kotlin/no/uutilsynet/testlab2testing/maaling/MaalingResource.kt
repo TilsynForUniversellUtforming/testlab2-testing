@@ -232,15 +232,15 @@ class MaalingResource(
 
     runCatching {
           val statusTesting = alleMaalinger.filterIsInstance<Maaling.Testing>()
-          val oppdaterteMaalinger =
-              statusTesting.map { updateTestingStatuses(it) }.toSingleResult().getOrThrow()
+          val oppdaterteMaalinger = statusTesting.map { updateTestingStatuses(it) }
           oppdaterteMaalinger.map { maalingDAO.save(it) }.toSingleResult().getOrThrow()
           if (statusTesting.isNotEmpty()) {
             logger.info("oppdaterte status for ${statusTesting.size} målinger med status `testing`")
           }
         }
         .getOrElse {
-          logger.error("klarte ikke å oppdatere status for målinger med status `testing`", it)
+          logger.error(
+              "klarte ikke å oppdatere status for målinger med status `testing` i maalingDAO", it)
         }
   }
 
@@ -263,14 +263,11 @@ class MaalingResource(
         else -> Result.success(maaling)
       }
 
-  private fun updateTestingStatuses(maaling: Maaling.Testing): Result<Maaling> = runCatching {
+  private fun updateTestingStatuses(maaling: Maaling.Testing): Maaling {
     val oppdaterteTestKoeyringar =
-        maaling.testKoeyringar
-            .map { testKoeyring -> autoTesterClient.updateStatus(testKoeyring) }
-            .toSingleResult()
-            .getOrThrow()
+        maaling.testKoeyringar.map { testKoeyring -> autoTesterClient.updateStatus(testKoeyring) }
     val oppdatertMaaling = maaling.copy(testKoeyringar = oppdaterteTestKoeyringar)
-    Maaling.toTestingFerdig(oppdatertMaaling) ?: oppdatertMaaling
+    return Maaling.toTestingFerdig(oppdatertMaaling) ?: oppdatertMaaling
   }
 
   private fun EditMaalingDTO.toMaaling(): Maaling {
