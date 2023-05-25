@@ -265,7 +265,14 @@ class MaalingResource(
 
   private fun updateTestingStatuses(maaling: Maaling.Testing): Maaling {
     val oppdaterteTestKoeyringar =
-        maaling.testKoeyringar.map { testKoeyring -> autoTesterClient.updateStatus(testKoeyring) }
+        maaling.testKoeyringar.map { testKoeyring ->
+          autoTesterClient.updateStatus(testKoeyring).getOrElse {
+            logger.error(
+                "feila da eg forsøkte å hente test status for løysing id ${testKoeyring.loeysing.id} på måling id ${maaling.id}",
+                it)
+            testKoeyring
+          }
+        }
     val oppdatertMaaling = maaling.copy(testKoeyringar = oppdaterteTestKoeyringar)
     return Maaling.toTestingFerdig(oppdatertMaaling) ?: oppdatertMaaling
   }

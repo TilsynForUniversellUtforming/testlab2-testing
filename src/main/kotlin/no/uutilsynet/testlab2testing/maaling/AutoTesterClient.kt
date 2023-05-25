@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
 import java.net.URL
-import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
@@ -17,8 +16,6 @@ class AutoTesterClient(
     val restTemplate: RestTemplate,
     val autoTesterProperties: AutoTesterProperties
 ) {
-
-  val logger = LoggerFactory.getLogger(AutoTesterClient::class.java)
 
   fun startTesting(maalingId: Int, crawlResultat: CrawlResultat.Ferdig): Result<URL> {
     return runCatching {
@@ -34,16 +31,23 @@ class AutoTesterClient(
     }
   }
 
-  fun updateStatus(testKoeyring: TestKoeyring): TestKoeyring =
+  fun updateStatus(testKoeyring: TestKoeyring): Result<TestKoeyring> =
       when (testKoeyring) {
+        is TestKoeyring.Ferdig -> Result.success(testKoeyring)
+        is TestKoeyring.Feila -> Result.success(testKoeyring)
         is TestKoeyring.IkkjeStarta,
         is TestKoeyring.Starta -> {
           val statusURL =
-              when (testKoeyring) {
-                is TestKoeyring.IkkjeStarta -> testKoeyring.statusURL
-                is TestKoeyring.Starta -> testKoeyring.statusURL
-                else -> throw IllegalStateException("Invalid type")
-              }
+              runCatching {
+                    when (testKoeyring) {
+                      is TestKoeyring.IkkjeStarta -> testKoeyring.statusURL
+                      is TestKoeyring.Starta -> testKoeyring.statusURL
+                      else -> throw RuntimeException("Ugyldig tilstand")
+                    }
+                  }
+                  .getOrElse {
+                    return Result.failure(it)
+                  }
 
           val response =
               runCatching {
@@ -51,16 +55,11 @@ class AutoTesterClient(
                         statusURL.toURI(), AzureFunctionResponse::class.java)!!
                   }
                   .getOrElse {
-                    logger.error(
-                        "feila da eg forsøkte å hente test status for løysing ${testKoeyring.loeysing.id}",
-                        it)
-                    return testKoeyring
+                    return Result.failure(it)
                   }
 
-          TestKoeyring.updateStatus(testKoeyring, response)
+          Result.success(TestKoeyring.updateStatus(testKoeyring, response))
         }
-        is TestKoeyring.Ferdig -> testKoeyring
-        is TestKoeyring.Feila -> testKoeyring
       }
 
   data class CustomStatus(val testaSider: Int, val talSider: Int)
