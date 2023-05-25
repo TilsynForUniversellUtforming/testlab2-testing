@@ -5,11 +5,7 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loysingRowmapper
-import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
-import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
-import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
-import no.uutilsynet.testlab2testing.maaling.Maaling.Testing
-import no.uutilsynet.testlab2testing.maaling.Maaling.TestingFerdig
+import no.uutilsynet.testlab2testing.maaling.Maaling.*
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingSql
@@ -27,11 +23,7 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.testResult
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingWithCrawlParameters
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.crawling
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.kvalitetssikring
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.planlegging
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing_ferdig
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.*
 import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
@@ -235,13 +227,13 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val crawlResultat = getCrawlResultatForMaaling(maalingId)
     return jdbcTemplate.query<TestKoeyring>(
         """
-              select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, t.lenker_testa
+              select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, t.lenker_testa, url_fullt_resultat, url_brot
               from testkoeyring t
               join loeysing l on l.id = t.loeysing_id
               where maaling_id = :maaling_id
             """
             .trimIndent(),
-        mapOf<String?, Int>("maaling_id" to maalingId),
+        mapOf("maaling_id" to maalingId),
         fun(rs: ResultSet, _: Int): TestKoeyring {
           val status = rs.getString("status")
           val loeysingId = rs.getInt("loeysing_id")
@@ -273,11 +265,18 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "ferdig" -> {
               val testkoeyringId = rs.getInt("id")
               val testResultat: List<TestResultat> = getTestResultat(testkoeyringId)
+              val urlFulltResultat = rs.getString("url_fullt_resultat")
+              val urlBrot = rs.getString("url_brot")
+              val lenker =
+                  if (urlFulltResultat != null)
+                      AutoTesterClient.AutoTesterOutput.Lenker(URL(urlFulltResultat), URL(urlBrot))
+                  else null
               TestKoeyring.Ferdig(
                   crawlResultatForLoeysing,
                   sistOppdatert,
                   URL(rs.getString("status_url")),
-                  testResultat)
+                  testResultat,
+                  lenker)
             }
             else -> throw RuntimeException("ukjent status $status")
           }
@@ -428,6 +427,24 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     "lenker_testa" to testKoeyring.framgang.prosessert),
                 Int::class.java)
           }
+          is TestKoeyring.Ferdig -> {
+            jdbcTemplate.queryForObject(
+                """
+              insert into testkoeyring(maaling_id, loeysing_id, status, status_url, sist_oppdatert, url_fullt_resultat, url_brot)
+              values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :url_fullt_resultat, :url_brot)
+              returning id
+            """
+                    .trimIndent(),
+                mapOf(
+                    "maaling_id" to maalingId,
+                    "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
+                    "status" to status(testKoeyring),
+                    "status_url" to statusURL(testKoeyring),
+                    "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
+                    "url_fullt_resultat" to testKoeyring.lenker?.urlFulltResultat?.toString(),
+                    "url_brot" to testKoeyring.lenker?.urlBrot?.toString()),
+                Int::class.java)
+          }
           else -> {
             jdbcTemplate.queryForObject(
                 """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding) 
@@ -446,6 +463,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           }
         }
     if (testKoeyring is TestKoeyring.Ferdig) {
+      // DFK-216 OK. Lagres bare for målinger som inneholder testResultat. Kan fjernes når vi
+      // fjerner testResultat fra TestKoeyring.
       testKoeyring.testResultat.forEach { saveTestResultat(testKoeyringId!!, it) }
     }
   }

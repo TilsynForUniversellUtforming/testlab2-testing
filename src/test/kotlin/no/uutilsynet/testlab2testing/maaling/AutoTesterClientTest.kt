@@ -54,15 +54,33 @@ class AutoTesterClientTest {
         .isInstanceOf(AutoTesterClient.AzureFunctionResponse.Running::class.java)
   }
 
-  @DisplayName("når responsen fra autotester er `Completed`, så skal det parses til responsklassen")
+  @DisplayName(
+      "når responsen fra autotester er `Completed`, og responsen inneholder testresultater, så skal det parses til responsklassen")
   @Test
   fun completed() {
-
     val completed =
         objectMapper.readValue(
             jsonSuccess, AutoTesterClient.AzureFunctionResponse.Completed::class.java)
     assertThat(completed).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Completed::class.java)
-    assertThat(completed.output).hasSize(2)
+    val output: AutoTesterClient.AutoTesterOutput.TestResultater =
+        completed.output as AutoTesterClient.AutoTesterOutput.TestResultater
+    assertThat(output.testResultater).hasSize(2)
+  }
+
+  @DisplayName(
+      "når responsen fra autotester er `Completed`, og responsen inneholder urler til testresultater, så skal det parses til responsklassen")
+  @Test
+  fun completedWithURLs() {
+    val jsonString =
+        """{"runtimeStatus":"Completed", "output": {"urlFulltResultat": "https://fullt.resultat.no", "urlBrot": "https://brot.resultat.no"}}"""
+    val completed =
+        objectMapper.readValue(
+            jsonString, AutoTesterClient.AzureFunctionResponse.Completed::class.java)
+    assertThat(completed).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Completed::class.java)
+    val output: AutoTesterClient.AutoTesterOutput.Lenker =
+        completed.output as AutoTesterClient.AutoTesterOutput.Lenker
+    assertThat(output.urlFulltResultat).isEqualTo(URL("https://fullt.resultat.no"))
+    assertThat(output.urlBrot).isEqualTo(URL("https://brot.resultat.no"))
   }
 
   @DisplayName("når responsen fra autotester er `Failed`, så skal det parses til responsklassen")
