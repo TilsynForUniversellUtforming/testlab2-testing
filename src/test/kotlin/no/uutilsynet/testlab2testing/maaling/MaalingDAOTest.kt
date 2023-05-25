@@ -87,7 +87,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
   }
 
   @DisplayName(
-      "når vi lagrer ei måling med status `testing_ferdig`, så skal alle resultatene også lagres")
+      "når vi lagrer ei måling med status `testing_ferdig` og testresultater, så skal alle resultatene også lagres")
   @Test
   fun lagreResultater() {
     val id = saveMaalingWithStatusTestingFerdig()
@@ -98,6 +98,40 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
             .flatMap { it.testResultat }
             .first()
     assertThat(testResultat.testregelId).isEqualTo("QW-ACT-R5")
+  }
+
+  @DisplayName(
+      "når vi lagrer ei måling med status `testing_ferdig` og med lenker til testresultatene, så skal lenkene også lagres")
+  @Test
+  fun lagreLenker() {
+    val maaling = createTestMaaling()
+    val crawlResultat =
+        maaling.loeysingList.map {
+          CrawlResultat.Ferdig(
+              it.url.toUrlListWithPages(), URL("https://status.uri"), it, Instant.now())
+        }
+    val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
+    val testKoeyringar =
+        crawlResultat.map {
+          TestKoeyring.Ferdig(
+              it,
+              Instant.now(),
+              URL("https://teststatus.url"),
+              emptyList(),
+              AutoTesterClient.AutoTesterOutput.Lenker(
+                  URL("https://fullt.resultat"), URL("https://brot.resultat")))
+        }
+    val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
+    val testingFerdig = Maaling.toTestingFerdig(testing)!!
+    maalingDAO.save(testingFerdig).getOrThrow()
+    val id = maaling.id
+
+    val maalingFromDatabase = maalingDAO.getMaaling(id) as Maaling.TestingFerdig
+
+    val testKoeyring = maalingFromDatabase.testKoeyringar[0] as TestKoeyring.Ferdig
+    assertThat(testKoeyring.testResultat).isEmpty()
+    assertThat(testKoeyring.lenker?.urlFulltResultat).isEqualTo(URL("https://fullt.resultat"))
+    assertThat(testKoeyring.lenker?.urlBrot).isEqualTo(URL("https://brot.resultat"))
   }
 
   @DisplayName("Skal kunne hente testresultater for måling og løsning")

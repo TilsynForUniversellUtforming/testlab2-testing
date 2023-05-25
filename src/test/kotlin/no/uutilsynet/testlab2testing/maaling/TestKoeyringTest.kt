@@ -86,7 +86,7 @@ class TestKoeyringTest {
     @DisplayName("gitt et testresultat for UUTilsynet")
     @Nested
     inner class TestResultatForUUTilsynet {
-      private val result = TestKoeyring.aggregerPaaTestregel(testKoeyringar(), 46)
+      private val result = TestKoeyring.aggregerPaaTestregel(koeyringarMedResultat(), 46)
 
       @Test
       @DisplayName("så skal aggregeringen gi oss en liste med et element per testregel")
@@ -243,7 +243,7 @@ class TestKoeyringTest {
       }
     }
 
-    private fun testKoeyringar(): List<TestKoeyring.Ferdig> {
+    private fun koeyringarMedResultat(): List<Pair<TestKoeyring.Ferdig, List<TestResultat>>> {
       val testResultat =
           jacksonObjectMapper()
               .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -251,7 +251,9 @@ class TestKoeyringTest {
       val nettsider = testResultat.map { it.side }.distinctBy { it.toString() }
       val crawlResultat =
           CrawlResultat.Ferdig(nettsider, URL(statusURL), uutilsynetLoeysing, Instant.now())
-      return listOf(TestKoeyring.Ferdig(crawlResultat, Instant.now(), URL(statusURL), testResultat))
+      return listOf(
+          TestKoeyring.Ferdig(crawlResultat, Instant.now(), URL(statusURL), emptyList()) to
+              testResultat)
     }
 
     private val testResultatJson =
@@ -435,7 +437,9 @@ class TestKoeyringTest {
               AutoTesterClient.AzureFunctionResponse.Running(AutoTesterClient.CustomStatus(0, 1)),
               TestKoeyring.Starta::class.java),
           Arguments.of(
-              AutoTesterClient.AzureFunctionResponse.Completed(testResultater()),
+              AutoTesterClient.AzureFunctionResponse.Completed(
+                  AutoTesterClient.AutoTesterOutput.Lenker(
+                      URL("https://fullt.resultat"), URL("https://brot.resultat"))),
               TestKoeyring.Ferdig::class.java),
           Arguments.of(
               AutoTesterClient.AzureFunctionResponse.Failed("401 Unauthorized"),

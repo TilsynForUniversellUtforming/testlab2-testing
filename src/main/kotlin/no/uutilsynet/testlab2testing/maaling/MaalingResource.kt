@@ -7,6 +7,7 @@ import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateParameters
+import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -67,35 +68,56 @@ class MaalingResource(
   fun getMaaling(@PathVariable id: Int): ResponseEntity<Maaling> =
       maalingDAO.getMaaling(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity.notFound().build()
 
-  @GetMapping("{id}/testresultat")
+  @GetMapping("{maalingId}/testresultat")
   fun getTestResultatList(
-      @PathVariable id: Int,
+      @PathVariable maalingId: Int,
       @RequestParam loeysingId: Int?
-  ): ResponseEntity<List<TestResultat>> =
+  ): ResponseEntity<Any> =
       if (loeysingId != null) {
-            maalingDAO.getTestresultatForMaalingLoeysing(id, loeysingId)
-          } else {
-            maalingDAO.getMaaling(id)?.let { maaling ->
-              when (maaling) {
-                is Maaling.TestingFerdig ->
-                    maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>().flatMap {
-                        testkoeyring ->
-                      testkoeyring.testResultat
-                    }
-                else -> emptyList()
-              }
-            }
-          }
-          ?.let { ResponseEntity.ok(it) }
-          ?: ResponseEntity.notFound().build()
+        ResponseEntity.ok(maalingDAO.getTestresultatForMaalingLoeysing(maalingId, loeysingId))
+      } else {
+        maalingDAO
+            .getMaaling(maalingId)
+            ?.let { maaling -> if (maaling is Maaling.TestingFerdig) maaling else null }
+            ?.testKoeyringar
+            ?.filterIsInstance<TestKoeyring.Ferdig>()
+            ?.map(autoTesterClient::fetchFulltResultat)
+            ?.toSingleResult()
+            ?.map { it.flatten() }
+            ?.fold(
+                { testResultatList -> ResponseEntity.ok(testResultatList) },
+                { error ->
+                  logger.error(
+                      "Feila da vi skulle hente fullt resultat for målinga $maalingId", error)
+                  ResponseEntity.internalServerError().body(error.message)
+                })
+            ?: ResponseEntity.notFound().build()
+      }
 
   @GetMapping("{maalingId}/testresultat/aggregering")
   fun getAggregering(@PathVariable maalingId: Int): ResponseEntity<Any> {
     return maalingDAO.getMaaling(maalingId)?.let { maaling ->
       when (maaling) {
         is Maaling.TestingFerdig -> {
-          val testKoeyringList = maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>()
-          val aggregering = TestKoeyring.aggregerPaaTestregel(testKoeyringList, maalingId)
+          val koeyringarMedResultat =
+              maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>().map {
+                  ferdigTestKoeyring ->
+                if (ferdigTestKoeyring.lenker != null) {
+                  val fulltResultat: Result<List<TestResultat>> =
+                      autoTesterClient.fetchFulltResultat(ferdigTestKoeyring)
+                  fulltResultat.fold(
+                      { testResultat -> ferdigTestKoeyring to testResultat },
+                      { error ->
+                        logger.error(
+                            "Feila da vi skulle hente fullt resultat for testkøyring for måling $maalingId og løysing ${ferdigTestKoeyring.loeysing.id}",
+                            error)
+                        return ResponseEntity.internalServerError().body(error.message)
+                      })
+                } else {
+                  ferdigTestKoeyring to ferdigTestKoeyring.testResultat
+                }
+              }
+          val aggregering = TestKoeyring.aggregerPaaTestregel(koeyringarMedResultat, maalingId)
           if (aggregering.isEmpty()) {
             // i dette tilfellet har alle testkjøringene feilet
             ResponseEntity.notFound().build()
@@ -299,8 +321,4 @@ class MaalingResource(
       is Maaling.Kvalitetssikring -> maaling.copy(navn = this.navn)
     }
   }
-}
-
-private fun <E> List<Result<E>>.toSingleResult(): Result<List<E>> = runCatching {
-  this.map { it.getOrThrow() }
 }

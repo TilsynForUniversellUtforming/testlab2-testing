@@ -42,7 +42,8 @@ sealed class TestKoeyring {
       @JsonIgnore override val crawlResultat: CrawlResultat.Ferdig,
       override val sistOppdatert: Instant,
       val statusURL: URL,
-      @JsonIgnore val testResultat: List<TestResultat>
+      @JsonIgnore val testResultat: List<TestResultat>,
+      @JsonIgnore val lenker: AutoTesterClient.AutoTesterOutput.Lenker? = null
   ) : TestKoeyring() {
     override val loeysing: Loeysing
       get() = crawlResultat.loeysing
@@ -76,11 +77,21 @@ sealed class TestKoeyring {
                         Framgang.from(
                             response.customStatus, testKoeyring.crawlResultat.nettsider.size))
                 is AutoTesterClient.AzureFunctionResponse.Completed ->
-                    Ferdig(
-                        testKoeyring.crawlResultat,
-                        Instant.now(),
-                        testKoeyring.statusURL,
-                        response.output)
+                    when (response.output) {
+                      is AutoTesterClient.AutoTesterOutput.Lenker ->
+                          Ferdig(
+                              testKoeyring.crawlResultat,
+                              Instant.now(),
+                              testKoeyring.statusURL,
+                              emptyList(),
+                              response.output)
+                      is AutoTesterClient.AutoTesterOutput.TestResultater ->
+                          Ferdig(
+                              testKoeyring.crawlResultat,
+                              Instant.now(),
+                              testKoeyring.statusURL,
+                              response.output.testResultater)
+                    }
                 is AutoTesterClient.AzureFunctionResponse.Failed ->
                     Feila(testKoeyring.crawlResultat, Instant.now(), response.output)
                 else -> testKoeyring
@@ -90,11 +101,21 @@ sealed class TestKoeyring {
               is AutoTesterClient.AzureFunctionResponse.Pending ->
                   IkkjeStarta(testKoeyring.crawlResultat, Instant.now(), testKoeyring.statusURL)
               is AutoTesterClient.AzureFunctionResponse.Completed ->
-                  Ferdig(
-                      testKoeyring.crawlResultat,
-                      Instant.now(),
-                      testKoeyring.statusURL,
-                      response.output)
+                  when (response.output) {
+                    is AutoTesterClient.AutoTesterOutput.Lenker ->
+                        Ferdig(
+                            testKoeyring.crawlResultat,
+                            Instant.now(),
+                            testKoeyring.statusURL,
+                            emptyList(),
+                            response.output)
+                    is AutoTesterClient.AutoTesterOutput.TestResultater ->
+                        Ferdig(
+                            testKoeyring.crawlResultat,
+                            Instant.now(),
+                            testKoeyring.statusURL,
+                            response.output.testResultater)
+                  }
               is AutoTesterClient.AzureFunctionResponse.Failed ->
                   Feila(testKoeyring.crawlResultat, Instant.now(), response.output)
               else -> testKoeyring
@@ -103,12 +124,21 @@ sealed class TestKoeyring {
           else -> testKoeyring
         }
 
+    fun aggregerPaaTestregel(
+        koeyringarMedResultat: List<Pair<Ferdig, List<TestResultat>>>,
+        maalingId: Int
+    ): List<AggregertResultat> =
+        koeyringarMedResultat.flatMap { (testKoeyring, resultat) ->
+          aggregerPaaTestregel(resultat, testKoeyring, maalingId)
+        }
+
     private fun aggregerPaaTestregel(
+        testResultat: List<TestResultat>,
         testKoeyring: Ferdig,
         maalingId: Int
     ): List<AggregertResultat> {
       val antallSider = testKoeyring.crawlResultat.nettsider.size
-      return testKoeyring.testResultat
+      return testResultat
           .groupBy { it.testregelId }
           .map { entry ->
             val antallSamsvar = entry.value.count { it.elementResultat == "samsvar" }
@@ -146,11 +176,6 @@ sealed class TestKoeyring {
                 antallSiderUtenForekomst)
           }
     }
-
-    fun aggregerPaaTestregel(
-        testKoeyringar: List<Ferdig>,
-        maalingId: Int
-    ): List<AggregertResultat> = testKoeyringar.flatMap { aggregerPaaTestregel(it, maalingId) }
   }
 
   data class AggregertResultat(
