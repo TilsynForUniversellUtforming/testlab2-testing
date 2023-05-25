@@ -2,6 +2,11 @@ package no.uutilsynet.testlab2testing.maaling
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import java.net.URI
 import java.net.URL
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -62,7 +67,42 @@ class AutoTesterClient(
         }
       }
 
+  fun fetchFulltResultat(testKoeyring: TestKoeyring.Ferdig): Result<List<TestResultat>> =
+      testKoeyring.lenker?.let { lenker ->
+        runCatching {
+          restTemplate
+              .getForObject(lenker.urlFulltResultat.toURI(), Array<TestResultat>::class.java)
+              ?.toList()
+              ?: throw RuntimeException(
+                  "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${lenker.urlFulltResultat}")
+        }
+      }
+          ?: Result.success(testKoeyring.testResultat)
+
   data class CustomStatus(val testaSider: Int, val talSider: Int)
+
+  @JsonDeserialize(using = AutoTesterOutputDeserializer::class)
+  sealed class AutoTesterOutput {
+    data class TestResultater(val testResultater: List<TestResultat>) : AutoTesterOutput()
+    data class Lenker(val urlFulltResultat: URL, val urlBrot: URL) : AutoTesterOutput()
+  }
+
+  class AutoTesterOutputDeserializer : JsonDeserializer<AutoTesterOutput>() {
+    override fun deserialize(jp: JsonParser, ctxt: DeserializationContext): AutoTesterOutput {
+      val node = jp.readValueAsTree<JsonNode>()
+      return when {
+        node.isArray ->
+            AutoTesterOutput.TestResultater(
+                node.map { objectNode ->
+                  ctxt.readTreeAsValue(objectNode, TestResultat::class.java)
+                })
+        node.has("urlFulltResultat") ->
+            AutoTesterOutput.Lenker(
+                URL(node["urlFulltResultat"].asText()), URL(node["urlBrot"].asText()))
+        else -> throw RuntimeException("Ukjent output fra AutoTester")
+      }
+    }
+  }
 
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "runtimeStatus")
@@ -77,7 +117,7 @@ class AutoTesterClient(
   sealed class AzureFunctionResponse {
     object Pending : AzureFunctionResponse()
     data class Running(val customStatus: CustomStatus?) : AzureFunctionResponse()
-    data class Completed(val output: List<TestResultat>) : AzureFunctionResponse()
+    data class Completed(val output: AutoTesterOutput) : AzureFunctionResponse()
     data class Failed(val output: String) : AzureFunctionResponse()
     data class Other(val output: String?) : AzureFunctionResponse()
   }
