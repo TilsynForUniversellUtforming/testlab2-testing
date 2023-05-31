@@ -6,6 +6,8 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URL
 import java.time.Instant
 import java.util.stream.Stream
+import no.uutilsynet.testlab2testing.maaling.TestConstants.crawlResultat
+import no.uutilsynet.testlab2testing.maaling.TestConstants.statusURL
 import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -17,22 +19,13 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 
 class TestKoeyringTest {
-  private val crawlResultat =
-      CrawlResultat.Ferdig(
-          listOf(
-              URL("https://www.uutilsynet.no/"),
-              URL("https://www.uutilsynet.no/underside/1"),
-              URL("https://www.uutilsynet.no/underside/2")),
-          URL("https://status.url"),
-          uutilsynetLoeysing,
-          Instant.now())
+
   @Test
   @DisplayName("ei ny TestKøyring startar med status `ikkje starta`")
   fun nyTestKoeyring() {
-    val actual = TestKoeyring.from(crawlResultat, URL("https://status.url"))
+    val actual = TestKoeyring.from(crawlResultat, URL(statusURL))
     assertThat(actual).isInstanceOf(TestKoeyring.IkkjeStarta::class.java)
-    assertThat((actual as TestKoeyring.IkkjeStarta).statusURL.toString())
-        .isEqualTo("https://status.url")
+    assertThat((actual as TestKoeyring.IkkjeStarta).statusURL.toString()).isEqualTo(statusURL)
   }
 
   @ParameterizedTest
@@ -40,8 +33,7 @@ class TestKoeyringTest {
   @DisplayName(
       "gitt ei testkøyring med tilstand `ikkje starta`, test riktig kombinasjon av respons og ny tilstand")
   fun testUpdateStatus(response: AutoTesterClient.AzureFunctionResponse, tilstand: Class<*>) {
-    val testKoeyring =
-        TestKoeyring.IkkjeStarta(crawlResultat, Instant.now(), URL("http://status.url"))
+    val testKoeyring = TestKoeyring.IkkjeStarta(crawlResultat, Instant.now(), URL(statusURL))
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(tilstand)
   }
@@ -56,10 +48,7 @@ class TestKoeyringTest {
   ) {
     val testKoeyring =
         TestKoeyring.Starta(
-            crawlResultat,
-            Instant.now(),
-            URL("http://status.url"),
-            Framgang(0, crawlResultat.nettsider.size))
+            crawlResultat, Instant.now(), URL(statusURL), Framgang(0, crawlResultat.nettsider.size))
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(tilstand)
   }
@@ -73,8 +62,7 @@ class TestKoeyringTest {
       tilstand: Class<*>
   ) {
     val testKoeyring =
-        TestKoeyring.Ferdig(
-            crawlResultat, Instant.now(), URL("https://status.url"), testResultater())
+        TestKoeyring.Ferdig(crawlResultat, Instant.now(), URL(statusURL), testResultater())
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(TestKoeyring.Ferdig::class.java)
   }
@@ -262,11 +250,8 @@ class TestKoeyringTest {
               .readValue(testResultatJson, object : TypeReference<List<TestResultat>>() {})
       val nettsider = testResultat.map { it.side }.distinctBy { it.toString() }
       val crawlResultat =
-          CrawlResultat.Ferdig(
-              nettsider, URL("https://status.url"), uutilsynetLoeysing, Instant.now())
-      return listOf(
-          TestKoeyring.Ferdig(
-              crawlResultat, Instant.now(), URL("https://status.url"), testResultat))
+          CrawlResultat.Ferdig(nettsider, URL(statusURL), uutilsynetLoeysing, Instant.now())
+      return listOf(TestKoeyring.Ferdig(crawlResultat, Instant.now(), URL(statusURL), testResultat))
     }
 
     private val testResultatJson =

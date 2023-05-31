@@ -33,22 +33,33 @@ class AutoTesterClient(
 
   fun updateStatus(testKoeyring: TestKoeyring): Result<TestKoeyring> =
       when (testKoeyring) {
-        is TestKoeyring.IkkjeStarta ->
-            runCatching {
-              val response =
-                  restTemplate.getForObject(
-                      testKoeyring.statusURL.toURI(), AzureFunctionResponse::class.java)!!
-              TestKoeyring.updateStatus(testKoeyring, response)
-            }
-        is TestKoeyring.Starta ->
-            runCatching {
-              val response =
-                  restTemplate.getForObject(
-                      testKoeyring.statusURL.toURI(), AzureFunctionResponse::class.java)!!
-              TestKoeyring.updateStatus(testKoeyring, response)
-            }
         is TestKoeyring.Ferdig -> Result.success(testKoeyring)
         is TestKoeyring.Feila -> Result.success(testKoeyring)
+        is TestKoeyring.IkkjeStarta,
+        is TestKoeyring.Starta -> {
+          val statusURL =
+              runCatching {
+                    when (testKoeyring) {
+                      is TestKoeyring.IkkjeStarta -> testKoeyring.statusURL
+                      is TestKoeyring.Starta -> testKoeyring.statusURL
+                      else -> throw RuntimeException("Ugyldig tilstand")
+                    }
+                  }
+                  .getOrElse {
+                    return Result.failure(it)
+                  }
+
+          val response =
+              runCatching {
+                    restTemplate.getForObject(
+                        statusURL.toURI(), AzureFunctionResponse::class.java)!!
+                  }
+                  .getOrElse {
+                    return Result.failure(it)
+                  }
+
+          Result.success(TestKoeyring.updateStatus(testKoeyring, response))
+        }
       }
 
   data class CustomStatus(val testaSider: Int, val talSider: Int)
