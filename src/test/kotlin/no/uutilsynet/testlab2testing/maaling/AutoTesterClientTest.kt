@@ -2,11 +2,27 @@ package no.uutilsynet.testlab2testing.maaling
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import java.net.URI
+import java.net.URL
+import no.uutilsynet.testlab2testing.maaling.TestConstants.statusURL
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.CoreMatchers
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
+import org.springframework.http.HttpMethod
+import org.springframework.http.MediaType
+import org.springframework.test.web.client.ExpectedCount
+import org.springframework.test.web.client.MockRestServiceServer
+import org.springframework.test.web.client.match.MockRestRequestMatchers
+import org.springframework.test.web.client.response.MockRestResponseCreators
 
+@RestClientTest(AutoTesterClient::class, AutoTesterProperties::class)
 class AutoTesterClientTest {
+  @Autowired private lateinit var server: MockRestServiceServer
+  @Autowired private lateinit var autoTesterClient: AutoTesterClient
+
   private val objectMapper =
       jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
@@ -41,8 +57,108 @@ class AutoTesterClientTest {
   @DisplayName("når responsen fra autotester er `Completed`, så skal det parses til responsklassen")
   @Test
   fun completed() {
-    val jsonString =
-        """{"runtimeStatus":"Completed", "output":[{
+
+    val completed =
+        objectMapper.readValue(
+            jsonSuccess, AutoTesterClient.AzureFunctionResponse.Completed::class.java)
+    assertThat(completed).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Completed::class.java)
+    assertThat(completed.output).hasSize(2)
+  }
+
+  @DisplayName("når responsen fra autotester er `Failed`, så skal det parses til responsklassen")
+  @Test
+  fun failed() {
+    val jsonString = """{"runtimeStatus":"Failed", "output": "401 Unauthorized"}"""
+    val failed =
+        objectMapper.readValue(
+            jsonString, AutoTesterClient.AzureFunctionResponse.Failed::class.java)
+    assertThat(failed).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Failed::class.java)
+    assertThat(failed.output).isEqualTo("401 Unauthorized")
+  }
+
+  @DisplayName("Når man starter testing, skal den returnere statusQueryGetUri")
+  @Test
+  fun startTesting() {
+    val maalingId = 1
+    val crawlResultat = TestConstants.crawlResultat
+    val expectedRequestData =
+        mapOf(
+            "urls" to crawlResultat.nettsider,
+            "idMaaling" to maalingId,
+            "idLoeysing" to crawlResultat.loeysing.id)
+
+    val statusUris = AutoTesterClient.StatusUris(URI(statusURL))
+    val jsonResponse = jacksonObjectMapper().writeValueAsString(statusUris)
+
+    server
+        .expect(
+            ExpectedCount.manyTimes(),
+            MockRestRequestMatchers.requestTo(
+                CoreMatchers.startsWith(autoTesterClient.autoTesterProperties.url)))
+        .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
+        .andExpect(
+            MockRestRequestMatchers.content()
+                .json(objectMapper.writeValueAsString(expectedRequestData)))
+        .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON))
+
+    val result = autoTesterClient.startTesting(maalingId, crawlResultat)
+
+    assertThat(result.isSuccess).isTrue
+    assertThat(result.getOrNull()).isEqualTo(statusUris.statusQueryGetUri.toURL())
+  }
+
+  @DisplayName(
+      "Hvis det er korrekt respons fra autotester skal man oppdatere til riktig status for testkoeyring")
+  @Test
+  fun updateStatus() {
+    server
+        .expect(
+            ExpectedCount.manyTimes(),
+            MockRestRequestMatchers.requestTo(CoreMatchers.startsWith(statusURL)))
+        .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+        .andRespond(MockRestResponseCreators.withSuccess(jsonSuccess, MediaType.APPLICATION_JSON))
+
+    val testKoeyringIkkjeStarta = TestKoeyring.from(TestConstants.crawlResultat, URL(statusURL))
+    val response = autoTesterClient.updateStatus(testKoeyringIkkjeStarta)
+
+    assertThat(response.isSuccess).isTrue
+    assertThat(response.getOrNull()).isInstanceOf(TestKoeyring.Ferdig::class.java)
+  }
+
+  @DisplayName("Hvis det er feil i respons fra autotester skal man returnere Result.Failure")
+  @Test
+  fun updateStatusFailed() {
+    server
+        .expect(
+            ExpectedCount.manyTimes(),
+            MockRestRequestMatchers.requestTo(CoreMatchers.startsWith(statusURL)))
+        .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+        .andRespond(MockRestResponseCreators.withSuccess(jsonFailure, MediaType.APPLICATION_JSON))
+
+    val testKoeyringIkkjeStarta = TestKoeyring.from(TestConstants.crawlResultat, URL(statusURL))
+    val response = autoTesterClient.updateStatus(testKoeyringIkkjeStarta)
+
+    assertThat(response.isFailure).isTrue
+  }
+
+  private val jsonFailure =
+      """{"runtimeStatus":"Completed", "output":[{
+    "suksesskriterium": [
+      "2.4.2"
+    ],
+    "side": "https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160",
+    "maalingId": 46,
+    "loeysingId": 1,
+    "testregelId": "QW-ACT-R1",
+    "sideNivaa": 1,
+    "testVartUtfoert": "3/23/2023, 11:15:54 AM",
+    "elementUtfall": "The `title` element exists and it's not empty ('').",
+    "elementResultat": "samsvar"
+  }]}"""
+          .trimIndent()
+
+  private val jsonSuccess =
+      """{"runtimeStatus":"Completed", "output":[{
     "suksesskriterium": [
       "2.4.2"
     ],
@@ -80,21 +196,5 @@ class AutoTesterClientTest {
       }
     ]
   }]}"""
-    val completed =
-        objectMapper.readValue(
-            jsonString, AutoTesterClient.AzureFunctionResponse.Completed::class.java)
-    assertThat(completed).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Completed::class.java)
-    assertThat(completed.output).hasSize(2)
-  }
-
-  @DisplayName("når responsen fra autotester er `Failed`, så skal det parses til responsklassen")
-  @Test
-  fun failed() {
-    val jsonString = """{"runtimeStatus":"Failed", "output": "401 Unauthorized"}"""
-    val failed =
-        objectMapper.readValue(
-            jsonString, AutoTesterClient.AzureFunctionResponse.Failed::class.java)
-    assertThat(failed).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Failed::class.java)
-    assertThat(failed.output).isEqualTo("401 Unauthorized")
-  }
+          .trimIndent()
 }
