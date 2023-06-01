@@ -99,43 +99,50 @@ class MaalingResource(
       }
 
   @GetMapping("{maalingId}/testresultat/aggregering")
-  fun getAggregering(@PathVariable maalingId: Int): ResponseEntity<Any> {
-    return maalingDAO.getMaaling(maalingId)?.let { maaling ->
-      when (maaling) {
-        is Maaling.TestingFerdig -> {
-          val koeyringarMedResultat =
-              maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>().map {
-                  ferdigTestKoeyring ->
-                if (ferdigTestKoeyring.lenker != null) {
-                  val fulltResultat: Result<List<TestResultat>> =
-                      autoTesterClient.fetchFulltResultat(ferdigTestKoeyring)
-                  fulltResultat.fold(
-                      { testResultat -> ferdigTestKoeyring to testResultat },
-                      { error ->
-                        logger.error(
-                            "Feila da vi skulle hente fullt resultat for testkøyring for måling $maalingId og løysing ${ferdigTestKoeyring.loeysing.id}",
-                            error)
-                        return ResponseEntity.internalServerError().body(error.message)
-                      })
-                } else {
-                  ferdigTestKoeyring to ferdigTestKoeyring.testResultat
-                }
-              }
-          val aggregering = TestKoeyring.aggregerPaaTestregel(koeyringarMedResultat, maalingId)
-          if (aggregering.isEmpty()) {
-            // i dette tilfellet har alle testkjøringene feilet
-            ResponseEntity.notFound().build()
-          } else {
-            ResponseEntity.ok(
-                aggregering.sortedBy { it.testregelId.removePrefix("QW-ACT-R").toInt() })
+  fun getAggregering(@PathVariable maalingId: Int): ResponseEntity<Any> =
+      maalingDAO
+          .getMaaling(maalingId)
+          ?.let { maaling ->
+            runCatching {
+              if (maaling is Maaling.TestingFerdig) maaling
+              else throw IllegalArgumentException("Måling $maalingId er ikkje ferdig testa")
+            }
           }
-        }
-        else ->
-            ResponseEntity.badRequest().body("${locationForId(maalingId)} er ikke ferdig testet")
-      }
-    }
-        ?: ResponseEntity.notFound().build()
-  }
+          ?.map(Maaling.TestingFerdig::testKoeyringar)
+          ?.map { testKoeyringar -> testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>() }
+          ?.mapCatching { ferdigeTestKoeyringar ->
+            runBlocking(Dispatchers.IO) {
+              val deferreds =
+                  ferdigeTestKoeyringar.map { testKoeyring ->
+                    async { testKoeyring to autoTesterClient.fetchFulltResultat(testKoeyring) }
+                  }
+              deferreds.awaitAll().toMap().toSingleResult().getOrThrow()
+            }
+          }
+          ?.map { koeyringerMedResultat ->
+            TestKoeyring.aggregerPaaTestregel(koeyringerMedResultat, maalingId)
+          }
+          ?.fold(
+              { aggregering ->
+                if (aggregering.isEmpty()) {
+                  // i dette tilfellet har alle testkjøringene feilet
+                  ResponseEntity.notFound().build()
+                } else {
+                  ResponseEntity.ok(
+                      aggregering.sortedBy { it.testregelId.removePrefix("QW-ACT-R").toInt() })
+                }
+              },
+              { error ->
+                when (error) {
+                  is IllegalArgumentException -> ResponseEntity.badRequest().body(error.message)
+                  else -> {
+                    logger.error(
+                        "Feila da vi skulle hente testresultat for måling $maalingId", error)
+                    ResponseEntity.internalServerError().body(error.message)
+                  }
+                }
+              })
+          ?: ResponseEntity.notFound().build()
 
   @GetMapping("{id}/crawlresultat")
   fun getCrawlResultatList(@PathVariable id: Int): ResponseEntity<List<CrawlResultat>> =
