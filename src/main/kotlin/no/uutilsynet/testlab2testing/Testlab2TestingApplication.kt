@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
+import org.springframework.http.MediaType
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.web.client.RestTemplate
@@ -22,6 +23,8 @@ class Testlab2TestingApplication {
         jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     val mappingJackson2HttpMessageConverter = MappingJackson2HttpMessageConverter()
     mappingJackson2HttpMessageConverter.objectMapper = objectMapper
+    mappingJackson2HttpMessageConverter.supportedMediaTypes =
+        listOf(MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM)
     return restTemplateBuilder.messageConverters(mappingJackson2HttpMessageConverter).build()
   }
 
