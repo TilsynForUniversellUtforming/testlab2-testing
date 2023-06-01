@@ -125,7 +125,7 @@ sealed class TestKoeyring {
         }
 
     fun aggregerPaaTestregel(
-        koeyringarMedResultat: List<Pair<Ferdig, List<TestResultat>>>,
+        koeyringarMedResultat: Map<Ferdig, List<TestResultat>>,
         maalingId: Int
     ): List<AggregertResultat> =
         koeyringarMedResultat.flatMap { (testKoeyring, resultat) ->

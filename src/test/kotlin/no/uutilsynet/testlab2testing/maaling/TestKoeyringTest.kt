@@ -243,7 +243,7 @@ class TestKoeyringTest {
       }
     }
 
-    private fun koeyringarMedResultat(): List<Pair<TestKoeyring.Ferdig, List<TestResultat>>> {
+    private fun koeyringarMedResultat(): Map<TestKoeyring.Ferdig, List<TestResultat>> {
       val testResultat =
           jacksonObjectMapper()
               .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -251,7 +251,7 @@ class TestKoeyringTest {
       val nettsider = testResultat.map { it.side }.distinctBy { it.toString() }
       val crawlResultat =
           CrawlResultat.Ferdig(nettsider, URL(statusURL), uutilsynetLoeysing, Instant.now())
-      return listOf(
+      return mapOf(
           TestKoeyring.Ferdig(crawlResultat, Instant.now(), URL(statusURL), emptyList()) to
               testResultat)
     }
