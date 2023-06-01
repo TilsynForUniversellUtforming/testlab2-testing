@@ -73,25 +73,29 @@ class MaalingResource(
       @PathVariable maalingId: Int,
       @RequestParam loeysingId: Int?
   ): ResponseEntity<Any> =
-      if (loeysingId != null) {
-        ResponseEntity.ok(maalingDAO.getTestresultatForMaalingLoeysing(maalingId, loeysingId))
-      } else {
-        maalingDAO
-            .getMaaling(maalingId)
-            ?.let { maaling -> if (maaling is Maaling.TestingFerdig) maaling else null }
-            ?.testKoeyringar
-            ?.filterIsInstance<TestKoeyring.Ferdig>()
-            ?.map(autoTesterClient::fetchFulltResultat)
-            ?.toSingleResult()
-            ?.map { it.flatten() }
-            ?.fold(
-                { testResultatList -> ResponseEntity.ok(testResultatList) },
-                { error ->
-                  logger.error(
-                      "Feila da vi skulle hente fullt resultat for målinga $maalingId", error)
-                  ResponseEntity.internalServerError().body(error.message)
-                })
-            ?: ResponseEntity.notFound().build()
+      runBlocking(Dispatchers.IO) {
+        if (loeysingId != null) {
+          ResponseEntity.ok(maalingDAO.getTestresultatForMaalingLoeysing(maalingId, loeysingId))
+        } else {
+          maalingDAO
+              .getMaaling(maalingId)
+              ?.let { maaling -> if (maaling is Maaling.TestingFerdig) maaling else null }
+              ?.testKoeyringar
+              ?.filterIsInstance<TestKoeyring.Ferdig>()
+              ?.let { ferdigeTestKoeyringar ->
+                autoTesterClient.fetchFulltResultat(ferdigeTestKoeyringar)
+              }
+              ?.toSingleResult()
+              ?.map { it.flatten() }
+              ?.fold(
+                  { testResultatList -> ResponseEntity.ok(testResultatList) },
+                  { error ->
+                    logger.error(
+                        "Feila da vi skulle hente fullt resultat for målinga $maalingId", error)
+                    ResponseEntity.internalServerError().body(error.message)
+                  })
+              ?: ResponseEntity.notFound().build()
+        }
       }
 
   @GetMapping("{maalingId}/testresultat/aggregering")
