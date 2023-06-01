@@ -5,6 +5,7 @@ import java.net.URL
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHandling
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
 import no.uutilsynet.testlab2testing.dto.Loeysing
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("v1/loeysing")
-class LoeysingResource(val loeysingDAO: LoeysingDAO) {
+class LoeysingResource(val loeysingDAO: LoeysingDAO, val maalingDAO: MaalingDAO) {
 
   data class CreateLoeysingDTO(
       val namn: String,
@@ -46,6 +47,17 @@ class LoeysingResource(val loeysingDAO: LoeysingDAO) {
 
   @DeleteMapping("{id}")
   fun deleteLoeysing(@PathVariable("id") id: Int) = executeWithErrorHandling {
+    val maalingLoeysingUsageList = loeysingDAO.getMaalingLoeysingListById(id)
+    if (maalingLoeysingUsageList.isNotEmpty()) {
+      val loeysing = loeysingDAO.getLoeysing(id)
+      val maalingList =
+          maalingDAO
+              .getMaalingList()
+              .filter { maalingLoeysingUsageList.contains(it.id) }
+              .map { it.navn }
+      throw IllegalArgumentException(
+          "Løysing ${loeysing?.namn ?: "ukjend løysing"} er i bruk i følgjande målingar: ${maalingList.joinToString(", ")}")
+    }
     loeysingDAO.deleteLoeysing(id)
   }
 }
