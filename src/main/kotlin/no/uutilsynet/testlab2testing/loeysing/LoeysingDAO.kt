@@ -60,4 +60,10 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getLoeysingIdList(): List<Int> =
       jdbcTemplate.queryForList(getLoeysingIdListSql, emptyMap<String, String>(), Int::class.java)
+
+  fun getMaalingLoeysingListById(idloeysing: Int): List<Int> =
+      jdbcTemplate.queryForList(
+          "select idmaaling from maalingLoeysing where idloeysing in (:idloeysing)",
+          mapOf("idloeysing" to idloeysing),
+          Int::class.java)
 }
