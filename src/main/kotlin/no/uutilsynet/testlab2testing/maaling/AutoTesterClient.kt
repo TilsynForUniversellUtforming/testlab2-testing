@@ -9,6 +9,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import java.net.URI
 import java.net.URL
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
@@ -29,7 +32,8 @@ class AutoTesterClient(
           mapOf(
               "urls" to crawlResultat.nettsider,
               "idMaaling" to maalingId,
-              "idLoeysing" to crawlResultat.loeysing.id)
+              "idLoeysing" to crawlResultat.loeysing.id,
+              "resultatSomFil" to true)
       val statusUris = restTemplate.postForObject(url, requestData, StatusUris::class.java)
       statusUris?.statusQueryGetUri?.toURL()
           ?: throw RuntimeException("mangler statusQueryGetUri i responsen")
@@ -71,13 +75,22 @@ class AutoTesterClient(
       testKoeyring.lenker?.let { lenker ->
         runCatching {
           restTemplate
-              .getForObject(lenker.urlFulltResultat.toURI(), Array<TestResultat>::class.java)
+              .getForObject(lenker.urlFulltResultat.toURI(), Array<Array<TestResultat>>::class.java)
+              ?.flatten()
               ?.toList()
               ?: throw RuntimeException(
                   "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${lenker.urlFulltResultat}")
         }
       }
           ?: Result.success(testKoeyring.testResultat)
+
+  suspend fun fetchFulltResultat(
+      testKoeyringar: List<TestKoeyring.Ferdig>
+  ): List<Result<List<TestResultat>>> = coroutineScope {
+    val deferreds =
+        testKoeyringar.map { testKoeyring -> async { fetchFulltResultat(testKoeyring) } }
+    deferreds.awaitAll()
+  }
 
   data class CustomStatus(val testaSider: Int, val talSider: Int)
 
