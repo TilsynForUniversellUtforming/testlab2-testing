@@ -76,6 +76,19 @@ class LoeysingIntegrationTests(
     Assertions.assertThat(url.toString()).isEqualTo(loeysingTestUrl)
   }
 
+  @Test
+  @DisplayName("Skal kunne slette en løsning som ikke er brukt i måling")
+  fun deleteLoeysingNotUsedInMaaling() {
+    val location = createDefaultLoeysing()
+    val loeysing = restTemplate.getForObject(location, Loeysing::class.java)
+
+    Assertions.assertThat(loeysing).isNotNull
+    restTemplate.delete(location)
+
+    val deletedLoeysing = restTemplate.getForObject(location, Loeysing::class.java)
+    Assertions.assertThat(deletedLoeysing).isNull()
+  }
+
   @Nested
   @DisplayName("Hvis det finnes en løsning i databasen")
   inner class DatabaseHasAtLeastOneLoeysing(@Autowired val restTemplate: TestRestTemplate) {
