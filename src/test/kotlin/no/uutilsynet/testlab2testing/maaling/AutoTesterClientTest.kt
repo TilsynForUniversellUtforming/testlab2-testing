@@ -169,9 +169,7 @@ class AutoTesterClientTest {
     "loeysingId": 1,
     "testregelId": "QW-ACT-R1",
     "sideNivaa": 1,
-    "testVartUtfoert": "3/23/2023, 11:15:54 AM",
-    "elementUtfall": "The `title` element exists and it's not empty ('').",
-    "elementResultat": "samsvar"
+    "testVartUtfoert": "3/23/2023, 11:15:54 AM"
   }]}"""
           .trimIndent()
 
