@@ -28,7 +28,6 @@ class MaalingIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val maalingDAO: MaalingDAO
 ) {
-
   @AfterAll
   fun cleanup() {
     maalingDAO.jdbcTemplate.update(

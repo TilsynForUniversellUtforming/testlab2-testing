@@ -6,6 +6,7 @@ import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateP
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.hasSize
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertTrue
 
@@ -153,6 +154,57 @@ class MaalingKtTest {
               ))
       val result = Maaling.toTestingFerdig(maaling)
       Assertions.assertThat(result).isNotNull
+    }
+  }
+
+  @DisplayName("findFerdigeTestKoeyringar")
+  @Nested
+  inner class FindFerdigeTestKoeyringar {
+    private val maaling =
+        Maaling.TestingFerdig(
+            1000,
+            "test",
+            listOf(
+                TestKoeyring.Ferdig(
+                    CrawlResultat.Ferdig(
+                        listOf(URL("https://www.uutilsynet.no")),
+                        URL("https://www.status.url"),
+                        TestConstants.uutilsynetLoeysing,
+                        Instant.now()),
+                    Instant.now(),
+                    URL("https://www.status.url"),
+                    emptyList(),
+                    AutoTesterClient.AutoTesterOutput.Lenker(
+                        URL("https://fullt.resultat"), URL("https://brot.resultat"))),
+                TestKoeyring.Ferdig(
+                    CrawlResultat.Ferdig(
+                        listOf(URL("https://www.digdir.no")),
+                        URL("https://www.status.url"),
+                        TestConstants.digdirLoeysing,
+                        Instant.now()),
+                    Instant.now(),
+                    URL("https://www.status.url"),
+                    emptyList(),
+                    AutoTesterClient.AutoTesterOutput.Lenker(
+                        URL("https://fullt.resultat"), URL("https://brot.resultat")))))
+
+    @DisplayName(
+        "når vi henter testkøyringar for ei måling, uten å spesifisere løysing, så skal vi få alle testkøyringane")
+    @Test
+    fun alleTestKoeyringar() {
+      val testKoeyringar = Maaling.findFerdigeTestKoeyringar(maaling)
+      assertThat(testKoeyringar, hasSize(2))
+    }
+
+    @DisplayName(
+        "når vi henter testkøyringar for ei måling, og spesifiserer ei løysing, så skal vi få testkøyringane for den løysinga")
+    @Test
+    fun testKoeyringarForLoeysing() {
+      val testKoeyringar =
+          Maaling.findFerdigeTestKoeyringar(maaling, TestConstants.uutilsynetLoeysing.id)
+      assertThat(testKoeyringar, hasSize(1))
+      assertThat(
+          testKoeyringar[0].crawlResultat.loeysing, equalTo(TestConstants.uutilsynetLoeysing))
     }
   }
 }
