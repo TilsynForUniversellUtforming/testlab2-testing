@@ -485,8 +485,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "element_resultat" to testResultat.elementResultat,
             "side_nivaa" to testResultat.sideNivaa,
             "test_vart_utfoert" to Timestamp.valueOf(testResultat.testVartUtfoert),
-            "pointer" to testResultat.elementOmtale.pointer,
-            "html_code" to testResultat.elementOmtale.htmlCode))
+            "pointer" to testResultat.elementOmtale?.pointer,
+            "html_code" to testResultat.elementOmtale?.htmlCode))
   }
 
   private fun status(testKoeyring: TestKoeyring): String =

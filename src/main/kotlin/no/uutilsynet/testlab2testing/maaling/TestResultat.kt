@@ -13,7 +13,7 @@ data class TestResultat(
     val testVartUtfoert: LocalDateTime,
     val elementUtfall: String,
     val elementResultat: String,
-    val elementOmtale: ACTElement
+    val elementOmtale: ACTElement?
 ) {
   data class ACTElement(val htmlCode: String, val pointer: String)
 
@@ -28,7 +28,7 @@ data class TestResultat(
         testVartUtfoert: String,
         elementUtfall: String,
         elementResultat: String,
-        elementOmtale: List<ACTElement>
+        elementOmtale: List<ACTElement>? = null
     ): TestResultat {
       return TestResultat(
           suksesskriterium,
@@ -38,7 +38,7 @@ data class TestResultat(
           parseLocalDateTime(testVartUtfoert),
           elementUtfall,
           elementResultat,
-          elementOmtale.first())
+          elementOmtale?.first())
     }
 
     fun parseLocalDateTime(s: String): LocalDateTime {
