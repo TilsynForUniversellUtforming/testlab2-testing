@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit.SECONDS
 import kotlinx.coroutines.*
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
+import no.uutilsynet.testlab2testing.firstMessage
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateParameters
 import no.uutilsynet.testlab2testing.toSingleResult
@@ -92,7 +93,7 @@ class MaalingResource(
                   { error ->
                     logger.error(
                         "Feila da vi skulle hente fullt resultat for målinga $maalingId", error)
-                    ResponseEntity.internalServerError().body(error.message)
+                    ResponseEntity.internalServerError().body(error.firstMessage())
                   })
               ?: ResponseEntity.notFound().build()
         }
