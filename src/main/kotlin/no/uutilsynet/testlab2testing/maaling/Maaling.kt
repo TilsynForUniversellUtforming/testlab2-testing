@@ -86,6 +86,18 @@ sealed class Maaling {
     fun toTesting(maaling: Kvalitetssikring, testKoeyringar: List<TestKoeyring>): Testing {
       return Testing(maaling.id, maaling.navn, testKoeyringar)
     }
+
+    fun findFerdigeTestKoeyringar(
+        maaling: Maaling,
+        loeysingId: Int? = null
+    ): List<TestKoeyring.Ferdig> =
+        if (maaling is TestingFerdig) {
+          maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>().filter {
+            loeysingId == null || it.crawlResultat.loeysing.id == loeysingId
+          }
+        } else {
+          emptyList()
+        }
   }
 }
 
