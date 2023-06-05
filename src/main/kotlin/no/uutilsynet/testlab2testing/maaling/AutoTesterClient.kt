@@ -67,15 +67,14 @@ class AutoTesterClient(
       }
 
   fun fetchFulltResultat(testKoeyring: TestKoeyring.Ferdig): Result<List<TestResultat>> =
-      testKoeyring.autoTesterOutput.let { lenker ->
-        runCatching {
-          restTemplate
-              .getForObject(lenker.urlFulltResultat.toURI(), Array<Array<TestResultat>>::class.java)
-              ?.flatten()
-              ?.toList()
-              ?: throw RuntimeException(
-                  "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${lenker.urlFulltResultat}")
-        }
+      runCatching {
+        val urlFulltResultat = testKoeyring.autoTesterOutput.urlFulltResultat
+        restTemplate
+            .getForObject(urlFulltResultat.toURI(), Array<Array<TestResultat>>::class.java)
+            ?.flatten()
+            ?.toList()
+            ?: throw RuntimeException(
+                "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra $urlFulltResultat")
       }
 
   suspend fun fetchFulltResultat(
