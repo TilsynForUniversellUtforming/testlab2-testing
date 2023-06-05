@@ -2,11 +2,6 @@ package no.uutilsynet.testlab2testing.maaling
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonDeserializer
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import java.net.URI
 import java.net.URL
 import kotlinx.coroutines.async
@@ -72,7 +67,7 @@ class AutoTesterClient(
       }
 
   fun fetchFulltResultat(testKoeyring: TestKoeyring.Ferdig): Result<List<TestResultat>> =
-      testKoeyring.lenker?.let { lenker ->
+      testKoeyring.autoTesterOutput.let { lenker ->
         runCatching {
           restTemplate
               .getForObject(lenker.urlFulltResultat.toURI(), Array<Array<TestResultat>>::class.java)
@@ -82,7 +77,6 @@ class AutoTesterClient(
                   "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${lenker.urlFulltResultat}")
         }
       }
-          ?: Result.success(testKoeyring.testResultat)
 
   suspend fun fetchFulltResultat(
       testKoeyringar: List<TestKoeyring.Ferdig>
@@ -94,28 +88,7 @@ class AutoTesterClient(
 
   data class CustomStatus(val testaSider: Int, val talSider: Int)
 
-  @JsonDeserialize(using = AutoTesterOutputDeserializer::class)
-  sealed class AutoTesterOutput {
-    data class TestResultater(val testResultater: List<TestResultat>) : AutoTesterOutput()
-    data class Lenker(val urlFulltResultat: URL, val urlBrot: URL) : AutoTesterOutput()
-  }
-
-  class AutoTesterOutputDeserializer : JsonDeserializer<AutoTesterOutput>() {
-    override fun deserialize(jp: JsonParser, ctxt: DeserializationContext): AutoTesterOutput {
-      val node = jp.readValueAsTree<JsonNode>()
-      return when {
-        node.isArray ->
-            AutoTesterOutput.TestResultater(
-                node.map { objectNode ->
-                  ctxt.readTreeAsValue(objectNode, TestResultat::class.java)
-                })
-        node.has("urlFulltResultat") ->
-            AutoTesterOutput.Lenker(
-                URL(node["urlFulltResultat"].asText()), URL(node["urlBrot"].asText()))
-        else -> throw RuntimeException("Ukjent output fra AutoTester")
-      }
-    }
-  }
+  data class AutoTesterOutput(val urlFulltResultat: URL, val urlBrot: URL)
 
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "runtimeStatus")

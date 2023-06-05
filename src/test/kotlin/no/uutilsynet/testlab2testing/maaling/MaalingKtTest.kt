@@ -131,7 +131,7 @@ class MaalingKtTest {
                       crawlResultatForUUTilsynet,
                       Instant.now(),
                       URL("https://status.url"),
-                      TestKoeyringTest.testResultater())))
+                      TestKoeyringTest.autoTesterOutput)))
       val result = Maaling.toTestingFerdig(maaling)
       Assertions.assertThat(result).isNotNull
     }
@@ -150,7 +150,7 @@ class MaalingKtTest {
                       crawlResultatForUUTilsynet,
                       Instant.now(),
                       URL("https://status.url"),
-                      TestKoeyringTest.testResultater()),
+                      TestKoeyringTest.autoTesterOutput),
               ))
       val result = Maaling.toTestingFerdig(maaling)
       Assertions.assertThat(result).isNotNull
@@ -173,8 +173,7 @@ class MaalingKtTest {
                         Instant.now()),
                     Instant.now(),
                     URL("https://www.status.url"),
-                    emptyList(),
-                    AutoTesterClient.AutoTesterOutput.Lenker(
+                    AutoTesterClient.AutoTesterOutput(
                         URL("https://fullt.resultat"), URL("https://brot.resultat"))),
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(
@@ -184,8 +183,7 @@ class MaalingKtTest {
                         Instant.now()),
                     Instant.now(),
                     URL("https://www.status.url"),
-                    emptyList(),
-                    AutoTesterClient.AutoTesterOutput.Lenker(
+                    AutoTesterClient.AutoTesterOutput(
                         URL("https://fullt.resultat"), URL("https://brot.resultat")))))
 
     @DisplayName(

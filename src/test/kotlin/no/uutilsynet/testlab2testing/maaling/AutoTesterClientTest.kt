@@ -55,19 +55,6 @@ class AutoTesterClientTest {
   }
 
   @DisplayName(
-      "når responsen fra autotester er `Completed`, og responsen inneholder testresultater, så skal det parses til responsklassen")
-  @Test
-  fun completed() {
-    val completed =
-        objectMapper.readValue(
-            jsonSuccess, AutoTesterClient.AzureFunctionResponse.Completed::class.java)
-    assertThat(completed).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Completed::class.java)
-    val output: AutoTesterClient.AutoTesterOutput.TestResultater =
-        completed.output as AutoTesterClient.AutoTesterOutput.TestResultater
-    assertThat(output.testResultater).hasSize(2)
-  }
-
-  @DisplayName(
       "når responsen fra autotester er `Completed`, og responsen inneholder urler til testresultater, så skal det parses til responsklassen")
   @Test
   fun completedWithURLs() {
@@ -77,8 +64,7 @@ class AutoTesterClientTest {
         objectMapper.readValue(
             jsonString, AutoTesterClient.AzureFunctionResponse.Completed::class.java)
     assertThat(completed).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Completed::class.java)
-    val output: AutoTesterClient.AutoTesterOutput.Lenker =
-        completed.output as AutoTesterClient.AutoTesterOutput.Lenker
+    val output: AutoTesterClient.AutoTesterOutput = completed.output
     assertThat(output.urlFulltResultat).isEqualTo(URL("https://fullt.resultat.no"))
     assertThat(output.urlBrot).isEqualTo(URL("https://brot.resultat.no"))
   }
@@ -174,43 +160,14 @@ class AutoTesterClientTest {
           .trimIndent()
 
   private val jsonSuccess =
-      """{"runtimeStatus":"Completed", "output":[{
-    "suksesskriterium": [
-      "2.4.2"
-    ],
-    "side": "https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160",
-    "maalingId": 46,
-    "loeysingId": 1,
-    "testregelId": "QW-ACT-R1",
-    "sideNivaa": 1,
-    "testVartUtfoert": "3/23/2023, 11:15:54 AM",
-    "elementUtfall": "The `title` element exists and it's not empty ('').",
-    "elementResultat": "samsvar",
-    "elementOmtale": [
-      {
-        "pointer": "html > head:nth-child(1) > title:nth-child(18)",
-        "htmlCode": "PHRpdGxlPkRpZ2l0YWxlIGJhcnJpZXJhciB8IFRpbHN5bmV0IGZvciB1bml2ZXJzZWxsIHV0Zm9ybWluZyBhdiBpa3Q8L3RpdGxlPg=="
-      }
-    ]
-  },
-  {
-    "suksesskriterium": [
-      "3.1.1"
-    ],
-    "side": "https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160",
-    "maalingId": 46,
-    "loeysingId": 1,
-    "testregelId": "QW-ACT-R2",
-    "sideNivaa": 1,
-    "testVartUtfoert": "3/23/2023, 11:15:54 AM",
-    "elementUtfall": "The `lang` attribute exists and has a value.",
-    "elementResultat": "samsvar",
-    "elementOmtale": [
-      {
-        "pointer": "html",
-        "htmlCode": "PGh0bWwgbGFuZz0ibm4iIGRpcj0ibHRyIiBwcmVmaXg9Im9nOiBodHRwczovL29ncC5tZS9ucyMiIGNsYXNzPSIganMiPjxoZWFkPjwvaGVhZD48Ym9keT48L2JvZHk+PC9odA=="
-      }
-    ]
-  }]}"""
+      """
+        {
+          "runtimeStatus": "Completed",
+          "output": {
+            "urlFulltResultat": "https://fulltresultat.example",
+            "urlBrot": "https://brot.example"
+          }
+        }
+      """
           .trimIndent()
 }

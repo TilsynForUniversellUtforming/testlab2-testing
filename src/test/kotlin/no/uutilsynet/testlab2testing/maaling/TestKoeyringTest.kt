@@ -62,7 +62,7 @@ class TestKoeyringTest {
       tilstand: Class<*>
   ) {
     val testKoeyring =
-        TestKoeyring.Ferdig(crawlResultat, Instant.now(), URL(statusURL), testResultater())
+        TestKoeyring.Ferdig(crawlResultat, Instant.now(), URL(statusURL), autoTesterOutput)
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(TestKoeyring.Ferdig::class.java)
   }
@@ -252,7 +252,7 @@ class TestKoeyringTest {
       val crawlResultat =
           CrawlResultat.Ferdig(nettsider, URL(statusURL), uutilsynetLoeysing, Instant.now())
       return mapOf(
-          TestKoeyring.Ferdig(crawlResultat, Instant.now(), URL(statusURL), emptyList()) to
+          TestKoeyring.Ferdig(crawlResultat, Instant.now(), URL(statusURL), autoTesterOutput) to
               testResultat)
     }
 
@@ -438,7 +438,7 @@ class TestKoeyringTest {
               TestKoeyring.Starta::class.java),
           Arguments.of(
               AutoTesterClient.AzureFunctionResponse.Completed(
-                  AutoTesterClient.AutoTesterOutput.Lenker(
+                  AutoTesterClient.AutoTesterOutput(
                       URL("https://fullt.resultat"), URL("https://brot.resultat"))),
               TestKoeyring.Ferdig::class.java),
           Arguments.of(
@@ -446,29 +446,8 @@ class TestKoeyringTest {
               TestKoeyring.Feila::class.java))
     }
 
-    fun testResultater() =
-        listOf(
-            TestResultat(
-                listOf("3.1.1"),
-                URL("https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160"),
-                "QW-ACT-R5",
-                1,
-                TestResultat.parseLocalDateTime("3/23/2023, 11:15:54 AM"),
-                "The `lang` attribute has a valid value.",
-                "samsvar",
-                TestResultat.ACTElement(
-                    "html",
-                    "PGh0bWwgbGFuZz0ibm4iIGRpcj0ibHRyIiBwcmVmaXg9Im9nOiBodHRwczovL29ncC5tZS9ucyMiIGNsYXNzPSIganMiPjxoZWFkPjwvaGVhZD48Ym9keT53aW5kb3cuZGF0YQ==")),
-            TestResultat(
-                listOf("4.1.2"),
-                URL("https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160"),
-                "QW-ACT-R11",
-                1,
-                TestResultat.parseLocalDateTime("3/23/2023, 11:15:54 AM"),
-                "The test target has an accessible name.",
-                "samsvar",
-                TestResultat.ACTElement(
-                    "html > body:nth-child(2) > div:nth-child(2) > div:nth-child(1) > header:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > button:nth-child(1)",
-                    "PGJ1dHRvbiBjbGFzcz0iaGVhZGVyLWJ1dHRvbiBoZWFkZXItYnV0dG9uLS1zZWFyY2ggY29sbGFwc2VkIiBkYXRhLWJzLXRvZ2dsZT0iY29sbGFwc2UiIGRhdGEtYnMtdGFyZw==")))
+    val autoTesterOutput: AutoTesterClient.AutoTesterOutput =
+        AutoTesterClient.AutoTesterOutput(
+            URL("https://fullt.resultat"), URL("https://brot.resultat"))
   }
 }

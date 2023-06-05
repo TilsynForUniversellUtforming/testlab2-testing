@@ -87,50 +87,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
   }
 
   @DisplayName(
-      "når vi lagrer ei måling med status `testing_ferdig` og testresultater, så skal alle resultatene også lagres")
-  @Test
-  fun lagreResultater() {
-    val maaling = createTestMaaling()
-    val crawlResultat =
-        maaling.loeysingList.map {
-          CrawlResultat.Ferdig(
-              it.url.toUrlListWithPages(), URL("https://status.uri"), it, Instant.now())
-        }
-    val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
-    val testKoeyringar =
-        crawlResultat.map {
-          TestKoeyring.Ferdig(
-              it,
-              Instant.now(),
-              URL("https://teststatus.url"),
-              listOf(
-                  TestResultat(
-                      listOf("3.1.1"),
-                      it.loeysing.url,
-                      "QW-ACT-R5",
-                      1,
-                      TestResultat.parseLocalDateTime("3/23/2023, 11:15:54 AM"),
-                      "The `lang` attribute has a valid value.",
-                      "samsvar",
-                      TestResultat.ACTElement(
-                          "html",
-                          "PGh0bWwgbGFuZz0ibm4iIGRpcj0ibHRyIiBwcmVmaXg9Im9nOiBodHRwczovL29ncC5tZS9ucyMiIGNsYXNzPSIganMiPjxoZWFkPjwvaGVhZD48Ym9keT53aW5kb3cuZGF0YQ=="))))
-        }
-    val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
-    val testingFerdig = Maaling.toTestingFerdig(testing)!!
-    maalingDAO.save(testingFerdig).getOrThrow()
-    val id = maaling.id
-    val maalingFraDatabasen = maalingDAO.getMaaling(id) as Maaling.TestingFerdig
-    val testResultat =
-        maalingFraDatabasen.testKoeyringar
-            .filterIsInstance<TestKoeyring.Ferdig>()
-            .flatMap { it.testResultat }
-            .first()
-    assertThat(testResultat.testregelId).isEqualTo("QW-ACT-R5")
-  }
-
-  @DisplayName(
-      "når vi lagrer ei måling med status `testing_ferdig` og med lenker til testresultatene, så skal lenkene også lagres")
+      "når vi lagrer ei måling med status `testing_ferdig`, og med lenker til testresultatene, så skal lenkene også lagres")
   @Test
   fun lagreLenker() {
     val id = saveMaalingWithStatusTestingFerdig()
@@ -138,9 +95,9 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     val maalingFromDatabase = maalingDAO.getMaaling(id) as Maaling.TestingFerdig
 
     val testKoeyring = maalingFromDatabase.testKoeyringar[0] as TestKoeyring.Ferdig
-    assertThat(testKoeyring.testResultat).isEmpty()
-    assertThat(testKoeyring.lenker?.urlFulltResultat).isEqualTo(URL("https://fullt.resultat"))
-    assertThat(testKoeyring.lenker?.urlBrot).isEqualTo(URL("https://brot.resultat"))
+    assertThat(testKoeyring.autoTesterOutput.urlFulltResultat)
+        .isEqualTo(URL("https://fullt.resultat"))
+    assertThat(testKoeyring.autoTesterOutput.urlBrot).isEqualTo(URL("https://brot.resultat"))
   }
 
   @DisplayName("Skal kunne oppdatere måling i Planlegging")
@@ -202,8 +159,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
               it,
               Instant.now(),
               URL("https://teststatus.url"),
-              emptyList(),
-              AutoTesterClient.AutoTesterOutput.Lenker(
+              AutoTesterClient.AutoTesterOutput(
                   URL("https://fullt.resultat"), URL("https://brot.resultat")))
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
