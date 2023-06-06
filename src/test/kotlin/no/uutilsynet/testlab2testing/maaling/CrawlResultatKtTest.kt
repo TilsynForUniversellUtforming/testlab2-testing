@@ -40,6 +40,17 @@ class CrawlResultatKtTest {
     assertThat(updated).isInstanceOf(CrawlResultat.Feilet::class.java)
   }
 
+  @DisplayName(
+      "når vi oppdaterer et crawlresultat, og ny status er `Terminated`, så skal crawlresultatet bli feilet")
+  @Test
+  fun terminated() {
+    val ikkeFerdig =
+        CrawlResultat.IkkeFerdig(
+            URL("https://status.uri"), uutilsynetLoeysing, Instant.now(), Framgang(1, 2))
+    val updated = updateStatus(ikkeFerdig, CrawlStatus.Terminated)
+    assertThat(updated).isInstanceOf(CrawlResultat.Feilet::class.java)
+  }
+
   @DisplayName("når vi oppdaterer et resultat som ikke er ferdig, så skal framgangen oppdateres")
   @Test
   fun updateFramgang() {
