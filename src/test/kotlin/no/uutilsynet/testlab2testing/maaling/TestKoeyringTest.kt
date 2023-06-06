@@ -53,6 +53,17 @@ class TestKoeyringTest {
     assertThat(actual).isInstanceOf(tilstand)
   }
 
+  @DisplayName("når ny responsen er `Terminated`, så skal ny tilstand bli `feila`")
+  @Test
+  fun testUpdateStatusFromStartaTerminated() {
+    val testKoeyring =
+        TestKoeyring.Starta(
+            crawlResultat, Instant.now(), URL(statusURL), Framgang(0, crawlResultat.nettsider.size))
+    val actual =
+        TestKoeyring.updateStatus(testKoeyring, AutoTesterClient.AzureFunctionResponse.Terminated)
+    assertThat(actual).isInstanceOf(TestKoeyring.Feila::class.java)
+  }
+
   @DisplayName(
       "gitt ei testkøyring med tilstand `ferdig`, så blir ikkje tilstanden endra uansett kva ny tilstand som blir rapportert")
   @ParameterizedTest
