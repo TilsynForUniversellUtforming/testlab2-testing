@@ -131,14 +131,15 @@ class AutoTesterClient(
       JsonSubTypes.Type(value = AzureFunctionResponse.Running::class, name = "Running"),
       JsonSubTypes.Type(value = AzureFunctionResponse.Completed::class, name = "Completed"),
       JsonSubTypes.Type(value = AzureFunctionResponse.Failed::class, name = "Failed"),
+      JsonSubTypes.Type(value = AzureFunctionResponse.Terminated::class, name = "Terminated"),
       JsonSubTypes.Type(value = AzureFunctionResponse.Other::class, name = "ContinuedAsNew"),
-      JsonSubTypes.Type(value = AzureFunctionResponse.Other::class, name = "Terminated"),
       JsonSubTypes.Type(value = AzureFunctionResponse.Other::class, name = "Suspended"))
   sealed class AzureFunctionResponse {
     object Pending : AzureFunctionResponse()
     data class Running(val customStatus: CustomStatus?) : AzureFunctionResponse()
     data class Completed(val output: AutoTesterOutput) : AzureFunctionResponse()
     data class Failed(val output: String) : AzureFunctionResponse()
+    object Terminated : AzureFunctionResponse()
     data class Other(val output: String?) : AzureFunctionResponse()
   }
 

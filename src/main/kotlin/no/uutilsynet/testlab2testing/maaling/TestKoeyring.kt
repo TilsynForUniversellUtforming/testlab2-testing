@@ -66,61 +66,75 @@ sealed class TestKoeyring {
         testKoeyring: TestKoeyring,
         response: AutoTesterClient.AzureFunctionResponse
     ): TestKoeyring =
-        when (testKoeyring) {
-          is IkkjeStarta ->
-              when (response) {
-                is AutoTesterClient.AzureFunctionResponse.Running ->
-                    Starta(
+        if (response is AutoTesterClient.AzureFunctionResponse.Terminated) {
+          Feila(testKoeyring.crawlResultat, Instant.now(), "Testen har blitt stoppa manuelt.")
+        } else {
+          when (testKoeyring) {
+            is IkkjeStarta -> updateStatusIkkjeStarta(response, testKoeyring)
+            is Starta -> {
+              updateStatusStarta(response, testKoeyring)
+            }
+            else -> testKoeyring
+          }
+        }
+
+    private fun updateStatusStarta(
+        response: AutoTesterClient.AzureFunctionResponse,
+        testKoeyring: Starta
+    ) =
+        when (response) {
+          is AutoTesterClient.AzureFunctionResponse.Pending ->
+              IkkjeStarta(testKoeyring.crawlResultat, Instant.now(), testKoeyring.statusURL)
+          is AutoTesterClient.AzureFunctionResponse.Completed ->
+              when (response.output) {
+                is AutoTesterClient.AutoTesterOutput.Lenker ->
+                    Ferdig(
                         testKoeyring.crawlResultat,
                         Instant.now(),
                         testKoeyring.statusURL,
-                        Framgang.from(
-                            response.customStatus, testKoeyring.crawlResultat.nettsider.size))
-                is AutoTesterClient.AzureFunctionResponse.Completed ->
-                    when (response.output) {
-                      is AutoTesterClient.AutoTesterOutput.Lenker ->
-                          Ferdig(
-                              testKoeyring.crawlResultat,
-                              Instant.now(),
-                              testKoeyring.statusURL,
-                              emptyList(),
-                              response.output)
-                      is AutoTesterClient.AutoTesterOutput.TestResultater ->
-                          Ferdig(
-                              testKoeyring.crawlResultat,
-                              Instant.now(),
-                              testKoeyring.statusURL,
-                              response.output.testResultater)
-                    }
-                is AutoTesterClient.AzureFunctionResponse.Failed ->
-                    Feila(testKoeyring.crawlResultat, Instant.now(), response.output)
-                else -> testKoeyring
+                        emptyList(),
+                        response.output)
+                is AutoTesterClient.AutoTesterOutput.TestResultater ->
+                    Ferdig(
+                        testKoeyring.crawlResultat,
+                        Instant.now(),
+                        testKoeyring.statusURL,
+                        response.output.testResultater)
               }
-          is Starta -> {
-            when (response) {
-              is AutoTesterClient.AzureFunctionResponse.Pending ->
-                  IkkjeStarta(testKoeyring.crawlResultat, Instant.now(), testKoeyring.statusURL)
-              is AutoTesterClient.AzureFunctionResponse.Completed ->
-                  when (response.output) {
-                    is AutoTesterClient.AutoTesterOutput.Lenker ->
-                        Ferdig(
-                            testKoeyring.crawlResultat,
-                            Instant.now(),
-                            testKoeyring.statusURL,
-                            emptyList(),
-                            response.output)
-                    is AutoTesterClient.AutoTesterOutput.TestResultater ->
-                        Ferdig(
-                            testKoeyring.crawlResultat,
-                            Instant.now(),
-                            testKoeyring.statusURL,
-                            response.output.testResultater)
-                  }
-              is AutoTesterClient.AzureFunctionResponse.Failed ->
-                  Feila(testKoeyring.crawlResultat, Instant.now(), response.output)
-              else -> testKoeyring
-            }
-          }
+          is AutoTesterClient.AzureFunctionResponse.Failed ->
+              Feila(testKoeyring.crawlResultat, Instant.now(), response.output)
+          else -> testKoeyring
+        }
+
+    private fun updateStatusIkkjeStarta(
+        response: AutoTesterClient.AzureFunctionResponse,
+        testKoeyring: IkkjeStarta
+    ) =
+        when (response) {
+          is AutoTesterClient.AzureFunctionResponse.Running ->
+              Starta(
+                  testKoeyring.crawlResultat,
+                  Instant.now(),
+                  testKoeyring.statusURL,
+                  Framgang.from(response.customStatus, testKoeyring.crawlResultat.nettsider.size))
+          is AutoTesterClient.AzureFunctionResponse.Completed ->
+              when (response.output) {
+                is AutoTesterClient.AutoTesterOutput.Lenker ->
+                    Ferdig(
+                        testKoeyring.crawlResultat,
+                        Instant.now(),
+                        testKoeyring.statusURL,
+                        emptyList(),
+                        response.output)
+                is AutoTesterClient.AutoTesterOutput.TestResultater ->
+                    Ferdig(
+                        testKoeyring.crawlResultat,
+                        Instant.now(),
+                        testKoeyring.statusURL,
+                        response.output.testResultater)
+              }
+          is AutoTesterClient.AzureFunctionResponse.Failed ->
+              Feila(testKoeyring.crawlResultat, Instant.now(), response.output)
           else -> testKoeyring
         }
 
