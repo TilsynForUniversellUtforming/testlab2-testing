@@ -1,8 +1,8 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKrav
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravtilsamsvar
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestReferanseAct
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravTilSamsvar
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestTestregelNoekkel
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DisplayName
@@ -20,7 +20,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
   fun cleanup() {
     testregelDAO.jdbcTemplate.update(
         "delete from testregel where kravtilsamsvar = :kravtilsamsvar",
-        mapOf("kravtilsamsvar" to testregelTestKravtilsamsvar))
+        mapOf("kravtilsamsvar" to testregelTestKravTilSamsvar))
   }
 
   @Test
@@ -29,7 +29,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
     val id = createTestregel()
     val testregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(testregel).isNotNull
-    Assertions.assertThat(testregel?.kravTilSamsvar).isEqualTo(testregelTestKravtilsamsvar)
+    Assertions.assertThat(testregel?.kravTilSamsvar).isEqualTo(testregelTestKravTilSamsvar)
   }
 
   @Test
@@ -67,38 +67,39 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
   @DisplayName("Skal oppdatere testregel i DAO")
   fun updateTestregel() {
     val oldKrav = "1.4.12 Tekstavstand"
-    val oldReferanseAct = "QW-ACT-R69"
+    val oldTestregelNoekkel = "QW-ACT-R69"
     val oldKravtilsamsvar = "test_skal_slettes_1"
     val id =
         createTestregel(
             oldKrav,
-            oldReferanseAct,
+            oldTestregelNoekkel,
             oldKravtilsamsvar,
         )
 
     val oldTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(oldTestregel).isNotNull
     Assertions.assertThat(oldTestregel?.krav).isEqualTo(oldKrav)
-    Assertions.assertThat(oldTestregel?.referanseAct).isEqualTo(oldReferanseAct)
+    Assertions.assertThat(oldTestregel?.testregelNoekkel).isEqualTo(oldTestregelNoekkel)
     Assertions.assertThat(oldTestregel?.kravTilSamsvar).isEqualTo(oldKravtilsamsvar)
 
     oldTestregel
         ?.copy(
-            krav = testregelTestReferanseAct,
-            referanseAct = testregelTestKrav,
-            kravTilSamsvar = testregelTestKravtilsamsvar)
+            krav = testregelTestKrav,
+            testregelNoekkel = testregelTestTestregelNoekkel,
+            kravTilSamsvar = testregelTestKravTilSamsvar)
         ?.let { testregelDAO.updateTestregel(it) }
 
     val updatedTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(updatedTestregel).isNotNull
-    Assertions.assertThat(updatedTestregel?.krav).isEqualTo(testregelTestReferanseAct)
-    Assertions.assertThat(updatedTestregel?.referanseAct).isEqualTo(testregelTestKrav)
-    Assertions.assertThat(updatedTestregel?.kravTilSamsvar).isEqualTo(testregelTestKravtilsamsvar)
+    Assertions.assertThat(updatedTestregel?.krav).isEqualTo(testregelTestKrav)
+    Assertions.assertThat(updatedTestregel?.testregelNoekkel)
+        .isEqualTo(testregelTestTestregelNoekkel)
+    Assertions.assertThat(updatedTestregel?.kravTilSamsvar).isEqualTo(testregelTestKravTilSamsvar)
   }
 
   private fun createTestregel(
-      krav: String = testregelTestReferanseAct,
-      referanseAct: String = testregelTestKrav,
-      kravtilsamsvar: String = testregelTestKravtilsamsvar,
-  ) = testregelDAO.createTestregel(krav, referanseAct, kravtilsamsvar)
+      krav: String = testregelTestKrav,
+      testregelNoekkel: String = testregelTestTestregelNoekkel,
+      kravtilsamsvar: String = testregelTestKravTilSamsvar,
+  ) = testregelDAO.createTestregel(krav, testregelNoekkel, kravtilsamsvar)
 }

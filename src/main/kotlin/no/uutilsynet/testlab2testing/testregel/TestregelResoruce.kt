@@ -21,7 +21,7 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
 
   data class CreateTestregelDTO(
       val krav: String,
-      val referanseAct: String,
+      val testregelNoekkel: String,
       val kravTilSamsvar: String
   )
 
@@ -39,7 +39,7 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
   @PostMapping
   fun createTestregel(@RequestBody dto: CreateTestregelDTO) =
       createWithErrorHandling(
-          { testregelDAO.createTestregel(dto.krav, dto.referanseAct, dto.kravTilSamsvar) },
+          { testregelDAO.createTestregel(dto.krav, dto.testregelNoekkel, dto.kravTilSamsvar) },
           locationForId)
 
   @PutMapping

@@ -21,23 +21,26 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   object TestregelParams {
     val createTestregelSql =
-        "insert into testregel (krav, referanseAct, kravtilsamsvar) values (:krav, :referanseAct, :kravtilsamsvar) returning id"
-    fun createTestregelParams(krav: String, referanseAct: String, kravtilsamsvar: String) =
-        mapOf("krav" to krav, "referanseAct" to referanseAct, "kravtilsamsvar" to kravtilsamsvar)
+        "insert into testregel (krav, testregelNoekkel, kravtilsamsvar) values (:krav, :testregelNoekkel, :kravtilsamsvar) returning id"
+    fun createTestregelParams(krav: String, testregelNoekkel: String, kravtilsamsvar: String) =
+        mapOf(
+            "krav" to krav,
+            "testregelNoekkel" to testregelNoekkel,
+            "kravtilsamsvar" to kravtilsamsvar)
 
     val getTestregelListSql =
-        "select id, krav, referanseAct, kravtilsamsvar from testregel order by id"
+        "select id, krav, testregelNoekkel, kravtilsamsvar from testregel order by id"
 
     val getTestregelSql =
-        "select id, krav, referanseAct, kravtilsamsvar from testregel where id = :id order by id"
+        "select id, krav, testregelNoekkel, kravtilsamsvar from testregel where id = :id order by id"
 
     val updateTestregelSql =
-        " update testregel set krav = :krav, referanseAct = :referanseAct, kravtilsamsvar = :kravtilsamsvar where id = :id"
+        " update testregel set krav = :krav, testregelNoekkel = :testregelNoekkel, kravtilsamsvar = :kravtilsamsvar where id = :id"
     fun updateTestregelParams(testregel: Testregel) =
         mapOf(
             "id" to testregel.id,
             "krav" to testregel.krav,
-            "referanseAct" to testregel.referanseAct,
+            "testregelNoekkel" to testregel.testregelNoekkel,
             "kravtilsamsvar" to testregel.kravTilSamsvar)
 
     val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
@@ -58,12 +61,12 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Transactional
   fun createTestregel(
       krav: String,
-      referanseAct: String,
+      testregelNoekkel: String,
       kravtilsamsvar: String,
   ): Int =
       jdbcTemplate.queryForObject(
           createTestregelSql,
-          createTestregelParams(krav, referanseAct, kravtilsamsvar),
+          createTestregelParams(krav, testregelNoekkel, kravtilsamsvar),
           Int::class.java)!!
 
   @Transactional

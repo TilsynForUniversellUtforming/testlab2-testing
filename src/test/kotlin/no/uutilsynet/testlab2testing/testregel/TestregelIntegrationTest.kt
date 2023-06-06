@@ -4,8 +4,8 @@ import java.net.URI
 import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelRequestBody
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKrav
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravtilsamsvar
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestReferanseAct
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravTilSamsvar
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestTestregelNoekkel
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DisplayName
@@ -30,7 +30,7 @@ class TestregelIntegrationTests(
   fun cleanup() {
     testregelDAO.jdbcTemplate.update(
         "delete from testregel where kravtilsamsvar = :kravtilsamsvar",
-        mapOf("kravtilsamsvar" to testregelTestKravtilsamsvar))
+        mapOf("kravtilsamsvar" to testregelTestKravTilSamsvar))
   }
 
   @Test
@@ -79,8 +79,8 @@ class TestregelIntegrationTests(
     fun getTestregel() {
       val testregel = restTemplate.getForObject(location, Testregel::class.java)
       Assertions.assertThat(testregel.krav).isEqualTo(testregelTestKrav)
-      Assertions.assertThat(testregel.referanseAct).isEqualTo(testregelTestReferanseAct)
-      Assertions.assertThat(testregel.kravTilSamsvar).isEqualTo(testregelTestKravtilsamsvar)
+      Assertions.assertThat(testregel.testregelNoekkel).isEqualTo(testregelTestTestregelNoekkel)
+      Assertions.assertThat(testregel.kravTilSamsvar).isEqualTo(testregelTestKravTilSamsvar)
     }
 
     @Test
