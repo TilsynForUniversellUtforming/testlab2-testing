@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("v1/testregler")
+@RequestMapping("v1/testreglar")
 class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingDAO) {
 
   data class CreateTestregelDTO(
@@ -26,7 +26,7 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
       val kravTilSamsvar: String
   )
 
-  private val locationForId: (Int) -> URI = { id -> URI("/v1/testregler/${id}") }
+  private val locationForId: (Int) -> URI = { id -> URI("/v1/testreglar/${id}") }
 
   @GetMapping("{id}")
   fun getTestregel(@PathVariable id: Int): ResponseEntity<Testregel> =
