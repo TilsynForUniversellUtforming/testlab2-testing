@@ -27,7 +27,9 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     val getTestregelListSql =
         "select id, krav, referanseAct, kravtilsamsvar from testregel order by id"
-    val getTestregelSql = "select id, referanseact from testregel where id = :id order by id"
+
+    val getTestregelSql =
+        "select id, krav, referanseAct, kravtilsamsvar from testregel where id = :id order by id"
 
     val updateTestregelSql =
         " update testregel set krav = :krav, referanseAct = :referanseAct, kravtilsamsvar = :kravtilsamsvar where id = :id"
