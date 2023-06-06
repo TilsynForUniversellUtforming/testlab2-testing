@@ -78,9 +78,11 @@ class MaalingResource(
         maalingDAO
             .getMaaling(maalingId)
             ?.let { maaling -> Maaling.findFerdigeTestKoeyringar(maaling, loeysingId) }
-            ?.let { ferdigeTestKoeyringar -> autoTesterClient.fetchResultat(ferdigeTestKoeyringar) }
+            ?.let { ferdigeTestKoeyringar ->
+              autoTesterClient.fetchResultat(ferdigeTestKoeyringar, false)
+            }
             ?.toSingleResult()
-            ?.map { it.flatten() }
+            ?.map { it.values.flatten() }
             ?.fold(
                 { testResultatList -> ResponseEntity.ok(testResultatList) },
                 { error ->
@@ -105,11 +107,10 @@ class MaalingResource(
           ?.map { testKoeyringar -> testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>() }
           ?.mapCatching { ferdigeTestKoeyringar ->
             runBlocking(Dispatchers.IO) {
-              val deferreds =
-                  ferdigeTestKoeyringar.map { testKoeyring ->
-                    async { testKoeyring to autoTesterClient.fetchResultat(testKoeyring, true) }
-                  }
-              deferreds.awaitAll().toMap().toSingleResult().getOrThrow()
+              autoTesterClient
+                  .fetchResultat(ferdigeTestKoeyringar, true)
+                  .toSingleResult()
+                  .getOrThrow()
             }
           }
           ?.map { koeyringerMedResultat ->
