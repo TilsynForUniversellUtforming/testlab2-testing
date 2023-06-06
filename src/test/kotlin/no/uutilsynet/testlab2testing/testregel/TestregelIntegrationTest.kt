@@ -38,8 +38,8 @@ class TestregelIntegrationTests(
   @Test
   @DisplayName("Skal kunne opprette en testregel")
   fun createTestregel() {
-    val locationPattern = """/v1/testregler/\d+"""
-    val location = restTemplate.postForLocation("/v1/testregler", testregelRequestBody)
+    val locationPattern = """/v1/testreglar/\d+"""
+    val location = restTemplate.postForLocation("/v1/testreglar", testregelRequestBody)
     Assertions.assertThat(location.toString()).matches(locationPattern)
   }
 
@@ -48,7 +48,7 @@ class TestregelIntegrationTests(
   fun createTestregelErrors() {
     val errorResponse =
         restTemplate.postForEntity(
-            "/v1/testregler",
+            "/v1/testreglar",
             mapOf(
                 "krav" to "",
                 "testregelNoekkel" to testregelTestTestregelNoekkel,
@@ -81,7 +81,7 @@ class TestregelIntegrationTests(
     Assertions.assertThat(testregel.krav).isNotEqualTo(krav)
 
     restTemplate.exchange(
-        "/v1/testregler", HttpMethod.PUT, HttpEntity(testregel.copy(krav = krav)), Int::class.java)
+        "/v1/testreglar", HttpMethod.PUT, HttpEntity(testregel.copy(krav = krav)), Int::class.java)
 
     val updatedTestregel = restTemplate.getForObject(location, Testregel::class.java)
     Assertions.assertThat(updatedTestregel.krav).isEqualTo(krav)
@@ -110,7 +110,7 @@ class TestregelIntegrationTests(
 
       val testregelFromList =
           restTemplate
-              .exchange("/v1/testregler", HttpMethod.GET, HttpEntity.EMPTY, testregelListType)
+              .exchange("/v1/testreglar", HttpMethod.GET, HttpEntity.EMPTY, testregelListType)
               .body
               ?.find { it.id == testregel.id }
 
@@ -119,5 +119,5 @@ class TestregelIntegrationTests(
   }
 
   private fun createDefaultTestregel(): URI =
-      restTemplate.postForLocation("/v1/testregler", testregelRequestBody)
+      restTemplate.postForLocation("/v1/testreglar", testregelRequestBody)
 }
