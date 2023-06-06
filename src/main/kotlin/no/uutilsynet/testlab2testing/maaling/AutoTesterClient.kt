@@ -71,11 +71,15 @@ class AutoTesterClient(
         }
       }
 
-  fun fetchFulltResultat(testKoeyring: TestKoeyring.Ferdig): Result<List<TestResultat>> =
+  fun fetchResultat(
+      testKoeyring: TestKoeyring.Ferdig,
+      fulltResultat: Boolean
+  ): Result<List<TestResultat>> =
       testKoeyring.lenker?.let { lenker ->
         runCatching {
+          val uri = if (fulltResultat) lenker.urlFulltResultat.toURI() else lenker.urlBrot.toURI()
           restTemplate
-              .getForObject(lenker.urlFulltResultat.toURI(), Array<Array<TestResultat>>::class.java)
+              .getForObject(uri, Array<Array<TestResultat>>::class.java)
               ?.flatten()
               ?.toList()
               ?: throw RuntimeException(
@@ -84,11 +88,11 @@ class AutoTesterClient(
       }
           ?: Result.success(testKoeyring.testResultat)
 
-  suspend fun fetchFulltResultat(
+  suspend fun fetchResultat(
       testKoeyringar: List<TestKoeyring.Ferdig>
   ): List<Result<List<TestResultat>>> = coroutineScope {
     val deferreds =
-        testKoeyringar.map { testKoeyring -> async { fetchFulltResultat(testKoeyring) } }
+        testKoeyringar.map { testKoeyring -> async { fetchResultat(testKoeyring, false) } }
     deferreds.awaitAll()
   }
 
