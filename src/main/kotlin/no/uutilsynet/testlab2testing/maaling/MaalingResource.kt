@@ -78,9 +78,7 @@ class MaalingResource(
         maalingDAO
             .getMaaling(maalingId)
             ?.let { maaling -> Maaling.findFerdigeTestKoeyringar(maaling, loeysingId) }
-            ?.let { ferdigeTestKoeyringar ->
-              autoTesterClient.fetchFulltResultat(ferdigeTestKoeyringar)
-            }
+            ?.let { ferdigeTestKoeyringar -> autoTesterClient.fetchResultat(ferdigeTestKoeyringar) }
             ?.toSingleResult()
             ?.map { it.flatten() }
             ?.fold(
@@ -109,7 +107,7 @@ class MaalingResource(
             runBlocking(Dispatchers.IO) {
               val deferreds =
                   ferdigeTestKoeyringar.map { testKoeyring ->
-                    async { testKoeyring to autoTesterClient.fetchFulltResultat(testKoeyring) }
+                    async { testKoeyring to autoTesterClient.fetchResultat(testKoeyring, true) }
                   }
               deferreds.awaitAll().toMap().toSingleResult().getOrThrow()
             }
