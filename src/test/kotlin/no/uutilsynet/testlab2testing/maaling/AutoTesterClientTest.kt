@@ -8,6 +8,7 @@ import no.uutilsynet.testlab2testing.maaling.TestConstants.statusURL
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers
 import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
@@ -26,72 +27,87 @@ class AutoTesterClientTest {
   private val objectMapper =
       jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
-  @DisplayName("når responsen fra autotester er `Pending`, så skal det parses til responsklassen")
-  @Test
-  fun pending() {
-    val jsonString = """{"runtimeStatus":"Pending", "output": null}"""
-    val pending =
-        objectMapper.readValue(
-            jsonString, AutoTesterClient.AzureFunctionResponse.Pending::class.java)
-    assertThat(pending).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Pending::class.java)
-  }
+  @DisplayName("parsing av responsen fra autotester")
+  @Nested
+  inner class ParsingResponse {
+    @DisplayName("når responsen fra autotester er `Pending`, så skal det parses til responsklassen")
+    @Test
+    fun pending() {
+      val jsonString = """{"runtimeStatus":"Pending", "output": null}"""
+      val pending =
+          objectMapper.readValue(jsonString, AutoTesterClient.AzureFunctionResponse::class.java)
+      assertThat(pending).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Pending::class.java)
+    }
 
-  @DisplayName("når responsen fra autotester er `Running`, så skal det parses til responsklassen")
-  @Test
-  fun running() {
-    val jsonString =
-        """{"runtimeStatus":"Running", "output": null, "customStatus":{"testaSider":0, "talSider":0}}"""
-    val running =
-        objectMapper.readValue(
-            jsonString, AutoTesterClient.AzureFunctionResponse.Running::class.java)
-    assertThat(running).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Running::class.java)
+    @DisplayName("når responsen fra autotester er `Running`, så skal det parses til responsklassen")
+    @Test
+    fun running() {
+      val jsonString =
+          """{"runtimeStatus":"Running", "output": null, "customStatus":{"testaSider":0, "talSider":0}}"""
+      val running =
+          objectMapper.readValue(jsonString, AutoTesterClient.AzureFunctionResponse::class.java)
+      assertThat(running).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Running::class.java)
 
-    val jsonStringNoStatus = """{"runtimeStatus":"Running", "output": null}"""
-    val runningNoStatus =
-        objectMapper.readValue(
-            jsonStringNoStatus, AutoTesterClient.AzureFunctionResponse.Running::class.java)
-    assertThat(runningNoStatus)
-        .isInstanceOf(AutoTesterClient.AzureFunctionResponse.Running::class.java)
-  }
+      val jsonStringNoStatus = """{"runtimeStatus":"Running", "output": null}"""
+      val runningNoStatus =
+          objectMapper.readValue(
+              jsonStringNoStatus, AutoTesterClient.AzureFunctionResponse::class.java)
+      assertThat(runningNoStatus)
+          .isInstanceOf(AutoTesterClient.AzureFunctionResponse.Running::class.java)
+    }
 
-  @DisplayName(
-      "når responsen fra autotester er `Completed`, og responsen inneholder testresultater, så skal det parses til responsklassen")
-  @Test
-  fun completed() {
-    val completed =
-        objectMapper.readValue(
-            jsonSuccess, AutoTesterClient.AzureFunctionResponse.Completed::class.java)
-    assertThat(completed).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Completed::class.java)
-    val output: AutoTesterClient.AutoTesterOutput.TestResultater =
-        completed.output as AutoTesterClient.AutoTesterOutput.TestResultater
-    assertThat(output.testResultater).hasSize(2)
-  }
+    @DisplayName(
+        "når responsen fra autotester er `Completed`, og responsen inneholder testresultater, så skal det parses til responsklassen")
+    @Test
+    fun completed() {
+      val completed =
+          objectMapper.readValue(jsonSuccess, AutoTesterClient.AzureFunctionResponse::class.java)
+      assertThat(completed)
+          .isInstanceOf(AutoTesterClient.AzureFunctionResponse.Completed::class.java)
+      val output: AutoTesterClient.AutoTesterOutput.TestResultater =
+          (completed as AutoTesterClient.AzureFunctionResponse.Completed).output
+              as AutoTesterClient.AutoTesterOutput.TestResultater
+      assertThat(output.testResultater).hasSize(2)
+    }
 
-  @DisplayName(
-      "når responsen fra autotester er `Completed`, og responsen inneholder urler til testresultater, så skal det parses til responsklassen")
-  @Test
-  fun completedWithURLs() {
-    val jsonString =
-        """{"runtimeStatus":"Completed", "output": {"urlFulltResultat": "https://fullt.resultat.no", "urlBrot": "https://brot.resultat.no"}}"""
-    val completed =
-        objectMapper.readValue(
-            jsonString, AutoTesterClient.AzureFunctionResponse.Completed::class.java)
-    assertThat(completed).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Completed::class.java)
-    val output: AutoTesterClient.AutoTesterOutput.Lenker =
-        completed.output as AutoTesterClient.AutoTesterOutput.Lenker
-    assertThat(output.urlFulltResultat).isEqualTo(URL("https://fullt.resultat.no"))
-    assertThat(output.urlBrot).isEqualTo(URL("https://brot.resultat.no"))
-  }
+    @DisplayName(
+        "når responsen fra autotester er `Completed`, og responsen inneholder urler til testresultater, så skal det parses til responsklassen")
+    @Test
+    fun completedWithURLs() {
+      val jsonString =
+          """{"runtimeStatus":"Completed", "output": {"urlFulltResultat": "https://fullt.resultat.no", "urlBrot": "https://brot.resultat.no"}}"""
+      val completed =
+          objectMapper.readValue(jsonString, AutoTesterClient.AzureFunctionResponse::class.java)
+      assertThat(completed)
+          .isInstanceOf(AutoTesterClient.AzureFunctionResponse.Completed::class.java)
+      val output: AutoTesterClient.AutoTesterOutput.Lenker =
+          (completed as AutoTesterClient.AzureFunctionResponse.Completed).output
+              as AutoTesterClient.AutoTesterOutput.Lenker
+      assertThat(output.urlFulltResultat).isEqualTo(URL("https://fullt.resultat.no"))
+      assertThat(output.urlBrot).isEqualTo(URL("https://brot.resultat.no"))
+    }
 
-  @DisplayName("når responsen fra autotester er `Failed`, så skal det parses til responsklassen")
-  @Test
-  fun failed() {
-    val jsonString = """{"runtimeStatus":"Failed", "output": "401 Unauthorized"}"""
-    val failed =
-        objectMapper.readValue(
-            jsonString, AutoTesterClient.AzureFunctionResponse.Failed::class.java)
-    assertThat(failed).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Failed::class.java)
-    assertThat(failed.output).isEqualTo("401 Unauthorized")
+    @DisplayName("når responsen fra autotester er `Failed`, så skal det parses til responsklassen")
+    @Test
+    fun failed() {
+      val jsonString = """{"runtimeStatus":"Failed", "output": "401 Unauthorized"}"""
+      val failed =
+          objectMapper.readValue(jsonString, AutoTesterClient.AzureFunctionResponse::class.java)
+      assertThat(failed).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Failed::class.java)
+      assertThat((failed as AutoTesterClient.AzureFunctionResponse.Failed).output)
+          .isEqualTo("401 Unauthorized")
+    }
+
+    @DisplayName("når responsen fra autotester er `Terminated`, så skal det kunne parses")
+    @Test
+    fun terminated() {
+      val outputFromAutotester = """{"runtimeStatus":"Terminated", "output": null}"""
+      val terminated =
+          objectMapper.readValue(
+              outputFromAutotester, AutoTesterClient.AzureFunctionResponse::class.java)
+      assertThat(terminated)
+          .isInstanceOf(AutoTesterClient.AzureFunctionResponse.Terminated::class.java)
+    }
   }
 
   @DisplayName("Når man starter testing, skal den returnere statusQueryGetUri")
@@ -213,4 +229,6 @@ class AutoTesterClientTest {
     ]
   }]}"""
           .trimIndent()
+
+  private val jsonTerminated = """{"runtimeStatus":"Terminated"}"""
 }
