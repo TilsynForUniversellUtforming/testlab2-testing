@@ -71,7 +71,18 @@ class AutoTesterClient(
         }
       }
 
-  fun fetchResultat(
+  suspend fun fetchResultat(
+      testKoeyringar: List<TestKoeyring.Ferdig>,
+      fulltResultat: Boolean
+  ): Map<TestKoeyring.Ferdig, Result<List<TestResultat>>> = coroutineScope {
+    val deferreds =
+        testKoeyringar.map { testKoeyring ->
+          async { testKoeyring to fetchResultat(testKoeyring, fulltResultat) }
+        }
+    deferreds.awaitAll().toMap()
+  }
+
+  private fun fetchResultat(
       testKoeyring: TestKoeyring.Ferdig,
       fulltResultat: Boolean
   ): Result<List<TestResultat>> =
@@ -87,14 +98,6 @@ class AutoTesterClient(
         }
       }
           ?: Result.success(testKoeyring.testResultat)
-
-  suspend fun fetchResultat(
-      testKoeyringar: List<TestKoeyring.Ferdig>
-  ): List<Result<List<TestResultat>>> = coroutineScope {
-    val deferreds =
-        testKoeyringar.map { testKoeyring -> async { fetchResultat(testKoeyring, false) } }
-    deferreds.awaitAll()
-  }
 
   data class CustomStatus(val testaSider: Int, val talSider: Int)
 
