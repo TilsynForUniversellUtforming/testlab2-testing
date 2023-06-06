@@ -15,9 +15,11 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.client.postForEntity
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -36,9 +38,25 @@ class TestregelIntegrationTests(
   @Test
   @DisplayName("Skal kunne opprette en testregel")
   fun createTestregel() {
-    val locationPattern = """/v1/testregel/\d+"""
-    val location = restTemplate.postForLocation("/v1/testregel", testregelRequestBody)
+    val locationPattern = """/v1/testregler/\d+"""
+    val location = restTemplate.postForLocation("/v1/testregler", testregelRequestBody)
     Assertions.assertThat(location.toString()).matches(locationPattern)
+  }
+
+  @Test
+  @DisplayName("Skal ikke kunne opprette en testregel med feil")
+  fun createTestregelErrors() {
+    val errorResponse =
+        restTemplate.postForEntity(
+            "/v1/testregler",
+            mapOf(
+                "krav" to "",
+                "testregelNoekkel" to testregelTestTestregelNoekkel,
+                "kravTilSamsvar" to testregelTestKravTilSamsvar),
+            String::class.java)
+
+    Assertions.assertThat(errorResponse.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+    Assertions.assertThat(errorResponse.body).isEqualTo("Krav kan ikkje vera blank")
   }
 
   @Test
@@ -63,7 +81,7 @@ class TestregelIntegrationTests(
     Assertions.assertThat(testregel.krav).isNotEqualTo(krav)
 
     restTemplate.exchange(
-        "/v1/testregel", HttpMethod.PUT, HttpEntity(testregel.copy(krav = krav)), Int::class.java)
+        "/v1/testregler", HttpMethod.PUT, HttpEntity(testregel.copy(krav = krav)), Int::class.java)
 
     val updatedTestregel = restTemplate.getForObject(location, Testregel::class.java)
     Assertions.assertThat(updatedTestregel.krav).isEqualTo(krav)
@@ -92,7 +110,7 @@ class TestregelIntegrationTests(
 
       val testregelFromList =
           restTemplate
-              .exchange("/v1/testregel", HttpMethod.GET, HttpEntity.EMPTY, testregelListType)
+              .exchange("/v1/testregler", HttpMethod.GET, HttpEntity.EMPTY, testregelListType)
               .body
               ?.find { it.id == testregel.id }
 
@@ -101,5 +119,5 @@ class TestregelIntegrationTests(
   }
 
   private fun createDefaultTestregel(): URI =
-      restTemplate.postForLocation("/v1/testregel", testregelRequestBody)
+      restTemplate.postForLocation("/v1/testregler", testregelRequestBody)
 }
