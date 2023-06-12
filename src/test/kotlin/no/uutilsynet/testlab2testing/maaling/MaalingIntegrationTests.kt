@@ -9,6 +9,7 @@ import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingRequestBody
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
+import no.uutilsynet.testlab2testing.maaling.TestConstants.testRegelList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
@@ -139,9 +140,13 @@ class MaalingIntegrationTests(
   @DisplayName("Skal kunne endre måling")
   fun updateMaaling() {
     val maaling =
-        maalingDAO.createMaaling("TestMåling", loeysingList.map { it.id }, CrawlParameters()).let {
-          maalingDAO.getMaaling(it) as Maaling.Planlegging
-        }
+        maalingDAO
+            .createMaaling(
+                "TestMåling",
+                loeysingList.map { it.id },
+                testRegelList.map { it.id },
+                CrawlParameters())
+            .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
 
     restTemplate.exchange(
         "/v1/maalinger",
@@ -151,6 +156,7 @@ class MaalingIntegrationTests(
                 id = maaling.id,
                 navn = maalingTestName,
                 loeysingIdList = listOf(maaling.loeysingList[0].id),
+                testregelIdList = testRegelList.map { it.id },
                 crawlParameters = null)),
         Unit::class.java)
 
@@ -171,9 +177,13 @@ class MaalingIntegrationTests(
   @DisplayName("Skal kunne slette måling")
   fun deleteMaaling() {
     val maaling =
-        maalingDAO.createMaaling("TestMåling", loeysingList.map { it.id }, CrawlParameters()).let {
-          maalingDAO.getMaaling(it) as Maaling.Planlegging
-        }
+        maalingDAO
+            .createMaaling(
+                "TestMåling",
+                loeysingList.map { it.id },
+                testRegelList.map { it.id },
+                CrawlParameters())
+            .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
 
     val existingMaaling =
         restTemplate.exchange(
@@ -223,9 +233,12 @@ class MaalingIntegrationTests(
 
     private fun createMaaling(): Pair<Int, Instant> {
       val crawlParameters = CrawlParameters()
-      val id = maalingDAO.createMaaling(maalingTestName, listOf(1), crawlParameters)
+      val id =
+          maalingDAO.createMaaling(
+              maalingTestName, listOf(1), testRegelList.map { it.id }, crawlParameters)
       val planlagtMaaling =
-          Maaling.Planlegging(id, maalingTestName, listOf(uutilsynetLoeysing), crawlParameters)
+          Maaling.Planlegging(
+              id, maalingTestName, listOf(uutilsynetLoeysing), testRegelList, crawlParameters)
       val sistOppdatert = Instant.now()
       val crawlingMaaling =
           Maaling.toCrawling(

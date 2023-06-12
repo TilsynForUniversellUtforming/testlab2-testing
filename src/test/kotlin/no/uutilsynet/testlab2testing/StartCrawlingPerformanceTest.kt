@@ -3,10 +3,12 @@ package no.uutilsynet.testlab2testing
 import java.net.URL
 import java.time.Duration
 import no.uutilsynet.testlab2testing.dto.Loeysing
+import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO
 import no.uutilsynet.testlab2testing.maaling.MaalingResource
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,7 +36,8 @@ fun <T> timeExecution(function: () -> T): Pair<T, Duration> {
 class StartCrawlingPerformanceTest(
     @Autowired val maalingDAO: MaalingDAO,
     @Autowired val maalingResource: MaalingResource,
-    @Autowired val loeysingDAO: LoeysingDAO
+    @Autowired val loeysingDAO: LoeysingDAO,
+    @Autowired val testregelDAO: TestregelDAO
 ) {
 
   @DisplayName("gitt en måling med status planlegging og 200 løsninger")
@@ -42,9 +45,13 @@ class StartCrawlingPerformanceTest(
   inner class EnStorMaaling {
     private val loeysingList: List<Loeysing> = loeysingDAO.getLoeysingList()
     private val loeysingSample: List<Loeysing> = randomSample(200, loeysingList)
+    private val testregelList: List<Testregel> = testregelDAO.getTestregelList()
     private val maalingId: Int =
         maalingDAO.createMaaling(
-            "performance_test_maaling", loeysingSample.map { it.id }, CrawlParameters())
+            "performance_test_maaling",
+            loeysingSample.map { it.id },
+            testregelList.map { it.id },
+            CrawlParameters())
 
     @DisplayName("når vi starter crawling, skal den returnere innen 10 sekunder")
     @Test

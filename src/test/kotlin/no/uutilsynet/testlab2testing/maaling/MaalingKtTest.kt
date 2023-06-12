@@ -43,7 +43,7 @@ class MaalingKtTest {
     @DisplayName("når input er en liste med gyldige id-er, så skal valideringen gi ok")
     fun ok() {
       val a = listOf(1, 2, 3)
-      val result = validateLoeysingIdList(a, validIds)
+      val result = validateIdList(a, validIds, "loeysingIdList")
       assertTrue(result.isSuccess)
     }
 
@@ -51,14 +51,15 @@ class MaalingKtTest {
     @DisplayName("når input inneholder ugyldige id-er, så skal valideringen feile")
     fun notOk() {
       val a = listOf(1, 2, 3, 11)
-      val result = validateLoeysingIdList(a, validIds)
+      val result = validateIdList(a, validIds, "loeysingIdList")
       assertTrue(result.isFailure)
     }
 
     @Test
     @DisplayName("når input er tom, så skal det feile")
     fun tomInput() {
-      val results = listOf(null, emptyList<Int>()).map { validateLoeysingIdList(it, validIds) }
+      val results =
+          listOf(null, emptyList<Int>()).map { validateIdList(it, validIds, "loeysingIdList") }
       assertTrue(results[0].isFailure)
       assertTrue(results[1].isFailure)
     }

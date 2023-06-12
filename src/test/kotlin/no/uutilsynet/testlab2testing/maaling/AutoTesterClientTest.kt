@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import java.net.URL
 import no.uutilsynet.testlab2testing.maaling.TestConstants.statusURL
+import no.uutilsynet.testlab2testing.maaling.TestConstants.testRegelList
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers
 import org.junit.jupiter.api.DisplayName
@@ -119,7 +120,10 @@ class AutoTesterClientTest {
         mapOf(
             "urls" to crawlResultat.nettsider,
             "idMaaling" to maalingId,
-            "idLoeysing" to crawlResultat.loeysing.id)
+            "idLoeysing" to crawlResultat.loeysing.id,
+            "resultatSomFil" to true,
+            "actRegler" to testRegelList.map { it.testregelNoekkel },
+        )
 
     val statusUris = AutoTesterClient.StatusUris(URI(statusURL))
     val jsonResponse = jacksonObjectMapper().writeValueAsString(statusUris)
@@ -135,7 +139,7 @@ class AutoTesterClientTest {
                 .json(objectMapper.writeValueAsString(expectedRequestData)))
         .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON))
 
-    val result = autoTesterClient.startTesting(maalingId, crawlResultat)
+    val result = autoTesterClient.startTesting(maalingId, crawlResultat, testRegelList)
 
     assertThat(result.isSuccess).isTrue
     assertThat(result.getOrNull()).isEqualTo(statusUris.statusQueryGetUri.toURL())

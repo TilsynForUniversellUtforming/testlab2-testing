@@ -5,9 +5,11 @@ import java.util.concurrent.TimeUnit.SECONDS
 import kotlinx.coroutines.*
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
+import no.uutilsynet.testlab2testing.dto.Testregel.Companion.validateTestRegel
 import no.uutilsynet.testlab2testing.firstMessage
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateParameters
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
@@ -20,12 +22,14 @@ import org.springframework.web.bind.annotation.*
 class MaalingResource(
     val maalingDAO: MaalingDAO,
     val loeysingDAO: LoeysingDAO,
+    val testregelDAO: TestregelDAO,
     val crawlerClient: CrawlerClient,
     val autoTesterClient: AutoTesterClient,
 ) {
   data class NyMaalingDTO(
       val navn: String,
       val loeysingIdList: List<Int>,
+      val testregelIdList: List<Int>,
       val crawlParameters: CrawlParameters?
   )
 
@@ -36,9 +40,17 @@ class MaalingResource(
       runCatching {
             val navn = validateNavn(dto.navn).getOrThrow()
             val loeysingIdList =
-                validateLoeysingIdList(dto.loeysingIdList, loeysingDAO.getLoeysingIdList())
+                validateIdList(
+                        dto.loeysingIdList, loeysingDAO.getLoeysingIdList(), "loeysingIdList")
                     .getOrThrow()
-            maalingDAO.createMaaling(navn, loeysingIdList, dto.crawlParameters ?: CrawlParameters())
+            val testregelIdList =
+                validateIdList(
+                        dto.testregelIdList,
+                        testregelDAO.getTestregelList().map { it.id },
+                        "testregelIdList")
+                    .getOrThrow()
+            maalingDAO.createMaaling(
+                navn, loeysingIdList, testregelIdList, dto.crawlParameters ?: CrawlParameters())
           }
           .fold(
               { id ->
@@ -195,12 +207,20 @@ class MaalingResource(
         }
   }
 
+  @GetMapping("{id}/testreglar")
+  fun getMaalingTestreglar(@PathVariable id: Int) =
+      runCatching { maalingDAO.getTestreglarForMaaling(id) }
+          .getOrElse {
+            logger.error("Feila ved henting av testreglar for måling $id", it)
+            ResponseEntity.internalServerError().body(it.message)
+          }
+
   private fun restartCrawling(
       statusDTO: StatusDTO,
       maaling: Maaling.Kvalitetssikring
   ): ResponseEntity<Any> {
     val loeysingIdList =
-        validateLoeysingIdList(statusDTO.loeysingIdList, loeysingDAO.getLoeysingIdList())
+        validateIdList(statusDTO.loeysingIdList, loeysingDAO.getLoeysingIdList(), "loeysingIdList")
             .getOrThrow()
     val crawlParameters = maalingDAO.getCrawlParameters(maaling.id)
     val updated = crawlerClient.restart(maaling, loeysingIdList, crawlParameters)
@@ -216,10 +236,22 @@ class MaalingResource(
 
   private suspend fun startTesting(maaling: Maaling.Kvalitetssikring): ResponseEntity<Any> =
       coroutineScope {
+        val testReglar =
+            withContext(Dispatchers.IO) { maalingDAO.getTestreglarForMaaling(maaling.id) }
+                .getOrElse {
+                  logger.error(
+                      "Feila ved henting av actregler for måling ${maaling.id}, faller tilbake til standard actregler",
+                      it)
+                  emptyList()
+                }
+                .onEach { it.validateTestRegel() }
+
         val testKoeyringar =
             maaling.crawlResultat
                 .filterIsInstance<CrawlResultat.Ferdig>()
-                .map { async { Pair(it, autoTesterClient.startTesting(maaling.id, it)) } }
+                .map {
+                  async { Pair(it, autoTesterClient.startTesting(maaling.id, it, testReglar)) }
+                }
                 .awaitAll()
                 .map { (crawlResultat, result) ->
                   result.fold(
@@ -315,9 +347,17 @@ class MaalingResource(
               loeysingDAO.getLoeysingList().filter { ll.contains(it.id) }
             }
                 ?: throw IllegalArgumentException("Måling må ha løysingar")
+
+        val testregelList =
+            this.testregelIdList?.let { idList ->
+              testregelDAO.getTestregelList().filter { idList.contains(it.id) }
+            }
+                ?: throw IllegalArgumentException("Måling må ha testreglar")
+
         maaling.copy(
             navn = navn,
             loeysingList = loeysingList,
+            testregelList = testregelList,
             crawlParameters = this.crawlParameters ?: maaling.crawlParameters)
       }
       is Maaling.Crawling -> maaling.copy(navn = this.navn)

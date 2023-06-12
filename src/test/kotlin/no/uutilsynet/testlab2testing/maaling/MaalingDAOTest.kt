@@ -5,6 +5,7 @@ import java.time.Instant
 import no.uutilsynet.testlab2testing.maaling.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
+import no.uutilsynet.testlab2testing.maaling.TestConstants.testRegelList
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DisplayName
@@ -213,9 +214,10 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
   }
 
   private fun createTestMaaling(name: String = maalingTestName): Maaling.Planlegging =
-      maalingDAO.createMaaling(name, loeysingList.map { it.id }, CrawlParameters()).let {
-        maalingDAO.getMaaling(it) as Maaling.Planlegging
-      }
+      maalingDAO
+          .createMaaling(
+              name, loeysingList.map { it.id }, testRegelList.map { it.id }, CrawlParameters())
+          .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
 
   private fun saveMaalingWithStatusKvalitetssikring(name: String = maalingTestName): Int {
     val maaling = createTestMaaling(name)
@@ -233,7 +235,11 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     val maxLinksPerPage = 2000
     val maaling =
         maalingDAO
-            .createMaaling(name, loeysingList.map { it.id }, CrawlParameters(maxLinksPerPage, 30))
+            .createMaaling(
+                name,
+                loeysingList.map { it.id },
+                testRegelList.map { it.id },
+                CrawlParameters(maxLinksPerPage, 30))
             .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
     val crawlResultat =
         maaling.loeysingList.map {

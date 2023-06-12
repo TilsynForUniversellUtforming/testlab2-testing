@@ -4,6 +4,8 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URL
 import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.dto.Loeysing
+import no.uutilsynet.testlab2testing.dto.Testregel
+import no.uutilsynet.testlab2testing.testregel.TestConstants
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.startsWith
 import org.junit.jupiter.api.DisplayName
@@ -33,7 +35,17 @@ class CrawlerClientTest {
         listOf(
             Loeysing(1, "uutilsynet", URL("https://www.uutilsynet.no")),
             Loeysing(2, "digdir", URL("https://www.digdir.no")))
-    val maaling = Maaling.Planlegging(1, "testmåling", loeysingList, CrawlParameters())
+
+    val testregelList =
+        listOf(
+            Testregel(
+                1,
+                TestConstants.testregelTestKrav,
+                "QW-ACT-12",
+                TestConstants.testregelTestKravTilSamsvar,
+            ))
+    val maaling =
+        Maaling.Planlegging(1, "testmåling", loeysingList, testregelList, CrawlParameters())
     runBlocking {
       val oppdatertMaaling = crawlerClient.start(maaling)
 
