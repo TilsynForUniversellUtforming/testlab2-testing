@@ -5,13 +5,14 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loysingRowmapper
-import no.uutilsynet.testlab2testing.maaling.Maaling.*
+import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
+import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
+import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
+import no.uutilsynet.testlab2testing.maaling.Maaling.Testing
+import no.uutilsynet.testlab2testing.maaling.Maaling.TestingFerdig
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingParams
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingLoysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingSql
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.deleteMaalingLoeysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.deleteMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingLoeysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingRowmapper
@@ -21,7 +22,13 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.testResult
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingWithCrawlParameters
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.*
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.crawling
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.kvalitetssikring
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.planlegging
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing_ferdig
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
 import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
@@ -71,13 +78,6 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "maxLinksPerPage" to crawlParameters.maxLinksPerPage,
             "numLinksToSelect" to crawlParameters.numLinksToSelect)
 
-    const val deleteMaalingLoeysingSql = "delete from MaalingLoeysing where idMaaling = :idMaaling"
-
-    val createMaalingLoysingSql =
-        "insert into MaalingLoeysing (idMaaling, idLoeysing) values (:idMaaling, :idLoeysing)"
-    fun createMaalingLoysingParams(idMaaling: Int, idLoeysing: Int) =
-        mapOf("idMaaling" to idMaaling, "idLoeysing" to idLoeysing)
-
     val selectMaalingSql =
         "select id, navn, status, max_links_per_page, num_links_to_select from Maalingv1"
     val selectMaalingByIdSql = "$selectMaalingSql where id = :id"
@@ -110,12 +110,24 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   @Transactional
-  fun createMaaling(navn: String, loyesingIds: List<Int>, crawlParameters: CrawlParameters): Int {
+  fun createMaaling(
+      navn: String,
+      loyesingIds: List<Int>,
+      testregelIdList: List<Int>,
+      crawlParameters: CrawlParameters
+  ): Int {
     val idMaaling =
         jdbcTemplate.queryForObject(
             createMaalingSql, createMaalingParams(navn, crawlParameters), Int::class.java)!!
-    for (idLoysing: Int in loyesingIds) {
-      jdbcTemplate.update(createMaalingLoysingSql, createMaalingLoysingParams(idMaaling, idLoysing))
+    for (idLoeysing: Int in loyesingIds) {
+      jdbcTemplate.update(
+          "insert into MaalingLoeysing (idMaaling, idLoeysing) values (:idMaaling, :idLoeysing)",
+          mapOf("idMaaling" to idMaaling, "idLoeysing" to idLoeysing))
+    }
+    for (idTestregel: Int in testregelIdList) {
+      jdbcTemplate.update(
+          "insert into Maaling_Testregel (maaling_id, testregel_id) values (:maaling_id, :testregel_id)",
+          mapOf("maaling_id" to idMaaling, "testregel_id" to idTestregel))
     }
 
     return idMaaling
@@ -154,7 +166,14 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       planlegging -> {
         val loeysingList =
             jdbcTemplate.query(maalingLoeysingSql, mapOf("id" to id), loysingRowmapper)
-        Planlegging(id, navn, loeysingList, CrawlParameters(maxLinksPerPage, numLinksToSelect))
+        val testregelList =
+            jdbcTemplate.query(maalingTestregelSql, mapOf("id" to id), testregelRowMapper)
+        Planlegging(
+            id,
+            navn,
+            loeysingList,
+            testregelList,
+            CrawlParameters(maxLinksPerPage, numLinksToSelect))
       }
       crawling,
       kvalitetssikring -> {
@@ -352,10 +371,23 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "status" to "planlegging",
               "maxLinksPerPage" to maaling.crawlParameters.maxLinksPerPage,
               "numLinksToSelect" to maaling.crawlParameters.numLinksToSelect))
-      jdbcTemplate.update(deleteMaalingLoeysingSql, mapOf("idMaaling" to maaling.id))
-      val updateBatchValues =
-          maaling.loeysingList.map { mapOf("idMaaling" to maaling.id, "idLoeysing" to it.id) }
-      jdbcTemplate.batchUpdate(createMaalingLoysingSql, updateBatchValues.toTypedArray())
+
+      val deleteParams = mapOf("maalingId" to maaling.id)
+
+      jdbcTemplate.update("delete from MaalingLoeysing where idMaaling = :maalingId", deleteParams)
+      val updateBatchValuesLoeysing =
+          maaling.loeysingList.map { mapOf("maalingId" to maaling.id, "loeysingId" to it.id) }
+      jdbcTemplate.batchUpdate(
+          "insert into MaalingLoeysing (idMaaling, idLoeysing) values (:maalingId, :loeysingId)",
+          updateBatchValuesLoeysing.toTypedArray())
+
+      jdbcTemplate.update(
+          "delete from Maaling_Testregel where maaling_id = :maalingId", deleteParams)
+      val updateBatchValuesTestregel =
+          maaling.testregelList.map { mapOf("maaling_id" to maaling.id, "testregel_id" to it.id) }
+      jdbcTemplate.batchUpdate(
+          "insert into Maaling_Testregel (maaling_id, testregel_id) values (:maaling_id, :testregel_id)",
+          updateBatchValuesTestregel.toTypedArray())
     } else {
       jdbcTemplate.update(updateMaalingSql, updateMaalingParams(maaling))
     }

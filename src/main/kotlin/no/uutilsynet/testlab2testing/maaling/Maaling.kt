@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
 import no.uutilsynet.testlab2testing.dto.Loeysing
+import no.uutilsynet.testlab2testing.dto.Testregel
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "status")
 @JsonSubTypes(
@@ -21,6 +22,7 @@ sealed class Maaling {
       override val id: Int,
       override val navn: String,
       val loeysingList: List<Loeysing>,
+      val testregelList: List<Testregel>,
       val crawlParameters: CrawlParameters
   ) : Maaling() {
     override val aksjoner: List<Aksjon>
@@ -140,10 +142,14 @@ fun validateStatus(s: String?): Result<Status> =
       else -> Result.failure(IllegalArgumentException("$s er ikke en gyldig status"))
     }
 
-fun validateLoeysingIdList(list: List<Int>?, validIds: List<Int>): Result<List<Int>> = runCatching {
+fun validateIdList(
+    list: List<Int>?,
+    validIds: List<Int>,
+    parameterName: String
+): Result<List<Int>> = runCatching {
   if (list.isNullOrEmpty()) {
     throw IllegalArgumentException(
-        "Eg forventa eit parameter `loeysingIdList` som skulle inneholde ei liste med id-ar, men han var tom.")
+        "Eg forventa eit parameter `${parameterName}` som skulle inneholde ei liste med id-ar, men han var tom.")
   }
 
   val invalidIds = list.filter { !validIds.contains(it) }

@@ -8,5 +8,6 @@ data class EditMaalingDTO(
     val id: Int,
     val navn: String,
     val loeysingIdList: List<Int>?,
+    val testregelIdList: List<Int>?,
     val crawlParameters: CrawlParameters?
 )
