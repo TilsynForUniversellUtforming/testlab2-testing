@@ -207,14 +207,6 @@ class MaalingResource(
         }
   }
 
-  @GetMapping("{id}/testreglar")
-  fun getMaalingTestreglar(@PathVariable id: Int) =
-      runCatching { maalingDAO.getTestreglarForMaaling(id) }
-          .getOrElse {
-            logger.error("Feila ved henting av testreglar for måling $id", it)
-            ResponseEntity.internalServerError().body(it.message)
-          }
-
   private fun restartCrawling(
       statusDTO: StatusDTO,
       maaling: Maaling.Kvalitetssikring
@@ -237,7 +229,7 @@ class MaalingResource(
   private suspend fun startTesting(maaling: Maaling.Kvalitetssikring): ResponseEntity<Any> =
       coroutineScope {
         val testReglar =
-            withContext(Dispatchers.IO) { maalingDAO.getTestreglarForMaaling(maaling.id) }
+            withContext(Dispatchers.IO) { testregelDAO.getTestreglarForMaaling(maaling.id) }
                 .getOrElse {
                   logger.error(
                       "Feila ved henting av actregler for måling ${maaling.id}, faller tilbake til standard actregler",

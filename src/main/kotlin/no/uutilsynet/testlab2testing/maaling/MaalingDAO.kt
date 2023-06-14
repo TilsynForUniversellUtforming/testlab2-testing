@@ -4,7 +4,6 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.dto.Loeysing
-import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loysingRowmapper
 import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
 import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
@@ -17,7 +16,6 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaal
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.deleteMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingLoeysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingRowmapper
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingTestregelSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByIdSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.testResultatRowMapper
@@ -29,6 +27,7 @@ import no.uutilsynet.testlab2testing.maaling.MaalingStatus.kvalitetssikring
 import no.uutilsynet.testlab2testing.maaling.MaalingStatus.planlegging
 import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing
 import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing_ferdig
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
 import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
@@ -108,20 +107,6 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         "update MaalingV1 set navn = :navn, status = :status, max_links_per_page = :maxLinksPerPage, num_links_to_select = :numLinksToSelect where id = :id"
 
     val deleteMaalingSql = "delete from MaalingV1 where id = :id"
-
-    val maalingTestregelSql =
-        """
-      select 
-      tr.id,
-      tr.krav,
-      tr.testregelNoekkel,
-      tr.kravtilsamsvar
-      from MaalingV1 m
-        join Maaling_Testregel mt on m.id = mt.maaling_id
-        join Testregel tr on mt.testregel_id = tr.id
-      where m.id = :id
-    """
-            .trimIndent()
   }
 
   @Transactional
@@ -236,10 +221,6 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 "Kunne ikke hente crawlparametere for maaling $maalingId, velger default parametere")
             throw it
           }
-
-  fun getTestreglarForMaaling(maalingId: Int): Result<List<Testregel>> = runCatching {
-    jdbcTemplate.query(maalingTestregelSql, mapOf("id" to maalingId), testregelRowMapper)
-  }
 
   private fun getTestKoeyringarForMaaling(maalingId: Int): List<TestKoeyring> {
     val crawlResultat = getCrawlResultatForMaaling(maalingId)

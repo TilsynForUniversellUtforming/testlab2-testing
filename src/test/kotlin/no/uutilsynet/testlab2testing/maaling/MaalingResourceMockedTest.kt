@@ -6,6 +6,7 @@ import no.uutilsynet.testlab2testing.maaling.TestConstants.crawlResultat
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
@@ -35,7 +36,8 @@ class MaalingResourceMockedTest {
   }
 
   @Test
-  fun `should return error when status is updated`() {
+  @DisplayName("should return error when status is updated with invalid testregelNoekkel")
+  fun illegalTestregelNoekkel() {
     val id = 1
     val status = MaalingResource.StatusDTO("testing", null)
     val maaling =
@@ -43,7 +45,7 @@ class MaalingResourceMockedTest {
             id = id, navn = "Testmaaling", crawlResultat = listOf(crawlResultat))
 
     `when`(maalingDAO.getMaaling(id)).thenReturn(maaling)
-    `when`(maalingDAO.getTestreglarForMaaling(id))
+    `when`(testregelDAO.getTestreglarForMaaling(id))
         .thenReturn(Result.success(listOf(Testregel(1, "krav", "QW", "samsvar"))))
 
     val result = maalingResource.putNewStatus(id, status)
