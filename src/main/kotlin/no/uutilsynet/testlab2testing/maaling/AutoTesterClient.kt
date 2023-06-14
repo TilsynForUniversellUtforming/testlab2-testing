@@ -12,6 +12,7 @@ import java.net.URL
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import no.uutilsynet.testlab2testing.dto.Testregel
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
@@ -25,7 +26,11 @@ class AutoTesterClient(
     val autoTesterProperties: AutoTesterProperties
 ) {
 
-  fun startTesting(maalingId: Int, crawlResultat: CrawlResultat.Ferdig): Result<URL> {
+  fun startTesting(
+      maalingId: Int,
+      crawlResultat: CrawlResultat.Ferdig,
+      actRegler: List<Testregel>
+  ): Result<URL> {
     return runCatching {
       val url = "${autoTesterProperties.url}?code=${autoTesterProperties.code}"
       val requestData =
@@ -33,7 +38,8 @@ class AutoTesterClient(
               "urls" to crawlResultat.nettsider,
               "idMaaling" to maalingId,
               "idLoeysing" to crawlResultat.loeysing.id,
-              "resultatSomFil" to true)
+              "resultatSomFil" to true,
+              "actRegler" to actRegler.map { it.testregelNoekkel })
       val statusUris = restTemplate.postForObject(url, requestData, StatusUris::class.java)
       statusUris?.statusQueryGetUri?.toURL()
           ?: throw RuntimeException("mangler statusQueryGetUri i responsen")

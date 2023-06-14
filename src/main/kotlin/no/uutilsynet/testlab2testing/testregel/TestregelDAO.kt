@@ -7,6 +7,7 @@ import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.dele
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelListSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelListByIdSql
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.updateTestregelParams
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.updateTestregelSql
@@ -49,6 +50,20 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     val maalingTestregelListByIdSql =
         "select maaling_id from maaling_testregel where testregel_id = :testregel_id"
+
+    val maalingTestregelSql =
+        """
+      select 
+      tr.id,
+      tr.krav,
+      tr.testregelNoekkel,
+      tr.kravtilsamsvar
+      from MaalingV1 m
+        join Maaling_Testregel mt on m.id = mt.maaling_id
+        join Testregel tr on mt.testregel_id = tr.id
+      where m.id = :id
+    """
+            .trimIndent()
   }
 
   fun getTestregel(id: Int): Testregel? =
@@ -80,4 +95,8 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getMaalingTestregelListById(testregelId: Int): List<Int> =
       jdbcTemplate.queryForList(
           maalingTestregelListByIdSql, mapOf("testregel_id" to testregelId), Int::class.java)
+
+  fun getTestreglarForMaaling(maalingId: Int): Result<List<Testregel>> = runCatching {
+    jdbcTemplate.query(maalingTestregelSql, mapOf("id" to maalingId), testregelRowMapper)
+  }
 }

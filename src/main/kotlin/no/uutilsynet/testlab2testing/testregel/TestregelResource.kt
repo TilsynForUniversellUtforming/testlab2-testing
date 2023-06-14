@@ -6,6 +6,7 @@ import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHa
 import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.dto.Testregel.Companion.validateTestRegel
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -14,11 +15,14 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("v1/testreglar")
 class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingDAO) {
+
+  val logger = LoggerFactory.getLogger(TestregelResource::class.java)
 
   data class CreateTestregelDTO(
       val krav: String,
@@ -34,8 +38,22 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
           ?: ResponseEntity.notFound().build()
 
   @GetMapping
-  fun getTestregelList(): ResponseEntity<List<Testregel>> =
-      ResponseEntity.ok(testregelDAO.getTestregelList())
+  fun getTestregelList(@RequestParam(required = false) maalingId: Int?): ResponseEntity<out Any> =
+      runCatching {
+            if (maalingId != null) {
+              logger.debug("Henter testreglar for måling $maalingId")
+              ResponseEntity.ok(testregelDAO.getTestreglarForMaaling(maalingId))
+            } else {
+              ResponseEntity.ok(testregelDAO.getTestregelList())
+            }
+          }
+          .getOrElse {
+            val errorMessage =
+                if (maalingId != null) "Feila ved henting av testreglar for måling $maalingId"
+                else "Feila ved henting av testreglar"
+            logger.error(errorMessage, it)
+            ResponseEntity.internalServerError().body(it.message)
+          }
 
   @PostMapping
   fun createTestregel(@RequestBody dto: CreateTestregelDTO): ResponseEntity<out Any> =
