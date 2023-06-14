@@ -231,10 +231,8 @@ class MaalingResource(
         val testReglar =
             withContext(Dispatchers.IO) { testregelDAO.getTestreglarForMaaling(maaling.id) }
                 .getOrElse {
-                  logger.error(
-                      "Feila ved henting av actregler for måling ${maaling.id}, faller tilbake til standard actregler",
-                      it)
-                  emptyList()
+                  logger.error("Feila ved henting av actregler for måling ${maaling.id}", it)
+                  throw it
                 }
                 .onEach { it.validateTestRegel() }
 
