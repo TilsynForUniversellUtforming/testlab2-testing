@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URL
 import java.time.Instant
-import no.uutilsynet.testlab2testing.dto.Loeysing
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "tilstand")
 @JsonSubTypes(

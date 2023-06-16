@@ -4,7 +4,6 @@ import java.net.URI
 import java.net.URL
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHandling
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
-import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping

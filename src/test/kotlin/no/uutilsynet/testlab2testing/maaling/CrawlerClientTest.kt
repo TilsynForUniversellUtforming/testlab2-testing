@@ -3,8 +3,8 @@ package no.uutilsynet.testlab2testing.maaling
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URL
 import kotlinx.coroutines.runBlocking
-import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.dto.Testregel
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.TestConstants
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.startsWith

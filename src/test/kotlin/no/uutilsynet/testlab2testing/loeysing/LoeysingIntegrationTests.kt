@@ -2,7 +2,6 @@ package no.uutilsynet.testlab2testing.loeysing
 
 import java.net.URI
 import java.net.URL
-import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingRequestBody
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestName
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestUrl

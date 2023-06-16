@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.dto
+package no.uutilsynet.testlab2testing.loeysing
 
 import java.net.URL
 

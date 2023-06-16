@@ -3,8 +3,8 @@ package no.uutilsynet.testlab2testing.maaling
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
-import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.dto.Testregel
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "status")
 @JsonSubTypes(
@@ -122,12 +122,9 @@ sealed class Aksjon(val data: Map<String, String>) {
 
 fun locationForId(id: Number): URI = URI.create("/v1/maalinger/${id}")
 
-fun validateNavn(s: String): Result<String> = runCatching {
-  if (s == "") {
-    throw IllegalArgumentException("mangler navn")
-  } else {
-    s
-  }
+fun validateNavn(s: String?): Result<String> = runCatching {
+  require(!(s == null || s == "")) { "mangler navn" }
+  s
 }
 
 enum class Status {
