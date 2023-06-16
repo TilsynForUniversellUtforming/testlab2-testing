@@ -2,8 +2,8 @@ package no.uutilsynet.testlab2testing
 
 import java.net.URL
 import java.time.Duration
-import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.dto.Testregel
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO

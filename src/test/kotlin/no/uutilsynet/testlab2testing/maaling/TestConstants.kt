@@ -2,8 +2,8 @@ package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URL
 import java.time.Instant
-import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.dto.Testregel
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.TestConstants
 
 object TestConstants {
