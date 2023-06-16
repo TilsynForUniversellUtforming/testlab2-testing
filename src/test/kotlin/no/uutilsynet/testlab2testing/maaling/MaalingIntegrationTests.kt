@@ -5,7 +5,7 @@ import java.net.URL
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
-import no.uutilsynet.testlab2testing.dto.Loeysing
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingRequestBody
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName

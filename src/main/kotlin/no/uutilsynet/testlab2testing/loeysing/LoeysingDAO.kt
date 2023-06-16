@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.loeysing
 
 import java.net.URL
-import no.uutilsynet.testlab2testing.dto.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.createLoeysingParams
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.createLoeysingSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.deleteLoeysingParams
