@@ -110,7 +110,8 @@ data class MaalingListElement(val id: Int, val navn: String, val status: String)
 @JsonSubTypes(
     JsonSubTypes.Type(value = Aksjon.StartCrawling::class, name = "start_crawling"),
     JsonSubTypes.Type(value = Aksjon.RestartCrawling::class, name = "restart_crawling"),
-    JsonSubTypes.Type(value = Aksjon.StartTesting::class, name = "start_testing"))
+    JsonSubTypes.Type(value = Aksjon.StartTesting::class, name = "start_testing"),
+    JsonSubTypes.Type(value = Aksjon.RestartTesting::class, name = "restart_testing"))
 sealed class Aksjon(val data: Map<String, String>) {
   val metode = "PUT"
 
@@ -118,6 +119,8 @@ sealed class Aksjon(val data: Map<String, String>) {
   data class RestartCrawling(val href: URI) :
       Aksjon(mapOf("status" to "crawling", "loeysingIdList" to "[]"))
   data class StartTesting(val href: URI) : Aksjon(mapOf("status" to "testing"))
+  data class RestartTesting(val href: URI) :
+      Aksjon(mapOf("status" to "testing", "loeysingIdList" to "[]"))
 }
 
 fun locationForId(id: Number): URI = URI.create("/v1/maalinger/${id}")

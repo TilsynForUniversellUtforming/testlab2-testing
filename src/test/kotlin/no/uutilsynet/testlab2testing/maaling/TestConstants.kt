@@ -38,4 +38,15 @@ object TestConstants {
           URL("https://status.url"),
           uutilsynetLoeysing,
           Instant.now())
+
+  val testKoeyring =
+      TestKoeyring.Ferdig(
+          crawlResultat,
+          Instant.now(),
+          URL("https://status.url"),
+          emptyList(),
+          AutoTesterClient.AutoTesterOutput.Lenker(
+              URL("https://fullt.resultat"), URL("https://brot.resultat")))
+
+  val testKoeyringList = listOf(testKoeyring)
 }

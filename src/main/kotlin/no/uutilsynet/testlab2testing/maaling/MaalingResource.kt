@@ -191,6 +191,14 @@ class MaalingResource(
                 }
               }
             }
+            is Maaling.TestingFerdig -> {
+              runBlocking(Dispatchers.IO) {
+                when (newStatus) {
+                  Status.Testing -> restartTesting(statusDTO, maaling)
+                  else -> badRequest
+                }
+              }
+            }
             else -> badRequest
           }
         }
@@ -226,33 +234,32 @@ class MaalingResource(
     return ResponseEntity.ok().build()
   }
 
+  private suspend fun restartTesting(
+      statusDTO: StatusDTO,
+      maaling: Maaling.TestingFerdig
+  ): ResponseEntity<Any> = coroutineScope {
+    val loeysingIdList =
+        validateIdList(statusDTO.loeysingIdList, loeysingDAO.getLoeysingIdList(), "loeysingIdList")
+            .getOrThrow()
+
+    val crawlResultatList =
+        maaling.testKoeyringar
+            .map { it.crawlResultat }
+            .filter { loeysingIdList.contains(it.loeysing.id) }
+
+    val testKoeyringar = startTesting(maaling.id, crawlResultatList)
+
+    val updated =
+        Maaling.Testing(id = maaling.id, navn = maaling.navn, testKoeyringar = testKoeyringar)
+    withContext(Dispatchers.IO) { maalingDAO.save(updated) }.getOrThrow()
+    ResponseEntity.ok().build()
+  }
+
   private suspend fun startTesting(maaling: Maaling.Kvalitetssikring): ResponseEntity<Any> =
       coroutineScope {
-        val testReglar =
-            withContext(Dispatchers.IO) { testregelDAO.getTestreglarForMaaling(maaling.id) }
-                .getOrElse {
-                  logger.error("Feila ved henting av actregler for måling ${maaling.id}", it)
-                  throw it
-                }
-                .onEach { it.validateTestRegel() }
-
         val testKoeyringar =
-            maaling.crawlResultat
-                .filterIsInstance<CrawlResultat.Ferdig>()
-                .map {
-                  async { Pair(it, autoTesterClient.startTesting(maaling.id, it, testReglar)) }
-                }
-                .awaitAll()
-                .map { (crawlResultat, result) ->
-                  result.fold(
-                      { statusURL -> TestKoeyring.from(crawlResultat, statusURL) },
-                      { exception ->
-                        val feilmelding =
-                            exception.message
-                                ?: "eg klarte ikkje å starte testing for ei løysing, og feilmeldinga manglar"
-                        TestKoeyring.Feila(crawlResultat, Instant.now(), feilmelding)
-                      })
-                }
+            startTesting(maaling.id, maaling.crawlResultat.filterIsInstance<CrawlResultat.Ferdig>())
+
         val updated = Maaling.toTesting(maaling, testKoeyringar)
         withContext(Dispatchers.IO) { maalingDAO.save(updated) }.getOrThrow()
         ResponseEntity.ok().build()
@@ -324,6 +331,33 @@ class MaalingResource(
         }
     val oppdatertMaaling = maaling.copy(testKoeyringar = oppdaterteTestKoeyringar)
     return Maaling.toTestingFerdig(oppdatertMaaling) ?: oppdatertMaaling
+  }
+
+  private suspend fun startTesting(
+      maalingId: Int,
+      crawlResultat: List<CrawlResultat.Ferdig>,
+  ): List<TestKoeyring> = coroutineScope {
+    val testreglar =
+        withContext(Dispatchers.IO) { testregelDAO.getTestreglarForMaaling(maalingId) }
+            .getOrElse {
+              logger.error("Feila ved henting av actregler for måling $maalingId", it)
+              throw it
+            }
+            .onEach { it.validateTestRegel() }
+
+    crawlResultat
+        .map { async { Pair(it, autoTesterClient.startTesting(maalingId, it, testreglar)) } }
+        .awaitAll()
+        .map { (crawlResultat, result) ->
+          result.fold(
+              { statusURL -> TestKoeyring.from(crawlResultat, statusURL) },
+              { exception ->
+                val feilmelding =
+                    exception.message
+                        ?: "eg klarte ikkje å starte testing for ei løysing, og feilmeldinga manglar"
+                TestKoeyring.Feila(crawlResultat, Instant.now(), feilmelding)
+              })
+        }
   }
 
   private fun EditMaalingDTO.toMaaling(): Maaling {
