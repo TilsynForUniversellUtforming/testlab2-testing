@@ -242,15 +242,14 @@ class MaalingResource(
         validateIdList(statusDTO.loeysingIdList, loeysingDAO.getLoeysingIdList(), "loeysingIdList")
             .getOrThrow()
 
-    val crawlResultatList =
-        maaling.testKoeyringar
-            .map { it.crawlResultat }
-            .filter { loeysingIdList.contains(it.loeysing.id) }
+    val (retestList, rest) =
+        maaling.testKoeyringar.partition { loeysingIdList.contains(it.loeysing.id) }
 
-    val testKoeyringar = startTesting(maaling.id, crawlResultatList)
+    val testKoeyringar = startTesting(maaling.id, retestList.map { it.crawlResultat })
 
     val updated =
-        Maaling.Testing(id = maaling.id, navn = maaling.navn, testKoeyringar = testKoeyringar)
+        Maaling.Testing(
+            id = maaling.id, navn = maaling.navn, testKoeyringar = rest.plus(testKoeyringar))
     withContext(Dispatchers.IO) { maalingDAO.save(updated) }.getOrThrow()
     ResponseEntity.ok().build()
   }

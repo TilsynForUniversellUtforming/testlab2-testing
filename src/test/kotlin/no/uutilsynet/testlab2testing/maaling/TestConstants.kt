@@ -39,6 +39,16 @@ object TestConstants {
           uutilsynetLoeysing,
           Instant.now())
 
+  val crawlResultat2 =
+      CrawlResultat.Ferdig(
+          listOf(
+              URL("https://www.digdir.no/"),
+              URL("https://www.digdir.no/underside/1"),
+              URL("https://www.digdir.no/underside/2")),
+          URL("https://status.url"),
+          digdirLoeysing,
+          Instant.now())
+
   val testKoeyring =
       TestKoeyring.Ferdig(
           crawlResultat,
@@ -48,5 +58,14 @@ object TestConstants {
           AutoTesterClient.AutoTesterOutput.Lenker(
               URL("https://fullt.resultat"), URL("https://brot.resultat")))
 
-  val testKoeyringList = listOf(testKoeyring)
+  val testKoeyring2 =
+      TestKoeyring.Ferdig(
+          crawlResultat2,
+          Instant.now(),
+          URL("https://status.url"),
+          emptyList(),
+          AutoTesterClient.AutoTesterOutput.Lenker(
+              URL("https://fullt.resultat"), URL("https://brot.resultat")))
+
+  val testKoeyringList = listOf(testKoeyring, testKoeyring2)
 }

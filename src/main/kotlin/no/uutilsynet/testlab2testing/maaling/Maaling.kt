@@ -92,14 +92,18 @@ sealed class Maaling {
     fun findFerdigeTestKoeyringar(
         maaling: Maaling,
         loeysingId: Int? = null
-    ): List<TestKoeyring.Ferdig> =
-        if (maaling is TestingFerdig) {
-          maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>().filter {
-            loeysingId == null || it.crawlResultat.loeysing.id == loeysingId
+    ): List<TestKoeyring.Ferdig> {
+      val testKoeyringar =
+          when (maaling) {
+            is TestingFerdig -> maaling.testKoeyringar
+            is Testing -> maaling.testKoeyringar
+            else -> emptyList()
           }
-        } else {
-          emptyList()
-        }
+
+      return testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>().filter {
+        loeysingId == null || it.crawlResultat.loeysing.id == loeysingId
+      }
+    }
   }
 }
 

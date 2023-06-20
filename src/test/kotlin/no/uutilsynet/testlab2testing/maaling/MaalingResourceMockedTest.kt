@@ -81,15 +81,15 @@ class MaalingResourceMockedTest {
         Maaling.TestingFerdig(id = id, navn = "Testmaaling", testKoeyringar = testKoeyringList)
 
     val maalingTesting =
-        Maaling.Testing(id = id, navn = "Testmaaling", testKoeyringar = testKoeyringList)
+        Maaling.Testing(id = id, navn = "Testmaaling", testKoeyringar = listOf(testKoeyringList[0]))
 
-    val testregelList = listOf(Testregel(uutilsynetLoeysing.id, "krav", "QW-ACT-R12", "samsvar"))
+    val testregelList = listOf(Testregel(1, "krav", "QW-ACT-R12", "samsvar"))
 
     val expectedRequestData =
         mapOf(
             "urls" to crawlResultat.nettsider,
             "idMaaling" to id,
-            "idLoeysing" to crawlResultat.loeysing.id,
+            "idLoeysing" to uutilsynetLoeysing.id,
             "resultatSomFil" to true,
             "actRegler" to testregelList.map { it.testregelNoekkel },
         )
