@@ -21,13 +21,14 @@ import org.springframework.transaction.annotation.Transactional
 class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   object LoeysingParams {
-    val createLoeysingSql = "insert into loeysing (namn, url) values (:namn, :url) returning id"
-    fun createLoeysingParams(namn: String, url: URL) =
-        mapOf("namn" to namn, "url" to url.toString())
+    val createLoeysingSql =
+        "insert into loeysing (namn, url, orgnummer) values (:namn, :url, :orgnummer) returning id"
+    fun createLoeysingParams(namn: String, url: URL, orgnummer: String?) =
+        mapOf("namn" to namn, "url" to url.toString(), "orgnummer" to orgnummer)
 
-    val getLoeysingListSql = "select id, namn, url from loeysing order by id"
+    val getLoeysingListSql = "select id, namn, url, orgnummer from loeysing order by id"
     val getLoeysingIdListSql = "select id from loeysing order by id"
-    val getLoeysingSql = "select id, namn, url from loeysing where id = :id order by id"
+    val getLoeysingSql = "select id, namn, url, orgnummer from loeysing where id = :id order by id"
 
     val updateLoeysingSql = "update loeysing set namn = :namn, url = :url where id = :id"
     fun updateLoeysingParams(loeysing: Loeysing) =
@@ -46,9 +47,9 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getLoeysingList(): List<Loeysing> = jdbcTemplate.query(getLoeysingListSql, loysingRowmapper)
 
   @Transactional
-  fun createLoeysing(namn: String, url: URL): Int =
+  fun createLoeysing(namn: String, url: URL, orgnummer: String?): Int =
       jdbcTemplate.queryForObject(
-          createLoeysingSql, createLoeysingParams(namn, url), Int::class.java)!!
+          createLoeysingSql, createLoeysingParams(namn, url, orgnummer), Int::class.java)!!
 
   @Transactional
   fun deleteLoeysing(id: Int) = jdbcTemplate.update(deleteLoeysingSql, deleteLoeysingParams(id))

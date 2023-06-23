@@ -76,7 +76,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     val maalingLoeysingSql =
         """ 
-      select l.id, l.namn, l.url 
+      select l.id, l.namn, l.url, l.orgnummer
       from MaalingLoeysing ml 
         join loeysing l on ml.idLoeysing = l.id
       where ml.idMaaling = :id
@@ -284,6 +284,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                        crawlresultat.feilmelding,
                        crawlresultat.lenker_crawla, loeysing.id as lid, loeysing.namn,
                        loeysing.url,
+                       loeysing.orgnummer,
                        nettside.url as nettside_url,
                        maaling.max_links_per_page
                 from crawlresultat
@@ -309,7 +310,12 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "fikk `null` da vi forsøkte å hente crawlresultat for måling med id = $maalingId")
 
   private fun toCrawlResultat(rs: ResultSet): CrawlResultat {
-    val loeysing = Loeysing(rs.getInt("lid"), rs.getString("namn"), URL(rs.getString("url")))
+    val loeysing =
+        Loeysing(
+            rs.getInt("lid"),
+            rs.getString("namn"),
+            URL(rs.getString("url")),
+            rs.getString("orgnummer"))
     val sistOppdatert = rs.getTimestamp("sist_oppdatert").toInstant()
     val status = rs.getString("status")
     val id = rs.getInt("crid")

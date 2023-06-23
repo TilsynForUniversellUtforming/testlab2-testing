@@ -2,7 +2,7 @@ package no.uutilsynet.testlab2testing.loeysing
 
 import java.net.URI
 import no.uutilsynet.testlab2testing.maaling.validateIdList
-import no.uutilsynet.testlab2testing.maaling.validateNavn
+import no.uutilsynet.testlab2testing.maaling.validateNamn
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,7 +19,7 @@ class UtvalResource(@Autowired val utvalDAO: UtvalDAO, @Autowired val loeysingDA
   @PostMapping
   fun createUtval(@RequestBody nyttUtval: NyttUtval): ResponseEntity<Any> =
       runCatching {
-            val namn = validateNavn(nyttUtval.namn).getOrThrow()
+            val namn = validateNamn(nyttUtval.namn).getOrThrow()
             val loeysingIdList = loeysingDAO.getLoeysingIdList()
             val loeysingar =
                 validateIdList(nyttUtval.loeysingar, loeysingIdList, "loeysingar").getOrThrow()

@@ -7,8 +7,8 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.TestConstants
 
 object TestConstants {
-  val uutilsynetLoeysing = Loeysing(1, "UUTilsynet", URL("https://www.uutilsynet.no/"))
-  val digdirLoeysing = Loeysing(2, "Digdir", URL("https://www.digdir.no/"))
+  val uutilsynetLoeysing = Loeysing(1, "UUTilsynet", URL("https://www.uutilsynet.no/"), "991825827")
+  val digdirLoeysing = Loeysing(2, "Digdir", URL("https://www.digdir.no/"), "991825827")
   val loeysingList = listOf(uutilsynetLoeysing, digdirLoeysing)
   val maalingTestName = "test_skal_slettes"
   val testregel =

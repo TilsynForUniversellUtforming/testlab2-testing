@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -33,11 +35,12 @@ class LoeysingIntegrationTests(
         "delete from loeysing where namn = :namn", mapOf("namn" to loeysingTestName))
   }
 
-  @Test
+  @ParameterizedTest
+  @ValueSource(strings = ["v1", "v2"])
   @DisplayName("Skal kunne opprette en løsning")
-  fun createLoeysing() {
+  fun createLoeysing(versjon: String) {
     val locationPattern = """/v1/loeysing/\d+"""
-    val location = restTemplate.postForLocation("/v1/loeysing", loeysingRequestBody)
+    val location = restTemplate.postForLocation("/$versjon/loeysing", loeysingRequestBody)
     Assertions.assertThat(location.toString()).matches(locationPattern)
   }
 
@@ -54,18 +57,22 @@ class LoeysingIntegrationTests(
     Assertions.assertThat(deletedLoeysing).isNull()
   }
 
-  @Test
+  @ParameterizedTest
+  @ValueSource(strings = ["v1", "v2"])
   @DisplayName("Skal oppdatere løsning")
-  fun updateLoeysing() {
+  fun updateLoeysing(versjon: String) {
     val oldName = "test_skal_slettes_1"
     val oldUrl = "https://www.w3.org/"
+    val orgnummer = "123456785"
 
     val location =
-        restTemplate.postForLocation("/v1/loeysing", mapOf("namn" to oldName, "url" to oldUrl))
+        restTemplate.postForLocation(
+            "/$versjon/loeysing",
+            mapOf("namn" to oldName, "url" to oldUrl, "orgnummer" to orgnummer))
     val loeysing = restTemplate.getForObject(location, Loeysing::class.java)
 
     restTemplate.exchange(
-        "/v1/loeysing",
+        "/$versjon/loeysing",
         HttpMethod.PUT,
         HttpEntity(loeysing.copy(namn = loeysingTestName, url = URL(loeysingTestUrl))),
         Int::class.java)

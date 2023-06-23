@@ -38,7 +38,7 @@ class MaalingResource(
   @PostMapping
   fun nyMaaling(@RequestBody dto: NyMaalingDTO): ResponseEntity<Any> =
       runCatching {
-            val navn = validateNavn(dto.navn).getOrThrow()
+            val navn = validateNamn(dto.navn).getOrThrow()
             val loeysingIdList =
                 validateIdList(
                         dto.loeysingIdList, loeysingDAO.getLoeysingIdList(), "loeysingIdList")
@@ -360,7 +360,7 @@ class MaalingResource(
   }
 
   private fun EditMaalingDTO.toMaaling(): Maaling {
-    val navn = validateNavn(this.navn).getOrThrow()
+    val navn = validateNamn(this.navn).getOrThrow()
     val maaling =
         maalingDAO.getMaaling(this.id) ?: throw IllegalArgumentException("Måling finnes ikkje")
     return when (maaling) {
