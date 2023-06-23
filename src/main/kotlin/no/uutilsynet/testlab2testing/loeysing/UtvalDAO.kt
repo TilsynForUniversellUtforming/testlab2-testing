@@ -32,10 +32,15 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getUtval(id: Int): Result<Utval> = runCatching {
     jdbcTemplate.query(
         """
-              select utval.id as utval_id, utval.namn as utval_namn, loeysing.id as loeysing_id, loeysing.namn as loeysing_namn, loeysing.url as loeysing_url
+              select utval.id           as utval_id,
+                     utval.namn         as utval_namn,
+                     loeysing.id        as loeysing_id,
+                     loeysing.namn      as loeysing_namn,
+                     loeysing.url       as loeysing_url,
+                     loeysing.orgnummer as loeysing_orgnummer
               from utval
-              join utval_loeysing ul on utval.id = ul.utval_id
-              join loeysing on loeysing.id = ul.loeysing_id
+                       join utval_loeysing ul on utval.id = ul.utval_id
+                       join loeysing on loeysing.id = ul.loeysing_id
               where utval.id = :id
             """
             .trimIndent(),
@@ -65,7 +70,8 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
           Loeysing(
               rs.getInt("loeysing_id"),
               rs.getString("loeysing_namn"),
-              URL(rs.getString("loeysing_url"))))
+              URL(rs.getString("loeysing_url")),
+              rs.getString("loeysing_orgnummer")))
     } while (rs.next())
     return utval.copy(loeysingar = loeysingar.toList())
   }

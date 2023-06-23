@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.loeysing
 
 import java.net.URL
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestName
+import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestOrgNummer
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestUrl
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
@@ -101,6 +102,9 @@ class LoeysingDAOTest(@Autowired val loeysingDAO: LoeysingDAO) {
     }
   }
 
-  private fun createLoeysing(name: String = loeysingTestName, url: String = loeysingTestUrl) =
-      loeysingDAO.createLoeysing(name, URL(url))
+  private fun createLoeysing(
+      name: String = loeysingTestName,
+      url: String = loeysingTestUrl,
+      orgnummer: String = loeysingTestOrgNummer
+  ) = loeysingDAO.createLoeysing(name, URL(url), loeysingTestOrgNummer)
 }

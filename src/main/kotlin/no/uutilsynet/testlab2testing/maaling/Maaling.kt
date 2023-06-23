@@ -129,7 +129,7 @@ sealed class Aksjon(val data: Map<String, String>) {
 
 fun locationForId(id: Number): URI = URI.create("/v1/maalinger/${id}")
 
-fun validateNavn(s: String?): Result<String> = runCatching {
+fun validateNamn(s: String?): Result<String> = runCatching {
   require(!(s == null || s == "")) { "mangler navn" }
   s
 }

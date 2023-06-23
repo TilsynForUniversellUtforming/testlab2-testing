@@ -6,14 +6,9 @@ import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHan
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+
+fun locationForId(id: Int): URI = URI("/v1/loeysing/${id}")
 
 @RestController
 @RequestMapping("v1/loeysing")
@@ -23,8 +18,6 @@ class LoeysingResource(val loeysingDAO: LoeysingDAO, val maalingDAO: MaalingDAO)
       val namn: String,
       val url: String,
   )
-
-  private val locationForId: (Int) -> URI = { id -> URI("/v1/loeysing/${id}") }
 
   @GetMapping("{id}")
   fun getLoeysing(@PathVariable id: Int): ResponseEntity<Loeysing> =
@@ -37,7 +30,8 @@ class LoeysingResource(val loeysingDAO: LoeysingDAO, val maalingDAO: MaalingDAO)
 
   @PostMapping
   fun createLoeysing(@RequestBody dto: CreateLoeysingDTO) =
-      createWithErrorHandling({ loeysingDAO.createLoeysing(dto.namn, URL(dto.url)) }, locationForId)
+      createWithErrorHandling(
+          { loeysingDAO.createLoeysing(dto.namn, URL(dto.url), null) }, ::locationForId)
 
   @PutMapping
   fun updateLoeysing(@RequestBody loeysing: Loeysing) = executeWithErrorHandling {
