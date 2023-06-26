@@ -4,6 +4,7 @@ import java.net.URI
 import java.net.URL
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingRequestBody
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestName
+import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestOrgNummer
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestUrl
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
@@ -63,23 +64,30 @@ class LoeysingIntegrationTests(
   fun updateLoeysing(versjon: String) {
     val oldName = "test_skal_slettes_1"
     val oldUrl = "https://www.w3.org/"
-    val orgnummer = "123456785"
+    val oldOrgnummer = "012345674"
 
     val location =
         restTemplate.postForLocation(
             "/$versjon/loeysing",
-            mapOf("namn" to oldName, "url" to oldUrl, "orgnummer" to orgnummer))
+            mapOf("namn" to oldName, "url" to oldUrl, "orgnummer" to oldOrgnummer))
     val loeysing = restTemplate.getForObject(location, Loeysing::class.java)
 
     restTemplate.exchange(
         "/$versjon/loeysing",
         HttpMethod.PUT,
-        HttpEntity(loeysing.copy(namn = loeysingTestName, url = URL(loeysingTestUrl))),
+        HttpEntity(
+            loeysing.copy(
+                namn = loeysingTestName,
+                url = URL(loeysingTestUrl),
+                orgnummer = loeysingTestOrgNummer)),
         Int::class.java)
 
-    val (_, namn, url) = restTemplate.getForObject(location, Loeysing::class.java)
+    val (_, namn, url, orgnummer) = restTemplate.getForObject(location, Loeysing::class.java)
     Assertions.assertThat(namn).isEqualTo(loeysingTestName)
     Assertions.assertThat(url.toString()).isEqualTo(loeysingTestUrl)
+    if (orgnummer != null) {
+      Assertions.assertThat(orgnummer).isEqualTo(loeysingTestOrgNummer)
+    }
   }
 
   @Test
