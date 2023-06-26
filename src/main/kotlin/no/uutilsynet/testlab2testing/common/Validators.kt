@@ -9,7 +9,7 @@ fun validateOrgNummer(s: String?): Result<String> = runCatching {
   val vekter = listOf(3, 2, 7, 6, 5, 4, 3, 2)
   val sum = orgnummer.take(8).zip(vekter).sumOf { (a, b) -> a * b }
   val rest = sum % 11
-  val kontrollsiffer = 11 - rest
+  val kontrollsiffer = if (rest == 0) 0 else 11 - rest
   if (kontrollsiffer == orgnummer[8]) {
     s
   } else {

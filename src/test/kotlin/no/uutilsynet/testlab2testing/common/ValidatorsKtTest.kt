@@ -3,14 +3,16 @@ package no.uutilsynet.testlab2testing.common
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 class ValidatorsKtTest {
-  @Test
+  @ParameterizedTest
+  @ValueSource(strings = ["123456785", "938644500"])
   @DisplayName("når vi validerer eit gyldig orgnummer, så skal vi få success")
-  fun gyldigOrgNummer() {
-    val orgnummer = "123456785"
-    val result = validateOrgNummer(orgnummer)
-    assertThat(result).isEqualTo(Result.success(orgnummer))
+  fun gyldigOrgNummer(s: String) {
+    val result = validateOrgNummer(s)
+    assertThat(result).isEqualTo(Result.success(s))
   }
 
   @Test
