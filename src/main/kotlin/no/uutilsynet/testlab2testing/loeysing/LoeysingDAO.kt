@@ -30,9 +30,14 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val getLoeysingIdListSql = "select id from loeysing order by id"
     val getLoeysingSql = "select id, namn, url, orgnummer from loeysing where id = :id order by id"
 
-    val updateLoeysingSql = "update loeysing set namn = :namn, url = :url where id = :id"
+    val updateLoeysingSql =
+        "update loeysing set namn = :namn, url = :url, orgnummer = :orgnummer where id = :id"
     fun updateLoeysingParams(loeysing: Loeysing) =
-        mapOf("namn" to loeysing.namn, "url" to loeysing.url.toString(), "id" to loeysing.id)
+        mapOf(
+            "namn" to loeysing.namn,
+            "url" to loeysing.url.toString(),
+            "orgnummer" to loeysing.orgnummer,
+            "id" to loeysing.id)
 
     val deleteLoeysingSql = "delete from loeysing where id = :id"
     fun deleteLoeysingParams(id: Int) = mapOf("id" to id)
