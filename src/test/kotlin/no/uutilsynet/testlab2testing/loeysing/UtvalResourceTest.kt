@@ -17,7 +17,7 @@ import org.springframework.http.HttpStatus
 class UtvalResourceTest(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val utvalResource: UtvalResource,
-    @Autowired val loeysingResource: LoeysingResource,
+    @Autowired val loeysingResourceV2: LoeysingResourceV2,
     @Autowired val utvalDAO: UtvalDAO,
 ) {
   val namn = UUID.randomUUID().toString()
@@ -58,7 +58,7 @@ class UtvalResourceTest(
   @DisplayName(
       "når vi oppretter eit utval med løysingar som ikkje finst, så skal vi få 400 Bad Request")
   fun opprettUtvalMedLoeysingarSomIkkjeFinst() {
-    val alleLoeysingar = loeysingResource.getLoeysingList().body!!
+    val alleLoeysingar = loeysingResourceV2.getLoeysingList().body!!
     val loeysingarSomIkkjeFinst =
         if (alleLoeysingar.isEmpty()) listOf(1) else listOf(alleLoeysingar.maxOf { it.id } + 1)
     val response = utvalResource.createUtval(NyttUtval(namn, loeysingarSomIkkjeFinst))
