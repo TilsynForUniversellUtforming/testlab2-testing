@@ -9,12 +9,7 @@ import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestUrl
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.samePropertyValuesAs
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +32,7 @@ class LoeysingIntegrationTests(
   }
 
   @ParameterizedTest
-  @ValueSource(strings = ["v1", "v2"])
+  @ValueSource(strings = ["v2"])
   @DisplayName("Skal kunne opprette en løsning")
   fun createLoeysing(versjon: String) {
     val locationPattern = """/v1/loeysing/\d+"""
@@ -59,7 +54,7 @@ class LoeysingIntegrationTests(
   }
 
   @ParameterizedTest
-  @ValueSource(strings = ["v1", "v2"])
+  @ValueSource(strings = ["v2"])
   @DisplayName("Skal oppdatere løsning")
   fun updateLoeysing(versjon: String) {
     val oldName = "test_skal_slettes_1"
@@ -106,7 +101,7 @@ class LoeysingIntegrationTests(
   @Nested
   @DisplayName("Hvis det finnes en løsning i databasen")
   inner class DatabaseHasAtLeastOneLoeysing(@Autowired val restTemplate: TestRestTemplate) {
-    val location = createDefaultLoeysing()
+    private val location = createDefaultLoeysing()
 
     @Test
     @DisplayName("Skal hente løsning")
@@ -125,7 +120,7 @@ class LoeysingIntegrationTests(
 
       val loeysingFromList = assertDoesNotThrow {
         restTemplate
-            .exchange("/v1/loeysing", HttpMethod.GET, HttpEntity.EMPTY, loeysingListType)
+            .exchange("/v2/loeysing", HttpMethod.GET, HttpEntity.EMPTY, loeysingListType)
             .body
             ?.find { it.id == loeysing.id }!!
       }
@@ -135,5 +130,5 @@ class LoeysingIntegrationTests(
   }
 
   private fun createDefaultLoeysing(): URI =
-      restTemplate.postForLocation("/v1/loeysing", loeysingRequestBody)
+      restTemplate.postForLocation("/v2/loeysing", loeysingRequestBody)
 }
