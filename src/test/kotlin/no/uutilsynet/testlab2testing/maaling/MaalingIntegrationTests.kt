@@ -64,7 +64,7 @@ class MaalingIntegrationTests(
 
       assertThat(id, instanceOf(Int::class.java))
       assertThat(navn, equalTo(maalingTestName))
-      assertThat(loeysingListFromApi, equalTo(loeysingList))
+      Assertions.assertThat(loeysingListFromApi).containsExactlyInAnyOrderElementsOf(loeysingList)
     }
 
     @Test
@@ -148,6 +148,7 @@ class MaalingIntegrationTests(
                 CrawlParameters())
             .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
 
+    val updatedLoeysingList = listOf(maaling.loeysingList[0])
     restTemplate.exchange(
         "/v1/maalinger",
         HttpMethod.PUT,
@@ -155,7 +156,7 @@ class MaalingIntegrationTests(
             EditMaalingDTO(
                 id = maaling.id,
                 navn = maalingTestName,
-                loeysingIdList = listOf(maaling.loeysingList[0].id),
+                loeysingIdList = updatedLoeysingList.map { it.id },
                 testregelIdList = testRegelList.map { it.id },
                 crawlParameters = null)),
         Unit::class.java)
@@ -170,7 +171,7 @@ class MaalingIntegrationTests(
     val response: MaalingDTO = updatedMaaling.body!!
 
     Assertions.assertThat(response.navn).isEqualTo(maalingTestName)
-    Assertions.assertThat(response.loeysingList).containsExactly(uutilsynetLoeysing)
+    Assertions.assertThat(response.loeysingList).containsExactlyElementsOf(updatedLoeysingList)
   }
 
   @Test
