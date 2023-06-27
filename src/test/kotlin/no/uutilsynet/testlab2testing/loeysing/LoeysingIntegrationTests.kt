@@ -35,7 +35,7 @@ class LoeysingIntegrationTests(
   @ValueSource(strings = ["v2"])
   @DisplayName("Skal kunne opprette en løsning")
   fun createLoeysing(versjon: String) {
-    val locationPattern = """/v1/loeysing/\d+"""
+    val locationPattern = """/v2/loeysing/\d+"""
     val location = restTemplate.postForLocation("/$versjon/loeysing", loeysingRequestBody)
     Assertions.assertThat(location.toString()).matches(locationPattern)
   }
