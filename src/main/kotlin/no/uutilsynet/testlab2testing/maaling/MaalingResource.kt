@@ -4,6 +4,9 @@ import java.time.Instant
 import java.util.concurrent.TimeUnit.SECONDS
 import kotlinx.coroutines.*
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
+import no.uutilsynet.testlab2testing.common.validateIdList
+import no.uutilsynet.testlab2testing.common.validateNamn
+import no.uutilsynet.testlab2testing.common.validateStatus
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.dto.Testregel.Companion.validateTestRegel
 import no.uutilsynet.testlab2testing.firstMessage

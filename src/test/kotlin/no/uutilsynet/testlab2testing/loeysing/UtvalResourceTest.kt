@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.loeysing
 
+import java.net.URL
 import java.util.*
 import no.uutilsynet.testlab2testing.loeysing.UtvalResource.NyttUtval
 import org.assertj.core.api.Assertions.assertThat
@@ -73,5 +74,24 @@ class UtvalResourceTest(
 
     assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir", uuid))
+  }
+
+  @DisplayName(
+      "når utvalet har ein URL som manglar protocol, så skal vi anta https, og utvalet skal opprettast")
+  @Test
+  fun opprettUtvalMedUrlUtenProtocol() {
+    val uutilsynet = Loeysing.External("UUTilsynet", "www.uutilsynet.no", "991825827")
+    val digdir = Loeysing.External("Digdir", "www.digdir.no", "991825827")
+
+    val loeysingList = listOf(uutilsynet, digdir)
+    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingList))
+    assert(response.statusCode.is2xxSuccessful)
+
+    val location = response.headers.location
+    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
+
+    assertThat(utval.namn).isEqualTo(uuid)
+    assertThat(utval.loeysingar.map { it.url })
+        .containsAll(listOf(URL("https://www.uutilsynet.no/"), URL("https://www.digdir.no/")))
   }
 }

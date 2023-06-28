@@ -15,7 +15,6 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   @Transactional
   fun createUtval(namn: String, loeysingar: List<Int>): Result<UtvalId> = runCatching {
-    logger.info("lagrer eit nytt utval med namn $namn")
     val utvalId =
         jdbcTemplate.queryForObject(
             "insert into utval (namn) values (:namn) returning id",

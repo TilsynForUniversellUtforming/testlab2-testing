@@ -4,9 +4,9 @@ import java.net.URI
 import java.net.URL
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
+import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateOrgNummer
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO
-import no.uutilsynet.testlab2testing.maaling.validateNamn
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
