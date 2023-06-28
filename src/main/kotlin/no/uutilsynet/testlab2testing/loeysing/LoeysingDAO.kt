@@ -8,7 +8,7 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.deleteL
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingIdListSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingListSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingSql
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loysingRowmapper
+import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loeysingRowMapper
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.updateLoeysingParams
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.updateLoeysingSql
 import org.springframework.dao.support.DataAccessUtils
@@ -42,14 +42,14 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val deleteLoeysingSql = "delete from loeysing where id = :id"
     fun deleteLoeysingParams(id: Int) = mapOf("id" to id)
 
-    val loysingRowmapper = DataClassRowMapper.newInstance(Loeysing::class.java)
+    val loeysingRowMapper = DataClassRowMapper.newInstance(Loeysing::class.java)
   }
 
   fun getLoeysing(id: Int): Loeysing? =
       DataAccessUtils.singleResult(
-          jdbcTemplate.query(getLoeysingSql, mapOf("id" to id), loysingRowmapper))
+          jdbcTemplate.query(getLoeysingSql, mapOf("id" to id), loeysingRowMapper))
 
-  fun getLoeysingList(): List<Loeysing> = jdbcTemplate.query(getLoeysingListSql, loysingRowmapper)
+  fun getLoeysingList(): List<Loeysing> = jdbcTemplate.query(getLoeysingListSql, loeysingRowMapper)
 
   @Transactional
   fun createLoeysing(namn: String, url: URL, orgnummer: String?): Int =
@@ -71,4 +71,18 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           "select idmaaling from maalingLoeysing where idloeysing in (:idloeysing)",
           mapOf("idloeysing" to idloeysing),
           Int::class.java)
+
+  fun findLoeysingByURLAndOrgnummer(url: URL, orgnummer: String): Loeysing? {
+    val sammeOrgnummer =
+        jdbcTemplate.query(
+            """
+                select id, namn, url, orgnummer
+                from loeysing
+                where orgnummer = :orgnummer
+            """
+                .trimIndent(),
+            mapOf("orgnummer" to orgnummer),
+            loeysingRowMapper)
+    return sammeOrgnummer.find { loeysing -> sameURL(loeysing.url, url) }
+  }
 }

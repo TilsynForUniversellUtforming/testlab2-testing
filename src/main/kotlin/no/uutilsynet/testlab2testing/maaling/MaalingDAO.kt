@@ -4,7 +4,7 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loysingRowmapper
+import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loeysingRowMapper
 import no.uutilsynet.testlab2testing.maaling.Maaling.*
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
@@ -157,7 +157,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return when (status) {
       planlegging -> {
         val loeysingList =
-            jdbcTemplate.query(maalingLoeysingSql, mapOf("id" to id), loysingRowmapper)
+            jdbcTemplate.query(maalingLoeysingSql, mapOf("id" to id), loeysingRowMapper)
         val testregelList =
             jdbcTemplate.query(maalingTestregelSql, mapOf("id" to id), testregelRowMapper)
         Planlegging(

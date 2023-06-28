@@ -16,14 +16,12 @@ fun locationForId(id: Int): URI = URI("/v2/loeysing/${id}")
 @RequestMapping("v2/loeysing")
 class LoeysingResourceV2(val loeysingDAO: LoeysingDAO, val maalingDAO: MaalingDAO) {
 
-  data class CreateLoeysingDTO(val namn: String, val url: String, val orgnummer: String)
-
   @PostMapping
-  fun createLoeysing(@RequestBody dto: CreateLoeysingDTO) =
+  fun createLoeysing(@RequestBody external: Loeysing.External) =
       runCatching {
-            val namn = validateNamn(dto.namn).getOrThrow()
-            val url = URL(dto.url)
-            val orgnummer = validateOrgNummer(dto.orgnummer).getOrThrow()
+            val namn = validateNamn(external.namn).getOrThrow()
+            val url = URL(external.url)
+            val orgnummer = validateOrgNummer(external.orgnummer).getOrThrow()
 
             loeysingDAO.createLoeysing(namn, url, orgnummer)
           }
