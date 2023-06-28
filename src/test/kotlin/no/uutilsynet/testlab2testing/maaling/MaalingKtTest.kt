@@ -2,6 +2,8 @@ package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URL
 import java.time.Instant
+import no.uutilsynet.testlab2testing.common.validateIdList
+import no.uutilsynet.testlab2testing.common.validateStatus
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateParameters
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat

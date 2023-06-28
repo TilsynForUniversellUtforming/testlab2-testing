@@ -129,38 +129,7 @@ sealed class Aksjon(val data: Map<String, String>) {
 
 fun locationForId(id: Number): URI = URI.create("/v1/maalinger/${id}")
 
-fun validateNamn(s: String?): Result<String> = runCatching {
-  require(!(s == null || s == "")) { "mangler navn" }
-  s
-}
-
 enum class Status {
   Crawling,
   Testing
-}
-
-fun validateStatus(s: String?): Result<Status> =
-    when (s) {
-      "crawling" -> Result.success(Status.Crawling)
-      "testing" -> Result.success(Status.Testing)
-      else -> Result.failure(IllegalArgumentException("$s er ikke en gyldig status"))
-    }
-
-fun validateIdList(
-    list: List<Int>?,
-    validIds: List<Int>,
-    parameterName: String
-): Result<List<Int>> = runCatching {
-  if (list.isNullOrEmpty()) {
-    throw IllegalArgumentException(
-        "Eg forventa eit parameter `${parameterName}` som skulle inneholde ei liste med id-ar, men han var tom.")
-  }
-
-  val invalidIds = list.filter { !validIds.contains(it) }
-  if (invalidIds.isNotEmpty()) {
-    throw IllegalArgumentException(
-        "Id-ane ${invalidIds.joinToString(", ")} er ikkje gyldige. Gyldige id-ar er ${validIds.joinToString(", ")}.")
-  }
-
-  list
 }
