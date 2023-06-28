@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -28,55 +29,32 @@ class UtvalResourceTest(
   }
 
   @Test
-  @DisplayName(
-      "når vi oppretter eit utval med navn og ei liste med løysingar, så skal vi få 201 Created, og uri til utvalet i Location-headeren")
-  fun oprettUtvalMedLoeysingar() {
-    val loeysingar = listOf(1, 2)
-    val response = utvalResource.createUtval(NyttUtval(namn, loeysingar))
+  @DisplayName("vi skal kunne opprette eit nytt utval")
+  fun nyttUtval() {
+    val loeysingList =
+        listOf(
+            Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827"),
+            Loeysing.External("Digdir", "https://www.digdir.no", "991825827"))
+    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(namn, loeysingList))
     assertThat(response.statusCode).isEqualTo(HttpStatus.CREATED)
-    assertThat(response.headers.location?.toString()).isNotNull()
   }
 
   @Test
-  @DisplayName("når vi har opprettet eit utval, så skal vi kunne hente det ut")
-  fun henteUtval() {
-    val loeysingar = listOf(1, 2)
-    val response = utvalResource.createUtval(NyttUtval(namn, loeysingar))
-    val utval = restTemplate.getForObject(response.headers.location!!, Utval::class.java)
+  @DisplayName("når vi har laget et utvalg, skal vi kunne hente det ut igjen")
+  fun hentUtval() {
+    val loeysingList =
+        listOf(
+            Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827"),
+            Loeysing.External("Digdir", "https://www.digdir.no", "991825827"))
+    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(namn, loeysingList))
+    assert(response.statusCode.is2xxSuccessful)
+
+    val location = response.headers.location
+    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
+
     assertThat(utval.namn).isEqualTo(namn)
-    assertThat(utval.loeysingar.map { it.id }).isEqualTo(loeysingar)
+    assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir"))
   }
 
-  @Test
-  @DisplayName("vi skal kunne hente alle utval")
-  fun henteAlleUtval() {
-    val utval = utvalResource.getUtvalList().body!!
-    assertThat(utval).isInstanceOf(List::class.java)
-  }
-
-  @Test
-  @DisplayName(
-      "når vi oppretter eit utval med løysingar som ikkje finst, så skal vi få 400 Bad Request")
-  fun opprettUtvalMedLoeysingarSomIkkjeFinst() {
-    val alleLoeysingar = loeysingResourceV2.getLoeysingList().body!!
-    val loeysingarSomIkkjeFinst =
-        if (alleLoeysingar.isEmpty()) listOf(1) else listOf(alleLoeysingar.maxOf { it.id } + 1)
-    val response = utvalResource.createUtval(NyttUtval(namn, loeysingarSomIkkjeFinst))
-    assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-  }
-
-  @Test
-  @DisplayName("vi skal kunne slette eit utval")
-  fun slettUtval() {
-    val loeysingar = listOf(1, 2)
-    val response = utvalResource.createUtval(NyttUtval(namn, loeysingar))
-    assertThat(response.statusCode).isEqualTo(HttpStatus.CREATED)
-
-    val utval: Utval? = restTemplate.getForObject(response.headers.location!!, Utval::class.java)
-    assertThat(utval?.id).isNotNull()
-
-    utvalResource.deleteUtval(utval?.id!!)
-    val sletta: Utval? = restTemplate.getForObject(response.headers.location!!, Utval::class.java)
-    assertThat(sletta).isNull()
-  }
+  // test med løsninger som ikke finnes i databasen
 }
