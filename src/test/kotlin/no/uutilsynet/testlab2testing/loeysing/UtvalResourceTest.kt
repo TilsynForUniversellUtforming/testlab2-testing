@@ -18,14 +18,14 @@ import org.springframework.http.ResponseEntity
 class UtvalResourceTest(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val utvalResource: UtvalResource,
-    @Autowired val loeysingResourceV2: LoeysingResourceV2,
     @Autowired val utvalDAO: UtvalDAO,
 ) {
-  val namn = UUID.randomUUID().toString()
+  val uuid = UUID.randomUUID().toString()
 
   @AfterAll
-  fun slettAlleUtval() {
-    utvalDAO.jdbcTemplate.update("delete from utval where namn = :namn", mapOf("namn" to namn))
+  fun tearDown() {
+    utvalDAO.jdbcTemplate.update("delete from utval where namn = :namn", mapOf("namn" to uuid))
+    utvalDAO.jdbcTemplate.update("delete from loeysing where namn = :namn", mapOf("namn" to uuid))
   }
 
   @Test
@@ -35,7 +35,7 @@ class UtvalResourceTest(
         listOf(
             Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827"),
             Loeysing.External("Digdir", "https://www.digdir.no", "991825827"))
-    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(namn, loeysingList))
+    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingList))
     assertThat(response.statusCode).isEqualTo(HttpStatus.CREATED)
   }
 
@@ -46,15 +46,32 @@ class UtvalResourceTest(
         listOf(
             Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827"),
             Loeysing.External("Digdir", "https://www.digdir.no", "991825827"))
-    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(namn, loeysingList))
+    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingList))
     assert(response.statusCode.is2xxSuccessful)
 
     val location = response.headers.location
     val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
 
-    assertThat(utval.namn).isEqualTo(namn)
+    assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir"))
   }
 
-  // test med løsninger som ikke finnes i databasen
+  @DisplayName(
+      "når vi opprettar eit utval med ei løysing som ikkje finst i databasen, så skal løysinga bli lagra, og utvalet oppretta")
+  @Test
+  fun opprettUtvalMedNyLoeysing() {
+    val uutilsynet = Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827")
+    val digdir = Loeysing.External("Digdir", "https://www.digdir.no", "991825827")
+    val randomLoeysing = Loeysing.External(uuid, "https://www.$uuid.com", "000000000")
+
+    val loeysingList = listOf(uutilsynet, digdir, randomLoeysing)
+    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingList))
+    assert(response.statusCode.is2xxSuccessful)
+
+    val location = response.headers.location
+    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
+
+    assertThat(utval.namn).isEqualTo(uuid)
+    assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir", uuid))
+  }
 }
