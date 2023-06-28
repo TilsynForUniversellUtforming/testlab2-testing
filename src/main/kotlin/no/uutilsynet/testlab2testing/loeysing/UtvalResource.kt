@@ -2,6 +2,8 @@ package no.uutilsynet.testlab2testing.loeysing
 
 import java.net.URI
 import java.net.URL
+import no.uutilsynet.testlab2testing.common.validateOrgNummer
+import no.uutilsynet.testlab2testing.maaling.validateNamn
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,7 +19,17 @@ class UtvalResource(@Autowired val utvalDAO: UtvalDAO, @Autowired val loeysingDA
   fun createUtval(@RequestBody nyttUtval: NyttUtval): ResponseEntity<Unit> {
     val loeysingar: List<Loeysing> =
         nyttUtval.loeysingList.map {
-          loeysingDAO.findLoeysingByURLAndOrgnummer(URL(it.url), it.orgnummer)!!
+          val namn = validateNamn(it.namn).getOrThrow()
+          val url = URL(it.url)
+          val orgnummer = validateOrgNummer(it.orgnummer).getOrThrow()
+
+          val foundLoeysing = loeysingDAO.findLoeysingByURLAndOrgnummer(url, orgnummer)
+          if (foundLoeysing == null) {
+            val id = loeysingDAO.createLoeysing(namn, url, orgnummer)
+            Loeysing(id, namn, url, orgnummer)
+          } else {
+            foundLoeysing
+          }
         }
     logger.atInfo().log("lagrar eit nytt utval med namn $nyttUtval.namn")
     val utvalId = utvalDAO.createUtval(nyttUtval.namn, loeysingar.map { it.id }).getOrThrow()
