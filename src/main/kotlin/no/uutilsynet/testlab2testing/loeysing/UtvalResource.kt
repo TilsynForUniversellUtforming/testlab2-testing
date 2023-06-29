@@ -49,5 +49,10 @@ class UtvalResource(@Autowired val utvalDAO: UtvalDAO, @Autowired val loeysingDA
     return utvalDAO.getUtval(id).getOrThrow()
   }
 
+  @GetMapping
+  fun getUtvalList(): List<UtvalListItem> {
+    return utvalDAO.getUtvalList().getOrThrow()
+  }
+
   data class NyttUtval(val namn: String, val loeysingList: List<Loeysing.External>)
 }
