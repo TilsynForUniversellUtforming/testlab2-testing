@@ -77,5 +77,3 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
 }
 
 typealias UtvalId = Int
-
-data class UtvalListItem(val id: Int, val namn: String)

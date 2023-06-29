@@ -94,4 +94,15 @@ class UtvalResourceTest(
     assertThat(utval.loeysingar.map { it.url })
         .containsAll(listOf(URL("https://www.uutilsynet.no/"), URL("https://www.digdir.no/")))
   }
+
+  @DisplayName("vi skal kunne hente ei liste med alle utval")
+  @Test
+  fun hentAlleUtval() {
+    val response = restTemplate.getForEntity("/v1/utval", Array<UtvalListItem>::class.java)
+    assertThat(response.statusCode.is2xxSuccessful).isTrue()
+    response.body!!.forEach {
+      assertThat(it.id).isNotNull()
+      assertThat(it.namn).isNotBlank()
+    }
+  }
 }
