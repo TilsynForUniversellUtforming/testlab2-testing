@@ -79,22 +79,28 @@ class AutoTesterClient(
 
   suspend fun fetchResultat(
       testKoeyringar: List<TestKoeyring.Ferdig>,
-      fulltResultat: Boolean
+      resultatType: ResultatUrls,
   ): Map<TestKoeyring.Ferdig, Result<List<TestResultat>>> = coroutineScope {
     val deferreds =
         testKoeyringar.map { testKoeyring ->
-          async { testKoeyring to fetchResultat(testKoeyring, fulltResultat) }
+          async { testKoeyring to fetchResultat(testKoeyring, resultatType) }
         }
     deferreds.awaitAll().toMap()
   }
 
   private fun fetchResultat(
       testKoeyring: TestKoeyring.Ferdig,
-      fulltResultat: Boolean
+      resultatType: ResultatUrls
   ): Result<List<TestResultat>> =
       testKoeyring.lenker?.let { lenker ->
         runCatching {
-          val uri = if (fulltResultat) lenker.urlFulltResultat.toURI() else lenker.urlBrot.toURI()
+          val uri =
+              when (resultatType) {
+                ResultatUrls.urlFulltResultat -> lenker.urlFulltResultat.toURI()
+                ResultatUrls.urlAggreggeringTR -> lenker.urlAggreggeringTR.toURI()
+                else -> lenker.urlBrot.toURI()
+              }
+
           restTemplate
               .getForObject(uri, Array<Array<TestResultat>>::class.java)
               ?.flatten()
@@ -110,8 +116,8 @@ class AutoTesterClient(
   @JsonDeserialize(using = AutoTesterOutputDeserializer::class)
   sealed class AutoTesterOutput {
     data class TestResultater(val testResultater: List<TestResultat>) : AutoTesterOutput()
-
-    data class Lenker(val urlFulltResultat: URL, val urlBrot: URL) : AutoTesterOutput()
+    data class Lenker(val urlFulltResultat: URL, val urlBrot: URL, val urlAggreggeringTR: URL) :
+        AutoTesterOutput()
   }
 
   class AutoTesterOutputDeserializer : JsonDeserializer<AutoTesterOutput>() {
@@ -126,7 +132,8 @@ class AutoTesterClient(
         node.has("urlFulltResultat") ->
             AutoTesterOutput.Lenker(
                 URI(node["urlFulltResultat"].asText()).toURL(),
-                URI(node["urlBrot"].asText()).toURL())
+                URI(node["urlBrot"].asText()).toURL(),
+                URI(node["urlAggreggeringTR"].asText()).toURL())
         else -> throw RuntimeException("Ukjent output fra AutoTester")
       }
     }
@@ -157,4 +164,10 @@ class AutoTesterClient(
   }
 
   data class StatusUris(val statusQueryGetUri: URI)
+
+  enum class ResultatUrls {
+    urlFulltResultat,
+    urlBrot,
+    urlAggreggeringTR
+  }
 }

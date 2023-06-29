@@ -6,6 +6,7 @@ import java.time.LocalDate
 import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.TestConstants
+import java.net.URL
 
 object TestConstants {
   val uutilsynetLoeysing =
@@ -61,7 +62,8 @@ object TestConstants {
           URI("https://status.url").toURL(),
           emptyList(),
           AutoTesterClient.AutoTesterOutput.Lenker(
-              URI("https://fullt.resultat").toURL(), URI("https://brot.resultat").toURL()))
+              URI("https://fullt.resultat").toURL(), URI("https://brot.resultat").toURL(), URI("https://aggregering.resultat").toURL()
+          ))
 
   val testKoeyring2 =
       TestKoeyring.Ferdig(
@@ -70,7 +72,7 @@ object TestConstants {
           URI("https://status.url").toURL(),
           emptyList(),
           AutoTesterClient.AutoTesterOutput.Lenker(
-              URI("https://fullt.resultat").toURL(), URI("https://brot.resultat").toURL()))
+              URI("https://fullt.resultat").toURL(), URI("https://brot.resultat").toURL(),  URL("https://aggregering.resultat")))
 
   val testKoeyringList = listOf(testKoeyring, testKoeyring2)
 }

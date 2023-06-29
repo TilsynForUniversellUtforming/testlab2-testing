@@ -208,7 +208,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
               URI("https://teststatus.url").toURL(),
               emptyList(),
               AutoTesterClient.AutoTesterOutput.Lenker(
-                  URI("https://fullt.resultat").toURL(), URI("https://brot.resultat").toURL()))
+                  URI("https://fullt.resultat").toURL(), URI("https://brot.resultat").toURL(), URI("https://aggregering.resultat").toURL()))
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     val testingFerdig = Maaling.toTestingFerdig(testing)!!
