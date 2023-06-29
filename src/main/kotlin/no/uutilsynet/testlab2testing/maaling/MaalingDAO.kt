@@ -281,7 +281,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val crawlResultat = getCrawlResultatForMaaling(maalingId)
     return jdbcTemplate.query<TestKoeyring>(
         """
-              select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, t.lenker_testa, url_fullt_resultat, url_brot
+              select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, t.lenker_testa, url_fullt_resultat, url_brot,url_agg_tr
               from testkoeyring t
               join loeysing l on l.id = t.loeysing_id
               where maaling_id = :maaling_id
@@ -321,10 +321,11 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               val testResultat: List<TestResultat> = getTestResultat(testkoeyringId)
               val urlFulltResultat = rs.getString("url_fullt_resultat")
               val urlBrot = rs.getString("url_brot")
+              val urlAggTR = rs.getString("url_agg_tr")
               val lenker =
                   if (urlFulltResultat != null)
                       AutoTesterClient.AutoTesterOutput.Lenker(
-                          URI(urlFulltResultat).toURL(), URI(urlBrot).toURL())
+                          URL(urlFulltResultat), URL(urlBrot), URL(urlAggTR))
                   else null
               TestKoeyring.Ferdig(
                   crawlResultatForLoeysing,
@@ -506,8 +507,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           is TestKoeyring.Ferdig -> {
             jdbcTemplate.queryForObject(
                 """
-              insert into testkoeyring(maaling_id, loeysing_id, status, status_url, sist_oppdatert, url_fullt_resultat, url_brot)
-              values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :url_fullt_resultat, :url_brot)
+              insert into testkoeyring(maaling_id, loeysing_id, status, status_url, sist_oppdatert, url_fullt_resultat, url_brot, url_agg_tr)
+              values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :url_fullt_resultat, :url_brot, :url_agg_tr)
               returning id
             """
                     .trimIndent(),
@@ -518,7 +519,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     "status_url" to statusURL(testKoeyring),
                     "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
                     "url_fullt_resultat" to testKoeyring.lenker?.urlFulltResultat?.toString(),
-                    "url_brot" to testKoeyring.lenker?.urlBrot?.toString()),
+                    "url_brot" to testKoeyring.lenker?.urlBrot?.toString(),
+                    "url_agg_tr" to testKoeyring.lenker?.urlAggreggeringTR?.toString()),
                 Int::class.java)
           }
           else -> {
