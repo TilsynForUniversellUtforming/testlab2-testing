@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.loeysing
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import java.net.URI
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateOrgNummer
@@ -12,9 +15,34 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("v1/utval")
+@Tag(
+    name = "Utval",
+    description = "API for å lage og hente utval. Eit utval er ei samling med løysingar.")
 class UtvalResource(@Autowired val utvalDAO: UtvalDAO, @Autowired val loeysingDAO: LoeysingDAO) {
   val logger: Logger = LoggerFactory.getLogger(UtvalResource::class.java)
 
+  @Operation(
+      summary = "Lagar eit nytt utval",
+      description =
+          """
+Gitt eit namn og ei liste med løysingar, lagar denne metoden eit nytt utval.
+
+Løysingar som ikkje finst frå før, blir lagra i databasen. Løysingar blir samanlikna på organisasjonsnummer og URL.
+Dersom ein løysing med same organisasjonsnummer og URL finst frå før, blir den eksisterande løysinga brukt.
+
+[Her finn du eksempelkode i python](https://github.com/TilsynForUniversellUtforming/utval-api-python-example) på korleis ein
+kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API-et.
+      """,
+      responses =
+          [
+              ApiResponse(
+                  responseCode = "201",
+                  description =
+                      "Utvalet vart laga, og du finn ei lenke til det nye utvalet i headeren \"Location\""),
+              ApiResponse(
+                  responseCode = "400",
+                  description =
+                      "Eit av argumenta var ugyldig. Du finn meir informasjon i *body*.")])
   @PostMapping
   fun createUtval(@RequestBody nyttUtval: NyttUtval): ResponseEntity<Unit> {
     val utvalNamn = validateNamn(nyttUtval.namn).getOrThrow()
@@ -44,11 +72,25 @@ class UtvalResource(@Autowired val utvalDAO: UtvalDAO, @Autowired val loeysingDA
     return ResponseEntity.created(URI("/v1/utval/$utvalId")).build()
   }
 
+  @Operation(
+      summary = "Hentar detaljert informasjon om eit utval.",
+      description =
+          "Kvart utval inneheld id, namn og ei liste med løysingar. For å finne id-en til eit utval, kan du bruke GET /v1/utval.",
+      responses =
+          [
+              ApiResponse(responseCode = "200", description = "Utvalet vart funne"),
+              ApiResponse(responseCode = "404", description = "Utvalet vart ikkje funne")])
   @GetMapping("{id}")
   fun getUtval(@PathVariable id: Int): Utval {
     return utvalDAO.getUtval(id).getOrThrow()
   }
 
+  @Operation(
+      summary = "Hentar ei liste med alle utvala.",
+      description =
+          "Kvart utval er berre beskrive med id og namn. For å hente lista med løysingar i utvalet, bruk GET /v1/utval/{id}.",
+      responses =
+          [ApiResponse(responseCode = "200", description = "Returnerer ei liste med alle utval")])
   @GetMapping
   fun getUtvalList(): List<UtvalListItem> {
     return utvalDAO.getUtvalList().getOrThrow()
