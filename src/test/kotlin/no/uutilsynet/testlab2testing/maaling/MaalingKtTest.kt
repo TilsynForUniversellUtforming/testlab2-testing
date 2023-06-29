@@ -187,8 +187,9 @@ class MaalingKtTest {
                     URI("https://www.status.url").toURL(),
                     emptyList(),
                     AutoTesterClient.AutoTesterOutput.Lenker(
-                        URI("https://fullt.resultat").toURL(),
-                        URI("https://brot.resultat").toURL())),
+                        URL("https://fullt.resultat"),
+                        URL("https://brot.resultat"),
+                        URL("https://brot.resultat"))),
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(
                         listOf(URI("https://www.digdir.no").toURL()),
@@ -199,8 +200,9 @@ class MaalingKtTest {
                     URI("https://www.status.url").toURL(),
                     emptyList(),
                     AutoTesterClient.AutoTesterOutput.Lenker(
-                        URI("https://fullt.resultat").toURL(),
-                        URI("https://brot.resultat").toURL()))))
+                        URL("https://fullt.resultat"),
+                        URL("https://brot.resultat"),
+                        URL("https://brot.resultat")))))
 
     @DisplayName(
         "når vi henter testkøyringar for ei måling, uten å spesifisere løysing, så skal vi få alle testkøyringane")

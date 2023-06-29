@@ -135,7 +135,8 @@ class MaalingResource(
             .getMaaling(maalingId)
             ?.let { maaling -> Maaling.findFerdigeTestKoeyringar(maaling, loeysingId) }
             ?.let { ferdigeTestKoeyringar ->
-              autoTesterClient.fetchResultat(ferdigeTestKoeyringar, false)
+              autoTesterClient.fetchResultat(
+                  ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlBrot)
             }
             ?.toSingleResult()
             ?.map { it.values.flatten() }
@@ -164,33 +165,18 @@ class MaalingResource(
           ?.mapCatching { ferdigeTestKoeyringar ->
             runBlocking(Dispatchers.IO) {
               autoTesterClient
-                  .fetchResultat(ferdigeTestKoeyringar, true)
+                  .fetchResultat(
+                      ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlFulltResultat)
                   .toSingleResult()
                   .getOrThrow()
             }
           }
-          ?.map { koeyringerMedResultat ->
-            TestKoeyring.aggregerPaaTestregel(koeyringerMedResultat, maalingId)
-          }
           ?.fold(
-              { aggregering ->
-                if (aggregering.isEmpty()) {
-                  // i dette tilfellet har alle testkjøringene feilet
-                  ResponseEntity.notFound().build()
-                } else {
-                  ResponseEntity.ok(
-                      aggregering.sortedBy { it.testregelId.removePrefix("QW-ACT-R").toInt() })
-                }
-              },
+              { testResultatList -> ResponseEntity.ok(testResultatList) },
               { error ->
-                when (error) {
-                  is IllegalArgumentException -> ResponseEntity.badRequest().body(error.message)
-                  else -> {
-                    logger.error(
-                        "Feila da vi skulle hente testresultat for måling $maalingId", error)
-                    ResponseEntity.internalServerError().body(error.message)
-                  }
-                }
+                logger.error(
+                    "Feila da vi skulle hente fullt resultat for målinga $maalingId", error)
+                ResponseEntity.internalServerError().body(error.firstMessage())
               })
           ?: ResponseEntity.notFound().build()
 
