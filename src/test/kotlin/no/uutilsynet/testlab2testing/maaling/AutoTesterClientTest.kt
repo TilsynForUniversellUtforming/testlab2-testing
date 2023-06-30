@@ -75,7 +75,7 @@ class AutoTesterClientTest {
     @Test
     fun completedWithURLs() {
       val jsonString =
-          """{"runtimeStatus":"Completed", "output": {"urlFulltResultat": "https://fullt.resultat.no", "urlBrot": "https://brot.resultat.no"}}"""
+          """{"runtimeStatus":"Completed", "output": {"urlFulltResultat": "https://fullt.resultat.no", "urlBrot": "https://brot.resultat.no","urlAggreggeringTR": "https://aggregeringTR.resultat.no"}}"""
       val completed =
           objectMapper.readValue(jsonString, AutoTesterClient.AzureFunctionResponse::class.java)
       assertThat(completed)
@@ -85,6 +85,7 @@ class AutoTesterClientTest {
               as AutoTesterClient.AutoTesterOutput.Lenker
       assertThat(output.urlFulltResultat).isEqualTo(URI("https://fullt.resultat.no").toURL())
       assertThat(output.urlBrot).isEqualTo(URI("https://brot.resultat.no").toURL())
+      assertThat(output.urlAggreggeringTR).isEqualTo(URI("https://aggregeringTR.resultat.no").toURL())
     }
 
     @DisplayName("når responsen fra autotester er `Failed`, så skal det parses til responsklassen")
