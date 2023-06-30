@@ -14,7 +14,7 @@ data class TestResultat(
     val elementUtfall: String,
     val elementResultat: String,
     val elementOmtale: ACTElement?
-) {
+) : AutotesterTestresultat {
   data class ACTElement(val htmlCode: String, val pointer: String)
 
   companion object {
