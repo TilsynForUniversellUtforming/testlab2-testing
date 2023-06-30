@@ -81,8 +81,11 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
               ApiResponse(responseCode = "200", description = "Utvalet vart funne"),
               ApiResponse(responseCode = "404", description = "Utvalet vart ikkje funne")])
   @GetMapping("{id}")
-  fun getUtval(@PathVariable id: Int): Utval {
-    return utvalDAO.getUtval(id).getOrThrow()
+  fun getUtval(@PathVariable id: Int): ResponseEntity<Utval> {
+    return utvalDAO
+        .getUtval(id)
+        .map { utval -> ResponseEntity.ok(utval) }
+        .getOrElse { ResponseEntity.notFound().build() }
   }
 
   @Operation(
