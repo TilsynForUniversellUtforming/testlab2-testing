@@ -166,7 +166,7 @@ class MaalingResource(
             runBlocking(Dispatchers.IO) {
               autoTesterClient
                   .fetchResultat(
-                      ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlFulltResultat)
+                      ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlAggreggeringTR)
                   .toSingleResult()
                   .getOrThrow()
             }
