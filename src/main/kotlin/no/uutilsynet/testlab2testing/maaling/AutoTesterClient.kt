@@ -39,7 +39,8 @@ class AutoTesterClient(
               "idMaaling" to maalingId,
               "idLoeysing" to crawlResultat.loeysing.id,
               "resultatSomFil" to true,
-              "actRegler" to actRegler.map { it.testregelNoekkel })
+              "actRegler" to actRegler.map { it.testregelNoekkel },
+              "loeysing" to crawlResultat.loeysing)
       val statusUris = restTemplate.postForObject(url, requestData, StatusUris::class.java)
       statusUris?.statusQueryGetUri?.toURL()
           ?: throw RuntimeException("mangler statusQueryGetUri i responsen")
@@ -80,7 +81,7 @@ class AutoTesterClient(
   suspend fun fetchResultat(
       testKoeyringar: List<TestKoeyring.Ferdig>,
       resultatType: ResultatUrls,
-  ): Map<TestKoeyring.Ferdig, Result<List<TestResultat>>> = coroutineScope {
+  ): Map<TestKoeyring.Ferdig, Result<List<AutotesterTestresultat>>> = coroutineScope {
     val deferreds =
         testKoeyringar.map { testKoeyring ->
           async { testKoeyring to fetchResultat(testKoeyring, resultatType) }
@@ -91,7 +92,7 @@ class AutoTesterClient(
   private fun fetchResultat(
       testKoeyring: TestKoeyring.Ferdig,
       resultatType: ResultatUrls
-  ): Result<List<TestResultat>> =
+  ): Result<List<AutotesterTestresultat>> =
       testKoeyring.lenker?.let { lenker ->
         runCatching {
           val uri =
@@ -101,12 +102,18 @@ class AutoTesterClient(
                 else -> lenker.urlBrot.toURI()
               }
 
-          restTemplate
-              .getForObject(uri, Array<Array<TestResultat>>::class.java)
-              ?.flatten()
-              ?.toList()
-              ?: throw RuntimeException(
-                  "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${lenker.urlFulltResultat}")
+          if (resultatType.equals(ResultatUrls.urlAggreggeringTR)) {
+            restTemplate.getForObject(uri, Array<AggregertResultatTestregel>::class.java)?.toList()
+                ?: throw RuntimeException(
+                    "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
+          } else {
+            restTemplate
+                .getForObject(uri, Array<Array<TestResultat>>::class.java)
+                ?.flatten()
+                ?.toList()
+                ?: throw RuntimeException(
+                    "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
+          }
         }
       }
           ?: Result.success(testKoeyring.testResultat)
