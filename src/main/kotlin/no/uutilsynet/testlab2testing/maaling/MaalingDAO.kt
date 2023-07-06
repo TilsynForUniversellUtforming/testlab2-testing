@@ -533,7 +533,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     "url_fullt_resultat" to testKoeyring.lenker?.urlFulltResultat?.toString(),
                     "url_brot" to testKoeyring.lenker?.urlBrot?.toString(),
                     "url_agg_tr" to testKoeyring.lenker?.urlAggregeringTR?.toString(),
-                    "url_agg_sk" to testKoeyring.lenker?.urlAggregeringSide?.toString(),
+                    "url_agg_sk" to testKoeyring.lenker?.urlAggregeringSK?.toString(),
                     "url_agg_side" to testKoeyring.lenker?.urlAggregeringSide?.toString()),
                 Int::class.java)
           }
