@@ -180,6 +180,66 @@ class MaalingResource(
               })
           ?: ResponseEntity.notFound().build()
 
+  @GetMapping("{maalingId}/testresultat/aggregeringSuksesskriterium")
+  fun getAgggregeringPrSuksesskriterium(@PathVariable maalingId: Int): ResponseEntity<Any> =
+      maalingDAO
+          .getMaaling(maalingId)
+          ?.let { maaling ->
+            runCatching {
+              if (maaling is Maaling.TestingFerdig) maaling
+              else throw IllegalArgumentException("Måling $maalingId er ikkje ferdig testa")
+            }
+          }
+          ?.map(Maaling.TestingFerdig::testKoeyringar)
+          ?.map { testKoeyringar -> testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>() }
+          ?.mapCatching { ferdigeTestKoeyringar ->
+            runBlocking(Dispatchers.IO) {
+              autoTesterClient
+                  .fetchResultat(
+                      ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlAggregeringSK)
+                  .toSingleResult()
+                  .getOrThrow()
+            }
+          }
+          ?.fold(
+              { testResultatList -> ResponseEntity.ok(testResultatList) },
+              { error ->
+                logger.error(
+                    "Feila da vi skulle hente fullt resultat for målinga $maalingId", error)
+                ResponseEntity.internalServerError().body(error.firstMessage())
+              })
+          ?: ResponseEntity.notFound().build()
+
+  @GetMapping("{maalingId}/testresultat/aggregeringSide")
+  fun getAgggregeringPrSide(@PathVariable maalingId: Int): ResponseEntity<Any> =
+      maalingDAO
+          .getMaaling(maalingId)
+          ?.let { maaling ->
+            runCatching {
+              if (maaling is Maaling.TestingFerdig) maaling
+              else throw IllegalArgumentException("Måling $maalingId er ikkje ferdig testa")
+            }
+          }
+          ?.map(Maaling.TestingFerdig::testKoeyringar)
+          ?.map { testKoeyringar -> testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>() }
+          ?.mapCatching { ferdigeTestKoeyringar ->
+            runBlocking(Dispatchers.IO) {
+              autoTesterClient
+                  .fetchResultat(
+                      ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlAggergeringSide)
+                  .toSingleResult()
+                  .getOrThrow()
+            }
+          }
+          ?.fold(
+              { testResultatList -> ResponseEntity.ok(testResultatList) },
+              { error ->
+                logger.error(
+                    "Feila da vi skulle hente fullt resultat for målinga $maalingId", error)
+                ResponseEntity.internalServerError().body(error.firstMessage())
+              })
+          ?: ResponseEntity.notFound().build()
+
   @GetMapping("{maalingId}/crawlresultat/nettsider")
   fun getCrawlResultatNettsider(
       @PathVariable maalingId: Int,

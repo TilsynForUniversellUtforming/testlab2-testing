@@ -85,7 +85,7 @@ class AutoTesterClientTest {
               as AutoTesterClient.AutoTesterOutput.Lenker
       assertThat(output.urlFulltResultat).isEqualTo(URL("https://fullt.resultat.no"))
       assertThat(output.urlBrot).isEqualTo(URL("https://brot.resultat.no"))
-      assertThat(output.urlAggreggeringTR).isEqualTo(URL("https://aggregeringTR.resultat.no"))
+      assertThat(output.urlAggregeringTR).isEqualTo(URL("https://aggregeringTR.resultat.no"))
     }
 
     @DisplayName("når responsen fra autotester er `Failed`, så skal det parses til responsklassen")
