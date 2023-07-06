@@ -189,7 +189,9 @@ class MaalingKtTest {
                     AutoTesterClient.AutoTesterOutput.Lenker(
                         URL("https://fullt.resultat"),
                         URL("https://brot.resultat"),
-                        URL("https://brot.resultat"))),
+                        URL("https://aggregeringTR.resultat"),
+                        URL("https://aggregeringSK.resultat"),
+                        URL("https://aggregeringSide.resultat"))),
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(
                         listOf(URI("https://www.digdir.no").toURL()),
@@ -202,7 +204,9 @@ class MaalingKtTest {
                     AutoTesterClient.AutoTesterOutput.Lenker(
                         URL("https://fullt.resultat"),
                         URL("https://brot.resultat"),
-                        URL("https://brot.resultat")))))
+                        URL("https://aggregeringTR.resultat"),
+                        URL("https://aggregeringSK.resultat"),
+                        URL("https://aggregering.resultatSide")))))
 
     @DisplayName(
         "når vi henter testkøyringar for ei måling, uten å spesifisere løysing, så skal vi få alle testkøyringane")

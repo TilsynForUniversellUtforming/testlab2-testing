@@ -95,36 +95,51 @@ class AutoTesterClient(
   ): Result<List<AutotesterTestresultat>> =
       testKoeyring.lenker?.let { lenker ->
         runCatching {
-          val uri =
-              when (resultatType) {
-                ResultatUrls.urlFulltResultat -> lenker.urlFulltResultat.toURI()
-                ResultatUrls.urlAggreggeringTR -> lenker.urlAggreggeringTR.toURI()
-                else -> lenker.urlBrot.toURI()
-              }
-
-          if (resultatType.equals(ResultatUrls.urlAggreggeringTR)) {
-            restTemplate.getForObject(uri, Array<AggregertResultatTestregel>::class.java)?.toList()
-                ?: throw RuntimeException(
-                    "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
-          } else {
-            restTemplate
-                .getForObject(uri, Array<Array<TestResultat>>::class.java)
-                ?.flatten()
-                ?.toList()
-                ?: throw RuntimeException(
-                    "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
+          when (resultatType) {
+            ResultatUrls.urlAggreggeringTR ->
+                fetchResultatAggregering<AggregertResultatTestregel>(
+                    lenker.urlAggregeringTR.toURI())
+            ResultatUrls.urlAggregeringSK ->
+                fetchResultatAggregering<AggregertResultatSuksesskriterium>(
+                    lenker.urlAggregeringSK.toURI())
+            ResultatUrls.urlAggergeringSide ->
+                fetchResultatAggregering<AggregertResultatSide>(lenker.urlAggregeringSide.toURI())
+            ResultatUrls.urlFulltResultat -> fetchResultatDetaljert(lenker.urlFulltResultat.toURI())
+            ResultatUrls.urlBrot -> fetchResultatDetaljert(lenker.urlBrot.toURI())
           }
         }
       }
           ?: Result.success(testKoeyring.testResultat)
+
+  private fun fetchResultatDetaljert(uri: URI): List<TestResultat> {
+    return restTemplate
+        .getForObject(uri, Array<Array<TestResultat>>::class.java)
+        ?.flatten()
+        ?.toList()
+        ?: throw RuntimeException(
+            "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
+  }
+
+  private fun <T : AutotesterTestresultat> fetchResultatAggregering(
+      uri: URI
+  ): List<AutotesterTestresultat> {
+    return restTemplate.getForObject(uri, Array<AutotesterTestresultat>::class.java)?.toList()
+        ?: throw RuntimeException(
+            "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
+  }
 
   data class CustomStatus(val testaSider: Int, val talSider: Int)
 
   @JsonDeserialize(using = AutoTesterOutputDeserializer::class)
   sealed class AutoTesterOutput {
     data class TestResultater(val testResultater: List<TestResultat>) : AutoTesterOutput()
-    data class Lenker(val urlFulltResultat: URL, val urlBrot: URL, val urlAggreggeringTR: URL) :
-        AutoTesterOutput()
+    data class Lenker(
+        val urlFulltResultat: URL,
+        val urlBrot: URL,
+        val urlAggregeringTR: URL,
+        val urlAggregeringSK: URL,
+        val urlAggregeringSide: URL
+    ) : AutoTesterOutput()
   }
 
   class AutoTesterOutputDeserializer : JsonDeserializer<AutoTesterOutput>() {
@@ -140,7 +155,9 @@ class AutoTesterClient(
             AutoTesterOutput.Lenker(
                 URL(node["urlFulltResultat"].asText()),
                 URL(node["urlBrot"].asText()),
-                URL(node["urlAggreggeringTR"].asText()))
+                URL(node["urlAggregeringTR"].asText()),
+                URL(node["urlAggregeringSK"].asText()),
+                URL(node["urlAggergeringSide"].asText()))
         else -> throw RuntimeException("Ukjent output fra AutoTester")
       }
     }
@@ -175,6 +192,8 @@ class AutoTesterClient(
   enum class ResultatUrls {
     urlFulltResultat,
     urlBrot,
-    urlAggreggeringTR
+    urlAggreggeringTR,
+    urlAggregeringSK,
+    urlAggergeringSide
   }
 }
