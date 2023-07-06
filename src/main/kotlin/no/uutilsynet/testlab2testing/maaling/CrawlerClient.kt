@@ -66,14 +66,22 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
             logger.error(
                 "feilet da jeg forsøkte å starte crawling for løysing ${loeysing.id}", exception)
             CrawlResultat.Feilet(
-                exception.message ?: "start crawling feilet", loeysing, Instant.now())
+                exception.message ?: "start crawling feilet", loeysing.url, loeysing, Instant.now())
           }
 
-  fun getStatus(crawlResultat: CrawlResultat.IkkeFerdig): Result<CrawlStatus> = runCatching {
-    val response =
-        restTemplate.getForObject(crawlResultat.statusUrl.toURI(), CrawlStatus::class.java)!!
-    response
-  }
+  fun getStatus(crawlResultat: CrawlResultat.IkkeFerdig): Result<CrawlStatus> =
+      runCatching {
+            val response =
+                restTemplate.getForObject(
+                    crawlResultat.statusUrl.toURI(), CrawlStatus::class.java)!!
+            response
+          }
+          .recoverCatching { exception ->
+            logger.error(
+                "feilet da jeg forsøkte å hente status crawling ${crawlResultat.statusUrl.toURI()} for ${crawlResultat.loeysing.namn}",
+                exception)
+            CrawlStatus.Failed("Feil henting av status")
+          }
 }
 
 data class CrawlerOutput(val url: String, val title: String)
