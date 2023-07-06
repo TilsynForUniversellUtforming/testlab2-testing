@@ -97,13 +97,11 @@ class AutoTesterClient(
         runCatching {
           when (resultatType) {
             ResultatUrls.urlAggreggeringTR ->
-                fetchResultatAggregering<AggregertResultatTestregel>(
-                    lenker.urlAggregeringTR.toURI())
+                fetchResultatAggregering(lenker.urlAggregeringTR.toURI(), resultatType)
             ResultatUrls.urlAggregeringSK ->
-                fetchResultatAggregering<AggregertResultatSuksesskriterium>(
-                    lenker.urlAggregeringSK.toURI())
-            ResultatUrls.urlAggergeringSide ->
-                fetchResultatAggregering<AggregertResultatSide>(lenker.urlAggregeringSide.toURI())
+                fetchResultatAggregering(lenker.urlAggregeringSK.toURI(), resultatType)
+            ResultatUrls.urlAggregeringSide ->
+                fetchResultatAggregering(lenker.urlAggregeringSide.toURI(), resultatType)
             ResultatUrls.urlFulltResultat -> fetchResultatDetaljert(lenker.urlFulltResultat.toURI())
             ResultatUrls.urlBrot -> fetchResultatDetaljert(lenker.urlBrot.toURI())
           }
@@ -120,12 +118,26 @@ class AutoTesterClient(
             "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
   }
 
-  private fun <T : AutotesterTestresultat> fetchResultatAggregering(
-      uri: URI
+  private fun fetchResultatAggregering(
+      uri: URI,
+      resultatType: ResultatUrls
   ): List<AutotesterTestresultat> {
-    return restTemplate.getForObject(uri, Array<AutotesterTestresultat>::class.java)?.toList()
+    return restTemplate.getForObject(uri, getAggregationClass(resultatType))?.toList()
         ?: throw RuntimeException(
             "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
+  }
+
+  private fun getAggregationClass(
+      resultatType: ResultatUrls
+  ): Class<out Array<out AutotesterTestresultat>> {
+    val returnCLass =
+        when (resultatType) {
+          ResultatUrls.urlAggreggeringTR -> Array<AggregertResultatTestregel>::class.java
+          ResultatUrls.urlAggregeringSK -> Array<AggregertResultatSuksesskriterium>::class.java
+          ResultatUrls.urlAggregeringSide -> Array<AggregertResultatSide>::class.java
+          else -> Array<AggregertResultatTestregel>::class.java
+        }
+    return returnCLass
   }
 
   data class CustomStatus(val testaSider: Int, val talSider: Int)
@@ -194,6 +206,6 @@ class AutoTesterClient(
     urlBrot,
     urlAggreggeringTR,
     urlAggregeringSK,
-    urlAggergeringSide
+    urlAggregeringSide
   }
 }
