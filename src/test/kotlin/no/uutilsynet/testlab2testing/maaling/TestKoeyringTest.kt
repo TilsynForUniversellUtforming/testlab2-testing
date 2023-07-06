@@ -459,7 +459,9 @@ class TestKoeyringTest {
                   AutoTesterClient.AutoTesterOutput.Lenker(
                       URL("https://fullt.resultat"),
                       URL("https://brot.resultat"),
-                      URL("https://aggregering.resultat"))),
+                      URL("https://aggregering.resultat"),
+                      URL("https://aggregeringSK.resultat"),
+                      URL("https://aggregeringSide.resultat"))),
               TestKoeyring.Ferdig::class.java),
           Arguments.of(
               AutoTesterClient.AzureFunctionResponse.Failed("401 Unauthorized"),

@@ -63,7 +63,9 @@ object TestConstants {
           AutoTesterClient.AutoTesterOutput.Lenker(
               URL("https://fullt.resultat"),
               URL("https://brot.resultat"),
-              URL("https://aggregering.resultat")))
+              URL("https://aggregering.resultat"),
+              URL("https://aggregeringSK.resultat"),
+              URL("https://aggregeringSide.resultat")))
 
   val testKoeyring2 =
       TestKoeyring.Ferdig(
@@ -74,7 +76,9 @@ object TestConstants {
           AutoTesterClient.AutoTesterOutput.Lenker(
               URL("https://fullt.resultat"),
               URL("https://brot.resultat"),
-              URL("https://aggregering.resultat")))
+              URL("https://aggregering.resultat"),
+              URL("https://aggregeringSK.resultat"),
+              URL("https://aggregeringSide.resultat")))
 
   val testKoeyringList = listOf(testKoeyring, testKoeyring2)
 }
