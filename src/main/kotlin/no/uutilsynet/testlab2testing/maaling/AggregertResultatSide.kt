@@ -8,7 +8,7 @@ data class AggregertResultatSide(
     val loeysing: Loeysing,
     val sideUrl: URL,
     val sideNivaa: Int,
-    val gjennomsnittligBruddProsentTR: Int,
+    val gjennomsnittligBruddProsentTR: Double,
     val talElementSamsvar: Int,
     val talElementBrot: Int,
     val talElementVarsel: Int
