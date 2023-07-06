@@ -36,6 +36,7 @@ sealed class CrawlResultat {
 
   data class Feilet(
       val feilmelding: String,
+      val statusUrl: URL?,
       override val loeysing: Loeysing,
       override val sistOppdatert: Instant
   ) : CrawlResultat()
@@ -56,6 +57,7 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
               if (newStatus.output.isEmpty()) {
                 CrawlResultat.Feilet(
                     "Crawling av ${crawlResultat.loeysing.url} feilet. Output fra crawleren var en tom liste.",
+                    crawlResultat.statusUrl,
                     crawlResultat.loeysing,
                     Instant.now())
               } else {
@@ -68,11 +70,13 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
           is CrawlStatus.Failed ->
               CrawlResultat.Feilet(
                   "Crawling av ${crawlResultat.loeysing.url} feilet.",
+                  crawlResultat.statusUrl,
                   crawlResultat.loeysing,
                   Instant.now())
           is CrawlStatus.Terminated ->
               CrawlResultat.Feilet(
                   "Crawling av ${crawlResultat.loeysing.url} ble avbrutt.",
+                  crawlResultat.statusUrl,
                   crawlResultat.loeysing,
                   Instant.now())
         }

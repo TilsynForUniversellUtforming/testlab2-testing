@@ -399,7 +399,13 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 URI(rs.getString("status_url")).toURL(), loeysing, sistOppdatert, framgang)
           }
           "feilet" -> {
-            CrawlResultat.Feilet(rs.getString("feilmelding"), loeysing, sistOppdatert)
+            var statusUrl: URL? = null
+            val statusUrlDB = rs.getString("status_url")
+            if (statusUrlDB != null) {
+              statusUrl = URL(statusUrlDB)
+            }
+
+            CrawlResultat.Feilet(rs.getString("feilmelding"), statusUrl, loeysing, sistOppdatert)
           }
           "ferdig" -> {
             val nettsider = mutableListOf<URL>()
