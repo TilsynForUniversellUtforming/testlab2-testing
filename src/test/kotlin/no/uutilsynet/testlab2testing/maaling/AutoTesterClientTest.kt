@@ -75,7 +75,7 @@ class AutoTesterClientTest {
     @Test
     fun completedWithURLs() {
       val jsonString =
-          """{"runtimeStatus":"Completed", "output": {"urlFulltResultat": "https://fullt.resultat.no", "urlBrot": "https://brot.resultat.no","urlAggreggeringTR": "https://aggregeringTR.resultat.no"}}"""
+          """{"runtimeStatus":"Completed", "output": {"urlFulltResultat": "https://fullt.resultat.no", "urlBrot": "https://brot.resultat.no","urlAggregeringTR": "https://aggregeringTR.resultat.no","urlAggregeringSK": "https://aggregeringSK.resultat.no","urlAggergeringSide": "https://aggregeringSide.resultat.no"}}"""
       val completed =
           objectMapper.readValue(jsonString, AutoTesterClient.AzureFunctionResponse::class.java)
       assertThat(completed)
