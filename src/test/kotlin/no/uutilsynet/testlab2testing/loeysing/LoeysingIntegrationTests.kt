@@ -8,8 +8,14 @@ import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestOrgNumme
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestUrl
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.samePropertyValuesAs
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,6 +24,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -25,7 +32,7 @@ class LoeysingIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val loeysingDAO: LoeysingDAO
 ) {
-  @AfterAll
+  @AfterEach
   fun cleanup() {
     loeysingDAO.jdbcTemplate.update(
         "delete from loeysing where namn = :namn", mapOf("namn" to loeysingTestName))
@@ -38,6 +45,19 @@ class LoeysingIntegrationTests(
     val locationPattern = """/v2/loeysing/\d+"""
     val location = restTemplate.postForLocation("/$versjon/loeysing", loeysingRequestBody)
     Assertions.assertThat(location.toString()).matches(locationPattern)
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = ["v2"])
+  @DisplayName("Skal kunne opprette en løsning")
+  fun createLoeysingDuplicate(versjon: String) {
+    val response =
+        restTemplate.postForEntity("/$versjon/loeysing", loeysingRequestBody, String::class.java)
+    assertThat(response.statusCode, Matchers.equalTo(HttpStatus.CREATED))
+
+    val duplicateResponse =
+        restTemplate.postForEntity("/$versjon/loeysing", loeysingRequestBody, String::class.java)
+    assertThat(duplicateResponse.statusCode, Matchers.equalTo(HttpStatus.BAD_REQUEST))
   }
 
   @Test
