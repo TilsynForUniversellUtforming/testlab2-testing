@@ -6,6 +6,8 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
+import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingRequestBody
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
@@ -21,26 +23,93 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
-import org.springframework.http.*
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MaalingIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
-    @Autowired val maalingDAO: MaalingDAO
+    @Autowired val maalingDAO: MaalingDAO,
+    @Autowired val loeysingDAO: LoeysingDAO,
+    @Autowired val utvalDAO: UtvalDAO
 ) {
+  val utvalTestName = "testutval"
+
   @AfterAll
   fun cleanup() {
     maalingDAO.jdbcTemplate.update(
         "delete from maalingv1 where navn = :navn", mapOf("navn" to maalingTestName))
+    maalingDAO.jdbcTemplate.update(
+        "delete from utval where namn = :namn", mapOf("namn" to utvalTestName))
   }
 
   @Test
-  @DisplayName("det er mulig å opprette nye målinger")
+  @DisplayName("vi kan opprette en ny måling basert på ei liste med løsninger")
   fun postNewMaaling() {
     val locationPattern = """/v1/maalinger/\d+"""
     val location = restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
     assertThat(location.toString(), matchesPattern(locationPattern))
+  }
+
+  @Test
+  @DisplayName("vi kan opprette en ny måling basert på et utvalg")
+  fun postNewMaalingWithUtvalg() {
+    val loeysingIdList = loeysingDAO.getLoeysingIdList()
+    val utvalId = utvalDAO.createUtval(utvalTestName, loeysingIdList)
+    val requestBody =
+        mapOf(
+            "navn" to maalingTestName,
+            "utvalId" to utvalId,
+            "testregelIdList" to testRegelList.map { it.id },
+            "crawlParameters" to mapOf("maxLinksPerPage" to 10, "numLinksToSelect" to 10))
+    val location = restTemplate.postForLocation("/v1/maalinger", requestBody)
+    val locationPattern = """/v1/maalinger/\d+"""
+    assertThat(location, notNullValue())
+    assertThat(location.toString(), matchesPattern(locationPattern))
+  }
+
+  @Test
+  @DisplayName(
+      "når vi oppretter en ny måling, men mangler utvalg og løsninger, så får vi en feilmelding")
+  fun postNewMaalingWithoutUtvalgAndLoeysing() {
+    val requestBody =
+        mapOf(
+            "navn" to maalingTestName,
+            "testregelIdList" to testRegelList.map { it.id },
+            "crawlParameters" to mapOf("maxLinksPerPage" to 10, "numLinksToSelect" to 10))
+    val response = restTemplate.postForEntity("/v1/maalinger", requestBody, String::class.java)
+    assertThat(response.statusCode, equalTo(HttpStatus.BAD_REQUEST))
+  }
+
+  @Test
+  @DisplayName(
+      "når vi har opprettet en måling basert på et utvalg, så skal utvalgs-ID lagres på målingen")
+  fun saveUtvalId() {
+    val loeysingIdList = loeysingDAO.getLoeysingIdList()
+    val utvalId = utvalDAO.createUtval(utvalTestName, loeysingIdList)
+    val requestBody =
+        mapOf(
+            "navn" to maalingTestName,
+            "utvalId" to utvalId,
+            "testregelIdList" to testRegelList.map { it.id },
+            "crawlParameters" to mapOf("maxLinksPerPage" to 10, "numLinksToSelect" to 10))
+    val location = restTemplate.postForLocation("/v1/maalinger", requestBody)
+    assertThat(location, notNullValue())
+
+    val maalingId = location!!.path.split("/").last().toInt()
+    val utvalIdFromDatabase =
+        maalingDAO.jdbcTemplate
+            .query("select utval_id from maalingv1 where id = :id", mapOf("id" to maalingId)) {
+                rs,
+                _ ->
+              rs.getInt("utval_id")
+            }
+            .first()
+
+    assertThat(utvalIdFromDatabase, equalTo(utvalId.getOrThrow()))
   }
 
   @Test
