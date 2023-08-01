@@ -53,7 +53,7 @@ class LoeysingResource(val loeysingDAO: LoeysingDAO, val maalingDAO: MaalingDAO)
     val namn = validateNamn(loeysing.namn).getOrThrow()
     val orgnummer = validateOrgNummer(loeysing.orgnummer).getOrThrow()
     val foundLoeysing = loeysingDAO.findLoeysingByURLAndOrgnummer(loeysing.url, orgnummer)
-    if (foundLoeysing != null) {
+    if (foundLoeysing != null && foundLoeysing.id != loeysing.id) {
       logger.error("Løysing med id ${loeysing.id} er duplikat")
       throw IllegalArgumentException(
           "Løysing med url ${loeysing.url} og orgnr $orgnummer finnes allereie")
