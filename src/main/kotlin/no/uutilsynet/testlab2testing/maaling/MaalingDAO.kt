@@ -5,6 +5,8 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loeysingRowMapper
+import no.uutilsynet.testlab2testing.loeysing.Utval
+import no.uutilsynet.testlab2testing.loeysing.UtvalId
 import no.uutilsynet.testlab2testing.maaling.Maaling.*
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
@@ -58,17 +60,22 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     val createMaalingSql =
         """
-      insert into Maalingv1 (navn, status, max_links_per_page, num_links_to_select) 
-      values (:navn, :status, :maxLinksPerPage, :numLinksToSelect)
+      insert into Maalingv1 (navn, status, max_links_per_page, num_links_to_select, utval_id) 
+      values (:navn, :status, :maxLinksPerPage, :numLinksToSelect, :utvalId)
       returning id
     """
             .trimIndent()
-    fun createMaalingParams(navn: String, crawlParameters: CrawlParameters) =
+    fun createMaalingParams(
+        navn: String,
+        crawlParameters: CrawlParameters,
+        utvalId: UtvalId? = null
+    ) =
         mapOf(
             "navn" to navn,
             "status" to "planlegging",
             "maxLinksPerPage" to crawlParameters.maxLinksPerPage,
-            "numLinksToSelect" to crawlParameters.numLinksToSelect)
+            "numLinksToSelect" to crawlParameters.numLinksToSelect,
+            "utvalId" to utvalId)
 
     val selectMaalingSql =
         "select id, navn, status, max_links_per_page, num_links_to_select from Maalingv1"
@@ -99,6 +106,33 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         "update MaalingV1 set navn = :navn, status = :status, max_links_per_page = :maxLinksPerPage, num_links_to_select = :numLinksToSelect where id = :id"
 
     val deleteMaalingSql = "delete from MaalingV1 where id = :id"
+  }
+
+  @Transactional
+  fun createMaaling(
+      navn: String,
+      utval: Utval,
+      testregelIdList: List<Int>,
+      crawlParameters: CrawlParameters
+  ): Int {
+    val idMaaling =
+        jdbcTemplate.queryForObject(
+            createMaalingSql,
+            createMaalingParams(navn, crawlParameters, utval.id),
+            Int::class.java)!!
+    val loeysingIdList = utval.loeysingar.map { it.id }
+    for (idLoeysing: Int in loeysingIdList) {
+      jdbcTemplate.update(
+          "insert into MaalingLoeysing (idMaaling, idLoeysing) values (:idMaaling, :idLoeysing)",
+          mapOf("idMaaling" to idMaaling, "idLoeysing" to idLoeysing))
+    }
+    for (idTestregel: Int in testregelIdList) {
+      jdbcTemplate.update(
+          "insert into Maaling_Testregel (maaling_id, testregel_id) values (:maaling_id, :testregel_id)",
+          mapOf("maaling_id" to idMaaling, "testregel_id" to idTestregel))
+    }
+
+    return idMaaling
   }
 
   @Transactional
