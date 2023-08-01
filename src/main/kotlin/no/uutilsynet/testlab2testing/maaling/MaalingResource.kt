@@ -11,6 +11,8 @@ import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.dto.Testregel.Companion.validateTestRegel
 import no.uutilsynet.testlab2testing.firstMessage
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
+import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
+import no.uutilsynet.testlab2testing.loeysing.UtvalId
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateParameters
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.toSingleResult
@@ -26,12 +28,15 @@ class MaalingResource(
     val maalingDAO: MaalingDAO,
     val loeysingDAO: LoeysingDAO,
     val testregelDAO: TestregelDAO,
+    val utvalDAO: UtvalDAO,
     val crawlerClient: CrawlerClient,
     val autoTesterClient: AutoTesterClient,
 ) {
+
   data class NyMaalingDTO(
       val navn: String,
-      val loeysingIdList: List<Int>,
+      val loeysingIdList: List<Int>?,
+      val utvalId: UtvalId?,
       val testregelIdList: List<Int>,
       val crawlParameters: CrawlParameters?
   )
@@ -43,17 +48,33 @@ class MaalingResource(
       runCatching {
             val navn = validateNamn(dto.navn).getOrThrow()
             val loeysingIdList =
-                validateIdList(
-                        dto.loeysingIdList, loeysingDAO.getLoeysingIdList(), "loeysingIdList")
-                    .getOrThrow()
+                dto.loeysingIdList?.let {
+                  validateIdList(
+                          dto.loeysingIdList, loeysingDAO.getLoeysingIdList(), "loeysingIdList")
+                      .getOrThrow()
+                }
+            val utvalIdList = utvalDAO.getUtvalList().getOrDefault(emptyList()).map { it.id }
+            val utvalId =
+                dto.utvalId?.let {
+                  validateIdList(listOf(it), utvalIdList, "utvalId").getOrThrow().first()
+                }
             val testregelIdList =
                 validateIdList(
                         dto.testregelIdList,
                         testregelDAO.getTestregelList().map { it.id },
                         "testregelIdList")
                     .getOrThrow()
-            maalingDAO.createMaaling(
-                navn, loeysingIdList, testregelIdList, dto.crawlParameters ?: CrawlParameters())
+
+            if (utvalId != null) {
+              val utval = utvalDAO.getUtval(utvalId).getOrThrow()
+              maalingDAO.createMaaling(
+                  navn, utval, testregelIdList, dto.crawlParameters ?: CrawlParameters())
+            } else if (loeysingIdList != null) {
+              maalingDAO.createMaaling(
+                  navn, loeysingIdList, testregelIdList, dto.crawlParameters ?: CrawlParameters())
+            } else {
+              throw IllegalArgumentException("utvalId eller loeysingIdList må være gitt")
+            }
           }
           .fold(
               { id ->
