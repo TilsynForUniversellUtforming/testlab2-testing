@@ -11,6 +11,7 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
@@ -104,5 +105,24 @@ class UtvalResourceTest(
       assertThat(it.id).isNotNull()
       assertThat(it.namn).isNotBlank()
     }
+  }
+
+  @DisplayName("vi skal kunne slette eit utval")
+  @Test
+  fun slettUtval() {
+    val loeysingList =
+        listOf(
+            Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827"),
+            Loeysing.External("Digdir", "https://www.digdir.no", "991825827"))
+    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingList))
+    assert(response.statusCode.is2xxSuccessful)
+
+    val location = response.headers.location
+
+    val deleteResponse = restTemplate.exchange(location, HttpMethod.DELETE, null, Unit::class.java)
+    assertThat(deleteResponse.statusCode.is2xxSuccessful).isTrue()
+
+    val getResponse = restTemplate.getForEntity(location, Utval::class.java)
+    assertThat(getResponse.statusCode.is2xxSuccessful).isFalse()
   }
 }
