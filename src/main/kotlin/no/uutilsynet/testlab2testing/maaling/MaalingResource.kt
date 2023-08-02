@@ -64,14 +64,14 @@ class MaalingResource(
                         testregelDAO.getTestregelList().map { it.id },
                         "testregelIdList")
                     .getOrThrow()
+            val crawlParameters = dto.crawlParameters ?: CrawlParameters()
+            crawlParameters.validateParameters()
 
             if (utvalId != null) {
               val utval = utvalDAO.getUtval(utvalId).getOrThrow()
-              maalingDAO.createMaaling(
-                  navn, utval, testregelIdList, dto.crawlParameters ?: CrawlParameters())
+              maalingDAO.createMaaling(navn, utval, testregelIdList, crawlParameters)
             } else if (loeysingIdList != null) {
-              maalingDAO.createMaaling(
-                  navn, loeysingIdList, testregelIdList, dto.crawlParameters ?: CrawlParameters())
+              maalingDAO.createMaaling(navn, loeysingIdList, testregelIdList, crawlParameters)
             } else {
               throw IllegalArgumentException("utvalId eller loeysingIdList må være gitt")
             }
@@ -385,6 +385,8 @@ class MaalingResource(
 
   private fun EditMaalingDTO.toMaaling(): Maaling {
     val navn = validateNamn(this.navn).getOrThrow()
+    this.crawlParameters?.validateParameters()
+
     val maaling =
         maalingDAO.getMaaling(this.id) ?: throw IllegalArgumentException("Måling finnes ikkje")
     return when (maaling) {
