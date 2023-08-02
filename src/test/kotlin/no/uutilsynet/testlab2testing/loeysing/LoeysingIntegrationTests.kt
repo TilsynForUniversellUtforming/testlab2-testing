@@ -69,11 +69,14 @@ class LoeysingIntegrationTests(
     Assertions.assertThat(deletedLoeysing).isNull()
   }
 
+  fun randomString(): String =
+      (1..24).map { (('a'..'z') + ('A'..'Z') + ('0'..'9')).random() }.joinToString("")
+
   @Test
   @DisplayName("Skal oppdatere løsning")
   fun updateLoeysing() {
     val oldName = "test_skal_slettes_1"
-    val oldUrl = "https://www.w3.org/"
+    val oldUrl = "https://www.${randomString()}.org/"
     val oldOrgnummer = "012345674"
 
     val location =
@@ -103,7 +106,7 @@ class LoeysingIntegrationTests(
     restTemplate.postForEntity("/v2/loeysing", loeysingRequestBody, String::class.java)
 
     val oldName = "test_skal_slettes_1"
-    val oldUrl = "https://www.w3.org/"
+    val oldUrl = "https://www.${randomString()}.org/"
     val oldOrgnummer = "012345674"
 
     val location =
