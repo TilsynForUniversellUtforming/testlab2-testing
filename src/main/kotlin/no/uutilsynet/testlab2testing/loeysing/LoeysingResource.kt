@@ -7,14 +7,23 @@ import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateOrgNummer
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 
 fun locationForId(id: Int): URI = URI("/v2/loeysing/${id}")
 
 @RestController
 @RequestMapping("v2/loeysing")
-class LoeysingResourceV2(val loeysingDAO: LoeysingDAO, val maalingDAO: MaalingDAO) {
+class LoeysingResource(val loeysingDAO: LoeysingDAO, val maalingDAO: MaalingDAO) {
+  val logger = LoggerFactory.getLogger(LoeysingResource::class.java)
 
   @PostMapping
   fun createLoeysing(@RequestBody external: Loeysing.External) =
@@ -22,6 +31,13 @@ class LoeysingResourceV2(val loeysingDAO: LoeysingDAO, val maalingDAO: MaalingDA
             val namn = validateNamn(external.namn).getOrThrow()
             val url = URL(external.url)
             val orgnummer = validateOrgNummer(external.orgnummer).getOrThrow()
+
+            val foundLoeysing = loeysingDAO.findLoeysingByURLAndOrgnummer(url, orgnummer)
+            if (foundLoeysing != null) {
+              logger.error("Løysing med url $url og orgnr $orgnummer er duplikat")
+              throw IllegalArgumentException(
+                  "Løysing med url $url og orgnr $orgnummer finnes allereie")
+            }
 
             loeysingDAO.createLoeysing(namn, url, orgnummer)
           }
@@ -36,6 +52,12 @@ class LoeysingResourceV2(val loeysingDAO: LoeysingDAO, val maalingDAO: MaalingDA
   fun updateLoeysing(@RequestBody loeysing: Loeysing) = executeWithErrorHandling {
     val namn = validateNamn(loeysing.namn).getOrThrow()
     val orgnummer = validateOrgNummer(loeysing.orgnummer).getOrThrow()
+    val foundLoeysing = loeysingDAO.findLoeysingByURLAndOrgnummer(loeysing.url, orgnummer)
+    if (foundLoeysing != null && foundLoeysing.id != loeysing.id) {
+      logger.error("Løysing med id ${loeysing.id} er duplikat")
+      throw IllegalArgumentException(
+          "Løysing med url ${loeysing.url} og orgnr $orgnummer finnes allereie")
+    }
     loeysingDAO.updateLoeysing(Loeysing(loeysing.id, namn, loeysing.url, orgnummer))
   }
 

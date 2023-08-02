@@ -8,16 +8,21 @@ import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestOrgNumme
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestUrl
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.samePropertyValuesAs
-import org.junit.jupiter.api.*
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -25,19 +30,30 @@ class LoeysingIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val loeysingDAO: LoeysingDAO
 ) {
-  @AfterAll
+  @AfterEach
   fun cleanup() {
     loeysingDAO.jdbcTemplate.update(
         "delete from loeysing where namn = :namn", mapOf("namn" to loeysingTestName))
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = ["v2"])
+  @Test
   @DisplayName("Skal kunne opprette en løsning")
-  fun createLoeysing(versjon: String) {
+  fun createLoeysing() {
     val locationPattern = """/v2/loeysing/\d+"""
-    val location = restTemplate.postForLocation("/$versjon/loeysing", loeysingRequestBody)
+    val location = restTemplate.postForLocation("/v2/loeysing", loeysingRequestBody)
     Assertions.assertThat(location.toString()).matches(locationPattern)
+  }
+
+  @Test
+  @DisplayName("Skal kunne opprette en løsning")
+  fun createLoeysingDuplicate() {
+    val response =
+        restTemplate.postForEntity("/v2/loeysing", loeysingRequestBody, String::class.java)
+    assertThat(response.statusCode, Matchers.equalTo(HttpStatus.CREATED))
+
+    val duplicateResponse =
+        restTemplate.postForEntity("/v2/loeysing", loeysingRequestBody, String::class.java)
+    assertThat(duplicateResponse.statusCode, Matchers.equalTo(HttpStatus.BAD_REQUEST))
   }
 
   @Test
@@ -53,22 +69,20 @@ class LoeysingIntegrationTests(
     Assertions.assertThat(deletedLoeysing).isNull()
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = ["v2"])
+  @Test
   @DisplayName("Skal oppdatere løsning")
-  fun updateLoeysing(versjon: String) {
+  fun updateLoeysing() {
     val oldName = "test_skal_slettes_1"
     val oldUrl = "https://www.w3.org/"
     val oldOrgnummer = "012345674"
 
     val location =
         restTemplate.postForLocation(
-            "/$versjon/loeysing",
-            mapOf("namn" to oldName, "url" to oldUrl, "orgnummer" to oldOrgnummer))
+            "/v2/loeysing", mapOf("namn" to oldName, "url" to oldUrl, "orgnummer" to oldOrgnummer))
     val loeysing = restTemplate.getForObject(location, Loeysing::class.java)
 
     restTemplate.exchange(
-        "/$versjon/loeysing",
+        "/v2/loeysing",
         HttpMethod.PUT,
         HttpEntity(
             loeysing.copy(
@@ -80,9 +94,35 @@ class LoeysingIntegrationTests(
     val (_, namn, url, orgnummer) = restTemplate.getForObject(location, Loeysing::class.java)
     Assertions.assertThat(namn).isEqualTo(loeysingTestName)
     Assertions.assertThat(url.toString()).isEqualTo(loeysingTestUrl)
-    if (orgnummer != null) {
-      Assertions.assertThat(orgnummer).isEqualTo(loeysingTestOrgNummer)
-    }
+    Assertions.assertThat(orgnummer).isEqualTo(loeysingTestOrgNummer)
+  }
+
+  @Test
+  @DisplayName("Skal kunne endre en løsning til å ha samme url og orgnr")
+  fun updateLoeysingDuplicate() {
+    restTemplate.postForEntity("/v2/loeysing", loeysingRequestBody, String::class.java)
+
+    val oldName = "test_skal_slettes_1"
+    val oldUrl = "https://www.w3.org/"
+    val oldOrgnummer = "012345674"
+
+    val location =
+        restTemplate.postForLocation(
+            "/v2/loeysing", mapOf("namn" to oldName, "url" to oldUrl, "orgnummer" to oldOrgnummer))
+    val loeysing = restTemplate.getForObject(location, Loeysing::class.java)
+
+    val duplicateResponse =
+        restTemplate.exchange(
+            "/v2/loeysing",
+            HttpMethod.PUT,
+            HttpEntity(
+                loeysing.copy(
+                    namn = loeysingTestName,
+                    url = URL(loeysingTestUrl),
+                    orgnummer = loeysingTestOrgNummer)),
+            String::class.java)
+
+    assertThat(duplicateResponse.statusCode, Matchers.equalTo(HttpStatus.BAD_REQUEST))
   }
 
   @Test
