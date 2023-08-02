@@ -99,5 +99,11 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
     return utvalDAO.getUtvalList().getOrThrow()
   }
 
+  @DeleteMapping("{id}")
+  fun deleteUtval(@PathVariable id: Int): ResponseEntity<Unit> {
+    utvalDAO.deleteUtval(id)
+    return ResponseEntity.ok().build()
+  }
+
   data class NyttUtval(val namn: String, val loeysingList: List<Loeysing.External>)
 }
