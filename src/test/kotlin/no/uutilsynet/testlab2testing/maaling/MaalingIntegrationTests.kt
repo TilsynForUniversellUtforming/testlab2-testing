@@ -9,16 +9,26 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
+import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingRequestBody
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
 import no.uutilsynet.testlab2testing.maaling.TestConstants.testRegelList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.greaterThan
+import org.hamcrest.Matchers.instanceOf
+import org.hamcrest.Matchers.matchesPattern
+import org.hamcrest.Matchers.notNullValue
+import org.hamcrest.Matchers.oneOf
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -62,6 +72,7 @@ class MaalingIntegrationTests(
     val requestBody =
         mapOf(
             "navn" to maalingTestName,
+            "datoStart" to maalingDateStart,
             "utvalId" to utvalId,
             "testregelIdList" to testRegelList.map { it.id },
             "crawlParameters" to mapOf("maxLinksPerPage" to 10, "numLinksToSelect" to 10))
@@ -93,6 +104,7 @@ class MaalingIntegrationTests(
     val requestBody =
         mapOf(
             "navn" to maalingTestName,
+            "datoStart" to maalingDateStart,
             "utvalId" to utvalId,
             "testregelIdList" to testRegelList.map { it.id },
             "crawlParameters" to mapOf("maxLinksPerPage" to 10, "numLinksToSelect" to 10))
@@ -212,6 +224,7 @@ class MaalingIntegrationTests(
         maalingDAO
             .createMaaling(
                 "TestMåling",
+                maalingDateStart,
                 loeysingList.map { it.id },
                 testRegelList.map { it.id },
                 CrawlParameters())
@@ -250,6 +263,7 @@ class MaalingIntegrationTests(
         maalingDAO
             .createMaaling(
                 "TestMåling",
+                maalingDateStart,
                 loeysingList.map { it.id },
                 testRegelList.map { it.id },
                 CrawlParameters())
@@ -305,10 +319,19 @@ class MaalingIntegrationTests(
       val crawlParameters = CrawlParameters()
       val id =
           maalingDAO.createMaaling(
-              maalingTestName, listOf(1), testRegelList.map { it.id }, crawlParameters)
+              maalingTestName,
+              maalingDateStart,
+              listOf(1),
+              testRegelList.map { it.id },
+              crawlParameters)
       val planlagtMaaling =
           Maaling.Planlegging(
-              id, maalingTestName, listOf(uutilsynetLoeysing), testRegelList, crawlParameters)
+              id,
+              maalingTestName,
+              maalingDateStart,
+              listOf(uutilsynetLoeysing),
+              testRegelList,
+              crawlParameters)
       val sistOppdatert = Instant.now()
       val crawlingMaaling =
           Maaling.toCrawling(

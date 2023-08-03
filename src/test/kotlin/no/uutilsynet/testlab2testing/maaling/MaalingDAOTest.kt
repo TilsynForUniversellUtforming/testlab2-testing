@@ -4,6 +4,7 @@ import java.net.URL
 import java.time.Instant
 import no.uutilsynet.testlab2testing.maaling.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
+import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
 import no.uutilsynet.testlab2testing.maaling.TestConstants.testRegelList
 import org.assertj.core.api.Assertions.assertThat
@@ -216,7 +217,11 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
   private fun createTestMaaling(name: String = maalingTestName): Maaling.Planlegging =
       maalingDAO
           .createMaaling(
-              name, loeysingList.map { it.id }, testRegelList.map { it.id }, CrawlParameters())
+              name,
+              maalingDateStart,
+              loeysingList.map { it.id },
+              testRegelList.map { it.id },
+              CrawlParameters())
           .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
 
   private fun saveMaalingWithStatusKvalitetssikring(name: String = maalingTestName): Int {
@@ -237,6 +242,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
         maalingDAO
             .createMaaling(
                 name,
+                maalingDateStart,
                 loeysingList.map { it.id },
                 testRegelList.map { it.id },
                 CrawlParameters(maxLinksPerPage, 30))

@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.maaling
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
+import java.time.LocalDate
 import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 
@@ -16,11 +17,13 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 sealed class Maaling {
   abstract val id: Int
   abstract val navn: String
+  abstract val datoStart: LocalDate
   abstract val aksjoner: List<Aksjon>
 
   data class Planlegging(
       override val id: Int,
       override val navn: String,
+      override val datoStart: LocalDate,
       val loeysingList: List<Loeysing>,
       val testregelList: List<Testregel>,
       val crawlParameters: CrawlParameters
@@ -32,6 +35,7 @@ sealed class Maaling {
   data class Crawling(
       override val id: Int,
       override val navn: String,
+      override val datoStart: LocalDate,
       val crawlResultat: List<CrawlResultat>
   ) : Maaling() {
     override val aksjoner: List<Aksjon>
@@ -41,6 +45,7 @@ sealed class Maaling {
   data class Kvalitetssikring(
       override val id: Int,
       override val navn: String,
+      override val datoStart: LocalDate,
       val crawlResultat: List<CrawlResultat>,
       override val aksjoner: List<Aksjon> =
           listOf(
@@ -51,6 +56,7 @@ sealed class Maaling {
   data class Testing(
       override val id: Int,
       override val navn: String,
+      override val datoStart: LocalDate,
       val testKoeyringar: List<TestKoeyring>,
       override val aksjoner: List<Aksjon> = listOf(),
   ) : Maaling()
@@ -58,6 +64,7 @@ sealed class Maaling {
   data class TestingFerdig(
       override val id: Int,
       override val navn: String,
+      override val datoStart: LocalDate,
       val testKoeyringar: List<TestKoeyring>,
   ) : Maaling() {
     override val aksjoner: List<Aksjon>
@@ -69,24 +76,28 @@ sealed class Maaling {
       val allAreDone =
           maaling.testKoeyringar.all { it is TestKoeyring.Ferdig || it is TestKoeyring.Feila }
       return if (allAreDone) {
-        TestingFerdig(maaling.id, maaling.navn, maaling.testKoeyringar)
+        TestingFerdig(maaling.id, maaling.navn, maaling.datoStart, maaling.testKoeyringar)
       } else {
         null
       }
     }
 
     fun toCrawling(planlagtMaaling: Planlegging, crawlResultat: List<CrawlResultat>): Crawling =
-        Crawling(planlagtMaaling.id, planlagtMaaling.navn, crawlResultat)
+        Crawling(planlagtMaaling.id, planlagtMaaling.navn, planlagtMaaling.datoStart, crawlResultat)
 
     fun toKvalitetssikring(crawlingMaaling: Crawling): Kvalitetssikring? =
         if (crawlingMaaling.crawlResultat.any { it is CrawlResultat.IkkeFerdig }) {
           null
         } else {
-          Kvalitetssikring(crawlingMaaling.id, crawlingMaaling.navn, crawlingMaaling.crawlResultat)
+          Kvalitetssikring(
+              crawlingMaaling.id,
+              crawlingMaaling.navn,
+              crawlingMaaling.datoStart,
+              crawlingMaaling.crawlResultat)
         }
 
     fun toTesting(maaling: Kvalitetssikring, testKoeyringar: List<TestKoeyring>): Testing {
-      return Testing(maaling.id, maaling.navn, testKoeyringar)
+      return Testing(maaling.id, maaling.navn, maaling.datoStart, testKoeyringar)
     }
 
     fun findFerdigeTestKoeyringar(
@@ -108,7 +119,12 @@ sealed class Maaling {
 }
 
 // Enkel representasjon av måling som brukes i utlisting av alle målinger.
-data class MaalingListElement(val id: Int, val navn: String, val status: String)
+data class MaalingListElement(
+    val id: Int,
+    val navn: String,
+    val datoStart: LocalDate,
+    val status: String
+)
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "id")
 @JsonSubTypes(

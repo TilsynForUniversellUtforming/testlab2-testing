@@ -1,8 +1,15 @@
 package no.uutilsynet.testlab2testing.maaling
 
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.concurrent.TimeUnit.SECONDS
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateNamn
@@ -20,7 +27,15 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("v1/maalinger")
@@ -67,11 +82,15 @@ class MaalingResource(
             val crawlParameters = dto.crawlParameters ?: CrawlParameters()
             crawlParameters.validateParameters()
 
+            val localDateNorway = LocalDate.now(ZoneId.of("Europe/Oslo"))
+
             if (utvalId != null) {
               val utval = utvalDAO.getUtval(utvalId).getOrThrow()
-              maalingDAO.createMaaling(navn, utval, testregelIdList, crawlParameters)
+              maalingDAO.createMaaling(
+                  navn, localDateNorway, utval, testregelIdList, crawlParameters)
             } else if (loeysingIdList != null) {
-              maalingDAO.createMaaling(navn, loeysingIdList, testregelIdList, crawlParameters)
+              maalingDAO.createMaaling(
+                  navn, localDateNorway, loeysingIdList, testregelIdList, crawlParameters)
             } else {
               throw IllegalArgumentException("utvalId eller loeysingIdList må være gitt")
             }
@@ -273,7 +292,10 @@ class MaalingResource(
 
     val updated =
         Maaling.Testing(
-            id = maaling.id, navn = maaling.navn, testKoeyringar = rest.plus(testKoeyringar))
+            id = maaling.id,
+            navn = maaling.navn,
+            datoStart = maaling.datoStart,
+            testKoeyringar = rest.plus(testKoeyringar))
     withContext(Dispatchers.IO) { maalingDAO.save(updated) }.getOrThrow()
     ResponseEntity.ok().build()
   }
