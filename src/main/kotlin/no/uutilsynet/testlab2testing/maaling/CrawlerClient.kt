@@ -37,7 +37,11 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
         maaling.crawlResultat.map {
           if (it.loeysing.id in loeysingIdList) start(it.loeysing, crawlParameters) else it
         }
-    return Maaling.Crawling(id = maaling.id, navn = maaling.navn, crawlResultat = crawlResultat)
+    return Maaling.Crawling(
+        id = maaling.id,
+        navn = maaling.navn,
+        datoStart = maaling.datoStart,
+        crawlResultat = crawlResultat)
   }
 
   private fun start(loeysing: Loeysing, crawlParameters: CrawlParameters): CrawlResultat =

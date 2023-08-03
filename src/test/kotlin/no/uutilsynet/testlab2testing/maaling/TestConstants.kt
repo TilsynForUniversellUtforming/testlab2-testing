@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URL
 import java.time.Instant
+import java.time.LocalDate
 import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.TestConstants
@@ -21,9 +22,12 @@ object TestConstants {
 
   val testRegelList = listOf(testregel)
 
+  val maalingDateStart = LocalDate.of(2023, 1, 1)
+
   val maalingRequestBody =
       mapOf(
           "navn" to maalingTestName,
+          "datoStart" to maalingDateStart,
           "loeysingIdList" to loeysingList.map { it.id },
           "testregelIdList" to testRegelList.map { it.id },
           "crawlParameters" to mapOf("maxLinksPerPage" to 10, "numLinksToSelect" to 10))

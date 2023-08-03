@@ -4,24 +4,34 @@ import java.net.URI
 import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
+import java.time.LocalDate
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loeysingRowMapper
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
-import no.uutilsynet.testlab2testing.maaling.Maaling.*
+import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
+import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
+import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
+import no.uutilsynet.testlab2testing.maaling.Maaling.Testing
+import no.uutilsynet.testlab2testing.maaling.Maaling.TestingFerdig
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.deleteMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingLoeysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingRowmapper
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByDateSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByIdSql
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingSql
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByStatus
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.testResultatRowMapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingWithCrawlParameters
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.*
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.crawling
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.kvalitetssikring
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.planlegging
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing_ferdig
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
 import org.slf4j.LoggerFactory
@@ -39,6 +49,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   data class MaalingDTO(
       val id: Int,
       val navn: String,
+      val datoStart: LocalDate,
       val status: MaalingStatus,
       val maxLinksPerPage: Int,
       val numLinksToSelect: Int
@@ -61,26 +72,33 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     val createMaalingSql =
         """
-      insert into Maalingv1 (navn, status, max_links_per_page, num_links_to_select, utval_id) 
-      values (:navn, :status, :maxLinksPerPage, :numLinksToSelect, :utvalId)
+      insert into Maalingv1 (navn, status, dato_start, max_links_per_page, num_links_to_select, utval_id) 
+      values (:navn, :status, :dato_start, :maxLinksPerPage, :numLinksToSelect, :utvalId)
       returning id
     """
             .trimIndent()
     fun createMaalingParams(
         navn: String,
+        datoStart: LocalDate,
         crawlParameters: CrawlParameters,
         utvalId: UtvalId? = null
     ) =
         mapOf(
             "navn" to navn,
+            "dato_start" to datoStart,
             "status" to "planlegging",
             "maxLinksPerPage" to crawlParameters.maxLinksPerPage,
             "numLinksToSelect" to crawlParameters.numLinksToSelect,
             "utvalId" to utvalId)
 
     val selectMaalingSql =
-        "select id, navn, status, max_links_per_page, num_links_to_select from Maalingv1"
+        "select id, navn, dato_start, status, max_links_per_page, num_links_to_select from Maalingv1"
+
+    val selectMaalingByDateSql = "$selectMaalingSql order by dato_start"
+
     val selectMaalingByIdSql = "$selectMaalingSql where id = :id"
+
+    val selectMaalingByStatus = "$selectMaalingSql where status in (:statusList)"
 
     val maalingLoeysingSql =
         """ 
@@ -112,6 +130,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Transactional
   fun createMaaling(
       navn: String,
+      datoStart: LocalDate,
       utval: Utval,
       testregelIdList: List<Int>,
       crawlParameters: CrawlParameters
@@ -119,7 +138,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val idMaaling =
         jdbcTemplate.queryForObject(
             createMaalingSql,
-            createMaalingParams(navn, crawlParameters, utval.id),
+            createMaalingParams(navn, datoStart, crawlParameters, utval.id),
             Int::class.java)!!
     val loeysingIdList = utval.loeysingar.map { it.id }
     for (idLoeysing: Int in loeysingIdList) {
@@ -139,13 +158,16 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Transactional
   fun createMaaling(
       navn: String,
+      datoStart: LocalDate,
       loyesingIds: List<Int>,
       testregelIdList: List<Int>,
       crawlParameters: CrawlParameters
   ): Int {
     val idMaaling =
         jdbcTemplate.queryForObject(
-            createMaalingSql, createMaalingParams(navn, crawlParameters), Int::class.java)!!
+            createMaalingSql,
+            createMaalingParams(navn, datoStart, crawlParameters),
+            Int::class.java)!!
     for (idLoeysing: Int in loyesingIds) {
       jdbcTemplate.update(
           "insert into MaalingLoeysing (idMaaling, idLoeysing) values (:idMaaling, :idLoeysing)",
@@ -173,14 +195,16 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getMaalingList(): List<MaalingListElement> =
       jdbcTemplate
-          .query(selectMaalingSql, maalingRowmapper)
-          .map { MaalingListElement(it.id, it.navn, it.status.status) }
+          .query(selectMaalingByDateSql, maalingRowmapper)
+          .map { MaalingListElement(it.id, it.navn, it.datoStart, it.status.status) }
           .also { logger.debug("hentet ${it.size} målinger fra databasen") }
 
   fun getMaalingListByStatus(statusList: List<MaalingStatus>): List<Maaling> {
-    val sql = "$selectMaalingSql where status in (:statusList)"
     return jdbcTemplate
-        .query(sql, mapOf("statusList" to statusList.map { it.status }), maalingRowmapper)
+        .query(
+            selectMaalingByStatus,
+            mapOf("statusList" to statusList.map { it.status }),
+            maalingRowmapper)
         .map { it.toMaaling() }
         .also {
           logger.debug(
@@ -198,6 +222,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         Planlegging(
             id,
             navn,
+            datoStart,
             loeysingList,
             testregelList,
             CrawlParameters(maxLinksPerPage, numLinksToSelect))
@@ -206,18 +231,18 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       kvalitetssikring -> {
         val crawlResultat = getCrawlResultatForMaaling(id)
         if (status == crawling) {
-          Crawling(this.id, this.navn, crawlResultat)
+          Crawling(this.id, this.navn, this.datoStart, crawlResultat)
         } else {
-          Kvalitetssikring(id, navn, crawlResultat)
+          Kvalitetssikring(id, navn, datoStart, crawlResultat)
         }
       }
       testing,
       testing_ferdig -> {
         val testKoeyringar = getTestKoeyringarForMaaling(id)
         if (status == testing) {
-          Testing(id, navn, testKoeyringar)
+          Testing(id, navn, datoStart, testKoeyringar)
         } else {
-          TestingFerdig(id, navn, testKoeyringar)
+          TestingFerdig(id, navn, datoStart, testKoeyringar)
         }
       }
     }
