@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
+import java.net.URI
 import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
@@ -49,7 +50,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val testResultatRowMapper: (ResultSet, Int) -> TestResultat = { rs: ResultSet, _: Int ->
       TestResultat(
           rs.getString("suksesskriterium").split(","),
-          URL(rs.getString("nettside")),
+          URI(rs.getString("nettside")).toURL(),
           rs.getString("testregel"),
           rs.getInt("side_nivaa"),
           rs.getTimestamp("test_vart_utfoert").toLocalDateTime(),
@@ -275,13 +276,13 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           return when (status) {
             "ikkje_starta" -> {
               TestKoeyring.IkkjeStarta(
-                  crawlResultatForLoeysing, sistOppdatert, URL(rs.getString("status_url")))
+                  crawlResultatForLoeysing, sistOppdatert, URI(rs.getString("status_url")).toURL())
             }
             "starta" -> {
               TestKoeyring.Starta(
                   crawlResultatForLoeysing,
                   sistOppdatert,
-                  URL(rs.getString("status_url")),
+                  URI(rs.getString("status_url")).toURL(),
                   Framgang(rs.getInt("lenker_testa"), crawlResultatForLoeysing.nettsider.size))
             }
             "feila" ->
@@ -294,12 +295,13 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               val urlBrot = rs.getString("url_brot")
               val lenker =
                   if (urlFulltResultat != null)
-                      AutoTesterClient.AutoTesterOutput.Lenker(URL(urlFulltResultat), URL(urlBrot))
+                      AutoTesterClient.AutoTesterOutput.Lenker(
+                          URI(urlFulltResultat).toURL(), URI(urlBrot).toURL())
                   else null
               TestKoeyring.Ferdig(
                   crawlResultatForLoeysing,
                   sistOppdatert,
-                  URL(rs.getString("status_url")),
+                  URI(rs.getString("status_url")).toURL(),
                   testResultat,
                   lenker)
             }
@@ -348,7 +350,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         Loeysing(
             rs.getInt("lid"),
             rs.getString("namn"),
-            URL(rs.getString("url")),
+            URI(rs.getString("url")).toURL(),
             rs.getString("orgnummer"))
     val sistOppdatert = rs.getTimestamp("sist_oppdatert").toInstant()
     val status = rs.getString("status")
@@ -359,7 +361,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           "ikke_ferdig" -> {
             val framgang = Framgang(rs.getInt("lenker_crawla"), rs.getInt("max_links_per_page"))
             CrawlResultat.IkkeFerdig(
-                URL(rs.getString("status_url")), loeysing, sistOppdatert, framgang)
+                URI(rs.getString("status_url")).toURL(), loeysing, sistOppdatert, framgang)
           }
           "feilet" -> {
             CrawlResultat.Feilet(rs.getString("feilmelding"), loeysing, sistOppdatert)
@@ -371,13 +373,14 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             while (isSameCrawlResultat(rs, id)) {
               val nettside = rs.getString("nettside_url")
               if (nettside != null) {
-                nettsider.add(URL(nettside))
+                nettsider.add(URI(nettside).toURL())
               } else {
                 logger.warn("nettside mangler for crawlresultat $id med status `ferdig`.")
               }
               rs.next()
             }
-            CrawlResultat.Ferdig(nettsider.toList(), URL(statusUrl), loeysing, sistOppdatert)
+            CrawlResultat.Ferdig(
+                nettsider.toList(), URI(statusUrl).toURL(), loeysing, sistOppdatert)
           }
           else -> throw RuntimeException("ukjent status lagret i databasen: $status")
         }

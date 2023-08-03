@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.loeysing
 
-import java.net.URL
+import java.net.URI
 import java.sql.ResultSet
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -69,7 +69,7 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
           Loeysing(
               rs.getInt("loeysing_id"),
               rs.getString("loeysing_namn"),
-              URL(rs.getString("loeysing_url")),
+              URI(rs.getString("loeysing_url")).toURL(),
               rs.getString("loeysing_orgnummer")))
     } while (rs.next())
     return utval.copy(loeysingar = loeysingar.toList())
