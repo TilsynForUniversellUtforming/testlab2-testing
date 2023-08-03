@@ -94,7 +94,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val selectMaalingSql =
         "select id, navn, dato_start, status, max_links_per_page, num_links_to_select from Maalingv1"
 
-    val selectMaalingByDateSql = "$selectMaalingSql order by dato_start"
+    val selectMaalingByDateSql = "$selectMaalingSql order by dato_start desc"
 
     val selectMaalingByIdSql = "$selectMaalingSql where id = :id"
 
