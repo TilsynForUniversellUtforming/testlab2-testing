@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.maaling
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import java.net.URI
 import java.net.URL
 import java.time.Instant
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
@@ -53,7 +54,7 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
                     Instant.now())
               } else {
                 CrawlResultat.Ferdig(
-                    newStatus.output.map { crawlerOutput -> URL(crawlerOutput.url) },
+                    newStatus.output.map { crawlerOutput -> URI(crawlerOutput.url).toURL() },
                     crawlResultat.statusUrl,
                     crawlResultat.loeysing,
                     Instant.now())

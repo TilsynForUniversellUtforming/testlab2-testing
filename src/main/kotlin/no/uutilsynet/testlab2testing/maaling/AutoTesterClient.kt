@@ -124,7 +124,8 @@ class AutoTesterClient(
                 })
         node.has("urlFulltResultat") ->
             AutoTesterOutput.Lenker(
-                URL(node["urlFulltResultat"].asText()), URL(node["urlBrot"].asText()))
+                URI(node["urlFulltResultat"].asText()).toURL(),
+                URI(node["urlBrot"].asText()).toURL())
         else -> throw RuntimeException("Ukjent output fra AutoTester")
       }
     }

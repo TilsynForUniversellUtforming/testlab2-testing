@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.common
 
+import java.net.URI
 import java.net.URL
 import no.uutilsynet.testlab2testing.maaling.Status
 
@@ -58,5 +59,5 @@ fun validateURL(s: String): Result<URL> = runCatching {
       } else {
         "https://$s"
       }
-  URL(withProtocol)
+  URI(withProtocol).toURL()
 }
