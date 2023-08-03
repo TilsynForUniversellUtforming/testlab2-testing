@@ -5,6 +5,7 @@ import java.net.URL
 import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.testregel.TestConstants
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.startsWith
@@ -45,7 +46,8 @@ class CrawlerClientTest {
                 TestConstants.testregelTestKravTilSamsvar,
             ))
     val maaling =
-        Maaling.Planlegging(1, "testmåling", loeysingList, testregelList, CrawlParameters())
+        Maaling.Planlegging(
+            1, "testmåling", maalingDateStart, loeysingList, testregelList, CrawlParameters())
     runBlocking {
       val oppdatertMaaling = crawlerClient.start(maaling)
 

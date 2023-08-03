@@ -5,12 +5,17 @@ import java.time.Instant
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateStatus
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateParameters
+import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingDateStart
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasSize
-import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.assertThrows
 
 class MaalingKtTest {
   @Nested
@@ -111,6 +116,7 @@ class MaalingKtTest {
           Maaling.Testing(
               1,
               "navn",
+              maalingDateStart,
               listOf(
                   TestKoeyring.Starta(
                       crawlResultatForUUTilsynet,
@@ -129,6 +135,7 @@ class MaalingKtTest {
           Maaling.Testing(
               1,
               "navn",
+              maalingDateStart,
               listOf(
                   TestKoeyring.Ferdig(
                       crawlResultatForUUTilsynet,
@@ -147,6 +154,7 @@ class MaalingKtTest {
           Maaling.Testing(
               1,
               "navn",
+              maalingDateStart,
               listOf(
                   TestKoeyring.Feila(crawlResultatForDigdir, Instant.now(), "autotester krasja"),
                   TestKoeyring.Ferdig(
@@ -167,6 +175,7 @@ class MaalingKtTest {
         Maaling.TestingFerdig(
             1000,
             "test",
+            maalingDateStart,
             listOf(
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(

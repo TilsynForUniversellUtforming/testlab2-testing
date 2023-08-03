@@ -7,6 +7,7 @@ import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.maaling.TestConstants.crawlResultat
+import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.maaling.TestConstants.testKoeyringList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
@@ -63,8 +64,7 @@ class MaalingResourceMockedTest {
     val id = 1
     val status = MaalingResource.StatusDTO("testing", null)
     val maaling =
-        Maaling.Kvalitetssikring(
-            id = id, navn = "Testmaaling", crawlResultat = listOf(crawlResultat))
+        Maaling.Kvalitetssikring(id, "Testmaaling", maalingDateStart, listOf(crawlResultat))
 
     `when`(maalingDAO.getMaaling(id)).thenReturn(maaling)
     `when`(testregelDAO.getTestreglarForMaaling(id))
@@ -81,11 +81,10 @@ class MaalingResourceMockedTest {
   fun restartTesting() {
     val id = 1
     val status = MaalingResource.StatusDTO("testing", listOf(uutilsynetLoeysing.id))
-    val maaling =
-        Maaling.TestingFerdig(id = id, navn = "Testmaaling", testKoeyringar = testKoeyringList)
+    val maaling = Maaling.TestingFerdig(id, "Testmaaling", maalingDateStart, testKoeyringList)
 
     val maalingTesting =
-        Maaling.Testing(id = id, navn = "Testmaaling", testKoeyringar = listOf(testKoeyringList[0]))
+        Maaling.Testing(id, "Testmaaling", maalingDateStart, listOf(testKoeyringList[0]))
 
     val testregelList = listOf(Testregel(1, "krav", "QW-ACT-R12", "samsvar"))
 
