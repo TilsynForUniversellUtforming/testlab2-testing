@@ -23,6 +23,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   object TestregelParams {
     val createTestregelSql =
         "insert into testregel (krav, testregelNoekkel, kravtilsamsvar) values (:krav, :testregelNoekkel, :kravtilsamsvar) returning id"
+
     fun createTestregelParams(krav: String, testregelNoekkel: String, kravtilsamsvar: String) =
         mapOf(
             "krav" to krav,
@@ -37,6 +38,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     val updateTestregelSql =
         " update testregel set krav = :krav, testregelNoekkel = :testregelNoekkel, kravtilsamsvar = :kravtilsamsvar where id = :id"
+
     fun updateTestregelParams(testregel: Testregel) =
         mapOf(
             "id" to testregel.id,

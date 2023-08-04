@@ -110,6 +110,7 @@ class AutoTesterClient(
   @JsonDeserialize(using = AutoTesterOutputDeserializer::class)
   sealed class AutoTesterOutput {
     data class TestResultater(val testResultater: List<TestResultat>) : AutoTesterOutput()
+
     data class Lenker(val urlFulltResultat: URL, val urlBrot: URL) : AutoTesterOutput()
   }
 
@@ -143,10 +144,15 @@ class AutoTesterClient(
       JsonSubTypes.Type(value = AzureFunctionResponse.Other::class, name = "Suspended"))
   sealed class AzureFunctionResponse {
     object Pending : AzureFunctionResponse()
+
     data class Running(val customStatus: CustomStatus?) : AzureFunctionResponse()
+
     data class Completed(val output: AutoTesterOutput) : AzureFunctionResponse()
+
     data class Failed(val output: String) : AzureFunctionResponse()
+
     object Terminated : AzureFunctionResponse()
+
     data class Other(val output: String?) : AzureFunctionResponse()
   }
 

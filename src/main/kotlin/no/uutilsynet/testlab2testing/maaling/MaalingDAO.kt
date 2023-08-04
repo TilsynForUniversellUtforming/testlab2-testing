@@ -77,6 +77,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       returning id
     """
             .trimIndent()
+
     fun createMaalingParams(
         navn: String,
         datoStart: LocalDate,
@@ -110,6 +111,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .trimIndent()
 
     val updateMaalingSql = "update MaalingV1 set navn = :navn, status = :status where id = :id"
+
     fun updateMaalingParams(maaling: Maaling): Map<String, Any> {
       val status =
           when (maaling) {
@@ -121,6 +123,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           }
       return mapOf("navn" to maaling.navn, "status" to status, "id" to maaling.id)
     }
+
     val updateMaalingWithCrawlParameters =
         "update MaalingV1 set navn = :navn, status = :status, max_links_per_page = :maxLinksPerPage, num_links_to_select = :numLinksToSelect where id = :id"
 

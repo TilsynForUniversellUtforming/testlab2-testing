@@ -23,6 +23,7 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   object LoeysingParams {
     val createLoeysingSql =
         "insert into loeysing (namn, url, orgnummer) values (:namn, :url, :orgnummer) returning id"
+
     fun createLoeysingParams(namn: String, url: URL, orgnummer: String?) =
         mapOf("namn" to namn, "url" to url.toString(), "orgnummer" to orgnummer)
 
@@ -32,6 +33,7 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     val updateLoeysingSql =
         "update loeysing set namn = :namn, url = :url, orgnummer = :orgnummer where id = :id"
+
     fun updateLoeysingParams(loeysing: Loeysing) =
         mapOf(
             "namn" to loeysing.namn,
@@ -40,6 +42,7 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "id" to loeysing.id)
 
     val deleteLoeysingSql = "delete from loeysing where id = :id"
+
     fun deleteLoeysingParams(id: Int) = mapOf("id" to id)
 
     val loeysingRowMapper = DataClassRowMapper.newInstance(Loeysing::class.java)

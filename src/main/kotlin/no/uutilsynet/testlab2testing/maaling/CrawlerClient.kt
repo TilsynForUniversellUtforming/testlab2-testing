@@ -90,8 +90,12 @@ data class CustomStatus(val lenkerCrawla: Int, val maxLenker: Int)
     JsonSubTypes.Type(value = CrawlStatus.Terminated::class, name = "Terminated"))
 sealed class CrawlStatus {
   object Pending : CrawlStatus()
+
   data class Running(val customStatus: CustomStatus?) : CrawlStatus()
+
   data class Completed(val output: List<CrawlerOutput>) : CrawlStatus()
+
   data class Failed(val output: String) : CrawlStatus()
+
   object Terminated : CrawlStatus()
 }
