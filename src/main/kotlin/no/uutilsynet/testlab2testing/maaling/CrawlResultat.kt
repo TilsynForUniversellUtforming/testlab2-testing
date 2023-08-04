@@ -22,12 +22,14 @@ sealed class CrawlResultat {
       override val sistOppdatert: Instant,
       val framgang: Framgang
   ) : CrawlResultat()
+
   data class Ferdig(
       val nettsider: List<URL>,
       val statusUrl: URL,
       override val loeysing: Loeysing,
       override val sistOppdatert: Instant
   ) : CrawlResultat()
+
   data class Feilet(
       val feilmelding: String,
       override val loeysing: Loeysing,

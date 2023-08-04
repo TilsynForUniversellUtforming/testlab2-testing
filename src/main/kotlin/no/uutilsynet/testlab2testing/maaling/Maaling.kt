@@ -136,9 +136,12 @@ sealed class Aksjon(val data: Map<String, String>) {
   val metode = "PUT"
 
   data class StartCrawling(val href: URI) : Aksjon(mapOf("status" to "crawling"))
+
   data class RestartCrawling(val href: URI) :
       Aksjon(mapOf("status" to "crawling", "loeysingIdList" to "[]"))
+
   data class StartTesting(val href: URI) : Aksjon(mapOf("status" to "testing"))
+
   data class RestartTesting(val href: URI) :
       Aksjon(mapOf("status" to "testing", "loeysingIdList" to "[]"))
 }
