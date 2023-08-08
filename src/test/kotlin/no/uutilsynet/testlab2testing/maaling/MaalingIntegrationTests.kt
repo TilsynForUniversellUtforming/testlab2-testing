@@ -315,6 +315,40 @@ class MaalingIntegrationTests(
       }
     }
 
+    @DisplayName("så får man hentet nettsidene som er crawlet")
+    @Test
+    fun hasHasCorrectNumberOfNettsider() {
+      val (key, _) = createMaaling()
+
+      val urlListType = object : ParameterizedTypeReference<List<URL>>() {}
+
+      val urlList: ResponseEntity<List<URL>> =
+          restTemplate.exchange(
+              "/v1/maalinger/$key/crawlresultat/nettsider",
+              HttpMethod.GET,
+              HttpEntity.EMPTY,
+              urlListType)!!
+
+      Assertions.assertThat(urlList.body!!).containsExactly(URL(uutilsynetLoeysing.url, "/"))
+    }
+
+    @DisplayName("så får man hentet nettsidene som er crawlet for gitt løysing")
+    @Test
+    fun hasHasCorrectNumberOfNettsiderWithLoeysing() {
+      val (key, _) = createMaaling()
+
+      val urlListType = object : ParameterizedTypeReference<List<URL>>() {}
+
+      val urlList: ResponseEntity<List<URL>> =
+          restTemplate.exchange(
+              "/v1/maalinger/$key/crawlresultat/nettsider?loeysingId=${uutilsynetLoeysing.id}",
+              HttpMethod.GET,
+              HttpEntity.EMPTY,
+              urlListType)!!
+
+      Assertions.assertThat(urlList.body!!).containsExactly(URL(uutilsynetLoeysing.url, "/"))
+    }
+
     private fun createMaaling(): Pair<Int, Instant> {
       val crawlParameters = CrawlParameters()
       val id =
@@ -353,7 +387,14 @@ data class MaalingDTO(
     val id: Int,
     val navn: String,
     val loeysingList: List<Loeysing>?, // hvis status er 'planlegging'
-    val crawlResultat: List<CrawlResultat>?, // hvis status er 'crawling'
+    val crawlResultat: List<CrawlResultatFerdigDTO>?, // hvis status er 'crawling'
     val status: String,
     val aksjoner: List<Aksjon>
+)
+
+data class CrawlResultatFerdigDTO(
+    val loeysing: Loeysing,
+    val sistOppdatert: Instant,
+    val antallNettsider: Int,
+    val statusUrl: URL,
 )
