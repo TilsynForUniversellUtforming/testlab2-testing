@@ -20,7 +20,7 @@ sealed class TestKoeyring {
   abstract val sistOppdatert: Instant
 
   data class IkkjeStarta(
-      @JsonIgnore override val crawlResultat: CrawlResultat.Ferdig,
+      override val crawlResultat: CrawlResultat.Ferdig,
       override val sistOppdatert: Instant,
       val statusURL: URL
   ) : TestKoeyring() {
@@ -29,7 +29,7 @@ sealed class TestKoeyring {
   }
 
   data class Starta(
-      @JsonIgnore override val crawlResultat: CrawlResultat.Ferdig,
+      override val crawlResultat: CrawlResultat.Ferdig,
       override val sistOppdatert: Instant,
       val statusURL: URL,
       val framgang: Framgang
@@ -39,7 +39,7 @@ sealed class TestKoeyring {
   }
 
   data class Ferdig(
-      @JsonIgnore override val crawlResultat: CrawlResultat.Ferdig,
+      override val crawlResultat: CrawlResultat.Ferdig,
       override val sistOppdatert: Instant,
       val statusURL: URL,
       @JsonIgnore val testResultat: List<TestResultat>,
@@ -50,7 +50,7 @@ sealed class TestKoeyring {
   }
 
   data class Feila(
-      @JsonIgnore override val crawlResultat: CrawlResultat.Ferdig,
+      override val crawlResultat: CrawlResultat.Ferdig,
       override val sistOppdatert: Instant,
       val feilmelding: String
   ) : TestKoeyring() {

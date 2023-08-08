@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
@@ -24,11 +25,14 @@ sealed class CrawlResultat {
   ) : CrawlResultat()
 
   data class Ferdig(
-      val nettsider: List<URL>,
+      @JsonIgnore val nettsider: List<URL>,
       val statusUrl: URL,
       override val loeysing: Loeysing,
       override val sistOppdatert: Instant
-  ) : CrawlResultat()
+  ) : CrawlResultat() {
+    val antallNettsider
+      get() = this.nettsider.size
+  }
 
   data class Feilet(
       val feilmelding: String,

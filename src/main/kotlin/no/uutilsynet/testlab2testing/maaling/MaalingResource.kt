@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
+import java.net.URL
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -193,10 +194,13 @@ class MaalingResource(
               })
           ?: ResponseEntity.notFound().build()
 
-  @GetMapping("{id}/crawlresultat")
-  fun getCrawlResultatList(@PathVariable id: Int): ResponseEntity<List<CrawlResultat>> =
+  @GetMapping("{maalingId}/crawlresultat/nettsider")
+  fun getCrawlResultatNettsider(
+      @PathVariable maalingId: Int,
+      @RequestParam loeysingId: Int?
+  ): ResponseEntity<List<URL>> =
       maalingDAO
-          .getMaaling(id)
+          .getMaaling(maalingId)
           ?.let { maaling: Maaling ->
             when (maaling) {
               is Maaling.Planlegging -> emptyList()
@@ -204,6 +208,19 @@ class MaalingResource(
               is Maaling.Kvalitetssikring -> maaling.crawlResultat
               is Maaling.Testing -> maaling.testKoeyringar.map { it.crawlResultat }
               is Maaling.TestingFerdig -> maaling.testKoeyringar.map { it.crawlResultat }
+            }
+          }
+          ?.let { crawlResultat ->
+            if (loeysingId != null) {
+              crawlResultat.filter { it.loeysing.id == loeysingId }
+            } else {
+              crawlResultat
+            }
+          }
+          ?.flatMap {
+            when (it) {
+              is CrawlResultat.Ferdig -> it.nettsider
+              else -> emptyList()
             }
           }
           ?.let { ResponseEntity.ok(it) }
