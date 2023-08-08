@@ -407,8 +407,10 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               }
               rs.next()
             }
+
+            val nettsideList = nettsider.toList()
             CrawlResultat.Ferdig(
-                nettsider.toList(), URI(statusUrl).toURL(), loeysing, sistOppdatert)
+                nettsideList, nettsideList.size, URI(statusUrl).toURL(), loeysing, sistOppdatert)
           }
           else -> throw RuntimeException("ukjent status lagret i databasen: $status")
         }

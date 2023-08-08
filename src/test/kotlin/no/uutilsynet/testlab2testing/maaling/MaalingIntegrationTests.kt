@@ -339,6 +339,7 @@ class MaalingIntegrationTests(
               listOf(
                   CrawlResultat.Ferdig(
                       listOf(URL(uutilsynetLoeysing.url, "/")),
+                      1,
                       URL("https://status.uri"),
                       uutilsynetLoeysing,
                       sistOppdatert)))
@@ -353,7 +354,14 @@ data class MaalingDTO(
     val id: Int,
     val navn: String,
     val loeysingList: List<Loeysing>?, // hvis status er 'planlegging'
-    val crawlResultat: List<CrawlResultat>?, // hvis status er 'crawling'
+    val crawlResultat: List<CrawlResultatFerdigDTO>?, // hvis status er 'crawling'
     val status: String,
     val aksjoner: List<Aksjon>
+)
+
+data class CrawlResultatFerdigDTO(
+    val loeysing: Loeysing,
+    val sistOppdatert: Instant,
+    val antallNettsider: Int,
+    val statusUrl: URL,
 )

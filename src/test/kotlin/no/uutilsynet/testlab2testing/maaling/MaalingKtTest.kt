@@ -98,12 +98,14 @@ class MaalingKtTest {
     private val crawlResultatForUUTilsynet =
         CrawlResultat.Ferdig(
             listOf(URL("https://www.uutilsynet.no")),
+            1,
             URL("https://www.status.url"),
             TestConstants.uutilsynetLoeysing,
             Instant.now())
     private val crawlResultatForDigdir =
         CrawlResultat.Ferdig(
             listOf(URL("https://www.digdir.no")),
+            1,
             URL("https://www.status.url"),
             TestConstants.digdirLoeysing,
             Instant.now())
@@ -180,6 +182,7 @@ class MaalingKtTest {
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(
                         listOf(URL("https://www.uutilsynet.no")),
+                        1,
                         URL("https://www.status.url"),
                         TestConstants.uutilsynetLoeysing,
                         Instant.now()),
@@ -191,6 +194,7 @@ class MaalingKtTest {
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(
                         listOf(URL("https://www.digdir.no")),
+                        1,
                         URL("https://www.status.url"),
                         TestConstants.digdirLoeysing,
                         Instant.now()),

@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
@@ -24,7 +25,8 @@ sealed class CrawlResultat {
   ) : CrawlResultat()
 
   data class Ferdig(
-      val nettsider: List<URL>,
+      @JsonIgnore val nettsider: List<URL>,
+      val antallNettsider: Int,
       val statusUrl: URL,
       override val loeysing: Loeysing,
       override val sistOppdatert: Instant
@@ -57,6 +59,7 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
               } else {
                 CrawlResultat.Ferdig(
                     newStatus.output.map { crawlerOutput -> URI(crawlerOutput.url).toURL() },
+                    newStatus.output.count(),
                     crawlResultat.statusUrl,
                     crawlResultat.loeysing,
                     Instant.now())
