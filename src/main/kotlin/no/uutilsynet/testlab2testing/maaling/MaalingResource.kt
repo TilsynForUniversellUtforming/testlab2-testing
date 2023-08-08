@@ -4,7 +4,7 @@ import java.net.URL
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.util.concurrent.TimeUnit.HOURS
+import java.util.concurrent.TimeUnit.SECONDS
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -329,7 +329,7 @@ class MaalingResource(
 
   data class StatusDTO(val status: String, val loeysingIdList: List<Int>?)
 
-  @Scheduled(fixedDelay = 30, timeUnit = HOURS)
+  @Scheduled(fixedDelay = 30, timeUnit = SECONDS)
   fun updateStatuses() {
     val alleMaalinger: List<Maaling> =
         maalingDAO.getMaalingListByStatus(listOf(MaalingStatus.crawling, MaalingStatus.testing))
