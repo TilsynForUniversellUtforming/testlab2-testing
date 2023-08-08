@@ -39,7 +39,6 @@ object TestConstants {
               URL("https://www.uutilsynet.no/"),
               URL("https://www.uutilsynet.no/underside/1"),
               URL("https://www.uutilsynet.no/underside/2")),
-          3,
           URL("https://status.url"),
           uutilsynetLoeysing,
           Instant.now())
@@ -50,7 +49,6 @@ object TestConstants {
               URL("https://www.digdir.no/"),
               URL("https://www.digdir.no/underside/1"),
               URL("https://www.digdir.no/underside/2")),
-          3,
           URL("https://status.url"),
           digdirLoeysing,
           Instant.now())

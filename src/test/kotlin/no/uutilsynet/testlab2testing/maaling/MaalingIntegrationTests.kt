@@ -315,6 +315,23 @@ class MaalingIntegrationTests(
       }
     }
 
+    @DisplayName("så får man hentet nettsidene som er crawlet")
+    @Test
+    fun hasHasCorrectNumberOfNettsider() {
+      val (key, _) = createMaaling()
+
+      val urlListType = object : ParameterizedTypeReference<List<URL>>() {}
+
+      val urlList: ResponseEntity<List<URL>> =
+          restTemplate.exchange(
+              "/v1/maalinger/$key/crawlresultat/nettsider",
+              HttpMethod.GET,
+              HttpEntity.EMPTY,
+              urlListType)!!
+
+      Assertions.assertThat(urlList.body!!).containsExactly(URL(uutilsynetLoeysing.url, "/"))
+    }
+
     private fun createMaaling(): Pair<Int, Instant> {
       val crawlParameters = CrawlParameters()
       val id =
@@ -339,7 +356,6 @@ class MaalingIntegrationTests(
               listOf(
                   CrawlResultat.Ferdig(
                       listOf(URL(uutilsynetLoeysing.url, "/")),
-                      1,
                       URL("https://status.uri"),
                       uutilsynetLoeysing,
                       sistOppdatert)))

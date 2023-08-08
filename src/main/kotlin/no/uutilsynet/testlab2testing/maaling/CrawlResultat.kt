@@ -26,11 +26,13 @@ sealed class CrawlResultat {
 
   data class Ferdig(
       @JsonIgnore val nettsider: List<URL>,
-      val antallNettsider: Int,
       val statusUrl: URL,
       override val loeysing: Loeysing,
       override val sistOppdatert: Instant
-  ) : CrawlResultat()
+  ) : CrawlResultat() {
+    val antallNettsider
+      get() = this.nettsider.size
+  }
 
   data class Feilet(
       val feilmelding: String,
@@ -59,7 +61,6 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
               } else {
                 CrawlResultat.Ferdig(
                     newStatus.output.map { crawlerOutput -> URI(crawlerOutput.url).toURL() },
-                    newStatus.output.count(),
                     crawlResultat.statusUrl,
                     crawlResultat.loeysing,
                     Instant.now())

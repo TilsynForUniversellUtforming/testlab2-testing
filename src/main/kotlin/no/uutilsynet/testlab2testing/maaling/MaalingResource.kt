@@ -194,7 +194,7 @@ class MaalingResource(
               })
           ?: ResponseEntity.notFound().build()
 
-  @GetMapping("{maalingId}/crawlresultat")
+  @GetMapping("{maalingId}/crawlresultat/nettsider")
   fun getCrawlResultatNettsider(
       @PathVariable maalingId: Int,
       @RequestParam loeysingId: Int?
