@@ -325,7 +325,9 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               val lenker =
                   if (urlFulltResultat != null)
                       AutoTesterClient.AutoTesterOutput.Lenker(
-                          URI(urlFulltResultat).toURL(), URI(urlBrot).toURL(), URI(urlAggTR).toURL())
+                          URI(urlFulltResultat).toURL(),
+                          URI(urlBrot).toURL(),
+                          URI(urlAggTR).toURL())
                   else null
               TestKoeyring.Ferdig(
                   crawlResultatForLoeysing,

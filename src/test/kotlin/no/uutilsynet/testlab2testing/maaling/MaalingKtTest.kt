@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import java.net.URL
 
 class MaalingKtTest {
   @Nested
@@ -190,8 +189,7 @@ class MaalingKtTest {
                     AutoTesterClient.AutoTesterOutput.Lenker(
                         URI("https://fullt.resultat").toURL(),
                         URI("https://brot.resultat").toURL(),
-                        URI("https://brot.resultat").toURL()
-                    )),
+                        URI("https://brot.resultat").toURL())),
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(
                         listOf(URI("https://www.digdir.no").toURL()),

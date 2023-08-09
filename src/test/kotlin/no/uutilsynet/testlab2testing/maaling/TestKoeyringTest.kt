@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.maaling
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import java.time.Instant
 import java.util.stream.Stream
@@ -14,8 +11,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import org.junit.jupiter.params.provider.ValueSource
-import java.net.URL
 
 class TestKoeyringTest {
 
@@ -109,8 +104,9 @@ class TestKoeyringTest {
           Arguments.of(
               AutoTesterClient.AzureFunctionResponse.Completed(
                   AutoTesterClient.AutoTesterOutput.Lenker(
-                      URI("https://fullt.resultat").toURL(), URI("https://brot.resultat").toURL(), URI("https://aggregering.resultat").toURL()
-                  )),
+                      URI("https://fullt.resultat").toURL(),
+                      URI("https://brot.resultat").toURL(),
+                      URI("https://aggregering.resultat").toURL())),
               TestKoeyring.Ferdig::class.java),
           Arguments.of(
               AutoTesterClient.AzureFunctionResponse.Failed("401 Unauthorized"),

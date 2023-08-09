@@ -156,6 +156,7 @@ class AutoTesterClient(
   @JsonDeserialize(using = AutoTesterOutputDeserializer::class)
   sealed class AutoTesterOutput {
     data class TestResultater(val testResultater: List<TestResultat>) : AutoTesterOutput()
+
     data class Lenker(val urlFulltResultat: URL, val urlBrot: URL, val urlAggreggeringTR: URL) :
         AutoTesterOutput()
   }
