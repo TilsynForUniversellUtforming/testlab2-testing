@@ -3,7 +3,6 @@ package no.uutilsynet.testlab2testing.maaling
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
-import java.net.URL
 import no.uutilsynet.testlab2testing.maaling.TestConstants.statusURL
 import no.uutilsynet.testlab2testing.maaling.TestConstants.testRegelList
 import org.assertj.core.api.Assertions.assertThat
@@ -84,8 +83,8 @@ class AutoTesterClientTest {
       val output: AutoTesterClient.AutoTesterOutput.Lenker =
           (completed as AutoTesterClient.AzureFunctionResponse.Completed).output
               as AutoTesterClient.AutoTesterOutput.Lenker
-      assertThat(output.urlFulltResultat).isEqualTo(URL("https://fullt.resultat.no"))
-      assertThat(output.urlBrot).isEqualTo(URL("https://brot.resultat.no"))
+      assertThat(output.urlFulltResultat).isEqualTo(URI("https://fullt.resultat.no").toURL())
+      assertThat(output.urlBrot).isEqualTo(URI("https://brot.resultat.no").toURL())
     }
 
     @DisplayName("når responsen fra autotester er `Failed`, så skal det parses til responsklassen")
@@ -156,7 +155,8 @@ class AutoTesterClientTest {
         .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
         .andRespond(MockRestResponseCreators.withSuccess(jsonSuccess, MediaType.APPLICATION_JSON))
 
-    val testKoeyringIkkjeStarta = TestKoeyring.from(TestConstants.crawlResultat, URL(statusURL))
+    val testKoeyringIkkjeStarta =
+        TestKoeyring.from(TestConstants.crawlResultat, URI(statusURL).toURL())
     val response = autoTesterClient.updateStatus(testKoeyringIkkjeStarta)
 
     assertThat(response.isSuccess).isTrue
@@ -173,7 +173,8 @@ class AutoTesterClientTest {
         .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
         .andRespond(MockRestResponseCreators.withSuccess(jsonFailure, MediaType.APPLICATION_JSON))
 
-    val testKoeyringIkkjeStarta = TestKoeyring.from(TestConstants.crawlResultat, URL(statusURL))
+    val testKoeyringIkkjeStarta =
+        TestKoeyring.from(TestConstants.crawlResultat, java.net.URI(statusURL).toURL())
     val response = autoTesterClient.updateStatus(testKoeyringIkkjeStarta)
 
     assertThat(response.isFailure).isTrue

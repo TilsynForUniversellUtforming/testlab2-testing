@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.maaling
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.net.URL
+import java.net.URI
 import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
@@ -34,8 +34,8 @@ class CrawlerClientTest {
 
     val loeysingList =
         listOf(
-            Loeysing(1, "uutilsynet", URL("https://www.uutilsynet.no"), "123456785"),
-            Loeysing(2, "digdir", URL("https://www.digdir.no"), "123456785"))
+            Loeysing(1, "uutilsynet", URI("https://www.uutilsynet.no").toURL(), "123456785"),
+            Loeysing(2, "digdir", URI("https://www.digdir.no").toURL(), "123456785"))
 
     val testregelList =
         listOf(

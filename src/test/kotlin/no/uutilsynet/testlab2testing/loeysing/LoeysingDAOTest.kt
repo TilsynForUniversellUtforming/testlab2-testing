@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.loeysing
 
-import java.net.URL
+import java.net.URI
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestName
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestOrgNummer
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestUrl
@@ -77,7 +77,7 @@ class LoeysingDAOTest(@Autowired val loeysingDAO: LoeysingDAO) {
     Assertions.assertThat(oldLoeysing?.namn).isEqualTo(oldName)
     Assertions.assertThat(oldLoeysing?.url?.toString()).isEqualTo(oldUrl)
 
-    oldLoeysing?.copy(namn = loeysingTestName, url = URL(loeysingTestUrl))?.let {
+    oldLoeysing?.copy(namn = loeysingTestName, url = URI(loeysingTestUrl).toURL())?.let {
       loeysingDAO.updateLoeysing(it)
     }
 
@@ -106,5 +106,5 @@ class LoeysingDAOTest(@Autowired val loeysingDAO: LoeysingDAO) {
       name: String = loeysingTestName,
       url: String = loeysingTestUrl,
       orgnummer: String = loeysingTestOrgNummer
-  ) = loeysingDAO.createLoeysing(name, URL(url), loeysingTestOrgNummer)
+  ) = loeysingDAO.createLoeysing(name, URI(url).toURL(), loeysingTestOrgNummer)
 }

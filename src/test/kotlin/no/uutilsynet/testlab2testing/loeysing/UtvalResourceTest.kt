@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.loeysing
 
-import java.net.URL
+import java.net.URI
 import java.util.*
 import no.uutilsynet.testlab2testing.loeysing.UtvalResource.NyttUtval
 import org.assertj.core.api.Assertions.assertThat
@@ -93,7 +93,9 @@ class UtvalResourceTest(
 
     assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.url })
-        .containsAll(listOf(URL("https://www.uutilsynet.no/"), URL("https://www.digdir.no/")))
+        .containsAll(
+            listOf(
+                URI("https://www.uutilsynet.no/").toURL(), URI("https://www.digdir.no/").toURL()))
   }
 
   @DisplayName("vi skal kunne hente ei liste med alle utval")
