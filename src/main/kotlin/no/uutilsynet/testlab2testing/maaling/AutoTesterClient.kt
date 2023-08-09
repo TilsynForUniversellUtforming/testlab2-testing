@@ -78,18 +78,18 @@ class AutoTesterClient(
         }
       }
 
-  suspend fun fetchResultat(
+  suspend fun fetchAggregering(
       testKoeyringar: List<TestKoeyring.Ferdig>,
       resultatType: ResultatUrls,
   ): Map<TestKoeyring.Ferdig, Result<List<AutotesterTestresultat>>> = coroutineScope {
     val deferreds =
         testKoeyringar.map { testKoeyring ->
-          async { testKoeyring to fetchResultat(testKoeyring, resultatType) }
+          async { testKoeyring to fetchAggregering(testKoeyring, resultatType) }
         }
     deferreds.awaitAll().toMap()
   }
 
-  private fun fetchResultat(
+  private fun fetchAggregering(
       testKoeyring: TestKoeyring.Ferdig,
       resultatType: ResultatUrls
   ): Result<List<AutotesterTestresultat>> =
@@ -114,6 +114,39 @@ class AutoTesterClient(
                 ?: throw RuntimeException(
                     "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
           }
+        }
+      }
+          ?: Result.success(testKoeyring.testResultat)
+
+  suspend fun fetchBrot(
+      testKoeyringar: List<TestKoeyring.Ferdig>,
+      resultatType: ResultatUrls,
+  ): Map<TestKoeyring.Ferdig, Result<List<TestResultat>>> = coroutineScope {
+    val deferreds =
+        testKoeyringar.map { testKoeyring ->
+          async { testKoeyring to fetchBrot(testKoeyring, resultatType) }
+        }
+    deferreds.awaitAll().toMap()
+  }
+
+  private fun fetchBrot(
+      testKoeyring: TestKoeyring.Ferdig,
+      resultatType: ResultatUrls
+  ): Result<List<TestResultat>> =
+      testKoeyring.lenker?.let { lenker ->
+        runCatching {
+          val uri =
+              when (resultatType) {
+                ResultatUrls.urlFulltResultat -> lenker.urlFulltResultat.toURI()
+                ResultatUrls.urlAggreggeringTR -> lenker.urlAggreggeringTR.toURI()
+                else -> lenker.urlBrot.toURI()
+              }
+          restTemplate
+              .getForObject(uri, Array<Array<TestResultat>>::class.java)
+              ?.flatten()
+              ?.toList()
+              ?: throw RuntimeException(
+                  "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
         }
       }
           ?: Result.success(testKoeyring.testResultat)

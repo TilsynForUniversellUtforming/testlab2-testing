@@ -135,7 +135,7 @@ class MaalingResource(
             .getMaaling(maalingId)
             ?.let { maaling -> Maaling.findFerdigeTestKoeyringar(maaling, loeysingId) }
             ?.let { ferdigeTestKoeyringar ->
-              autoTesterClient.fetchResultat(
+              autoTesterClient.fetchBrot(
                   ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlBrot)
             }
             ?.toSingleResult()
@@ -165,7 +165,7 @@ class MaalingResource(
           ?.mapCatching { ferdigeTestKoeyringar ->
             runBlocking(Dispatchers.IO) {
               autoTesterClient
-                  .fetchResultat(
+                  .fetchAggregering(
                       ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlAggreggeringTR)
                   .toSingleResult()
                   .getOrThrow()
