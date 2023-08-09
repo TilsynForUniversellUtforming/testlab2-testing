@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
-import java.net.URL
+import java.net.URI
 import java.time.Instant
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateStatus
@@ -97,14 +97,14 @@ class MaalingKtTest {
   inner class TestingFerdigTests {
     private val crawlResultatForUUTilsynet =
         CrawlResultat.Ferdig(
-            listOf(URL("https://www.uutilsynet.no")),
-            URL("https://www.status.url"),
+            listOf(URI("https://www.uutilsynet.no").toURL()),
+            URI("https://www.status.url").toURL(),
             TestConstants.uutilsynetLoeysing,
             Instant.now())
     private val crawlResultatForDigdir =
         CrawlResultat.Ferdig(
-            listOf(URL("https://www.digdir.no")),
-            URL("https://www.status.url"),
+            listOf(URI("https://www.digdir.no").toURL()),
+            URI("https://www.status.url").toURL(),
             TestConstants.digdirLoeysing,
             Instant.now())
 
@@ -121,7 +121,7 @@ class MaalingKtTest {
                   TestKoeyring.Starta(
                       crawlResultatForUUTilsynet,
                       Instant.now(),
-                      URL("https://www.status.url"),
+                      URI("https://www.status.url").toURL(),
                       Framgang(0, 0))))
       val result = Maaling.toTestingFerdig(maaling)
       Assertions.assertThat(result).isNull()
@@ -140,7 +140,7 @@ class MaalingKtTest {
                   TestKoeyring.Ferdig(
                       crawlResultatForUUTilsynet,
                       Instant.now(),
-                      URL("https://status.url"),
+                      URI("https://status.url").toURL(),
                       TestKoeyringTest.testResultater())))
       val result = Maaling.toTestingFerdig(maaling)
       Assertions.assertThat(result).isNotNull
@@ -160,7 +160,7 @@ class MaalingKtTest {
                   TestKoeyring.Ferdig(
                       crawlResultatForUUTilsynet,
                       Instant.now(),
-                      URL("https://status.url"),
+                      URI("https://status.url").toURL(),
                       TestKoeyringTest.testResultater()),
               ))
       val result = Maaling.toTestingFerdig(maaling)
@@ -179,26 +179,28 @@ class MaalingKtTest {
             listOf(
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(
-                        listOf(URL("https://www.uutilsynet.no")),
-                        URL("https://www.status.url"),
+                        listOf(URI("https://www.uutilsynet.no").toURL()),
+                        URI("https://www.status.url").toURL(),
                         TestConstants.uutilsynetLoeysing,
                         Instant.now()),
                     Instant.now(),
-                    URL("https://www.status.url"),
+                    URI("https://www.status.url").toURL(),
                     emptyList(),
                     AutoTesterClient.AutoTesterOutput.Lenker(
-                        URL("https://fullt.resultat"), URL("https://brot.resultat"))),
+                        URI("https://fullt.resultat").toURL(),
+                        URI("https://brot.resultat").toURL())),
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(
-                        listOf(URL("https://www.digdir.no")),
-                        URL("https://www.status.url"),
+                        listOf(URI("https://www.digdir.no").toURL()),
+                        URI("https://www.status.url").toURL(),
                         TestConstants.digdirLoeysing,
                         Instant.now()),
                     Instant.now(),
-                    URL("https://www.status.url"),
+                    URI("https://www.status.url").toURL(),
                     emptyList(),
                     AutoTesterClient.AutoTesterOutput.Lenker(
-                        URL("https://fullt.resultat"), URL("https://brot.resultat")))))
+                        URI("https://fullt.resultat").toURL(),
+                        URI("https://brot.resultat").toURL()))))
 
     @DisplayName(
         "når vi henter testkøyringar for ei måling, uten å spesifisere løysing, så skal vi få alle testkøyringane")

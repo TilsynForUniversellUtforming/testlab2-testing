@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.loeysing
 
 import java.net.URI
-import java.net.URL
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingRequestBody
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestName
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestOrgNummer
@@ -90,7 +89,7 @@ class LoeysingIntegrationTests(
         HttpEntity(
             loeysing.copy(
                 namn = loeysingTestName,
-                url = URL(loeysingTestUrl),
+                url = URI(loeysingTestUrl).toURL(),
                 orgnummer = loeysingTestOrgNummer)),
         Int::class.java)
 
@@ -121,7 +120,7 @@ class LoeysingIntegrationTests(
             HttpEntity(
                 loeysing.copy(
                     namn = loeysingTestName,
-                    url = URL(loeysingTestUrl),
+                    url = URI(loeysingTestUrl).toURL(),
                     orgnummer = loeysingTestOrgNummer)),
             String::class.java)
 

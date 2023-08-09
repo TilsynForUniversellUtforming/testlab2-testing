@@ -373,7 +373,7 @@ class MaalingIntegrationTests(
               listOf(
                   CrawlResultat.Ferdig(
                       listOf(URL(uutilsynetLoeysing.url, "/")),
-                      URL("https://status.uri"),
+                      URI("https://status.uri").toURL(),
                       uutilsynetLoeysing,
                       sistOppdatert)))
       val kvalitetssikring = Maaling.toKvalitetssikring(crawlingMaaling)!!

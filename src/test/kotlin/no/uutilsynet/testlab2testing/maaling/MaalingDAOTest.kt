@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
+import java.net.URI
 import java.net.URL
 import java.time.Instant
 import no.uutilsynet.testlab2testing.maaling.TestConstants.digdirLoeysing
@@ -96,7 +97,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Ferdig(
-              it.url.toUrlListWithPages(), URL("https://status.uri"), it, Instant.now())
+              it.url.toUrlListWithPages(), URI("https://status.uri").toURL(), it, Instant.now())
         }
     val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
     val testKoeyringar =
@@ -104,7 +105,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
           TestKoeyring.Ferdig(
               it,
               Instant.now(),
-              URL("https://teststatus.url"),
+              URI("https://teststatus.url").toURL(),
               listOf(
                   TestResultat(
                       listOf("3.1.1"),
@@ -141,8 +142,9 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
 
     val testKoeyring = maalingFromDatabase.testKoeyringar[0] as TestKoeyring.Ferdig
     assertThat(testKoeyring.testResultat).isEmpty()
-    assertThat(testKoeyring.lenker?.urlFulltResultat).isEqualTo(URL("https://fullt.resultat"))
-    assertThat(testKoeyring.lenker?.urlBrot).isEqualTo(URL("https://brot.resultat"))
+    assertThat(testKoeyring.lenker?.urlFulltResultat)
+        .isEqualTo(URI("https://fullt.resultat").toURL())
+    assertThat(testKoeyring.lenker?.urlBrot).isEqualTo(URI("https://brot.resultat").toURL())
   }
 
   @DisplayName("Skal kunne oppdatere måling i Planlegging")
@@ -195,7 +197,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Ferdig(
-              it.url.toUrlListWithPages(), URL("https://status.uri"), it, Instant.now())
+              it.url.toUrlListWithPages(), URI("https://status.uri").toURL(), it, Instant.now())
         }
     val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
     val testKoeyringar =
@@ -203,10 +205,10 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
           TestKoeyring.Ferdig(
               it,
               Instant.now(),
-              URL("https://teststatus.url"),
+              URI("https://teststatus.url").toURL(),
               emptyList(),
               AutoTesterClient.AutoTesterOutput.Lenker(
-                  URL("https://fullt.resultat"), URL("https://brot.resultat")))
+                  URI("https://fullt.resultat").toURL(), URI("https://brot.resultat").toURL()))
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     val testingFerdig = Maaling.toTestingFerdig(testing)!!
@@ -229,7 +231,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Ferdig(
-              it.url.toUrlListWithPages(), URL("https://status.uri"), it, Instant.now())
+              it.url.toUrlListWithPages(), URI("https://status.uri").toURL(), it, Instant.now())
         }
     val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
     maalingDAO.save(kvalitetssikring).getOrThrow()
@@ -250,7 +252,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.IkkeFerdig(
-              URL("https://status.uri"), it, Instant.now(), Framgang(10, maxLinksPerPage))
+              URI("https://status.uri").toURL(), it, Instant.now(), Framgang(10, maxLinksPerPage))
         }
     val crawling = Maaling.toCrawling(maaling, crawlResultat)
     maalingDAO.save(crawling).getOrThrow()
@@ -262,12 +264,12 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Ferdig(
-              it.url.toUrlListWithPages(), URL("https://status.uri"), it, Instant.now())
+              it.url.toUrlListWithPages(), URI("https://status.uri").toURL(), it, Instant.now())
         }
     val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
     val testKoeyringar =
         crawlResultat.map {
-          TestKoeyring.IkkjeStarta(it, Instant.now(), URL("https://teststatus.url"))
+          TestKoeyring.IkkjeStarta(it, Instant.now(), URI("https://teststatus.url").toURL())
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     maalingDAO.save(testing).getOrThrow()
@@ -279,13 +281,16 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Ferdig(
-              it.url.toUrlListWithPages(), URL("https://status.uri"), it, Instant.now())
+              it.url.toUrlListWithPages(), URI("https://status.uri").toURL(), it, Instant.now())
         }
     val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
     val testKoeyringar =
         crawlResultat.map {
           TestKoeyring.Starta(
-              it, Instant.now(), URL("https://teststatus.url"), Framgang(0, it.nettsider.size))
+              it,
+              Instant.now(),
+              URI("https://teststatus.url").toURL(),
+              Framgang(0, it.nettsider.size))
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     maalingDAO.save(testing).getOrThrow()

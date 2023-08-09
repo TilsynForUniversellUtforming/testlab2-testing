@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
-import java.net.URL
+import java.net.URI
 import java.time.Instant
 import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
 import org.assertj.core.api.Assertions.assertThat
@@ -16,7 +16,7 @@ class CrawlResultatKtTest {
   fun toFerdig() {
     val ikkeFerdig =
         CrawlResultat.IkkeFerdig(
-            URL("https://status.uri"), uutilsynetLoeysing, Instant.now(), Framgang(2, 2))
+            URI("https://status.uri").toURL(), uutilsynetLoeysing, Instant.now(), Framgang(2, 2))
     val crawlerOutput =
         listOf(
             CrawlerOutput("https://www.uutilsynet.no/", "uutilsynet"),
@@ -25,7 +25,8 @@ class CrawlResultatKtTest {
                 "uutilsynet"))
     val updated =
         updateStatus(ikkeFerdig, CrawlStatus.Completed(crawlerOutput)) as CrawlResultat.Ferdig
-    assertThat(updated.nettsider).containsExactlyElementsOf(crawlerOutput.map { URL(it.url) })
+    assertThat(updated.nettsider)
+        .containsExactlyElementsOf(crawlerOutput.map { URI(it.url).toURL() })
   }
 
   @DisplayName(
@@ -34,7 +35,7 @@ class CrawlResultatKtTest {
   fun toFeilet() {
     val ikkeFerdig =
         CrawlResultat.IkkeFerdig(
-            URL("https://status.uri"), uutilsynetLoeysing, Instant.now(), Framgang(2, 2))
+            URI("https://status.uri").toURL(), uutilsynetLoeysing, Instant.now(), Framgang(2, 2))
     val updated =
         updateStatus(ikkeFerdig, CrawlStatus.Completed(emptyList())) as CrawlResultat.Feilet
     assertThat(updated).isInstanceOf(CrawlResultat.Feilet::class.java)
@@ -46,7 +47,7 @@ class CrawlResultatKtTest {
   fun terminated() {
     val ikkeFerdig =
         CrawlResultat.IkkeFerdig(
-            URL("https://status.uri"), uutilsynetLoeysing, Instant.now(), Framgang(1, 2))
+            URI("https://status.uri").toURL(), uutilsynetLoeysing, Instant.now(), Framgang(1, 2))
     val updated = updateStatus(ikkeFerdig, CrawlStatus.Terminated)
     assertThat(updated).isInstanceOf(CrawlResultat.Feilet::class.java)
   }
@@ -56,7 +57,7 @@ class CrawlResultatKtTest {
   fun updateFramgang() {
     val ikkeFerdig =
         CrawlResultat.IkkeFerdig(
-            URL("https://status.uri"), uutilsynetLoeysing, Instant.now(), Framgang(2, 100))
+            URI("https://status.uri").toURL(), uutilsynetLoeysing, Instant.now(), Framgang(2, 100))
     val updated =
         updateStatus(ikkeFerdig, CrawlStatus.Running(CustomStatus(23, 100)))
             as CrawlResultat.IkkeFerdig

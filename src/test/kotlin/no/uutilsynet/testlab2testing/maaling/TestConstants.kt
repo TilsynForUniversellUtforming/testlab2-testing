@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
-import java.net.URL
+import java.net.URI
 import java.time.Instant
 import java.time.LocalDate
 import no.uutilsynet.testlab2testing.dto.Testregel
@@ -8,8 +8,9 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.TestConstants
 
 object TestConstants {
-  val uutilsynetLoeysing = Loeysing(1, "UUTilsynet", URL("https://www.uutilsynet.no/"), "991825827")
-  val digdirLoeysing = Loeysing(2, "Digdir", URL("https://www.digdir.no/"), "991825827")
+  val uutilsynetLoeysing =
+      Loeysing(1, "UUTilsynet", URI("https://www.uutilsynet.no/").toURL(), "991825827")
+  val digdirLoeysing = Loeysing(2, "Digdir", URI("https://www.digdir.no/").toURL(), "991825827")
   val loeysingList = listOf(uutilsynetLoeysing, digdirLoeysing)
   val maalingTestName = "test_skal_slettes"
   val testregel =
@@ -36,20 +37,20 @@ object TestConstants {
   val crawlResultat =
       CrawlResultat.Ferdig(
           listOf(
-              URL("https://www.uutilsynet.no/"),
-              URL("https://www.uutilsynet.no/underside/1"),
-              URL("https://www.uutilsynet.no/underside/2")),
-          URL("https://status.url"),
+              URI("https://www.uutilsynet.no/").toURL(),
+              URI("https://www.uutilsynet.no/underside/1").toURL(),
+              URI("https://www.uutilsynet.no/underside/2").toURL()),
+          URI("https://status.url").toURL(),
           uutilsynetLoeysing,
           Instant.now())
 
   val crawlResultat2 =
       CrawlResultat.Ferdig(
           listOf(
-              URL("https://www.digdir.no/"),
-              URL("https://www.digdir.no/underside/1"),
-              URL("https://www.digdir.no/underside/2")),
-          URL("https://status.url"),
+              URI("https://www.digdir.no/").toURL(),
+              URI("https://www.digdir.no/underside/1").toURL(),
+              URI("https://www.digdir.no/underside/2").toURL()),
+          URI("https://status.url").toURL(),
           digdirLoeysing,
           Instant.now())
 
@@ -57,19 +58,19 @@ object TestConstants {
       TestKoeyring.Ferdig(
           crawlResultat,
           Instant.now(),
-          URL("https://status.url"),
+          URI("https://status.url").toURL(),
           emptyList(),
           AutoTesterClient.AutoTesterOutput.Lenker(
-              URL("https://fullt.resultat"), URL("https://brot.resultat")))
+              URI("https://fullt.resultat").toURL(), URI("https://brot.resultat").toURL()))
 
   val testKoeyring2 =
       TestKoeyring.Ferdig(
           crawlResultat2,
           Instant.now(),
-          URL("https://status.url"),
+          URI("https://status.url").toURL(),
           emptyList(),
           AutoTesterClient.AutoTesterOutput.Lenker(
-              URL("https://fullt.resultat"), URL("https://brot.resultat")))
+              URI("https://fullt.resultat").toURL(), URI("https://brot.resultat").toURL()))
 
   val testKoeyringList = listOf(testKoeyring, testKoeyring2)
 }
