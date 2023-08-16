@@ -47,36 +47,16 @@ class AutoTesterClient(
     }
   }
 
-  fun updateStatus(testKoeyring: TestKoeyring): Result<TestKoeyring> =
-      when (testKoeyring) {
-        is TestKoeyring.Ferdig -> Result.success(testKoeyring)
-        is TestKoeyring.Feila -> Result.success(testKoeyring)
-        is TestKoeyring.IkkjeStarta,
-        is TestKoeyring.Starta -> {
-          val statusURL =
-              runCatching {
-                    when (testKoeyring) {
-                      is TestKoeyring.IkkjeStarta -> testKoeyring.statusURL
-                      is TestKoeyring.Starta -> testKoeyring.statusURL
-                      else -> throw RuntimeException("Ugyldig tilstand")
-                    }
-                  }
-                  .getOrElse {
-                    return Result.failure(it)
-                  }
+  fun updateStatus(testKoeyring: TestKoeyring.Starta): Result<AutoTesterStatus> = runCatching {
+    fetchAutoTesterStatus(testKoeyring.statusURL.toURI())!!
+  }
 
-          val response =
-              runCatching {
-                    restTemplate.getForObject(
-                        statusURL.toURI(), AzureFunctionResponse::class.java)!!
-                  }
-                  .getOrElse {
-                    return Result.failure(it)
-                  }
+  fun updateStatus(testKoeyring: TestKoeyring.IkkjeStarta): Result<AutoTesterStatus> = runCatching {
+    fetchAutoTesterStatus(testKoeyring.statusURL.toURI())!!
+  }
 
-          Result.success(TestKoeyring.updateStatus(testKoeyring, response))
-        }
-      }
+  private fun fetchAutoTesterStatus(uri: URI) =
+      restTemplate.getForObject(uri, AutoTesterStatus::class.java)
 
   suspend fun fetchResultat(
       testKoeyringar: List<TestKoeyring.Ferdig>,
@@ -179,25 +159,25 @@ class AutoTesterClient(
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "runtimeStatus")
   @JsonSubTypes(
-      JsonSubTypes.Type(value = AzureFunctionResponse.Pending::class, name = "Pending"),
-      JsonSubTypes.Type(value = AzureFunctionResponse.Running::class, name = "Running"),
-      JsonSubTypes.Type(value = AzureFunctionResponse.Completed::class, name = "Completed"),
-      JsonSubTypes.Type(value = AzureFunctionResponse.Failed::class, name = "Failed"),
-      JsonSubTypes.Type(value = AzureFunctionResponse.Terminated::class, name = "Terminated"),
-      JsonSubTypes.Type(value = AzureFunctionResponse.Other::class, name = "ContinuedAsNew"),
-      JsonSubTypes.Type(value = AzureFunctionResponse.Other::class, name = "Suspended"))
-  sealed class AzureFunctionResponse {
-    object Pending : AzureFunctionResponse()
+      JsonSubTypes.Type(value = AutoTesterStatus.Pending::class, name = "Pending"),
+      JsonSubTypes.Type(value = AutoTesterStatus.Running::class, name = "Running"),
+      JsonSubTypes.Type(value = AutoTesterStatus.Completed::class, name = "Completed"),
+      JsonSubTypes.Type(value = AutoTesterStatus.Failed::class, name = "Failed"),
+      JsonSubTypes.Type(value = AutoTesterStatus.Terminated::class, name = "Terminated"),
+      JsonSubTypes.Type(value = AutoTesterStatus.Other::class, name = "ContinuedAsNew"),
+      JsonSubTypes.Type(value = AutoTesterStatus.Other::class, name = "Suspended"))
+  sealed class AutoTesterStatus {
+    object Pending : AutoTesterStatus()
 
-    data class Running(val customStatus: CustomStatus?) : AzureFunctionResponse()
+    data class Running(val customStatus: CustomStatus?) : AutoTesterStatus()
 
-    data class Completed(val output: AutoTesterOutput) : AzureFunctionResponse()
+    data class Completed(val output: AutoTesterOutput) : AutoTesterStatus()
 
-    data class Failed(val output: String) : AzureFunctionResponse()
+    data class Failed(val output: String) : AutoTesterStatus()
 
-    object Terminated : AzureFunctionResponse()
+    object Terminated : AutoTesterStatus()
 
-    data class Other(val output: String?) : AzureFunctionResponse()
+    data class Other(val output: String?) : AutoTesterStatus()
   }
 
   data class StatusUris(val statusQueryGetUri: URI)
