@@ -35,8 +35,8 @@ class AutoTesterClientTest {
     fun pending() {
       val jsonString = """{"runtimeStatus":"Pending", "output": null}"""
       val pending =
-          objectMapper.readValue(jsonString, AutoTesterClient.AzureFunctionResponse::class.java)
-      assertThat(pending).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Pending::class.java)
+          objectMapper.readValue(jsonString, AutoTesterClient.AutoTesterStatus::class.java)
+      assertThat(pending).isInstanceOf(AutoTesterClient.AutoTesterStatus.Pending::class.java)
     }
 
     @DisplayName("når responsen fra autotester er `Running`, så skal det parses til responsklassen")
@@ -45,15 +45,14 @@ class AutoTesterClientTest {
       val jsonString =
           """{"runtimeStatus":"Running", "output": null, "customStatus":{"testaSider":0, "talSider":0}}"""
       val running =
-          objectMapper.readValue(jsonString, AutoTesterClient.AzureFunctionResponse::class.java)
-      assertThat(running).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Running::class.java)
+          objectMapper.readValue(jsonString, AutoTesterClient.AutoTesterStatus::class.java)
+      assertThat(running).isInstanceOf(AutoTesterClient.AutoTesterStatus.Running::class.java)
 
       val jsonStringNoStatus = """{"runtimeStatus":"Running", "output": null}"""
       val runningNoStatus =
-          objectMapper.readValue(
-              jsonStringNoStatus, AutoTesterClient.AzureFunctionResponse::class.java)
+          objectMapper.readValue(jsonStringNoStatus, AutoTesterClient.AutoTesterStatus::class.java)
       assertThat(runningNoStatus)
-          .isInstanceOf(AutoTesterClient.AzureFunctionResponse.Running::class.java)
+          .isInstanceOf(AutoTesterClient.AutoTesterStatus.Running::class.java)
     }
 
     @DisplayName(
@@ -61,11 +60,10 @@ class AutoTesterClientTest {
     @Test
     fun completed() {
       val completed =
-          objectMapper.readValue(jsonSuccess, AutoTesterClient.AzureFunctionResponse::class.java)
-      assertThat(completed)
-          .isInstanceOf(AutoTesterClient.AzureFunctionResponse.Completed::class.java)
+          objectMapper.readValue(jsonSuccess, AutoTesterClient.AutoTesterStatus::class.java)
+      assertThat(completed).isInstanceOf(AutoTesterClient.AutoTesterStatus.Completed::class.java)
       val output: AutoTesterClient.AutoTesterOutput.TestResultater =
-          (completed as AutoTesterClient.AzureFunctionResponse.Completed).output
+          (completed as AutoTesterClient.AutoTesterStatus.Completed).output
               as AutoTesterClient.AutoTesterOutput.TestResultater
       assertThat(output.testResultater).hasSize(2)
     }
@@ -77,11 +75,10 @@ class AutoTesterClientTest {
       val jsonString =
           """{"runtimeStatus":"Completed", "output": {"urlFulltResultat": "https://fullt.resultat.no", "urlBrot": "https://brot.resultat.no","urlAggregeringTR": "https://aggregeringTR.resultat.no","urlAggregeringSK": "https://aggregeringSK.resultat.no","urlAggergeringSide": "https://aggregeringSide.resultat.no"}}"""
       val completed =
-          objectMapper.readValue(jsonString, AutoTesterClient.AzureFunctionResponse::class.java)
-      assertThat(completed)
-          .isInstanceOf(AutoTesterClient.AzureFunctionResponse.Completed::class.java)
+          objectMapper.readValue(jsonString, AutoTesterClient.AutoTesterStatus::class.java)
+      assertThat(completed).isInstanceOf(AutoTesterClient.AutoTesterStatus.Completed::class.java)
       val output: AutoTesterClient.AutoTesterOutput.Lenker =
-          (completed as AutoTesterClient.AzureFunctionResponse.Completed).output
+          (completed as AutoTesterClient.AutoTesterStatus.Completed).output
               as AutoTesterClient.AutoTesterOutput.Lenker
       assertThat(output.urlFulltResultat).isEqualTo(URI("https://fullt.resultat.no").toURL())
       assertThat(output.urlBrot).isEqualTo(URI("https://brot.resultat.no").toURL())
@@ -93,10 +90,9 @@ class AutoTesterClientTest {
     @Test
     fun failed() {
       val jsonString = """{"runtimeStatus":"Failed", "output": "401 Unauthorized"}"""
-      val failed =
-          objectMapper.readValue(jsonString, AutoTesterClient.AzureFunctionResponse::class.java)
-      assertThat(failed).isInstanceOf(AutoTesterClient.AzureFunctionResponse.Failed::class.java)
-      assertThat((failed as AutoTesterClient.AzureFunctionResponse.Failed).output)
+      val failed = objectMapper.readValue(jsonString, AutoTesterClient.AutoTesterStatus::class.java)
+      assertThat(failed).isInstanceOf(AutoTesterClient.AutoTesterStatus.Failed::class.java)
+      assertThat((failed as AutoTesterClient.AutoTesterStatus.Failed).output)
           .isEqualTo("401 Unauthorized")
     }
 
@@ -106,9 +102,8 @@ class AutoTesterClientTest {
       val outputFromAutotester = """{"runtimeStatus":"Terminated", "output": null}"""
       val terminated =
           objectMapper.readValue(
-              outputFromAutotester, AutoTesterClient.AzureFunctionResponse::class.java)
-      assertThat(terminated)
-          .isInstanceOf(AutoTesterClient.AzureFunctionResponse.Terminated::class.java)
+              outputFromAutotester, AutoTesterClient.AutoTesterStatus::class.java)
+      assertThat(terminated).isInstanceOf(AutoTesterClient.AutoTesterStatus.Terminated::class.java)
     }
   }
 
@@ -159,10 +154,13 @@ class AutoTesterClientTest {
 
     val testKoeyringIkkjeStarta =
         TestKoeyring.from(TestConstants.crawlResultat, URI(statusURL).toURL())
-    val response = autoTesterClient.updateStatus(testKoeyringIkkjeStarta)
+    val updatedTestKoeyring =
+        autoTesterClient.updateStatus(testKoeyringIkkjeStarta).map {
+          TestKoeyring.updateStatus(testKoeyringIkkjeStarta, it)
+        }
 
-    assertThat(response.isSuccess).isTrue
-    assertThat(response.getOrNull()).isInstanceOf(TestKoeyring.Ferdig::class.java)
+    assertThat(updatedTestKoeyring.isSuccess).isTrue
+    assertThat(updatedTestKoeyring.getOrNull()).isInstanceOf(TestKoeyring.Ferdig::class.java)
   }
 
   @DisplayName("Hvis det er feil i respons fra autotester skal man returnere Result.Failure")
@@ -176,7 +174,7 @@ class AutoTesterClientTest {
         .andRespond(MockRestResponseCreators.withSuccess(jsonFailure, MediaType.APPLICATION_JSON))
 
     val testKoeyringIkkjeStarta =
-        TestKoeyring.from(TestConstants.crawlResultat, java.net.URI(statusURL).toURL())
+        TestKoeyring.from(TestConstants.crawlResultat, URI(statusURL).toURL())
     val response = autoTesterClient.updateStatus(testKoeyringIkkjeStarta)
 
     assertThat(response.isFailure).isTrue
