@@ -32,7 +32,7 @@ class TestKoeyringTest {
   @MethodSource("pairsOfResponseTilstand")
   @DisplayName(
       "gitt ei testkøyring med tilstand `ikkje starta`, test riktig kombinasjon av respons og ny tilstand")
-  fun testUpdateStatus(response: AutoTesterClient.AzureFunctionResponse, tilstand: Class<*>) {
+  fun testUpdateStatus(response: AutoTesterClient.AutoTesterStatus, tilstand: Class<*>) {
     val testKoeyring =
         TestKoeyring.IkkjeStarta(crawlResultat, Instant.now(), URI(statusURL).toURL())
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
@@ -43,10 +43,7 @@ class TestKoeyringTest {
   @MethodSource("pairsOfResponseTilstand")
   @DisplayName(
       "gitt ei testkøyring med tilstand `starta`, test riktig kombinasjon av respons og ny tilstand")
-  fun testUpdateStatusFromStarta(
-      response: AutoTesterClient.AzureFunctionResponse,
-      tilstand: Class<*>
-  ) {
+  fun testUpdateStatusFromStarta(response: AutoTesterClient.AutoTesterStatus, tilstand: Class<*>) {
     val testKoeyring =
         TestKoeyring.Starta(
             crawlResultat,
@@ -67,7 +64,7 @@ class TestKoeyringTest {
             URI(statusURL).toURL(),
             Framgang(0, crawlResultat.nettsider.size))
     val actual =
-        TestKoeyring.updateStatus(testKoeyring, AutoTesterClient.AzureFunctionResponse.Terminated)
+        TestKoeyring.updateStatus(testKoeyring, AutoTesterClient.AutoTesterStatus.Terminated)
     assertThat(actual).isInstanceOf(TestKoeyring.Feila::class.java)
   }
 
@@ -75,10 +72,7 @@ class TestKoeyringTest {
       "gitt ei testkøyring med tilstand `ferdig`, så blir ikkje tilstanden endra uansett kva ny tilstand som blir rapportert")
   @ParameterizedTest
   @MethodSource("pairsOfResponseTilstand")
-  fun testUpdateStatusFromFerdig(
-      response: AutoTesterClient.AzureFunctionResponse,
-      tilstand: Class<*>
-  ) {
+  fun testUpdateStatusFromFerdig(response: AutoTesterClient.AutoTesterStatus, tilstand: Class<*>) {
     val testKoeyring =
         TestKoeyring.Ferdig(crawlResultat, Instant.now(), URI(statusURL).toURL(), testResultater())
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
@@ -89,10 +83,7 @@ class TestKoeyringTest {
       "gitt ei testkøyring med tilstand `feila`, så blir ikkje tilstanden endra uansett kva ny tilstand som blir rapportert")
   @ParameterizedTest
   @MethodSource("pairsOfResponseTilstand")
-  fun testUpdateStatusFromFeila(
-      response: AutoTesterClient.AzureFunctionResponse,
-      tilstand: Class<*>
-  ) {
+  fun testUpdateStatusFromFeila(response: AutoTesterClient.AutoTesterStatus, tilstand: Class<*>) {
     val testKoeyring = TestKoeyring.Feila(crawlResultat, Instant.now(), "dette går ikkje")
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(TestKoeyring.Feila::class.java)
@@ -450,12 +441,12 @@ class TestKoeyringTest {
     fun pairsOfResponseTilstand(): Stream<Arguments> {
       return Stream.of(
           Arguments.of(
-              AutoTesterClient.AzureFunctionResponse.Pending, TestKoeyring.IkkjeStarta::class.java),
+              AutoTesterClient.AutoTesterStatus.Pending, TestKoeyring.IkkjeStarta::class.java),
           Arguments.of(
-              AutoTesterClient.AzureFunctionResponse.Running(AutoTesterClient.CustomStatus(0, 1)),
+              AutoTesterClient.AutoTesterStatus.Running(AutoTesterClient.CustomStatus(0, 1)),
               TestKoeyring.Starta::class.java),
           Arguments.of(
-              AutoTesterClient.AzureFunctionResponse.Completed(
+              AutoTesterClient.AutoTesterStatus.Completed(
                   AutoTesterClient.AutoTesterOutput.Lenker(
                       URI("https://fullt.resultat").toURL(),
                       URI("https://brot.resultat").toURL(),
@@ -464,7 +455,7 @@ class TestKoeyringTest {
                       URI("https://aggregeringSide.resultat").toURL())),
               TestKoeyring.Ferdig::class.java),
           Arguments.of(
-              AutoTesterClient.AzureFunctionResponse.Failed("401 Unauthorized"),
+              AutoTesterClient.AutoTesterStatus.Failed("401 Unauthorized"),
               TestKoeyring.Feila::class.java))
     }
 
