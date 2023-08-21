@@ -327,11 +327,11 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               val lenker =
                   if (urlFulltResultat != null)
                       AutoTesterClient.AutoTesterOutput.Lenker(
-                          URL(urlFulltResultat),
-                          URL(urlBrot),
-                          URL(urlAggTR),
-                          URL(urlAggSK),
-                          URL(urlAggSide))
+                          URI(urlFulltResultat).toURL(),
+                          URI(urlBrot).toURL(),
+                          URI(urlAggTR).toURL(),
+                          URI(urlAggSK).toURL(),
+                          URI(urlAggSide).toURL())
                   else null
               TestKoeyring.Ferdig(
                   crawlResultatForLoeysing,
@@ -402,7 +402,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             var statusUrl: URL? = null
             val statusUrlDB = rs.getString("status_url")
             if (statusUrlDB != null) {
-              statusUrl = URL(statusUrlDB)
+              statusUrl = URI(statusUrlDB).toURL()
             }
 
             CrawlResultat.Feilet(rs.getString("feilmelding"), statusUrl, loeysing, sistOppdatert)
