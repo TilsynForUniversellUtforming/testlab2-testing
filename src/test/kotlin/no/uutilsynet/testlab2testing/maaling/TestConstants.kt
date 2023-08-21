@@ -61,11 +61,11 @@ object TestConstants {
           URI("https://status.url").toURL(),
           emptyList(),
           AutoTesterClient.AutoTesterOutput.Lenker(
-              URL("https://fullt.resultat"),
-              URL("https://brot.resultat"),
-              URL("https://aggregering.resultat"),
-              URL("https://aggregeringSK.resultat"),
-              URL("https://aggregeringSide.resultat")))
+              URI("https://fullt.resultat").toURL(),
+              URI("https://brot.resultat").toURL(),
+              URI("https://aggregering.resultat").toURL(),
+              URI("https://aggregeringSK.resultat").toURL(),
+              URI("https://aggregeringSide.resultat").toURL()))
 
   val testKoeyring2 =
       TestKoeyring.Ferdig(
@@ -74,11 +74,11 @@ object TestConstants {
           URI("https://status.url").toURL(),
           emptyList(),
           AutoTesterClient.AutoTesterOutput.Lenker(
-              URL("https://fullt.resultat"),
-              URL("https://brot.resultat"),
-              URL("https://aggregering.resultat"),
-              URL("https://aggregeringSK.resultat"),
-              URL("https://aggregeringSide.resultat")))
+              URI("https://fullt.resultat").toURL(),
+              URI("https://brot.resultat").toURL(),
+              URI("https://aggregering.resultat").toURL(),
+              URI("https://aggregeringSK.resultat").toURL(),
+              URI("https://aggregeringSide.resultat").toURL()))
 
   val testKoeyringList = listOf(testKoeyring, testKoeyring2)
 }
