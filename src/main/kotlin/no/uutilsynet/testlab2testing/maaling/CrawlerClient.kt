@@ -66,7 +66,7 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
             logger.error(
                 "feilet da jeg forsøkte å starte crawling for løysing ${loeysing.id}", exception)
             CrawlResultat.Feilet(
-                exception.message ?: "start crawling feilet", loeysing.url, loeysing, Instant.now())
+                exception.message ?: "start crawling feilet", loeysing, Instant.now())
           }
 
   fun getStatus(crawlResultat: CrawlResultat.IkkeFerdig): Result<CrawlStatus> =
