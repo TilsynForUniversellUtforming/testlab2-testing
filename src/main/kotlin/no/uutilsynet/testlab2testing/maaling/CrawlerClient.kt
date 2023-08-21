@@ -76,11 +76,10 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
                     crawlResultat.statusUrl.toURI(), CrawlStatus::class.java)!!
             response
           }
-          .recoverCatching { exception ->
+          .onFailure { exception ->
             logger.error(
                 "feilet da jeg forsøkte å hente status crawling ${crawlResultat.statusUrl.toURI()} for ${crawlResultat.loeysing.namn}",
                 exception)
-            CrawlStatus.Failed("Feil henting av status")
           }
 }
 
