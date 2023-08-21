@@ -405,7 +405,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               statusUrl = URI(statusUrlDB).toURL()
             }
 
-            CrawlResultat.Feilet(rs.getString("feilmelding"), statusUrl, loeysing, sistOppdatert)
+            CrawlResultat.Feilet(rs.getString("feilmelding"), loeysing, sistOppdatert)
           }
           "ferdig" -> {
             val nettsider = mutableListOf<URL>()
