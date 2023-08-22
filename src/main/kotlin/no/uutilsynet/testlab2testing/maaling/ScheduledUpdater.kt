@@ -51,18 +51,28 @@ class ScheduledUpdater(
         }
   }
 
-  private fun updateCrawlingStatuses(maaling: Maaling.Crawling): Maaling {
-    val ikkeFerdige = maaling.crawlResultat.filterIsInstance<CrawlResultat.IkkeFerdig>()
+  fun updateCrawlingStatuses(maaling: Maaling.Crawling): Maaling {
     val oppdaterteResultater =
-        ikkeFerdige.map { updateCrawlingStatus(it, crawlerClient::getStatus) }
+        maaling.crawlResultat.map {
+          if (it is CrawlResultat.IkkeFerdig) {
+            updateCrawlingStatus(it, crawlerClient::getStatus)
+          } else {
+            it
+          }
+        }
     val oppdatertMaaling = maaling.copy(crawlResultat = oppdaterteResultater)
     return Maaling.toKvalitetssikring(oppdatertMaaling) ?: oppdatertMaaling
   }
 
-  private fun updateTestingStatuses(maaling: Maaling.Testing): Maaling {
-    val startaTestKoeyringar = maaling.testKoeyringar.filterIsInstance<TestKoeyring.Starta>()
+  fun updateTestingStatuses(maaling: Maaling.Testing): Maaling {
     val oppdaterteTestKoeyringar =
-        startaTestKoeyringar.map { updateTestingStatus(it, autoTesterClient::updateStatus) }
+        maaling.testKoeyringar.map {
+          if (it is TestKoeyring.Starta) {
+            updateTestingStatus(it, autoTesterClient::updateStatus)
+          } else {
+            it
+          }
+        }
     val oppdatertMaaling = maaling.copy(testKoeyringar = oppdaterteTestKoeyringar)
     return Maaling.toTestingFerdig(oppdatertMaaling) ?: oppdatertMaaling
   }
