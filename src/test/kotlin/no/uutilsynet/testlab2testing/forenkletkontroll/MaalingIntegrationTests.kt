@@ -4,6 +4,7 @@ import java.net.URI
 import java.net.URL
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import no.uutilsynet.testlab2testing.common.TestSecurityConfig
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.context.annotation.Import
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -40,6 +42,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(TestSecurityConfig::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MaalingIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
