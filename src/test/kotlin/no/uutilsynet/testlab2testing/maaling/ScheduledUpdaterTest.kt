@@ -10,6 +10,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 
 class ScheduledUpdaterTest {
   private val maalingDAO = Mockito.mock(MaalingDAO::class.java)
@@ -133,6 +134,9 @@ class ScheduledUpdaterTest {
             navn = "Test",
             datoStart = LocalDate.now(),
             aksjoner = listOf())
+
+    `when`(autoTesterClient.updateStatus(testKoeyring))
+        .thenReturn(Result.success(AutoTesterClient.AutoTesterStatus.Pending))
 
     val updatedMaaling = updater.updateTestingStatuses(maaling)
 
