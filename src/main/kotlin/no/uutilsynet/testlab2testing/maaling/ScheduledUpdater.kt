@@ -67,10 +67,20 @@ class ScheduledUpdater(
   fun updateTestingStatuses(maaling: Maaling.Testing): Maaling {
     val oppdaterteTestKoeyringar =
         maaling.testKoeyringar.map {
-          if (it is TestKoeyring.Starta) {
-            updateTestingStatus(it, autoTesterClient::updateStatus)
-          } else {
-            it
+          when (it) {
+            is TestKoeyring.Starta -> {
+              updateTestingStatus(it) { testKoeyring ->
+                autoTesterClient.updateStatus(testKoeyring as TestKoeyring.Starta)
+              }
+            }
+            is TestKoeyring.IkkjeStarta -> {
+              updateTestingStatus(it) { testKoeyring ->
+                autoTesterClient.updateStatus(testKoeyring as TestKoeyring.IkkjeStarta)
+              }
+            }
+            else -> {
+              it
+            }
           }
         }
     val oppdatertMaaling = maaling.copy(testKoeyringar = oppdaterteTestKoeyringar)
@@ -108,11 +118,11 @@ class ScheduledUpdater(
       }
     }
 
-    private val failedTestingStatusAttempts = mutableMapOf<TestKoeyring.Starta, Int>()
+    private val failedTestingStatusAttempts = mutableMapOf<TestKoeyring, Int>()
 
     fun updateTestingStatus(
-        testKoeyring: TestKoeyring.Starta,
-        getNewStatus: (TestKoeyring.Starta) -> Result<AutoTesterClient.AutoTesterStatus>
+        testKoeyring: TestKoeyring,
+        getNewStatus: (TestKoeyring) -> Result<AutoTesterClient.AutoTesterStatus>
     ): TestKoeyring {
       val updated =
           getNewStatus(testKoeyring).map { newStatus ->
