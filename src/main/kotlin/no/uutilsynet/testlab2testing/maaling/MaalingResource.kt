@@ -141,7 +141,7 @@ class MaalingResource(
       }
 
   @Operation(
-      summary = "Hentar fullt resultat for ei måling",
+      summary = "Hentar aggregert resultat for ei måling",
       description =
           "Aggregerar resultat frå alle testkøyringar for ei måling. Resultatane kan aggregerast på testresultat, suksesskriterium eller side. Dette velger du med parameteret `aggregeringstype`.",
       parameters =
