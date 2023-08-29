@@ -23,7 +23,9 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
 
   suspend fun start(maaling: Maaling.Planlegging): Maaling.Crawling = coroutineScope {
     val deferreds: List<Deferred<CrawlResultat>> =
-        maaling.loeysingList.map { loeysing -> async { start(loeysing, maaling.crawlParameters) } }
+        maaling.loeysingList.map { loeysing ->
+          async { start(loeysing, maaling.crawlParameters, maaling.id) }
+        }
     val crawlResultatList = deferreds.awaitAll()
     Maaling.toCrawling(maaling, crawlResultatList)
   }
@@ -35,7 +37,8 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
   ): Maaling.Crawling {
     val crawlResultat =
         maaling.crawlResultat.map {
-          if (it.loeysing.id in loeysingIdList) start(it.loeysing, crawlParameters) else it
+          if (it.loeysing.id in loeysingIdList) start(it.loeysing, crawlParameters, maaling.id)
+          else it
         }
     return Maaling.Crawling(
         id = maaling.id,
@@ -44,7 +47,11 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
         crawlResultat = crawlResultat)
   }
 
-  private fun start(loeysing: Loeysing, crawlParameters: CrawlParameters): CrawlResultat =
+  private fun start(
+      loeysing: Loeysing,
+      crawlParameters: CrawlParameters,
+      maalingId: Int
+  ): CrawlResultat =
       runCatching {
             val statusUris =
                 restTemplate.postForObject(
@@ -54,6 +61,7 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
                         "maxLenker" to crawlParameters.maxLinksPerPage,
                         "talLenker" to crawlParameters.numLinksToSelect,
                         "idLoeysing" to loeysing.id,
+                        "idMaaling" to maalingId,
                         "domene" to loeysing.url),
                     AutoTesterClient.StatusUris::class.java)!!
             CrawlResultat.IkkeFerdig(
