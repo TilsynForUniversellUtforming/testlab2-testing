@@ -4,7 +4,6 @@ import java.net.URI
 import java.time.Instant
 import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
@@ -62,5 +61,23 @@ class CrawlResultatKtTest {
         updateStatus(ikkeFerdig, CrawlStatus.Running(CustomStatus(23, 100)))
             as CrawlResultat.IkkeFerdig
     assertThat(updated.framgang).isEqualTo(Framgang(23, 100))
+  }
+
+  @DisplayName(
+      "når vi oppdaterer et resultat fra ikke ferdig til ferdig, og crawlresultatet inneholder en ugyldig url, så skal denne url-en fjernes, og resultatet settes til ferdig")
+  @Test
+  fun toFerdigWithInvalidUrl() {
+    val ikkeFerdig =
+        CrawlResultat.IkkeFerdig(
+            URI("https://status.uri").toURL(), uutilsynetLoeysing, Instant.now(), Framgang(2, 2))
+    // output med en gyldig og en ugyldig url
+    val crawlerOutput =
+        listOf(
+            CrawlerOutput("https://www.uutilsynet.no/", "gyldig_url"),
+            CrawlerOutput("https://www.uutilsynet.no/[VIEWURL]", "ugyldig_url"))
+    val updated =
+        updateStatus(ikkeFerdig, CrawlStatus.Completed(crawlerOutput)) as CrawlResultat.Ferdig
+    assertThat(updated.nettsider)
+        .containsExactlyElementsOf(listOf(crawlerOutput[0].url).map { URI(it).toURL() })
   }
 }
