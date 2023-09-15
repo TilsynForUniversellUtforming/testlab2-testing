@@ -7,6 +7,10 @@ import java.net.URI
 import java.net.URL
 import java.time.Instant
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+val logger: Logger = LoggerFactory.getLogger(CrawlResultat::class.java)
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
@@ -59,8 +63,14 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
                     crawlResultat.loeysing,
                     Instant.now())
               } else {
+                val urlList = newStatus.output.map { runCatching { URI(it.url).toURL() } }
+                urlList.forEach {
+                  if (it.isFailure)
+                      logger.info(
+                          "Crawlresultatet for løysing ${crawlResultat.loeysing.id} inneholder en ugyldig url: ${it.exceptionOrNull()?.message}")
+                }
                 CrawlResultat.Ferdig(
-                    newStatus.output.map { crawlerOutput -> URI(crawlerOutput.url).toURL() },
+                    urlList.filter { it.isSuccess }.map { it.getOrThrow() },
                     crawlResultat.statusUrl,
                     crawlResultat.loeysing,
                     Instant.now())
