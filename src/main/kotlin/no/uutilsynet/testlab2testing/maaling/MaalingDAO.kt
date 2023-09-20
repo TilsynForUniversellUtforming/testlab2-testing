@@ -9,7 +9,11 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loeysingRowMapper
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
-import no.uutilsynet.testlab2testing.maaling.Maaling.*
+import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
+import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
+import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
+import no.uutilsynet.testlab2testing.maaling.Maaling.Testing
+import no.uutilsynet.testlab2testing.maaling.Maaling.TestingFerdig
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingSql
@@ -23,7 +27,11 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.testResult
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingWithCrawlParameters
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.*
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.crawling
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.kvalitetssikring
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.planlegging
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing_ferdig
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
 import org.slf4j.LoggerFactory
@@ -269,6 +277,27 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             throw it
           }
 
+  fun getCrawlResultatNettsider(maalingId: Int, loeysingId: Int): List<URL> =
+      jdbcTemplate
+          .queryForList(
+              """
+                select n.url
+                from nettside n
+                    join crawlresultat cr on n.crawlresultat_id = cr.id
+                where cr.maaling_id = :maalingId
+                    and cr.loeysingid = :loeysingId
+              """
+                  .trimIndent(),
+              mapOf("maalingId" to maalingId, "loeysingId" to loeysingId),
+              String::class.java)
+          .map { url ->
+            runCatching { URI(url).toURL() }
+                .getOrElse {
+                  logger.error("Ugylig url $url")
+                  throw it
+                }
+          }
+
   private fun getTestKoeyringarForMaaling(maalingId: Int): List<TestKoeyring> {
     val crawlResultat = getCrawlResultatForMaaling(maalingId)
     return jdbcTemplate.query<TestKoeyring>(
@@ -303,7 +332,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   crawlResultatForLoeysing,
                   sistOppdatert,
                   URI(rs.getString("status_url")).toURL(),
-                  Framgang(rs.getInt("lenker_testa"), crawlResultatForLoeysing.nettsider.size))
+                  Framgang(rs.getInt("lenker_testa"), crawlResultatForLoeysing.antallNettsider))
             }
             "feila" ->
                 TestKoeyring.Feila(
@@ -340,30 +369,38 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   private fun getCrawlResultatForMaaling(maalingId: Int) =
       jdbcTemplate.query(
           """
-                select crawlresultat.id as crid,
-                       crawlresultat.status,
-                       crawlresultat.status_url,
-                       crawlresultat.sist_oppdatert,
-                       crawlresultat.feilmelding,
-                       crawlresultat.lenker_crawla, loeysing.id as lid, loeysing.namn,
-                       loeysing.url,
-                       loeysing.orgnummer,
-                       nettside.url as nettside_url,
-                       maaling.max_links_per_page
-                from crawlresultat
-                         join loeysing on crawlresultat.loeysingid = loeysing.id
-                         left join nettside on crawlresultat.id = nettside.crawlresultat_id
-                         join maalingv1 maaling on maaling.id = crawlresultat.maaling_id
-                where crawlresultat.maaling_id = :maalingId
-                order by maaling.id, loeysing.id
+          with agg_nettsider as (
+              select crawlresultat_id, count(*) as ant_nettsider
+              from nettside
+              group by crawlresultat_id
+          )
+          select
+              cr.id as crid,
+              cr.status,
+              cr.status_url,
+              cr.sist_oppdatert,
+              cr.feilmelding,
+              cr.lenker_crawla,
+              l.id as lid,
+              l.namn,
+              l.url,
+              l.orgnummer,
+              coalesce(an.ant_nettsider, 0) as ant_nettsider,
+              m.max_links_per_page
+          from crawlresultat cr
+              join loeysing l on cr.loeysingid = l.id
+              left join agg_nettsider an on cr.id = an.crawlresultat_id
+              join maalingv1 m on m.id = cr.maaling_id
+          where
+              cr.maaling_id = :maalingId
+          order by m.id, l.id
               """
               .trimIndent(),
           mapOf("maalingId" to maalingId),
           fun(rs: ResultSet): List<CrawlResultat> {
             val result = mutableListOf<CrawlResultat>()
-            rs.next()
 
-            while (!rs.isAfterLast) {
+            while (rs.next()) {
               result.add(toCrawlResultat(rs))
             }
 
@@ -381,7 +418,6 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             rs.getString("orgnummer"))
     val sistOppdatert = rs.getTimestamp("sist_oppdatert").toInstant()
     val status = rs.getString("status")
-    val id = rs.getInt("crid")
 
     val crawlResultat =
         when (status) {
@@ -391,43 +427,18 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 URI(rs.getString("status_url")).toURL(), loeysing, sistOppdatert, framgang)
           }
           "feilet" -> {
-            var statusUrl: URL? = null
-            val statusUrlDB = rs.getString("status_url")
-            if (statusUrlDB != null) {
-              statusUrl = URI(statusUrlDB).toURL()
-            }
-
             CrawlResultat.Feilet(rs.getString("feilmelding"), loeysing, sistOppdatert)
           }
           "ferdig" -> {
-            val nettsider = mutableListOf<URL>()
             val statusUrl = rs.getString("status_url")
-
-            while (isSameCrawlResultat(rs, id)) {
-              val nettside = rs.getString("nettside_url")
-              if (nettside != null) {
-                nettsider.add(URI(nettside).toURL())
-              } else {
-                logger.warn("nettside mangler for crawlresultat $id med status `ferdig`.")
-              }
-              rs.next()
-            }
-
-            val nettsideList = nettsider.toList()
-            CrawlResultat.Ferdig(nettsideList, URI(statusUrl).toURL(), loeysing, sistOppdatert)
+            val antallNettsider = rs.getInt("ant_nettsider")
+            CrawlResultat.Ferdig(antallNettsider, URI(statusUrl).toURL(), loeysing, sistOppdatert)
           }
           else -> throw RuntimeException("ukjent status lagret i databasen: $status")
         }
 
-    if (isSameCrawlResultat(rs, id)) {
-      rs.next()
-    }
-
     return crawlResultat
   }
-
-  private fun isSameCrawlResultat(rs: ResultSet, id: Int) =
-      !rs.isAfterLast && rs.getInt("crid") == id
 
   @Transactional
   fun updateMaaling(maaling: Maaling) {
@@ -491,7 +502,6 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   @Transactional
   fun saveTestKoeyring(testKoeyring: TestKoeyring, maalingId: Int) {
-    saveCrawlResultat(testKoeyring.crawlResultat, maalingId)
     jdbcTemplate.update(
         """delete from testkoeyring where maaling_id = :maaling_id and loeysing_id = :loeysing_id""",
         mapOf("maaling_id" to maalingId, "loeysing_id" to testKoeyring.crawlResultat.loeysing.id))

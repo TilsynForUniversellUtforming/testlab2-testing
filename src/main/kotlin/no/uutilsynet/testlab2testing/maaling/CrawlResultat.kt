@@ -29,14 +29,12 @@ sealed class CrawlResultat {
   ) : CrawlResultat()
 
   data class Ferdig(
-      @JsonIgnore val nettsider: List<URL>,
+      val antallNettsider: Int,
       val statusUrl: URL,
       override val loeysing: Loeysing,
-      override val sistOppdatert: Instant
-  ) : CrawlResultat() {
-    val antallNettsider
-      get() = this.nettsider.size
-  }
+      override val sistOppdatert: Instant,
+      @JsonIgnore val nettsider: List<URL> = emptyList(),
+  ) : CrawlResultat()
 
   data class Feilet(
       val feilmelding: String,
@@ -69,11 +67,14 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
                       logger.info(
                           "Crawlresultatet for løysing ${crawlResultat.loeysing.id} inneholder en ugyldig url: ${it.exceptionOrNull()?.message}")
                 }
+                val filteredUrlList = urlList.filter { it.isSuccess }.map { it.getOrThrow() }
                 CrawlResultat.Ferdig(
-                    urlList.filter { it.isSuccess }.map { it.getOrThrow() },
+                    filteredUrlList.size,
                     crawlResultat.statusUrl,
                     crawlResultat.loeysing,
-                    Instant.now())
+                    Instant.now(),
+                    filteredUrlList,
+                )
               }
           is CrawlStatus.Failed ->
               CrawlResultat.Feilet(

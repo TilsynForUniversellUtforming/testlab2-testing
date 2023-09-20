@@ -116,7 +116,7 @@ sealed class TestKoeyring {
                   testKoeyring.crawlResultat,
                   Instant.now(),
                   testKoeyring.statusURL,
-                  Framgang.from(response.customStatus, testKoeyring.crawlResultat.nettsider.size))
+                  Framgang.from(response.customStatus, testKoeyring.crawlResultat.antallNettsider))
           is AutoTesterClient.AutoTesterStatus.Completed ->
               when (response.output) {
                 is AutoTesterClient.AutoTesterOutput.Lenker ->
@@ -151,7 +151,7 @@ sealed class TestKoeyring {
         testKoeyring: Ferdig,
         maalingId: Int
     ): List<AggregertResultat> {
-      val antallSider = testKoeyring.crawlResultat.nettsider.size
+      val antallSider = testKoeyring.crawlResultat.antallNettsider
       return testResultat
           .groupBy { it.testregelId }
           .map { entry ->

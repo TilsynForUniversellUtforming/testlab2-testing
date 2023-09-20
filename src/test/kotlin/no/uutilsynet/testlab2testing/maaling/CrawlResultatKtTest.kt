@@ -26,6 +26,7 @@ class CrawlResultatKtTest {
         updateStatus(ikkeFerdig, CrawlStatus.Completed(crawlerOutput)) as CrawlResultat.Ferdig
     assertThat(updated.nettsider)
         .containsExactlyElementsOf(crawlerOutput.map { URI(it.url).toURL() })
+    assertThat(updated.antallNettsider).isEqualTo(crawlerOutput.size)
   }
 
   @DisplayName(

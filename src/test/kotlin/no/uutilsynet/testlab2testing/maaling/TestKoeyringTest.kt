@@ -259,7 +259,8 @@ class TestKoeyringTest {
               .readValue(testResultatJson, object : TypeReference<List<TestResultat>>() {})
       val nettsider = testResultat.map { it.side }.distinctBy { it.toString() }
       val crawlResultat =
-          CrawlResultat.Ferdig(nettsider, URI(statusURL).toURL(), uutilsynetLoeysing, Instant.now())
+          CrawlResultat.Ferdig(
+              nettsider.size, URI(statusURL).toURL(), uutilsynetLoeysing, Instant.now())
       return mapOf(
           TestKoeyring.Ferdig(crawlResultat, Instant.now(), URI(statusURL).toURL(), emptyList()) to
               testResultat)

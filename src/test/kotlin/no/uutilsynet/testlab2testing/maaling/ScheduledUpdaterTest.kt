@@ -6,6 +6,7 @@ import java.time.LocalDate
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.maaling.ScheduledUpdater.Companion.updateCrawlingStatus
 import no.uutilsynet.testlab2testing.maaling.ScheduledUpdater.Companion.updateTestingStatus
+import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -50,6 +51,7 @@ class ScheduledUpdaterTest {
   fun testKoeyringStatusFailed() {
     val crawlResultat =
         CrawlResultat.Ferdig(
+            antallNettsider = 1,
             statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
             loeysing =
                 Loeysing(
@@ -57,8 +59,7 @@ class ScheduledUpdaterTest {
                     url = URI("https://www.uutilsynet.no").toURL(),
                     id = 1,
                     orgnummer = "000000000"),
-            sistOppdatert = Instant.now(),
-            nettsider = listOf(URI("https://www.uutilsynet.no").toURL()))
+            sistOppdatert = Instant.now())
     val testKoeyring =
         TestKoeyring.Starta(
             crawlResultat = crawlResultat,
@@ -80,12 +81,63 @@ class ScheduledUpdaterTest {
   @Test
   @DisplayName(
       "når vi oppdaterer ei måling med crawlresultat som er ferdig, så skal vi få samme data tilbake")
+  fun updateIkkeFerdigToKvalitetssikring() {
+    val updater = ScheduledUpdater(maalingDAO, crawlerClient, autoTesterClient)
+    val crawlerOutput =
+        listOf(CrawlerOutput(uutilsynetLoeysing.url.toString(), uutilsynetLoeysing.namn))
+
+    val crawlResultatIkkeFerdig =
+        CrawlResultat.IkkeFerdig(
+            statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
+            loeysing =
+                Loeysing(
+                    namn = "UUTilsynet",
+                    url = uutilsynetLoeysing.url,
+                    id = 1,
+                    orgnummer = "000000000"),
+            sistOppdatert = Instant.now(),
+            framgang = Framgang(0, 0))
+
+    `when`(crawlerClient.getStatus(crawlResultatIkkeFerdig))
+        .thenReturn(Result.success(CrawlStatus.Completed(crawlerOutput)))
+
+    val maaling =
+        Maaling.Crawling(
+            id = 1,
+            crawlResultat = listOf(crawlResultatIkkeFerdig),
+            navn = "Test",
+            datoStart = LocalDate.now())
+
+    val expectedCrawlResultat =
+        CrawlResultat.Ferdig(
+            antallNettsider = 1,
+            statusUrl = crawlResultatIkkeFerdig.statusUrl,
+            loeysing = crawlResultatIkkeFerdig.loeysing,
+            sistOppdatert = Instant.now(),
+            nettsider = crawlerOutput.map { URI(it.url).toURL() })
+
+    val updatedMaaling = updater.updateCrawlingStatuses(maaling)
+
+    assertThat(updatedMaaling).isInstanceOf(Maaling.Kvalitetssikring::class.java)
+    val crawlResultat = (updatedMaaling as Maaling.Kvalitetssikring).crawlResultat.first()
+    assertThat(crawlResultat).isInstanceOf(CrawlResultat.Ferdig::class.java)
+    assertThat(crawlResultat.loeysing).isEqualTo(expectedCrawlResultat.loeysing)
+    assertThat((crawlResultat as CrawlResultat.Ferdig).nettsider)
+        .isEqualTo(expectedCrawlResultat.nettsider)
+    assertThat((crawlResultat as CrawlResultat.Ferdig).antallNettsider)
+        .isEqualTo(expectedCrawlResultat.nettsider.size)
+  }
+
+  @Test
+  @DisplayName(
+      "når vi oppdaterer ei måling med crawlresultat som er ferdig, så skal vi få samme data tilbake")
   fun updateKvalitetssikring() {
     val updater = ScheduledUpdater(maalingDAO, crawlerClient, autoTesterClient)
 
     val crawlResultat =
         listOf(
             CrawlResultat.Ferdig(
+                antallNettsider = 1,
                 statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
                 loeysing =
                     Loeysing(
@@ -93,8 +145,7 @@ class ScheduledUpdaterTest {
                         url = URI("https://www.uutilsynet.no").toURL(),
                         id = 1,
                         orgnummer = "000000000"),
-                sistOppdatert = Instant.now(),
-                nettsider = listOf(URI("https://www.uutilsynet.no").toURL())))
+                sistOppdatert = Instant.now()))
     val maaling =
         Maaling.Crawling(
             id = 1, crawlResultat = crawlResultat, navn = "Test", datoStart = LocalDate.now())
@@ -113,6 +164,7 @@ class ScheduledUpdaterTest {
 
     val crawlResultat =
         CrawlResultat.Ferdig(
+            antallNettsider = 1,
             statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
             loeysing =
                 Loeysing(
@@ -120,8 +172,8 @@ class ScheduledUpdaterTest {
                     url = URI("https://www.uutilsynet.no").toURL(),
                     id = 1,
                     orgnummer = "000000000"),
-            sistOppdatert = Instant.now(),
-            nettsider = listOf(URI("https://www.uutilsynet.no").toURL()))
+            sistOppdatert = Instant.now())
+
     val testKoeyring =
         TestKoeyring.IkkjeStarta(
             crawlResultat = crawlResultat,

@@ -324,7 +324,7 @@ class MaalingIntegrationTests(
 
       val urlList: ResponseEntity<List<URL>> =
           restTemplate.exchange(
-              "/v1/maalinger/$key/crawlresultat/nettsider",
+              "/v1/maalinger/$key/crawlresultat/nettsider?loeysingId=${uutilsynetLoeysing.id}",
               HttpMethod.GET,
               HttpEntity.EMPTY,
               urlListType)!!
@@ -372,10 +372,11 @@ class MaalingIntegrationTests(
               planlagtMaaling,
               listOf(
                   CrawlResultat.Ferdig(
-                      listOf(URL(uutilsynetLoeysing.url, "/")),
+                      1,
                       URI("https://status.uri").toURL(),
                       uutilsynetLoeysing,
-                      sistOppdatert)))
+                      sistOppdatert,
+                      listOf(uutilsynetLoeysing.url))))
       val kvalitetssikring = Maaling.toKvalitetssikring(crawlingMaaling)!!
       maalingDAO.save(kvalitetssikring).getOrThrow()
       return Pair(id, sistOppdatert)

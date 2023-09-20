@@ -97,16 +97,13 @@ class MaalingKtTest {
   inner class TestingFerdigTests {
     private val crawlResultatForUUTilsynet =
         CrawlResultat.Ferdig(
-            listOf(URI("https://www.uutilsynet.no").toURL()),
+            1,
             URI("https://www.status.url").toURL(),
             TestConstants.uutilsynetLoeysing,
             Instant.now())
     private val crawlResultatForDigdir =
         CrawlResultat.Ferdig(
-            listOf(URI("https://www.digdir.no").toURL()),
-            URI("https://www.status.url").toURL(),
-            TestConstants.digdirLoeysing,
-            Instant.now())
+            1, URI("https://www.status.url").toURL(), TestConstants.digdirLoeysing, Instant.now())
 
     @DisplayName(
         "når vi prøver å gå til TestingFerdig, og det finnes testkjøringer som ikke er ferdig, så skal det ikke gå")
@@ -179,7 +176,7 @@ class MaalingKtTest {
             listOf(
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(
-                        listOf(URI("https://www.uutilsynet.no").toURL()),
+                        1,
                         URI("https://www.status.url").toURL(),
                         TestConstants.uutilsynetLoeysing,
                         Instant.now()),
@@ -194,7 +191,7 @@ class MaalingKtTest {
                         URI("https://aggregeringSide.resultat").toURL())),
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(
-                        listOf(URI("https://www.digdir.no").toURL()),
+                        1,
                         URI("https://www.status.url").toURL(),
                         TestConstants.digdirLoeysing,
                         Instant.now()),
