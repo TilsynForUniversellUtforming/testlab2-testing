@@ -8,6 +8,7 @@ import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
 import no.uutilsynet.testlab2testing.maaling.TestConstants.testRegelList
+import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DisplayName
@@ -193,6 +194,45 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     assertThat(nonExistingMaaling).isNull()
   }
 
+  @DisplayName("Skal kunne hente crawlresultat med riktig antall nettsider for måling")
+  @Test
+  fun getCrawlResultatForMaaling() {
+    val maaling = createTestMaaling()
+    val digdirUrls = digdirLoeysing.url.toUrlListWithPages(5)
+    val uutilsynetUrls = uutilsynetLoeysing.url.toUrlListWithPages(50)
+
+    val kvalitetssikring =
+        Maaling.toKvalitetssikring(
+            Maaling.toCrawling(
+                maaling,
+                listOf(
+                    CrawlResultat.Ferdig(
+                        digdirUrls.size,
+                        URI("https://status.uri").toURL(),
+                        digdirLoeysing,
+                        Instant.now(),
+                        digdirUrls,
+                    ),
+                    CrawlResultat.Ferdig(
+                        uutilsynetUrls.size,
+                        URI("https://status.uri").toURL(),
+                        uutilsynetLoeysing,
+                        Instant.now(),
+                        uutilsynetUrls),
+                )))!!
+    maalingDAO.save(kvalitetssikring).getOrThrow()
+    val crawlResults = maalingDAO.getCrawlResultatForMaaling(maaling.id)
+    val digdirCrawlResult = crawlResults.find { it.loeysing == digdirLoeysing }
+    assertThat(digdirCrawlResult).isInstanceOf(CrawlResultat.Ferdig::class.java)
+    assertThat((digdirCrawlResult as CrawlResultat.Ferdig).antallNettsider)
+        .isEqualTo(digdirUrls.size)
+
+    val uuTilsynetCrawlResult = crawlResults.find { it.loeysing == uutilsynetLoeysing }
+    assertThat(uuTilsynetCrawlResult).isInstanceOf(CrawlResultat.Ferdig::class.java)
+    assertThat((uuTilsynetCrawlResult as CrawlResultat.Ferdig).antallNettsider)
+        .isEqualTo(uutilsynetUrls.size)
+  }
+
   private fun saveMaalingWithStatusTestingFerdig(): Int {
     val maaling = createTestMaaling()
     val crawlResultat =
@@ -305,6 +345,6 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     return maaling.id
   }
 
-  private fun URL.toUrlListWithPages() =
-      listOf(URL(this, "/"), URL(this, "/underside/1"), URL(this, "/underside/2"))
+  private fun URL.toUrlListWithPages(numberOfPages: Int = 3) =
+      (1..numberOfPages).map { URI("${this.toString()}/underside/$it").toURL() }
 }

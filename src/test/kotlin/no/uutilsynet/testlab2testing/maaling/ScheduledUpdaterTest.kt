@@ -80,7 +80,7 @@ class ScheduledUpdaterTest {
 
   @Test
   @DisplayName(
-      "når vi oppdaterer ei måling med crawlresultat som er ferdig, så skal vi få samme data tilbake")
+      "når vi oppdaterer ei måling med status Crawling til Kvalitetssikring, så skal riktig data lagres og returneres")
   fun updateIkkeFerdigToKvalitetssikring() {
     val updater = ScheduledUpdater(maalingDAO, crawlerClient, autoTesterClient)
     val crawlerOutput =

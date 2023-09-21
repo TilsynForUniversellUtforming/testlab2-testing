@@ -67,13 +67,14 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
                       logger.info(
                           "Crawlresultatet for løysing ${crawlResultat.loeysing.id} inneholder en ugyldig url: ${it.exceptionOrNull()?.message}")
                 }
-                val filteredUrlList = urlList.filter { it.isSuccess }.map { it.getOrThrow() }
+                val (validUrls, invalidUrls) = urlList.partition { it.isSuccess }
+                logger.warn("${invalidUrls.size} ugyldige urler oppdaget i oppdatering av status")
                 CrawlResultat.Ferdig(
-                    filteredUrlList.size,
+                    validUrls.size,
                     crawlResultat.statusUrl,
                     crawlResultat.loeysing,
                     Instant.now(),
-                    filteredUrlList,
+                    validUrls.map { it.getOrThrow() },
                 )
               }
           is CrawlStatus.Failed ->

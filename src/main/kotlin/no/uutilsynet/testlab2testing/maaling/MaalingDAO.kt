@@ -290,13 +290,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   .trimIndent(),
               mapOf("maalingId" to maalingId, "loeysingId" to loeysingId),
               String::class.java)
-          .map { url ->
-            runCatching { URI(url).toURL() }
-                .getOrElse {
-                  logger.error("Ugylig url $url")
-                  throw it
-                }
-          }
+          .map { url -> URI(url).toURL() }
 
   private fun getTestKoeyringarForMaaling(maalingId: Int): List<TestKoeyring> {
     val crawlResultat = getCrawlResultatForMaaling(maalingId)
@@ -366,7 +360,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         })
   }
 
-  private fun getCrawlResultatForMaaling(maalingId: Int) =
+  fun getCrawlResultatForMaaling(maalingId: Int) =
       jdbcTemplate.query(
           """
           with agg_nettsider as (
