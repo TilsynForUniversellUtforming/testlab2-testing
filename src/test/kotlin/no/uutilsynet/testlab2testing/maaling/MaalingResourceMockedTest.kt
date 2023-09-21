@@ -88,9 +88,15 @@ class MaalingResourceMockedTest {
 
     val testregelList = listOf(Testregel(1, "krav", "QW-ACT-R12", "samsvar"))
 
+    val nettsider =
+        listOf(
+            URI("https://www.uutilsynet.no/").toURL(),
+            URI("https://www.uutilsynet.no/underside/1").toURL(),
+            URI("https://www.uutilsynet.no/underside/2").toURL())
+
     val expectedRequestData =
         mapOf(
-            "urls" to crawlResultat.nettsider,
+            "urls" to nettsider,
             "idMaaling" to id,
             "idLoeysing" to uutilsynetLoeysing.id,
             "resultatSomFil" to true,
@@ -102,6 +108,7 @@ class MaalingResourceMockedTest {
 
     `when`(maalingDAO.getMaaling(id)).thenReturn(maaling)
     `when`(maalingDAO.save(maalingTesting)).thenReturn(Result.success(maalingTesting))
+    `when`(maalingDAO.getCrawlResultatNettsider(id, uutilsynetLoeysing.id)).thenReturn(nettsider)
     `when`(testregelDAO.getTestreglarForMaaling(id)).thenReturn(Result.success(testregelList))
     `when`(loeysingDAO.getLoeysingIdList()).thenReturn(listOf(uutilsynetLoeysing.id))
 

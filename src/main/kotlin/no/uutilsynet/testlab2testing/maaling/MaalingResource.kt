@@ -338,7 +338,19 @@ class MaalingResource(
             .onEach { it.validateTestRegel() }
 
     crawlResultat
-        .map { async { Pair(it, autoTesterClient.startTesting(maalingId, it, testreglar)) } }
+        .map {
+          async {
+            val nettsider =
+                withContext(Dispatchers.IO) {
+                  maalingDAO.getCrawlResultatNettsider(maalingId, it.loeysing.id)
+                }
+            if (nettsider.isEmpty()) {
+              throw RuntimeException(
+                  "Tomt resultat frå crawling, kan ikkje starte test. maalingId: $maalingId loeysingId: ${it.loeysing.id}")
+            }
+            Pair(it, autoTesterClient.startTesting(maalingId, it, testreglar, nettsider))
+          }
+        }
         .awaitAll()
         .map { (crawlResultat, result) ->
           result.fold(
