@@ -648,17 +648,22 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 "status_url" to crawlResultat.statusUrl.toString(),
                 "maaling_id" to maalingId,
                 "sist_oppdatert" to Timestamp.from(crawlResultat.sistOppdatert)))
-        val id =
-            jdbcTemplate.queryForObject(
-                "select id from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id",
-                mapOf("loeysingid" to crawlResultat.loeysing.id, "maaling_id" to maalingId),
-                Int::class.java)
-        crawlResultat.nettsider.forEach { nettside ->
-          jdbcTemplate.update(
-              "insert into nettside (crawlresultat_id, url) values (:cr_id, :url)",
-              mapOf("cr_id" to id, "url" to nettside.toString()))
-        }
       }
+    }
+  }
+
+  @Transactional
+  fun saveNettsider(maalingId: Int, loeysingId: Int, nettsider: List<URL>) {
+    val crawlResultatId =
+        jdbcTemplate.queryForObject(
+            "select id from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id",
+            mapOf("loeysingid" to loeysingId, "maaling_id" to maalingId),
+            Int::class.java)
+
+    nettsider.forEach { nettside ->
+      jdbcTemplate.update(
+          "insert into nettside (crawlresultat_id, url) values (:cr_id, :url)",
+          mapOf("cr_id" to crawlResultatId, "url" to nettside.toString()))
     }
   }
 }

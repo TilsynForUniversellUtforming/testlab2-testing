@@ -45,11 +45,7 @@ class TestKoeyringTest {
       "gitt ei testkøyring med tilstand `starta`, test riktig kombinasjon av respons og ny tilstand")
   fun testUpdateStatusFromStarta(response: AutoTesterClient.AutoTesterStatus, tilstand: Class<*>) {
     val testKoeyring =
-        TestKoeyring.Starta(
-            crawlResultat,
-            Instant.now(),
-            URI(statusURL).toURL(),
-            Framgang(0, crawlResultat.nettsider.size))
+        TestKoeyring.Starta(crawlResultat, Instant.now(), URI(statusURL).toURL(), Framgang(0, 10))
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(tilstand)
   }
@@ -58,11 +54,7 @@ class TestKoeyringTest {
   @Test
   fun testUpdateStatusFromStartaTerminated() {
     val testKoeyring =
-        TestKoeyring.Starta(
-            crawlResultat,
-            Instant.now(),
-            URI(statusURL).toURL(),
-            Framgang(0, crawlResultat.nettsider.size))
+        TestKoeyring.Starta(crawlResultat, Instant.now(), URI(statusURL).toURL(), Framgang(0, 10))
     val actual =
         TestKoeyring.updateStatus(testKoeyring, AutoTesterClient.AutoTesterStatus.Terminated)
     assertThat(actual).isInstanceOf(TestKoeyring.Feila::class.java)
