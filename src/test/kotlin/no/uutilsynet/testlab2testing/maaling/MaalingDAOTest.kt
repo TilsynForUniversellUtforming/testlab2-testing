@@ -320,7 +320,9 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
                   URI("https://brot.resultat").toURL(),
                   URI("https://aggregering.resultat").toURL(),
                   URI("https://aggregeringSK.resultat").toURL(),
-                  URI("https://aggregeringSide.resultat").toURL()))
+                  URI("https://aggregeringSide.resultat").toURL(),
+                  URI("https://aggregeringSideTR.resultat").toURL(),
+                  URI("https://aggregeringSideLoeysing.resultat").toURL()))
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     val testingFerdig = Maaling.toTestingFerdig(testing)!!
