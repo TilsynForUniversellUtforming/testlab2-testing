@@ -3,13 +3,22 @@ package no.uutilsynet.testlab2testing.maaling
 import java.net.URI
 import java.time.Instant
 import java.time.LocalDate
+import java.util.stream.Stream
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.maaling.ScheduledUpdater.Companion.updateCrawlingStatus
 import no.uutilsynet.testlab2testing.maaling.ScheduledUpdater.Companion.updateTestingStatus
+import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.Mockito
+import org.mockito.Mockito.anyList
+import org.mockito.Mockito.eq
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 
 class ScheduledUpdaterTest {
@@ -36,9 +45,8 @@ class ScheduledUpdaterTest {
     var updatedCrawlResultat: CrawlResultat? = null
     for (i in 1..13) {
       updatedCrawlResultat =
-          updateCrawlingStatus(crawlResultat) {
-            Result.failure(RuntimeException("500 Internal Server Error"))
-          }
+          updateCrawlingStatus(
+              crawlResultat, Result.failure(RuntimeException("500 Internal Server Error")))
     }
 
     assertThat(updatedCrawlResultat).isInstanceOf(CrawlResultat.Feilet::class.java)
@@ -50,6 +58,7 @@ class ScheduledUpdaterTest {
   fun testKoeyringStatusFailed() {
     val crawlResultat =
         CrawlResultat.Ferdig(
+            antallNettsider = 1,
             statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
             loeysing =
                 Loeysing(
@@ -57,8 +66,7 @@ class ScheduledUpdaterTest {
                     url = URI("https://www.uutilsynet.no").toURL(),
                     id = 1,
                     orgnummer = "000000000"),
-            sistOppdatert = Instant.now(),
-            nettsider = listOf(URI("https://www.uutilsynet.no").toURL()))
+            sistOppdatert = Instant.now())
     val testKoeyring =
         TestKoeyring.Starta(
             crawlResultat = crawlResultat,
@@ -77,6 +85,49 @@ class ScheduledUpdaterTest {
     assertThat(updatedTestKoeyring).isInstanceOf(TestKoeyring.Feila::class.java)
   }
 
+  @ParameterizedTest
+  @MethodSource("crawlOutputList")
+  @DisplayName(
+      "når vi oppdaterer ei måling med status Crawling til Kvalitetssikring, så skal riktig data lagres og returneres")
+  fun updateIkkeFerdigToKvalitetssikring(
+      crawlerOutput: List<CrawlerOutput>,
+      expectedAntallNettsider: Int
+  ) {
+    val updater = ScheduledUpdater(maalingDAO, crawlerClient, autoTesterClient)
+
+    val crawlResultatIkkeFerdig =
+        CrawlResultat.IkkeFerdig(
+            statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
+            loeysing =
+                Loeysing(
+                    namn = "UUTilsynet",
+                    url = uutilsynetLoeysing.url,
+                    id = 1,
+                    orgnummer = "000000000"),
+            sistOppdatert = Instant.now(),
+            framgang = Framgang(0, 0))
+
+    `when`(crawlerClient.getStatus(crawlResultatIkkeFerdig))
+        .thenReturn(Result.success(CrawlStatus.Completed(crawlerOutput)))
+
+    val maaling =
+        Maaling.Crawling(
+            id = 1,
+            crawlResultat = listOf(crawlResultatIkkeFerdig),
+            navn = "Test",
+            datoStart = LocalDate.now())
+
+    val updatedMaaling = updater.updateCrawlingStatuses(maaling)
+
+    assertThat(updatedMaaling).isInstanceOf(Maaling.Kvalitetssikring::class.java)
+    val crawlResultat = (updatedMaaling as Maaling.Kvalitetssikring).crawlResultat.first()
+    assertThat(crawlResultat).isInstanceOf(CrawlResultat.Ferdig::class.java)
+    assertThat((crawlResultat as CrawlResultat.Ferdig).antallNettsider)
+        .isEqualTo(expectedAntallNettsider)
+
+    verify(maalingDAO, times(1)).saveNettsider(eq(1), eq(1), anyList())
+  }
+
   @Test
   @DisplayName(
       "når vi oppdaterer ei måling med crawlresultat som er ferdig, så skal vi få samme data tilbake")
@@ -86,6 +137,7 @@ class ScheduledUpdaterTest {
     val crawlResultat =
         listOf(
             CrawlResultat.Ferdig(
+                antallNettsider = 1,
                 statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
                 loeysing =
                     Loeysing(
@@ -93,8 +145,7 @@ class ScheduledUpdaterTest {
                         url = URI("https://www.uutilsynet.no").toURL(),
                         id = 1,
                         orgnummer = "000000000"),
-                sistOppdatert = Instant.now(),
-                nettsider = listOf(URI("https://www.uutilsynet.no").toURL())))
+                sistOppdatert = Instant.now()))
     val maaling =
         Maaling.Crawling(
             id = 1, crawlResultat = crawlResultat, navn = "Test", datoStart = LocalDate.now())
@@ -113,6 +164,7 @@ class ScheduledUpdaterTest {
 
     val crawlResultat =
         CrawlResultat.Ferdig(
+            antallNettsider = 1,
             statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
             loeysing =
                 Loeysing(
@@ -120,8 +172,8 @@ class ScheduledUpdaterTest {
                     url = URI("https://www.uutilsynet.no").toURL(),
                     id = 1,
                     orgnummer = "000000000"),
-            sistOppdatert = Instant.now(),
-            nettsider = listOf(URI("https://www.uutilsynet.no").toURL()))
+            sistOppdatert = Instant.now())
+
     val testKoeyring =
         TestKoeyring.IkkjeStarta(
             crawlResultat = crawlResultat,
@@ -141,5 +193,23 @@ class ScheduledUpdaterTest {
     val updatedMaaling = updater.updateTestingStatuses(maaling)
 
     assertThat(updatedMaaling).isEqualTo(maaling)
+  }
+
+  companion object {
+    @JvmStatic
+    fun crawlOutputList(): Stream<Arguments> {
+      return Stream.of(
+          Arguments.of(
+              listOf(
+                  CrawlerOutput("https://www.uutilsynet.no/", "uutilsynet"),
+                  CrawlerOutput("https://www.uutilsynet.no/side/1", "uutilsynet - side 1"),
+              ),
+              2),
+          Arguments.of(
+              listOf(
+                  CrawlerOutput("https://www.uutilsynet.no/", "uutilsynet"),
+                  CrawlerOutput("https://www.uutilsynet.no/[VIEWURL]", "ugylig_url")),
+              1))
+    }
   }
 }

@@ -13,6 +13,7 @@ import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingRequestBody
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
 import no.uutilsynet.testlab2testing.maaling.TestConstants.testRegelList
+import no.uutilsynet.testlab2testing.maaling.TestConstants.toUrlListWithPages
 import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
@@ -324,7 +325,7 @@ class MaalingIntegrationTests(
 
       val urlList: ResponseEntity<List<URL>> =
           restTemplate.exchange(
-              "/v1/maalinger/$key/crawlresultat/nettsider",
+              "/v1/maalinger/$key/crawlresultat/nettsider?loeysingId=${uutilsynetLoeysing.id}",
               HttpMethod.GET,
               HttpEntity.EMPTY,
               urlListType)!!
@@ -372,12 +373,17 @@ class MaalingIntegrationTests(
               planlagtMaaling,
               listOf(
                   CrawlResultat.Ferdig(
-                      listOf(URL(uutilsynetLoeysing.url, "/")),
+                      1,
                       URI("https://status.uri").toURL(),
                       uutilsynetLoeysing,
-                      sistOppdatert)))
+                      sistOppdatert,
+                  )))
       val kvalitetssikring = Maaling.toKvalitetssikring(crawlingMaaling)!!
       maalingDAO.save(kvalitetssikring).getOrThrow()
+      kvalitetssikring.crawlResultat.filterIsInstance(CrawlResultat.Ferdig::class.java).forEach {
+        maalingDAO.saveNettsider(
+            id, it.loeysing.id, it.loeysing.url.toUrlListWithPages(it.antallNettsider))
+      }
       return Pair(id, sistOppdatert)
     }
   }

@@ -112,9 +112,15 @@ class AutoTesterClientTest {
   fun startTesting() {
     val maalingId = 1
     val crawlResultat = TestConstants.crawlResultat
+    val nettsider =
+        listOf(
+            URI("https://www.uutilsynet.no/").toURL(),
+            URI("https://www.uutilsynet.no/underside/1").toURL(),
+            URI("https://www.uutilsynet.no/underside/2").toURL())
+
     val expectedRequestData =
         mapOf(
-            "urls" to crawlResultat.nettsider,
+            "urls" to nettsider,
             "idMaaling" to maalingId,
             "idLoeysing" to crawlResultat.loeysing.id,
             "resultatSomFil" to true,
@@ -135,7 +141,7 @@ class AutoTesterClientTest {
                 .json(objectMapper.writeValueAsString(expectedRequestData)))
         .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON))
 
-    val result = autoTesterClient.startTesting(maalingId, crawlResultat, testRegelList)
+    val result = autoTesterClient.startTesting(maalingId, crawlResultat, testRegelList, nettsider)
 
     assertThat(result.isSuccess).isTrue
     assertThat(result.getOrNull()).isEqualTo(statusUris.statusQueryGetUri.toURL())
