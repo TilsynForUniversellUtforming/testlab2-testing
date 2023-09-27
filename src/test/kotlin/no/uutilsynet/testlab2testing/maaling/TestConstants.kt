@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URI
+import java.net.URL
 import java.time.Instant
 import java.time.LocalDate
 import no.uutilsynet.testlab2testing.dto.Testregel
@@ -35,24 +36,10 @@ object TestConstants {
 
   const val statusURL = "https://status.url"
   val crawlResultat =
-      CrawlResultat.Ferdig(
-          listOf(
-              URI("https://www.uutilsynet.no/").toURL(),
-              URI("https://www.uutilsynet.no/underside/1").toURL(),
-              URI("https://www.uutilsynet.no/underside/2").toURL()),
-          URI("https://status.url").toURL(),
-          uutilsynetLoeysing,
-          Instant.now())
+      CrawlResultat.Ferdig(3, URI("https://status.url").toURL(), uutilsynetLoeysing, Instant.now())
 
   val crawlResultat2 =
-      CrawlResultat.Ferdig(
-          listOf(
-              URI("https://www.digdir.no/").toURL(),
-              URI("https://www.digdir.no/underside/1").toURL(),
-              URI("https://www.digdir.no/underside/2").toURL()),
-          URI("https://status.url").toURL(),
-          digdirLoeysing,
-          Instant.now())
+      CrawlResultat.Ferdig(3, URI("https://status.url").toURL(), digdirLoeysing, Instant.now())
 
   val testKoeyring =
       TestKoeyring.Ferdig(
@@ -81,4 +68,7 @@ object TestConstants {
               URI("https://aggregeringSide.resultat").toURL()))
 
   val testKoeyringList = listOf(testKoeyring, testKoeyring2)
+
+  fun URL.toUrlListWithPages(numberOfPages: Int = 3) =
+      listOf(this).plus((2..numberOfPages).map { URI("${this}/underside/$it").toURL() })
 }

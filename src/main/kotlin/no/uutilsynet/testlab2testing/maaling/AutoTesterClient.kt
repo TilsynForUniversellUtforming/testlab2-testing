@@ -29,13 +29,14 @@ class AutoTesterClient(
   fun startTesting(
       maalingId: Int,
       crawlResultat: CrawlResultat.Ferdig,
-      actRegler: List<Testregel>
+      actRegler: List<Testregel>,
+      nettsider: List<URL>
   ): Result<URL> {
     return runCatching {
       val url = "${autoTesterProperties.url}?code=${autoTesterProperties.code}"
       val requestData =
           mapOf(
-              "urls" to crawlResultat.nettsider,
+              "urls" to nettsider,
               "idMaaling" to maalingId,
               "idLoeysing" to crawlResultat.loeysing.id,
               "resultatSomFil" to true,
