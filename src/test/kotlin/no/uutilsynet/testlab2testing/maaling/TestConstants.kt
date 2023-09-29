@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URI
+import java.net.URL
 import java.time.Instant
 import java.time.LocalDate
 import no.uutilsynet.testlab2testing.dto.Testregel
@@ -67,4 +68,7 @@ object TestConstants {
               URI("https://aggregeringSide.resultat").toURL()))
 
   val testKoeyringList = listOf(testKoeyring, testKoeyring2)
+
+  fun URL.toUrlListWithPages(numberOfPages: Int = 3) =
+      listOf(this).plus((2..numberOfPages).map { URI("${this}/underside/$it").toURL() })
 }
