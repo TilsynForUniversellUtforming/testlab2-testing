@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.maaling
 
-import java.net.URI
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
@@ -56,20 +55,7 @@ class ScheduledUpdater(
     val oppdaterteResultater =
         maaling.crawlResultat.map {
           if (it is CrawlResultat.IkkeFerdig) {
-            val crawlStatus =
-                crawlerClient.getStatus(it).onSuccess { crawlStatus ->
-                  if (crawlStatus is CrawlStatus.Completed) {
-                    val urlList = crawlStatus.output.map { runCatching { URI(it.url).toURL() } }
-                    val (validUrls, invalidUrls) = urlList.partition { url -> url.isSuccess }
-                    logger.warn(
-                        "${invalidUrls.size} ugyldige urler oppdaget i oppdatert status for måling id ${maaling.id} løysing id ${it.loeysing.id}")
-
-                    maalingDAO.saveNettsider(
-                        maaling.id, it.loeysing.id, validUrls.map { url -> url.getOrThrow() })
-                  }
-                }
-
-            updateCrawlingStatus(it, crawlStatus)
+            updateCrawlingStatus(it, crawlerClient::getStatus)
           } else {
             it
           }
@@ -108,26 +94,29 @@ class ScheduledUpdater(
 
     fun updateCrawlingStatus(
         crawlResultat: CrawlResultat.IkkeFerdig,
-        newStatus: Result<CrawlStatus>
-    ): CrawlResultat =
-        if (newStatus.isFailure) {
-          val previousAttempts = failedCrawlStatusAttempts.getOrDefault(crawlResultat, 0)
-          if (previousAttempts < 12) {
-            failedCrawlStatusAttempts[crawlResultat] = previousAttempts + 1
-            crawlResultat
-          } else {
-            logger.error(
-                "feila da eg forsøkte å oppdatere status for løysing ${crawlResultat.loeysing.id}",
-                newStatus.exceptionOrNull())
-            CrawlResultat.Feilet(
-                "Crawling av ${crawlResultat.loeysing.url} feila. Eg klarte ikkje å hente status frå crawleren.",
-                crawlResultat.loeysing,
-                Instant.now())
-          }
+        getNewStatus: (CrawlResultat.IkkeFerdig) -> Result<CrawlStatus>
+    ): CrawlResultat {
+      val updated =
+          getNewStatus(crawlResultat).map { newStatus -> updateStatus(crawlResultat, newStatus) }
+      return if (updated.isFailure) {
+        val previousAttempts = failedCrawlStatusAttempts.getOrDefault(crawlResultat, 0)
+        if (previousAttempts < 12) {
+          failedCrawlStatusAttempts[crawlResultat] = previousAttempts + 1
+          crawlResultat
         } else {
-          failedCrawlStatusAttempts.remove(crawlResultat)
-          updateStatus(crawlResultat, newStatus.getOrThrow())
+          logger.error(
+              "feila da eg forsøkte å oppdatere status for løysing ${crawlResultat.loeysing.id}",
+              updated.exceptionOrNull())
+          CrawlResultat.Feilet(
+              "Crawling av ${crawlResultat.loeysing.url} feila. Eg klarte ikkje å hente status frå crawleren.",
+              crawlResultat.loeysing,
+              Instant.now())
         }
+      } else {
+        failedCrawlStatusAttempts.remove(crawlResultat)
+        updated.getOrThrow()
+      }
+    }
 
     private val failedTestingStatusAttempts = mutableMapOf<TestKoeyring, Int>()
 
