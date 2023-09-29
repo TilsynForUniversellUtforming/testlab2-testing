@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.maaling
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
@@ -32,6 +33,7 @@ sealed class CrawlResultat {
       val statusUrl: URL,
       override val loeysing: Loeysing,
       override val sistOppdatert: Instant,
+      @JsonIgnore val nettsider: List<URL> = emptyList(),
   ) : CrawlResultat()
 
   data class Feilet(
@@ -65,12 +67,14 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
                       logger.info(
                           "Crawlresultatet for løysing ${crawlResultat.loeysing.id} inneholder en ugyldig url: ${it.exceptionOrNull()?.message}")
                 }
-                val validUrls = urlList.filter { it.isSuccess }
+                val (validUrls, invalidUrls) = urlList.partition { it.isSuccess }
+                logger.warn("${invalidUrls.size} ugyldige urler oppdaget i oppdatering av status")
                 CrawlResultat.Ferdig(
                     validUrls.size,
                     crawlResultat.statusUrl,
                     crawlResultat.loeysing,
                     Instant.now(),
+                    validUrls.map { it.getOrThrow() },
                 )
               }
           is CrawlStatus.Failed ->

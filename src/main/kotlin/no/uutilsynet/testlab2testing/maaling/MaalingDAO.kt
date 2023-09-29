@@ -37,7 +37,9 @@ import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.test
 import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
@@ -617,6 +619,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             Int::class.java)
 
     if (alreadyFinished == 1) {
+      logger.info(
+          "CrawlResultat.Ferdig hopper over for maalingId: $maalingId loeysingId: ${crawlResultat.loeysing.id}")
       return
     }
 
@@ -653,30 +657,38 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 "feilmelding" to crawlResultat.feilmelding))
       }
       is CrawlResultat.Ferdig -> {
+        logger.info(
+            "CrawlResultat.Ferdig insert start. maalingId: $maalingId, loeysingId: ${crawlResultat.loeysing.id}")
+
+        val keyHolder = GeneratedKeyHolder()
+
         jdbcTemplate.update(
             "insert into crawlresultat (loeysingid, status, status_url, maaling_id, sist_oppdatert) values (:loeysingid, :status, :status_url, :maaling_id, :sist_oppdatert)",
-            mapOf(
-                "loeysingid" to crawlResultat.loeysing.id,
-                "status" to "ferdig",
-                "status_url" to crawlResultat.statusUrl.toString(),
-                "maaling_id" to maalingId,
-                "sist_oppdatert" to Timestamp.from(crawlResultat.sistOppdatert)))
+            MapSqlParameterSource(
+                mapOf(
+                    "loeysingid" to crawlResultat.loeysing.id,
+                    "status" to "ferdig",
+                    "status_url" to crawlResultat.statusUrl.toString(),
+                    "maaling_id" to maalingId,
+                    "sist_oppdatert" to Timestamp.from(crawlResultat.sistOppdatert))),
+            keyHolder,
+            arrayOf("id"))
+
+        val id =
+            keyHolder.key?.toInt() ?: throw RuntimeException("Feil ved insert av CrawlResultat")
+
+        logger.info(
+            "CrawlResultat.Ferdig insert ferdig. maalingId: $maalingId loeysingId: ${crawlResultat.loeysing.id} ny crid: $id")
+
+        crawlResultat.nettsider.forEach { nettside ->
+          jdbcTemplate.update(
+              "insert into nettside (crawlresultat_id, url) values (:cr_id, :url)",
+              mapOf("cr_id" to id, "url" to nettside.toString()))
+        }
+
+        logger.info(
+            "CrawlResultat.Ferdig insert nettsider ferdig. maalingId: $maalingId loeysingId: ${crawlResultat.loeysing.id} crid: $id antall nettsider: ${crawlResultat.nettsider.size}")
       }
-    }
-  }
-
-  @Transactional
-  fun saveNettsider(maalingId: Int, loeysingId: Int, nettsider: List<URL>) {
-    val crawlResultatId =
-        jdbcTemplate.queryForObject(
-            "select id from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id",
-            mapOf("loeysingid" to loeysingId, "maaling_id" to maalingId),
-            Int::class.java)
-
-    nettsider.forEach { nettside ->
-      jdbcTemplate.update(
-          "insert into nettside (crawlresultat_id, url) values (:cr_id, :url)",
-          mapOf("cr_id" to crawlResultatId, "url" to nettside.toString()))
     }
   }
 }
