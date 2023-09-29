@@ -619,7 +619,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             Int::class.java)
 
     if (alreadyFinished == 1) {
-      logger.info(
+      logger.debug(
           "CrawlResultat.Ferdig hopper over for maalingId: $maalingId loeysingId: ${crawlResultat.loeysing.id}")
       return
     }
@@ -657,7 +657,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 "feilmelding" to crawlResultat.feilmelding))
       }
       is CrawlResultat.Ferdig -> {
-        logger.info(
+        logger.debug(
             "CrawlResultat.Ferdig insert start. maalingId: $maalingId, loeysingId: ${crawlResultat.loeysing.id}")
 
         val keyHolder = GeneratedKeyHolder()
@@ -677,7 +677,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         val id =
             keyHolder.key?.toInt() ?: throw RuntimeException("Feil ved insert av CrawlResultat")
 
-        logger.info(
+        logger.debug(
             "CrawlResultat.Ferdig insert ferdig. maalingId: $maalingId loeysingId: ${crawlResultat.loeysing.id} ny crid: $id")
 
         crawlResultat.nettsider.forEach { nettside ->
@@ -686,7 +686,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               mapOf("cr_id" to id, "url" to nettside.toString()))
         }
 
-        logger.info(
+        logger.debug(
             "CrawlResultat.Ferdig insert nettsider ferdig. maalingId: $maalingId loeysingId: ${crawlResultat.loeysing.id} crid: $id antall nettsider: ${crawlResultat.nettsider.size}")
       }
     }
