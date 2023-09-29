@@ -232,6 +232,72 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
         .isEqualTo(uutilsynetUrls.size)
   }
 
+  @DisplayName("Skal ikke ikke oppdatere CrawlResultat.Ferdig mer enn en gang")
+  @Test
+  fun shouldNotInsertFinishedCrawlResultTwice() {
+    val maaling = createTestMaaling()
+
+    val crawling =
+        Maaling.toCrawling(
+            maaling,
+            listOf(
+                CrawlResultat.Ferdig(
+                    5,
+                    URI("https://status.uri").toURL(),
+                    digdirLoeysing,
+                    Instant.now(),
+                )))
+
+    maalingDAO.save(crawling).getOrThrow()
+    val crId =
+        maalingDAO.jdbcTemplate.queryForObject(
+            "select id from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id",
+            mapOf("loeysingid" to digdirLoeysing.id, "maaling_id" to maaling.id),
+            Int::class.java)
+    maalingDAO.save(crawling).getOrThrow()
+
+    val crIdAfterInsert =
+        maalingDAO.jdbcTemplate.queryForObject(
+            "select id from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id",
+            mapOf("loeysingid" to digdirLoeysing.id, "maaling_id" to maaling.id),
+            Int::class.java)
+
+    assertThat(crId).isEqualTo(crIdAfterInsert)
+  }
+
+  @DisplayName(
+      "Skal kunne oppdatere CrawlResultat med andre statuser enn CrawlResultat.Ferdig mer enn en gang")
+  @Test
+  fun shouldInsertNonFinishedCrawlResultTwice() {
+    val maaling = createTestMaaling()
+
+    val crawling =
+        Maaling.toCrawling(
+            maaling,
+            listOf(
+                CrawlResultat.IkkeFerdig(
+                    URI("https://status.uri").toURL(),
+                    digdirLoeysing,
+                    Instant.now(),
+                    Framgang(0, 10))))
+
+    maalingDAO.save(crawling).getOrThrow()
+    val crId =
+        maalingDAO.jdbcTemplate.queryForObject(
+            "select id from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id",
+            mapOf("loeysingid" to digdirLoeysing.id, "maaling_id" to maaling.id),
+            Int::class.java)
+    maalingDAO.save(crawling).getOrThrow()
+
+    val crIdAfterInsert =
+        maalingDAO.jdbcTemplate.queryForObject(
+            "select id from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id",
+            mapOf("loeysingid" to digdirLoeysing.id, "maaling_id" to maaling.id),
+            Int::class.java)
+
+    assertThat(crId).isNotEqualTo(crIdAfterInsert)
+  }
+
   private fun saveMaalingWithStatusTestingFerdig(): Int {
     val maaling = createTestMaaling()
     val crawlResultat =
