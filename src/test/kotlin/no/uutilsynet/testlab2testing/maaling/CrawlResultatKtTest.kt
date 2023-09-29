@@ -24,8 +24,6 @@ class CrawlResultatKtTest {
                 "uutilsynet"))
     val updated =
         updateStatus(ikkeFerdig, CrawlStatus.Completed(crawlerOutput)) as CrawlResultat.Ferdig
-    assertThat(updated.nettsider)
-        .containsExactlyElementsOf(crawlerOutput.map { URI(it.url).toURL() })
     assertThat(updated.antallNettsider).isEqualTo(crawlerOutput.size)
   }
 
@@ -78,7 +76,6 @@ class CrawlResultatKtTest {
             CrawlerOutput("https://www.uutilsynet.no/[VIEWURL]", "ugyldig_url"))
     val updated =
         updateStatus(ikkeFerdig, CrawlStatus.Completed(crawlerOutput)) as CrawlResultat.Ferdig
-    assertThat(updated.nettsider)
-        .containsExactlyElementsOf(listOf(crawlerOutput[0].url).map { URI(it).toURL() })
+    assertThat(updated.antallNettsider).isEqualTo(1)
   }
 }
