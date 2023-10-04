@@ -103,6 +103,12 @@ sealed class TestKoeyring {
               }
           is AutoTesterClient.AutoTesterStatus.Failed ->
               Feila(testKoeyring.crawlResultat, Instant.now(), response.output)
+          is AutoTesterClient.AutoTesterStatus.Running ->
+              Starta(
+                  testKoeyring.crawlResultat,
+                  Instant.now(),
+                  testKoeyring.statusURL,
+                  Framgang.from(response.customStatus, testKoeyring.crawlResultat.antallNettsider))
           else -> testKoeyring
         }
 
