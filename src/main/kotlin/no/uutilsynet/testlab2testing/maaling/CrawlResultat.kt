@@ -78,10 +78,7 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
                 )
               }
           is CrawlStatus.Failed ->
-              CrawlResultat.Feilet(
-                  "Crawling av ${crawlResultat.loeysing.url} feilet.",
-                  crawlResultat.loeysing,
-                  Instant.now())
+              CrawlResultat.Feilet(newStatus.output, crawlResultat.loeysing, Instant.now())
           is CrawlStatus.Terminated ->
               CrawlResultat.Feilet(
                   "Crawling av ${crawlResultat.loeysing.url} ble avbrutt.",
