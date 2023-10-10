@@ -613,19 +613,22 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   @Transactional
   fun saveCrawlResultat(crawlResultat: CrawlResultat, maalingId: Int) {
-    val alreadyFinished =
-        jdbcTemplate.queryForObject(
-            "select count(*) from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id and status = :status_finished",
-            mapOf(
-                "loeysingid" to crawlResultat.loeysing.id,
-                "maaling_id" to maalingId,
-                "status_finished" to "ferdig"),
-            Int::class.java)
 
-    if (alreadyFinished == 1) {
-      logger.debug(
-          "CrawlResultat.Ferdig hopper over for maalingId: $maalingId loeysingId: ${crawlResultat.loeysing.id}")
-      return
+    if (crawlResultat is CrawlResultat.Ferdig) {
+      val alreadyFinished =
+          jdbcTemplate.queryForObject(
+              "select count(*) from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id and status = :status_finished",
+              mapOf(
+                  "loeysingid" to crawlResultat.loeysing.id,
+                  "maaling_id" to maalingId,
+                  "status_finished" to "ferdig"),
+              Int::class.java)
+
+      if (alreadyFinished == 1) {
+        logger.debug(
+            "CrawlResultat.Ferdig hopper over for maalingId: $maalingId loeysingId: ${crawlResultat.loeysing.id}")
+        return
+      }
     }
 
     jdbcTemplate.update(
