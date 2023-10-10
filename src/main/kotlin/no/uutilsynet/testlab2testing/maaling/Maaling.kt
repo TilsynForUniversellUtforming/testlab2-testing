@@ -86,7 +86,9 @@ sealed class Maaling {
         Crawling(planlagtMaaling.id, planlagtMaaling.navn, planlagtMaaling.datoStart, crawlResultat)
 
     fun toKvalitetssikring(crawlingMaaling: Crawling): Kvalitetssikring? =
-        if (crawlingMaaling.crawlResultat.any { it is CrawlResultat.IkkeFerdig }) {
+        if (crawlingMaaling.crawlResultat.any {
+          it is CrawlResultat.IkkjeStarta || it is CrawlResultat.Starta
+        }) {
           null
         } else {
           Kvalitetssikring(

@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.maaling
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import java.net.URI
 import java.time.Instant
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -56,30 +57,27 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
                         "idLoeysing" to loeysing.id,
                         "domene" to loeysing.url),
                     AutoTesterClient.StatusUris::class.java)!!
-            CrawlResultat.IkkeFerdig(
-                statusUris.statusQueryGetUri.toURL(),
-                loeysing,
-                Instant.now(),
-                Framgang(0, crawlParameters.maxLinksPerPage))
+            CrawlResultat.IkkjeStarta(statusUris.statusQueryGetUri.toURL(), loeysing, Instant.now())
           }
           .getOrElse { exception ->
             logger.error(
                 "feilet da jeg forsøkte å starte crawling for løysing ${loeysing.id}", exception)
-            CrawlResultat.Feilet(
+            CrawlResultat.Feila(
                 exception.message ?: "start crawling feilet", loeysing, Instant.now())
           }
 
-  fun getStatus(crawlResultat: CrawlResultat.IkkeFerdig): Result<CrawlStatus> =
-      runCatching {
-            val response =
-                restTemplate.getForObject(
-                    crawlResultat.statusUrl.toURI(), CrawlStatus::class.java)!!
-            response
-          }
-          .onFailure { exception ->
+  fun getStatus(crawlResultat: CrawlResultat.Starta, maalingId: Int): Result<CrawlStatus> =
+      fetchCrawlerStatus(crawlResultat.statusUrl.toURI(), crawlResultat.loeysing.id, maalingId)
+
+  fun getStatus(crawlResultat: CrawlResultat.IkkjeStarta, maalingId: Int): Result<CrawlStatus> =
+      fetchCrawlerStatus(crawlResultat.statusUrl.toURI(), crawlResultat.loeysing.id, maalingId)
+
+  fun fetchCrawlerStatus(uri: URI, maalingId: Int, loeysingId: Int): Result<CrawlStatus> =
+      runCatching { restTemplate.getForObject(uri, CrawlStatus::class.java)!! }
+          .onFailure {
             logger.error(
-                "feilet da jeg forsøkte å hente status crawling ${crawlResultat.statusUrl.toURI()} for ${crawlResultat.loeysing.namn}",
-                exception)
+                "feilet da jeg forsøkte å hente status crawling $uri for måling id $maalingId løysing id $loeysingId",
+                it)
           }
 }
 
