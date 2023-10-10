@@ -125,6 +125,9 @@ class LoeysingIntegrationTests(
             String::class.java)
 
     assertThat(duplicateResponse.statusCode, Matchers.equalTo(HttpStatus.BAD_REQUEST))
+
+    loeysingDAO.jdbcTemplate.update(
+        "delete from loeysing where namn = :namn", mapOf("namn" to "test_skal_slettes_1"))
   }
 
   @Test
