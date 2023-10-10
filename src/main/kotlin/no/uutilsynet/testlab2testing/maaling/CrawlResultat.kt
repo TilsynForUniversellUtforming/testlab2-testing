@@ -78,7 +78,7 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
                           framgang = Framgang.from(newStatus.customStatus))
                   else ->
                       throw RuntimeException(
-                          "Ulovleg status på crawlresultat, kan ikkkje oppdatere ny status")
+                          "Ulovleg status på crawlresultat for løysing id ${crawlResultat.loeysing.id}, kan ikkje oppdatere ny status")
                 }
               }
           is CrawlStatus.Completed ->
