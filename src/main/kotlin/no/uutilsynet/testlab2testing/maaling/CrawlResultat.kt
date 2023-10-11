@@ -57,29 +57,26 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
       is CrawlResultat.Starta -> {
         when (newStatus) {
           is CrawlStatus.Pending ->
-              CrawlResultat.IkkjeStarta(
-                  statusUrl =
-                      if (crawlResultat is CrawlResultat.Starta) crawlResultat.statusUrl
-                      else (crawlResultat as CrawlResultat.IkkjeStarta).statusUrl,
-                  crawlResultat.loeysing,
-                  Instant.now())
-          is CrawlStatus.Running ->
-              if (newStatus.customStatus == null) {
-                crawlResultat
+              if (crawlResultat is CrawlResultat.IkkjeStarta) {
+                CrawlResultat.IkkjeStarta(
+                    crawlResultat.statusUrl, crawlResultat.loeysing, Instant.now())
               } else {
-                when (crawlResultat) {
-                  is CrawlResultat.Starta ->
-                      crawlResultat.copy(framgang = Framgang.from(newStatus.customStatus))
-                  is CrawlResultat.IkkjeStarta ->
-                      CrawlResultat.Starta(
-                          crawlResultat.statusUrl,
-                          crawlResultat.loeysing,
-                          Instant.now(),
-                          framgang = Framgang.from(newStatus.customStatus))
-                  else ->
-                      throw RuntimeException(
-                          "Ulovleg status på crawlresultat for løysing id ${crawlResultat.loeysing.id}, kan ikkje oppdatere ny status")
-                }
+                throw RuntimeException(
+                    "Ulovleg status på crawlresultat for løysing id ${crawlResultat.loeysing.id}, kan ikkje oppdatere ny status")
+              }
+          is CrawlStatus.Running ->
+              when (crawlResultat) {
+                is CrawlResultat.IkkjeStarta ->
+                    CrawlResultat.Starta(
+                        crawlResultat.statusUrl,
+                        crawlResultat.loeysing,
+                        Instant.now(),
+                        framgang = Framgang.from(newStatus.customStatus))
+                is CrawlResultat.Starta ->
+                    crawlResultat.copy(framgang = Framgang.from(newStatus.customStatus))
+                else ->
+                    throw RuntimeException(
+                        "Ulovleg status på crawlresultat for løysing id ${crawlResultat.loeysing.id}, kan ikkje oppdatere ny status")
               }
           is CrawlStatus.Completed ->
               if (newStatus.output.isEmpty()) {

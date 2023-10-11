@@ -96,7 +96,7 @@ data class CustomStatus(val lenkerCrawla: Int, val maxLenker: Int)
 sealed class CrawlStatus {
   object Pending : CrawlStatus()
 
-  data class Running(val customStatus: CustomStatus?) : CrawlStatus()
+  data class Running(val customStatus: CustomStatus) : CrawlStatus()
 
   data class Completed(val output: List<CrawlerOutput>) : CrawlStatus()
 
