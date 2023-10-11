@@ -417,13 +417,17 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     val crawlResultat =
         when (status) {
-          "ikke_ferdig" -> {
+          "ikkje_starta" -> {
+            CrawlResultat.IkkjeStarta(
+                URI(rs.getString("status_url")).toURL(), loeysing, sistOppdatert)
+          }
+          "starta" -> {
             val framgang = Framgang(rs.getInt("lenker_crawla"), rs.getInt("max_links_per_page"))
-            CrawlResultat.IkkeFerdig(
+            CrawlResultat.Starta(
                 URI(rs.getString("status_url")).toURL(), loeysing, sistOppdatert, framgang)
           }
-          "feilet" -> {
-            CrawlResultat.Feilet(rs.getString("feilmelding"), loeysing, sistOppdatert)
+          "feila" -> {
+            CrawlResultat.Feila(rs.getString("feilmelding"), loeysing, sistOppdatert)
           }
           "ferdig" -> {
             val statusUrl = rs.getString("status_url")
@@ -631,7 +635,22 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         "delete from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id",
         mapOf("loeysingid" to crawlResultat.loeysing.id, "maaling_id" to maalingId))
     when (crawlResultat) {
-      is CrawlResultat.IkkeFerdig -> {
+      is CrawlResultat.IkkjeStarta -> {
+        jdbcTemplate.update(
+            """
+              insert into crawlresultat (loeysingid, status, status_url, maaling_id, sist_oppdatert) 
+              values (:loeysingid, :status, :status_url, :maaling_id, :sist_oppdatert)
+            """
+                .trimIndent(),
+            mapOf(
+                "loeysingid" to crawlResultat.loeysing.id,
+                "status" to status(crawlResultat),
+                "status_url" to crawlResultat.statusUrl.toString(),
+                "maaling_id" to maalingId,
+                "sist_oppdatert" to Timestamp.from(crawlResultat.sistOppdatert),
+            ))
+      }
+      is CrawlResultat.Starta -> {
         jdbcTemplate.update(
             """
               insert into crawlresultat (loeysingid, status, status_url, maaling_id, sist_oppdatert, lenker_crawla) 
@@ -640,21 +659,22 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 .trimIndent(),
             mapOf(
                 "loeysingid" to crawlResultat.loeysing.id,
-                "status" to "ikke_ferdig",
+                "status" to status(crawlResultat),
                 "status_url" to crawlResultat.statusUrl.toString(),
                 "maaling_id" to maalingId,
                 "sist_oppdatert" to Timestamp.from(crawlResultat.sistOppdatert),
                 "lenker_crawla" to crawlResultat.framgang.prosessert))
       }
-      is CrawlResultat.Feilet -> {
+      is CrawlResultat.Feila -> {
         jdbcTemplate.update(
             """
               insert into crawlresultat (loeysingid, status, maaling_id, sist_oppdatert, feilmelding)
-              values (:loeysingid, 'feilet', :maaling_id, :sist_oppdatert, :feilmelding)
+              values (:loeysingid, :status, :maaling_id, :sist_oppdatert, :feilmelding)
             """
                 .trimIndent(),
             mapOf(
                 "loeysingid" to crawlResultat.loeysing.id,
+                "status" to status(crawlResultat),
                 "maaling_id" to maalingId,
                 "sist_oppdatert" to Timestamp.from(crawlResultat.sistOppdatert),
                 "feilmelding" to crawlResultat.feilmelding))
@@ -670,7 +690,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             MapSqlParameterSource(
                 mapOf(
                     "loeysingid" to crawlResultat.loeysing.id,
-                    "status" to "ferdig",
+                    "status" to status(crawlResultat),
                     "status_url" to crawlResultat.statusUrl.toString(),
                     "maaling_id" to maalingId,
                     "sist_oppdatert" to Timestamp.from(crawlResultat.sistOppdatert))),
@@ -694,4 +714,12 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       }
     }
   }
+
+  private fun status(crawresultat: CrawlResultat): String =
+      when (crawresultat) {
+        is CrawlResultat.IkkjeStarta -> "ikkje_starta"
+        is CrawlResultat.Starta -> "starta"
+        is CrawlResultat.Feila -> "feila"
+        is CrawlResultat.Ferdig -> "ferdig"
+      }
 }

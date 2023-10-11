@@ -54,10 +54,18 @@ class ScheduledUpdater(
   fun updateCrawlingStatuses(maaling: Maaling.Crawling): Maaling {
     val oppdaterteResultater =
         maaling.crawlResultat.map {
-          if (it is CrawlResultat.IkkeFerdig) {
-            updateCrawlingStatus(it, crawlerClient::getStatus)
-          } else {
-            it
+          when (it) {
+            is CrawlResultat.Starta -> {
+              updateCrawlingStatus(it) { cr ->
+                crawlerClient.getStatus(cr as CrawlResultat.Starta, maaling.id)
+              }
+            }
+            is CrawlResultat.IkkjeStarta -> {
+              updateCrawlingStatus(it) { cr ->
+                crawlerClient.getStatus(cr as CrawlResultat.IkkjeStarta, maaling.id)
+              }
+            }
+            else -> it
           }
         }
     val oppdatertMaaling = maaling.copy(crawlResultat = oppdaterteResultater)
@@ -90,11 +98,11 @@ class ScheduledUpdater(
   companion object {
     private val logger = LoggerFactory.getLogger(ScheduledUpdater::class.java)
 
-    private val failedCrawlStatusAttempts = mutableMapOf<CrawlResultat.IkkeFerdig, Int>()
+    private val failedCrawlStatusAttempts = mutableMapOf<CrawlResultat, Int>()
 
     fun updateCrawlingStatus(
-        crawlResultat: CrawlResultat.IkkeFerdig,
-        getNewStatus: (CrawlResultat.IkkeFerdig) -> Result<CrawlStatus>
+        crawlResultat: CrawlResultat,
+        getNewStatus: (CrawlResultat) -> Result<CrawlStatus>
     ): CrawlResultat {
       val updated =
           getNewStatus(crawlResultat).map { newStatus -> updateStatus(crawlResultat, newStatus) }
@@ -107,7 +115,7 @@ class ScheduledUpdater(
           logger.error(
               "feila da eg forsøkte å oppdatere status for løysing ${crawlResultat.loeysing.id}",
               updated.exceptionOrNull())
-          CrawlResultat.Feilet(
+          CrawlResultat.Feila(
               "Crawling av ${crawlResultat.loeysing.url} feila. Eg klarte ikkje å hente status frå crawleren.",
               crawlResultat.loeysing,
               Instant.now())

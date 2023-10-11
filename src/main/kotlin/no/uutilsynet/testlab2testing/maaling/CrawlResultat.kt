@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.maaling
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
 import java.net.URL
@@ -14,14 +15,21 @@ val logger: Logger = LoggerFactory.getLogger(CrawlResultat::class.java)
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
-    JsonSubTypes.Type(CrawlResultat.IkkeFerdig::class, name = "ikke_ferdig"),
-    JsonSubTypes.Type(CrawlResultat.Feilet::class, name = "feilet"),
-    JsonSubTypes.Type(CrawlResultat.Ferdig::class, name = "ferdig"))
+    Type(CrawlResultat.IkkjeStarta::class, name = "ikkje_starta"),
+    Type(CrawlResultat.Starta::class, name = "starta"),
+    Type(CrawlResultat.Ferdig::class, name = "ferdig"),
+    Type(CrawlResultat.Feila::class, name = "feila"))
 sealed class CrawlResultat {
   abstract val loeysing: Loeysing
   abstract val sistOppdatert: Instant
 
-  data class IkkeFerdig(
+  data class IkkjeStarta(
+      val statusUrl: URL,
+      override val loeysing: Loeysing,
+      override val sistOppdatert: Instant,
+  ) : CrawlResultat()
+
+  data class Starta(
       val statusUrl: URL,
       override val loeysing: Loeysing,
       override val sistOppdatert: Instant,
@@ -36,7 +44,7 @@ sealed class CrawlResultat {
       @JsonIgnore val nettsider: List<URL> = emptyList(),
   ) : CrawlResultat()
 
-  data class Feilet(
+  data class Feila(
       val feilmelding: String,
       override val loeysing: Loeysing,
       override val sistOppdatert: Instant
@@ -45,18 +53,34 @@ sealed class CrawlResultat {
 
 fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlResultat =
     when (crawlResultat) {
-      is CrawlResultat.IkkeFerdig -> {
+      is CrawlResultat.IkkjeStarta,
+      is CrawlResultat.Starta -> {
         when (newStatus) {
-          is CrawlStatus.Pending -> crawlResultat
-          is CrawlStatus.Running ->
-              if (newStatus.customStatus == null) {
-                crawlResultat
+          is CrawlStatus.Pending ->
+              if (crawlResultat is CrawlResultat.IkkjeStarta) {
+                CrawlResultat.IkkjeStarta(
+                    crawlResultat.statusUrl, crawlResultat.loeysing, Instant.now())
               } else {
-                crawlResultat.copy(framgang = Framgang.from(newStatus.customStatus))
+                throw RuntimeException(
+                    "Ulovleg status på crawlresultat for løysing id ${crawlResultat.loeysing.id}, kan ikkje oppdatere ny status")
+              }
+          is CrawlStatus.Running ->
+              when (crawlResultat) {
+                is CrawlResultat.IkkjeStarta ->
+                    CrawlResultat.Starta(
+                        crawlResultat.statusUrl,
+                        crawlResultat.loeysing,
+                        Instant.now(),
+                        framgang = Framgang.from(newStatus.customStatus))
+                is CrawlResultat.Starta ->
+                    crawlResultat.copy(framgang = Framgang.from(newStatus.customStatus))
+                else ->
+                    throw RuntimeException(
+                        "Ulovleg status på crawlresultat for løysing id ${crawlResultat.loeysing.id}, kan ikkje oppdatere ny status")
               }
           is CrawlStatus.Completed ->
               if (newStatus.output.isEmpty()) {
-                CrawlResultat.Feilet(
+                CrawlResultat.Feila(
                     "Crawling av ${crawlResultat.loeysing.url} feilet. Output fra crawleren var en tom liste.",
                     crawlResultat.loeysing,
                     Instant.now())
@@ -68,19 +92,24 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
                           "Crawlresultatet for løysing ${crawlResultat.loeysing.id} inneholder en ugyldig url: ${it.exceptionOrNull()?.message}")
                 }
                 val (validUrls, invalidUrls) = urlList.partition { it.isSuccess }
-                logger.warn("${invalidUrls.size} ugyldige urler oppdaget i oppdatering av status")
+
+                if (invalidUrls.isNotEmpty()) {
+                  logger.warn("${invalidUrls.size} ugyldige urler oppdaget i oppdatering av status")
+                }
                 CrawlResultat.Ferdig(
                     validUrls.size,
-                    crawlResultat.statusUrl,
+                    statusUrl =
+                        if (crawlResultat is CrawlResultat.Starta) crawlResultat.statusUrl
+                        else (crawlResultat as CrawlResultat.IkkjeStarta).statusUrl,
                     crawlResultat.loeysing,
                     Instant.now(),
                     validUrls.map { it.getOrThrow() },
                 )
               }
           is CrawlStatus.Failed ->
-              CrawlResultat.Feilet(newStatus.output, crawlResultat.loeysing, Instant.now())
+              CrawlResultat.Feila(newStatus.output, crawlResultat.loeysing, Instant.now())
           is CrawlStatus.Terminated ->
-              CrawlResultat.Feilet(
+              CrawlResultat.Feila(
                   "Crawling av ${crawlResultat.loeysing.url} ble avbrutt.",
                   crawlResultat.loeysing,
                   Instant.now())

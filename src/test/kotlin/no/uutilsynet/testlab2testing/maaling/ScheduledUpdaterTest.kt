@@ -23,7 +23,7 @@ class ScheduledUpdaterTest {
       "når oppdatering av status feiler mer enn 12 ganger, så skal crawlresultatet settes som 'feilet'")
   fun crawlStatusFailed() {
     val crawlResultat =
-        CrawlResultat.IkkeFerdig(
+        CrawlResultat.Starta(
             statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
             loeysing =
                 Loeysing(
@@ -42,7 +42,7 @@ class ScheduledUpdaterTest {
           }
     }
 
-    assertThat(updatedCrawlResultat).isInstanceOf(CrawlResultat.Feilet::class.java)
+    assertThat(updatedCrawlResultat).isInstanceOf(CrawlResultat.Feila::class.java)
   }
 
   @Test
@@ -86,8 +86,8 @@ class ScheduledUpdaterTest {
     val crawlerOutput =
         listOf(CrawlerOutput(uutilsynetLoeysing.url.toString(), uutilsynetLoeysing.namn))
 
-    val crawlResultatIkkeFerdig =
-        CrawlResultat.IkkeFerdig(
+    val crawlResultatIkkjeStarta =
+        CrawlResultat.IkkjeStarta(
             statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
             loeysing =
                 Loeysing(
@@ -95,24 +95,23 @@ class ScheduledUpdaterTest {
                     url = uutilsynetLoeysing.url,
                     id = 1,
                     orgnummer = "000000000"),
-            sistOppdatert = Instant.now(),
-            framgang = Framgang(0, 0))
+            sistOppdatert = Instant.now())
 
-    `when`(crawlerClient.getStatus(crawlResultatIkkeFerdig))
+    `when`(crawlerClient.getStatus(crawlResultatIkkjeStarta, 1))
         .thenReturn(Result.success(CrawlStatus.Completed(crawlerOutput)))
 
     val maaling =
         Maaling.Crawling(
             id = 1,
-            crawlResultat = listOf(crawlResultatIkkeFerdig),
+            crawlResultat = listOf(crawlResultatIkkjeStarta),
             navn = "Test",
             datoStart = LocalDate.now())
 
     val expectedCrawlResultat =
         CrawlResultat.Ferdig(
             antallNettsider = 1,
-            statusUrl = crawlResultatIkkeFerdig.statusUrl,
-            loeysing = crawlResultatIkkeFerdig.loeysing,
+            statusUrl = crawlResultatIkkjeStarta.statusUrl,
+            loeysing = crawlResultatIkkjeStarta.loeysing,
             sistOppdatert = Instant.now(),
             nettsider = crawlerOutput.map { URI(it.url).toURL() })
 

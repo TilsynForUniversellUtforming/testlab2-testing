@@ -53,7 +53,7 @@ class CrawlerClientTest {
 
       assertThat(oppdatertMaaling.crawlResultat).hasSize(2)
       assertThat(oppdatertMaaling.crawlResultat)
-          .hasOnlyElementsOfType(CrawlResultat.IkkeFerdig::class.java)
+          .hasOnlyElementsOfType(CrawlResultat.IkkjeStarta::class.java)
     }
   }
 

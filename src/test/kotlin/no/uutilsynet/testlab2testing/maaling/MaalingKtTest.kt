@@ -2,11 +2,14 @@ package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URI
 import java.time.Instant
+import java.time.LocalDate
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateStatus
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateParameters
+import no.uutilsynet.testlab2testing.maaling.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingDateStart
-import org.assertj.core.api.Assertions
+import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
+import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasSize
@@ -103,7 +106,78 @@ class MaalingKtTest {
             Instant.now())
     private val crawlResultatForDigdir =
         CrawlResultat.Ferdig(
-            1, URI("https://www.status.url").toURL(), TestConstants.digdirLoeysing, Instant.now())
+            1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now())
+
+    @DisplayName(
+        "man skal ikke gå til status kvalitetssikring hvis noen crawlresultat har status starta")
+    @Test
+    fun toKvalitetssikringWithCrawlResultStarta() {
+      val maaling =
+          Maaling.Crawling(
+              id = 1,
+              crawlResultat =
+                  listOf(
+                      CrawlResultat.Ferdig(
+                          1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now()),
+                      CrawlResultat.Starta(
+                          URI("https://www.status.url").toURL(),
+                          uutilsynetLoeysing,
+                          Instant.now(),
+                          Framgang(10, 100))),
+              navn = "Test",
+              datoStart = LocalDate.now())
+
+      val maalingCrawling = Maaling.toKvalitetssikring(maaling)
+
+      assertThat(maalingCrawling).isNull()
+    }
+
+    @DisplayName(
+        "man skal ikke gå til status kvalitetssikring hvis noen crawlresultat har status ikkje starta")
+    @Test
+    fun toKvalitetssikringWithCrawlResultIkkjeStarta() {
+      val maaling =
+          Maaling.Crawling(
+              id = 1,
+              crawlResultat =
+                  listOf(
+                      CrawlResultat.Ferdig(
+                          1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now()),
+                      CrawlResultat.IkkjeStarta(
+                          URI("https://www.status.url").toURL(),
+                          uutilsynetLoeysing,
+                          Instant.now())),
+              navn = "Test",
+              datoStart = LocalDate.now())
+
+      val maalingCrawling = Maaling.toKvalitetssikring(maaling)
+
+      assertThat(maalingCrawling).isNull()
+    }
+
+    @DisplayName(
+        "man skal gå til status kvalitetssikring hvis alle crawlresultat har status ferdig")
+    @Test
+    fun toKvalitetssikring() {
+      val maaling =
+          Maaling.Crawling(
+              id = 1,
+              crawlResultat =
+                  listOf(
+                      CrawlResultat.Ferdig(
+                          1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now()),
+                      CrawlResultat.Ferdig(
+                          1,
+                          URI("https://www.status.url").toURL(),
+                          uutilsynetLoeysing,
+                          Instant.now())),
+              navn = "Test",
+              datoStart = LocalDate.now())
+
+      val maalingKvalitetssikring = Maaling.toKvalitetssikring(maaling)
+
+      assertThat(maalingKvalitetssikring).isInstanceOf(Maaling.Kvalitetssikring::class.java)
+    }
 
     @DisplayName(
         "når vi prøver å gå til TestingFerdig, og det finnes testkjøringer som ikke er ferdig, så skal det ikke gå")
@@ -121,7 +195,7 @@ class MaalingKtTest {
                       URI("https://www.status.url").toURL(),
                       Framgang(0, 0))))
       val result = Maaling.toTestingFerdig(maaling)
-      Assertions.assertThat(result).isNull()
+      assertThat(result).isNull()
     }
 
     @DisplayName(
@@ -140,7 +214,7 @@ class MaalingKtTest {
                       URI("https://status.url").toURL(),
                       TestKoeyringTest.testResultater())))
       val result = Maaling.toTestingFerdig(maaling)
-      Assertions.assertThat(result).isNotNull
+      assertThat(result).isNotNull
     }
 
     @DisplayName(
@@ -161,7 +235,7 @@ class MaalingKtTest {
                       TestKoeyringTest.testResultater()),
               ))
       val result = Maaling.toTestingFerdig(maaling)
-      Assertions.assertThat(result).isNotNull
+      assertThat(result).isNotNull
     }
   }
 
@@ -191,10 +265,7 @@ class MaalingKtTest {
                         URI("https://aggregeringSide.resultat").toURL())),
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(
-                        1,
-                        URI("https://www.status.url").toURL(),
-                        TestConstants.digdirLoeysing,
-                        Instant.now()),
+                        1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now()),
                     Instant.now(),
                     URI("https://www.status.url").toURL(),
                     emptyList(),

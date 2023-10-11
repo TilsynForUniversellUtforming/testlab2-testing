@@ -51,7 +51,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
     val id = saveMaalingWithStatusCrawling()
     val maaling = maalingDAO.getMaaling(id) as Maaling.Crawling
     maaling.crawlResultat.forEach {
-      val (lenkerCrawla, maxLenker) = (it as CrawlResultat.IkkeFerdig).framgang
+      val (lenkerCrawla, maxLenker) = (it as CrawlResultat.Starta).framgang
       assertThat(lenkerCrawla).isEqualTo(10)
       assertThat(maxLenker).isEqualTo(2000)
     }
@@ -276,7 +276,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
         Maaling.toCrawling(
             maaling,
             listOf(
-                CrawlResultat.IkkeFerdig(
+                CrawlResultat.Starta(
                     URI("https://status.uri").toURL(),
                     digdirLoeysing,
                     Instant.now(),
@@ -363,7 +363,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
             .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
     val crawlResultat =
         maaling.loeysingList.map {
-          CrawlResultat.IkkeFerdig(
+          CrawlResultat.Starta(
               URI("https://status.uri").toURL(), it, Instant.now(), Framgang(10, maxLinksPerPage))
         }
     val crawling = Maaling.toCrawling(maaling, crawlResultat)
