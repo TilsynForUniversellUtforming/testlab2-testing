@@ -31,7 +31,7 @@ object TestConstants {
           "datoStart" to maalingDateStart,
           "loeysingIdList" to loeysingList.map { it.id },
           "testregelIdList" to testRegelList.map { it.id },
-          "crawlParameters" to mapOf("maxLinksPerPage" to 10, "numLinksToSelect" to 10))
+          "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10))
 
   const val statusURL = "https://status.url"
   val crawlResultat =

@@ -75,7 +75,7 @@ class MaalingIntegrationTests(
             "datoStart" to maalingDateStart,
             "utvalId" to utvalId,
             "testregelIdList" to testRegelList.map { it.id },
-            "crawlParameters" to mapOf("maxLinksPerPage" to 10, "numLinksToSelect" to 10))
+            "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10))
     val location = restTemplate.postForLocation("/v1/maalinger", requestBody)
     val locationPattern = """/v1/maalinger/\d+"""
     assertThat(location, notNullValue())
@@ -90,7 +90,7 @@ class MaalingIntegrationTests(
         mapOf(
             "navn" to maalingTestName,
             "testregelIdList" to testRegelList.map { it.id },
-            "crawlParameters" to mapOf("maxLinksPerPage" to 10, "numLinksToSelect" to 10))
+            "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10))
     val response = restTemplate.postForEntity("/v1/maalinger", requestBody, String::class.java)
     assertThat(response.statusCode, equalTo(HttpStatus.BAD_REQUEST))
   }
@@ -107,7 +107,7 @@ class MaalingIntegrationTests(
             "datoStart" to maalingDateStart,
             "utvalId" to utvalId,
             "testregelIdList" to testRegelList.map { it.id },
-            "crawlParameters" to mapOf("maxLinksPerPage" to 10, "numLinksToSelect" to 10))
+            "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10))
     val location = restTemplate.postForLocation("/v1/maalinger", requestBody)
     assertThat(location, notNullValue())
 
