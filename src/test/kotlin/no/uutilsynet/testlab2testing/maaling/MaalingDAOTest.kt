@@ -351,7 +351,7 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
   }
 
   private fun saveMaalingWithStatusCrawling(name: String = maalingTestName): Int {
-    val maxLinksPerPage = 2000
+    val maxLenker = 2000
     val maaling =
         maalingDAO
             .createMaaling(
@@ -359,12 +359,12 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
                 maalingDateStart,
                 loeysingList.map { it.id },
                 testRegelList.map { it.id },
-                CrawlParameters(maxLinksPerPage, 30))
+                CrawlParameters(maxLenker, 30))
             .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Starta(
-              URI("https://status.uri").toURL(), it, Instant.now(), Framgang(10, maxLinksPerPage))
+              URI("https://status.uri").toURL(), it, Instant.now(), Framgang(10, maxLenker))
         }
     val crawling = Maaling.toCrawling(maaling, crawlResultat)
     maalingDAO.save(crawling).getOrThrow()

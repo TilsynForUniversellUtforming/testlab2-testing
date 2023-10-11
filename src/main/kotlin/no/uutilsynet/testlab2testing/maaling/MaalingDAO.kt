@@ -26,7 +26,6 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaal
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.testResultatRowMapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingSql
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingWithCrawlParameters
 import no.uutilsynet.testlab2testing.maaling.MaalingStatus.crawling
 import no.uutilsynet.testlab2testing.maaling.MaalingStatus.kvalitetssikring
 import no.uutilsynet.testlab2testing.maaling.MaalingStatus.planlegging
@@ -53,8 +52,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val navn: String,
       val datoStart: LocalDate,
       val status: MaalingStatus,
-      val maxLinksPerPage: Int,
-      val numLinksToSelect: Int
+      val maxLenker: Int,
+      val talLenker: Int
   )
 
   object MaalingParams {
@@ -74,8 +73,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     val createMaalingSql =
         """
-      insert into Maalingv1 (navn, status, dato_start, max_links_per_page, num_links_to_select, utval_id) 
-      values (:navn, :status, :dato_start, :maxLinksPerPage, :numLinksToSelect, :utvalId)
+      insert into Maalingv1 (navn, status, dato_start, max_lenker, tal_lenker, utval_id) 
+      values (:navn, :status, :dato_start, :max_lenker, :tal_lenker, :utvalId)
       returning id
     """
             .trimIndent()
@@ -90,12 +89,12 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "navn" to navn,
             "dato_start" to datoStart,
             "status" to "planlegging",
-            "maxLinksPerPage" to crawlParameters.maxLinksPerPage,
-            "numLinksToSelect" to crawlParameters.numLinksToSelect,
+            "max_lenker" to crawlParameters.maxLenker,
+            "tal_lenker" to crawlParameters.talLenker,
             "utvalId" to utvalId)
 
     val selectMaalingSql =
-        "select id, navn, dato_start, status, max_links_per_page, num_links_to_select from Maalingv1"
+        "select id, navn, dato_start, status, max_lenker, tal_lenker from Maalingv1"
 
     val selectMaalingByDateSql = "$selectMaalingSql order by dato_start desc"
 
@@ -125,9 +124,6 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           }
       return mapOf("navn" to maaling.navn, "status" to status, "id" to maaling.id)
     }
-
-    val updateMaalingWithCrawlParameters =
-        "update MaalingV1 set navn = :navn, status = :status, max_links_per_page = :maxLinksPerPage, num_links_to_select = :numLinksToSelect where id = :id"
 
     val deleteMaalingSql = "delete from MaalingV1 where id = :id"
   }
@@ -225,12 +221,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         val testregelList =
             jdbcTemplate.query(maalingTestregelSql, mapOf("id" to id), testregelRowMapper)
         Planlegging(
-            id,
-            navn,
-            datoStart,
-            loeysingList,
-            testregelList,
-            CrawlParameters(maxLinksPerPage, numLinksToSelect))
+            id, navn, datoStart, loeysingList, testregelList, CrawlParameters(maxLenker, talLenker))
       }
       crawling,
       kvalitetssikring -> {
@@ -268,7 +259,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getCrawlParameters(maalingId: Int): CrawlParameters =
       runCatching {
             jdbcTemplate.queryForObject(
-                "select m.max_links_per_page, m.num_links_to_select from maalingv1 m where m.id = :id",
+                "select m.max_lenker, m.tal_lenker from maalingv1 m where m.id = :id",
                 mapOf("id" to maalingId),
                 crawlParametersRowmapper)
                 ?: throw RuntimeException("Fant ikke crawlparametere for maaling $maalingId")
@@ -382,7 +373,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               l.url,
               l.orgnummer,
               coalesce(an.ant_nettsider, 0) as ant_nettsider,
-              m.max_links_per_page
+              m.max_lenker
           from crawlresultat cr
               join loeysing l on cr.loeysingid = l.id
               left join agg_nettsider an on cr.id = an.crawlresultat_id
@@ -422,7 +413,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 URI(rs.getString("status_url")).toURL(), loeysing, sistOppdatert)
           }
           "starta" -> {
-            val framgang = Framgang(rs.getInt("lenker_crawla"), rs.getInt("max_links_per_page"))
+            val framgang = Framgang(rs.getInt("lenker_crawla"), rs.getInt("max_lenker"))
             CrawlResultat.Starta(
                 URI(rs.getString("status_url")).toURL(), loeysing, sistOppdatert, framgang)
           }
@@ -444,13 +435,13 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun updateMaaling(maaling: Maaling) {
     if (maaling is Planlegging) {
       jdbcTemplate.update(
-          updateMaalingWithCrawlParameters,
+          "update MaalingV1 set navn = :navn, status = :status, max_lenker = :max_lenker, tal_lenker = :tal_lenker where id = :id",
           mapOf(
               "id" to maaling.id,
               "navn" to maaling.navn,
               "status" to "planlegging",
-              "maxLinksPerPage" to maaling.crawlParameters.maxLinksPerPage,
-              "numLinksToSelect" to maaling.crawlParameters.numLinksToSelect))
+              "max_lenker" to maaling.crawlParameters.maxLenker,
+              "tal_lenker" to maaling.crawlParameters.talLenker))
 
       val deleteParams = mapOf("maalingId" to maaling.id)
 
