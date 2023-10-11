@@ -52,8 +52,8 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
                     "${crawlerProperties.url}?code=${crawlerProperties.code}",
                     mapOf(
                         "startUrl" to loeysing.url,
-                        "maxLenker" to crawlParameters.maxLinksPerPage,
-                        "talLenker" to crawlParameters.numLinksToSelect,
+                        "maxLenker" to crawlParameters.maxLenker,
+                        "talLenker" to crawlParameters.talLenker,
                         "idLoeysing" to loeysing.id,
                         "domene" to loeysing.url),
                     AutoTesterClient.StatusUris::class.java)!!

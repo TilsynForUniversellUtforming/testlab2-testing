@@ -79,19 +79,19 @@ class MaalingKtTest {
   @DisplayName("Validering av crawlparameter")
   inner class ValidateCrawlParameters {
     @Test
-    @DisplayName("Minste utvalg er 10 sider")
+    @DisplayName("Minste utvalg er 1 side")
     fun min10() {
-      assertThrows<IllegalArgumentException> { CrawlParameters(9, 10).validateParameters() }
-      assertThrows<IllegalArgumentException> { CrawlParameters(10, 9).validateParameters() }
-      assertDoesNotThrow { CrawlParameters(10, 10).validateParameters() }
+      assertThrows<IllegalArgumentException> { CrawlParameters(0, 1).validateParameters() }
+      assertThrows<IllegalArgumentException> { CrawlParameters(1, 0).validateParameters() }
+      assertDoesNotThrow { CrawlParameters(1, 1).validateParameters() }
     }
 
     @Test
-    @DisplayName("Største utvalg er 2000 sider")
-    fun max2000() {
-      assertThrows<IllegalArgumentException> { CrawlParameters(2001, 2000).validateParameters() }
-      assertThrows<IllegalArgumentException> { CrawlParameters(2000, 2001).validateParameters() }
-      assertDoesNotThrow { CrawlParameters(2000, 2000).validateParameters() }
+    @DisplayName("Største utvalg er 10000 for brutt og 2000 for netto")
+    fun max10000() {
+      assertThrows<IllegalArgumentException> { CrawlParameters(10001, 2000).validateParameters() }
+      assertThrows<IllegalArgumentException> { CrawlParameters(10000, 2001).validateParameters() }
+      assertDoesNotThrow { CrawlParameters(10000, 2000).validateParameters() }
     }
   }
 
