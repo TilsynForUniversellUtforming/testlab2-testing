@@ -33,19 +33,24 @@ class AutoTesterClient(
       nettsider: List<URL>
   ): Result<URL> {
     return runCatching {
-      val url = "${autoTesterProperties.url}?code=${autoTesterProperties.code}"
-      val requestData =
-          mapOf(
-              "urls" to nettsider,
-              "idMaaling" to maalingId,
-              "idLoeysing" to crawlResultat.loeysing.id,
-              "resultatSomFil" to true,
-              "actRegler" to actRegler.map { it.testregelNoekkel },
-              "loeysing" to crawlResultat.loeysing)
-      val statusUris = restTemplate.postForObject(url, requestData, StatusUris::class.java)
-      statusUris?.statusQueryGetUri?.toURL()
-          ?: throw RuntimeException("mangler statusQueryGetUri i responsen")
-    }
+          val url = "${autoTesterProperties.url}?code=${autoTesterProperties.code}"
+          val requestData =
+              mapOf(
+                  "urls" to nettsider,
+                  "idMaaling" to maalingId,
+                  "idLoeysing" to crawlResultat.loeysing.id,
+                  "resultatSomFil" to true,
+                  "actRegler" to actRegler.map { it.testregelNoekkel },
+                  "loeysing" to crawlResultat.loeysing)
+          val statusUris = restTemplate.postForObject(url, requestData, StatusUris::class.java)
+          statusUris?.statusQueryGetUri?.toURL()
+              ?: throw RuntimeException("mangler statusQueryGetUri i responsen")
+        }
+        .onFailure {
+          logger.error(
+              "Kunne ikkje starte test for måling id $maalingId løysing id ${crawlResultat.loeysing.id}",
+              it)
+        }
   }
 
   fun updateStatus(testKoeyring: TestKoeyring.Starta): Result<AutoTesterStatus> = runCatching {
