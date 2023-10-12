@@ -53,59 +53,35 @@ sealed class CrawlResultat {
 
 fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlResultat =
     when (crawlResultat) {
-      is CrawlResultat.IkkjeStarta,
+      is CrawlResultat.IkkjeStarta -> {
+        when (newStatus) {
+          is CrawlStatus.Pending ->
+              CrawlResultat.IkkjeStarta(
+                  crawlResultat.statusUrl, crawlResultat.loeysing, Instant.now())
+          is CrawlStatus.Running ->
+              CrawlResultat.Starta(
+                  crawlResultat.statusUrl,
+                  crawlResultat.loeysing,
+                  Instant.now(),
+                  framgang = Framgang.from(newStatus.customStatus))
+          is CrawlStatus.Completed -> onStatusCompleted(newStatus, crawlResultat)
+          is CrawlStatus.Failed ->
+              CrawlResultat.Feila(newStatus.output, crawlResultat.loeysing, Instant.now())
+          is CrawlStatus.Terminated ->
+              CrawlResultat.Feila(
+                  "Crawling av ${crawlResultat.loeysing.url} ble avbrutt.",
+                  crawlResultat.loeysing,
+                  Instant.now())
+        }
+      }
       is CrawlResultat.Starta -> {
         when (newStatus) {
           is CrawlStatus.Pending ->
-              if (crawlResultat is CrawlResultat.IkkjeStarta) {
-                CrawlResultat.IkkjeStarta(
-                    crawlResultat.statusUrl, crawlResultat.loeysing, Instant.now())
-              } else {
-                throw RuntimeException(
-                    "Ulovleg status på crawlresultat for løysing id ${crawlResultat.loeysing.id}, kan ikkje oppdatere ny status")
-              }
+              CrawlResultat.IkkjeStarta(
+                  crawlResultat.statusUrl, crawlResultat.loeysing, Instant.now())
           is CrawlStatus.Running ->
-              when (crawlResultat) {
-                is CrawlResultat.IkkjeStarta ->
-                    CrawlResultat.Starta(
-                        crawlResultat.statusUrl,
-                        crawlResultat.loeysing,
-                        Instant.now(),
-                        framgang = Framgang.from(newStatus.customStatus))
-                is CrawlResultat.Starta ->
-                    crawlResultat.copy(framgang = Framgang.from(newStatus.customStatus))
-                else ->
-                    throw RuntimeException(
-                        "Ulovleg status på crawlresultat for løysing id ${crawlResultat.loeysing.id}, kan ikkje oppdatere ny status")
-              }
-          is CrawlStatus.Completed ->
-              if (newStatus.output.isEmpty()) {
-                CrawlResultat.Feila(
-                    "Crawling av ${crawlResultat.loeysing.url} feilet. Output fra crawleren var en tom liste.",
-                    crawlResultat.loeysing,
-                    Instant.now())
-              } else {
-                val urlList = newStatus.output.map { runCatching { URI(it.url).toURL() } }
-                urlList.forEach {
-                  if (it.isFailure)
-                      logger.info(
-                          "Crawlresultatet for løysing ${crawlResultat.loeysing.id} inneholder en ugyldig url: ${it.exceptionOrNull()?.message}")
-                }
-                val (validUrls, invalidUrls) = urlList.partition { it.isSuccess }
-
-                if (invalidUrls.isNotEmpty()) {
-                  logger.warn("${invalidUrls.size} ugyldige urler oppdaget i oppdatering av status")
-                }
-                CrawlResultat.Ferdig(
-                    validUrls.size,
-                    statusUrl =
-                        if (crawlResultat is CrawlResultat.Starta) crawlResultat.statusUrl
-                        else (crawlResultat as CrawlResultat.IkkjeStarta).statusUrl,
-                    crawlResultat.loeysing,
-                    Instant.now(),
-                    validUrls.map { it.getOrThrow() },
-                )
-              }
+              crawlResultat.copy(framgang = Framgang.from(newStatus.customStatus))
+          is CrawlStatus.Completed -> onStatusCompleted(newStatus, crawlResultat)
           is CrawlStatus.Failed ->
               CrawlResultat.Feila(newStatus.output, crawlResultat.loeysing, Instant.now())
           is CrawlStatus.Terminated ->
@@ -116,4 +92,33 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
         }
       }
       else -> crawlResultat
+    }
+
+private fun onStatusCompleted(newStatus: CrawlStatus.Completed, crawlResultat: CrawlResultat) =
+    if (newStatus.output.isEmpty()) {
+      CrawlResultat.Feila(
+          "Crawling av ${crawlResultat.loeysing.url} feilet. Output fra crawleren var en tom liste.",
+          crawlResultat.loeysing,
+          Instant.now())
+    } else {
+      val urlList = newStatus.output.map { runCatching { URI(it.url).toURL() } }
+      urlList.forEach {
+        if (it.isFailure)
+            logger.info(
+                "Crawlresultatet for løysing ${crawlResultat.loeysing.id} inneholder en ugyldig url: ${it.exceptionOrNull()?.message}")
+      }
+      val (validUrls, invalidUrls) = urlList.partition { it.isSuccess }
+
+      if (invalidUrls.isNotEmpty()) {
+        logger.warn("${invalidUrls.size} ugyldige urler oppdaget i oppdatering av status")
+      }
+      CrawlResultat.Ferdig(
+          validUrls.size,
+          statusUrl =
+              if (crawlResultat is CrawlResultat.Starta) crawlResultat.statusUrl
+              else (crawlResultat as CrawlResultat.IkkjeStarta).statusUrl,
+          crawlResultat.loeysing,
+          Instant.now(),
+          validUrls.map { it.getOrThrow() },
+      )
     }
