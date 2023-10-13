@@ -367,7 +367,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
   }
 
-  private fun getCrawlResultatForMaaling(maalingId: Int) =
+  fun getCrawlResultatForMaaling(maalingId: Int) =
       jdbcTemplate.query(
           """
           with agg_nettsider as (
@@ -549,7 +549,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     "url_agg_sk" to testKoeyring.lenker?.urlAggregeringSK?.toString(),
                     "url_agg_side" to testKoeyring.lenker?.urlAggregeringSide?.toString(),
                     "url_agg_side_tr" to testKoeyring.lenker?.urlAggregeringSideTR?.toString(),
-                    "url_loeysing" to testKoeyring.lenker?.urlAggregeringLoeysing?.toString()),
+                    "url_agg_loeysing" to testKoeyring.lenker?.urlAggregeringLoeysing?.toString()),
                 Int::class.java)
           }
           else -> {

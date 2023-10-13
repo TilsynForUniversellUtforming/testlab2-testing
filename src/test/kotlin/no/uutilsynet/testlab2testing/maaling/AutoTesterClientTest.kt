@@ -73,7 +73,7 @@ class AutoTesterClientTest {
     @Test
     fun completedWithURLs() {
       val jsonString =
-          """{"runtimeStatus":"Completed", "output": {"urlFulltResultat": "https://fullt.resultat.no", "urlBrot": "https://brot.resultat.no","urlAggregeringTR": "https://aggregeringTR.resultat.no","urlAggregeringSK": "https://aggregeringSK.resultat.no","urlAggergeringSide": "https://aggregeringSide.resultat.no"}}"""
+          """{"runtimeStatus":"Completed", "output": {"urlFulltResultat": "https://fullt.resultat.no", "urlBrot": "https://brot.resultat.no","urlAggregeringTR": "https://aggregeringTR.resultat.no","urlAggregeringSK": "https://aggregeringSK.resultat.no","urlAggergeringSide": "https://aggregeringSide.resultat.no","urlAggergeringSideTR": "https://aggregeringSideTR.resultat.no","urlAggergeringLoeysing": "https://aggregeringLoeysing.resultat.no"}}"""
       val completed =
           objectMapper.readValue(jsonString, AutoTesterClient.AutoTesterStatus::class.java)
       assertThat(completed).isInstanceOf(AutoTesterClient.AutoTesterStatus.Completed::class.java)
