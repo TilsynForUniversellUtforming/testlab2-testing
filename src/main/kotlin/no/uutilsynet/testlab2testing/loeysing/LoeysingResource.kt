@@ -8,7 +8,15 @@ import no.uutilsynet.testlab2testing.common.validateOrgNummer
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 
 fun locationForId(id: Int): URI = URI("/v2/loeysing/${id}")
 
@@ -59,8 +67,25 @@ class LoeysingResource(val loeysingDAO: LoeysingDAO, val maalingDAO: MaalingDAO)
           ?: ResponseEntity.notFound().build()
 
   @GetMapping
-  fun getLoeysingList(): ResponseEntity<List<Loeysing>> =
+  fun getLoeysingList(
+      @RequestParam("namn", required = false) namn: String?,
+      @RequestParam("orgnummer", required = false) orgnummer: String?
+  ): ResponseEntity<Any> {
+    if (namn != null && orgnummer != null) {
+      return ResponseEntity.badRequest().body("Må søke med enten namn eller orgnummer")
+    }
+
+    return if (namn != null) {
+      ResponseEntity.ok(loeysingDAO.findByName(namn))
+    } else if (orgnummer != null) {
+      validateOrgNummer(orgnummer).getOrElse {
+        ResponseEntity.badRequest().body("Ugyldig orgnummer")
+      }
+      ResponseEntity.ok(loeysingDAO.findByOrgnumber(orgnummer))
+    } else {
       ResponseEntity.ok(loeysingDAO.getLoeysingList())
+    }
+  }
 
   @DeleteMapping("{id}")
   fun deleteLoeysing(@PathVariable("id") id: Int) = executeWithErrorHandling {
