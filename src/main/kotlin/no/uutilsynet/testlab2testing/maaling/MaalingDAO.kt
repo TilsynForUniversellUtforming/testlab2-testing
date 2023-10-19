@@ -336,16 +336,14 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               val urlAggLoeysing = resultSetToURL(rs, "url_agg_loeysing")
 
               val lenker =
-                  if (urlFulltResultat != null)
-                      AutoTesterClient.AutoTesterOutput.Lenker(
-                          urlFulltResultat,
-                          urlBrot,
-                          urlAggTR,
-                          urlAggSK,
-                          urlAggSide,
-                          urlAggSideTR,
-                          urlAggLoeysing)
-                  else null
+                  AutoTesterClient.AutoTesterOutput.Lenker(
+                      urlFulltResultat,
+                      urlBrot,
+                      urlAggTR,
+                      urlAggSK,
+                      urlAggSide,
+                      urlAggSideTR,
+                      urlAggLoeysing)
               TestKoeyring.Ferdig(
                   crawlResultatForLoeysing,
                   sistOppdatert,
@@ -358,13 +356,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         })
   }
 
-  private fun resultSetToURL(rs: ResultSet, field: String): URL? {
-    val urlString = rs.getString(field)
-    return if (urlString != null) {
-      URI(urlString).toURL()
-    } else {
-      null
-    }
+  private fun resultSetToURL(rs: ResultSet, field: String): URL {
+    return URI(rs.getString(field)).toURL()
   }
 
   fun getCrawlResultatForMaaling(maalingId: Int) =

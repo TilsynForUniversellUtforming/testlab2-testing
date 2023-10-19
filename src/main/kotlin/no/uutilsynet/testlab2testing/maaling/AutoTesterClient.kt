@@ -83,18 +83,17 @@ class AutoTesterClient(
         runCatching {
           when (resultatType) {
             ResultatUrls.urlAggreggeringTR ->
-                fetchResultatAggregering(lenker.urlAggregeringTR?.toURI(), resultatType)
+                fetchResultatAggregering(lenker.urlAggregeringTR.toURI(), resultatType)
             ResultatUrls.urlAggregeringSK ->
-                fetchResultatAggregering(lenker.urlAggregeringSK?.toURI(), resultatType)
+                fetchResultatAggregering(lenker.urlAggregeringSK.toURI(), resultatType)
             ResultatUrls.urlAggregeringSide ->
-                fetchResultatAggregering(lenker.urlAggregeringSide?.toURI(), resultatType)
+                fetchResultatAggregering(lenker.urlAggregeringSide.toURI(), resultatType)
             ResultatUrls.urlAggregeringSideTR ->
-                fetchResultatAggregering(lenker.urlAggregeringSideTR?.toURI(), resultatType)
+                fetchResultatAggregering(lenker.urlAggregeringSideTR.toURI(), resultatType)
             ResultatUrls.urlAggregeringLoeysing ->
-                fetchResultatAggregering(lenker.urlAggregeringLoeysing?.toURI(), resultatType)
-            ResultatUrls.urlFulltResultat ->
-                fetchResultatDetaljert(lenker.urlFulltResultat?.toURI())
-            ResultatUrls.urlBrot -> fetchResultatDetaljert(lenker.urlBrot?.toURI())
+                fetchResultatAggregering(lenker.urlAggregeringLoeysing.toURI(), resultatType)
+            ResultatUrls.urlFulltResultat -> fetchResultatDetaljert(lenker.urlFulltResultat.toURI())
+            ResultatUrls.urlBrot -> fetchResultatDetaljert(lenker.urlBrot.toURI())
           }
         }
       }
@@ -144,13 +143,13 @@ class AutoTesterClient(
     data class TestResultater(val testResultater: List<TestResultat>) : AutoTesterOutput()
 
     data class Lenker(
-        val urlFulltResultat: URL?,
-        val urlBrot: URL?,
-        val urlAggregeringTR: URL?,
-        val urlAggregeringSK: URL?,
-        val urlAggregeringSide: URL?,
-        val urlAggregeringSideTR: URL?,
-        val urlAggregeringLoeysing: URL?
+        val urlFulltResultat: URL,
+        val urlBrot: URL,
+        val urlAggregeringTR: URL,
+        val urlAggregeringSK: URL,
+        val urlAggregeringSide: URL,
+        val urlAggregeringSideTR: URL,
+        val urlAggregeringLoeysing: URL
     ) : AutoTesterOutput()
   }
 
