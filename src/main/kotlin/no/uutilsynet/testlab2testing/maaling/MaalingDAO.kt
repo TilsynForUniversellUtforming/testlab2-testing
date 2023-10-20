@@ -327,23 +327,25 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "ferdig" -> {
               val testkoeyringId = rs.getInt("id")
               val testResultat: List<TestResultat> = getTestResultat(testkoeyringId)
-              val urlFulltResultat = resultSetToURL(rs, "url_fullt_resultat")
-              val urlBrot = resultSetToURL(rs, "url_brot")
-              val urlAggTR = resultSetToURL(rs, "url_agg_tr")
-              val urlAggSK = resultSetToURL(rs, "url_agg_sk")
-              val urlAggSide = resultSetToURL(rs, "url_agg_side")
-              val urlAggSideTR = resultSetToURL(rs, "url_agg_side_tr")
-              val urlAggLoeysing = resultSetToURL(rs, "url_agg_loeysing")
+              val urlFulltResultat = rs.getString("url_fullt_resultat")
+              val urlBrot = rs.getString("url_brot")
+              val urlAggTR = rs.getString("url_agg_tr")
+              val urlAggSK = rs.getString("url_agg_sk")
+              val urlAggSide = rs.getString("url_agg_side")
+              val urlAggSideTR = rs.getString("url_agg_side_tr")
+              val urlAggLoeysing = rs.getString("url_agg_loeysing")
 
               val lenker =
-                  AutoTesterClient.AutoTesterOutput.Lenker(
-                      urlFulltResultat,
-                      urlBrot,
-                      urlAggTR,
-                      urlAggSK,
-                      urlAggSide,
-                      urlAggSideTR,
-                      urlAggLoeysing)
+                  if (urlFulltResultat != null)
+                      AutoTesterClient.AutoTesterOutput.Lenker(
+                          URI(urlFulltResultat).toURL(),
+                          URI(urlBrot).toURL(),
+                          URI(urlAggTR).toURL(),
+                          URI(urlAggSK).toURL(),
+                          URI(urlAggSide).toURL(),
+                          URI(urlAggSideTR).toURL(),
+                          URI(urlAggLoeysing).toURL())
+                  else null
               TestKoeyring.Ferdig(
                   crawlResultatForLoeysing,
                   sistOppdatert,
@@ -354,10 +356,6 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             else -> throw RuntimeException("ukjent status $status")
           }
         })
-  }
-
-  private fun resultSetToURL(rs: ResultSet, field: String): URL {
-    return URI(rs.getString(field)).toURL()
   }
 
   fun getCrawlResultatForMaaling(maalingId: Int) =
