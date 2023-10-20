@@ -99,27 +99,23 @@ class AutoTesterClient(
       }
           ?: Result.success(testKoeyring.testResultat)
 
-  private fun fetchResultatDetaljert(uri: URI?): List<TestResultat> {
-    if (uri != null) {
-      return restTemplate
-          .getForObject(uri, Array<Array<TestResultat>>::class.java)
-          ?.flatten()
-          ?.toList()
-          ?: throw RuntimeException(
-              "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
-    }
+  private fun fetchResultatDetaljert(uri: URI): List<TestResultat> {
+    return restTemplate
+        .getForObject(uri, Array<Array<TestResultat>>::class.java)
+        ?.flatten()
+        ?.toList()
+        ?: throw RuntimeException(
+            "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
     return emptyList()
   }
 
   private fun fetchResultatAggregering(
-      uri: URI?,
+      uri: URI,
       resultatType: ResultatUrls
   ): List<AutotesterTestresultat> {
-    if (uri != null) {
-      return restTemplate.getForObject(uri, getAggregationClass(resultatType))?.toList()
-          ?: throw RuntimeException(
-              "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
-    }
+    return restTemplate.getForObject(uri, getAggregationClass(resultatType))?.toList()
+        ?: throw RuntimeException(
+            "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
     return emptyList()
   }
 
