@@ -51,7 +51,10 @@ object TestConstants {
               URI("https://brot.resultat").toURL(),
               URI("https://aggregering.resultat").toURL(),
               URI("https://aggregeringSK.resultat").toURL(),
-              URI("https://aggregeringSide.resultat").toURL()))
+              URI("https://aggregeringSide.resultat").toURL(),
+              URI("https://aggregeringSideTR.resultat").toURL(),
+              URI("https://aggregeringLoeysing.resultat").toURL(),
+          ))
 
   val testKoeyring2 =
       TestKoeyring.Ferdig(
@@ -64,7 +67,10 @@ object TestConstants {
               URI("https://brot.resultat").toURL(),
               URI("https://aggregering.resultat").toURL(),
               URI("https://aggregeringSK.resultat").toURL(),
-              URI("https://aggregeringSide.resultat").toURL()))
+              URI("https://aggregeringSide.resultat").toURL(),
+              URI("https://aggregeringSideTR.resultat").toURL(),
+              URI("https://aggregeringLoeysing.resultat").toURL(),
+          ))
 
   val testKoeyringList = listOf(testKoeyring, testKoeyring2)
 }
