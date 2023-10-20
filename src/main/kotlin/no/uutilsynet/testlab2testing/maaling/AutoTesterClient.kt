@@ -164,9 +164,9 @@ class AutoTesterClient(
                 URI(node["urlBrot"].asText()).toURL(),
                 URI(node["urlAggregeringTR"].asText()).toURL(),
                 URI(node["urlAggregeringSK"].asText()).toURL(),
-                URI(node["urlAggergeringSide"].asText()).toURL(),
-                URI(node["urlAggergeringSideTR"].asText()).toURL(),
-                URI(node["urlAggergeringLoeysing"].asText()).toURL())
+                URI(node["urlAggregeringSide"].asText()).toURL(),
+                URI(node["urlAggregeringSideTR"].asText()).toURL(),
+                URI(node["urlAggregeringLoeysing"].asText()).toURL())
         else -> throw RuntimeException("Ukjent output fra AutoTester")
       }
     }
