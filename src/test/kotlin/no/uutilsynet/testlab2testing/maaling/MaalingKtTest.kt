@@ -262,7 +262,10 @@ class MaalingKtTest {
                         URI("https://brot.resultat").toURL(),
                         URI("https://aggregeringTR.resultat").toURL(),
                         URI("https://aggregeringSK.resultat").toURL(),
-                        URI("https://aggregeringSide.resultat").toURL())),
+                        URI("https://aggregeringSide.resultat").toURL(),
+                        URI("https://aggregeringSideTR.resultat").toURL(),
+                        URI("https://aggregeringLoeysing.resultat").toURL(),
+                    )),
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(
                         1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now()),
@@ -274,7 +277,10 @@ class MaalingKtTest {
                         URI("https://brot.resultat").toURL(),
                         URI("https://aggregeringTR.resultat").toURL(),
                         URI("https://aggregeringSK.resultat").toURL(),
-                        URI("https://aggregering.resultatSide").toURL()))))
+                        URI("https://aggregering.resultatSide").toURL(),
+                        URI("https://aggregeringSideTR.resultat").toURL(),
+                        URI("https://aggregeringLoeysing.resultat").toURL(),
+                    ))))
 
     @DisplayName(
         "når vi henter testkøyringar for ei måling, uten å spesifisere løysing, så skal vi få alle testkøyringane")
