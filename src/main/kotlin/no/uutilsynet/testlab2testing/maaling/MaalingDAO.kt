@@ -5,15 +5,11 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.LocalDate
-import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loeysingRowMapper
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
-import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
-import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
-import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
-import no.uutilsynet.testlab2testing.maaling.Maaling.Testing
-import no.uutilsynet.testlab2testing.maaling.Maaling.TestingFerdig
+import no.uutilsynet.testlab2testing.maaling.Maaling.*
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingSql
@@ -26,11 +22,7 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaal
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.testResultatRowMapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingSql
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.crawling
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.kvalitetssikring
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.planlegging
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing_ferdig
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.*
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
 import org.slf4j.LoggerFactory
@@ -43,7 +35,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val loeysingDAO: LoeysingDAO) {
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
 
@@ -366,25 +358,21 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               group by crawlresultat_id
           )
           select
-              cr.id as crid,
+              cr.id,
+              cr.loeysingid,
               cr.status,
               cr.status_url,
               cr.sist_oppdatert,
               cr.feilmelding,
               cr.lenker_crawla,
-              l.id as lid,
-              l.namn,
-              l.url,
-              l.orgnummer,
               coalesce(an.ant_nettsider, 0) as ant_nettsider,
               m.max_lenker
           from crawlresultat cr
-              join loeysing l on cr.loeysingid = l.id
               left join agg_nettsider an on cr.id = an.crawlresultat_id
               join maalingv1 m on m.id = cr.maaling_id
           where
               cr.maaling_id = :maalingId
-          order by m.id, l.id
+          order by m.id
               """
               .trimIndent(),
           mapOf("maalingId" to maalingId),
@@ -401,12 +389,12 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "fikk `null` da vi forsøkte å hente crawlresultat for måling med id = $maalingId")
 
   private fun toCrawlResultat(rs: ResultSet): CrawlResultat {
+    val id = rs.getInt("id")
+    val loeysingId = rs.getInt("loeysingid")
     val loeysing =
-        Loeysing(
-            rs.getInt("lid"),
-            rs.getString("namn"),
-            URI(rs.getString("url")).toURL(),
-            rs.getString("orgnummer"))
+        loeysingDAO.getLoeysing(loeysingId)
+            ?: throw IllegalStateException(
+                "crawlresultat $id er lagra med ei løysing som ikkje finnes.")
     val sistOppdatert = rs.getTimestamp("sist_oppdatert").toInstant()
     val status = rs.getString("status")
 
