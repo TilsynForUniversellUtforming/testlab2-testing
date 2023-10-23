@@ -291,7 +291,6 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         """
               select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, t.lenker_testa, url_fullt_resultat, url_brot,url_agg_tr,url_agg_sk,url_agg_side,url_agg_side_tr,url_agg_loeysing
               from testkoeyring t
-              join loeysing l on l.id = t.loeysing_id
               where maaling_id = :maaling_id
             """
             .trimIndent(),
