@@ -5,9 +5,11 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.createL
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.createLoeysingSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.deleteLoeysingParams
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.deleteLoeysingSql
+import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.findLoeysingByNameSql
+import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingByIdSql
+import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingByOrgnummerSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingIdListSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingListSql
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loeysingRowMapper
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.updateLoeysingParams
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.updateLoeysingSql
@@ -27,9 +29,12 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     fun createLoeysingParams(namn: String, url: URL, orgnummer: String?) =
         mapOf("namn" to namn, "url" to url.toString(), "orgnummer" to orgnummer)
 
-    val getLoeysingListSql = "select id, namn, url, orgnummer from loeysing order by id"
+    val getLoeysingBaseSql = "select id, namn, url, orgnummer from loeysing"
+    val getLoeysingListSql = "$getLoeysingBaseSql order by id"
     val getLoeysingIdListSql = "select id from loeysing order by id"
-    val getLoeysingSql = "select id, namn, url, orgnummer from loeysing where id = :id order by id"
+    val getLoeysingByIdSql = "$getLoeysingBaseSql where id = :id"
+    val findLoeysingByNameSql = "$getLoeysingBaseSql where lower(namn) like lower(:name_search)"
+    val getLoeysingByOrgnummerSql = "$getLoeysingBaseSql where orgnummer like :orgnummer"
 
     val updateLoeysingSql =
         "update loeysing set namn = :namn, url = :url, orgnummer = :orgnummer where id = :id"
@@ -50,7 +55,15 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getLoeysing(id: Int): Loeysing? =
       DataAccessUtils.singleResult(
-          jdbcTemplate.query(getLoeysingSql, mapOf("id" to id), loeysingRowMapper))
+          jdbcTemplate.query(getLoeysingByIdSql, mapOf("id" to id), loeysingRowMapper))
+
+  fun findByName(nameSearch: String): List<Loeysing> =
+      jdbcTemplate.query(
+          findLoeysingByNameSql, mapOf("name_search" to "%$nameSearch%"), loeysingRowMapper)
+
+  fun findByOrgnumber(orgnummerSearch: String): List<Loeysing> =
+      jdbcTemplate.query(
+          getLoeysingByOrgnummerSql, mapOf("orgnummer" to "%$orgnummerSearch%"), loeysingRowMapper)
 
   fun getLoeysingList(): List<Loeysing> = jdbcTemplate.query(getLoeysingListSql, loeysingRowMapper)
 
