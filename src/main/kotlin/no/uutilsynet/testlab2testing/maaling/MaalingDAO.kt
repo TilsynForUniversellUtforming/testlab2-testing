@@ -6,7 +6,6 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.LocalDate
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loeysingRowMapper
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
 import no.uutilsynet.testlab2testing.maaling.Maaling.*
@@ -14,7 +13,6 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParam
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.deleteMaalingSql
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingLoeysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByDateSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByIdSql
@@ -93,15 +91,6 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val loeysingDAO: 
     val selectMaalingByIdSql = "$selectMaalingSql where id = :id"
 
     val selectMaalingByStatus = "$selectMaalingSql where status in (:statusList)"
-
-    val maalingLoeysingSql =
-        """ 
-      select l.id, l.namn, l.url, l.orgnummer
-      from MaalingLoeysing ml 
-        join loeysing l on ml.idLoeysing = l.id
-      where ml.idMaaling = :id
-      """
-            .trimIndent()
 
     val updateMaalingSql = "update MaalingV1 set navn = :navn, status = :status where id = :id"
 
@@ -208,8 +197,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val loeysingDAO: 
   private fun MaalingDTO.toMaaling(): Maaling {
     return when (status) {
       planlegging -> {
-        val loeysingList =
-            jdbcTemplate.query(maalingLoeysingSql, mapOf("id" to id), loeysingRowMapper)
+        val loeysingList = loeysingDAO.findLoeysingListForMaaling(this.id)
         val testregelList =
             jdbcTemplate.query(maalingTestregelSql, mapOf("id" to id), testregelRowMapper)
         Planlegging(

@@ -1,27 +1,34 @@
 package no.uutilsynet.testlab2testing.loeysing
 
 import java.net.URI
+import java.net.URL
+import java.time.LocalDate
+import java.util.*
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestName
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestOrgNummer
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestUrl
+import no.uutilsynet.testlab2testing.maaling.CrawlParameters
+import no.uutilsynet.testlab2testing.maaling.MaalingDAO
+import no.uutilsynet.testlab2testing.maaling.MaalingListElement
+import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
 import org.assertj.core.api.Assertions
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class LoeysingDAOTest(@Autowired val loeysingDAO: LoeysingDAO) {
+class LoeysingDAOTest(
+    @Autowired val loeysingDAO: LoeysingDAO,
+    @Autowired val maalingDAO: MaalingDAO
+) {
 
   @AfterAll
   fun cleanup() {
     loeysingDAO.jdbcTemplate.update(
         "delete from loeysing where namn = :namn", mapOf("namn" to loeysingTestName))
+    maalingDAO.jdbcTemplate.update(
+        "delete from maalingv1 where navn = :navn", mapOf("navn" to maalingTestName))
   }
 
   @Test
@@ -102,9 +109,48 @@ class LoeysingDAOTest(@Autowired val loeysingDAO: LoeysingDAO) {
     }
   }
 
-  private fun createLoeysing(
-      name: String = loeysingTestName,
-      url: String = loeysingTestUrl,
-      orgnummer: String = loeysingTestOrgNummer
-  ) = loeysingDAO.createLoeysing(name, URI(url).toURL(), loeysingTestOrgNummer)
+  @DisplayName("findLoeysingListForMaaling")
+  @Nested
+  inner class FindLoeysingListForMaaling {
+    @DisplayName(
+        "når det finnes ei måling med to løysingar, så skal vi kunne hente lista med løysingar for den målinga")
+    @Test
+    fun listeMedLoeysingar() {
+      val a = createLoeysing(loeysingTestName, "https://www.a.com/")
+      val b = createLoeysing(loeysingTestName, "https://www.b.com/")
+      val maaling =
+          maalingDAO.createMaaling(
+              maalingTestName, LocalDate.now(), listOf(a, b), emptyList(), CrawlParameters())
+
+      val loeysingList = loeysingDAO.findLoeysingListForMaaling(maaling)
+
+      Assertions.assertThat(loeysingList.map(Loeysing::url).map(URL::toString))
+          .contains("https://www.a.com/", "https://www.b.com/")
+    }
+
+    @DisplayName("når målinga ikkje finnes, så skal den returnere ei tom liste")
+    @Test
+    fun maalingaFinnesIkkje() {
+      val idList = maalingDAO.getMaalingList().map(MaalingListElement::id)
+      val id = getNumberNotInList(idList)
+
+      val loeysingList = loeysingDAO.findLoeysingListForMaaling(id)
+
+      Assertions.assertThat(loeysingList).isEmpty()
+    }
+
+    private fun getNumberNotInList(list: List<Int>): Int {
+      val random = Random()
+      var i = random.nextInt()
+
+      while (i in list) {
+        i = random.nextInt()
+      }
+
+      return i
+    }
+  }
+
+  private fun createLoeysing(name: String = loeysingTestName, url: String = loeysingTestUrl) =
+      loeysingDAO.createLoeysing(name, URI(url).toURL(), loeysingTestOrgNummer)
 }
