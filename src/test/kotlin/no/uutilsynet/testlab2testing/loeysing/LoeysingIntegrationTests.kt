@@ -172,6 +172,64 @@ class LoeysingIntegrationTests(
 
       assertThat(loeysingFromList, samePropertyValuesAs(loeysing))
     }
+
+    @Test
+    @DisplayName("Skal hente liste med løsninger basert på navn")
+    fun getLoeysingListByName() {
+      val loeysing = restTemplate.getForObject(location, Loeysing::class.java)
+
+      val loeysingListType = object : ParameterizedTypeReference<List<Loeysing>>() {}
+
+      val loeysingFromList = assertDoesNotThrow {
+        restTemplate
+            .exchange(
+                "/v2/loeysing?namn=${loeysing.namn.dropLast(1)}",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                loeysingListType)
+            .body
+            ?.find { it.id == loeysing.id }!!
+      }
+
+      assertThat(loeysingFromList, samePropertyValuesAs(loeysing))
+    }
+
+    @Test
+    @DisplayName("Skal hente liste med løsninger basert på orgnr")
+    fun getLoeysingListByOrgnr() {
+      val loeysing = restTemplate.getForObject(location, Loeysing::class.java)
+
+      val loeysingListType = object : ParameterizedTypeReference<List<Loeysing>>() {}
+
+      val loeysingFromList = assertDoesNotThrow {
+        restTemplate
+            .exchange(
+                "/v2/loeysing?orgnummer=${loeysing.orgnummer.dropLast(1)}",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                loeysingListType)
+            .body
+            ?.find { it.id == loeysing.id }!!
+      }
+
+      assertThat(loeysingFromList, samePropertyValuesAs(loeysing))
+    }
+
+    @Test
+    @DisplayName("Skal ikke kunne hente liste med løsninger basert på både orgnr og namn")
+    fun getLoeysingListByOrgnrAndName() {
+      val loeysing = restTemplate.getForObject(location, Loeysing::class.java)
+
+      val loeysingGetStatus =
+          assertDoesNotThrow {
+                restTemplate.getForEntity(
+                    "/v2/loeysing?orgnummer=${loeysing.orgnummer}&namn=${loeysing.namn}",
+                    String::class.java)
+              }
+              .statusCode
+
+      Assertions.assertThat(loeysingGetStatus).isEqualTo(HttpStatus.BAD_REQUEST)
+    }
   }
 
   private fun createDefaultLoeysing(): URI =

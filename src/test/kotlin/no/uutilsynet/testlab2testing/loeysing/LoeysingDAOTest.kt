@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.loeysing
 import java.net.URI
 import java.net.URL
 import java.time.LocalDate
-import java.util.*
+import java.util.Random
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestName
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestOrgNummer
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestUrl
@@ -12,7 +12,12 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO
 import no.uutilsynet.testlab2testing.maaling.MaalingListElement
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
 import org.assertj.core.api.Assertions
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 
@@ -49,6 +54,26 @@ class LoeysingDAOTest(
     val list = loeysingDAO.getLoeysingList()
 
     Assertions.assertThat(list).contains(loeysing)
+  }
+
+  @Test
+  @DisplayName("Skal hente løsningliste fra DAO basert på delvis navn")
+  fun getLoeysingListByName() {
+    val id = createLoeysing()
+    val loeysing = loeysingDAO.getLoeysing(id)
+    val list = loeysingDAO.findByName(loeysingTestName.substring(1, 7))
+
+    Assertions.assertThat(list).containsExactly(loeysing)
+  }
+
+  @Test
+  @DisplayName("Skal hente løsningliste fra DAO basert på delvis orgnr")
+  fun getLoeysingListByOrgnr() {
+    val id = createLoeysing()
+    val loeysing = loeysingDAO.getLoeysing(id)
+    val list = loeysingDAO.findByOrgnumber(loeysingTestOrgNummer.substring(1, 7))
+
+    Assertions.assertThat(list).containsExactly(loeysing)
   }
 
   @Test

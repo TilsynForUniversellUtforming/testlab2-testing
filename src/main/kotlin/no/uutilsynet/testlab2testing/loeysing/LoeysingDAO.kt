@@ -34,7 +34,7 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val getLoeysingIdListSql = "select id from loeysing order by id"
     val getLoeysingByIdSql = "$getLoeysingBaseSql where id = :id"
     val findLoeysingByNameSql = "$getLoeysingBaseSql where lower(namn) like lower(:name_search)"
-    val getLoeysingByOrgnummerSql = "$getLoeysingBaseSql where orgnummer = :orgnummer"
+    val getLoeysingByOrgnummerSql = "$getLoeysingBaseSql where orgnummer like :orgnummer"
 
     val updateLoeysingSql =
         "update loeysing set namn = :namn, url = :url, orgnummer = :orgnummer where id = :id"
@@ -61,9 +61,9 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       jdbcTemplate.query(
           findLoeysingByNameSql, mapOf("name_search" to "%$nameSearch%"), loeysingRowMapper)
 
-  fun findByOrgnumber(orgnummer: String): List<Loeysing> =
+  fun findByOrgnumber(orgnummerSearch: String): List<Loeysing> =
       jdbcTemplate.query(
-          getLoeysingByOrgnummerSql, mapOf("orgnummer" to orgnummer), loeysingRowMapper)
+          getLoeysingByOrgnummerSql, mapOf("orgnummer" to "%$orgnummerSearch%"), loeysingRowMapper)
 
   fun getLoeysingList(): List<Loeysing> = jdbcTemplate.query(getLoeysingListSql, loeysingRowMapper)
 

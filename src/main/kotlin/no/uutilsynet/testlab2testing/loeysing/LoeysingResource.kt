@@ -78,9 +78,6 @@ class LoeysingResource(val loeysingDAO: LoeysingDAO, val maalingDAO: MaalingDAO)
     return if (namn != null) {
       ResponseEntity.ok(loeysingDAO.findByName(namn))
     } else if (orgnummer != null) {
-      validateOrgNummer(orgnummer).getOrElse {
-        ResponseEntity.badRequest().body("Ugyldig orgnummer")
-      }
       ResponseEntity.ok(loeysingDAO.findByOrgnumber(orgnummer))
     } else {
       ResponseEntity.ok(loeysingDAO.getLoeysingList())
