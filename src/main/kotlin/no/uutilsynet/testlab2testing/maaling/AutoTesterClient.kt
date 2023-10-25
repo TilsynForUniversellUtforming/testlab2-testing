@@ -88,6 +88,10 @@ class AutoTesterClient(
                 fetchResultatAggregering(lenker.urlAggregeringSK.toURI(), resultatType)
             ResultatUrls.urlAggregeringSide ->
                 fetchResultatAggregering(lenker.urlAggregeringSide.toURI(), resultatType)
+            ResultatUrls.urlAggregeringSideTR ->
+                fetchResultatAggregering(lenker.urlAggregeringSideTR.toURI(), resultatType)
+            ResultatUrls.urlAggregeringLoeysing ->
+                fetchResultatAggregering(lenker.urlAggregeringLoeysing.toURI(), resultatType)
             ResultatUrls.urlFulltResultat -> fetchResultatDetaljert(lenker.urlFulltResultat.toURI())
             ResultatUrls.urlBrot -> fetchResultatDetaljert(lenker.urlBrot.toURI())
           }
@@ -102,6 +106,7 @@ class AutoTesterClient(
         ?.toList()
         ?: throw RuntimeException(
             "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
+    return emptyList()
   }
 
   private fun fetchResultatAggregering(
@@ -111,6 +116,7 @@ class AutoTesterClient(
     return restTemplate.getForObject(uri, getAggregationClass(resultatType))?.toList()
         ?: throw RuntimeException(
             "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
+    return emptyList()
   }
 
   private fun getAggregationClass(
@@ -137,7 +143,9 @@ class AutoTesterClient(
         val urlBrot: URL,
         val urlAggregeringTR: URL,
         val urlAggregeringSK: URL,
-        val urlAggregeringSide: URL
+        val urlAggregeringSide: URL,
+        val urlAggregeringSideTR: URL,
+        val urlAggregeringLoeysing: URL
     ) : AutoTesterOutput()
   }
 
@@ -156,7 +164,9 @@ class AutoTesterClient(
                 URI(node["urlBrot"].asText()).toURL(),
                 URI(node["urlAggregeringTR"].asText()).toURL(),
                 URI(node["urlAggregeringSK"].asText()).toURL(),
-                URI(node["urlAggergeringSide"].asText()).toURL())
+                URI(node["urlAggregeringSide"].asText()).toURL(),
+                URI(node["urlAggregeringSideTR"].asText()).toURL(),
+                URI(node["urlAggregeringLoeysing"].asText()).toURL())
         else -> throw RuntimeException("Ukjent output fra AutoTester")
       }
     }
@@ -193,6 +203,8 @@ class AutoTesterClient(
     urlBrot,
     urlAggreggeringTR,
     urlAggregeringSK,
-    urlAggregeringSide
+    urlAggregeringSide,
+    urlAggregeringSideTR,
+    urlAggregeringLoeysing
   }
 }

@@ -5,20 +5,14 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.LocalDate
-import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loeysingRowMapper
+import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
-import no.uutilsynet.testlab2testing.maaling.Maaling.Crawling
-import no.uutilsynet.testlab2testing.maaling.Maaling.Kvalitetssikring
-import no.uutilsynet.testlab2testing.maaling.Maaling.Planlegging
-import no.uutilsynet.testlab2testing.maaling.Maaling.Testing
-import no.uutilsynet.testlab2testing.maaling.Maaling.TestingFerdig
+import no.uutilsynet.testlab2testing.maaling.Maaling.*
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.deleteMaalingSql
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingLoeysingSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.maalingRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByDateSql
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaalingByIdSql
@@ -26,11 +20,7 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.selectMaal
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.testResultatRowMapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingParams
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.updateMaalingSql
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.crawling
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.kvalitetssikring
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.planlegging
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing
-import no.uutilsynet.testlab2testing.maaling.MaalingStatus.testing_ferdig
+import no.uutilsynet.testlab2testing.maaling.MaalingStatus.*
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
 import org.slf4j.LoggerFactory
@@ -43,7 +33,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val loeysingDAO: LoeysingDAO) {
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
 
@@ -101,15 +91,6 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val selectMaalingByIdSql = "$selectMaalingSql where id = :id"
 
     val selectMaalingByStatus = "$selectMaalingSql where status in (:statusList)"
-
-    val maalingLoeysingSql =
-        """ 
-      select l.id, l.namn, l.url, l.orgnummer
-      from MaalingLoeysing ml 
-        join loeysing l on ml.idLoeysing = l.id
-      where ml.idMaaling = :id
-      """
-            .trimIndent()
 
     val updateMaalingSql = "update MaalingV1 set navn = :navn, status = :status where id = :id"
 
@@ -216,8 +197,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   private fun MaalingDTO.toMaaling(): Maaling {
     return when (status) {
       planlegging -> {
-        val loeysingList =
-            jdbcTemplate.query(maalingLoeysingSql, mapOf("id" to id), loeysingRowMapper)
+        val loeysingList = loeysingDAO.findLoeysingListForMaaling(this.id)
         val testregelList =
             jdbcTemplate.query(maalingTestregelSql, mapOf("id" to id), testregelRowMapper)
         Planlegging(
@@ -289,9 +269,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val crawlResultat = getCrawlResultatForMaaling(maalingId)
     return jdbcTemplate.query<TestKoeyring>(
         """
-              select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, t.lenker_testa, url_fullt_resultat, url_brot,url_agg_tr,url_agg_sk,url_agg_side
+              select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, t.lenker_testa, url_fullt_resultat, url_brot,url_agg_tr,url_agg_sk,url_agg_side,url_agg_side_tr,url_agg_loeysing
               from testkoeyring t
-              join loeysing l on l.id = t.loeysing_id
               where maaling_id = :maaling_id
             """
             .trimIndent(),
@@ -332,6 +311,9 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               val urlAggTR = rs.getString("url_agg_tr")
               val urlAggSK = rs.getString("url_agg_sk")
               val urlAggSide = rs.getString("url_agg_side")
+              val urlAggSideTR = rs.getString("url_agg_side_tr")
+              val urlAggLoeysing = rs.getString("url_agg_loeysing")
+
               val lenker =
                   if (urlFulltResultat != null)
                       AutoTesterClient.AutoTesterOutput.Lenker(
@@ -339,7 +321,9 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                           URI(urlBrot).toURL(),
                           URI(urlAggTR).toURL(),
                           URI(urlAggSK).toURL(),
-                          URI(urlAggSide).toURL())
+                          URI(urlAggSide).toURL(),
+                          URI(urlAggSideTR).toURL(),
+                          URI(urlAggLoeysing).toURL())
                   else null
               TestKoeyring.Ferdig(
                   crawlResultatForLoeysing,
@@ -362,25 +346,21 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               group by crawlresultat_id
           )
           select
-              cr.id as crid,
+              cr.id,
+              cr.loeysingid,
               cr.status,
               cr.status_url,
               cr.sist_oppdatert,
               cr.feilmelding,
               cr.lenker_crawla,
-              l.id as lid,
-              l.namn,
-              l.url,
-              l.orgnummer,
               coalesce(an.ant_nettsider, 0) as ant_nettsider,
               m.max_lenker
           from crawlresultat cr
-              join loeysing l on cr.loeysingid = l.id
               left join agg_nettsider an on cr.id = an.crawlresultat_id
               join maalingv1 m on m.id = cr.maaling_id
           where
               cr.maaling_id = :maalingId
-          order by m.id, l.id
+          order by m.id
               """
               .trimIndent(),
           mapOf("maalingId" to maalingId),
@@ -397,12 +377,12 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "fikk `null` da vi forsøkte å hente crawlresultat for måling med id = $maalingId")
 
   private fun toCrawlResultat(rs: ResultSet): CrawlResultat {
+    val id = rs.getInt("id")
+    val loeysingId = rs.getInt("loeysingid")
     val loeysing =
-        Loeysing(
-            rs.getInt("lid"),
-            rs.getString("namn"),
-            URI(rs.getString("url")).toURL(),
-            rs.getString("orgnummer"))
+        loeysingDAO.getLoeysing(loeysingId)
+            ?: throw IllegalStateException(
+                "crawlresultat $id er lagra med ei løysing som ikkje finnes.")
     val sistOppdatert = rs.getTimestamp("sist_oppdatert").toInstant()
     val status = rs.getString("status")
 
@@ -518,8 +498,8 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           is TestKoeyring.Ferdig -> {
             jdbcTemplate.queryForObject(
                 """
-              insert into testkoeyring(maaling_id, loeysing_id, status, status_url, sist_oppdatert, url_fullt_resultat, url_brot, url_agg_tr, url_agg_sk,url_agg_side)
-              values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :url_fullt_resultat, :url_brot, :url_agg_tr, :url_agg_sk, :url_agg_side)
+              insert into testkoeyring(maaling_id, loeysing_id, status, status_url, sist_oppdatert, url_fullt_resultat, url_brot, url_agg_tr, url_agg_sk,url_agg_side, url_agg_side_tr, url_agg_loeysing)
+              values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :url_fullt_resultat, :url_brot, :url_agg_tr, :url_agg_sk, :url_agg_side,:url_agg_side_tr,:url_agg_loeysing)
               returning id
             """
                     .trimIndent(),
@@ -533,7 +513,9 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     "url_brot" to testKoeyring.lenker?.urlBrot?.toString(),
                     "url_agg_tr" to testKoeyring.lenker?.urlAggregeringTR?.toString(),
                     "url_agg_sk" to testKoeyring.lenker?.urlAggregeringSK?.toString(),
-                    "url_agg_side" to testKoeyring.lenker?.urlAggregeringSide?.toString()),
+                    "url_agg_side" to testKoeyring.lenker?.urlAggregeringSide?.toString(),
+                    "url_agg_side_tr" to testKoeyring.lenker?.urlAggregeringSideTR?.toString(),
+                    "url_agg_loeysing" to testKoeyring.lenker?.urlAggregeringLoeysing?.toString()),
                 Int::class.java)
           }
           else -> {
