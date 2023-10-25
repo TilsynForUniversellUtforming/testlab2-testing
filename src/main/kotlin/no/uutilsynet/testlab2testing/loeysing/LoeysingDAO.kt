@@ -88,4 +88,18 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             loeysingRowMapper)
     return sammeOrgnummer.find { loeysing -> sameURL(loeysing.url, url) }
   }
+
+  fun findLoeysingListForMaaling(maaling: Int): List<Loeysing> {
+    return jdbcTemplate.query(
+        """
+            select id, namn, url, orgnummer
+            from maalingloeysing ml
+            join loeysing l
+            on ml.idloeysing = l.id
+            where ml.idmaaling = :maaling
+        """
+            .trimIndent(),
+        mapOf("maaling" to maaling),
+        loeysingRowMapper)
+  }
 }
