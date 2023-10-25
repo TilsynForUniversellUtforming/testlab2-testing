@@ -12,7 +12,7 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO
 import no.uutilsynet.testlab2testing.maaling.MaalingListElement
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
 import org.assertj.core.api.Assertions
-import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -28,7 +28,7 @@ class LoeysingDAOTest(
     @Autowired val maalingDAO: MaalingDAO
 ) {
 
-  @AfterAll
+  @AfterEach
   fun cleanup() {
     loeysingDAO.jdbcTemplate.update(
         "delete from loeysing where namn = :namn", mapOf("namn" to loeysingTestName))
