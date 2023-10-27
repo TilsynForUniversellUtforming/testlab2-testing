@@ -20,7 +20,10 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+class LoeysingDAO(
+    val jdbcTemplate: NamedParameterJdbcTemplate,
+    val loeysingsRegisterClient: LoeysingsRegisterClient
+) {
 
   object LoeysingParams {
     val createLoeysingSql =
@@ -67,10 +70,26 @@ class LoeysingDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getLoeysingList(): List<Loeysing> = jdbcTemplate.query(getLoeysingListSql, loeysingRowMapper)
 
+  /**
+   * Bruk createLoeysing for produksjon. Denne er bare til test.
+   *
+   * I en mellomfase, mens vi går over til et nytt løysingsregister, lagrer vi løsninger både i
+   * denne databasen, og i det nye registeret. Denne funksjonen er bare for test, og kommer til å
+   * bli fjernet.
+   */
   @Transactional
-  fun createLoeysing(namn: String, url: URL, orgnummer: String?): Int =
+  fun createLoeysingInternal(namn: String, url: URL, orgnummer: String?): Int =
       jdbcTemplate.queryForObject(
           createLoeysingSql, createLoeysingParams(namn, url, orgnummer), Int::class.java)!!
+
+  @Transactional
+  fun createLoeysing(namn: String, url: URL, orgnummer: String): Int {
+    val id =
+        jdbcTemplate.queryForObject(
+            createLoeysingSql, createLoeysingParams(namn, url, orgnummer), Int::class.java)!!
+    loeysingsRegisterClient.saveLoeysing(id, namn, url, orgnummer)
+    return id
+  }
 
   @Transactional
   fun deleteLoeysing(id: Int) = jdbcTemplate.update(deleteLoeysingSql, deleteLoeysingParams(id))

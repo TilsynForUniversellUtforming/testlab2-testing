@@ -177,5 +177,5 @@ class LoeysingDAOTest(
   }
 
   private fun createLoeysing(name: String = loeysingTestName, url: String = loeysingTestUrl) =
-      loeysingDAO.createLoeysing(name, URI(url).toURL(), loeysingTestOrgNummer)
+      loeysingDAO.createLoeysingInternal(name, URI(url).toURL(), loeysingTestOrgNummer)
 }
