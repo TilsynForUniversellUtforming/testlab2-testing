@@ -9,4 +9,4 @@ data class AggregertResultatLoeysing(
     val talElementSamsvar: Int,
     val talElementBrot: Int,
     val talElementVarsel: Int
-)
+) : AutotesterTestresultat
