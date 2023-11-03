@@ -5,6 +5,7 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.LocalDate
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
@@ -195,9 +196,9 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val loeysingDAO: 
   }
 
   private fun MaalingDTO.toMaaling(): Maaling {
+    val loeysingList = loeysingDAO.findLoeysingListForMaaling(this.id)
     return when (status) {
       planlegging -> {
-        val loeysingList = loeysingDAO.findLoeysingListForMaaling(this.id)
         val testregelList =
             jdbcTemplate.query(maalingTestregelSql, mapOf("id" to id), testregelRowMapper)
         Planlegging(
@@ -205,7 +206,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val loeysingDAO: 
       }
       crawling,
       kvalitetssikring -> {
-        val crawlResultat = getCrawlResultatForMaaling(id)
+        val crawlResultat = getCrawlResultatForMaaling(id, loeysingList)
         if (status == crawling) {
           Crawling(this.id, this.navn, this.datoStart, crawlResultat)
         } else {
@@ -214,7 +215,7 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val loeysingDAO: 
       }
       testing,
       testing_ferdig -> {
-        val testKoeyringar = getTestKoeyringarForMaaling(id)
+        val testKoeyringar = getTestKoeyringarForMaaling(id, loeysingList)
         if (status == testing) {
           Testing(id, navn, datoStart, testKoeyringar)
         } else {
@@ -265,8 +266,11 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val loeysingDAO: 
               String::class.java)
           .map { url -> URI(url).toURL() }
 
-  private fun getTestKoeyringarForMaaling(maalingId: Int): List<TestKoeyring> {
-    val crawlResultat = getCrawlResultatForMaaling(maalingId)
+  private fun getTestKoeyringarForMaaling(
+      maalingId: Int,
+      loeysingList: List<Loeysing>
+  ): List<TestKoeyring> {
+    val crawlResultat = getCrawlResultatForMaaling(maalingId, loeysingList)
     return jdbcTemplate.query<TestKoeyring>(
         """
               select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, t.lenker_testa, url_fullt_resultat, url_brot,url_agg_tr,url_agg_sk,url_agg_side,url_agg_side_tr,url_agg_loeysing
@@ -337,52 +341,57 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val loeysingDAO: 
         })
   }
 
-  fun getCrawlResultatForMaaling(maalingId: Int) =
-      jdbcTemplate.query(
-          """
-          with agg_nettsider as (
-              select crawlresultat_id, count(*) as ant_nettsider
-              from nettside
-              group by crawlresultat_id
-          )
-          select
-              cr.id,
-              cr.loeysingid,
-              cr.status,
-              cr.status_url,
-              cr.sist_oppdatert,
-              cr.feilmelding,
-              cr.lenker_crawla,
-              coalesce(an.ant_nettsider, 0) as ant_nettsider,
-              m.max_lenker
-          from crawlresultat cr
-              left join agg_nettsider an on cr.id = an.crawlresultat_id
-              join maalingv1 m on m.id = cr.maaling_id
-          where
-              cr.maaling_id = :maalingId
-          order by m.id
-              """
-              .trimIndent(),
-          mapOf("maalingId" to maalingId),
-          fun(rs: ResultSet): List<CrawlResultat> {
-            val result = mutableListOf<CrawlResultat>()
+  fun getCrawlResultatForMaaling(
+      maalingId: Int,
+      loeysingList: List<Loeysing>
+  ): List<CrawlResultat> {
+    val loeysingar = loeysingList.associateBy { it.id }
+    return jdbcTemplate.query(
+        """
+            with agg_nettsider as (
+                select crawlresultat_id, count(*) as ant_nettsider
+                from nettside
+                group by crawlresultat_id
+            )
+            select
+                cr.id,
+                cr.loeysingid,
+                cr.status,
+                cr.status_url,
+                cr.sist_oppdatert,
+                cr.feilmelding,
+                cr.lenker_crawla,
+                coalesce(an.ant_nettsider, 0) as ant_nettsider,
+                m.max_lenker
+            from crawlresultat cr
+                left join agg_nettsider an on cr.id = an.crawlresultat_id
+                join maalingv1 m on m.id = cr.maaling_id
+            where
+                cr.maaling_id = :maalingId
+            order by m.id
+                """
+            .trimIndent(),
+        mapOf("maalingId" to maalingId),
+        fun(rs: ResultSet): List<CrawlResultat> {
+          val result = mutableListOf<CrawlResultat>()
 
-            while (rs.next()) {
-              result.add(toCrawlResultat(rs))
-            }
+          while (rs.next()) {
+            val id = rs.getInt("id")
+            val loeysingId = rs.getInt("loeysingid")
+            val loeysing =
+                loeysingar[loeysingId]
+                    ?: throw IllegalStateException(
+                        "crawlresultat $id er lagra med ei løysing som ikkje finnes.")
+            result.add(toCrawlResultat(rs, loeysing))
+          }
 
-            return result.toList()
-          })
-          ?: throw RuntimeException(
-              "fikk `null` da vi forsøkte å hente crawlresultat for måling med id = $maalingId")
+          return result.toList()
+        })
+        ?: throw RuntimeException(
+            "fikk `null` da vi forsøkte å hente crawlresultat for måling med id = $maalingId")
+  }
 
-  private fun toCrawlResultat(rs: ResultSet): CrawlResultat {
-    val id = rs.getInt("id")
-    val loeysingId = rs.getInt("loeysingid")
-    val loeysing =
-        loeysingDAO.getLoeysing(loeysingId)
-            ?: throw IllegalStateException(
-                "crawlresultat $id er lagra med ei løysing som ikkje finnes.")
+  private fun toCrawlResultat(rs: ResultSet, loeysing: Loeysing): CrawlResultat {
     val sistOppdatert = rs.getTimestamp("sist_oppdatert").toInstant()
     val status = rs.getString("status")
 
