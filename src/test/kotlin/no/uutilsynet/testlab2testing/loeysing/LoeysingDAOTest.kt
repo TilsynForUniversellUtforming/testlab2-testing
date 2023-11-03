@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.loeysing
 import java.net.URI
 import java.net.URL
 import java.time.LocalDate
-import java.util.Random
+import java.util.*
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestName
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestOrgNummer
 import no.uutilsynet.testlab2testing.loeysing.TestConstants.loeysingTestUrl
@@ -11,15 +11,12 @@ import no.uutilsynet.testlab2testing.maaling.CrawlParameters
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO
 import no.uutilsynet.testlab2testing.maaling.MaalingListElement
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
-import org.assertj.core.api.Assertions
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertDoesNotThrow
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.dao.support.DataAccessUtils
+import org.springframework.jdbc.core.DataClassRowMapper
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -37,64 +34,47 @@ class LoeysingDAOTest(
   }
 
   @Test
-  @DisplayName("Skal hente løsning fra DAO")
-  fun getLoeysing() {
-    val id = createLoeysing()
-    val loeysing = loeysingDAO.getLoeysing(id)
-    Assertions.assertThat(loeysing).isNotNull
-    Assertions.assertThat(loeysing?.namn).isEqualTo(loeysingTestName)
-    Assertions.assertThat(loeysing?.url?.toString()).isEqualTo(loeysingTestUrl)
-  }
-
-  @Test
   @DisplayName("Skal hente løsningliste fra DAO")
   fun getLoeysingList() {
     val id = createLoeysing()
-    val loeysing = loeysingDAO.getLoeysing(id)
     val list = loeysingDAO.getLoeysingList()
-
-    Assertions.assertThat(list).contains(loeysing)
+    assertThat(list.map(Loeysing::id)).contains(id)
   }
 
   @Test
   @DisplayName("Skal hente løsningliste fra DAO basert på delvis navn")
   fun getLoeysingListByName() {
     val id = createLoeysing()
-    val loeysing = loeysingDAO.getLoeysing(id)
     val list = loeysingDAO.findByName(loeysingTestName.substring(1, 7))
-
-    Assertions.assertThat(list).containsExactly(loeysing)
+    assertThat(list.map(Loeysing::id)).containsExactly(id)
   }
 
   @Test
   @DisplayName("Skal hente løsningliste fra DAO basert på delvis orgnr")
   fun getLoeysingListByOrgnr() {
     val id = createLoeysing()
-    val loeysing = loeysingDAO.getLoeysing(id)
     val list = loeysingDAO.findByOrgnumber(loeysingTestOrgNummer.substring(1, 7))
-
-    Assertions.assertThat(list).containsExactly(loeysing)
+    assertThat(list.map(Loeysing::id)).containsExactly(id)
   }
 
   @Test
   @DisplayName("Skal opprette løsning i DAO")
   fun insertLoeysing() {
     val id = assertDoesNotThrow { createLoeysing() }
-    val loeysing = loeysingDAO.getLoeysing(id)
-    Assertions.assertThat(loeysing).isNotNull
+    assertThat(id).isNotNull()
   }
 
   @Test
   @DisplayName("Skal slette løsning i DAO")
   fun deleteLoeysing() {
     val id = createLoeysing()
-    val existingLoeysing = loeysingDAO.getLoeysing(id)
-    Assertions.assertThat(existingLoeysing).isNotNull
+    val existingLoeysing = getLoeysing(id)
+    assertThat(existingLoeysing).isNotNull
 
     loeysingDAO.deleteLoeysing(id)
 
-    val nonExistingLoeysing = loeysingDAO.getLoeysing(id)
-    Assertions.assertThat(nonExistingLoeysing).isNull()
+    val nonExistingLoeysing = getLoeysing(id)
+    assertThat(nonExistingLoeysing).isNull()
   }
 
   @Test
@@ -104,19 +84,19 @@ class LoeysingDAOTest(
     val oldUrl = "https://www.w3.org"
     val id = createLoeysing(oldName, oldUrl)
 
-    val oldLoeysing = loeysingDAO.getLoeysing(id)
-    Assertions.assertThat(oldLoeysing).isNotNull
-    Assertions.assertThat(oldLoeysing?.namn).isEqualTo(oldName)
-    Assertions.assertThat(oldLoeysing?.url?.toString()).isEqualTo(oldUrl)
+    val oldLoeysing = getLoeysing(id)
+    assertThat(oldLoeysing).isNotNull
+    assertThat(oldLoeysing?.namn).isEqualTo(oldName)
+    assertThat(oldLoeysing?.url?.toString()).isEqualTo(oldUrl)
 
     oldLoeysing?.copy(namn = loeysingTestName, url = URI(loeysingTestUrl).toURL())?.let {
       loeysingDAO.updateLoeysing(it)
     }
 
-    val updatedLoeysing = loeysingDAO.getLoeysing(id)
-    Assertions.assertThat(updatedLoeysing).isNotNull
-    Assertions.assertThat(updatedLoeysing?.namn).isEqualTo(loeysingTestName)
-    Assertions.assertThat(updatedLoeysing?.url?.toString()).isEqualTo(loeysingTestUrl)
+    val updatedLoeysing = getLoeysing(id)
+    assertThat(updatedLoeysing).isNotNull
+    assertThat(updatedLoeysing?.namn).isEqualTo(loeysingTestName)
+    assertThat(updatedLoeysing?.url?.toString()).isEqualTo(loeysingTestUrl)
   }
 
   @Nested
@@ -130,7 +110,7 @@ class LoeysingDAOTest(
       val id2 = createLoeysing()
       val id3 = createLoeysing()
       val idList = loeysingDAO.getLoeysingIdList()
-      Assertions.assertThat(idList).contains(id1, id2, id3)
+      assertThat(idList).contains(id1, id2, id3)
     }
   }
 
@@ -149,7 +129,7 @@ class LoeysingDAOTest(
 
       val loeysingList = loeysingDAO.findLoeysingListForMaaling(maaling)
 
-      Assertions.assertThat(loeysingList.map(Loeysing::url).map(URL::toString))
+      assertThat(loeysingList.map(Loeysing::url).map(URL::toString))
           .contains("https://www.a.com/", "https://www.b.com/")
     }
 
@@ -161,7 +141,7 @@ class LoeysingDAOTest(
 
       val loeysingList = loeysingDAO.findLoeysingListForMaaling(id)
 
-      Assertions.assertThat(loeysingList).isEmpty()
+      assertThat(loeysingList).isEmpty()
     }
 
     private fun getNumberNotInList(list: List<Int>): Int {
@@ -178,4 +158,11 @@ class LoeysingDAOTest(
 
   private fun createLoeysing(name: String = loeysingTestName, url: String = loeysingTestUrl) =
       loeysingDAO.createLoeysingInternal(name, URI(url).toURL(), loeysingTestOrgNummer)
+
+  private fun getLoeysing(id: Int): Loeysing? =
+      DataAccessUtils.singleResult(
+          loeysingDAO.jdbcTemplate.query(
+              "select id, namn, url, orgnummer from loeysing where id = :id",
+              mapOf("id" to id),
+              DataClassRowMapper.newInstance(Loeysing::class.java)))
 }

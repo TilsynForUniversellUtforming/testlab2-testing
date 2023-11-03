@@ -6,14 +6,12 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.createL
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.deleteLoeysingParams
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.deleteLoeysingSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.findLoeysingByNameSql
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingByIdSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingByOrgnummerSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingIdListSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingListSql
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loeysingRowMapper
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.updateLoeysingParams
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.updateLoeysingSql
-import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -35,7 +33,6 @@ class LoeysingDAO(
     val getLoeysingBaseSql = "select id, namn, url, orgnummer from loeysing"
     val getLoeysingListSql = "$getLoeysingBaseSql order by id"
     val getLoeysingIdListSql = "select id from loeysing order by id"
-    val getLoeysingByIdSql = "$getLoeysingBaseSql where id = :id"
     val findLoeysingByNameSql = "$getLoeysingBaseSql where lower(namn) like lower(:name_search)"
     val getLoeysingByOrgnummerSql = "$getLoeysingBaseSql where orgnummer like :orgnummer"
 
@@ -55,10 +52,6 @@ class LoeysingDAO(
 
     val loeysingRowMapper = DataClassRowMapper.newInstance(Loeysing::class.java)
   }
-
-  fun getLoeysing(id: Int): Loeysing? =
-      DataAccessUtils.singleResult(
-          jdbcTemplate.query(getLoeysingByIdSql, mapOf("id" to id), loeysingRowMapper))
 
   fun findByName(nameSearch: String): List<Loeysing> =
       jdbcTemplate.query(

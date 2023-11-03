@@ -10,11 +10,7 @@ import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingTestName
 import no.uutilsynet.testlab2testing.maaling.TestConstants.testRegelList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 
@@ -221,7 +217,9 @@ class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
                         uutilsynetUrls),
                 )))!!
     maalingDAO.save(kvalitetssikring).getOrThrow()
-    val crawlResults = maalingDAO.getCrawlResultatForMaaling(maaling.id)
+    val crawlResults =
+        maalingDAO.getCrawlResultatForMaaling(
+            maaling.id, listOf(digdirLoeysing, uutilsynetLoeysing))
     val digdirCrawlResult = crawlResults.find { it.loeysing == digdirLoeysing }
     assertThat(digdirCrawlResult).isInstanceOf(CrawlResultat.Ferdig::class.java)
     assertThat((digdirCrawlResult as CrawlResultat.Ferdig).antallNettsider)

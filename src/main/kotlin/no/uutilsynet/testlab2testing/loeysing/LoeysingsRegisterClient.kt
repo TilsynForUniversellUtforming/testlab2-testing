@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 
 @ConfigurationProperties(prefix = "loeysingsregister")
-data class LoeysingsRegisterProperties(val baseUrl: String)
+data class LoeysingsRegisterProperties(val host: String)
 
 @Component
 class LoeysingsRegisterClient(
@@ -19,7 +19,7 @@ class LoeysingsRegisterClient(
 
   fun saveLoeysing(id: Int, namn: String, url: URL, orgnummer: String): Result<Unit> = runCatching {
     restTemplate.postForLocation(
-        "${properties.baseUrl}/v1/loeysing", Loeysing(id, namn, url, orgnummer))
+        "${properties.host}/v1/loeysing", Loeysing(id, namn, url, orgnummer))
     Unit
   }
 }
