@@ -23,6 +23,17 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      loeysingsregister:
+        image: acrddtprod.azurecr.io/testlab2-loeysingsregister:latest
+        credentials:
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: postgres
+        ports:
+          - 8000:8080
 
     steps:
       - uses: actions/checkout@v3
@@ -45,6 +56,7 @@ jobs:
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: postgres
           FEATURES_START_TESTING: true
+          LOEYSINGSREGISTER_HOST: 'http://localhost:8000'
 
   deploy:
     runs-on: ubuntu-latest
