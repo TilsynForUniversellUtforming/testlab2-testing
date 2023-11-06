@@ -9,6 +9,7 @@ import no.uutilsynet.testlab2testing.maaling.MaalingDAO
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.util.UriComponentsBuilder
 
 fun locationForId(id: Int): URI = URI("/v2/loeysing/${id}")
 
@@ -67,19 +68,21 @@ class LoeysingResource(
   fun getLoeysingList(
       @RequestParam("namn", required = false) namn: String?,
       @RequestParam("orgnummer", required = false) orgnummer: String?
-  ): ResponseEntity<Any> {
-    if (namn != null && orgnummer != null) {
-      return ResponseEntity.badRequest().body("Må søke med enten namn eller orgnummer")
-    }
-
-    return if (namn != null) {
-      ResponseEntity.ok(loeysingDAO.findByName(namn))
-    } else if (orgnummer != null) {
-      ResponseEntity.ok(loeysingDAO.findByOrgnumber(orgnummer))
-    } else {
-      ResponseEntity.ok(loeysingDAO.getLoeysingList())
-    }
-  }
+  ): ResponseEntity<Any> =
+      if (namn != null && orgnummer != null) {
+        ResponseEntity.badRequest().body("Må søke med enten namn eller orgnummer")
+      } else if (namn != null || orgnummer != null) {
+        val uri =
+            UriComponentsBuilder.fromUriString("${loeysingsRegisterProperties.host}/v1/loeysing")
+                .queryParam("search", namn ?: orgnummer)
+                .build()
+                .toUri()
+        ResponseEntity.status(301).location(uri).build()
+      } else {
+        ResponseEntity.status(301)
+            .location(URI("${loeysingsRegisterProperties.host}/v1/loeysing"))
+            .build()
+      }
 
   @DeleteMapping("{id}")
   fun deleteLoeysing(@PathVariable("id") loeysingId: Int) = executeWithErrorHandling {

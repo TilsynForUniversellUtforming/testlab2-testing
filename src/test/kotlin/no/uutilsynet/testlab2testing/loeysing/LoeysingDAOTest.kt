@@ -42,22 +42,6 @@ class LoeysingDAOTest(
   }
 
   @Test
-  @DisplayName("Skal hente løsningliste fra DAO basert på delvis navn")
-  fun getLoeysingListByName() {
-    val id = createLoeysing()
-    val list = loeysingDAO.findByName(loeysingTestName.substring(1, 7))
-    assertThat(list.map(Loeysing::id)).containsExactly(id)
-  }
-
-  @Test
-  @DisplayName("Skal hente løsningliste fra DAO basert på delvis orgnr")
-  fun getLoeysingListByOrgnr() {
-    val id = createLoeysing()
-    val list = loeysingDAO.findByOrgnumber(loeysingTestOrgNummer.substring(1, 7))
-    assertThat(list.map(Loeysing::id)).containsExactly(id)
-  }
-
-  @Test
   @DisplayName("Skal opprette løsning i DAO")
   fun insertLoeysing() {
     val id = assertDoesNotThrow { createLoeysing() }
