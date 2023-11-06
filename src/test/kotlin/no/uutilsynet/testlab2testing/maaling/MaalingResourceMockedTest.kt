@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
+import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.maaling.TestConstants.crawlResultat
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingDateStart
@@ -39,6 +40,8 @@ class MaalingResourceMockedTest {
 
   @MockBean private lateinit var loeysingDAO: LoeysingDAO
 
+  @MockBean private lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+
   @MockBean private lateinit var testregelDAO: TestregelDAO
 
   @MockBean private lateinit var utvalDAO: UtvalDAO
@@ -55,7 +58,13 @@ class MaalingResourceMockedTest {
     MockitoAnnotations.openMocks(this)
     maalingResource =
         MaalingResource(
-            maalingDAO, loeysingDAO, testregelDAO, utvalDAO, crawlerClient, autoTesterClient)
+            maalingDAO,
+            loeysingDAO,
+            loeysingsRegisterClient,
+            testregelDAO,
+            utvalDAO,
+            crawlerClient,
+            autoTesterClient)
   }
 
   @Test

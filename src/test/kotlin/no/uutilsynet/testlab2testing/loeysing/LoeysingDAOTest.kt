@@ -34,14 +34,6 @@ class LoeysingDAOTest(
   }
 
   @Test
-  @DisplayName("Skal hente løsningliste fra DAO")
-  fun getLoeysingList() {
-    val id = createLoeysing()
-    val list = loeysingDAO.getLoeysingList()
-    assertThat(list.map(Loeysing::id)).contains(id)
-  }
-
-  @Test
   @DisplayName("Skal opprette løsning i DAO")
   fun insertLoeysing() {
     val id = assertDoesNotThrow { createLoeysing() }

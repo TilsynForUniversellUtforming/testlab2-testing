@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
+import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingDateStart
@@ -44,7 +45,8 @@ class MaalingIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val maalingDAO: MaalingDAO,
     @Autowired val loeysingDAO: LoeysingDAO,
-    @Autowired val utvalDAO: UtvalDAO
+    @Autowired val utvalDAO: UtvalDAO,
+    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
   val utvalTestName = "testutval"
 
@@ -220,6 +222,9 @@ class MaalingIntegrationTests(
   @Test
   @DisplayName("Skal kunne endre måling")
   fun updateMaaling() {
+    loeysingList.forEach {
+      loeysingsRegisterClient.saveLoeysing(it.id, it.namn, it.url, it.orgnummer).getOrThrow()
+    }
     val maaling =
         maalingDAO
             .createMaaling(

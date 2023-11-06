@@ -1,15 +1,6 @@
 package no.uutilsynet.testlab2testing.loeysing
 
 import java.net.URL
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.createLoeysingParams
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.createLoeysingSql
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.deleteLoeysingParams
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.deleteLoeysingSql
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingIdListSql
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.getLoeysingListSql
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.loeysingRowMapper
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.updateLoeysingParams
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO.LoeysingParams.updateLoeysingSql
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -21,35 +12,29 @@ class LoeysingDAO(
     val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
 
-  object LoeysingParams {
-    val createLoeysingSql =
-        "insert into loeysing (namn, url, orgnummer) values (:namn, :url, :orgnummer) returning id"
+  val createLoeysingSql =
+      "insert into loeysing (namn, url, orgnummer) values (:namn, :url, :orgnummer) returning id"
 
-    fun createLoeysingParams(namn: String, url: URL, orgnummer: String?) =
-        mapOf("namn" to namn, "url" to url.toString(), "orgnummer" to orgnummer)
+  fun createLoeysingParams(namn: String, url: URL, orgnummer: String?) =
+      mapOf("namn" to namn, "url" to url.toString(), "orgnummer" to orgnummer)
 
-    val getLoeysingBaseSql = "select id, namn, url, orgnummer from loeysing"
-    val getLoeysingListSql = "$getLoeysingBaseSql order by id"
-    val getLoeysingIdListSql = "select id from loeysing order by id"
+  val getLoeysingIdListSql = "select id from loeysing order by id"
 
-    val updateLoeysingSql =
-        "update loeysing set namn = :namn, url = :url, orgnummer = :orgnummer where id = :id"
+  val updateLoeysingSql =
+      "update loeysing set namn = :namn, url = :url, orgnummer = :orgnummer where id = :id"
 
-    fun updateLoeysingParams(loeysing: Loeysing) =
-        mapOf(
-            "namn" to loeysing.namn,
-            "url" to loeysing.url.toString(),
-            "orgnummer" to loeysing.orgnummer,
-            "id" to loeysing.id)
+  fun updateLoeysingParams(loeysing: Loeysing) =
+      mapOf(
+          "namn" to loeysing.namn,
+          "url" to loeysing.url.toString(),
+          "orgnummer" to loeysing.orgnummer,
+          "id" to loeysing.id)
 
-    val deleteLoeysingSql = "delete from loeysing where id = :id"
+  val deleteLoeysingSql = "delete from loeysing where id = :id"
 
-    fun deleteLoeysingParams(id: Int) = mapOf("id" to id)
+  fun deleteLoeysingParams(id: Int) = mapOf("id" to id)
 
-    val loeysingRowMapper = DataClassRowMapper.newInstance(Loeysing::class.java)
-  }
-
-  fun getLoeysingList(): List<Loeysing> = jdbcTemplate.query(getLoeysingListSql, loeysingRowMapper)
+  val loeysingRowMapper = DataClassRowMapper.newInstance(Loeysing::class.java)
 
   /**
    * Bruk createLoeysing for produksjon. Denne er bare til test.

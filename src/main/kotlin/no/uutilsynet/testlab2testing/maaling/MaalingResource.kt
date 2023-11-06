@@ -9,12 +9,7 @@ import java.net.URL
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateNamn
@@ -23,6 +18,7 @@ import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.dto.Testregel.Companion.validateTestRegel
 import no.uutilsynet.testlab2testing.firstMessage
 import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
+import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateParameters
@@ -31,21 +27,14 @@ import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("v1/maalinger")
 class MaalingResource(
     val maalingDAO: MaalingDAO,
     val loeysingDAO: LoeysingDAO,
+    val loeysingsRegisterClient: LoeysingsRegisterClient,
     val testregelDAO: TestregelDAO,
     val utvalDAO: UtvalDAO,
     val crawlerClient: CrawlerClient,
@@ -112,7 +101,10 @@ class MaalingResource(
             val maalingCopy = dto.toMaaling()
             ResponseEntity.ok(maalingDAO.updateMaaling(maalingCopy))
           }
-          .getOrElse { exception -> handleErrors(exception) }
+          .getOrElse { exception ->
+            logger.error("Feila da vi skulle oppdatere målinga ${dto.id}", exception)
+            handleErrors(exception)
+          }
 
   @DeleteMapping("{id}")
   fun deleteMaaling(@PathVariable id: Int): ResponseEntity<out Any> =
@@ -149,8 +141,7 @@ class MaalingResource(
                   logger.error(
                       "Feila da vi skulle hente fullt resultat for målinga $maalingId", error)
                   ResponseEntity.internalServerError().body(error.firstMessage())
-                })
-            ?: ResponseEntity.notFound().build()
+                }) ?: ResponseEntity.notFound().build()
       }
 
   @Operation(
@@ -213,8 +204,7 @@ class MaalingResource(
             { error ->
               logger.error("Feila da vi skulle hente aggregering for målinga $maalingId", error)
               ResponseEntity.internalServerError().body(error.firstMessage())
-            })
-        ?: ResponseEntity.notFound().build()
+            }) ?: ResponseEntity.notFound().build()
   }
 
   @GetMapping("{maalingId}/crawlresultat/nettsider")
@@ -366,7 +356,7 @@ class MaalingResource(
         }
   }
 
-  private fun EditMaalingDTO.toMaaling(): Maaling {
+  fun EditMaalingDTO.toMaaling(): Maaling {
     val navn = validateNamn(this.navn).getOrThrow()
     this.crawlParameters?.validateParameters()
 
@@ -375,16 +365,14 @@ class MaalingResource(
     return when (maaling) {
       is Maaling.Planlegging -> {
         val loeysingList =
-            this.loeysingIdList?.let { ll ->
-              loeysingDAO.getLoeysingList().filter { ll.contains(it.id) }
-            }
-                ?: throw IllegalArgumentException("Måling må ha løysingar")
+            this.loeysingIdList
+                ?.let { idList -> loeysingsRegisterClient.getMany(idList) }
+                ?.getOrThrow() ?: throw IllegalArgumentException("Måling må ha løysingar")
 
         val testregelList =
             this.testregelIdList?.let { idList ->
               testregelDAO.getTestregelList().filter { idList.contains(it.id) }
-            }
-                ?: throw IllegalArgumentException("Måling må ha testreglar")
+            } ?: throw IllegalArgumentException("Måling må ha testreglar")
 
         maaling.copy(
             navn = navn,

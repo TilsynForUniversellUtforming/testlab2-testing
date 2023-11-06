@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.util.UriComponentsBuilder
 
 @ConfigurationProperties(prefix = "loeysingsregister")
 data class LoeysingsRegisterProperties(val host: String)
@@ -21,5 +22,19 @@ class LoeysingsRegisterClient(
     restTemplate.postForLocation(
         "${properties.host}/v1/loeysing", Loeysing(id, namn, url, orgnummer))
     Unit
+  }
+
+  fun getMany(idList: List<Int>): Result<List<Loeysing>> {
+    return runCatching {
+      val uri =
+          UriComponentsBuilder.fromUriString(properties.host)
+              .pathSegment("v1", "loeysing")
+              .queryParam("ids", idList.joinToString(","))
+              .build()
+              .toUri()
+      restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
+          ?: throw RuntimeException(
+              "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}")
+    }
   }
 }
