@@ -25,6 +25,9 @@ jobs:
           - 5432:5432
       loeysingsregister:
         image: acrddtprod.azurecr.io/testlab2-loeysingsregister:latest
+        credentials:
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
           SPRING_DATASOURCE_USERNAME: postgres
