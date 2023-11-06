@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: Passw0rd
+      POSTGRES_DB: postgres
+    networks:
+      - dev_network
+
+  loeysingsregister:
+    image: acrddtprod.azurecr.io/testlab2-loeysingsregister:latest
+    ports:
+      - "8000:8080"
+    networks:
+      - dev_network
+    environment:
+      SPRING_DATASOURCE_URL: 'jdbc:postgresql://postgres:5432/postgres?currentSchema=testlab2_loeysingsregister'
+
+networks:
+  dev_network:
