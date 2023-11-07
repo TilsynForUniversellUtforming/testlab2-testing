@@ -18,7 +18,11 @@ import org.springframework.web.bind.annotation.*
 @Tag(
     name = "Utval",
     description = "API for å lage og hente utval. Eit utval er ei samling med løysingar.")
-class UtvalResource(@Autowired val utvalDAO: UtvalDAO, @Autowired val loeysingDAO: LoeysingDAO) {
+class UtvalResource(
+    @Autowired val utvalDAO: UtvalDAO,
+    @Autowired val loeysingDAO: LoeysingDAO,
+    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient
+) {
   val logger: Logger = LoggerFactory.getLogger(UtvalResource::class.java)
 
   @Operation(
@@ -56,7 +60,8 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
 
     val loeysingar: List<Loeysing> =
         loeysingList.map { (namn, url, orgnummer) ->
-          val foundLoeysing = loeysingDAO.findLoeysingByURLAndOrgnummer(url, orgnummer)
+          val sammeOrgnummer = loeysingsRegisterClient.search(orgnummer).getOrThrow()
+          val foundLoeysing = sammeOrgnummer.find { sameURL(it.url, url) }
           if (foundLoeysing == null) {
             logger
                 .atInfo()

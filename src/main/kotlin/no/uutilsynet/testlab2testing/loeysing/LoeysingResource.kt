@@ -6,6 +6,7 @@ import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateOrgNummer
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -18,9 +19,10 @@ fun locationForId(id: Int): URI = URI("/v2/loeysing/${id}")
 class LoeysingResource(
     val loeysingDAO: LoeysingDAO,
     val maalingDAO: MaalingDAO,
-    val loeysingsRegisterProperties: LoeysingsRegisterProperties
+    val loeysingsRegisterProperties: LoeysingsRegisterProperties,
+    val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
-  val logger = LoggerFactory.getLogger(LoeysingResource::class.java)
+  val logger: Logger = LoggerFactory.getLogger(LoeysingResource::class.java)
 
   @PostMapping
   fun createLoeysing(@RequestBody external: Loeysing.External) =
@@ -29,7 +31,8 @@ class LoeysingResource(
             val url = URI(external.url).toURL()
             val orgnummer = validateOrgNummer(external.orgnummer).getOrThrow()
 
-            val foundLoeysing = loeysingDAO.findLoeysingByURLAndOrgnummer(url, orgnummer)
+            val sammeOrgnummer = loeysingsRegisterClient.search(orgnummer).getOrThrow()
+            val foundLoeysing = sammeOrgnummer.find { sameURL(it.url, url) }
             if (foundLoeysing != null) {
               logger.error("Løysing med url $url og orgnr $orgnummer er duplikat")
               throw IllegalArgumentException(
@@ -49,12 +52,16 @@ class LoeysingResource(
   fun updateLoeysing(@RequestBody loeysing: Loeysing) = executeWithErrorHandling {
     val namn = validateNamn(loeysing.namn).getOrThrow()
     val orgnummer = validateOrgNummer(loeysing.orgnummer).getOrThrow()
-    val foundLoeysing = loeysingDAO.findLoeysingByURLAndOrgnummer(loeysing.url, orgnummer)
+
+    val sammeOrgnummer = loeysingsRegisterClient.search(orgnummer).getOrThrow()
+    val foundLoeysing = sammeOrgnummer.find { sameURL(it.url, loeysing.url) }
+
     if (foundLoeysing != null && foundLoeysing.id != loeysing.id) {
       logger.error("Løysing med id ${loeysing.id} er duplikat")
       throw IllegalArgumentException(
           "Løysing med url ${loeysing.url} og orgnr $orgnummer finnes allereie")
     }
+
     loeysingDAO.updateLoeysing(Loeysing(loeysing.id, namn, loeysing.url, orgnummer))
   }
 
