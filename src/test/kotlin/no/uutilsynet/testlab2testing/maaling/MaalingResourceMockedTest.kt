@@ -59,7 +59,6 @@ class MaalingResourceMockedTest {
     maalingResource =
         MaalingResource(
             maalingDAO,
-            loeysingDAO,
             loeysingsRegisterClient,
             testregelDAO,
             utvalDAO,
@@ -119,7 +118,8 @@ class MaalingResourceMockedTest {
     `when`(maalingDAO.save(maalingTesting)).thenReturn(Result.success(maalingTesting))
     `when`(maalingDAO.getCrawlResultatNettsider(id, uutilsynetLoeysing.id)).thenReturn(nettsider)
     `when`(testregelDAO.getTestreglarForMaaling(id)).thenReturn(Result.success(testregelList))
-    `when`(loeysingDAO.getLoeysingIdList()).thenReturn(listOf(uutilsynetLoeysing.id))
+    `when`(loeysingsRegisterClient.getMany(listOf(uutilsynetLoeysing.id)))
+        .thenReturn(Result.success(listOf(uutilsynetLoeysing)))
 
     server
         .expect(

@@ -5,10 +5,7 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.LocalDate
-import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
-import no.uutilsynet.testlab2testing.loeysing.Utval
-import no.uutilsynet.testlab2testing.loeysing.UtvalId
+import no.uutilsynet.testlab2testing.loeysing.*
 import no.uutilsynet.testlab2testing.maaling.Maaling.*
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
@@ -34,7 +31,11 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val loeysingDAO: LoeysingDAO) {
+class MaalingDAO(
+    val jdbcTemplate: NamedParameterJdbcTemplate,
+    val loeysingDAO: LoeysingDAO,
+    val loeysingsRegisterClient: LoeysingsRegisterClient
+) {
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
 
@@ -196,7 +197,12 @@ class MaalingDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val loeysingDAO: 
   }
 
   private fun MaalingDTO.toMaaling(): Maaling {
-    val loeysingList = loeysingDAO.findLoeysingListForMaaling(this.id)
+    val loeysingIdList: List<Int> =
+        jdbcTemplate.queryForList(
+            "select idloeysing from maalingloeysing where idmaaling = :id",
+            mapOf("id" to id),
+            Int::class.java)
+    val loeysingList = loeysingsRegisterClient.getMany(loeysingIdList).getOrThrow()
     return when (status) {
       planlegging -> {
         val testregelList =

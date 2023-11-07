@@ -17,19 +17,10 @@ import no.uutilsynet.testlab2testing.maaling.TestConstants.testRegelList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.uutilsynetLoeysing
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.greaterThan
-import org.hamcrest.Matchers.instanceOf
-import org.hamcrest.Matchers.matchesPattern
-import org.hamcrest.Matchers.notNullValue
-import org.hamcrest.Matchers.oneOf
+import org.hamcrest.Matchers.*
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -50,6 +41,13 @@ class MaalingIntegrationTests(
 ) {
   val utvalTestName = "testutval"
 
+  @BeforeAll
+  fun beforeAll() {
+    loeysingList.forEach {
+      loeysingsRegisterClient.saveLoeysing(it.id, it.namn, it.url, it.orgnummer).getOrThrow()
+    }
+  }
+
   @AfterAll
   fun cleanup() {
     maalingDAO.jdbcTemplate.update(
@@ -69,8 +67,8 @@ class MaalingIntegrationTests(
   @Test
   @DisplayName("vi kan opprette en ny måling basert på et utvalg")
   fun postNewMaalingWithUtvalg() {
-    val loeysingIdList = loeysingDAO.getLoeysingIdList()
-    val utvalId = utvalDAO.createUtval(utvalTestName, loeysingIdList)
+    val loeysingIdList = listOf(1)
+    val utvalId = utvalDAO.createUtval(utvalTestName, loeysingIdList).getOrThrow()
     val requestBody =
         mapOf(
             "navn" to maalingTestName,
@@ -101,7 +99,7 @@ class MaalingIntegrationTests(
   @DisplayName(
       "når vi har opprettet en måling basert på et utvalg, så skal utvalgs-ID lagres på målingen")
   fun saveUtvalId() {
-    val loeysingIdList = loeysingDAO.getLoeysingIdList()
+    val loeysingIdList = listOf(1)
     val utvalId = utvalDAO.createUtval(utvalTestName, loeysingIdList)
     val requestBody =
         mapOf(

@@ -17,7 +17,6 @@ import no.uutilsynet.testlab2testing.common.validateStatus
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.dto.Testregel.Companion.validateTestRegel
 import no.uutilsynet.testlab2testing.firstMessage
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
@@ -33,7 +32,6 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("v1/maalinger")
 class MaalingResource(
     val maalingDAO: MaalingDAO,
-    val loeysingDAO: LoeysingDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val testregelDAO: TestregelDAO,
     val utvalDAO: UtvalDAO,
@@ -57,8 +55,8 @@ class MaalingResource(
             val navn = validateNamn(dto.navn).getOrThrow()
             val loeysingIdList =
                 dto.loeysingIdList?.let {
-                  validateIdList(
-                          dto.loeysingIdList, loeysingDAO.getLoeysingIdList(), "loeysingIdList")
+                  val loeysingar = loeysingsRegisterClient.getMany(it).getOrThrow()
+                  validateIdList(dto.loeysingIdList, loeysingar.map { it.id }, "loeysingIdList")
                       .getOrThrow()
                 }
             val utvalIdList = utvalDAO.getUtvalList().getOrDefault(emptyList()).map { it.id }
@@ -141,8 +139,7 @@ class MaalingResource(
                   logger.error(
                       "Feila da vi skulle hente fullt resultat for målinga $maalingId", error)
                   ResponseEntity.internalServerError().body(error.firstMessage())
-                })
-            ?: ResponseEntity.notFound().build()
+                }) ?: ResponseEntity.notFound().build()
       }
 
   @Operation(
@@ -205,8 +202,7 @@ class MaalingResource(
             { error ->
               logger.error("Feila da vi skulle hente aggregering for målinga $maalingId", error)
               ResponseEntity.internalServerError().body(error.firstMessage())
-            })
-        ?: ResponseEntity.notFound().build()
+            }) ?: ResponseEntity.notFound().build()
   }
 
   @GetMapping("{maalingId}/crawlresultat/nettsider")
@@ -269,9 +265,14 @@ class MaalingResource(
       statusDTO: StatusDTO,
       maaling: Maaling.Kvalitetssikring
   ): ResponseEntity<Any> {
+    val validIds =
+        if (statusDTO.loeysingIdList?.isNotEmpty() == true) {
+          loeysingsRegisterClient.getMany(statusDTO.loeysingIdList).getOrThrow().map { it.id }
+        } else {
+          emptyList()
+        }
     val loeysingIdList =
-        validateIdList(statusDTO.loeysingIdList, loeysingDAO.getLoeysingIdList(), "loeysingIdList")
-            .getOrThrow()
+        validateIdList(statusDTO.loeysingIdList, validIds, "loeysingIdList").getOrThrow()
     val crawlParameters = maalingDAO.getCrawlParameters(maaling.id)
     val updated = crawlerClient.restart(maaling, loeysingIdList, crawlParameters)
     maalingDAO.save(updated).getOrThrow()
@@ -288,9 +289,15 @@ class MaalingResource(
       statusDTO: StatusDTO,
       maaling: Maaling.TestingFerdig
   ): ResponseEntity<Any> = coroutineScope {
+    logger.info("Restarter testing for måling ${maaling.id}")
+    val validIds =
+        if (statusDTO.loeysingIdList?.isNotEmpty() == true) {
+          loeysingsRegisterClient.getMany(statusDTO.loeysingIdList).getOrThrow().map { it.id }
+        } else {
+          emptyList()
+        }
     val loeysingIdList =
-        validateIdList(statusDTO.loeysingIdList, loeysingDAO.getLoeysingIdList(), "loeysingIdList")
-            .getOrThrow()
+        validateIdList(statusDTO.loeysingIdList, validIds, "loeysingIdList").getOrThrow()
 
     val (retestList, rest) =
         maaling.testKoeyringar.partition { loeysingIdList.contains(it.loeysing.id) }
@@ -369,14 +376,12 @@ class MaalingResource(
         val loeysingList =
             this.loeysingIdList
                 ?.let { idList -> loeysingsRegisterClient.getMany(idList) }
-                ?.getOrThrow()
-                ?: throw IllegalArgumentException("Måling må ha løysingar")
+                ?.getOrThrow() ?: throw IllegalArgumentException("Måling må ha løysingar")
 
         val testregelList =
             this.testregelIdList?.let { idList ->
               testregelDAO.getTestregelList().filter { idList.contains(it.id) }
-            }
-                ?: throw IllegalArgumentException("Måling må ha testreglar")
+            } ?: throw IllegalArgumentException("Måling må ha testreglar")
 
         maaling.copy(
             navn = navn,

@@ -4,7 +4,7 @@
 
 For å komme i gang:
 
-1. Start lokale versjoner av eksterne systemer (se under) med `docker-compose -f docker-compose.dev.yml up`.
+1. Start lokale versjoner av eksterne systemer (se under) med `docker compose -f docker-compose.dev.yml up`.
 2. Kjør alle testene med `./mvnw test`
 3. Start applikasjonen med `./mvnw spring-boot:run`
 
@@ -12,7 +12,7 @@ For å komme i gang:
 
 Testlab2-testing er avhengig av noen eksterne systemer for å kjøre, og også for å kjøre noen av integrasjonstestene.
 Disse systemene er definert i fila docker-compose.dev.yml, og kan kjøres lokalt med
-kommandoen `docker-compose -f docker-compose.dev.yml up`.
+kommandoen `docker compose -f docker-compose.dev.yml up`.
 
 ### Lokale properties
 

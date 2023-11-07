@@ -37,4 +37,8 @@ class LoeysingsRegisterClient(
               "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}")
     }
   }
+
+  fun delete(id: Int): Result<Unit> = runCatching {
+    restTemplate.delete("${properties.host}/v1/loeysing/$id")
+  }
 }

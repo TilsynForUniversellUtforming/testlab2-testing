@@ -18,8 +18,6 @@ class LoeysingDAO(
   fun createLoeysingParams(namn: String, url: URL, orgnummer: String?) =
       mapOf("namn" to namn, "url" to url.toString(), "orgnummer" to orgnummer)
 
-  val getLoeysingIdListSql = "select id from loeysing order by id"
-
   val updateLoeysingSql =
       "update loeysing set namn = :namn, url = :url, orgnummer = :orgnummer where id = :id"
 
@@ -63,9 +61,6 @@ class LoeysingDAO(
   @Transactional
   fun updateLoeysing(loeysing: Loeysing) =
       jdbcTemplate.update(updateLoeysingSql, updateLoeysingParams(loeysing))
-
-  fun getLoeysingIdList(): List<Int> =
-      jdbcTemplate.queryForList(getLoeysingIdListSql, emptyMap<String, String>(), Int::class.java)
 
   fun getMaalingLoeysingListById(idloeysing: Int): List<Int> =
       jdbcTemplate.queryForList(
