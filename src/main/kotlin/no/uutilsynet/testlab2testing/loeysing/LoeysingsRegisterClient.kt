@@ -38,6 +38,19 @@ class LoeysingsRegisterClient(
     }
   }
 
+  fun search(search: String): Result<List<Loeysing>> {
+    return runCatching {
+      val uri =
+          UriComponentsBuilder.fromUriString(properties.host)
+              .pathSegment("v1", "loeysing")
+              .queryParam("search", search)
+              .build()
+              .toUri()
+      restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
+          ?: throw RuntimeException("loeysingsregisteret returnerte null for søk $search")
+    }
+  }
+
   fun delete(id: Int): Result<Unit> = runCatching {
     restTemplate.delete("${properties.host}/v1/loeysing/$id")
   }

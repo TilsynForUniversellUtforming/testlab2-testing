@@ -62,20 +62,6 @@ class LoeysingDAO(
   fun updateLoeysing(loeysing: Loeysing) =
       jdbcTemplate.update(updateLoeysingSql, updateLoeysingParams(loeysing))
 
-  fun findLoeysingByURLAndOrgnummer(url: URL, orgnummer: String): Loeysing? {
-    val sammeOrgnummer =
-        jdbcTemplate.query(
-            """
-                select id, namn, url, orgnummer
-                from loeysing
-                where orgnummer = :orgnummer
-            """
-                .trimIndent(),
-            mapOf("orgnummer" to orgnummer),
-            loeysingRowMapper)
-    return sammeOrgnummer.find { loeysing -> sameURL(loeysing.url, url) }
-  }
-
   fun findLoeysingListForMaaling(maaling: Int): List<Loeysing> {
     return jdbcTemplate.query(
         """
