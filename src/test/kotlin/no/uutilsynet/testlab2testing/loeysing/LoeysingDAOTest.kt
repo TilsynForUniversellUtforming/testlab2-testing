@@ -75,21 +75,6 @@ class LoeysingDAOTest(
     assertThat(updatedLoeysing?.url?.toString()).isEqualTo(loeysingTestUrl)
   }
 
-  @Nested
-  @DisplayName("getLoeysingIdList")
-  inner class GetLoeysingIdList {
-    @Test
-    @DisplayName(
-        "når vi henter id-lista, så skal den inneholde alle id-ene på løsninger i databasen")
-    fun getIdList() {
-      val id1 = createLoeysing()
-      val id2 = createLoeysing()
-      val id3 = createLoeysing()
-      val idList = loeysingDAO.getLoeysingIdList()
-      assertThat(idList).contains(id1, id2, id3)
-    }
-  }
-
   @DisplayName("findLoeysingListForMaaling")
   @Nested
   inner class FindLoeysingListForMaaling {

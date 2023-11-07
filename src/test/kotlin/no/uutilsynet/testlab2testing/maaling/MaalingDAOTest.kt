@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.maaling
 import java.net.URI
 import java.net.URL
 import java.time.Instant
+import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.maaling.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.maaling.TestConstants.maalingDateStart
@@ -17,7 +18,17 @@ import org.springframework.boot.test.context.SpringBootTest
 @DisplayName("Tester for MaalingDAO")
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class MaalingDAOTest(@Autowired val maalingDAO: MaalingDAO) {
+class MaalingDAOTest(
+    @Autowired val maalingDAO: MaalingDAO,
+    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient
+) {
+
+  @BeforeAll
+  fun beforeAll() {
+    loeysingList.forEach {
+      loeysingsRegisterClient.saveLoeysing(it.id, it.namn, it.url, it.orgnummer)
+    }
+  }
 
   @AfterAll
   fun cleanup() {
