@@ -86,7 +86,7 @@ class LoeysingResource(
 
   @DeleteMapping("{id}")
   fun deleteLoeysing(@PathVariable("id") loeysingId: Int) = executeWithErrorHandling {
-    val maalingLoeysingUsageList = loeysingDAO.getMaalingLoeysingListById(loeysingId)
+    val maalingLoeysingUsageList = maalingDAO.findMaalingarByLoeysing(loeysingId)
     if (maalingLoeysingUsageList.isNotEmpty()) {
       val maalingList =
           maalingDAO

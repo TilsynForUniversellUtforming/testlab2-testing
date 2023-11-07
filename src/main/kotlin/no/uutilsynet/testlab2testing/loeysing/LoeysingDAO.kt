@@ -62,12 +62,6 @@ class LoeysingDAO(
   fun updateLoeysing(loeysing: Loeysing) =
       jdbcTemplate.update(updateLoeysingSql, updateLoeysingParams(loeysing))
 
-  fun getMaalingLoeysingListById(idloeysing: Int): List<Int> =
-      jdbcTemplate.queryForList(
-          "select idmaaling from maalingLoeysing where idloeysing in (:idloeysing)",
-          mapOf("idloeysing" to idloeysing),
-          Int::class.java)
-
   fun findLoeysingByURLAndOrgnummer(url: URL, orgnummer: String): Loeysing? {
     val sammeOrgnummer =
         jdbcTemplate.query(
