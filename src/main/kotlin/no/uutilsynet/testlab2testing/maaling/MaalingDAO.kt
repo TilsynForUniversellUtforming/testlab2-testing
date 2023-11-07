@@ -703,6 +703,12 @@ class MaalingDAO(
     }
   }
 
+  fun findMaalingarByLoeysing(loeysingId: Int): List<Int> =
+      jdbcTemplate.queryForList(
+          "select idmaaling from maalingLoeysing where idloeysing in (:idloeysing)",
+          mapOf("idloeysing" to loeysingId),
+          Int::class.java)
+
   private fun status(crawresultat: CrawlResultat): String =
       when (crawresultat) {
         is CrawlResultat.IkkjeStarta -> "ikkje_starta"
