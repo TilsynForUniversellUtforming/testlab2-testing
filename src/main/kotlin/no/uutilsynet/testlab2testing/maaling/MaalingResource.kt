@@ -147,7 +147,8 @@ class MaalingResource(
                   logger.error(
                       "Feila da vi skulle hente fullt resultat for målinga $maalingId", error)
                   ResponseEntity.internalServerError().body(error.firstMessage())
-                }) ?: ResponseEntity.notFound().build()
+                })
+            ?: ResponseEntity.notFound().build()
       }
 
   @Operation(
@@ -210,7 +211,8 @@ class MaalingResource(
             { error ->
               logger.error("Feila da vi skulle hente aggregering for målinga $maalingId", error)
               ResponseEntity.internalServerError().body(error.firstMessage())
-            }) ?: ResponseEntity.notFound().build()
+            })
+        ?: ResponseEntity.notFound().build()
   }
 
   @GetMapping("{maalingId}/crawlresultat/nettsider")
@@ -384,12 +386,14 @@ class MaalingResource(
         val loeysingList =
             this.loeysingIdList
                 ?.let { idList -> loeysingsRegisterClient.getMany(idList) }
-                ?.getOrThrow() ?: throw IllegalArgumentException("Måling må ha løysingar")
+                ?.getOrThrow()
+                ?: throw IllegalArgumentException("Måling må ha løysingar")
 
         val testregelList =
             this.testregelIdList?.let { idList ->
               testregelDAO.getTestregelList().filter { idList.contains(it.id) }
-            } ?: throw IllegalArgumentException("Måling må ha testreglar")
+            }
+                ?: throw IllegalArgumentException("Måling må ha testreglar")
 
         maaling.copy(
             navn = navn,
