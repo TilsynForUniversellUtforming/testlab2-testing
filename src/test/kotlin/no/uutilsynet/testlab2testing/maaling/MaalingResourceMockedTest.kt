@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import no.uutilsynet.testlab2testing.dto.Testregel
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.maaling.TestConstants.crawlResultat
@@ -37,8 +36,6 @@ class MaalingResourceMockedTest {
   @Autowired private lateinit var autoTesterClient: AutoTesterClient
 
   @MockBean private lateinit var maalingDAO: MaalingDAO
-
-  @MockBean private lateinit var loeysingDAO: LoeysingDAO
 
   @MockBean private lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 

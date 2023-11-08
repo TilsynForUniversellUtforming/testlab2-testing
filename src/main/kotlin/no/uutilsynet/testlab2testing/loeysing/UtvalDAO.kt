@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.loeysing
 
-import java.net.URI
 import java.sql.ResultSet
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -28,24 +27,21 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
     utvalId
   }
 
-  fun getUtval(id: Int): Result<Utval> = runCatching {
+  data class UtvalFromDatabase(val id: Int, val namn: String, val loeysingar: List<Int>)
+
+  fun getUtval(id: Int): Result<UtvalFromDatabase> = runCatching {
     jdbcTemplate.query(
         """
               select utval.id           as utval_id,
                      utval.namn         as utval_namn,
-                     loeysing.id        as loeysing_id,
-                     loeysing.namn      as loeysing_namn,
-                     loeysing.url       as loeysing_url,
-                     loeysing.orgnummer as loeysing_orgnummer
+                     ul.loeysing_id as loeysing_id
               from utval
                        join utval_loeysing ul on utval.id = ul.utval_id
-                       join loeysing on loeysing.id = ul.loeysing_id
               where utval.id = :id
             """
             .trimIndent(),
         mapOf("id" to id),
-        ::toUtval)
-        ?: throw IllegalArgumentException("Fann ikkje utval med id $id")
+        ::toUtval) ?: throw IllegalArgumentException("Fann ikkje utval med id $id")
   }
 
   fun getUtvalList(): Result<List<UtvalListItem>> = runCatching {
@@ -59,20 +55,16 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
     jdbcTemplate.update("delete from utval where id = :id", mapOf("id" to id))
   }
 
-  private fun toUtval(rs: ResultSet): Utval {
+  private fun toUtval(rs: ResultSet): UtvalFromDatabase {
     require(rs.isBeforeFirst)
     rs.next()
-    val utval = Utval(rs.getInt("utval_id"), rs.getString("utval_namn"), emptyList())
-    val loeysingar = mutableListOf<Loeysing>()
+    val id = rs.getInt("utval_id")
+    val namn = rs.getString("utval_namn")
+    val loeysingar = mutableListOf<Int>()
     do {
-      loeysingar.add(
-          Loeysing(
-              rs.getInt("loeysing_id"),
-              rs.getString("loeysing_namn"),
-              URI(rs.getString("loeysing_url")).toURL(),
-              rs.getString("loeysing_orgnummer")))
+      loeysingar.add(rs.getInt("loeysing_id"))
     } while (rs.next())
-    return utval.copy(loeysingar = loeysingar.toList())
+    return UtvalFromDatabase(id, namn, loeysingar.toList())
   }
 }
 

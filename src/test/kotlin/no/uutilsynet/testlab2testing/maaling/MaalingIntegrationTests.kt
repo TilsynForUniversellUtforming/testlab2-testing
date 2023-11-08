@@ -6,7 +6,6 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.loeysing.LoeysingDAO
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
@@ -35,7 +34,6 @@ import org.springframework.http.ResponseEntity
 class MaalingIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val maalingDAO: MaalingDAO,
-    @Autowired val loeysingDAO: LoeysingDAO,
     @Autowired val utvalDAO: UtvalDAO,
     @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
@@ -44,7 +42,7 @@ class MaalingIntegrationTests(
   @BeforeAll
   fun beforeAll() {
     loeysingList.forEach {
-      loeysingsRegisterClient.saveLoeysing(it.id, it.namn, it.url, it.orgnummer).getOrThrow()
+      loeysingsRegisterClient.saveLoeysing(it.namn, it.url, it.orgnummer).getOrThrow()
     }
   }
 
@@ -221,7 +219,7 @@ class MaalingIntegrationTests(
   @DisplayName("Skal kunne endre måling")
   fun updateMaaling() {
     loeysingList.forEach {
-      loeysingsRegisterClient.saveLoeysing(it.id, it.namn, it.url, it.orgnummer).getOrThrow()
+      loeysingsRegisterClient.saveLoeysing(it.namn, it.url, it.orgnummer).getOrThrow()
     }
     val maaling =
         maalingDAO
