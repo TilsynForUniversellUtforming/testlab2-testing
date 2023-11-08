@@ -18,6 +18,7 @@ import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.dto.Testregel.Companion.validateTestRegel
 import no.uutilsynet.testlab2testing.firstMessage
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
+import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateParameters
@@ -76,7 +77,14 @@ class MaalingResource(
             val localDateNorway = LocalDate.now(ZoneId.of("Europe/Oslo"))
 
             if (utvalId != null) {
-              val utval = utvalDAO.getUtval(utvalId).getOrThrow()
+              val utval =
+                  utvalDAO
+                      .getUtval(utvalId)
+                      .mapCatching {
+                        val loeysingar = loeysingsRegisterClient.getMany(it.loeysingar).getOrThrow()
+                        Utval(it.id, it.namn, loeysingar)
+                      }
+                      .getOrThrow()
               maalingDAO.createMaaling(
                   navn, localDateNorway, utval, testregelIdList, crawlParameters)
             } else if (loeysingIdList != null) {

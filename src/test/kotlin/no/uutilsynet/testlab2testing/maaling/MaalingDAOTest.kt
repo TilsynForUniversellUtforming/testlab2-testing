@@ -25,9 +25,7 @@ class MaalingDAOTest(
 
   @BeforeAll
   fun beforeAll() {
-    loeysingList.forEach {
-      loeysingsRegisterClient.saveLoeysing(it.id, it.namn, it.url, it.orgnummer)
-    }
+    loeysingList.forEach { loeysingsRegisterClient.saveLoeysing(it.namn, it.url, it.orgnummer) }
   }
 
   @AfterAll

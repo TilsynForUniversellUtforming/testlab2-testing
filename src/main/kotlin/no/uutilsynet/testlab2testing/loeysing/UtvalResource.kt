@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.*
     description = "API for å lage og hente utval. Eit utval er ei samling med løysingar.")
 class UtvalResource(
     @Autowired val utvalDAO: UtvalDAO,
-    @Autowired val loeysingDAO: LoeysingDAO,
     @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
   val logger: Logger = LoggerFactory.getLogger(UtvalResource::class.java)
@@ -66,8 +65,8 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
             logger
                 .atInfo()
                 .log("lagrar ei ny løysing som vi ikkje fann i databasen: $namn, $url, $orgnummer")
-            val id = loeysingDAO.createLoeysing(namn, url, orgnummer)
-            Loeysing(id, namn, url, orgnummer)
+            val loeysing = loeysingsRegisterClient.saveLoeysing(namn, url, orgnummer).getOrThrow()
+            loeysing
           } else {
             foundLoeysing
           }
@@ -89,8 +88,17 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
   fun getUtval(@PathVariable id: Int): ResponseEntity<Utval> {
     return utvalDAO
         .getUtval(id)
+        .mapCatching {
+          val loeysingar = loeysingsRegisterClient.getMany(it.loeysingar).getOrThrow()
+          Utval(it.id, it.namn, loeysingar)
+        }
         .map { utval -> ResponseEntity.ok(utval) }
-        .getOrElse { ResponseEntity.notFound().build() }
+        .getOrElse {
+          when (it) {
+            is IllegalArgumentException -> ResponseEntity.notFound().build()
+            else -> ResponseEntity.internalServerError().build()
+          }
+        }
   }
 
   @Operation(

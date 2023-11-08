@@ -4,11 +4,7 @@ import java.net.URI
 import java.util.*
 import no.uutilsynet.testlab2testing.loeysing.UtvalResource.NyttUtval
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -18,39 +14,51 @@ import org.springframework.http.ResponseEntity
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Disabled("skrudd av mens vi jobber med nytt løsningsregister")
 class UtvalResourceTest(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val utvalResource: UtvalResource,
     @Autowired val utvalDAO: UtvalDAO,
+    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
   val uuid = UUID.randomUUID().toString()
+
+  @BeforeAll
+  fun beforeAll() {
+    loeysingsRegisterClient
+        .saveLoeysing("UUTilsynet", URI("https://www.uutilsynet.no/").toURL(), "991825827")
+        .getOrThrow()
+    loeysingsRegisterClient
+        .saveLoeysing("Digdir", URI("https://www.digdir.no/").toURL(), "991825827")
+        .getOrThrow()
+  }
 
   @AfterAll
   fun tearDown() {
     utvalDAO.jdbcTemplate.update("delete from utval where namn = :namn", mapOf("namn" to uuid))
-    utvalDAO.jdbcTemplate.update("delete from loeysing where namn = :namn", mapOf("namn" to uuid))
+    loeysingsRegisterClient
+        .search(uuid)
+        .mapCatching { loeysingar ->
+          loeysingar.forEach { loeysingsRegisterClient.delete(it.id).getOrThrow() }
+        }
+        .getOrThrow()
   }
+
+  private val loeysingar =
+      listOf(
+          Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827"),
+          Loeysing.External("Digdir", "https://www.digdir.no", "991825827"))
 
   @Test
   @DisplayName("vi skal kunne opprette eit nytt utval")
   fun nyttUtval() {
-    val loeysingList =
-        listOf(
-            Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827"),
-            Loeysing.External("Digdir", "https://www.digdir.no", "991825827"))
-    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingList))
+    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingar))
     assertThat(response.statusCode).isEqualTo(HttpStatus.CREATED)
   }
 
   @Test
   @DisplayName("når vi har laget et utvalg, skal vi kunne hente det ut igjen")
   fun hentUtval() {
-    val loeysingList =
-        listOf(
-            Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827"),
-            Loeysing.External("Digdir", "https://www.digdir.no", "991825827"))
-    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingList))
+    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingar))
     assert(response.statusCode.is2xxSuccessful)
 
     val location = response.headers.location
@@ -114,11 +122,7 @@ class UtvalResourceTest(
   @DisplayName("vi skal kunne slette eit utval")
   @Test
   fun slettUtval() {
-    val loeysingList =
-        listOf(
-            Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827"),
-            Loeysing.External("Digdir", "https://www.digdir.no", "991825827"))
-    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingList))
+    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingar))
     assert(response.statusCode.is2xxSuccessful)
 
     val location = response.headers.location

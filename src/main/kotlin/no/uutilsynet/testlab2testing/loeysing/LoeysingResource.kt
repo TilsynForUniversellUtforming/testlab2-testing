@@ -1,8 +1,6 @@
 package no.uutilsynet.testlab2testing.loeysing
 
 import java.net.URI
-import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
-import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateOrgNummer
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO
@@ -12,12 +10,9 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.util.UriComponentsBuilder
 
-fun locationForId(id: Int): URI = URI("/v2/loeysing/${id}")
-
 @RestController
 @RequestMapping("v2/loeysing")
 class LoeysingResource(
-    val loeysingDAO: LoeysingDAO,
     val maalingDAO: MaalingDAO,
     val loeysingsRegisterProperties: LoeysingsRegisterProperties,
     val loeysingsRegisterClient: LoeysingsRegisterClient
@@ -25,45 +20,43 @@ class LoeysingResource(
   val logger: Logger = LoggerFactory.getLogger(LoeysingResource::class.java)
 
   @PostMapping
-  fun createLoeysing(@RequestBody external: Loeysing.External) =
-      runCatching {
-            val namn = validateNamn(external.namn).getOrThrow()
-            val url = URI(external.url).toURL()
-            val orgnummer = validateOrgNummer(external.orgnummer).getOrThrow()
-
-            val sammeOrgnummer = loeysingsRegisterClient.search(orgnummer).getOrThrow()
-            val foundLoeysing = sammeOrgnummer.find { sameURL(it.url, url) }
-            if (foundLoeysing != null) {
-              logger.error("Løysing med url $url og orgnr $orgnummer er duplikat")
-              throw IllegalArgumentException(
-                  "Løysing med url $url og orgnr $orgnummer finnes allereie")
-            }
-
-            loeysingDAO.createLoeysing(namn, url, orgnummer)
-          }
-          .fold(
-              { id ->
-                val location = locationForId(id)
-                ResponseEntity.created(location).build()
-              },
-              { exception -> handleErrors(exception) })
+  fun createLoeysing(
+      @RequestBody external: Loeysing.External
+  ): ResponseEntity<Map<String, String>> {
+    val uri =
+        UriComponentsBuilder.fromUriString(loeysingsRegisterProperties.host)
+            .pathSegment("v1", "loeysing")
+            .build()
+            .toUri()
+    return ResponseEntity.status(308)
+        .location(uri)
+        .body(
+            mapOf(
+                "namn" to external.namn, "url" to external.url, "orgnummer" to external.orgnummer))
+  }
 
   @PutMapping
-  fun updateLoeysing(@RequestBody loeysing: Loeysing) = executeWithErrorHandling {
-    val namn = validateNamn(loeysing.namn).getOrThrow()
-    val orgnummer = validateOrgNummer(loeysing.orgnummer).getOrThrow()
-
-    val sammeOrgnummer = loeysingsRegisterClient.search(orgnummer).getOrThrow()
-    val foundLoeysing = sammeOrgnummer.find { sameURL(it.url, loeysing.url) }
-
-    if (foundLoeysing != null && foundLoeysing.id != loeysing.id) {
-      logger.error("Løysing med id ${loeysing.id} er duplikat")
-      throw IllegalArgumentException(
-          "Løysing med url ${loeysing.url} og orgnr $orgnummer finnes allereie")
-    }
-
-    loeysingDAO.updateLoeysing(Loeysing(loeysing.id, namn, loeysing.url, orgnummer))
-  }
+  fun updateLoeysing(@RequestBody loeysing: Loeysing): ResponseEntity<out Any> =
+      runCatching {
+            validateNamn(loeysing.namn).getOrThrow()
+            val orgnummer = validateOrgNummer(loeysing.orgnummer).getOrThrow()
+            val sammeOrgnummer = loeysingsRegisterClient.search(orgnummer).getOrThrow()
+            val foundLoeysing = sammeOrgnummer.find { sameURL(it.url, loeysing.url) }
+            if (foundLoeysing != null && foundLoeysing.id != loeysing.id) {
+              logger.error("Løysing med id ${loeysing.id} er duplikat")
+              throw IllegalArgumentException(
+                  "Løysing med url ${loeysing.url} og orgnr $orgnummer finnes allereie")
+            }
+            ResponseEntity.status(308)
+                .location(URI("${loeysingsRegisterProperties.host}/v1/loeysing"))
+                .body(loeysing)
+          }
+          .getOrElse {
+            when (it) {
+              is IllegalArgumentException -> ResponseEntity.badRequest().body(it.message)
+              else -> ResponseEntity.internalServerError().body(it.message)
+            }
+          }
 
   @GetMapping("{id}")
   fun getLoeysing(@PathVariable id: Int): ResponseEntity<Loeysing> =
@@ -92,17 +85,27 @@ class LoeysingResource(
       }
 
   @DeleteMapping("{id}")
-  fun deleteLoeysing(@PathVariable("id") loeysingId: Int) = executeWithErrorHandling {
-    val maalingLoeysingUsageList = maalingDAO.findMaalingarByLoeysing(loeysingId)
-    if (maalingLoeysingUsageList.isNotEmpty()) {
-      val maalingList =
-          maalingDAO
-              .getMaalingList()
-              .filter { maalingLoeysingUsageList.contains(it.id) }
-              .map { it.navn }
-      throw IllegalArgumentException(
-          "Løysing $loeysingId er i bruk i følgjande målingar: ${maalingList.joinToString(", ")}")
-    }
-    loeysingDAO.deleteLoeysing(loeysingId)
-  }
+  fun deleteLoeysing(@PathVariable("id") loeysingId: Int): ResponseEntity<Any> =
+      runCatching {
+            val maalingLoeysingUsageList = maalingDAO.findMaalingarByLoeysing(loeysingId)
+            if (maalingLoeysingUsageList.isNotEmpty()) {
+              val maalingList =
+                  maalingDAO
+                      .getMaalingList()
+                      .filter { maalingLoeysingUsageList.contains(it.id) }
+                      .map { it.navn }
+              throw IllegalArgumentException(
+                  "Løysing $loeysingId er i bruk i følgjande målingar: ${maalingList.joinToString(", ")}")
+            }
+            ResponseEntity.status(308)
+                .location(URI("${loeysingsRegisterProperties.host}/v1/loeysing/$loeysingId"))
+                .build<Any>()
+          }
+          .getOrElse { ex ->
+            when (ex) {
+              is NullPointerException -> ResponseEntity.badRequest().body(ex.message)
+              is IllegalArgumentException -> ResponseEntity.badRequest().body(ex.message)
+              else -> ResponseEntity.internalServerError().body(ex.message)
+            }
+          }
 }

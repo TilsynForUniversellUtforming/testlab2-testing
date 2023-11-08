@@ -5,7 +5,10 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.LocalDate
-import no.uutilsynet.testlab2testing.loeysing.*
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
+import no.uutilsynet.testlab2testing.loeysing.Utval
+import no.uutilsynet.testlab2testing.loeysing.UtvalId
 import no.uutilsynet.testlab2testing.maaling.Maaling.*
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.maaling.MaalingDAO.MaalingParams.createMaalingParams
@@ -33,7 +36,6 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class MaalingDAO(
     val jdbcTemplate: NamedParameterJdbcTemplate,
-    val loeysingDAO: LoeysingDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
 
