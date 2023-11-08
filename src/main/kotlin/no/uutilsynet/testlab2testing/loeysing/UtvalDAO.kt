@@ -41,7 +41,8 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
             """
             .trimIndent(),
         mapOf("id" to id),
-        ::toUtval) ?: throw IllegalArgumentException("Fann ikkje utval med id $id")
+        ::toUtval)
+        ?: throw IllegalArgumentException("Fann ikkje utval med id $id")
   }
 
   fun getUtvalList(): Result<List<UtvalListItem>> = runCatching {

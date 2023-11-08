@@ -1,12 +1,12 @@
 package no.uutilsynet.testlab2testing.loeysing
 
+import java.net.URL
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
-import java.net.URL
 
 @ConfigurationProperties(prefix = "loeysingsregister")
 data class LoeysingsRegisterProperties(val host: String)
