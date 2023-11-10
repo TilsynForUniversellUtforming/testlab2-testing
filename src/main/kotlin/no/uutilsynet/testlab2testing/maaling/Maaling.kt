@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.maaling
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
-import java.time.LocalDate
+import java.time.Instant
 import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 
@@ -17,13 +17,13 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 sealed class Maaling {
   abstract val id: Int
   abstract val navn: String
-  abstract val datoStart: LocalDate
+  abstract val datoStart: Instant
   abstract val aksjoner: List<Aksjon>
 
   data class Planlegging(
       override val id: Int,
       override val navn: String,
-      override val datoStart: LocalDate,
+      override val datoStart: Instant,
       val loeysingList: List<Loeysing>,
       val testregelList: List<Testregel>,
       val crawlParameters: CrawlParameters
@@ -35,7 +35,7 @@ sealed class Maaling {
   data class Crawling(
       override val id: Int,
       override val navn: String,
-      override val datoStart: LocalDate,
+      override val datoStart: Instant,
       val crawlResultat: List<CrawlResultat>
   ) : Maaling() {
     override val aksjoner: List<Aksjon>
@@ -45,7 +45,7 @@ sealed class Maaling {
   data class Kvalitetssikring(
       override val id: Int,
       override val navn: String,
-      override val datoStart: LocalDate,
+      override val datoStart: Instant,
       val crawlResultat: List<CrawlResultat>,
       override val aksjoner: List<Aksjon> =
           listOf(
@@ -56,7 +56,7 @@ sealed class Maaling {
   data class Testing(
       override val id: Int,
       override val navn: String,
-      override val datoStart: LocalDate,
+      override val datoStart: Instant,
       val testKoeyringar: List<TestKoeyring>,
       override val aksjoner: List<Aksjon> = listOf(),
   ) : Maaling()
@@ -64,7 +64,7 @@ sealed class Maaling {
   data class TestingFerdig(
       override val id: Int,
       override val navn: String,
-      override val datoStart: LocalDate,
+      override val datoStart: Instant,
       val testKoeyringar: List<TestKoeyring>,
   ) : Maaling() {
     override val aksjoner: List<Aksjon>
@@ -124,7 +124,7 @@ sealed class Maaling {
 data class MaalingListElement(
     val id: Int,
     val navn: String,
-    val datoStart: LocalDate,
+    val datoStart: Instant,
     val status: String
 )
 

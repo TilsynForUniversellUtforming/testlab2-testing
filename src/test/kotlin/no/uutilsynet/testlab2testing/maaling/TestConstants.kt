@@ -2,7 +2,6 @@ package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URI
 import java.time.Instant
-import java.time.LocalDate
 import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.TestConstants
@@ -23,7 +22,7 @@ object TestConstants {
 
   val testRegelList = listOf(testregel)
 
-  val maalingDateStart = LocalDate.of(2023, 1, 1)
+  val maalingDateStart = Instant.parse("2023-01-01T00:00:00Z")
 
   val maalingRequestBody =
       mapOf(

@@ -7,8 +7,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import java.net.URL
 import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 import kotlinx.coroutines.*
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.common.validateIdList
@@ -74,7 +72,7 @@ class MaalingResource(
             val crawlParameters = dto.crawlParameters ?: CrawlParameters()
             crawlParameters.validateParameters()
 
-            val localDateNorway = LocalDate.now(ZoneId.of("Europe/Oslo"))
+            val localDateNorway = Instant.now()
 
             if (utvalId != null) {
               val utval =

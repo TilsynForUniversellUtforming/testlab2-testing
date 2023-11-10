@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.maaling
 import java.net.URI
 import java.net.URL
 import java.time.Instant
+import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.maaling.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.maaling.TestConstants.loeysingList
@@ -32,6 +33,33 @@ class MaalingDAOTest(
   fun cleanup() {
     maalingDAO.jdbcTemplate.update(
         "delete from maalingv1 where navn = :navn", mapOf("navn" to maalingTestName))
+  }
+
+  @DisplayName(
+      "når vi lagar ei ny måling med ei løysing, og slettar løysinga etterpå, så skal vi fortsatt få data om løysinga når vi henter målinga")
+  @Test
+  fun getMaalingMedSlettaLoeysing() {
+    val loeysing =
+        loeysingsRegisterClient
+            .saveLoeysing(
+                "Løysing som skal bli sletta",
+                URI("https://www.snartsletta.no/").toURL(),
+                "123456785")
+            .getOrThrow()
+
+    val maalingId =
+        maalingDAO.createMaaling(
+            "måling med sletta løysing",
+            Instant.now(),
+            listOf(loeysing.id),
+            testRegelList.map(Testregel::id),
+            CrawlParameters())
+
+    loeysingsRegisterClient.delete(loeysing.id).getOrThrow()
+
+    val maaling = maalingDAO.getMaaling(maalingId) as Maaling.Planlegging
+
+    assertThat(maaling.loeysingList).containsExactly(loeysing)
   }
 
   @DisplayName(
@@ -341,7 +369,7 @@ class MaalingDAOTest(
       maalingDAO
           .createMaaling(
               name,
-              maalingDateStart,
+              Instant.now(),
               loeysingList.map { it.id },
               testRegelList.map { it.id },
               CrawlParameters())
