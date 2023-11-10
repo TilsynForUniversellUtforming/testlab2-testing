@@ -2,7 +2,6 @@ package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URI
 import java.time.Instant
-import java.time.LocalDate
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateStatus
 import no.uutilsynet.testlab2testing.maaling.CrawlParameters.Companion.validateParameters
@@ -13,12 +12,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasSize
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
-import org.junit.jupiter.api.assertThrows
 
 class MaalingKtTest {
   @Nested
@@ -125,7 +120,7 @@ class MaalingKtTest {
                           Instant.now(),
                           Framgang(10, 100))),
               navn = "Test",
-              datoStart = LocalDate.now())
+              datoStart = Instant.now())
 
       val maalingCrawling = Maaling.toKvalitetssikring(maaling)
 
@@ -148,7 +143,7 @@ class MaalingKtTest {
                           uutilsynetLoeysing,
                           Instant.now())),
               navn = "Test",
-              datoStart = LocalDate.now())
+              datoStart = Instant.now())
 
       val maalingCrawling = Maaling.toKvalitetssikring(maaling)
 
@@ -172,7 +167,7 @@ class MaalingKtTest {
                           uutilsynetLoeysing,
                           Instant.now())),
               navn = "Test",
-              datoStart = LocalDate.now())
+              datoStart = Instant.now())
 
       val maalingKvalitetssikring = Maaling.toKvalitetssikring(maaling)
 

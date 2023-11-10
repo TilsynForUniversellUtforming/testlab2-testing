@@ -1,6 +1,8 @@
 package no.uutilsynet.testlab2testing.loeysing
 
 import java.net.URL
+import java.time.Instant
+import java.time.format.DateTimeFormatter.ISO_INSTANT
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -28,12 +30,15 @@ class LoeysingsRegisterClient(
             "loeysingsregisteret returnerte ikkje ein location da vi oppretta ei ny løysing")
   }
 
-  fun getMany(idList: List<Int>): Result<List<Loeysing>> {
+  fun getMany(idList: List<Int>): Result<List<Loeysing>> = getMany(idList, Instant.now())
+
+  fun getMany(idList: List<Int>, tidspunkt: Instant): Result<List<Loeysing>> {
     return runCatching {
       val uri =
           UriComponentsBuilder.fromUriString(properties.host)
               .pathSegment("v1", "loeysing")
               .queryParam("ids", idList.joinToString(","))
+              .queryParam("atTime", ISO_INSTANT.format(tidspunkt))
               .build()
               .toUri()
       restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()

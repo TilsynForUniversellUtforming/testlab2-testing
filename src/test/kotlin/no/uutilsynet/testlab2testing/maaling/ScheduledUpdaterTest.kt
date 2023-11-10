@@ -2,7 +2,6 @@ package no.uutilsynet.testlab2testing.maaling
 
 import java.net.URI
 import java.time.Instant
-import java.time.LocalDate
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.maaling.ScheduledUpdater.Companion.updateCrawlingStatus
 import no.uutilsynet.testlab2testing.maaling.ScheduledUpdater.Companion.updateTestingStatus
@@ -105,7 +104,7 @@ class ScheduledUpdaterTest {
             id = 1,
             crawlResultat = listOf(crawlResultatIkkjeStarta),
             navn = "Test",
-            datoStart = LocalDate.now())
+            datoStart = Instant.now())
 
     val expectedCrawlResultat =
         CrawlResultat.Ferdig(
@@ -123,8 +122,7 @@ class ScheduledUpdaterTest {
     assertThat(crawlResultat.loeysing).isEqualTo(expectedCrawlResultat.loeysing)
     assertThat((crawlResultat as CrawlResultat.Ferdig).nettsider)
         .isEqualTo(expectedCrawlResultat.nettsider)
-    assertThat((crawlResultat as CrawlResultat.Ferdig).antallNettsider)
-        .isEqualTo(expectedCrawlResultat.nettsider.size)
+    assertThat(crawlResultat.antallNettsider).isEqualTo(expectedCrawlResultat.nettsider.size)
   }
 
   @Test
@@ -147,7 +145,7 @@ class ScheduledUpdaterTest {
                 sistOppdatert = Instant.now()))
     val maaling =
         Maaling.Crawling(
-            id = 1, crawlResultat = crawlResultat, navn = "Test", datoStart = LocalDate.now())
+            id = 1, crawlResultat = crawlResultat, navn = "Test", datoStart = Instant.now())
 
     val updatedMaaling = updater.updateCrawlingStatuses(maaling)
 
@@ -183,7 +181,7 @@ class ScheduledUpdaterTest {
             id = 1,
             testKoeyringar = listOf(testKoeyring),
             navn = "Test",
-            datoStart = LocalDate.now(),
+            datoStart = Instant.now(),
             aksjoner = listOf())
 
     `when`(autoTesterClient.updateStatus(testKoeyring))

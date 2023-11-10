@@ -225,7 +225,7 @@ class MaalingIntegrationTests(
         maalingDAO
             .createMaaling(
                 "TestMåling",
-                maalingDateStart,
+                Instant.now(),
                 loeysingList.map { it.id },
                 testRegelList.map { it.id },
                 CrawlParameters())
@@ -355,18 +355,11 @@ class MaalingIntegrationTests(
       val id =
           maalingDAO.createMaaling(
               maalingTestName,
-              maalingDateStart,
+              Instant.now(),
               listOf(1),
               testRegelList.map { it.id },
               crawlParameters)
-      val planlagtMaaling =
-          Maaling.Planlegging(
-              id,
-              maalingTestName,
-              maalingDateStart,
-              listOf(uutilsynetLoeysing),
-              testRegelList,
-              crawlParameters)
+      val planlagtMaaling = maalingDAO.getMaaling(id)!! as Maaling.Planlegging
       val sistOppdatert = Instant.now()
       val crawlingMaaling =
           Maaling.toCrawling(

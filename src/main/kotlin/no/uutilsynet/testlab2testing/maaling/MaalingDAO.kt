@@ -4,7 +4,7 @@ import java.net.URI
 import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
-import java.time.LocalDate
+import java.time.Instant
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
@@ -44,7 +44,7 @@ class MaalingDAO(
   data class MaalingDTO(
       val id: Int,
       val navn: String,
-      val datoStart: LocalDate,
+      val datoStart: Instant,
       val status: MaalingStatus,
       val maxLenker: Int,
       val talLenker: Int
@@ -75,13 +75,13 @@ class MaalingDAO(
 
     fun createMaalingParams(
         navn: String,
-        datoStart: LocalDate,
+        datoStart: Instant,
         crawlParameters: CrawlParameters,
         utvalId: UtvalId? = null
     ) =
         mapOf(
             "navn" to navn,
-            "dato_start" to datoStart,
+            "dato_start" to Timestamp.from(datoStart),
             "status" to "planlegging",
             "max_lenker" to crawlParameters.maxLenker,
             "tal_lenker" to crawlParameters.talLenker,
@@ -116,7 +116,7 @@ class MaalingDAO(
   @Transactional
   fun createMaaling(
       navn: String,
-      datoStart: LocalDate,
+      datoStart: Instant,
       utval: Utval,
       testregelIdList: List<Int>,
       crawlParameters: CrawlParameters
@@ -144,7 +144,7 @@ class MaalingDAO(
   @Transactional
   fun createMaaling(
       navn: String,
-      datoStart: LocalDate,
+      datoStart: Instant,
       loyesingIds: List<Int>,
       testregelIdList: List<Int>,
       crawlParameters: CrawlParameters
@@ -204,7 +204,7 @@ class MaalingDAO(
             "select idloeysing from maalingloeysing where idmaaling = :id",
             mapOf("id" to id),
             Int::class.java)
-    val loeysingList = loeysingsRegisterClient.getMany(loeysingIdList).getOrThrow()
+    val loeysingList = loeysingsRegisterClient.getMany(loeysingIdList, datoStart).getOrThrow()
     return when (status) {
       planlegging -> {
         val testregelList =
