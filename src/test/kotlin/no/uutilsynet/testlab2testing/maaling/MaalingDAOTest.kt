@@ -29,10 +29,17 @@ class MaalingDAOTest(
     loeysingList.forEach { loeysingsRegisterClient.saveLoeysing(it.namn, it.url, it.orgnummer) }
   }
 
+  val deleteTheseIds: MutableSet<Int> = mutableSetOf()
+
   @AfterAll
   fun cleanup() {
     maalingDAO.jdbcTemplate.update(
         "delete from maalingv1 where navn = :navn", mapOf("navn" to maalingTestName))
+
+    if (deleteTheseIds.isNotEmpty()) {
+      maalingDAO.jdbcTemplate.update(
+          "delete from maalingv1 where id in (:ids)", mapOf("ids" to deleteTheseIds))
+    }
   }
 
   @DisplayName(
@@ -48,12 +55,14 @@ class MaalingDAOTest(
             .getOrThrow()
 
     val maalingId =
-        maalingDAO.createMaaling(
-            "måling med sletta løysing",
-            Instant.now(),
-            listOf(loeysing.id),
-            testRegelList.map(Testregel::id),
-            CrawlParameters())
+        maalingDAO
+            .createMaaling(
+                "måling med sletta løysing",
+                Instant.now(),
+                listOf(loeysing.id),
+                testRegelList.map(Testregel::id),
+                CrawlParameters())
+            .also { id -> deleteTheseIds.add(id) }
 
     loeysingsRegisterClient.delete(loeysing.id).getOrThrow()
 
