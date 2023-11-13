@@ -163,8 +163,8 @@ class MaalingResource(
                   schema =
                       Schema(
                           type = "string",
-                          defaultValue = "testresultat",
-                          allowableValues = ["testresultat", "suksesskriterium", "side"])),
+                          defaultValue = "testregel",
+                          allowableValues = ["testregel", "suksesskriterium", "side"])),
           ],
       responses =
           [
@@ -175,15 +175,13 @@ class MaalingResource(
   @GetMapping("{maalingId}/testresultat/aggregering")
   fun getAggregering(
       @PathVariable maalingId: Int,
-      @RequestParam aggregeringstype: String = "testresultat"
+      @RequestParam aggregeringstype: String = "testregel"
   ): ResponseEntity<Any> {
     val aggregeringURL =
         when (aggregeringstype) {
-          "testresultat" -> AutoTesterClient.ResultatUrls.urlAggreggeringTR
+          "testregel" -> AutoTesterClient.ResultatUrls.urlAggreggeringTR
           "suksesskriterium" -> AutoTesterClient.ResultatUrls.urlAggregeringSK
           "side" -> AutoTesterClient.ResultatUrls.urlAggregeringSide
-          "sideTestregel" -> AutoTesterClient.ResultatUrls.urlAggregeringSideTR
-          "loeysing" -> AutoTesterClient.ResultatUrls.urlAggregeringLoeysing
           else -> throw IllegalArgumentException("Ugyldig aggregeringstype: $aggregeringstype")
         }
     return maalingDAO
