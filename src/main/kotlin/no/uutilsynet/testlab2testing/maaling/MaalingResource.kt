@@ -163,7 +163,7 @@ class MaalingResource(
                   schema =
                       Schema(
                           type = "string",
-                          defaultValue = "testregel",
+                          defaultValue = "testresultat",
                           allowableValues = ["testregel", "suksesskriterium", "side"])),
           ],
       responses =
@@ -179,7 +179,7 @@ class MaalingResource(
   ): ResponseEntity<Any> {
     val aggregeringURL =
         when (aggregeringstype) {
-          "testregel" -> AutoTesterClient.ResultatUrls.urlAggreggeringTR
+          "testresultat" -> AutoTesterClient.ResultatUrls.urlAggreggeringTR
           "suksesskriterium" -> AutoTesterClient.ResultatUrls.urlAggregeringSK
           "side" -> AutoTesterClient.ResultatUrls.urlAggregeringSide
           else -> throw IllegalArgumentException("Ugyldig aggregeringstype: $aggregeringstype")
