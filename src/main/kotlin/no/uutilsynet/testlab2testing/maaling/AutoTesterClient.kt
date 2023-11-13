@@ -127,8 +127,6 @@ class AutoTesterClient(
           ResultatUrls.urlAggreggeringTR -> Array<AggregertResultatTestregel>::class.java
           ResultatUrls.urlAggregeringSK -> Array<AggregertResultatSuksesskriterium>::class.java
           ResultatUrls.urlAggregeringSide -> Array<AggregertResultatSide>::class.java
-          ResultatUrls.urlAggregeringSideTR -> Array<AggregertResultatSideTestregel>::class.java
-          ResultatUrls.urlAggregeringLoeysing -> Array<AggregertResultatLoeysing>::class.java
           else -> Array<AggregertResultatTestregel>::class.java
         }
     return returnCLass
