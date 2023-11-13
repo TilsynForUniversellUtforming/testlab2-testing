@@ -164,7 +164,7 @@ class MaalingResource(
                       Schema(
                           type = "string",
                           defaultValue = "testresultat",
-                          allowableValues = ["testregel", "suksesskriterium", "side"])),
+                          allowableValues = ["testresultat", "suksesskriterium", "side"])),
           ],
       responses =
           [
