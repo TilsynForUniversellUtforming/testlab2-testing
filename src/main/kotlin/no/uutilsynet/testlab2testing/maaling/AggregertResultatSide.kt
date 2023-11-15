@@ -11,5 +11,6 @@ data class AggregertResultatSide(
     val gjennomsnittligBruddProsentTR: Double,
     val talElementSamsvar: Int,
     val talElementBrot: Int,
-    val talElementVarsel: Int
+    val talElementVarsel: Int,
+    val talElementIkkjeForekomst: Int
 ) : AutotesterTestresultat
