@@ -11,8 +11,10 @@ data class AggregertResultatTestregel(
     val talElementSamsvar: Int,
     val talElementBrot: Int,
     val talElementVarsel: Int,
+    val talElementIkkjeForekomst: Int,
     val talSiderSamsvar: Int,
     val talSiderBrot: Int,
     val talSiderIkkjeForekomst: Int,
-    val testregelGjennomsnittlegScore: Float
+    val testregelGjennomsnittlegSideSamsvarProsent: Float,
+    var testregelGjennomsnittlegSideBrotProsent: Float
 ) : AutotesterTestresultat

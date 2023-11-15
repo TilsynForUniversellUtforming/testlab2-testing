@@ -182,6 +182,7 @@ class MaalingResource(
           "testresultat" -> AutoTesterClient.ResultatUrls.urlAggreggeringTR
           "suksesskriterium" -> AutoTesterClient.ResultatUrls.urlAggregeringSK
           "side" -> AutoTesterClient.ResultatUrls.urlAggregeringSide
+          "sideTestregel" -> AutoTesterClient.ResultatUrls.urlAggregeringSideTR
           else -> throw IllegalArgumentException("Ugyldig aggregeringstype: $aggregeringstype")
         }
     return maalingDAO
