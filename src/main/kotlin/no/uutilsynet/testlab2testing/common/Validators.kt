@@ -2,7 +2,7 @@ package no.uutilsynet.testlab2testing.common
 
 import java.net.URI
 import java.net.URL
-import no.uutilsynet.testlab2testing.maaling.Status
+import no.uutilsynet.testlab2testing.forenkletkontroll.Status
 
 fun validateOrgNummer(s: String?): Result<String> = runCatching {
   requireNotNull(s) { "Organisasjonsnummer kan ikkje vere null" }
