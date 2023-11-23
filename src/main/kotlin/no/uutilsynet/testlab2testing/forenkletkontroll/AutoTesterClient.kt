@@ -96,7 +96,8 @@ class AutoTesterClient(
             ResultatUrls.urlBrot -> fetchResultatDetaljert(lenker.urlBrot.toURI())
           }
         }
-      } ?: Result.success(testKoeyring.testResultat)
+      }
+          ?: Result.success(testKoeyring.testResultat)
 
   private fun fetchResultatDetaljert(uri: URI): List<TestResultat> {
     return restTemplate

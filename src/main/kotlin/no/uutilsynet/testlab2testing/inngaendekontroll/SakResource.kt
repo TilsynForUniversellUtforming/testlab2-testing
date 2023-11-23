@@ -8,11 +8,14 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 @RestController
 @RequestMapping("/saker")
 class SakResource(val sakDAO: SakDAO) {
+
+  data class NySak(val virksomhet: String)
+
   @PostMapping
-  fun createSak(@RequestBody virksomhet: String): ResponseEntity<Unit> {
+  fun createSak(@RequestBody nySak: NySak): ResponseEntity<Unit> {
     return runCatching {
-          val orgnummer = validateOrgNummer(virksomhet).getOrThrow()
-          val sak = Sak(orgnummer)
+          val virksomhet = validateOrgNummer(nySak.virksomhet).getOrThrow()
+          val sak = Sak(virksomhet)
           sakDAO.save(sak).getOrThrow()
         }
         .fold(
@@ -21,12 +24,21 @@ class SakResource(val sakDAO: SakDAO) {
   }
 
   private fun location(id: Int) =
-      ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(id).toUri()
+      ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
 
   @GetMapping("/{id}")
   fun getSak(@PathVariable id: Int): ResponseEntity<Sak> {
     return sakDAO
         .getSak(id)
+        .fold(
+            onSuccess = { ResponseEntity.ok(it) },
+            onFailure = { ResponseEntity.notFound().build() })
+  }
+
+  @PutMapping("/{id}")
+  fun updateSak(@PathVariable id: Int, @RequestBody sak: Sak): ResponseEntity<Sak> {
+    return sakDAO
+        .update(id, sak)
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
             onFailure = { ResponseEntity.notFound().build() })
