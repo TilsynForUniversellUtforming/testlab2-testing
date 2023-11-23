@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.test
 
-import no.uutilsynet.testlab2testing.maaling.AutoTesterClient
-import no.uutilsynet.testlab2testing.maaling.MaalingDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.AutoTesterClient
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
