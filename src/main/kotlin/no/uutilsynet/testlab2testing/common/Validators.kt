@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.common
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import java.net.URI
 import java.net.URL
 import no.uutilsynet.testlab2testing.forenkletkontroll.Status
@@ -60,4 +62,9 @@ fun validateURL(s: String): Result<URL> = runCatching {
         "https://$s"
       }
   URI(withProtocol).toURL()
+}
+
+fun validateJSONString(s: String): Result<JsonNode> = runCatching {
+  val mapper = ObjectMapper()
+  mapper.readTree(s)
 }

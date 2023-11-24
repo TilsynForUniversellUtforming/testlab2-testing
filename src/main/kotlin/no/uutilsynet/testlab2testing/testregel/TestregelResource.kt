@@ -24,12 +24,6 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
 
   val logger = LoggerFactory.getLogger(TestregelResource::class.java)
 
-  data class CreateTestregelDTO(
-      val krav: String,
-      val testregelNoekkel: String,
-      val kravTilSamsvar: String
-  )
-
   private val locationForId: (Int) -> URI = { id -> URI("/v1/testreglar/${id}") }
 
   @GetMapping("{id}")
@@ -56,18 +50,22 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
           }
 
   @PostMapping
-  fun createTestregel(@RequestBody dto: CreateTestregelDTO): ResponseEntity<out Any> =
+  fun createTestregel(@RequestBody testregelInit: TestregelInit): ResponseEntity<out Any> =
       createWithErrorHandling(
           {
-            validateTestRegel(dto.krav, dto.testregelNoekkel, dto.kravTilSamsvar)
-            testregelDAO.createTestregel(dto.krav, dto.testregelNoekkel, dto.kravTilSamsvar)
+            validateTestRegel(
+                testregelInit.name,
+                testregelInit.testregelSchema,
+                testregelInit.type,
+                testregelInit.krav)
+            testregelDAO.createTestregel(testregelInit)
           },
           locationForId)
 
   @PutMapping
   fun updateTestregel(@RequestBody testregel: Testregel): ResponseEntity<out Any> =
       executeWithErrorHandling {
-        validateTestRegel(testregel.krav, testregel.testregelNoekkel, testregel.kravTilSamsvar)
+        testregel.validateTestRegel()
         testregelDAO.updateTestregel(testregel)
       }
 

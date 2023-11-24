@@ -124,7 +124,7 @@ class AutoTesterClientTest {
             "idMaaling" to maalingId,
             "idLoeysing" to crawlResultat.loeysing.id,
             "resultatSomFil" to true,
-            "actRegler" to testRegelList.map { it.testregelNoekkel },
+            "actRegler" to testRegelList.map { it.testregelSchema },
         )
 
     val statusUris = AutoTesterClient.StatusUris(URI(statusURL))

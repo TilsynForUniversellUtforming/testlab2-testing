@@ -40,7 +40,7 @@ class AutoTesterClient(
                   "idMaaling" to maalingId,
                   "idLoeysing" to crawlResultat.loeysing.id,
                   "resultatSomFil" to true,
-                  "actRegler" to actRegler.map { it.testregelNoekkel },
+                  "actRegler" to actRegler.map { it.testregelSchema },
                   "loeysing" to crawlResultat.loeysing)
           val statusUris = restTemplate.postForObject(url, requestData, StatusUris::class.java)
           statusUris?.statusQueryGetUri?.toURL()
