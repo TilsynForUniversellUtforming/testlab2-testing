@@ -1,6 +1,8 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll
 
 import no.uutilsynet.testlab2testing.common.validateOrgNummer
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
@@ -11,6 +13,8 @@ class SakResource(val sakDAO: SakDAO) {
 
   data class NySak(val virksomhet: String)
 
+  val logger: Logger = LoggerFactory.getLogger(SakResource::class.java)
+
   @PostMapping
   fun createSak(@RequestBody nySak: NySak): ResponseEntity<Unit> {
     return runCatching {
@@ -20,7 +24,10 @@ class SakResource(val sakDAO: SakDAO) {
         }
         .fold(
             onSuccess = { id -> ResponseEntity.created(location(id)).build() },
-            onFailure = { ResponseEntity.badRequest().build() })
+            onFailure = {
+              logger.error("Feil ved oppretting av sak", it)
+              ResponseEntity.badRequest().build()
+            })
   }
 
   private fun location(id: Int) =

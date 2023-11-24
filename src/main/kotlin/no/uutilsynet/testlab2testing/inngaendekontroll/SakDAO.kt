@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll
 
+import java.sql.Timestamp
+import java.time.Instant
 import javax.sql.DataSource
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.RowMapper
@@ -11,8 +13,8 @@ import org.springframework.transaction.annotation.Transactional
 class SakDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val dataSource: DataSource) {
   fun save(sak: Sak): Result<Int> = runCatching {
     jdbcTemplate.queryForObject(
-        "insert into sak (virksomhet) values (:virksomhet) returning id",
-        mapOf("virksomhet" to sak.virksomhet),
+        "insert into sak (virksomhet, opprettet) values (:virksomhet, :opprettet) returning id",
+        mapOf("virksomhet" to sak.virksomhet, "opprettet" to Timestamp.from(Instant.now())),
         Int::class.java)!!
   }
 
