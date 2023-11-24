@@ -264,7 +264,7 @@ class MaalingDAO(
           .queryForList(
               """
                 select n.url
-                from nettside n
+                from crawl_side n
                     join crawlresultat cr on n.crawlresultat_id = cr.id
                 where cr.maaling_id = :maalingId
                     and cr.loeysingid = :loeysingId
@@ -358,7 +358,7 @@ class MaalingDAO(
         """
             with agg_nettsider as (
                 select crawlresultat_id, count(*) as ant_nettsider
-                from nettside
+                from crawl_side
                 group by crawlresultat_id
             )
             select
@@ -695,7 +695,7 @@ class MaalingDAO(
 
         crawlResultat.nettsider.forEach { nettside ->
           jdbcTemplate.update(
-              "insert into nettside (crawlresultat_id, url) values (:cr_id, :url)",
+              "insert into crawl_side (crawlresultat_id, url) values (:cr_id, :url)",
               mapOf("cr_id" to id, "url" to nettside.toString()))
         }
 
