@@ -79,5 +79,56 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
       val sakEtterFjerning: Sak = restTemplate.getForObject(location)!!
       assertThat(sakEtterFjerning.loeysingar).isEmpty()
     }
+
+    @DisplayName("vi skal kunne legge til nettsider på ei løysing")
+    @Test
+    fun leggTilNettside() {
+      val location = restTemplate.postForLocation("/saker", mapOf("virksomhet" to "123456785"))!!
+      val sak: Sak = restTemplate.getForObject(location)!!
+
+      val forside = Sak.Nettside("forside", "https://www.uutilsynet.no/", "Forsida", "")
+      val artikkel =
+          Sak.Nettside(
+              "artikkel",
+              "https://www.uutilsynet.no/tilsyn/slik-forer-vi-tilsyn-med-nettsteder-og-apper/84",
+              "Slik fører vi tilsyn med nettsteder og apper",
+              "")
+
+      val loeysingMedNettsider = Sak.Loeysing(1, listOf(forside, artikkel))
+      val sakMedLoeysingOgNettsider = sak.copy(loeysingar = listOf(loeysingMedNettsider))
+      restTemplate.put(location, sakMedLoeysingOgNettsider)
+
+      val sakEtterOppdateringAvLoeysing: Sak = restTemplate.getForObject(location)!!
+      assertThat(sakEtterOppdateringAvLoeysing.loeysingar).hasSize(1)
+      assertThat(sakEtterOppdateringAvLoeysing.loeysingar.first().nettsider)
+          .containsExactlyInAnyOrder(forside, artikkel)
+    }
+
+    @DisplayName("vi skal kunne fjerne nettsider frå ei løysing")
+    @Test
+    fun fjernNettside() {
+      val location = restTemplate.postForLocation("/saker", mapOf("virksomhet" to "123456785"))!!
+      val sak: Sak = restTemplate.getForObject(location)!!
+
+      val forside = Sak.Nettside("forside", "https://www.uutilsynet.no/", "Forsida", "")
+      val artikkel =
+          Sak.Nettside(
+              "artikkel",
+              "https://www.uutilsynet.no/tilsyn/slik-forer-vi-tilsyn-med-nettsteder-og-apper/84",
+              "Slik fører vi tilsyn med nettsteder og apper",
+              "")
+
+      val loeysingMedNettsider = Sak.Loeysing(1, listOf(forside, artikkel))
+      val sakMedLoeysingOgNettsider = sak.copy(loeysingar = listOf(loeysingMedNettsider))
+      restTemplate.put(location, sakMedLoeysingOgNettsider)
+
+      val loeysingMedEiNettside = Sak.Loeysing(1, listOf(forside))
+      val oppdatertSak = sak.copy(loeysingar = listOf(loeysingMedEiNettside))
+      restTemplate.put(location, oppdatertSak)
+
+      val sakEtterFjerningAvNettside: Sak = restTemplate.getForObject(location)!!
+      assertThat(sakEtterFjerningAvNettside.loeysingar).hasSize(1)
+      assertThat(sakEtterFjerningAvNettside.loeysingar.first().nettsider).containsExactly(forside)
+    }
   }
 }
