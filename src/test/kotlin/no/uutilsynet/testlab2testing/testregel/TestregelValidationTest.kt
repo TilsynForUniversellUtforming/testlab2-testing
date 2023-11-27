@@ -1,11 +1,10 @@
 package no.uutilsynet.testlab2testing.testregel
 
-import no.uutilsynet.testlab2testing.dto.Testregel
-import no.uutilsynet.testlab2testing.dto.Testregel.Companion.validateTestregel
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaInngaaende
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKrav
+import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested

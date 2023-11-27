@@ -1,9 +1,4 @@
-package no.uutilsynet.testlab2testing.dto
-
-import no.uutilsynet.testlab2testing.testregel.TestregelType
-import no.uutilsynet.testlab2testing.testregel.validateKrav
-import no.uutilsynet.testlab2testing.testregel.validateName
-import no.uutilsynet.testlab2testing.testregel.validateSchema
+package no.uutilsynet.testlab2testing.testregel
 
 data class Testregel(
     val id: Int,

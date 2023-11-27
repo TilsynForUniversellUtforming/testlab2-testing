@@ -12,7 +12,7 @@ import java.net.URL
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import no.uutilsynet.testlab2testing.dto.Testregel
+import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate

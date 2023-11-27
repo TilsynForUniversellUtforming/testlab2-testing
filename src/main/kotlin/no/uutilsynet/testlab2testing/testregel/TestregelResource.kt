@@ -3,9 +3,8 @@ package no.uutilsynet.testlab2testing.testregel
 import java.net.URI
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHandling
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
-import no.uutilsynet.testlab2testing.dto.Testregel
-import no.uutilsynet.testlab2testing.dto.Testregel.Companion.validateTestregel
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping

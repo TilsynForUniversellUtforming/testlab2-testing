@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
 import java.time.Instant
-import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.testregel.Testregel
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "status")
 @JsonSubTypes(

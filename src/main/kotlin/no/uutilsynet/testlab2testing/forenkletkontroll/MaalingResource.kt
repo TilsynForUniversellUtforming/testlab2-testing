@@ -18,13 +18,13 @@ import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateStatus
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
-import no.uutilsynet.testlab2testing.dto.Testregel.Companion.validateTestregel
 import no.uutilsynet.testlab2testing.firstMessage
 import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters.Companion.validateParameters
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
+import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
