@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.testregel
 
-import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.deleteTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelListSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelSql

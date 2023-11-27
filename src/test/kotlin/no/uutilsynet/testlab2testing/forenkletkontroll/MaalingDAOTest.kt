@@ -3,7 +3,6 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 import java.net.URI
 import java.net.URL
 import java.time.Instant
-import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
@@ -11,6 +10,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingTest
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testRegelList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
+import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired

@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import java.net.URI
-import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelRequestBody
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet

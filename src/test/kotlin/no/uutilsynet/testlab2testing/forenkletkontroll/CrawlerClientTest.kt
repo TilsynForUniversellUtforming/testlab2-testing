@@ -3,10 +3,10 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import kotlinx.coroutines.runBlocking
-import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.TestConstants
+import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelType
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.startsWith
