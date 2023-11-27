@@ -11,6 +11,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetL
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelType
 import org.assertj.core.api.Assertions
 import org.hamcrest.CoreMatchers
 import org.junit.jupiter.api.BeforeEach
@@ -64,8 +65,8 @@ class MaalingResourceMockedTest {
   }
 
   @Test
-  @DisplayName("Skal returnere feil når man bruker ulovlig testregelNoekkel")
-  fun illegalTestregelNoekkel() {
+  @DisplayName("Skal returnere feil når man bruker ulovlig testregelSchema")
+  fun illegaltestregelSchema() {
     val id = 1
     val status = MaalingResource.StatusDTO("testing", null)
     val maaling =
@@ -73,12 +74,13 @@ class MaalingResourceMockedTest {
 
     `when`(maalingDAO.getMaaling(id)).thenReturn(maaling)
     `when`(testregelDAO.getTestreglarForMaaling(id))
-        .thenReturn(Result.success(listOf(Testregel(1, "krav", "QW", "samsvar"))))
+        .thenReturn(
+            Result.success(listOf(Testregel(1, "name", "QW", "1.2.3", TestregelType.forenklet))))
 
     val result = maalingResource.putNewStatus(id, status)
 
     Assertions.assertThat(result.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    Assertions.assertThat(result.body).isEqualTo("TestregelNoekkel må vera på formen QW-ACT-RXX")
+    Assertions.assertThat(result.body).isEqualTo("QualWeb regel id må vera på formen QW-ACT-RXX")
   }
 
   @Test
@@ -91,7 +93,7 @@ class MaalingResourceMockedTest {
     val maalingTesting =
         Maaling.Testing(id, "Testmaaling", maalingDateStart, listOf(testKoeyringList[0]))
 
-    val testregelList = listOf(Testregel(1, "krav", "QW-ACT-R12", "samsvar"))
+    val testregelList = listOf(Testregel(1, "name", "QW-ACT-R12", "1.2.3", TestregelType.forenklet))
 
     val nettsider =
         listOf(
@@ -105,7 +107,7 @@ class MaalingResourceMockedTest {
             "idMaaling" to id,
             "idLoeysing" to uutilsynetLoeysing.id,
             "resultatSomFil" to true,
-            "actRegler" to testregelList.map { it.testregelNoekkel },
+            "actRegler" to testregelList.map { it.testregelSchema },
         )
 
     val statusUris = AutoTesterClient.StatusUris(URI(TestConstants.statusURL))

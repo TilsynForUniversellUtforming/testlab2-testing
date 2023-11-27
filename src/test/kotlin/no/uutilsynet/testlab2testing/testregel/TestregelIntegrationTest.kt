@@ -2,10 +2,10 @@ package no.uutilsynet.testlab2testing.testregel
 
 import java.net.URI
 import no.uutilsynet.testlab2testing.dto.Testregel
+import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelRequestBody
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKrav
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravTilSamsvar
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestTestregelNoekkel
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DisplayName
@@ -15,7 +15,6 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.boot.test.web.client.postForEntity
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -31,8 +30,7 @@ class TestregelIntegrationTests(
   @AfterAll
   fun cleanup() {
     testregelDAO.jdbcTemplate.update(
-        "delete from testregel where kravtilsamsvar = :kravtilsamsvar",
-        mapOf("kravtilsamsvar" to testregelTestKravTilSamsvar))
+        "delete from testregel where name = :name", mapOf("name" to name))
   }
 
   @Test
@@ -51,8 +49,9 @@ class TestregelIntegrationTests(
             "/v1/testreglar",
             mapOf(
                 "krav" to "",
-                "testregelNoekkel" to testregelTestTestregelNoekkel,
-                "kravTilSamsvar" to testregelTestKravTilSamsvar),
+                "testregelSchema" to testregelSchemaForenklet,
+                "name" to name,
+                "type" to "forenklet"),
             String::class.java)
 
     Assertions.assertThat(errorResponse.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
@@ -97,8 +96,8 @@ class TestregelIntegrationTests(
     fun getTestregel() {
       val testregel = restTemplate.getForObject(location, Testregel::class.java)
       Assertions.assertThat(testregel.krav).isEqualTo(testregelTestKrav)
-      Assertions.assertThat(testregel.testregelNoekkel).isEqualTo(testregelTestTestregelNoekkel)
-      Assertions.assertThat(testregel.kravTilSamsvar).isEqualTo(testregelTestKravTilSamsvar)
+      Assertions.assertThat(testregel.testregelSchema).isEqualTo(testregelSchemaForenklet)
+      Assertions.assertThat(testregel.name).isEqualTo(name)
     }
 
     @Test
