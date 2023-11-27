@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchema
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKrav
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
@@ -78,13 +78,13 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
     Assertions.assertThat(oldTestregel?.name).isEqualTo(testregelInit.name)
 
     oldTestregel
-        ?.copy(krav = testregelTestKrav, testregelSchema = testregelSchema, name = name)
+        ?.copy(krav = testregelTestKrav, testregelSchema = testregelSchemaForenklet, name = name)
         ?.let { testregelDAO.updateTestregel(it) }
 
     val updatedTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(updatedTestregel).isNotNull
     Assertions.assertThat(updatedTestregel?.krav).isEqualTo(testregelTestKrav)
-    Assertions.assertThat(updatedTestregel?.testregelSchema).isEqualTo(testregelSchema)
+    Assertions.assertThat(updatedTestregel?.testregelSchema).isEqualTo(testregelSchemaForenklet)
     Assertions.assertThat(updatedTestregel?.name).isEqualTo(name)
   }
 
@@ -93,7 +93,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
           TestregelInit(
               name,
               testregelTestKrav,
-              testregelSchema,
+              testregelSchemaForenklet,
               TestregelType.forenklet,
           )
   ) = testregelDAO.createTestregel(testregelInit)

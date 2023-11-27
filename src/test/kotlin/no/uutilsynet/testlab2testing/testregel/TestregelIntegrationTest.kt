@@ -4,7 +4,7 @@ import java.net.URI
 import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelRequestBody
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchema
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKrav
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
@@ -49,7 +49,7 @@ class TestregelIntegrationTests(
             "/v1/testreglar",
             mapOf(
                 "krav" to "",
-                "testregelSchema" to testregelSchema,
+                "testregelSchema" to testregelSchemaForenklet,
                 "name" to name,
                 "type" to "forenklet"),
             String::class.java)
@@ -96,7 +96,7 @@ class TestregelIntegrationTests(
     fun getTestregel() {
       val testregel = restTemplate.getForObject(location, Testregel::class.java)
       Assertions.assertThat(testregel.krav).isEqualTo(testregelTestKrav)
-      Assertions.assertThat(testregel.testregelSchema).isEqualTo(testregelSchema)
+      Assertions.assertThat(testregel.testregelSchema).isEqualTo(testregelSchemaForenklet)
       Assertions.assertThat(testregel.name).isEqualTo(name)
     }
 

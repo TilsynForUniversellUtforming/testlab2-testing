@@ -4,7 +4,7 @@ import java.net.URI
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHandling
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
 import no.uutilsynet.testlab2testing.dto.Testregel
-import no.uutilsynet.testlab2testing.dto.Testregel.Companion.validateTestRegel
+import no.uutilsynet.testlab2testing.dto.Testregel.Companion.validateTestregel
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -53,19 +53,19 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
   fun createTestregel(@RequestBody testregelInit: TestregelInit): ResponseEntity<out Any> =
       createWithErrorHandling(
           {
-            validateTestRegel(
-                testregelInit.name,
-                testregelInit.testregelSchema,
-                testregelInit.type,
-                testregelInit.krav)
-            testregelDAO.createTestregel(testregelInit)
+            val name = validateName(testregelInit.name).getOrThrow()
+            val krav = validateKrav(testregelInit.krav).getOrThrow()
+            val schema =
+                validateSchema(testregelInit.testregelSchema, testregelInit.type).getOrThrow()
+
+            testregelDAO.createTestregel(TestregelInit(name, schema, krav, testregelInit.type))
           },
           locationForId)
 
   @PutMapping
   fun updateTestregel(@RequestBody testregel: Testregel): ResponseEntity<out Any> =
       executeWithErrorHandling {
-        testregel.validateTestRegel()
+        testregel.validateTestregel().getOrThrow()
         testregelDAO.updateTestregel(testregel)
       }
 
