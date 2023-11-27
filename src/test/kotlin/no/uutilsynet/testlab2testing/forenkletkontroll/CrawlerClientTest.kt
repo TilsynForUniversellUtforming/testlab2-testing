@@ -7,6 +7,7 @@ import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.TestConstants
+import no.uutilsynet.testlab2testing.testregel.TestregelType
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.startsWith
 import org.junit.jupiter.api.DisplayName
@@ -41,10 +42,10 @@ class CrawlerClientTest {
         listOf(
             Testregel(
                 1,
-                TestConstants.testregelTestKrav,
+                TestConstants.name,
                 "QW-ACT-12",
-                TestConstants.testregelTestKravTilSamsvar,
-            ))
+                TestConstants.testregelTestKrav,
+                TestregelType.forenklet))
     val maaling =
         Maaling.Planlegging(
             1, "testmåling", maalingDateStart, loeysingList, testregelList, CrawlParameters())

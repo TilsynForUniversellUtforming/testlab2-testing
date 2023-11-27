@@ -4,7 +4,7 @@ import java.net.URI
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHandling
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
 import no.uutilsynet.testlab2testing.dto.Testregel
-import no.uutilsynet.testlab2testing.dto.Testregel.Companion.validateTestRegel
+import no.uutilsynet.testlab2testing.dto.Testregel.Companion.validateTestregel
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -23,12 +23,6 @@ import org.springframework.web.bind.annotation.RestController
 class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingDAO) {
 
   val logger = LoggerFactory.getLogger(TestregelResource::class.java)
-
-  data class CreateTestregelDTO(
-      val krav: String,
-      val testregelNoekkel: String,
-      val kravTilSamsvar: String
-  )
 
   private val locationForId: (Int) -> URI = { id -> URI("/v1/testreglar/${id}") }
 
@@ -56,18 +50,22 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
           }
 
   @PostMapping
-  fun createTestregel(@RequestBody dto: CreateTestregelDTO): ResponseEntity<out Any> =
+  fun createTestregel(@RequestBody testregelInit: TestregelInit): ResponseEntity<out Any> =
       createWithErrorHandling(
           {
-            validateTestRegel(dto.krav, dto.testregelNoekkel, dto.kravTilSamsvar)
-            testregelDAO.createTestregel(dto.krav, dto.testregelNoekkel, dto.kravTilSamsvar)
+            val name = validateName(testregelInit.name).getOrThrow()
+            val krav = validateKrav(testregelInit.krav).getOrThrow()
+            val schema =
+                validateSchema(testregelInit.testregelSchema, testregelInit.type).getOrThrow()
+
+            testregelDAO.createTestregel(TestregelInit(name, schema, krav, testregelInit.type))
           },
           locationForId)
 
   @PutMapping
   fun updateTestregel(@RequestBody testregel: Testregel): ResponseEntity<out Any> =
       executeWithErrorHandling {
-        validateTestRegel(testregel.krav, testregel.testregelNoekkel, testregel.kravTilSamsvar)
+        testregel.validateTestregel().getOrThrow()
         testregelDAO.updateTestregel(testregel)
       }
 

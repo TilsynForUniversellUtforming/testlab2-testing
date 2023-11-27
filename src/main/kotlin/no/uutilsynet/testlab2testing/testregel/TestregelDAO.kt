@@ -1,16 +1,12 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import no.uutilsynet.testlab2testing.dto.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.createTestregelParams
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.createTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.deleteTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelListSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelListByIdSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.updateTestregelParams
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.updateTestregelSql
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -21,30 +17,12 @@ import org.springframework.transaction.annotation.Transactional
 class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   object TestregelParams {
-    val createTestregelSql =
-        "insert into testregel (krav, testregelNoekkel, kravtilsamsvar) values (:krav, :testregelNoekkel, :kravtilsamsvar) returning id"
-
-    fun createTestregelParams(krav: String, testregelNoekkel: String, kravtilsamsvar: String) =
-        mapOf(
-            "krav" to krav,
-            "testregelNoekkel" to testregelNoekkel,
-            "kravtilsamsvar" to kravtilsamsvar)
 
     val getTestregelListSql =
-        "select id, krav, testregelNoekkel, kravtilsamsvar from testregel order by id"
+        "select id, name, krav, testregel_schema, type  from testregel order by id"
 
     val getTestregelSql =
-        "select id, krav, testregelNoekkel, kravtilsamsvar from testregel where id = :id order by id"
-
-    val updateTestregelSql =
-        " update testregel set krav = :krav, testregelNoekkel = :testregelNoekkel, kravtilsamsvar = :kravtilsamsvar where id = :id"
-
-    fun updateTestregelParams(testregel: Testregel) =
-        mapOf(
-            "id" to testregel.id,
-            "krav" to testregel.krav,
-            "testregelNoekkel" to testregel.testregelNoekkel,
-            "kravtilsamsvar" to testregel.kravTilSamsvar)
+        "select id, name, krav, testregel_schema, type from testregel where id = :id order by id"
 
     val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
 
@@ -57,9 +35,10 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         """
       select 
       tr.id,
+      tr.name,
       tr.krav,
-      tr.testregelNoekkel,
-      tr.kravtilsamsvar
+      tr.testregel_schema,
+      tr.type
       from MaalingV1 m
         join Maaling_Testregel mt on m.id = mt.maaling_id
         join Testregel tr on mt.testregel_id = tr.id
@@ -76,19 +55,26 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       jdbcTemplate.query(getTestregelListSql, testregelRowMapper)
 
   @Transactional
-  fun createTestregel(
-      krav: String,
-      testregelNoekkel: String,
-      kravtilsamsvar: String,
-  ): Int =
+  fun createTestregel(testregelInit: TestregelInit): Int =
       jdbcTemplate.queryForObject(
-          createTestregelSql,
-          createTestregelParams(krav, testregelNoekkel, kravtilsamsvar),
+          "insert into testregel (name, testregel_schema, type, krav) values (:name, :testregel_schema, :type, :krav) returning id",
+          mapOf(
+              "name" to testregelInit.name,
+              "testregel_schema" to testregelInit.testregelSchema,
+              "type" to testregelInit.type.value,
+              "krav" to testregelInit.krav),
           Int::class.java)!!
 
   @Transactional
   fun updateTestregel(testregel: Testregel) =
-      jdbcTemplate.update(updateTestregelSql, updateTestregelParams(testregel))
+      jdbcTemplate.update(
+          " update testregel set name = :name, krav = :krav, testregel_schema = :testregel_schema where id = :id",
+          mapOf(
+              "id" to testregel.id,
+              "name" to testregel.name,
+              "krav" to testregel.krav,
+              "testregel_schema" to testregel.testregelSchema,
+          ))
 
   @Transactional
   fun deleteTestregel(testregelId: Int) =

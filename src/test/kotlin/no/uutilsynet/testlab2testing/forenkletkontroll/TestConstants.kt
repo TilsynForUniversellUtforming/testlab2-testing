@@ -5,6 +5,7 @@ import java.time.Instant
 import no.uutilsynet.testlab2testing.dto.Testregel
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.TestConstants
+import no.uutilsynet.testlab2testing.testregel.TestregelType
 
 object TestConstants {
   val uutilsynetLoeysing =
@@ -15,9 +16,10 @@ object TestConstants {
   val testregel =
       Testregel(
           1,
-          TestConstants.testregelTestKrav,
+          TestConstants.name,
           "QW-ACT-12",
-          TestConstants.testregelTestKravTilSamsvar,
+          TestConstants.testregelTestKrav,
+          TestregelType.forenklet,
       )
 
   val testRegelList = listOf(testregel)

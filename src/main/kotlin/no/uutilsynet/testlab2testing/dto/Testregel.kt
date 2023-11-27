@@ -1,26 +1,24 @@
 package no.uutilsynet.testlab2testing.dto
 
+import no.uutilsynet.testlab2testing.testregel.TestregelType
+import no.uutilsynet.testlab2testing.testregel.validateKrav
+import no.uutilsynet.testlab2testing.testregel.validateName
+import no.uutilsynet.testlab2testing.testregel.validateSchema
+
 data class Testregel(
     val id: Int,
+    val name: String,
+    val testregelSchema: String,
     val krav: String,
-    val testregelNoekkel: String,
-    val kravTilSamsvar: String,
+    val type: TestregelType,
 ) {
   companion object {
-    fun validateTestRegel(krav: String, testregelNoekkel: String, kravTilSamsvar: String) =
-        if (krav.isBlank()) {
-          throw IllegalArgumentException("Krav kan ikkje vera blank")
-        } else if (testregelNoekkel.isBlank()) {
-          throw IllegalArgumentException("Testregelnøkkel kan ikkje vera blank")
-        } else if (kravTilSamsvar.isBlank()) {
-          throw IllegalArgumentException("Krav til samsvar kan ikkje vera blank")
-        } else if (!testregelNoekkel.matches(
-            "^(QW-ACT-R)[0-9]{1,2}$".toRegex(RegexOption.IGNORE_CASE))) {
-          throw IllegalArgumentException("TestregelNoekkel må vera på formen QW-ACT-RXX")
-        } else {
-          true
-        }
+    fun Testregel.validateTestregel(): Result<Testregel> = runCatching {
+      val name = validateName(this.name).getOrThrow()
+      val krav = validateKrav(this.krav).getOrThrow()
+      val schema = validateSchema(this.testregelSchema, this.type).getOrThrow()
 
-    fun Testregel.validateTestRegel() = validateTestRegel(krav, testregelNoekkel, kravTilSamsvar)
+      Testregel(this.id, name, krav, schema, type)
+    }
   }
 }
