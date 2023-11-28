@@ -1,6 +1,12 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll
 
-data class Sak(val virksomhet: String, val loeysingar: List<Loeysing> = emptyList()) {
+import no.uutilsynet.testlab2testing.testregel.Testregel
+
+data class Sak(
+    val virksomhet: String,
+    val loeysingar: List<Loeysing> = emptyList(),
+    val testreglar: List<Testregel> = emptyList()
+) {
   data class Loeysing(val loeysingId: Int, val nettsider: List<Nettside> = emptyList())
 
   data class Nettside(

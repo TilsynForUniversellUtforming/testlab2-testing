@@ -86,4 +86,16 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getTestreglarForMaaling(maalingId: Int): Result<List<Testregel>> = runCatching {
     jdbcTemplate.query(maalingTestregelSql, mapOf("id" to maalingId), testregelRowMapper)
   }
+
+  fun getTestreglarBySak(sakId: Int): List<Testregel> =
+      jdbcTemplate.query(
+          """
+          select t.id, t.name, t.krav, t.testregel_schema, t.type
+          from testregel t
+          join sak_testregel st on t.id = st.testregel_id
+          where st.sak_id = :sak_id
+      """
+              .trimIndent(),
+          mapOf("sak_id" to sakId),
+          DataClassRowMapper.newInstance(Testregel::class.java))
 }
