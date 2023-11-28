@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.testregel
 
+import no.uutilsynet.testlab2testing.common.validateNamn
+
 data class Testregel(
     val id: Int,
     val name: String,
@@ -9,7 +11,7 @@ data class Testregel(
 ) {
   companion object {
     fun Testregel.validateTestregel(): Result<Testregel> = runCatching {
-      val name = validateName(this.name).getOrThrow()
+      val name = validateNamn(this.name).getOrThrow()
       val krav = validateKrav(this.krav).getOrThrow()
       val schema = validateSchema(this.testregelSchema, this.type).getOrThrow()
 
