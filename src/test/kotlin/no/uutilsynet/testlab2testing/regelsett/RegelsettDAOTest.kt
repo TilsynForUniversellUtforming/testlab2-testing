@@ -50,7 +50,7 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
   @DisplayName("Skal kunne hente liste med aktive regelsett")
   fun getRegelsettListActive() {
     val (id1, id2) = Pair(createTestRegelsett(), createTestRegelsett())
-    val regelsettList = regelsettDAO.getList(false)
+    val regelsettList = regelsettDAO.getRegelsettBaseList(false)
 
     assertThat(regelsettList).isNotEmpty
     val regelsettIdList = regelsettList.map { it.id }
@@ -65,9 +65,29 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
 
     regelsettDAO.deleteRegelsett(id2)
 
-    val regelsettList = regelsettDAO.getList(true)
+    val regelsettList = regelsettDAO.getRegelsettBaseList(true)
 
     assertThat(regelsettList).isNotEmpty
+    val regelsettIdList = regelsettList.map { it.id }
+    assertThat(regelsettIdList).contains(id1)
+    assertThat(regelsettIdList).contains(id2)
+  }
+
+  @Test
+  @DisplayName("Skal kunne hente liste med aktive regelsett")
+  fun getRegelsettListWithTestreglar() {
+    val (id1, id2) = Pair(createTestRegelsett(), createTestRegelsett())
+    val regelsettList = regelsettDAO.getRegelsettTestreglarList(false)
+
+    assertThat(regelsettList).isNotEmpty
+
+    val testregelIdList = listOf(1, 2)
+
+    val regelsettTestregelIdMap =
+        regelsettList.associate { tr -> tr.id to tr.testregelList.map { it.id } }
+    assertThat(regelsettTestregelIdMap[id1]).containsExactlyInAnyOrderElementsOf(testregelIdList)
+    assertThat(regelsettTestregelIdMap[id2]).containsExactlyInAnyOrderElementsOf(testregelIdList)
+
     val regelsettIdList = regelsettList.map { it.id }
     assertThat(regelsettIdList).contains(id1)
     assertThat(regelsettIdList).contains(id2)
@@ -77,12 +97,12 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
   @DisplayName("Skal kunne slette (sette inaktivt) regelsett")
   fun deleteRegelsett() {
     val id = createTestRegelsett()
-    val regelsettList = regelsettDAO.getList(false)
+    val regelsettList = regelsettDAO.getRegelsettBaseList(false)
     assertThat(regelsettList.map { it.id }).contains(id)
 
     regelsettDAO.deleteRegelsett(id)
 
-    val regelsettListAfterDelete = regelsettDAO.getList(false)
+    val regelsettListAfterDelete = regelsettDAO.getRegelsettBaseList(false)
     assertThat(regelsettListAfterDelete.map { it.id }).doesNotContain(id)
   }
 

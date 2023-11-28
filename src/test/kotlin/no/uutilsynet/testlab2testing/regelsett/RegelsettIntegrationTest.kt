@@ -70,7 +70,7 @@ class RegelsettIntegrationTest(
   }
 
   @Test
-  @DisplayName("Skal kunne hente ein liste med aktive testreglar")
+  @DisplayName("Skal kunne hente ei liste med aktive regelsett")
   fun getRegelsettList() {
     val regelsettType = object : ParameterizedTypeReference<List<RegelsettBase>>() {}
     val location = createDefaultRegelsett()
@@ -85,7 +85,26 @@ class RegelsettIntegrationTest(
   }
 
   @Test
-  @DisplayName("Skal kunne hente ein liste med både aktive og inaktive testreglar")
+  @DisplayName("Skal kunne hente ei liste med regelsett med testreglar")
+  fun getRegelsettListWithTestreglar() {
+    val regelsettType = object : ParameterizedTypeReference<List<Regelsett>>() {}
+    val location = createDefaultRegelsett()
+    val regelsett = restTemplate.getForObject(location, Regelsett::class.java)
+    val response =
+        restTemplate
+            .exchange(
+                "$regelsettBaseUri?includeTestreglar=true",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                regelsettType)
+            .body
+
+    assertThat(response?.get(0)?.testregelList).isNotEmpty
+    assertThat(response?.map { it.id }).contains(regelsett.id)
+  }
+
+  @Test
+  @DisplayName("Skal kunne hente ei liste med både aktive og inaktive regelsett")
   fun getRegelsettListActiveInactive() {
     val regelsettType = object : ParameterizedTypeReference<List<RegelsettBase>>() {}
     val location = createDefaultRegelsett()

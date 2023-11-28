@@ -80,8 +80,14 @@ Returnerer ei liste med regelsett, eller ei tom liste om ingen finst. Ein kan sp
               ApiResponse(responseCode = "500", description = "Andre feil")])
   @GetMapping
   fun getRegelsettList(
-      @RequestParam(required = false, defaultValue = "false") includeInactive: Boolean
-  ): List<RegelsettBase> = regelsettDAO.getList(includeInactive)
+      @RequestParam(required = false, defaultValue = "false") includeInactive: Boolean = false,
+      @RequestParam(required = false, defaultValue = "false") includeTestreglar: Boolean = false
+  ): List<RegelsettBase> =
+      if (includeTestreglar) {
+        regelsettDAO.getRegelsettTestreglarList(includeInactive)
+      } else {
+        regelsettDAO.getRegelsettBaseList(includeInactive)
+      }
 
   @Operation(
       summary = "Hent eit spesifikt regelsett",

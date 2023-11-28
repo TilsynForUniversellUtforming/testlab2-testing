@@ -37,13 +37,16 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return regelsettDTO?.toRegelsett()
   }
 
-  fun getList(includeInactive: Boolean): List<RegelsettBase> {
+  fun getRegelsettBaseList(includeInactive: Boolean): List<RegelsettBase> {
     val activeSql = if (includeInactive) "1=1" else "aktiv = true"
 
     return jdbcTemplate.query(
         "select id, namn, type, standard from regelsett where $activeSql",
         DataClassRowMapper.newInstance(RegelsettBase::class.java))
   }
+
+  fun getRegelsettTestreglarList(includeInactive: Boolean): List<Regelsett> =
+      getRegelsettBaseList(includeInactive).map { it.toRegelsett() }
 
   @Transactional
   fun createRegelsett(regelsett: RegelsettCreate): Int {
