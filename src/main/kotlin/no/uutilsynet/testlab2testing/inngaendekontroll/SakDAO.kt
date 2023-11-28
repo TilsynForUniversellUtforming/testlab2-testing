@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll
 import java.sql.Timestamp
 import java.time.Instant
 import javax.sql.DataSource
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -10,7 +11,11 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-class SakDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val dataSource: DataSource) {
+class SakDAO(
+    val jdbcTemplate: NamedParameterJdbcTemplate,
+    val dataSource: DataSource,
+    val testregelDAO: TestregelDAO
+) {
   fun save(sak: Sak): Result<Int> = runCatching {
     jdbcTemplate.queryForObject(
         "insert into sak (virksomhet, opprettet) values (:virksomhet, :opprettet) returning id",
@@ -20,13 +25,14 @@ class SakDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val dataSource: DataS
 
   fun getSak(sakId: Int): Result<Sak> {
     val rowMapper = RowMapper { rs, _ ->
-      val array = rs.getArray("loeysingar")?.array as? Array<Int> ?: emptyArray()
+      val loeysingIdArray = rs.getArray("loeysingar")?.array as? Array<Int> ?: emptyArray()
       val loeysingar =
-          array.map { loeysingId ->
+          loeysingIdArray.map { loeysingId ->
             val nettsider = findNettsiderBySakAndLoeysing(sakId, loeysingId)
             Sak.Loeysing(loeysingId, nettsider)
           }
-      Sak(rs.getString("virksomhet"), loeysingar)
+      val testreglar = testregelDAO.getTestreglarBySak(sakId)
+      Sak(rs.getString("virksomhet"), loeysingar, testreglar)
     }
     val sak =
         jdbcTemplate.queryForObject(
@@ -118,6 +124,26 @@ class SakDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val dataSource: DataS
                 "loeysing_id" to loeysing.loeysingId,
                 "nettside_id" to nettsideId))
       }
+    }
+
+    // slett alle testreglar som er knyttet til saken
+    jdbcTemplate.update(
+        """
+            delete from sak_testregel
+            where sak_id = :sak_id
+        """
+            .trimIndent(),
+        mapOf("sak_id" to sakId))
+
+    // legg til alle nye testreglar som er knyttet til saken
+    sak.testreglar.forEach { testregel ->
+      jdbcTemplate.update(
+          """
+              insert into sak_testregel (sak_id, testregel_id)
+              values (:sak_id, :testregel_id)
+          """
+              .trimIndent(),
+          mapOf("sak_id" to sakId, "testregel_id" to testregel.id))
     }
     sak
   }
