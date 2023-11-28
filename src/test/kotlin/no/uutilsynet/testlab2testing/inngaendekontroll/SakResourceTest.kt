@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll
 
+import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -129,6 +130,25 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
       val sakEtterFjerningAvNettside: Sak = restTemplate.getForObject(location)!!
       assertThat(sakEtterFjerningAvNettside.loeysingar).hasSize(1)
       assertThat(sakEtterFjerningAvNettside.loeysingar.first().nettsider).containsExactly(forside)
+    }
+
+    @DisplayName("vi skal kunne legge til testreglar på ei sak")
+    @Test
+    fun leggeTilTestreglar() {
+      val location = restTemplate.postForLocation("/saker", mapOf("virksomhet" to "123456785"))!!
+      val sak: Sak = restTemplate.getForObject(location)!!
+
+      val testreglar =
+          restTemplate
+              .getForObject("/v1/testreglar", Array<Testregel>::class.java)!!
+              .toList()
+              .take(3)
+      assert(testreglar.isNotEmpty()) // testreglar blir lagt i databasen i migrasjon V24.
+      val oppdatertSak = sak.copy(testreglar = testreglar)
+      restTemplate.put(location, oppdatertSak)
+
+      val sakEtterOppdatering: Sak = restTemplate.getForObject(location)!!
+      assertThat(sakEtterOppdatering.testreglar).containsExactlyInAnyOrderElementsOf(testreglar)
     }
   }
 }
