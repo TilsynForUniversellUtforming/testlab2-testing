@@ -160,7 +160,7 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
   @Test
   @DisplayName("Skal kunne oppdatere testreglar i regelsett")
   fun updateRegelsettTestregel() {
-    val testregelListBefore = listOf(regelsettTestregelList.first)
+    val testregelListBefore = listOf(regelsettTestregelList[0])
     val id = createTestRegelsett(testregelIdList = testregelListBefore.map { it.id })
     val regelsettBefore = regelsettDAO.getRegelsett(id)
 
