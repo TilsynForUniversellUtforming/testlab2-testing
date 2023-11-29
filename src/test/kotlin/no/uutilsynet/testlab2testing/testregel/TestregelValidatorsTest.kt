@@ -13,7 +13,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
-class TestregelValidationTest {
+class TestregelValidatorsTest {
   @Test
   @DisplayName("Gyldig testregel for forenklet kontroll skal kunne valideres")
   fun validForenklet() {
@@ -105,16 +105,7 @@ class TestregelValidationTest {
   inner class ValidateRequiredFields {
     @ParameterizedTest
     @MethodSource(
-        "no.uutilsynet.testlab2testing.testregel.TestregelValidationTest#invalidParamsSource")
-    @DisplayName("namn være definert")
-    fun nameError(invalidParam: String?) {
-      val name = validateName(invalidParam)
-      assertTrue(name.isFailure)
-    }
-
-    @ParameterizedTest
-    @MethodSource(
-        "no.uutilsynet.testlab2testing.testregel.TestregelValidationTest#invalidParamsSource")
+        "no.uutilsynet.testlab2testing.testregel.TestregelValidatorsTest#invalidParamsSource")
     @DisplayName("krav være definert")
     fun kravError(invalidParam: String?) {
       val krav = validateKrav(invalidParam)
@@ -123,7 +114,7 @@ class TestregelValidationTest {
 
     @ParameterizedTest
     @MethodSource(
-        "no.uutilsynet.testlab2testing.testregel.TestregelValidationTest#invalidParamsSource")
+        "no.uutilsynet.testlab2testing.testregel.TestregelValidatorsTest#invalidParamsSource")
     @DisplayName("TestregelSchema være definert for forenklet kontroll")
     fun testregelSchemaErrorForenklet(invalidParam: String?) {
       val schema = validateSchema(invalidParam, TestregelType.forenklet)
@@ -132,7 +123,7 @@ class TestregelValidationTest {
 
     @ParameterizedTest
     @MethodSource(
-        "no.uutilsynet.testlab2testing.testregel.TestregelValidationTest#invalidParamsSource")
+        "no.uutilsynet.testlab2testing.testregel.TestregelValidatorsTest#invalidParamsSource")
     @DisplayName("TestregelSchema være definert for inngående kontroll")
     fun testregelSchemaErrorInngaaende(invalidParam: String?) {
       val schema = validateSchema(invalidParam, TestregelType.inngaaende)

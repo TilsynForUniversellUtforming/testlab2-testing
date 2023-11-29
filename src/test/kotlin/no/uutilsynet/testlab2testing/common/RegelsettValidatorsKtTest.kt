@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
-class ValidatorsKtTest {
+class RegelsettValidatorsKtTest {
   @ParameterizedTest
   @ValueSource(strings = ["123456785", "938644500"])
   @DisplayName("når vi validerer eit gyldig orgnummer, så skal vi få success")

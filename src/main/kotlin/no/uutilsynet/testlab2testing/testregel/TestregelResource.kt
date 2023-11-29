@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.testregel
 import java.net.URI
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHandling
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
+import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import org.slf4j.LoggerFactory
@@ -52,7 +53,7 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
   fun createTestregel(@RequestBody testregelInit: TestregelInit): ResponseEntity<out Any> =
       createWithErrorHandling(
           {
-            val name = validateName(testregelInit.name).getOrThrow()
+            val name = validateNamn(testregelInit.name).getOrThrow()
             val krav = validateKrav(testregelInit.krav).getOrThrow()
             val schema =
                 validateSchema(testregelInit.testregelSchema, testregelInit.type).getOrThrow()
