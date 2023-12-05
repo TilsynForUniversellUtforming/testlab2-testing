@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.common
+package no.uutilsynet.testlab2testing
 
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
@@ -9,8 +9,8 @@ import org.springframework.security.web.SecurityFilterChain
 @TestConfiguration
 class TestSecurityConfig {
 
-  @Bean()
-  open fun resouceServerFilterChain(http: HttpSecurity): SecurityFilterChain {
+  @Bean
+  open fun testFilterChain(http: HttpSecurity): SecurityFilterChain {
 
     http {
       authorizeHttpRequests { authorize(anyRequest, permitAll) }
