@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.deleteTestregelSql
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelByNoekkelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelListSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelListByIdSql
@@ -22,6 +23,9 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     val getTestregelSql =
         "select id, name, krav, testregel_schema, type from testregel where id = :id order by id"
+
+    val getTestregelByNoekkelSql =
+        "select id, name, krav, testregel_schema, type from testregel where testregel_schema = :noekkel order by id"
 
     val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
 
@@ -52,6 +56,13 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getTestregelList(): List<Testregel> =
       jdbcTemplate.query(getTestregelListSql, testregelRowMapper)
+
+  fun getTestregelByNoekkel(testregelNoekkel: String): Testregel? =
+      DataAccessUtils.singleResult(
+          jdbcTemplate.query(
+              getTestregelByNoekkelSql,
+              mapOf("testregelnoekkel" to testregelNoekkel),
+              testregelRowMapper))
 
   @Transactional
   fun createTestregel(testregelInit: TestregelInit): Int =

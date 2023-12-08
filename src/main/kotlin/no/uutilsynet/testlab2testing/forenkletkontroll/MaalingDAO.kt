@@ -35,7 +35,8 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class MaalingDAO(
     val jdbcTemplate: NamedParameterJdbcTemplate,
-    val loeysingsRegisterClient: LoeysingsRegisterClient
+    val loeysingsRegisterClient: LoeysingsRegisterClient,
+    val aggregeringDao: AggregeringDAO,
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
@@ -449,7 +450,10 @@ class MaalingDAO(
         maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling.id) }
       }
       is TestingFerdig -> {
-        maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling.id) }
+        maaling.testKoeyringar.forEach {
+          saveTestKoeyring(it, maaling.id)
+          aggregeringDao.saveAggregertResultatTestregel(it as TestKoeyring.Ferdig)
+        }
       }
     }
     maaling
