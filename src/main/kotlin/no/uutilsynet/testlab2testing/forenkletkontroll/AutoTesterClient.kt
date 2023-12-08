@@ -103,10 +103,7 @@ class AutoTesterClient(
             "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
   }
 
-  private fun fetchResultatAggregering(
-      uri: URI,
-      resultatType: ResultatUrls
-  ): List<AutotesterTestresultat> {
+  fun fetchResultatAggregering(uri: URI, resultatType: ResultatUrls): List<AutotesterTestresultat> {
     return restTemplate.getForObject(uri, getAggregationClass(resultatType))?.toList()
         ?: throw RuntimeException(
             "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
