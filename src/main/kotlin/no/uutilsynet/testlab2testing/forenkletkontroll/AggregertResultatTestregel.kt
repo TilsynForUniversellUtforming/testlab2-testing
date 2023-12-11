@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 
 data class AggregertResultatTestregel(
-    val maalingId: Int,
+    var maalingId: Int,
     val loeysing: Loeysing,
     val testregelId: String,
     val suksesskriterium: String,

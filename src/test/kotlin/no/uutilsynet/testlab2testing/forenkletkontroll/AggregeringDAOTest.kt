@@ -4,18 +4,25 @@ import java.net.URL
 import java.time.Instant
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelInit
+import no.uutilsynet.testlab2testing.testregel.TestregelType
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 
-@SpringBootTest // (classes = [AggregeringDAO::class])
+@SpringBootTest
 class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
 
   @MockBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
   @MockBean lateinit var autoTesterClient: AutoTesterClient
+
+  @Autowired lateinit var maalingDao: MaalingDAO
+
+  @Autowired lateinit var testregelDAO: TestregelDAO
 
   var aggregeringTestregel: AggregertResultatTestregel =
       AggregertResultatTestregel(
@@ -23,8 +30,7 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
           loeysing = Loeysing(1, "test", URL("http://localhost:8080/"), "123456789"),
           testregelId = "QW-1",
           suksesskriterium = "1.1.1",
-          fleireSuksesskriterium =
-              listOf("1.1.1","1.1.2"),
+          fleireSuksesskriterium = listOf("1.1.1", "1.1.2"),
           talElementSamsvar = 1,
           talElementBrot = 2,
           talElementVarsel = 1,
@@ -37,6 +43,10 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
 
   @Test
   fun saveAggregeringTestregel() {
+
+    val maalingId = createTestMaaling()
+    aggregeringTestregel.maalingId = maalingId
+
     val testKoeyring: TestKoeyring.Ferdig =
         TestKoeyring.Ferdig(
             crawlResultat =
@@ -60,11 +70,29 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
                     urlAggregeringSK = URL("http://localhost:8080/")),
         )
 
-
-      Mockito.`when`(autoTesterClient. fetchResultatAggregering(URL("http://localhost:8080/").toURI(),AutoTesterClient.ResultatUrls.urlAggreggeringTR)).thenReturn(
-          listOf(aggregeringTestregel)
-      );
+    Mockito.`when`(
+            autoTesterClient.fetchResultatAggregering(
+                URL("http://localhost:8080/").toURI(),
+                AutoTesterClient.ResultatUrls.urlAggreggeringTR))
+        .thenReturn(listOf(aggregeringTestregel))
     // AutoTesterClient.ResultatUrls.urlAggreggeringTR)).thenReturn(aggregeringTestregel)
     aggregeringDAO.saveAggregertResultatTestregel(testKoeyring)
+  }
+
+  fun createTestMaaling(): Int {
+    val crawlParameters = CrawlParameters(10, 10)
+    val testregel = TestregelInit("QW-1", "QW-1", "1.1.1", TestregelType.forenklet)
+
+    val testregelId = testregelDAO.createTestregel(testregel)
+
+    val maalingId =
+        maalingDao.createMaaling(
+            "Testmaaling_aggregering",
+            Instant.now(),
+            listOf(1),
+            listOf(testregelId),
+            crawlParameters)
+
+    return maalingId
   }
 }

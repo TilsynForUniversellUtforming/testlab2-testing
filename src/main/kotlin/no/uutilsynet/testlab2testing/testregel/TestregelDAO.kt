@@ -25,7 +25,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         "select id, name, krav, testregel_schema, type from testregel where id = :id order by id"
 
     val getTestregelByNoekkelSql =
-        "select id, name, krav, testregel_schema, type from testregel where testregel_schema = :noekkel order by id"
+        "select id, name, krav, testregel_schema, type from testregel where testregel_schema = :testregelSchema order by id"
 
     val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
 
@@ -57,11 +57,11 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getTestregelList(): List<Testregel> =
       jdbcTemplate.query(getTestregelListSql, testregelRowMapper)
 
-  fun getTestregelByNoekkel(testregelNoekkel: String): Testregel? =
+  fun getTestregelBySchema(testregelSchema: String): Testregel? =
       DataAccessUtils.singleResult(
           jdbcTemplate.query(
               getTestregelByNoekkelSql,
-              mapOf("testregelnoekkel" to testregelNoekkel),
+              mapOf("testregelSchema" to testregelSchema),
               testregelRowMapper))
 
   @Transactional
