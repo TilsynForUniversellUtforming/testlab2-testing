@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.inngaendekontroll
+package no.uutilsynet.testlab2testing.inngaendekontroll.sak
 
 import java.sql.Timestamp
 import java.time.Instant
@@ -16,10 +16,10 @@ class SakDAO(
     val dataSource: DataSource,
     val testregelDAO: TestregelDAO
 ) {
-  fun save(sak: Sak): Result<Int> = runCatching {
+  fun save(virksomhet: String): Result<Int> = runCatching {
     jdbcTemplate.queryForObject(
         "insert into sak (virksomhet, opprettet) values (:virksomhet, :opprettet) returning id",
-        mapOf("virksomhet" to sak.virksomhet, "opprettet" to Timestamp.from(Instant.now())),
+        mapOf("virksomhet" to virksomhet, "opprettet" to Timestamp.from(Instant.now())),
         Int::class.java)!!
   }
 
@@ -32,7 +32,7 @@ class SakDAO(
             Sak.Loeysing(loeysingId, nettsider)
           }
       val testreglar = testregelDAO.getTestreglarBySak(sakId)
-      Sak(rs.getString("virksomhet"), loeysingar, testreglar)
+      Sak(sakId, rs.getString("virksomhet"), loeysingar, testreglar)
     }
     val sak =
         jdbcTemplate.queryForObject(
@@ -53,7 +53,7 @@ class SakDAO(
   ): MutableList<Sak.Nettside> =
       jdbcTemplate.query(
           """
-                    select type, url, beskrivelse, begrunnelse
+                    select id, type, url, beskrivelse, begrunnelse
                     from nettside
                     where id in (
                         select nettside_id
@@ -67,14 +67,14 @@ class SakDAO(
           DataClassRowMapper.newInstance(Sak.Nettside::class.java))
 
   @Transactional
-  fun update(sakId: Int, sak: Sak): Result<Sak> = runCatching {
+  fun update(sak: Sak): Result<Sak> = runCatching {
     // oppdater lista med virksomheter
     val array =
         dataSource.connection.createArrayOf(
             "INTEGER", sak.loeysingar.map { it.loeysingId }.toTypedArray())
     jdbcTemplate.update(
         "update sak set virksomhet = :virksomhet, loeysingar = :loeysingar where id = :id",
-        mapOf("virksomhet" to sak.virksomhet, "loeysingar" to array, "id" to sakId))
+        mapOf("virksomhet" to sak.virksomhet, "loeysingar" to array, "id" to sak.id))
 
     // slett alle nettsider som er knyttet til saken
     jdbcTemplate.update(
@@ -83,7 +83,7 @@ class SakDAO(
               where sak_id = :sak_id
           """
             .trimIndent(),
-        mapOf("sak_id" to sakId))
+        mapOf("sak_id" to sak.id))
     jdbcTemplate.update(
         """
         delete from nettside
@@ -94,7 +94,7 @@ class SakDAO(
         )
     """
             .trimIndent(),
-        mapOf("sak_id" to sakId))
+        mapOf("sak_id" to sak.id))
 
     // legg til alle nye nettsider som er knyttet til saken
     sak.loeysingar.forEach { loeysing ->
@@ -120,7 +120,7 @@ class SakDAO(
               """
                 .trimIndent(),
             mapOf(
-                "sak_id" to sakId,
+                "sak_id" to sak.id,
                 "loeysing_id" to loeysing.loeysingId,
                 "nettside_id" to nettsideId))
       }
@@ -133,7 +133,7 @@ class SakDAO(
             where sak_id = :sak_id
         """
             .trimIndent(),
-        mapOf("sak_id" to sakId))
+        mapOf("sak_id" to sak.id))
 
     // legg til alle nye testreglar som er knyttet til saken
     sak.testreglar.forEach { testregel ->
@@ -143,7 +143,7 @@ class SakDAO(
               values (:sak_id, :testregel_id)
           """
               .trimIndent(),
-          mapOf("sak_id" to sakId, "testregel_id" to testregel.id))
+          mapOf("sak_id" to sak.id, "testregel_id" to testregel.id))
     }
     sak
   }

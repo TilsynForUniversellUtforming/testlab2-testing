@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.inngaendekontroll
+package no.uutilsynet.testlab2testing.inngaendekontroll.sak
 
 import no.uutilsynet.testlab2testing.common.validateOrgNummer
 import org.slf4j.Logger
@@ -11,16 +11,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 @RequestMapping("/saker")
 class SakResource(val sakDAO: SakDAO) {
 
-  data class NySak(val virksomhet: String)
-
   val logger: Logger = LoggerFactory.getLogger(SakResource::class.java)
 
   @PostMapping
-  fun createSak(@RequestBody nySak: NySak): ResponseEntity<Unit> {
+  fun createSak(@RequestBody nySak: Map<String, String>): ResponseEntity<Unit> {
     return runCatching {
-          val virksomhet = validateOrgNummer(nySak.virksomhet).getOrThrow()
-          val sak = Sak(virksomhet)
-          sakDAO.save(sak).getOrThrow()
+          val virksomhet = validateOrgNummer(nySak["virksomhet"]).getOrThrow()
+          sakDAO.save(virksomhet).getOrThrow()
         }
         .fold(
             onSuccess = { id -> ResponseEntity.created(location(id)).build() },
@@ -44,8 +41,9 @@ class SakResource(val sakDAO: SakDAO) {
 
   @PutMapping("/{id}")
   fun updateSak(@PathVariable id: Int, @RequestBody sak: Sak): ResponseEntity<Sak> {
+    require(sak.id == id) { "id i URL-en og id er ikkje den same" }
     return sakDAO
-        .update(id, sak)
+        .update(sak)
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
             onFailure = { ResponseEntity.notFound().build() })
