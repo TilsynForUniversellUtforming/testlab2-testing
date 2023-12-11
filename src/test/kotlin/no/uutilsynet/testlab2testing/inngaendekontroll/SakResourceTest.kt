@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll
 
+import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -87,9 +88,10 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
       val location = restTemplate.postForLocation("/saker", mapOf("virksomhet" to "123456785"))!!
       val sak: Sak = restTemplate.getForObject(location)!!
 
-      val forside = Sak.Nettside("forside", "https://www.uutilsynet.no/", "Forsida", "")
+      val forside = Sak.Nettside(1, "forside", "https://www.uutilsynet.no/", "Forsida", "")
       val artikkel =
           Sak.Nettside(
+              2,
               "artikkel",
               "https://www.uutilsynet.no/tilsyn/slik-forer-vi-tilsyn-med-nettsteder-og-apper/84",
               "Slik fører vi tilsyn med nettsteder og apper",
@@ -101,8 +103,10 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
 
       val sakEtterOppdateringAvLoeysing: Sak = restTemplate.getForObject(location)!!
       assertThat(sakEtterOppdateringAvLoeysing.loeysingar).hasSize(1)
-      assertThat(sakEtterOppdateringAvLoeysing.loeysingar.first().nettsider)
-          .containsExactlyInAnyOrder(forside, artikkel)
+      assertThat(sakEtterOppdateringAvLoeysing.loeysingar.first().nettsider.sortedBy { it.type })
+          .usingRecursiveComparison()
+          .ignoringFields("id")
+          .isEqualTo(listOf(artikkel, forside))
     }
 
     @DisplayName("vi skal kunne fjerne nettsider frå ei løysing")
@@ -111,9 +115,10 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
       val location = restTemplate.postForLocation("/saker", mapOf("virksomhet" to "123456785"))!!
       val sak: Sak = restTemplate.getForObject(location)!!
 
-      val forside = Sak.Nettside("forside", "https://www.uutilsynet.no/", "Forsida", "")
+      val forside = Sak.Nettside(1, "forside", "https://www.uutilsynet.no/", "Forsida", "")
       val artikkel =
           Sak.Nettside(
+              2,
               "artikkel",
               "https://www.uutilsynet.no/tilsyn/slik-forer-vi-tilsyn-med-nettsteder-og-apper/84",
               "Slik fører vi tilsyn med nettsteder og apper",
@@ -129,7 +134,10 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
 
       val sakEtterFjerningAvNettside: Sak = restTemplate.getForObject(location)!!
       assertThat(sakEtterFjerningAvNettside.loeysingar).hasSize(1)
-      assertThat(sakEtterFjerningAvNettside.loeysingar.first().nettsider).containsExactly(forside)
+      assertThat(sakEtterFjerningAvNettside.loeysingar.first().nettsider.first())
+          .usingRecursiveComparison()
+          .ignoringFields("id")
+          .isEqualTo(forside)
     }
 
     @DisplayName("vi skal kunne legge til testreglar på ei sak")
