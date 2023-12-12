@@ -35,10 +35,13 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun saveSvar(testresultatId: Int, stegOgSvar: Pair<String, String>): Result<Unit> = runCatching {
     val (steg, svar) = stegOgSvar
+
     jdbcTemplate.update(
         """
             insert into testresultat_ik_svar (testresultat_ik_id, steg, svar)
             values (:testresultatId, :steg, :svar)
+            on conflict (testresultat_ik_id, steg) do update
+            set svar = excluded.svar
         """
             .trimIndent(),
         mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar))
