@@ -106,6 +106,23 @@ class TestResultatResourceTest(
 
   @Test
   @Order(5)
+  @DisplayName("vi skal kunne oppdatere et svar")
+  fun oppdatereSvar() {
+    val uri = UriComponentsBuilder.fromUri(location).pathSegment("svar").build().toUri()
+    val responseEntity =
+        restTemplate.postForEntity(uri, mapOf("steg" to "3.2", "svar" to "nei"), Unit::class.java)
+    assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+
+    val testresultat =
+        restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
+
+    assertThat(testresultat.svar)
+        .containsExactlyInAnyOrder(
+            ResultatManuellKontroll.Svar("3.2", "nei"), ResultatManuellKontroll.Svar("3.3", "nei"))
+  }
+
+  @Test
+  @Order(6)
   @DisplayName("vi skal kunne oppdatere testresultatet med elementomtale")
   fun oppdatereTestresultat() {
     val testresultat =
@@ -121,7 +138,7 @@ class TestResultatResourceTest(
   }
 
   @Test
-  @Order(6)
+  @Order(7)
   @DisplayName(
       "når vi oppdaterer resultatet med elementresultat og elementutfall, så skal også tidspunktet settes")
   fun oppdatereTestresultatMedElementresultatOgElementutfall() {
