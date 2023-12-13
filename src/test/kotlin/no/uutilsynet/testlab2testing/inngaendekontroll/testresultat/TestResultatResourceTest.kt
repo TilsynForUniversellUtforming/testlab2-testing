@@ -5,6 +5,7 @@ import java.time.Instant
 import kotlin.properties.Delegates
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll.Svar
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
-import org.springframework.web.util.UriComponentsBuilder
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(OrderAnnotation::class)
@@ -63,14 +63,16 @@ class TestResultatResourceTest(
     location = responseEntity.headers.location!!
   }
 
+  val svar = listOf(Svar("2.2", "ja"), Svar("3.1", "iframe nummer 1"), Svar("3.2", "ja"))
+
   @Test
   @Order(2)
   @DisplayName("vi skal kunne legge til svar på et testresultat vi har opprettet")
   fun leggeTilSvar() {
-    val uri = UriComponentsBuilder.fromUri(location).pathSegment("svar").build().toUri()
-    val responseEntity =
-        restTemplate.postForEntity(uri, mapOf("steg" to "3.2", "svar" to "ja"), Unit::class.java)
-    assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+    val testresultat =
+        restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
+    val endret = testresultat.copy(svar = svar)
+    assertDoesNotThrow { restTemplate.put(location, endret) }
   }
 
   @Test
@@ -83,42 +85,41 @@ class TestResultatResourceTest(
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
 
     val body = responseEntity.body!!
-    assertThat(body.svar).containsExactlyInAnyOrder(ResultatManuellKontroll.Svar("3.2", "ja"))
+    assertThat(body.svar).containsExactlyElementsOf(svar)
   }
+
+  val restenAvSvarene = listOf(Svar("3.3", "title"), Svar("3.4", "ja"))
 
   @Test
   @Order(4)
   @DisplayName(
       "vi skal kunne legge til flere svar på et testresultat vi har opprettet, og hente dem ut igjen")
   fun leggeTilFlereSvar() {
-    val uri = UriComponentsBuilder.fromUri(location).pathSegment("svar").build().toUri()
-    val responseEntity =
-        restTemplate.postForEntity(uri, mapOf("steg" to "3.3", "svar" to "nei"), Unit::class.java)
-    assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+    val resultat =
+        restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
+    val endret = resultat.copy(svar = resultat.svar + restenAvSvarene)
+    restTemplate.put(location, endret)
 
-    val testresultat =
+    val oppdatertResultat =
         restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
 
-    assertThat(testresultat.svar)
-        .containsExactlyInAnyOrder(
-            ResultatManuellKontroll.Svar("3.2", "ja"), ResultatManuellKontroll.Svar("3.3", "nei"))
+    assertThat(oppdatertResultat.svar).containsExactlyElementsOf(svar + restenAvSvarene)
   }
 
   @Test
   @Order(5)
   @DisplayName("vi skal kunne oppdatere et svar")
   fun oppdatereSvar() {
-    val uri = UriComponentsBuilder.fromUri(location).pathSegment("svar").build().toUri()
-    val responseEntity =
-        restTemplate.postForEntity(uri, mapOf("steg" to "3.2", "svar" to "nei"), Unit::class.java)
-    assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+    val resultat =
+        restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
+    val endretSvar = resultat.svar.map { if (it.steg == "3.4") it.copy(svar = "nei") else it }
+    restTemplate.put(location, resultat.copy(svar = endretSvar))
 
-    val testresultat =
+    val oppdatertResultat =
         restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
 
-    assertThat(testresultat.svar)
-        .containsExactlyInAnyOrder(
-            ResultatManuellKontroll.Svar("3.2", "nei"), ResultatManuellKontroll.Svar("3.3", "nei"))
+    assertThat(oppdatertResultat.svar).contains(Svar("3.4", "nei"))
+    assertThat(oppdatertResultat.svar).doesNotContain(Svar("3.4", "ja"))
   }
 
   @Test
@@ -127,14 +128,14 @@ class TestResultatResourceTest(
   fun oppdatereTestresultat() {
     val testresultat =
         restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
-    val endret = testresultat.copy(elementOmtale = "elementomtale")
+    val endret = testresultat.copy(elementOmtale = "iframe nummer 1")
 
     restTemplate.put(location, endret)
 
     val oppdatert =
         restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
 
-    assertThat(oppdatert.elementOmtale).isEqualTo("elementomtale")
+    assertThat(oppdatert.elementOmtale).isEqualTo("iframe nummer 1")
   }
 
   @Test
@@ -145,15 +146,17 @@ class TestResultatResourceTest(
     val start = Instant.now()
     val testresultat =
         restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
-    val endret =
-        testresultat.copy(elementResultat = "elementresultat", elementUtfall = "elementutfall")
+    val elementUtfall =
+        "Iframe har et tilgjengelig navn, som ikke beskriver formålet med innholdet i iframe."
+    val elementResultat = "brudd"
+    val endret = testresultat.copy(elementResultat = elementResultat, elementUtfall = elementUtfall)
 
     restTemplate.put(location, endret)
 
     val oppdatert = restTemplate.getForObject(location, ResultatManuellKontroll.Ferdig::class.java)
 
-    assertThat(oppdatert.elementResultat).isEqualTo("elementresultat")
-    assertThat(oppdatert.elementUtfall).isEqualTo("elementutfall")
+    assertThat(oppdatert.elementResultat).isEqualTo(elementResultat)
+    assertThat(oppdatert.elementUtfall).isEqualTo(elementUtfall)
     assertThat(oppdatert.testVartUtfoert).isBetween(start, Instant.now())
   }
 }

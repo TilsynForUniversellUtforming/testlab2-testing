@@ -21,16 +21,6 @@ class TestResultatResource(val testResultatDAO: TestResultatDAO) {
               { id -> ResponseEntity.created(location(id)).build() },
               { ResponseEntity.internalServerError().build() })
 
-  @PostMapping("/{id}/svar")
-  fun createSvar(
-      @PathVariable id: Int,
-      @RequestBody body: Map<String, String>
-  ): ResponseEntity<Unit> {
-    return validateSvar(body)
-        .mapCatching { stegOgSvar -> testResultatDAO.saveSvar(id, stegOgSvar) }
-        .fold({ ResponseEntity.ok().build() }, { ResponseEntity.internalServerError().build() })
-  }
-
   @GetMapping("/{id}")
   fun getTestResultat(@PathVariable id: Int): ResponseEntity<ResultatManuellKontroll> {
     return testResultatDAO
@@ -57,14 +47,6 @@ class TestResultatResource(val testResultatDAO: TestResultatDAO) {
               logger.error("Feil ved oppdatering av testresultat", it)
               ResponseEntity.internalServerError().build()
             })
-  }
-
-  private fun validateSvar(stegOgSvar: Map<String, String>): Result<Pair<String, String>> {
-    return kotlin.runCatching {
-      val steg = stegOgSvar["steg"] ?: throw IllegalArgumentException("steg mangler")
-      val svar = stegOgSvar["svar"] ?: throw IllegalArgumentException("svar mangler")
-      Pair(steg, svar)
-    }
   }
 
   private fun location(id: Int) =
