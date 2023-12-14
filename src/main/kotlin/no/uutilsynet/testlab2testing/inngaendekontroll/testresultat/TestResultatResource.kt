@@ -12,14 +12,17 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 class TestResultatResource(val testResultatDAO: TestResultatDAO) {
   val logger: Logger = getLogger(TestResultatResource::class.java)
 
-  @PostMapping("")
+  @PostMapping
   fun createTestResultat(
       @RequestBody createTestResultat: CreateTestResultat
   ): ResponseEntity<Unit> =
       runCatching { testResultatDAO.save(createTestResultat).getOrThrow() }
           .fold(
               { id -> ResponseEntity.created(location(id)).build() },
-              { ResponseEntity.internalServerError().build() })
+              {
+                logger.error("Feil ved oppretting av testresultat", it)
+                ResponseEntity.internalServerError().build()
+              })
 
   @GetMapping("/{id}")
   fun getOneResult(@PathVariable id: Int): ResponseEntity<ResultatManuellKontroll> {
