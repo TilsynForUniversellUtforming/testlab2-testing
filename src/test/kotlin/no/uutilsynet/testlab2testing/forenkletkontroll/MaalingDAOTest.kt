@@ -313,7 +313,7 @@ class MaalingDAOTest(
               it,
               Instant.now(),
               URI("https://teststatus.url").toURL(),
-              AutoTesterClient.AutoTesterOutput.Lenker(
+              AutoTesterClient.AutoTesterLenker(
                   URI("https://fullt.resultat").toURL(),
                   URI("https://brot.resultat").toURL(),
                   URI("https://aggregering.resultat").toURL(),
@@ -412,5 +412,5 @@ class MaalingDAOTest(
   }
 
   private fun URL.toUrlListWithPages(numberOfPages: Int = 3) =
-      (1..numberOfPages).map { URI("${this.toString()}/underside/$it").toURL() }
+      (1..numberOfPages).map { URI("${this}/underside/$it").toURL() }
 }
