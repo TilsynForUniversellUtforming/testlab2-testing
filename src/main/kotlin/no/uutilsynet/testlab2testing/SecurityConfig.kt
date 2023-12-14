@@ -7,6 +7,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.CorsConfigurationSource
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableWebSecurity
@@ -19,10 +22,23 @@ class SecurityConfig {
       oauth2ResourceServer {
         jwt { jwtAuthenticationConverter = Testlab2AuthenticationConverter() }
       }
-      cors { disable() }
       csrf { disable() }
     }
 
     return http.build()
+  }
+
+  @Bean
+  fun corsConfigurationSource(): CorsConfigurationSource {
+    val configuration = CorsConfiguration()
+    configuration.allowedOrigins =
+        listOf(
+            "https://user.difi.no",
+            "https://test-testlab.uutilsynet.no",
+            "https://beta-testlab.uutilsynet.no",
+            "https://user.difi.no")
+    val source = UrlBasedCorsConfigurationSource()
+    source.registerCorsConfiguration("/**", configuration)
+    return source
   }
 }
