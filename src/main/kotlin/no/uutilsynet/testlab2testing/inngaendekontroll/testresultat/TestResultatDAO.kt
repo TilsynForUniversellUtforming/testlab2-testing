@@ -33,23 +33,20 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
   }
 
-  @Transactional
-  fun getTestResultat(id: Int): Result<ResultatManuellKontroll> = runCatching {
-    val isFerdig =
-        jdbcTemplate.queryForObject(
-            "select test_vart_utfoert is not null from testresultat_ik where id = :id",
-            mapOf("id" to id),
-            Boolean::class.java)!!
+  fun getTestResultat(id: Int): Result<ResultatManuellKontroll> =
+      getTestResultat(resultatId = id).map { it.first() }
+
+  fun getManyResults(sakId: Int): Result<List<ResultatManuellKontroll>> =
+      getTestResultat(sakId = sakId)
+
+  private fun getTestResultat(
+      resultatId: Int? = null,
+      sakId: Int? = null
+  ): Result<List<ResultatManuellKontroll>> = runCatching {
     val resultSetExtractor =
-        if (isFerdig)
-            JdbcTemplateMapperFactory.newInstance()
-                .addKeys("id", "svar_steg")
-                .newResultSetExtractor(ResultatManuellKontroll.Ferdig::class.java)
-        else
-            JdbcTemplateMapperFactory.newInstance()
-                .addKeys("id", "svar_steg")
-                .ignoreColumns("test_vart_utfoert")
-                .newResultSetExtractor(ResultatManuellKontroll.UnderArbeid::class.java)
+        JdbcTemplateMapperFactory.newInstance()
+            .addKeys("id", "svar_steg")
+            .newResultSetExtractor(ResultatManuellKontroll::class.java)
     val testResultat =
         jdbcTemplate.query(
             """
@@ -66,17 +63,18 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                        tis.svar as svar_svar
                 from testresultat_ik ti
                          left join testresultat_ik_svar tis on ti.id = tis.testresultat_ik_id
-                where ti.id = :id
+                where ${if (resultatId != null) "ti.id = :id" else "true"}
+                and ${if (sakId != null) "ti.sak_id = :sakId" else "true"}
                 order by id, svar_steg
             """
                 .trimIndent(),
-            mapOf("id" to id),
+            mapOf("id" to resultatId, "sakId" to sakId),
             resultSetExtractor)
-    testResultat?.first()!!
+    testResultat ?: emptyList()
   }
 
   @Transactional
-  fun update(testResultat: ResultatManuellKontroll.UnderArbeid): Result<Unit> = runCatching {
+  fun update(testResultat: ResultatManuellKontroll): Result<Unit> = runCatching {
     val testVartUtfoert =
         if (testResultat.elementOmtale != null &&
             testResultat.elementResultat != null &&
@@ -99,6 +97,8 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "elementUtfall" to testResultat.elementUtfall,
             "testVartUtfoert" to testVartUtfoert,
             "id" to testResultat.id))
+
+    // slett gamle svar og lagre de nye
     jdbcTemplate.update(
         """
             delete from testresultat_ik_svar
