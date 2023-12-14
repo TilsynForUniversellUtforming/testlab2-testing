@@ -91,7 +91,8 @@ class AutoTesterClient(
             ResultatUrls.urlBrot -> fetchResultatDetaljert(lenker.urlBrot.toURI())
           }
         }
-      } ?: throw IllegalStateException("manglar lenker til testresultat")
+      }
+          ?: throw IllegalStateException("manglar lenker til testresultat")
 
   private fun fetchResultatDetaljert(uri: URI): List<TestResultat> {
     return restTemplate
