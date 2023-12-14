@@ -2,11 +2,6 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonDeserializer
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import java.net.URI
 import java.net.URL
 import kotlinx.coroutines.async
@@ -96,8 +91,7 @@ class AutoTesterClient(
             ResultatUrls.urlBrot -> fetchResultatDetaljert(lenker.urlBrot.toURI())
           }
         }
-      }
-          ?: throw IllegalStateException("manglar lenker til testresultat")
+      } ?: throw IllegalStateException("manglar lenker til testresultat")
 
   private fun fetchResultatDetaljert(uri: URI): List<TestResultat> {
     return restTemplate
@@ -133,36 +127,15 @@ class AutoTesterClient(
 
   data class CustomStatus(val testaSider: Int, val talSider: Int)
 
-  @JsonDeserialize(using = AutoTesterOutputDeserializer::class)
-  sealed class AutoTesterOutput {
-    data class Lenker(
-        val urlFulltResultat: URL,
-        val urlBrot: URL,
-        val urlAggregeringTR: URL,
-        val urlAggregeringSK: URL,
-        val urlAggregeringSide: URL,
-        val urlAggregeringSideTR: URL,
-        val urlAggregeringLoeysing: URL
-    ) : AutoTesterOutput()
-  }
-
-  class AutoTesterOutputDeserializer : JsonDeserializer<AutoTesterOutput>() {
-    override fun deserialize(jp: JsonParser, ctxt: DeserializationContext): AutoTesterOutput {
-      val node = jp.readValueAsTree<JsonNode>()
-      return when {
-        node.has("urlFulltResultat") ->
-            AutoTesterOutput.Lenker(
-                URI(node["urlFulltResultat"].asText()).toURL(),
-                URI(node["urlBrot"].asText()).toURL(),
-                URI(node["urlAggregeringTR"].asText()).toURL(),
-                URI(node["urlAggregeringSK"].asText()).toURL(),
-                URI(node["urlAggregeringSide"].asText()).toURL(),
-                URI(node["urlAggregeringSideTR"].asText()).toURL(),
-                URI(node["urlAggregeringLoeysing"].asText()).toURL())
-        else -> throw RuntimeException("Ukjent output fra AutoTester")
-      }
-    }
-  }
+  data class AutoTesterLenker(
+      val urlFulltResultat: URL,
+      val urlBrot: URL,
+      val urlAggregeringTR: URL,
+      val urlAggregeringSK: URL,
+      val urlAggregeringSide: URL,
+      val urlAggregeringSideTR: URL,
+      val urlAggregeringLoeysing: URL
+  )
 
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "runtimeStatus")
@@ -179,7 +152,7 @@ class AutoTesterClient(
 
     data class Running(val customStatus: CustomStatus?) : AutoTesterStatus()
 
-    data class Completed(val output: AutoTesterOutput) : AutoTesterStatus()
+    data class Completed(val output: AutoTesterLenker) : AutoTesterStatus()
 
     data class Failed(val output: String) : AutoTesterStatus()
 

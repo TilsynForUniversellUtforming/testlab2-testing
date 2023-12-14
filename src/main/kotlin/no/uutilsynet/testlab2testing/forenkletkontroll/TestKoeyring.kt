@@ -42,7 +42,7 @@ sealed class TestKoeyring {
       override val crawlResultat: CrawlResultat.Ferdig,
       override val sistOppdatert: Instant,
       val statusURL: URL,
-      @JsonIgnore val lenker: AutoTesterClient.AutoTesterOutput.Lenker? = null
+      @JsonIgnore val lenker: AutoTesterClient.AutoTesterLenker? = null
   ) : TestKoeyring() {
     override val loeysing: Loeysing
       get() = crawlResultat.loeysing
@@ -85,14 +85,11 @@ sealed class TestKoeyring {
           is AutoTesterClient.AutoTesterStatus.Pending ->
               IkkjeStarta(testKoeyring.crawlResultat, Instant.now(), testKoeyring.statusURL)
           is AutoTesterClient.AutoTesterStatus.Completed ->
-              when (response.output) {
-                is AutoTesterClient.AutoTesterOutput.Lenker ->
-                    Ferdig(
-                        testKoeyring.crawlResultat,
-                        Instant.now(),
-                        testKoeyring.statusURL,
-                        response.output)
-              }
+              Ferdig(
+                  testKoeyring.crawlResultat,
+                  Instant.now(),
+                  testKoeyring.statusURL,
+                  response.output)
           is AutoTesterClient.AutoTesterStatus.Failed ->
               Feila(testKoeyring.crawlResultat, Instant.now(), response.output)
           is AutoTesterClient.AutoTesterStatus.Running ->
@@ -116,14 +113,11 @@ sealed class TestKoeyring {
                   testKoeyring.statusURL,
                   Framgang.from(response.customStatus, testKoeyring.crawlResultat.antallNettsider))
           is AutoTesterClient.AutoTesterStatus.Completed ->
-              when (response.output) {
-                is AutoTesterClient.AutoTesterOutput.Lenker ->
-                    Ferdig(
-                        testKoeyring.crawlResultat,
-                        Instant.now(),
-                        testKoeyring.statusURL,
-                        response.output)
-              }
+              Ferdig(
+                  testKoeyring.crawlResultat,
+                  Instant.now(),
+                  testKoeyring.statusURL,
+                  response.output)
           is AutoTesterClient.AutoTesterStatus.Failed ->
               Feila(testKoeyring.crawlResultat, Instant.now(), response.output)
           else -> testKoeyring

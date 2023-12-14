@@ -46,7 +46,7 @@ object TestConstants {
           crawlResultat,
           Instant.now(),
           URI("https://status.url").toURL(),
-          AutoTesterClient.AutoTesterOutput.Lenker(
+          AutoTesterClient.AutoTesterLenker(
               URI("https://fullt.resultat").toURL(),
               URI("https://brot.resultat").toURL(),
               URI("https://aggregering.resultat").toURL(),
@@ -61,7 +61,7 @@ object TestConstants {
           crawlResultat2,
           Instant.now(),
           URI("https://status.url").toURL(),
-          AutoTesterClient.AutoTesterOutput.Lenker(
+          AutoTesterClient.AutoTesterLenker(
               URI("https://fullt.resultat").toURL(),
               URI("https://brot.resultat").toURL(),
               URI("https://aggregering.resultat").toURL(),

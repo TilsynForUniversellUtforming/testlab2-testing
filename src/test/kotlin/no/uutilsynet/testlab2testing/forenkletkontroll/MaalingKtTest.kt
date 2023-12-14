@@ -276,7 +276,7 @@ class MaalingKtTest {
 }
 
 val lenker =
-    AutoTesterClient.AutoTesterOutput.Lenker(
+    AutoTesterClient.AutoTesterLenker(
         URI("https://fullt.resultat").toURL(),
         URI("https://brot.resultat").toURL(),
         URI("https://aggregeringTR.resultat").toURL(),

@@ -94,7 +94,7 @@ class TestKoeyringTest {
               TestKoeyring.Starta::class.java),
           Arguments.of(
               AutoTesterClient.AutoTesterStatus.Completed(
-                  AutoTesterClient.AutoTesterOutput.Lenker(
+                  AutoTesterClient.AutoTesterLenker(
                       URI("https://fullt.resultat").toURL(),
                       URI("https://brot.resultat").toURL(),
                       URI("https://aggregering.resultat").toURL(),
@@ -108,32 +108,5 @@ class TestKoeyringTest {
               AutoTesterClient.AutoTesterStatus.Failed("401 Unauthorized"),
               TestKoeyring.Feila::class.java))
     }
-
-    fun testResultater() =
-        listOf(
-            TestResultat(
-                listOf("3.1.1"),
-                URI("https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160")
-                    .toURL(),
-                "QW-ACT-R5",
-                1,
-                TestResultat.parseLocalDateTime("3/23/2023, 11:15:54 AM"),
-                "The `lang` attribute has a valid value.",
-                "samsvar",
-                TestResultat.ACTElement(
-                    "html",
-                    "PGh0bWwgbGFuZz0ibm4iIGRpcj0ibHRyIiBwcmVmaXg9Im9nOiBodHRwczovL29ncC5tZS9ucyMiIGNsYXNzPSIganMiPjxoZWFkPjwvaGVhZD48Ym9keT53aW5kb3cuZGF0YQ==")),
-            TestResultat(
-                listOf("4.1.2"),
-                URI("https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160")
-                    .toURL(),
-                "QW-ACT-R11",
-                1,
-                TestResultat.parseLocalDateTime("3/23/2023, 11:15:54 AM"),
-                "The test target has an accessible name.",
-                "samsvar",
-                TestResultat.ACTElement(
-                    "html > body:nth-child(2) > div:nth-child(2) > div:nth-child(1) > header:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > button:nth-child(1)",
-                    "PGJ1dHRvbiBjbGFzcz0iaGVhZGVyLWJ1dHRvbiBoZWFkZXItYnV0dG9uLS1zZWFyY2ggY29sbGFwc2VkIiBkYXRhLWJzLXRvZ2dsZT0iY29sbGFwc2UiIGRhdGEtYnMtdGFyZw==")))
   }
 }

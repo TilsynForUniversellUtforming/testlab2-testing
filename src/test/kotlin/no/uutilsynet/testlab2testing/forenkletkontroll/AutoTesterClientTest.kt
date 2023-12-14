@@ -64,9 +64,8 @@ class AutoTesterClientTest {
       val completed =
           objectMapper.readValue(jsonString, AutoTesterClient.AutoTesterStatus::class.java)
       assertThat(completed).isInstanceOf(AutoTesterClient.AutoTesterStatus.Completed::class.java)
-      val output: AutoTesterClient.AutoTesterOutput.Lenker =
+      val output: AutoTesterClient.AutoTesterLenker =
           (completed as AutoTesterClient.AutoTesterStatus.Completed).output
-              as AutoTesterClient.AutoTesterOutput.Lenker
       assertThat(output.urlFulltResultat).isEqualTo(URI("https://fullt.resultat.no").toURL())
       assertThat(output.urlBrot).isEqualTo(URI("https://brot.resultat.no").toURL())
       assertThat(output.urlAggregeringTR)

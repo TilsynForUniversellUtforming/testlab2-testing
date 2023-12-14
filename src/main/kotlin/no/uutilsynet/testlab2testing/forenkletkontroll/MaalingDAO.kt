@@ -302,7 +302,7 @@ class MaalingDAO(
 
               val lenker =
                   if (urlFulltResultat != null)
-                      AutoTesterClient.AutoTesterOutput.Lenker(
+                      AutoTesterClient.AutoTesterLenker(
                           URI(urlFulltResultat).toURL(),
                           URI(urlBrot).toURL(),
                           URI(urlAggTR).toURL(),
