@@ -69,8 +69,7 @@ class TestResultatResourceTest(
   @Order(2)
   @DisplayName("vi skal kunne legge til svar på et testresultat vi har opprettet")
   fun leggeTilSvar() {
-    val testresultat =
-        restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
+    val testresultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
     val endret = testresultat.copy(svar = svar)
     assertDoesNotThrow { restTemplate.put(location, endret) }
   }
@@ -80,8 +79,7 @@ class TestResultatResourceTest(
   @DisplayName(
       "vi skal kunne hente ut et testresultat, og den skal inneholde svaret som er lagt inn")
   fun henteUtTestresultat() {
-    val responseEntity =
-        restTemplate.getForEntity(location, ResultatManuellKontroll.UnderArbeid::class.java)
+    val responseEntity = restTemplate.getForEntity(location, ResultatManuellKontroll::class.java)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
 
     val body = responseEntity.body!!
@@ -95,13 +93,11 @@ class TestResultatResourceTest(
   @DisplayName(
       "vi skal kunne legge til flere svar på et testresultat vi har opprettet, og hente dem ut igjen")
   fun leggeTilFlereSvar() {
-    val resultat =
-        restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
+    val resultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
     val endret = resultat.copy(svar = resultat.svar + restenAvSvarene)
     restTemplate.put(location, endret)
 
-    val oppdatertResultat =
-        restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
+    val oppdatertResultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
 
     assertThat(oppdatertResultat.svar).containsExactlyElementsOf(svar + restenAvSvarene)
   }
@@ -110,13 +106,11 @@ class TestResultatResourceTest(
   @Order(5)
   @DisplayName("vi skal kunne oppdatere et svar")
   fun oppdatereSvar() {
-    val resultat =
-        restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
+    val resultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
     val endretSvar = resultat.svar.map { if (it.steg == "3.4") it.copy(svar = "nei") else it }
     restTemplate.put(location, resultat.copy(svar = endretSvar))
 
-    val oppdatertResultat =
-        restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
+    val oppdatertResultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
 
     assertThat(oppdatertResultat.svar).contains(Svar("3.4", "nei"))
     assertThat(oppdatertResultat.svar).doesNotContain(Svar("3.4", "ja"))
@@ -126,14 +120,12 @@ class TestResultatResourceTest(
   @Order(6)
   @DisplayName("vi skal kunne oppdatere testresultatet med elementomtale")
   fun oppdatereTestresultat() {
-    val testresultat =
-        restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
+    val testresultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
     val endret = testresultat.copy(elementOmtale = "iframe nummer 1")
 
     restTemplate.put(location, endret)
 
-    val oppdatert =
-        restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
+    val oppdatert = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
 
     assertThat(oppdatert.elementOmtale).isEqualTo("iframe nummer 1")
   }
@@ -144,8 +136,7 @@ class TestResultatResourceTest(
       "når vi oppdaterer resultatet med elementresultat og elementutfall, så skal også tidspunktet settes")
   fun oppdatereTestresultatMedElementresultatOgElementutfall() {
     val start = Instant.now()
-    val testresultat =
-        restTemplate.getForObject(location, ResultatManuellKontroll.UnderArbeid::class.java)
+    val testresultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
     val elementUtfall =
         "Iframe har et tilgjengelig navn, som ikke beskriver formålet med innholdet i iframe."
     val elementResultat = "brudd"
@@ -153,10 +144,31 @@ class TestResultatResourceTest(
 
     restTemplate.put(location, endret)
 
-    val oppdatert = restTemplate.getForObject(location, ResultatManuellKontroll.Ferdig::class.java)
+    val oppdatert = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
 
     assertThat(oppdatert.elementResultat).isEqualTo(elementResultat)
     assertThat(oppdatert.elementUtfall).isEqualTo(elementUtfall)
     assertThat(oppdatert.testVartUtfoert).isBetween(start, Instant.now())
   }
+
+  @Test
+  @Order(8)
+  @DisplayName("vi kan hente alle resultater for en gitt sak")
+  fun henteAlleResultaterForSak() {
+    val resultatForSak =
+        restTemplate.getForObject("/testresultat?sakId=$sakId", ResultatForSak::class.java)!!
+    assertThat(resultatForSak.resultat).hasSize(1)
+    val resultat = resultatForSak.resultat.first()
+    assertThat(resultat.elementOmtale).isEqualTo("iframe nummer 1")
+    assertThat(resultat.elementResultat).isEqualTo("brudd")
+    assertThat(resultat.elementUtfall)
+        .isEqualTo(
+            "Iframe har et tilgjengelig navn, som ikke beskriver formålet med innholdet i iframe.")
+    assertThat(resultat.testVartUtfoert).isNotNull()
+    val expected =
+        (svar + restenAvSvarene).map { if (it.steg == "3.4") it.copy(svar = "nei") else it }
+    assertThat(resultat.svar).containsExactlyElementsOf(expected)
+  }
+
+  data class ResultatForSak(val resultat: List<ResultatManuellKontroll>)
 }
