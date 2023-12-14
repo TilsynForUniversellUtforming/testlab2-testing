@@ -62,7 +62,7 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                        tis.steg as svar_steg,
                        tis.svar as svar_svar
                 from testresultat ti
-                         left join testresultat_svar tis on ti.id = tis.testresultat_ik_id
+                         left join testresultat_svar tis on ti.id = tis.testresultat_id
                 where ${if (resultatId != null) "ti.id = :id" else "true"}
                 and ${if (sakId != null) "ti.sak_id = :sakId" else "true"}
                 order by id, svar_steg
@@ -102,7 +102,7 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     jdbcTemplate.update(
         """
             delete from testresultat_svar
-            where testresultat_ik_id = :id
+            where testresultat_id = :id
         """
             .trimIndent(),
         mapOf("id" to testResultat.id))
@@ -115,9 +115,9 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
         jdbcTemplate.update(
             """
-            insert into testresultat_svar (testresultat_ik_id, steg, svar)
+            insert into testresultat_svar (testresultat_id, steg, svar)
             values (:testresultatId, :steg, :svar)
-            on conflict (testresultat_ik_id, steg) do update
+            on conflict (testresultat_id, steg) do update
             set svar = excluded.svar
         """
                 .trimIndent(),
