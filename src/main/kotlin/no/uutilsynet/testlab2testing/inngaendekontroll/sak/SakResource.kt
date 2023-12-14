@@ -13,10 +13,12 @@ class SakResource(val sakDAO: SakDAO) {
 
   val logger: Logger = LoggerFactory.getLogger(SakResource::class.java)
 
+  data class NySak(val virksomhet: String)
+
   @PostMapping
-  fun createSak(@RequestBody nySak: Map<String, String>): ResponseEntity<Unit> {
+  fun createSak(@RequestBody nySak: NySak): ResponseEntity<Unit> {
     return runCatching {
-          val virksomhet = validateOrgNummer(nySak["virksomhet"]).getOrThrow()
+          val virksomhet = validateOrgNummer(nySak.virksomhet).getOrThrow()
           sakDAO.save(virksomhet).getOrThrow()
         }
         .fold(
