@@ -95,10 +95,7 @@ class MaalingKtTest {
   inner class TestingFerdigTests {
     private val crawlResultatForUUTilsynet =
         CrawlResultat.Ferdig(
-            1,
-            URI("https://www.status.url").toURL(),
-            TestConstants.uutilsynetLoeysing,
-            Instant.now())
+            1, URI("https://www.status.url").toURL(), uutilsynetLoeysing, Instant.now())
     private val crawlResultatForDigdir =
         CrawlResultat.Ferdig(
             1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now())
@@ -207,7 +204,7 @@ class MaalingKtTest {
                       crawlResultatForUUTilsynet,
                       Instant.now(),
                       URI("https://status.url").toURL(),
-                      TestKoeyringTest.testResultater())))
+                      lenker)))
       val result = Maaling.toTestingFerdig(maaling)
       assertThat(result).isNotNull
     }
@@ -227,7 +224,7 @@ class MaalingKtTest {
                       crawlResultatForUUTilsynet,
                       Instant.now(),
                       URI("https://status.url").toURL(),
-                      TestKoeyringTest.testResultater()),
+                      lenker),
               ))
       val result = Maaling.toTestingFerdig(maaling)
       assertThat(result).isNotNull
@@ -247,35 +244,17 @@ class MaalingKtTest {
                     CrawlResultat.Ferdig(
                         1,
                         URI("https://www.status.url").toURL(),
-                        TestConstants.uutilsynetLoeysing,
+                        uutilsynetLoeysing,
                         Instant.now()),
                     Instant.now(),
                     URI("https://www.status.url").toURL(),
-                    emptyList(),
-                    AutoTesterClient.AutoTesterOutput.Lenker(
-                        URI("https://fullt.resultat").toURL(),
-                        URI("https://brot.resultat").toURL(),
-                        URI("https://aggregeringTR.resultat").toURL(),
-                        URI("https://aggregeringSK.resultat").toURL(),
-                        URI("https://aggregeringSide.resultat").toURL(),
-                        URI("https://aggregeringSideTR.resultat").toURL(),
-                        URI("https://aggregeringLoeysing.resultat").toURL(),
-                    )),
+                    lenker),
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(
                         1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now()),
                     Instant.now(),
                     URI("https://www.status.url").toURL(),
-                    emptyList(),
-                    AutoTesterClient.AutoTesterOutput.Lenker(
-                        URI("https://fullt.resultat").toURL(),
-                        URI("https://brot.resultat").toURL(),
-                        URI("https://aggregeringTR.resultat").toURL(),
-                        URI("https://aggregeringSK.resultat").toURL(),
-                        URI("https://aggregering.resultatSide").toURL(),
-                        URI("https://aggregeringSideTR.resultat").toURL(),
-                        URI("https://aggregeringLoeysing.resultat").toURL(),
-                    ))))
+                    lenker)))
 
     @DisplayName(
         "når vi henter testkøyringar for ei måling, uten å spesifisere løysing, så skal vi få alle testkøyringane")
@@ -289,11 +268,20 @@ class MaalingKtTest {
         "når vi henter testkøyringar for ei måling, og spesifiserer ei løysing, så skal vi få testkøyringane for den løysinga")
     @Test
     fun testKoeyringarForLoeysing() {
-      val testKoeyringar =
-          Maaling.findFerdigeTestKoeyringar(maaling, TestConstants.uutilsynetLoeysing.id)
+      val testKoeyringar = Maaling.findFerdigeTestKoeyringar(maaling, uutilsynetLoeysing.id)
       assertThat(testKoeyringar, hasSize(1))
-      assertThat(
-          testKoeyringar[0].crawlResultat.loeysing, equalTo(TestConstants.uutilsynetLoeysing))
+      assertThat(testKoeyringar[0].crawlResultat.loeysing, equalTo(uutilsynetLoeysing))
     }
   }
 }
+
+val lenker =
+    AutoTesterClient.AutoTesterOutput.Lenker(
+        URI("https://fullt.resultat").toURL(),
+        URI("https://brot.resultat").toURL(),
+        URI("https://aggregeringTR.resultat").toURL(),
+        URI("https://aggregeringSK.resultat").toURL(),
+        URI("https://aggregeringSide.resultat").toURL(),
+        URI("https://aggregeringSideTR.resultat").toURL(),
+        URI("https://aggregeringLoeysing.resultat").toURL(),
+    )

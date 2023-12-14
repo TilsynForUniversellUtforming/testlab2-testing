@@ -56,19 +56,6 @@ class AutoTesterClientTest {
     }
 
     @DisplayName(
-        "når responsen fra autotester er `Completed`, og responsen inneholder testresultater, så skal det parses til responsklassen")
-    @Test
-    fun completed() {
-      val completed =
-          objectMapper.readValue(jsonSuccess, AutoTesterClient.AutoTesterStatus::class.java)
-      assertThat(completed).isInstanceOf(AutoTesterClient.AutoTesterStatus.Completed::class.java)
-      val output: AutoTesterClient.AutoTesterOutput.TestResultater =
-          (completed as AutoTesterClient.AutoTesterStatus.Completed).output
-              as AutoTesterClient.AutoTesterOutput.TestResultater
-      assertThat(output.testResultater).hasSize(2)
-    }
-
-    @DisplayName(
         "når responsen fra autotester er `Completed`, og responsen inneholder urler til testresultater, så skal det parses til responsklassen")
     @Test
     fun completedWithURLs() {
@@ -83,7 +70,7 @@ class AutoTesterClientTest {
       assertThat(output.urlFulltResultat).isEqualTo(URI("https://fullt.resultat.no").toURL())
       assertThat(output.urlBrot).isEqualTo(URI("https://brot.resultat.no").toURL())
       assertThat(output.urlAggregeringTR)
-          .isEqualTo(java.net.URI("https://aggregeringTR.resultat.no").toURL())
+          .isEqualTo(URI("https://aggregeringTR.resultat.no").toURL())
     }
 
     @DisplayName("når responsen fra autotester er `Failed`, så skal det parses til responsklassen")
@@ -147,28 +134,6 @@ class AutoTesterClientTest {
     assertThat(result.getOrNull()).isEqualTo(statusUris.statusQueryGetUri.toURL())
   }
 
-  @DisplayName(
-      "Hvis det er korrekt respons fra autotester skal man oppdatere til riktig status for testkoeyring")
-  @Test
-  fun updateStatus() {
-    server
-        .expect(
-            ExpectedCount.manyTimes(),
-            MockRestRequestMatchers.requestTo(CoreMatchers.startsWith(statusURL)))
-        .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-        .andRespond(MockRestResponseCreators.withSuccess(jsonSuccess, MediaType.APPLICATION_JSON))
-
-    val testKoeyringIkkjeStarta =
-        TestKoeyring.from(TestConstants.crawlResultat, URI(statusURL).toURL())
-    val updatedTestKoeyring =
-        autoTesterClient.updateStatus(testKoeyringIkkjeStarta).map {
-          TestKoeyring.updateStatus(testKoeyringIkkjeStarta, it)
-        }
-
-    assertThat(updatedTestKoeyring.isSuccess).isTrue
-    assertThat(updatedTestKoeyring.getOrNull()).isInstanceOf(TestKoeyring.Ferdig::class.java)
-  }
-
   @DisplayName("Hvis det er feil i respons fra autotester skal man returnere Result.Failure")
   @Test
   fun updateStatusFailed() {
@@ -199,47 +164,4 @@ class AutoTesterClientTest {
     "testVartUtfoert": "3/23/2023, 11:15:54 AM"
   }]}"""
           .trimIndent()
-
-  private val jsonSuccess =
-      """{"runtimeStatus":"Completed", "output":[{
-    "suksesskriterium": [
-      "2.4.2"
-    ],
-    "side": "https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160",
-    "maalingId": 46,
-    "loeysingId": 1,
-    "testregelId": "QW-ACT-R1",
-    "sideNivaa": 1,
-    "testVartUtfoert": "3/23/2023, 11:15:54 AM",
-    "elementUtfall": "The `title` element exists and it's not empty ('').",
-    "elementResultat": "samsvar",
-    "elementOmtale": [
-      {
-        "pointer": "html > head:nth-child(1) > title:nth-child(18)",
-        "htmlCode": "PHRpdGxlPkRpZ2l0YWxlIGJhcnJpZXJhciB8IFRpbHN5bmV0IGZvciB1bml2ZXJzZWxsIHV0Zm9ybWluZyBhdiBpa3Q8L3RpdGxlPg=="
-      }
-    ]
-  },
-  {
-    "suksesskriterium": [
-      "3.1.1"
-    ],
-    "side": "https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160",
-    "maalingId": 46,
-    "loeysingId": 1,
-    "testregelId": "QW-ACT-R2",
-    "sideNivaa": 1,
-    "testVartUtfoert": "3/23/2023, 11:15:54 AM",
-    "elementUtfall": "The `lang` attribute exists and has a value.",
-    "elementResultat": "samsvar",
-    "elementOmtale": [
-      {
-        "pointer": "html",
-        "htmlCode": "PGh0bWwgbGFuZz0ibm4iIGRpcj0ibHRyIiBwcmVmaXg9Im9nOiBodHRwczovL29ncC5tZS9ucyMiIGNsYXNzPSIganMiPjxoZWFkPjwvaGVhZD48Ym9keT48L2JvZHk+PC9odA=="
-      }
-    ]
-  }]}"""
-          .trimIndent()
-
-  private val jsonTerminated = """{"runtimeStatus":"Terminated"}"""
 }

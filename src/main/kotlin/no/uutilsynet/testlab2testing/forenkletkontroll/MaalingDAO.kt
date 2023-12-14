@@ -14,7 +14,6 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByDateSql
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByIdSql
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByStatus
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.testResultatRowMapper
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.updateMaalingParams
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.updateMaalingSql
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingStatus.*
@@ -53,17 +52,6 @@ class MaalingDAO(
   object MaalingParams {
     val maalingRowmapper = DataClassRowMapper.newInstance(MaalingDTO::class.java)
     val crawlParametersRowmapper = DataClassRowMapper.newInstance(CrawlParameters::class.java)
-    val testResultatRowMapper: (ResultSet, Int) -> TestResultat = { rs: ResultSet, _: Int ->
-      TestResultat(
-          rs.getString("suksesskriterium").split(","),
-          URI(rs.getString("nettside")).toURL(),
-          rs.getString("testregel"),
-          rs.getInt("side_nivaa"),
-          rs.getTimestamp("test_vart_utfoert").toLocalDateTime(),
-          rs.getString("element_utfall"),
-          rs.getString("element_resultat"),
-          TestResultat.ACTElement(rs.getString("html_code"), rs.getString("pointer")))
-    }
 
     val createMaalingSql =
         """
@@ -233,18 +221,6 @@ class MaalingDAO(
     }
   }
 
-  private fun getTestResultat(testkoeyringId: Int): List<TestResultat> {
-    return jdbcTemplate.query(
-        """
-          select nettside, suksesskriterium, testregel, element_utfall, element_resultat, side_nivaa, test_vart_utfoert, pointer, html_code
-          from testresultat
-          where testkoeyring_id = :testkoeyring_id
-        """
-            .trimIndent(),
-        mapOf("testkoeyring_id" to testkoeyringId),
-        testResultatRowMapper)
-  }
-
   fun getCrawlParameters(maalingId: Int): CrawlParameters =
       runCatching {
             jdbcTemplate.queryForObject(
@@ -316,8 +292,6 @@ class MaalingDAO(
                 TestKoeyring.Feila(
                     crawlResultatForLoeysing, sistOppdatert, rs.getString("feilmelding"))
             "ferdig" -> {
-              val testkoeyringId = rs.getInt("id")
-              val testResultat: List<TestResultat> = getTestResultat(testkoeyringId)
               val urlFulltResultat = rs.getString("url_fullt_resultat")
               val urlBrot = rs.getString("url_brot")
               val urlAggTR = rs.getString("url_agg_tr")
@@ -341,7 +315,6 @@ class MaalingDAO(
                   crawlResultatForLoeysing,
                   sistOppdatert,
                   URI(rs.getString("status_url")).toURL(),
-                  testResultat,
                   lenker)
             }
             else -> throw RuntimeException("ukjent status $status")
@@ -493,90 +466,64 @@ class MaalingDAO(
     jdbcTemplate.update(
         """delete from testkoeyring where maaling_id = :maaling_id and loeysing_id = :loeysing_id""",
         mapOf("maaling_id" to maalingId, "loeysing_id" to testKoeyring.crawlResultat.loeysing.id))
-    val testKoeyringId =
-        when (testKoeyring) {
-          is TestKoeyring.Starta -> {
-            jdbcTemplate.queryForObject(
-                """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, lenker_testa) 
+    when (testKoeyring) {
+      is TestKoeyring.Starta -> {
+        jdbcTemplate.queryForObject(
+            """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, lenker_testa) 
                 values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :feilmelding, :lenker_testa)
                 returning id
             """
-                    .trimMargin(),
-                mapOf(
-                    "maaling_id" to maalingId,
-                    "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
-                    "status" to status(testKoeyring),
-                    "status_url" to statusURL(testKoeyring),
-                    "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
-                    "feilmelding" to feilmelding(testKoeyring),
-                    "lenker_testa" to testKoeyring.framgang.prosessert),
-                Int::class.java)
-          }
-          is TestKoeyring.Ferdig -> {
-            jdbcTemplate.queryForObject(
-                """
+                .trimMargin(),
+            mapOf(
+                "maaling_id" to maalingId,
+                "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
+                "status" to status(testKoeyring),
+                "status_url" to statusURL(testKoeyring),
+                "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
+                "feilmelding" to feilmelding(testKoeyring),
+                "lenker_testa" to testKoeyring.framgang.prosessert),
+            Int::class.java)
+      }
+      is TestKoeyring.Ferdig -> {
+        jdbcTemplate.queryForObject(
+            """
               insert into testkoeyring(maaling_id, loeysing_id, status, status_url, sist_oppdatert, url_fullt_resultat, url_brot, url_agg_tr, url_agg_sk,url_agg_side, url_agg_side_tr, url_agg_loeysing)
               values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :url_fullt_resultat, :url_brot, :url_agg_tr, :url_agg_sk, :url_agg_side,:url_agg_side_tr,:url_agg_loeysing)
               returning id
             """
-                    .trimIndent(),
-                mapOf(
-                    "maaling_id" to maalingId,
-                    "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
-                    "status" to status(testKoeyring),
-                    "status_url" to statusURL(testKoeyring),
-                    "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
-                    "url_fullt_resultat" to testKoeyring.lenker?.urlFulltResultat?.toString(),
-                    "url_brot" to testKoeyring.lenker?.urlBrot?.toString(),
-                    "url_agg_tr" to testKoeyring.lenker?.urlAggregeringTR?.toString(),
-                    "url_agg_sk" to testKoeyring.lenker?.urlAggregeringSK?.toString(),
-                    "url_agg_side" to testKoeyring.lenker?.urlAggregeringSide?.toString(),
-                    "url_agg_side_tr" to testKoeyring.lenker?.urlAggregeringSideTR?.toString(),
-                    "url_agg_loeysing" to testKoeyring.lenker?.urlAggregeringLoeysing?.toString()),
-                Int::class.java)
-          }
-          else -> {
-            jdbcTemplate.queryForObject(
-                """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding) 
+                .trimIndent(),
+            mapOf(
+                "maaling_id" to maalingId,
+                "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
+                "status" to status(testKoeyring),
+                "status_url" to statusURL(testKoeyring),
+                "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
+                "url_fullt_resultat" to testKoeyring.lenker?.urlFulltResultat?.toString(),
+                "url_brot" to testKoeyring.lenker?.urlBrot?.toString(),
+                "url_agg_tr" to testKoeyring.lenker?.urlAggregeringTR?.toString(),
+                "url_agg_sk" to testKoeyring.lenker?.urlAggregeringSK?.toString(),
+                "url_agg_side" to testKoeyring.lenker?.urlAggregeringSide?.toString(),
+                "url_agg_side_tr" to testKoeyring.lenker?.urlAggregeringSideTR?.toString(),
+                "url_agg_loeysing" to testKoeyring.lenker?.urlAggregeringLoeysing?.toString()),
+            Int::class.java)
+      }
+      else -> {
+        jdbcTemplate.queryForObject(
+            """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding) 
                 values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :feilmelding)
                 returning id
             """
-                    .trimMargin(),
-                mapOf(
-                    "maaling_id" to maalingId,
-                    "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
-                    "status" to status(testKoeyring),
-                    "status_url" to statusURL(testKoeyring),
-                    "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
-                    "feilmelding" to feilmelding(testKoeyring)),
-                Int::class.java)
-          }
-        }
-    if (testKoeyring is TestKoeyring.Ferdig) {
-      // DFK-216 OK. Lagres bare for målinger som inneholder testResultat. Kan fjernes når vi
-      // fjerner testResultat fra TestKoeyring.
-      testKoeyring.testResultat.forEach { saveTestResultat(testKoeyringId!!, it) }
+                .trimMargin(),
+            mapOf(
+                "maaling_id" to maalingId,
+                "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
+                "status" to status(testKoeyring),
+                "status_url" to statusURL(testKoeyring),
+                "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
+                "feilmelding" to feilmelding(testKoeyring)),
+            Int::class.java)
+      }
     }
-  }
-
-  private fun saveTestResultat(testkoeyringId: Int, testResultat: TestResultat) {
-    jdbcTemplate.update(
-        """
-         insert into testresultat (testkoeyring_id, nettside, suksesskriterium, testregel, element_utfall, element_resultat, side_nivaa, test_vart_utfoert, pointer, html_code)
-         values (:testkoeyring_id, :nettside, :suksesskriterium, :testregel, :element_utfall, :element_resultat, :side_nivaa, :test_vart_utfoert, :pointer, :html_code)
-            """
-            .trimIndent(),
-        mapOf(
-            "testkoeyring_id" to testkoeyringId,
-            "nettside" to testResultat.side.toString(),
-            "suksesskriterium" to testResultat.suksesskriterium.joinToString(separator = ","),
-            "testregel" to testResultat.testregelId,
-            "element_utfall" to testResultat.elementUtfall,
-            "element_resultat" to testResultat.elementResultat,
-            "side_nivaa" to testResultat.sideNivaa,
-            "test_vart_utfoert" to Timestamp.valueOf(testResultat.testVartUtfoert),
-            "pointer" to testResultat.elementOmtale?.pointer,
-            "html_code" to testResultat.elementOmtale?.htmlCode))
   }
 
   private fun status(testKoeyring: TestKoeyring): String =
@@ -704,12 +651,6 @@ class MaalingDAO(
       }
     }
   }
-
-  fun findMaalingarByLoeysing(loeysingId: Int): List<Int> =
-      jdbcTemplate.queryForList(
-          "select idmaaling from maalingLoeysing where idloeysing in (:idloeysing)",
-          mapOf("idloeysing" to loeysingId),
-          Int::class.java)
 
   private fun status(crawresultat: CrawlResultat): String =
       when (crawresultat) {
