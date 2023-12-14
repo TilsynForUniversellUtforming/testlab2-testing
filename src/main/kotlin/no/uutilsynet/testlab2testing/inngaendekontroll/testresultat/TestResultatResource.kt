@@ -22,7 +22,7 @@ class TestResultatResource(val testResultatDAO: TestResultatDAO) {
               { ResponseEntity.internalServerError().build() })
 
   @GetMapping("/{id}")
-  fun getTestResultat(@PathVariable id: Int): ResponseEntity<ResultatManuellKontroll> {
+  fun getOneResult(@PathVariable id: Int): ResponseEntity<ResultatManuellKontroll> {
     return testResultatDAO
         .getTestResultat(id)
         .fold(
@@ -33,10 +33,24 @@ class TestResultatResource(val testResultatDAO: TestResultatDAO) {
             })
   }
 
+  @GetMapping("")
+  fun getManyResults(
+      @RequestParam sakId: Int
+  ): ResponseEntity<Map<String, List<ResultatManuellKontroll>>> {
+    return testResultatDAO
+        .getManyResults(sakId)
+        .fold(
+            onSuccess = { ResponseEntity.ok(mapOf("resultat" to it)) },
+            onFailure = {
+              logger.error("Feil ved henting av testresultat", it)
+              ResponseEntity.internalServerError().build()
+            })
+  }
+
   @PutMapping("/{id}")
   fun updateTestResultat(
       @PathVariable id: Int,
-      @RequestBody testResultat: ResultatManuellKontroll.UnderArbeid
+      @RequestBody testResultat: ResultatManuellKontroll
   ): ResponseEntity<Unit> {
     require(testResultat.id == id) { "id i URL-en og id i dei innsendte dataene er ikkje den same" }
     return testResultatDAO
