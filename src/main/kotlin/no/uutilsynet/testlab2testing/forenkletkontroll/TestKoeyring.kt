@@ -42,7 +42,6 @@ sealed class TestKoeyring {
       override val crawlResultat: CrawlResultat.Ferdig,
       override val sistOppdatert: Instant,
       val statusURL: URL,
-      @JsonIgnore val testResultat: List<TestResultat>,
       @JsonIgnore val lenker: AutoTesterClient.AutoTesterOutput.Lenker? = null
   ) : TestKoeyring() {
     override val loeysing: Loeysing
@@ -92,14 +91,7 @@ sealed class TestKoeyring {
                         testKoeyring.crawlResultat,
                         Instant.now(),
                         testKoeyring.statusURL,
-                        emptyList(),
                         response.output)
-                is AutoTesterClient.AutoTesterOutput.TestResultater ->
-                    Ferdig(
-                        testKoeyring.crawlResultat,
-                        Instant.now(),
-                        testKoeyring.statusURL,
-                        response.output.testResultater)
               }
           is AutoTesterClient.AutoTesterStatus.Failed ->
               Feila(testKoeyring.crawlResultat, Instant.now(), response.output)
@@ -130,85 +122,11 @@ sealed class TestKoeyring {
                         testKoeyring.crawlResultat,
                         Instant.now(),
                         testKoeyring.statusURL,
-                        emptyList(),
                         response.output)
-                is AutoTesterClient.AutoTesterOutput.TestResultater ->
-                    Ferdig(
-                        testKoeyring.crawlResultat,
-                        Instant.now(),
-                        testKoeyring.statusURL,
-                        response.output.testResultater)
               }
           is AutoTesterClient.AutoTesterStatus.Failed ->
               Feila(testKoeyring.crawlResultat, Instant.now(), response.output)
           else -> testKoeyring
         }
-
-    fun aggregerPaaTestregel(
-        koeyringarMedResultat: Map<Ferdig, List<TestResultat>>,
-        maalingId: Int
-    ): List<AggregertResultat> =
-        koeyringarMedResultat.flatMap { (testKoeyring, resultat) ->
-          aggregerPaaTestregel(resultat, testKoeyring, maalingId)
-        }
-
-    private fun aggregerPaaTestregel(
-        testResultat: List<TestResultat>,
-        testKoeyring: Ferdig,
-        maalingId: Int
-    ): List<AggregertResultat> {
-      val antallSider = testKoeyring.crawlResultat.antallNettsider
-      return testResultat
-          .groupBy { it.testregelId }
-          .map { entry ->
-            val antallSamsvar = entry.value.count { it.elementResultat == "samsvar" }
-            val antallBrot = entry.value.count { it.elementResultat == "brot" }
-            val antallVarsel = entry.value.count { it.elementResultat == "varsel" }
-            val antallSiderMedSamsvar =
-                entry.value
-                    .groupBy { it.side }
-                    .count {
-                      it.value.all { testResultat -> testResultat.elementResultat == "samsvar" }
-                    }
-            val antallSiderMedBrot =
-                entry.value
-                    .groupBy { it.side }
-                    .count {
-                      it.value.any { testResultat -> testResultat.elementResultat == "brot" }
-                    }
-            val siderTestet = entry.value.map { it.side }.distinct().count()
-            val antallSiderUtenForekomst = antallSider - siderTestet
-            // suksesskriterier vil være det samme for alle testresultatene, siden resultatene er
-            // gruppert på testregelId
-            val alleSuksesskriterier = entry.value.first().suksesskriterium
-
-            AggregertResultat(
-                maalingId,
-                testKoeyring.loeysing,
-                entry.key,
-                alleSuksesskriterier.first(),
-                alleSuksesskriterier.drop(1),
-                antallSamsvar,
-                antallBrot,
-                antallVarsel,
-                antallSiderMedSamsvar,
-                antallSiderMedBrot,
-                antallSiderUtenForekomst)
-          }
-    }
   }
-
-  data class AggregertResultat(
-      val maalingId: Int,
-      val loeysing: Loeysing,
-      val testregelId: String,
-      val suksesskriterium: String,
-      val fleireSuksesskriterium: List<String>,
-      val talElementSamsvar: Int,
-      val talElementBrot: Int,
-      val talElementVarsel: Int,
-      val talSiderSamsvar: Int,
-      val talSiderBrot: Int,
-      val talSiderIkkjeForekomst: Int
-  )
 }

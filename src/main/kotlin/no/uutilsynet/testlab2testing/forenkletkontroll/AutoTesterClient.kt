@@ -97,7 +97,7 @@ class AutoTesterClient(
           }
         }
       }
-          ?: Result.success(testKoeyring.testResultat)
+          ?: throw IllegalStateException("manglar lenker til testresultat")
 
   private fun fetchResultatDetaljert(uri: URI): List<TestResultat> {
     return restTemplate
@@ -106,7 +106,6 @@ class AutoTesterClient(
         ?.toList()
         ?: throw RuntimeException(
             "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
-    return emptyList()
   }
 
   private fun fetchResultatAggregering(
@@ -116,7 +115,6 @@ class AutoTesterClient(
     return restTemplate.getForObject(uri, getAggregationClass(resultatType))?.toList()
         ?: throw RuntimeException(
             "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
-    return emptyList()
   }
 
   private fun getAggregationClass(
@@ -137,8 +135,6 @@ class AutoTesterClient(
 
   @JsonDeserialize(using = AutoTesterOutputDeserializer::class)
   sealed class AutoTesterOutput {
-    data class TestResultater(val testResultater: List<TestResultat>) : AutoTesterOutput()
-
     data class Lenker(
         val urlFulltResultat: URL,
         val urlBrot: URL,
@@ -154,11 +150,6 @@ class AutoTesterClient(
     override fun deserialize(jp: JsonParser, ctxt: DeserializationContext): AutoTesterOutput {
       val node = jp.readValueAsTree<JsonNode>()
       return when {
-        node.isArray ->
-            AutoTesterOutput.TestResultater(
-                node.map { objectNode ->
-                  ctxt.readTreeAsValue(objectNode, TestResultat::class.java)
-                })
         node.has("urlFulltResultat") ->
             AutoTesterOutput.Lenker(
                 URI(node["urlFulltResultat"].asText()).toURL(),
