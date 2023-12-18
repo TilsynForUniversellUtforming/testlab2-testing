@@ -2,7 +2,7 @@ package no.uutilsynet.testlab2testing.testregel
 
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaInngaaende
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaManuell
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKrav
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -24,10 +24,10 @@ class TestregelValidatorsTest {
   }
 
   @Test
-  @DisplayName("Gyldig testregel for inngående kontroll skal kunne valideres")
-  fun validInngaaende() {
+  @DisplayName("Gyldig testregel for manuell kontroll skal kunne valideres")
+  fun validManuell() {
     assertDoesNotThrow {
-      Testregel(1, name, testregelSchemaInngaaende, testregelTestKrav, TestregelType.inngaaende)
+      Testregel(1, name, testregelSchemaManuell, testregelTestKrav, TestregelType.manuell)
           .validateTestregel()
     }
   }
@@ -59,9 +59,9 @@ class TestregelValidatorsTest {
     }
 
     @Test
-    @DisplayName("ugyldig testregelSchema for forenklet inngaaende feile")
-    fun invalidSchemaInngaaende() {
-      val testregel = Testregel(1, name, "", testregelTestKrav, TestregelType.inngaaende)
+    @DisplayName("ugyldig testregelSchema for forenklet manuell feile")
+    fun invalidSchemaManuell() {
+      val testregel = Testregel(1, name, "", testregelTestKrav, TestregelType.manuell)
       assertTrue(testregel.validateTestregel().isFailure)
     }
   }
@@ -83,16 +83,16 @@ class TestregelValidatorsTest {
   }
 
   @Test
-  @DisplayName("TestregelSchema for inngående kontroll må ha gyldig json-format")
+  @DisplayName("TestregelSchema for manuell kontroll må ha gyldig json-format")
   fun testregelSchemaWcagJsonError() {
-    val schema = validateSchema("{1}", TestregelType.inngaaende)
+    val schema = validateSchema("{1}", TestregelType.manuell)
     assertTrue(schema.isFailure)
   }
 
   @Test
-  @DisplayName("TestregelSchema for inngående kontroll med riktig json-format skal være gyldig")
+  @DisplayName("TestregelSchema for manuell kontroll med riktig json-format skal være gyldig")
   fun testregelSchemaWcagJsonSuccess() {
-    val schema = validateSchema(testregelSchemaInngaaende, TestregelType.inngaaende)
+    val schema = validateSchema(testregelSchemaManuell, TestregelType.manuell)
     assertTrue(schema.isSuccess)
   }
 
@@ -124,9 +124,9 @@ class TestregelValidatorsTest {
     @ParameterizedTest
     @MethodSource(
         "no.uutilsynet.testlab2testing.testregel.TestregelValidatorsTest#invalidParamsSource")
-    @DisplayName("TestregelSchema være definert for inngående kontroll")
-    fun testregelSchemaErrorInngaaende(invalidParam: String?) {
-      val schema = validateSchema(invalidParam, TestregelType.inngaaende)
+    @DisplayName("TestregelSchema være definert for manuell kontroll")
+    fun testregelSchemaErrorManuell(invalidParam: String?) {
+      val schema = validateSchema(invalidParam, TestregelType.manuell)
       assertTrue(schema.isFailure)
     }
   }
