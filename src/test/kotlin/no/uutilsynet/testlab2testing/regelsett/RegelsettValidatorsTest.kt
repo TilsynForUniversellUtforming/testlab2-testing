@@ -23,14 +23,14 @@ class RegelsettValidatorsTest {
   }
 
   @Test
-  @DisplayName("Skal validere regelsett med gyldige testreglar for inngående kontroll")
-  fun validInngaaende() {
+  @DisplayName("Skal validere regelsett med gyldige testreglar for manuell kontroll")
+  fun validManuell() {
     val testregelList =
         listOf(
-            Testregel(1, "TR1", """{"gaaTil": 1}""", "1.1.1", TestregelType.inngaaende),
-            Testregel(2, "TR2", """{"gaaTil": 1}""", "1.1.1", TestregelType.inngaaende))
+            Testregel(1, "TR1", """{"gaaTil": 1}""", "1.1.1", TestregelType.manuell),
+            Testregel(2, "TR2", """{"gaaTil": 1}""", "1.1.1", TestregelType.manuell))
     val testregelIdList = listOf(1, 2)
-    val regelsettType = TestregelType.inngaaende
+    val regelsettType = TestregelType.manuell
 
     assertTrue(validateRegelsettTestreglar(testregelIdList, regelsettType, testregelList).isSuccess)
   }
@@ -53,12 +53,12 @@ class RegelsettValidatorsTest {
   }
 
   @Test
-  @DisplayName("Skal feile validering for regelsett med både inngående og forenklede testregler")
-  fun invalidBothInngaaendeForenklet() {
+  @DisplayName("Skal feile validering for regelsett med både manuell og forenklede testregler")
+  fun invalidBothManuellForenklet() {
     val testregelList =
         listOf(
             Testregel(1, "TR1", "QW-ACT-R12", "1.1.1", TestregelType.forenklet),
-            Testregel(2, "TR2", "QW-ACT-R13", "1.1.2", TestregelType.inngaaende))
+            Testregel(2, "TR2", "QW-ACT-R13", "1.1.2", TestregelType.manuell))
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelType.forenklet
 
