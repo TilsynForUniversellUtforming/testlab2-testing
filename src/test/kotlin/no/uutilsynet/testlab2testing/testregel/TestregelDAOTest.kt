@@ -28,7 +28,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
     val id = createTestregel()
     val testregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(testregel).isNotNull
-    Assertions.assertThat(testregel?.name).isEqualTo(name)
+    Assertions.assertThat(testregel?.namn).isEqualTo(name)
   }
 
   @Test
@@ -75,17 +75,17 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
     Assertions.assertThat(oldTestregel).isNotNull
     Assertions.assertThat(oldTestregel?.krav).isEqualTo(testregelInit.krav)
     Assertions.assertThat(oldTestregel?.testregelSchema).isEqualTo(testregelInit.testregelSchema)
-    Assertions.assertThat(oldTestregel?.name).isEqualTo(testregelInit.name)
+    Assertions.assertThat(oldTestregel?.namn).isEqualTo(testregelInit.namn)
 
     oldTestregel
-        ?.copy(krav = testregelTestKrav, testregelSchema = testregelSchemaForenklet, name = name)
+        ?.copy(krav = testregelTestKrav, testregelSchema = testregelSchemaForenklet, namn = name)
         ?.let { testregelDAO.updateTestregel(it) }
 
     val updatedTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(updatedTestregel).isNotNull
     Assertions.assertThat(updatedTestregel?.krav).isEqualTo(testregelTestKrav)
     Assertions.assertThat(updatedTestregel?.testregelSchema).isEqualTo(testregelSchemaForenklet)
-    Assertions.assertThat(updatedTestregel?.name).isEqualTo(name)
+    Assertions.assertThat(updatedTestregel?.namn).isEqualTo(name)
   }
 
   private fun createTestregel(

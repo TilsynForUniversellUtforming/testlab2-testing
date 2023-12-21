@@ -76,7 +76,6 @@ class AggregeringDAO(
                 aggregertResultatTestregel.testregelGjennomsnittlegSideSamsvarProsent,
                 java.sql.Types.FLOAT)
 
-
     jdbcTemplate.update(sql, parameterSource)
   }
 
@@ -95,26 +94,26 @@ class AggregeringDAO(
   }
 
   fun getAggregertResultatTestregelForMaaling(maalingId: Int): List<AggregertResultatTestregel> {
-    val query = "select * from aggregering_testregel where maalingId = :maalingId"
+    val query = "select * from aggregering_testregel where maaling_id = :maalingId"
     val params = mapOf("maalingId" to maalingId)
     return jdbcTemplate.query(query, params) { rs, _ ->
       AggregertResultatTestregel(
-          maalingId = rs.getInt("maalingId"),
-          testregelId = rs.getString("testregelId"),
-          loeysing = getLoeysingFromId(rs.getInt("loeysingId")),
+          maalingId = rs.getInt("maaling_id"),
+          testregelId = rs.getString("testregel_id"),
+          loeysing = getLoeysingFromId(rs.getInt("loeysing_id")),
           suksesskriterium = rs.getString("suksesskriterium"),
-          fleireSuksesskriterium = rs.getArray("fleiresuksesskriterium").array as List<String>,
-          talElementSamsvar = rs.getInt("talelementsamsvar"),
-          talElementBrot = rs.getInt("talelementbrot"),
-          talElementVarsel = rs.getInt("talelementvarsel"),
-          talElementIkkjeForekomst = rs.getInt("talelementikkjeforekomst"),
-          talSiderSamsvar = rs.getInt("talsidersamsvar"),
-          talSiderBrot = rs.getInt("talsiderbrot"),
-          talSiderIkkjeForekomst = rs.getInt("talsiderikkjeforekomst"),
+          fleireSuksesskriterium = rs.getArray("fleire_suksesskriterium").array as List<String>,
+          talElementSamsvar = rs.getInt("tal_element_samsvar"),
+          talElementBrot = rs.getInt("tal_element_brot"),
+          talElementVarsel = rs.getInt("tal_elemen_tvarsel"),
+          talElementIkkjeForekomst = rs.getInt("tal_element_ikkje_forekomst"),
+          talSiderSamsvar = rs.getInt("tal_sider_samsvar"),
+          talSiderBrot = rs.getInt("tal_sider_brot"),
+          talSiderIkkjeForekomst = rs.getInt("tal_sider_ikkje_forekomst"),
           testregelGjennomsnittlegSideBrotProsent =
-              rs.getFloat("testregelgjennomsnittlegsidebrotprosent"),
+              rs.getFloat("testregel_gjennomsnittleg_side_brot_prosent"),
           testregelGjennomsnittlegSideSamsvarProsent =
-              rs.getFloat("testregelgjennomsnittlegsidesamsvarprosent"))
+              rs.getFloat("testregel_gjennomsnittleg_side_samsvar_prosent"))
     }
   }
 
@@ -128,7 +127,6 @@ class AggregeringDAO(
   }
 
   fun getTestregelIdFromSchema(testregelKey: String): Int? {
-    println("Testregelkey: $testregelKey")
     testregelDAO.getTestregelBySchema(testregelKey).let { testregel ->
       return testregel?.id
     }
