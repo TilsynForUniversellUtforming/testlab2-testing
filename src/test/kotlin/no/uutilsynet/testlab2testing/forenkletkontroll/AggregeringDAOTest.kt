@@ -6,7 +6,9 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelInit
+import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 import no.uutilsynet.testlab2testing.testregel.TestregelType
+import org.apache.commons.lang3.RandomStringUtils
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +46,9 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
   @Test
   fun saveAggregeringTestregel() {
 
-    val maalingId = createTestMaaling()
+    val testregelNoekkel = RandomStringUtils.randomAlphanumeric(5)
+    aggregeringTestregel.testregelId = testregelNoekkel
+    val maalingId = createTestMaaling(testregelNoekkel)
     aggregeringTestregel.maalingId = maalingId
 
     val testKoeyring: TestKoeyring.Ferdig =
@@ -77,11 +81,16 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
         .thenReturn(listOf(aggregeringTestregel))
     // AutoTesterClient.ResultatUrls.urlAggreggeringTR)).thenReturn(aggregeringTestregel)
     aggregeringDAO.saveAggregertResultatTestregel(testKoeyring)
+
+    val retrievedAggregering = aggregeringDAO.getAggregertResultatTestregelForMaaling(maalingId)
+    assert(!retrievedAggregering.isEmpty())
+    assert(retrievedAggregering[0].maalingId == maalingId)
+    assert(retrievedAggregering[0].testregelId == aggregeringTestregel.testregelId)
   }
 
-  fun createTestMaaling(): Int {
+  fun createTestMaaling(testregelNoekkel: String): Int {
     val crawlParameters = CrawlParameters(10, 10)
-    val testregel = TestregelInit("QW-1", "QW-1", "1.1.1", TestregelType.forenklet)
+    val testregel = TestregelInit("QW-1","QW-1", "1.1.1",TestregelType.forenklet,"QW-1",TestregelStatus.publisert,1,1,1);
 
     val testregelId = testregelDAO.createTestregel(testregel)
 

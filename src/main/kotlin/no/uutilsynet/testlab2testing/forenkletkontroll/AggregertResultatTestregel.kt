@@ -5,7 +5,7 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 data class AggregertResultatTestregel(
     var maalingId: Int,
     val loeysing: Loeysing,
-    val testregelId: String,
+    var testregelId: String,
     val suksesskriterium: String,
     val fleireSuksesskriterium: List<String>,
     val talElementSamsvar: Int,

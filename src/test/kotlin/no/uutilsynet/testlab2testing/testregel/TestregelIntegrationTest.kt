@@ -96,7 +96,7 @@ class TestregelIntegrationTests(
       val testregel = restTemplate.getForObject(location, Testregel::class.java)
       Assertions.assertThat(testregel.krav).isEqualTo(testregelTestKrav)
       Assertions.assertThat(testregel.testregelSchema).isEqualTo(testregelSchemaForenklet)
-      Assertions.assertThat(testregel.name).isEqualTo(name)
+      Assertions.assertThat(testregel.namn).isEqualTo(name)
     }
 
     @Test

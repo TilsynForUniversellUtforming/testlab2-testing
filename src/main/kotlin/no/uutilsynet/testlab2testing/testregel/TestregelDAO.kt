@@ -25,7 +25,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         "select id, name, krav, testregel_schema, type from testregel where id = :id order by id"
 
     val getTestregelByNoekkelSql =
-        "select id, name, krav, testregel_schema, type from testregel where testregel_schema = :testregelSchema order by id"
+        "select id, name, krav, testregel_schema, type from testregel where testregelnoekkel = :testregelnoekkel and versjon=(select max(versjon) from testlab2_testing.testregel where testregelnoekkel= :testregelnoekkel) order by id"
 
     val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
 
@@ -57,11 +57,11 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getTestregelList(): List<Testregel> =
       jdbcTemplate.query(getTestregelListSql, testregelRowMapper)
 
-  fun getTestregelBySchema(testregelSchema: String): Testregel? =
+  fun getTestregelBySchema(testregelnoekkel: String): Testregel? =
       DataAccessUtils.singleResult(
           jdbcTemplate.query(
               getTestregelByNoekkelSql,
-              mapOf("testregelSchema" to testregelSchema),
+              mapOf("testregelnoekkel" to testregelnoekkel),
               testregelRowMapper))
 
   @Transactional
@@ -69,7 +69,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       jdbcTemplate.queryForObject(
           "insert into testregel (name, testregel_schema, type, krav) values (:name, :testregel_schema, :type, :krav) returning id",
           mapOf(
-              "name" to testregelInit.name,
+              "name" to testregelInit.namn,
               "testregel_schema" to testregelInit.testregelSchema,
               "type" to testregelInit.type.value,
               "krav" to testregelInit.krav),
@@ -81,7 +81,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           " update testregel set name = :name, krav = :krav, testregel_schema = :testregel_schema where id = :id",
           mapOf(
               "id" to testregel.id,
-              "name" to testregel.name,
+              "name" to testregel.namn,
               "krav" to testregel.krav,
               "testregel_schema" to testregel.testregelSchema,
           ))

@@ -53,12 +53,11 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
   fun createTestregel(@RequestBody testregelInit: TestregelInit): ResponseEntity<out Any> =
       createWithErrorHandling(
           {
-            val name = validateNamn(testregelInit.name).getOrThrow()
-            val krav = validateKrav(testregelInit.krav).getOrThrow()
-            val schema =
-                validateSchema(testregelInit.testregelSchema, testregelInit.type).getOrThrow()
+            validateNamn(testregelInit.namn).getOrThrow()
+              validateKrav(testregelInit.krav).getOrThrow()
+              validateSchema(testregelInit.testregelSchema, testregelInit.type).getOrThrow()
 
-            testregelDAO.createTestregel(TestregelInit(name, schema, krav, testregelInit.type))
+            testregelDAO.createTestregel(testregelInit);
           },
           locationForId)
 
