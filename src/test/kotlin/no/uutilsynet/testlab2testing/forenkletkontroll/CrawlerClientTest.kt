@@ -5,9 +5,8 @@ import java.net.URI
 import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.testregel.*
 import no.uutilsynet.testlab2testing.testregel.TestConstants
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelType
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.startsWith
 import org.junit.jupiter.api.DisplayName
@@ -19,6 +18,7 @@ import org.springframework.test.web.client.ExpectedCount.manyTimes
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
+import java.time.LocalDate
 
 @RestClientTest(CrawlerClient::class, CrawlerProperties::class)
 @DisplayName("Crawler test")
@@ -42,8 +42,15 @@ class CrawlerClientTest {
         listOf(
             Testregel(
                 1,
+                TestConstants.testregelSchemaForenklet,
+                1,
                 TestConstants.name,
                 "QW-ACT-12",
+                TestregelStatus.publisert,
+                LocalDate.now(),
+                TestregelInnholdstype.nett,
+                TestregelType.forenklet,
+                L
                 TestConstants.testregelTestKrav,
                 TestregelType.forenklet))
     val maaling =

@@ -54,10 +54,10 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
       createWithErrorHandling(
           {
             validateNamn(testregelInit.namn).getOrThrow()
-              validateKrav(testregelInit.krav).getOrThrow()
-              validateSchema(testregelInit.testregelSchema, testregelInit.type).getOrThrow()
+            validateKrav(testregelInit.krav).getOrThrow()
+            validateSchema(testregelInit.testregelSchema, testregelInit.type).getOrThrow()
 
-            testregelDAO.createTestregel(testregelInit);
+            testregelDAO.createTestregel(testregelInit)
           },
           locationForId)
 
