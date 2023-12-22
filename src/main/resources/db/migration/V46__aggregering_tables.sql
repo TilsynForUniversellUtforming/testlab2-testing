@@ -2,8 +2,8 @@ create table aggregering_testregel
 (
     id   serial primary key,
     maaling_id int references maalingv1 (id),
-    loeysing_id int,
-    suksesskriterium varchar,
+    loeysing_id int not null,
+    suksesskriterium int not null,
     fleire_suksesskriterium varchar[],
     testregel_id int references testregel (id),
     tal_element_samsvar int,
@@ -20,7 +20,7 @@ create table aggregering_testregel
 create table aggregering_side(
     id serial primary key,
     maaling_id int references maalingv1 (id),
-    loeysing_id int,
+    loeysing_id int not null,
     side int references crawlresultat (id),
     gjennomsnittlig_brudd_prosent_tr int,
     tal_samsvar int,
@@ -31,8 +31,8 @@ create table aggregering_side(
 create table aggregering_suksesskriterium(
     id serial primary key,
     maaling_id int references maalingv1 (id),
-    loeysing_id int,
-    suksesskriterium_id varchar,
+    loeysing_id int not null,
+    suksesskriterium_id int not null ,
     tal_sider_samsvar int,
     tal_sider_brot int,
     tal_sider_sider_ikkje_forekomst int

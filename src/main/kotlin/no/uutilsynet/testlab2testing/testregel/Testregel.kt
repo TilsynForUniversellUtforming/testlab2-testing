@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import java.time.LocalDate
-import no.uutilsynet.testlab2testing.common.Locale
+import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.common.validateNamn
 
 data class Testregel(
@@ -14,7 +14,7 @@ data class Testregel(
     val datoSistEndra: LocalDate,
     val innholdstype: TestregelInnholdstype,
     val type: TestregelType,
-    val spraak: Locale,
+    val spraak: TestlabLocale,
     val tema: Int,
     val testobjekt: Int,
     val kravTilSamsvar: String,

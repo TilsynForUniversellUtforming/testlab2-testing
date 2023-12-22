@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
+import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
@@ -14,6 +15,7 @@ class AggregeringDAO(
     val jdbcTemplate: NamedParameterJdbcTemplate,
     val autoTesterClient: AutoTesterClient,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
+    val kravregisterClient: KravregisterClient,
     val testregelDAO: TestregelDAO,
 ) {
 
@@ -31,7 +33,7 @@ class AggregeringDAO(
             .addValue("loeysing_id", aggregertResultatTestregel.loeysing.id, java.sql.Types.INTEGER)
             .addValue(
                 "suksesskriterium",
-                aggregertResultatTestregel.suksesskriterium,
+                getKravFromSuksesskritterium(aggregertResultatTestregel.suksesskriterium),
                 java.sql.Types.VARCHAR)
             .addValue(
                 "fleire_suksesskriterium",
@@ -123,12 +125,18 @@ class AggregeringDAO(
         return loeysing
       }
     }
-    throw RuntimeException("Fant ikke løsning med id $loeysingId")
+    throw RuntimeException("Fant ikkje løsning med id $loeysingId")
   }
 
   fun getTestregelIdFromSchema(testregelKey: String): Int? {
     testregelDAO.getTestregelBySchema(testregelKey).let { testregel ->
       return testregel?.id
+    }
+  }
+
+  fun getKravFromSuksesskritterium(suksesskriterium: String): Int {
+    kravregisterClient.getKrav(suksesskriterium).let { krav ->
+      return krav.getOrThrow().id
     }
   }
 }
