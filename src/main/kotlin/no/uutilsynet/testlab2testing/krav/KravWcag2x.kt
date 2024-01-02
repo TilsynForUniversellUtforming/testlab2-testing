@@ -25,9 +25,8 @@ data class KravWcag2x(
         urlRettleiing,
     )
 
-
 enum class WcagSamsvarsnivaa(val nivaa: String) {
-    A("A"),
-    AA("AA"),
-    AAA("AAA")
+  A("A"),
+  AA("AA"),
+  AAA("AAA")
 }

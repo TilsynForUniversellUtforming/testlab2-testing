@@ -1,6 +1,10 @@
 package no.uutilsynet.testlab2testing.regelsett
 
+import java.time.LocalDate
+import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
+import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 import no.uutilsynet.testlab2testing.testregel.TestregelType
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -14,8 +18,36 @@ class RegelsettValidatorsTest {
   fun validForenklet() {
     val testregelList =
         listOf(
-            Testregel(1, "TR1", "QW-ACT-R12", "1.1.1", TestregelType.forenklet),
-            Testregel(2, "TR2", "QW-ACT-R13", "1.1.1", TestregelType.forenklet))
+            Testregel(
+                1,
+                "TR1",
+                1,
+                "QW-ACT-R12",
+                "1.1.1",
+                TestregelStatus.publisert,
+                LocalDate.now(),
+                TestregelInnholdstype.nett,
+                TestregelType.forenklet,
+                TestlabLocale.nb,
+                1,
+                1,
+                "QW-ACT-R12 HTML Page has a title",
+                "QW-ACT-R12"),
+            Testregel(
+                2,
+                "TR2",
+                1,
+                "QW-ACT-R13",
+                "1.1.1",
+                TestregelStatus.publisert,
+                LocalDate.now(),
+                TestregelInnholdstype.nett,
+                TestregelType.forenklet,
+                TestlabLocale.nb,
+                1,
+                1,
+                "QW-ACT-R13 HTML Page has a title",
+                "QW-ACT-R13"))
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelType.forenklet
 
@@ -27,8 +59,36 @@ class RegelsettValidatorsTest {
   fun validManuell() {
     val testregelList =
         listOf(
-            Testregel(1, "TR1", """{"gaaTil": 1}""", "1.1.1", TestregelType.manuell),
-            Testregel(2, "TR2", """{"gaaTil": 1}""", "1.1.1", TestregelType.manuell))
+            Testregel(
+                1,
+                "TR1",
+                1,
+                "TR1",
+                "1.1.1",
+                TestregelStatus.publisert,
+                LocalDate.now(),
+                TestregelInnholdstype.nett,
+                TestregelType.inngaaende,
+                TestlabLocale.nb,
+                1,
+                1,
+                "1.1.1",
+                """"{"gaaTil": 1}"""),
+            Testregel(
+                2,
+                "TR2",
+                1,
+                "TR2",
+                "1.1.1",
+                TestregelStatus.publisert,
+                LocalDate.now(),
+                TestregelInnholdstype.nett,
+                TestregelType.inngaaende,
+                TestlabLocale.nb,
+                1,
+                1,
+                "1.1.1",
+                """{"gaaTil": 1}"""))
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelType.manuell
 
@@ -40,9 +100,51 @@ class RegelsettValidatorsTest {
   fun validTestregelIdListLength() {
     val testregelList =
         listOf(
-            Testregel(1, "TR1", "QW-ACT-R12", "1.1.1", TestregelType.forenklet),
-            Testregel(2, "TR2", "QW-ACT-R13", "1.1.1", TestregelType.forenklet),
-            Testregel(3, "TR3", "QW-ACT-R14", "1.1.1", TestregelType.forenklet),
+            Testregel(
+                1,
+                "TR1",
+                1,
+                "QW-ACT-R12",
+                "1.1.1",
+                TestregelStatus.publisert,
+                LocalDate.now(),
+                TestregelInnholdstype.nett,
+                TestregelType.forenklet,
+                TestlabLocale.nb,
+                1,
+                1,
+                "QW-ACT-R12 HTML Page has a title",
+                "QW-ACT-R12"),
+            Testregel(
+                2,
+                "TR2",
+                1,
+                "QW-ACT-R13",
+                "1.1.1",
+                TestregelStatus.publisert,
+                LocalDate.now(),
+                TestregelInnholdstype.nett,
+                TestregelType.forenklet,
+                TestlabLocale.nb,
+                1,
+                1,
+                "QW-ACT-R13 HTML Page has a title",
+                "QW-ACT-R13"),
+            Testregel(
+                3,
+                "TR3",
+                1,
+                "QW-ACT-R14",
+                "1.1.1",
+                TestregelStatus.publisert,
+                LocalDate.now(),
+                TestregelInnholdstype.nett,
+                TestregelType.forenklet,
+                TestlabLocale.nb,
+                1,
+                1,
+                "QW-ACT-R14 HTML Page has a title",
+                "QW-ACT-R14"),
         )
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelType.forenklet
@@ -57,8 +159,36 @@ class RegelsettValidatorsTest {
   fun invalidBothManuellForenklet() {
     val testregelList =
         listOf(
-            Testregel(1, "TR1", "QW-ACT-R12", "1.1.1", TestregelType.forenklet),
-            Testregel(2, "TR2", "QW-ACT-R13", "1.1.2", TestregelType.manuell))
+            Testregel(
+                1,
+                "TR1",
+                1,
+                "QW-ACT-R12",
+                "1.1.1",
+                TestregelStatus.publisert,
+                LocalDate.now(),
+                TestregelInnholdstype.nett,
+                TestregelType.forenklet,
+                TestlabLocale.nb,
+                1,
+                1,
+                "QW-ACT-R12 HTML Page has a title",
+                "QW-ACT-R12"),
+            Testregel(
+                2,
+                "TR2",
+                1,
+                "QW-ACT-R13",
+                "1.1.2",
+                TestregelStatus.publisert,
+                LocalDate.now(),
+                TestregelInnholdstype.nett,
+                TestregelType.inngaaende,
+                TestlabLocale.nb,
+                1,
+                1,
+                "QW-ACT-R13 HTML Page has a title",
+                "QW-ACT-R13"))
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelType.forenklet
 
@@ -70,7 +200,21 @@ class RegelsettValidatorsTest {
   fun invalidNonExistingTestregel() {
     val testregelList =
         listOf(
-            Testregel(1, "TR1", "QW-ACT-R12", "1.1.1", TestregelType.forenklet),
+            Testregel(
+                1,
+                "TR1",
+                1,
+                "QW-ACT-R12",
+                "1.1.1",
+                TestregelStatus.publisert,
+                LocalDate.now(),
+                TestregelInnholdstype.nett,
+                TestregelType.forenklet,
+                TestlabLocale.nb,
+                1,
+                1,
+                "QW-ACT-R12 HTML Page has a title",
+                "QW-ACT-R12"),
         )
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelType.forenklet

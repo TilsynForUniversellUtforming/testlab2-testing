@@ -129,7 +129,7 @@ class AggregeringDAO(
   }
 
   fun getTestregelIdFromSchema(testregelKey: String): Int? {
-    testregelDAO.getTestregelBySchema(testregelKey).let { testregel ->
+    testregelDAO.getTestregelByTestregelId(testregelKey).let { testregel ->
       return testregel?.id
     }
   }

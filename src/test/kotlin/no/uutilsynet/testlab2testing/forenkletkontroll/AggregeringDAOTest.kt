@@ -1,17 +1,13 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import no.uutilsynet.testlab2testing.krav.Krav
+import java.net.URL
+import java.time.Instant
 import no.uutilsynet.testlab2testing.krav.KravWcag2x
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.krav.WcagSamsvarsnivaa
-import java.net.URL
-import java.time.Instant
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelInit
-import no.uutilsynet.testlab2testing.testregel.TestregelStatus
-import no.uutilsynet.testlab2testing.testregel.TestregelType
+import no.uutilsynet.testlab2testing.testregel.*
 import org.apache.commons.lang3.RandomStringUtils
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
@@ -49,22 +45,20 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
           testregelGjennomsnittlegSideSamsvarProsent = 1.0f,
           testregelGjennomsnittlegSideBrotProsent = 1.0f)
 
-
-    var krav:KravWcag2x =
-        KravWcag2x(1,
-            "1.1.1 Ikke-tekstlig innhold (Nivå A)",
-            "Gjeldande",
-            "Suksesskriterium",
-            false,
-            true,
-            true,
-            "http://example.com",
-            "Mulig å oppfatte",
-            "1.2 Tidsbaserte medier",
-            "1.1.1",
-            WcagSamsvarsnivaa.A
-        )
-
+  var krav: KravWcag2x =
+      KravWcag2x(
+          1,
+          "1.1.1 Ikke-tekstlig innhold (Nivå A)",
+          "Gjeldande",
+          "Suksesskriterium",
+          false,
+          true,
+          true,
+          "http://example.com",
+          "Mulig å oppfatte",
+          "1.2 Tidsbaserte medier",
+          "1.1.1",
+          WcagSamsvarsnivaa.A)
 
   @Test
   fun saveAggregeringTestregel() {
@@ -103,7 +97,7 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
                 AutoTesterClient.ResultatUrls.urlAggreggeringTR))
         .thenReturn(listOf(aggregeringTestregel))
 
-    Mockito.`when`(kravregisterClient.getKrav("1.1.1")).thenReturn(Result.success(krav));
+    Mockito.`when`(kravregisterClient.getKrav("1.1.1")).thenReturn(Result.success(krav))
     // AutoTesterClient.ResultatUrls.urlAggreggeringTR)).thenReturn(aggregeringTestregel)
     aggregeringDAO.saveAggregertResultatTestregel(testKoeyring)
 
@@ -115,19 +109,21 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
 
   fun createTestMaaling(testregelNoekkel: String): Int {
     val crawlParameters = CrawlParameters(10, 10)
-    val testregel =
-        TestregelInit(
-            "QW-1",
-            "QW-1",
-            "1.1.1",
-            TestregelType.forenklet,
-            "QW-1",
-            TestregelStatus.publisert,
-            1,
-            1,
-            1)
+    //    val testregel2 =
+    //        TestregelInit(
+    //            "QW-1",
+    //            "QW-1",
+    //            "1.1.1",
+    //            TestregelType.forenklet,
+    //            "QW-1",
+    //            TestregelStatus.publisert,
+    //            1,
+    //            1,
+    //            1)
 
-    val testregelId = testregelDAO.createTestregel(testregel)
+    val testregel: TestregelInitAutomatisk = TestregelInitAutomatisk("QW-1", "QW-1", "1.1.1", 1, 1)
+
+    val testregelId = testregelDAO.createAutomatiskTestregel(testregel)
 
     val maalingId =
         maalingDao.createMaaling(

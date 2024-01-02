@@ -1,7 +1,9 @@
 package no.uutilsynet.testlab2testing.testregel
 
+import java.time.LocalDate
+import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.deleteTestregelSql
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelByNoekkelSql
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelByTestregelId
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelListSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelListByIdSql
@@ -19,13 +21,13 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   object TestregelParams {
 
     val getTestregelListSql =
-        "select id, name, krav, testregel_schema, type  from testregel order by id"
+        "select id, namn, krav, testregel_schema, modus  from testregel order by id"
 
     val getTestregelSql =
-        "select id, name, krav, testregel_schema, type from testregel where id = :id order by id"
+        "select id, namn, krav, testregel_schema, modus from testregel where id = :id order by id"
 
-    val getTestregelByNoekkelSql =
-        "select id, name, krav, testregel_schema, type from testregel where testregelnoekkel = :testregelnoekkel and versjon=(select max(versjon) from testlab2_testing.testregel where testregelnoekkel= :testregelnoekkel) order by id"
+    val getTestregelByTestregelId =
+        "select id, namn, krav, testregel_schema, modus from testregel where testregel_id = :testregelId and versjon=(select max(versjon) from testlab2_testing.testregel where testregel_id= :testregelId) order by id"
 
     val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
 
@@ -38,10 +40,10 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         """
       select 
       tr.id,
-      tr.name,
+      tr.namn,
       tr.krav,
       tr.testregel_schema,
-      tr.type
+      tr.modus
       from MaalingV1 m
         join Maaling_Testregel mt on m.id = mt.maaling_id
         join Testregel tr on mt.testregel_id = tr.id
@@ -57,28 +59,67 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getTestregelList(): List<Testregel> =
       jdbcTemplate.query(getTestregelListSql, testregelRowMapper)
 
-  fun getTestregelBySchema(testregelnoekkel: String): Testregel? =
+  fun getTestregelByTestregelId(testregelId: String): Testregel? =
       DataAccessUtils.singleResult(
           jdbcTemplate.query(
-              getTestregelByNoekkelSql,
-              mapOf("testregelnoekkel" to testregelnoekkel),
+              getTestregelByTestregelId,
+              mapOf("testregelId" to testregelId),
               testregelRowMapper))
 
   @Transactional
   fun createTestregel(testregelInit: TestregelInit): Int =
       jdbcTemplate.queryForObject(
-          "insert into testregel (name, testregel_schema, type, krav) values (:name, :testregel_schema, :type, :krav) returning id",
+          "insert into testregel (namn, testregel_schema, modus, krav) values (:name, :testregel_schema, :modus, :krav) returning id",
           mapOf(
-              "name" to testregelInit.namn,
+              "name" to testregelInit.name,
               "testregel_schema" to testregelInit.testregelSchema,
-              "type" to testregelInit.type.value,
+              "modus" to testregelInit.type.value,
               "krav" to testregelInit.krav),
+          Int::class.java)!!
+
+  @Transactional
+  fun createAutomatiskTestregel(testregelInit: TestregelInitAutomatisk): Int =
+      jdbcTemplate.queryForObject(
+          """insert into testregel (testregel_id,versjon, namn, krav, status,dato_sist_endra, type,modus, spraak, tema,testobjekt,krav_til_samsvar, testregel_schema) values 
+                  (:testregelId,:versjon, :namn, :krav, :status,:datoSistEndra, :type,:modus, :spraak, :tema,:testobjekt,:kravTilSamsvar, :testregelSchema) returning id""",
+          mapOf(
+              "testregelId" to testregelInit.testregelId,
+              "versjon" to 1,
+              "namn" to testregelInit.namn,
+              "krav" to testregelInit.krav,
+              "status" to TestregelStatus.publisert.value,
+              "datoSistEndra" to LocalDate.now(),
+              "innholdstype" to TestregelInnholdstype.nett.value,
+              "type" to TestregelType.forenklet.value,
+              "spraak" to TestlabLocale.nb.value,
+              "tema" to testregelInit.tema,
+              "testobjekt" to testregelInit.testobjekt,
+              "testregel_schema" to testregelInit.testregelId),
+          Int::class.java)!!
+
+  fun createManuellTestregel(testregelInitManuell: TestregelInitManuell): Int =
+      jdbcTemplate.queryForObject(
+          """insert into testregel (testregel_id,versjon, namn, krav, status,dato_sist_endra, modus,type, spraak, tema,testobjekt,krav_til_samsvar, testregel_schema) values 
+                  (:testregelId,:versjon, :namn, :krav, :status,:datoSistEndra, :modus,:type, :spraak, :tema,:testobjekt,:kravTilSamsvar, :testregelSchema) returning id""",
+          mapOf(
+              "testregelId" to testregelInitManuell.testregelId,
+              "versjon" to 1,
+              "namn" to testregelInitManuell.namn,
+              "krav" to testregelInitManuell.krav,
+              "status" to TestregelStatus.publisert.value,
+              "datoSistEndra" to LocalDate.now(),
+              "innholdstype" to TestregelInnholdstype.nett.value,
+              "type" to TestregelType.inngaaende.value,
+              "spraak" to TestlabLocale.nb.value,
+              "tema" to testregelInitManuell.tema,
+              "testobjekt" to testregelInitManuell.testobjekt,
+              "testregel_schema" to testregelInitManuell.testregelId),
           Int::class.java)!!
 
   @Transactional
   fun updateTestregel(testregel: Testregel) =
       jdbcTemplate.update(
-          " update testregel set name = :name, krav = :krav, testregel_schema = :testregel_schema where id = :id",
+          " update testregel set namn = :name, krav = :krav, testregel_schema = :testregel_schema where id = :id",
           mapOf(
               "id" to testregel.id,
               "name" to testregel.namn,
