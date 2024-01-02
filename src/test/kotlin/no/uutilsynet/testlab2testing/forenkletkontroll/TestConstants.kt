@@ -2,10 +2,11 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
 import java.time.Instant
+import java.time.LocalDate
+import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.testregel.*
 import no.uutilsynet.testlab2testing.testregel.TestConstants
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelType
 
 object TestConstants {
   val uutilsynetLoeysing =
@@ -18,11 +19,19 @@ object TestConstants {
   val testregel =
       Testregel(
           1,
-          TestConstants.name,
           "QW-ACT-12",
+          1,
+          TestConstants.name,
           TestConstants.testregelTestKrav,
+          TestregelStatus.publisert,
+          LocalDate.now(),
+          TestregelInnholdstype.nett,
           TestregelType.forenklet,
-      )
+          TestlabLocale.nb,
+          1,
+          1,
+          "QW-ACT-12",
+          TestConstants.testregelSchemaForenklet)
 
   val testRegelList = listOf(testregel)
 

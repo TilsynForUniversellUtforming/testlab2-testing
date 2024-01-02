@@ -3,15 +3,15 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
+import java.time.LocalDate
+import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.crawlResultat
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testKoeyringList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelType
+import no.uutilsynet.testlab2testing.testregel.*
 import org.assertj.core.api.Assertions
 import org.hamcrest.CoreMatchers
 import org.junit.jupiter.api.BeforeEach
@@ -75,7 +75,23 @@ class MaalingResourceMockedTest {
     `when`(maalingDAO.getMaaling(id)).thenReturn(maaling)
     `when`(testregelDAO.getTestreglarForMaaling(id))
         .thenReturn(
-            Result.success(listOf(Testregel(1, "name", "QW", "1.2.3", TestregelType.forenklet))))
+            Result.success(
+                listOf(
+                    Testregel(
+                        1,
+                        "QW",
+                        1,
+                        "name",
+                        "1.2.3",
+                        TestregelStatus.publisert,
+                        LocalDate.now(),
+                        TestregelInnholdstype.nett,
+                        TestregelType.forenklet,
+                        TestlabLocale.nb,
+                        1,
+                        1,
+                        "QW",
+                        "1.2.3"))))
 
     val result = maalingResource.putNewStatus(id, status)
 
@@ -93,7 +109,23 @@ class MaalingResourceMockedTest {
     val maalingTesting =
         Maaling.Testing(id, "Testmaaling", maalingDateStart, listOf(testKoeyringList[0]))
 
-    val testregelList = listOf(Testregel(1, "name", "QW-ACT-R12", "1.2.3", TestregelType.forenklet))
+    val testregelList =
+        listOf(
+            Testregel(
+                1,
+                "QW-ACT-R12",
+                1,
+                "name",
+                "1.2.3",
+                TestregelStatus.publisert,
+                LocalDate.now(),
+                TestregelInnholdstype.nett,
+                TestregelType.forenklet,
+                TestlabLocale.nb,
+                1,
+                1,
+                "QW-ACT-R12",
+                "QW-ACT-R12"))
 
     val nettsider =
         listOf(

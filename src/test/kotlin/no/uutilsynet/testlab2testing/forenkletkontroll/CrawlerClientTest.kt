@@ -2,7 +2,9 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
+import java.time.LocalDate
 import kotlinx.coroutines.runBlocking
+import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.*
@@ -18,7 +20,6 @@ import org.springframework.test.web.client.ExpectedCount.manyTimes
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
-import java.time.LocalDate
 
 @RestClientTest(CrawlerClient::class, CrawlerProperties::class)
 @DisplayName("Crawler test")
@@ -50,9 +51,11 @@ class CrawlerClientTest {
                 LocalDate.now(),
                 TestregelInnholdstype.nett,
                 TestregelType.forenklet,
-                L
-                TestConstants.testregelTestKrav,
-                TestregelType.forenklet))
+                TestlabLocale.nb,
+                1,
+                1,
+                "Er rett",
+                TestConstants.testregelSchemaForenklet))
     val maaling =
         Maaling.Planlegging(
             1, "testmåling", maalingDateStart, loeysingList, testregelList, CrawlParameters())
