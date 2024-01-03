@@ -15,3 +15,5 @@ add column tema int,
 add column type text not null default 'nett',
 add column testobjekt int,
 add column krav_til_samsvar text;
+
+update testregel set testregel_id = namn where testregel_id is null;
