@@ -102,9 +102,9 @@ class AggregeringDAO(
     return jdbcTemplate.query(query, params) { rs, _ ->
       AggregertResultatTestregel(
           maalingId = rs.getInt("maaling_id"),
-          testregelId = rs.getString("testregel_id"),
+          testregelId = getTestregelId(rs.getInt("testregel_id")),
           loeysing = getLoeysingFromId(rs.getInt("loeysing_id")),
-          suksesskriterium = rs.getString("suksesskriterium"),
+          suksesskriterium = getSuksesskriteriumFromKrav(rs.getInt("suksesskriterium")),
           fleireSuksesskriterium = sqlArrayToList(rs.getArray("fleire_suksesskriterium")),
           talElementSamsvar = rs.getInt("tal_element_samsvar"),
           talElementBrot = rs.getInt("tal_element_brot"),
@@ -143,6 +143,18 @@ class AggregeringDAO(
   fun getKravFromSuksesskritterium(suksesskriterium: String): Int {
     kravregisterClient.getKrav(suksesskriterium).let { krav ->
       return krav.getOrThrow().id
+    }
+  }
+
+  fun getSuksesskriteriumFromKrav(kravId: Int): String {
+    kravregisterClient.getWcagKrav(kravId).let { krav ->
+      return krav.getOrThrow().suksesskriterium
+    }
+  }
+
+  fun getTestregelId(idTestregel: Int): String {
+    testregelDAO.getTestregel(idTestregel).let { testregel ->
+      return testregel?.testregelId.toString()
     }
   }
 }
