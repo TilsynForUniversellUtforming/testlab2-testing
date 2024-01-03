@@ -29,7 +29,7 @@ class TestregelIntegrationTests(
   @AfterAll
   fun cleanup() {
     testregelDAO.jdbcTemplate.update(
-        "delete from testregel where name = :name", mapOf("name" to name))
+        "delete from testregel where namn = :name", mapOf("name" to name))
   }
 
   @Test

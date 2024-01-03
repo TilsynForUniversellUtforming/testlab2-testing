@@ -27,7 +27,7 @@ object RegelsettTestConstants {
               TestlabLocale.nb,
               1,
               1,
-              "QW-ACT-R1 HTML Page has a title",
+              "HTML Page has a title",
               "QW-ACT-R1"),
           Testregel(
               2,
