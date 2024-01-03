@@ -105,6 +105,7 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
         .thenReturn(Result.success(listOf(testLoeysing)))
 
     Mockito.`when`(kravregisterClient.getKrav("1.1.1")).thenReturn(Result.success(krav))
+    Mockito.`when`(kravregisterClient.getWcagKrav(1)).thenReturn(Result.success(krav))
 
     aggregeringDAO.saveAggregertResultatTestregel(testKoeyring)
 
@@ -112,7 +113,8 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
 
     assert(!retrievedAggregering.isEmpty())
     assert(retrievedAggregering[0].maalingId == maalingId)
-    assert(retrievedAggregering[0].testregelId.toInt() == testregelId)
+    assert(retrievedAggregering[0].testregelId == aggregeringTestregel.testregelId)
+    assert(retrievedAggregering[0].suksesskriterium == aggregeringTestregel.suksesskriterium)
   }
 
   fun createTestMaaling(testregelNoekkel: String): Int {
