@@ -65,8 +65,12 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
 
     val testregelNoekkel = RandomStringUtils.randomAlphanumeric(5)
     aggregeringTestregel.testregelId = testregelNoekkel
+
     val maalingId = createTestMaaling(testregelNoekkel)
+    val testregelId = testregelDAO.getTestregelByTestregelId(testregelNoekkel)?.id
     aggregeringTestregel.maalingId = maalingId
+
+    val testLoeysing = Loeysing(1, "test", URL("http://localhost:8080/"), "123456789")
 
     val testKoeyring: TestKoeyring.Ferdig =
         TestKoeyring.Ferdig(
@@ -74,7 +78,7 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
                 CrawlResultat.Ferdig(
                     antallNettsider = 1,
                     statusUrl = URL("http://localhost:8080/"),
-                    loeysing = Loeysing(1, "test", URL("http://localhost:8080/"), "123456789"),
+                    loeysing = testLoeysing,
                     sistOppdatert = Instant.now(),
                     nettsider = emptyList()),
             sistOppdatert = Instant.now(),
@@ -97,31 +101,25 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
                 AutoTesterClient.ResultatUrls.urlAggreggeringTR))
         .thenReturn(listOf(aggregeringTestregel))
 
+    Mockito.`when`(loeysingsRegisterClient.getMany(listOf(1)))
+        .thenReturn(Result.success(listOf(testLoeysing)))
+
     Mockito.`when`(kravregisterClient.getKrav("1.1.1")).thenReturn(Result.success(krav))
-    // AutoTesterClient.ResultatUrls.urlAggreggeringTR)).thenReturn(aggregeringTestregel)
+
     aggregeringDAO.saveAggregertResultatTestregel(testKoeyring)
 
     val retrievedAggregering = aggregeringDAO.getAggregertResultatTestregelForMaaling(maalingId)
+
     assert(!retrievedAggregering.isEmpty())
     assert(retrievedAggregering[0].maalingId == maalingId)
-    assert(retrievedAggregering[0].testregelId == aggregeringTestregel.testregelId)
+    assert(retrievedAggregering[0].testregelId.toInt() == testregelId)
   }
 
   fun createTestMaaling(testregelNoekkel: String): Int {
     val crawlParameters = CrawlParameters(10, 10)
-    //    val testregel2 =
-    //        TestregelInit(
-    //            "QW-1",
-    //            "QW-1",
-    //            "1.1.1",
-    //            TestregelType.forenklet,
-    //            "QW-1",
-    //            TestregelStatus.publisert,
-    //            1,
-    //            1,
-    //            1)
 
-    val testregel: TestregelInitAutomatisk = TestregelInitAutomatisk("QW-1", "QW-1", "1.1.1", 1, 1)
+    val testregel =
+        TestregelInitAutomatisk(testregelNoekkel, "QW-1", "1.1.1", 1, 1, testregelNoekkel)
 
     val testregelId = testregelDAO.createAutomatiskTestregel(testregel)
 

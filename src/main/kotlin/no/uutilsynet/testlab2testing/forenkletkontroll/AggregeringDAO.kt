@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
+import java.util.*
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
@@ -34,7 +35,7 @@ class AggregeringDAO(
             .addValue(
                 "suksesskriterium",
                 getKravFromSuksesskritterium(aggregertResultatTestregel.suksesskriterium),
-                java.sql.Types.VARCHAR)
+                java.sql.Types.INTEGER)
             .addValue(
                 "fleire_suksesskriterium",
                 aggregertResultatTestregel.fleireSuksesskriterium.toTypedArray(),
@@ -104,10 +105,10 @@ class AggregeringDAO(
           testregelId = rs.getString("testregel_id"),
           loeysing = getLoeysingFromId(rs.getInt("loeysing_id")),
           suksesskriterium = rs.getString("suksesskriterium"),
-          fleireSuksesskriterium = rs.getArray("fleire_suksesskriterium").array as List<String>,
+          fleireSuksesskriterium = sqlArrayToList(rs.getArray("fleire_suksesskriterium")),
           talElementSamsvar = rs.getInt("tal_element_samsvar"),
           talElementBrot = rs.getInt("tal_element_brot"),
-          talElementVarsel = rs.getInt("tal_elemen_tvarsel"),
+          talElementVarsel = rs.getInt("tal_element_varsel"),
           talElementIkkjeForekomst = rs.getInt("tal_element_ikkje_forekomst"),
           talSiderSamsvar = rs.getInt("tal_sider_samsvar"),
           talSiderBrot = rs.getInt("tal_sider_brot"),
@@ -126,6 +127,11 @@ class AggregeringDAO(
       }
     }
     throw RuntimeException("Fant ikkje løsning med id $loeysingId")
+  }
+
+  fun sqlArrayToList(sqlArray: java.sql.Array): List<String> {
+    val array = Arrays.asList(sqlArray.getArray())
+    return array.map { it.toString() }
   }
 
   fun getTestregelIdFromSchema(testregelKey: String): Int? {
