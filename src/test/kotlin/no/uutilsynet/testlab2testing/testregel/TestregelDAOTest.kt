@@ -19,7 +19,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
   @AfterAll
   fun cleanup() {
     testregelDAO.jdbcTemplate.update(
-        "delete from testregel where name = :name", mapOf("name" to name))
+        "delete from testregel where namn = :name", mapOf("name" to name))
   }
 
   @Test
@@ -66,25 +66,15 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
   @DisplayName("Skal oppdatere testregel i DAO")
   fun updateTestregel() {
     val testregelInit =
-        TestregelInitManuell(
-            "test_skal_slettes_1",
-            "QW-ACT-R69",
-            1,
-            1,
-            "1.4.12 Tekstavstand",
-            "QW-ACT-R69",
-            TestregelType.forenklet,
-            TestregelStatus.publisert,
-            1,
-            1)
-
+        TestregelInit(
+            "test_skal_slettes_1", "QW-ACT-R69", "1.4.12 Tekstavstand", TestregelType.forenklet)
     val id = createTestregel(testregelInit)
 
     val oldTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(oldTestregel).isNotNull
     Assertions.assertThat(oldTestregel?.krav).isEqualTo(testregelInit.krav)
     Assertions.assertThat(oldTestregel?.testregelSchema).isEqualTo(testregelInit.testregelSchema)
-    Assertions.assertThat(oldTestregel?.namn).isEqualTo(testregelInit.namn)
+    Assertions.assertThat(oldTestregel?.namn).isEqualTo(testregelInit.name)
 
     oldTestregel
         ?.copy(krav = testregelTestKrav, testregelSchema = testregelSchemaForenklet, namn = name)
@@ -98,17 +88,12 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
   }
 
   private fun createTestregel(
-      testregelInit: TestregelInitManuell =
-          TestregelInitManuell(
+      testregelInit: TestregelInit =
+          TestregelInit(
               name,
-              name,
-              1,
-              1,
               testregelTestKrav,
               testregelSchemaForenklet,
               TestregelType.forenklet,
-              TestregelStatus.publisert,
-              1,
-              1)
-  ) = testregelDAO.createManuellTestregel(testregelInit)
+          )
+  ) = testregelDAO.createTestregel(testregelInit)
 }

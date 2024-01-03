@@ -12,7 +12,8 @@ data class TestregelInitAutomatisk(
     val namn: String,
     val krav: String,
     val tema: Int,
-    val testobjekt: Int
+    val testobjekt: Int,
+    val testregelSchema: String,
 )
 
 data class TestregelInitManuell(

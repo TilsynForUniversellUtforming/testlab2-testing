@@ -9,7 +9,7 @@ fun validateRegelsettTestreglar(
     type: TestregelType,
     existingTestregelList: List<Testregel>
 ): Result<List<Int>> {
-  val testregelIdsOfType = existingTestregelList.filter { it.type == type }.map { it.id }
+  val testregelIdsOfType = existingTestregelList.filter { it.modus == type }.map { it.id }
 
   return validateIdList(testregelIdList, testregelIdsOfType, "testregelIdList")
 }
