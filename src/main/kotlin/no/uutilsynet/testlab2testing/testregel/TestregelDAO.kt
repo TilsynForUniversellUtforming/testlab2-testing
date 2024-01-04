@@ -51,8 +51,14 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       DataAccessUtils.singleResult(
           jdbcTemplate.query(getTestregelSql, mapOf("id" to id), testregelRowMapper))
 
+  fun getTestregelResponse(id: Int): TestregelResponse? =
+      getTestregel(id)?.let { TestregelResponse(it) }
+
   fun getTestregelList(): List<Testregel> =
       jdbcTemplate.query(getTestregelListSql, testregelRowMapper)
+
+  fun getTestregelListResponse(): List<TestregelResponse> =
+      getTestregelList().map { TestregelResponse(it) }
 
   fun getTestregelByTestregelId(testregelId: String): Testregel? =
       DataAccessUtils.singleResult(
@@ -148,6 +154,11 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     jdbcTemplate.query(maalingTestregelSql, mapOf("id" to maalingId), testregelRowMapper)
   }
 
+  fun getTestregelResponseForMaaling(maalingId: Int): Result<List<TestregelResponse>> =
+      runCatching {
+        getTestreglarForMaaling(maalingId).getOrThrow().map { TestregelResponse(it) }
+      }
+
   fun getTestreglarBySak(sakId: Int): List<Testregel> =
       jdbcTemplate.query(
           """
@@ -159,4 +170,14 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               .trimIndent(),
           mapOf("sak_id" to sakId),
           DataClassRowMapper.newInstance(Testregel::class.java))
+
+  //    fun Testregel.toTestregelResponse(): TestregelResponse {
+  //        return TestregelResponse(
+  //            id,
+  //            namn,
+  //            testregelSchema,
+  //            krav,
+  //            modus,
+  //        )
+  //    }
 }

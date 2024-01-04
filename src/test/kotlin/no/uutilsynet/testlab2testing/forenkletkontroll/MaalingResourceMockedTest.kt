@@ -46,6 +46,8 @@ class MaalingResourceMockedTest {
 
   @MockBean private lateinit var crawlerClient: CrawlerClient
 
+  @MockBean private lateinit var aggregeringDAO: AggregeringDAO
+
   private lateinit var maalingResource: MaalingResource
 
   private val objectMapper =
@@ -61,7 +63,8 @@ class MaalingResourceMockedTest {
             testregelDAO,
             utvalDAO,
             crawlerClient,
-            autoTesterClient)
+            autoTesterClient,
+            aggregeringDAO)
   }
 
   @Test

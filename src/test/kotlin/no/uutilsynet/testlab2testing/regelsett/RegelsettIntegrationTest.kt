@@ -74,7 +74,7 @@ class RegelsettIntegrationTest(
   fun getRegelsettList() {
     val regelsettType = object : ParameterizedTypeReference<List<RegelsettBase>>() {}
     val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, Regelsett::class.java)
+    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
     val responseIdList =
         restTemplate
             .exchange(regelsettBaseUri, HttpMethod.GET, HttpEntity.EMPTY, regelsettType)
@@ -87,9 +87,9 @@ class RegelsettIntegrationTest(
   @Test
   @DisplayName("Skal kunne hente ei liste med regelsett med testreglar")
   fun getRegelsettListWithTestreglar() {
-    val regelsettType = object : ParameterizedTypeReference<List<Regelsett>>() {}
+    val regelsettType = object : ParameterizedTypeReference<List<RegelsettResponse>>() {}
     val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, Regelsett::class.java)
+    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
     val response =
         restTemplate
             .exchange(
@@ -108,7 +108,7 @@ class RegelsettIntegrationTest(
   fun getRegelsettListActiveInactive() {
     val regelsettType = object : ParameterizedTypeReference<List<RegelsettBase>>() {}
     val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, Regelsett::class.java)
+    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
 
     restTemplate.exchange<Unit>(
         "$regelsettBaseUri/${regelsett.id}", HttpMethod.DELETE, HttpEntity.EMPTY)
@@ -141,7 +141,7 @@ class RegelsettIntegrationTest(
     val nameUpdate = regelsettName
 
     val location = createDefaultRegelsett(namn = name)
-    val regelsett = restTemplate.getForObject(location, Regelsett::class.java)
+    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
     assertThat(regelsett.namn).isEqualTo(name)
 
     restTemplate.exchange(
@@ -156,7 +156,7 @@ class RegelsettIntegrationTest(
                 testregelIdList = regelsett.testregelList.map { it.id })),
         Unit::class.java)
 
-    val regelsettAfterUpdate = restTemplate.getForObject(location, Regelsett::class.java)
+    val regelsettAfterUpdate = restTemplate.getForObject(location, RegelsettResponse::class.java)
 
     assertThat(regelsettAfterUpdate.namn).isEqualTo(nameUpdate)
   }
@@ -167,7 +167,7 @@ class RegelsettIntegrationTest(
     val nameUpdate = ""
 
     val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, Regelsett::class.java)
+    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
     assertThat(regelsett.namn).isEqualTo(regelsettName)
 
     val response =
@@ -192,7 +192,7 @@ class RegelsettIntegrationTest(
       "Skal ikkje kunne oppdatere eit regelsett til ein annan type enn typen til testrelgane, eit regelsett og dets typar må vera same type")
   fun updateRegelsettIllegalTestregelType() {
     val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, Regelsett::class.java)
+    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
     assertThat(regelsett.type).isEqualTo(TestregelType.forenklet)
 
     val response =
@@ -218,7 +218,7 @@ class RegelsettIntegrationTest(
   fun deleteRegelsett() {
     val regelsettType = object : ParameterizedTypeReference<List<RegelsettBase>>() {}
     val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, Regelsett::class.java)
+    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
 
     val responseActiveIdList =
         restTemplate

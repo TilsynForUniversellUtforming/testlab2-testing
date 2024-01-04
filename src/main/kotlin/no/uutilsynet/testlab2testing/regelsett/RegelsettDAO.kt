@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.regelsett
 
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
+import no.uutilsynet.testlab2testing.testregel.TestregelResponse
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -26,6 +27,19 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return Regelsett(this.id, this.namn, this.type, this.standard, testregelList)
   }
 
+  fun toRegelsettResponse(regelsett: Regelsett): RegelsettResponse? {
+    return RegelsettResponse(
+        regelsett.id,
+        regelsett.namn,
+        regelsett.type,
+        regelsett.standard,
+        regelsett.testregelList.map { TestregelResponse(it) })
+  }
+
+  fun getRegelsettResponse(int: Int): RegelsettResponse? {
+    return getRegelsett(int)?.let { toRegelsettResponse(it) }
+  }
+
   fun getRegelsett(id: Int): Regelsett? {
     val regelsettDTO =
         DataAccessUtils.singleResult(
@@ -47,6 +61,9 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getRegelsettTestreglarList(includeInactive: Boolean): List<Regelsett> =
       getRegelsettBaseList(includeInactive).map { it.toRegelsett() }
+
+  fun getRegelsettResponseList(includeInactive: Boolean): List<RegelsettResponse> =
+      getRegelsettTestreglarList(includeInactive).map { toRegelsettResponse(it)!! }
 
   @Transactional
   fun createRegelsett(regelsett: RegelsettCreate): Int {

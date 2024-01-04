@@ -49,6 +49,7 @@ class MaalingResource(
     val utvalDAO: UtvalDAO,
     val crawlerClient: CrawlerClient,
     val autoTesterClient: AutoTesterClient,
+    val aggregeringDAO: AggregeringDAO
 ) {
 
   data class NyMaalingDTO(
@@ -190,39 +191,46 @@ class MaalingResource(
       @PathVariable maalingId: Int,
       @RequestParam aggregeringstype: String = "testregel"
   ): ResponseEntity<Any> {
-    val aggregeringURL =
-        when (aggregeringstype) {
-          "testresultat" -> AutoTesterClient.ResultatUrls.urlAggreggeringTR
-          "suksesskriterium" -> AutoTesterClient.ResultatUrls.urlAggregeringSK
-          "side" -> AutoTesterClient.ResultatUrls.urlAggregeringSide
-          "sideTestregel" -> AutoTesterClient.ResultatUrls.urlAggregeringSideTR
-          else -> throw IllegalArgumentException("Ugyldig aggregeringstype: $aggregeringstype")
-        }
-    return maalingDAO
-        .getMaaling(maalingId)
-        ?.let { maaling ->
-          runCatching {
-            if (maaling is Maaling.TestingFerdig) maaling
-            else throw IllegalArgumentException("Måling $maalingId er ikkje ferdig testa")
+    if (aggregeringstype == "testresultat") {
+      return aggregeringDAO.getAggregertResultatTestregelForMaaling(maalingId).let {
+        ResponseEntity.ok(it)
+      }
+    } else {
+
+      val aggregeringURL =
+          when (aggregeringstype) {
+            "testresultat" -> AutoTesterClient.ResultatUrls.urlAggreggeringTR
+            "suksesskriterium" -> AutoTesterClient.ResultatUrls.urlAggregeringSK
+            "side" -> AutoTesterClient.ResultatUrls.urlAggregeringSide
+            "sideTestregel" -> AutoTesterClient.ResultatUrls.urlAggregeringSideTR
+            else -> throw IllegalArgumentException("Ugyldig aggregeringstype: $aggregeringstype")
           }
-        }
-        ?.map(Maaling.TestingFerdig::testKoeyringar)
-        ?.map { testKoeyringar -> testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>() }
-        ?.mapCatching { ferdigeTestKoeyringar ->
-          runBlocking(Dispatchers.IO) {
-            autoTesterClient
-                .fetchResultat(ferdigeTestKoeyringar, aggregeringURL)
-                .toSingleResult()
-                .getOrThrow()
+      return maalingDAO
+          .getMaaling(maalingId)
+          ?.let { maaling ->
+            runCatching {
+              if (maaling is Maaling.TestingFerdig) maaling
+              else throw IllegalArgumentException("Måling $maalingId er ikkje ferdig testa")
+            }
           }
-        }
-        ?.fold(
-            { testResultatList -> ResponseEntity.ok(testResultatList) },
-            { error ->
-              logger.error("Feila da vi skulle hente aggregering for målinga $maalingId", error)
-              ResponseEntity.internalServerError().body(error.firstMessage())
-            })
-        ?: ResponseEntity.notFound().build()
+          ?.map(Maaling.TestingFerdig::testKoeyringar)
+          ?.map { testKoeyringar -> testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>() }
+          ?.mapCatching { ferdigeTestKoeyringar ->
+            runBlocking(Dispatchers.IO) {
+              autoTesterClient
+                  .fetchResultat(ferdigeTestKoeyringar, aggregeringURL)
+                  .toSingleResult()
+                  .getOrThrow()
+            }
+          }
+          ?.fold(
+              { testResultatList -> ResponseEntity.ok(testResultatList) },
+              { error ->
+                logger.error("Feila da vi skulle hente aggregering for målinga $maalingId", error)
+                ResponseEntity.internalServerError().body(error.firstMessage())
+              })
+          ?: ResponseEntity.notFound().build()
+    }
   }
 
   @GetMapping("{maalingId}/crawlresultat/nettsider")

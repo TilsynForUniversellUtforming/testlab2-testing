@@ -1,11 +1,14 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import java.net.URI
+import java.time.LocalDate
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHandling
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
+import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
+import no.uutilsynet.testlab2testing.testregel.TestregelResponse.Companion.validateTestregel
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -27,8 +30,8 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
   private val locationForId: (Int) -> URI = { id -> URI("/v1/testreglar/${id}") }
 
   @GetMapping("{id}")
-  fun getTestregel(@PathVariable id: Int): ResponseEntity<Testregel> =
-      testregelDAO.getTestregel(id)?.let { ResponseEntity.ok(it) }
+  fun getTestregel(@PathVariable id: Int): ResponseEntity<TestregelResponse> =
+      testregelDAO.getTestregelResponse(id)?.let { ResponseEntity.ok(it) }
           ?: ResponseEntity.notFound().build()
 
   @GetMapping
@@ -36,9 +39,9 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
       runCatching {
             if (maalingId != null) {
               logger.debug("Henter testreglar for måling $maalingId")
-              ResponseEntity.ok(testregelDAO.getTestreglarForMaaling(maalingId))
+              ResponseEntity.ok(testregelDAO.getTestregelResponseForMaaling(maalingId))
             } else {
-              ResponseEntity.ok(testregelDAO.getTestregelList())
+              ResponseEntity.ok(testregelDAO.getTestregelListResponse())
             }
           }
           .getOrElse {
@@ -62,9 +65,10 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
           locationForId)
 
   @PutMapping
-  fun updateTestregel(@RequestBody testregel: Testregel): ResponseEntity<out Any> =
+  fun updateTestregel(@RequestBody testregelrequest: TestregelResponse): ResponseEntity<out Any> =
       executeWithErrorHandling {
-        testregel.validateTestregel().getOrThrow()
+        testregelrequest.validateTestregel().getOrThrow()
+        val testregel = testregelResponseToTestregel(testregelrequest)
         testregelDAO.updateTestregel(testregel)
       }
 
@@ -86,4 +90,29 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
         }
         testregelDAO.deleteTestregel(testregelId)
       }
+
+  fun testregelResponseToTestregel(testregelResponse: TestregelResponse): Testregel {
+    return Testregel(
+        testregelResponse.id,
+        testregelResponse.name,
+        1,
+        testregelResponse.name,
+        testregelResponse.krav,
+        TestregelStatus.publisert,
+        LocalDate.now(),
+        TestregelInnholdstype.nett,
+        testregelResponse.type,
+        TestlabLocale.nb,
+        1,
+        1,
+        testregelResponse.krav,
+        testregelResponse.testregelSchema,
+    )
+  }
+
+  fun testregelListToTestregelResponseList(
+      testregelResultList: Result<List<Testregel>>
+  ): Result<List<TestregelResponse>> {
+    return testregelResultList.map { it.map { TestregelResponse(it) } }
+  }
 }
