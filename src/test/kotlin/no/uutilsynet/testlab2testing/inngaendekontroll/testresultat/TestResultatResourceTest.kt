@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 import java.net.URI
 import java.time.Instant
 import kotlin.properties.Delegates
+import no.uutilsynet.testlab2testing.common.Brukar
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll.Svar
@@ -56,7 +57,8 @@ class TestResultatResourceTest(
                 "sakId" to sakId,
                 "loeysingId" to 1,
                 "testregelId" to 1,
-                "nettsideId" to nettside.id),
+                "nettsideId" to nettside.id,
+                "brukar" to mapOf("brukarnamn" to "testbrukar@digdir.no", "namn" to "Test Brukar")),
             Unit::class.java)
 
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.CREATED)
@@ -72,6 +74,14 @@ class TestResultatResourceTest(
     val testresultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
     val endret = testresultat.copy(svar = svar)
     assertDoesNotThrow { restTemplate.put(location, endret) }
+  }
+
+  @Test
+  @Order(3)
+  @DisplayName("vi skal kunne hente ut et testresultat, og den skal inneholde brukaren")
+  fun skalInneholdeBrukar() {
+    val resultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
+    assertThat(resultat.brukar).isEqualTo(Brukar("testbrukar@digdir.no", "Test Brukar"))
   }
 
   @Test
