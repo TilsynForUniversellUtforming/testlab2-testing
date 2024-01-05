@@ -1,14 +1,14 @@
 package no.uutilsynet.testlab2testing.regelsett
 
-import no.uutilsynet.testlab2testing.testregel.TestregelResponse
-import no.uutilsynet.testlab2testing.testregel.TestregelType
+import no.uutilsynet.testlab2testing.testregel.TestregelDTO
+import no.uutilsynet.testlab2testing.testregel.TestregelModus
 
 data class RegelsettResponse(
     override val id: Int,
     override val namn: String,
-    override val type: TestregelType,
+    override val type: TestregelModus,
     override val standard: Boolean,
-    val testregelList: List<TestregelResponse>,
+    val testregelList: List<TestregelDTO>,
 ) :
     RegelsettBase(
         id,

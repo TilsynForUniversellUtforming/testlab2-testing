@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.regelsett
 
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
-import no.uutilsynet.testlab2testing.testregel.TestregelResponse
+import no.uutilsynet.testlab2testing.testregel.TestregelDTO
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -19,6 +19,7 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         from regelsett_testregel rt
           join testregel tr on tr.id = rt.testregel_id
         where rt.regelsett_id = :regelsett_id
+        order by tr.id
       """
                 .trimIndent(),
             mapOf("regelsett_id" to this.id),
@@ -27,13 +28,13 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return Regelsett(this.id, this.namn, this.type, this.standard, testregelList)
   }
 
-  fun toRegelsettResponse(regelsett: Regelsett): RegelsettResponse? {
+  fun toRegelsettResponse(regelsett: Regelsett): RegelsettResponse {
     return RegelsettResponse(
         regelsett.id,
         regelsett.namn,
         regelsett.type,
         regelsett.standard,
-        regelsett.testregelList.map { TestregelResponse(it) })
+        regelsett.testregelList.map { TestregelDTO(it) })
   }
 
   fun getRegelsettResponse(int: Int): RegelsettResponse? {

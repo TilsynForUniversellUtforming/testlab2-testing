@@ -1,11 +1,13 @@
 package no.uutilsynet.testlab2testing.regelsett
 
+import java.time.*
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettName
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettStandard
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestregelIdList
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestregelList
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettType
-import no.uutilsynet.testlab2testing.testregel.TestregelType
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelModus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DisplayName
@@ -17,7 +19,10 @@ import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
+class RegelsettDAOTest(
+    @Autowired val regelsettDAO: RegelsettDAO,
+    @Autowired val testregelDAO: TestregelDAO
+) {
 
   @AfterAll
   fun cleanup() {
@@ -29,7 +34,7 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
   @DisplayName("Skal kunne opprette et regelsett")
   fun createRegelsett() {
     val id = assertDoesNotThrow { createTestRegelsett() }
-    val regelsett = regelsettDAO.getRegelsett(id)
+    val regelsett = regelsettDAO.getRegelsettResponse(id)
     assertThat(regelsett).isNotNull
   }
 
@@ -38,7 +43,6 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
   fun getRegelsett() {
     val id = createTestRegelsett()
     val regelsett = regelsettDAO.getRegelsett(id)
-
     val expected =
         Regelsett(id, regelsettName, regelsettType, regelsettStandard, regelsettTestregelList)
 
@@ -209,15 +213,19 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
 
   private fun createTestRegelsett(
       namn: String = regelsettName,
-      type: TestregelType = regelsettType,
+      type: TestregelModus = regelsettType,
       standard: Boolean = regelsettStandard,
       testregelIdList: List<Int> = regelsettTestregelIdList,
-  ): Int =
-      regelsettDAO.createRegelsett(
-          RegelsettCreate(
-              namn,
-              type,
-              standard,
-              testregelIdList,
-          ))
+  ): Int {
+
+    regelsettTestregelList.forEach { testregel -> testregelDAO.updateTestregel(testregel) }
+
+    return regelsettDAO.createRegelsett(
+        RegelsettCreate(
+            namn,
+            type,
+            standard,
+            testregelIdList,
+        ))
+  }
 }

@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.testregel
 
-enum class TestregelType(val value: String) {
+enum class TestregelModus(val value: String) {
   forenklet("forenklet"),
   manuell("manuell")
 }

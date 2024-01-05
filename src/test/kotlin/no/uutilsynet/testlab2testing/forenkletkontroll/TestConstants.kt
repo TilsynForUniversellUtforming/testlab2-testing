@@ -2,7 +2,6 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
 import java.time.Instant
-import java.time.LocalDate
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.*
@@ -24,9 +23,9 @@ object TestConstants {
           TestConstants.name,
           TestConstants.testregelTestKrav,
           TestregelStatus.publisert,
-          LocalDate.now(),
+          Instant.now(),
           TestregelInnholdstype.nett,
-          TestregelType.forenklet,
+          TestregelModus.forenklet,
           TestlabLocale.nb,
           1,
           1,

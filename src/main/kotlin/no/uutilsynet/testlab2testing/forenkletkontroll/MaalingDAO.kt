@@ -495,25 +495,25 @@ class MaalingDAO(
               values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :url_fullt_resultat, :url_brot, :url_agg_tr, :url_agg_sk, :url_agg_side,:url_agg_side_tr,:url_agg_loeysing)
               returning id
             """
-                .trimIndent(),
-            mapOf(
-                "maaling_id" to maalingId,
-                "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
-                "status" to status(testKoeyring),
-                "status_url" to statusURL(testKoeyring),
-                "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
-                "url_fullt_resultat" to testKoeyring.lenker?.urlFulltResultat?.toString(),
-                "url_brot" to testKoeyring.lenker?.urlBrot?.toString(),
-                "url_agg_tr" to testKoeyring.lenker?.urlAggregeringTR?.toString(),
-                "url_agg_sk" to testKoeyring.lenker?.urlAggregeringSK?.toString(),
-                "url_agg_side" to testKoeyring.lenker?.urlAggregeringSide?.toString(),
-                "url_agg_side_tr" to testKoeyring.lenker?.urlAggregeringSideTR?.toString(),
-                "url_agg_loeysing" to testKoeyring.lenker?.urlAggregeringLoeysing?.toString()),
-            Int::class.java)
-      }
-      else -> {
-        jdbcTemplate.queryForObject(
-            """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding) 
+                    .trimIndent(),
+                mapOf(
+                    "maaling_id" to maalingId,
+                    "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
+                    "status" to status(testKoeyring),
+                    "status_url" to statusURL(testKoeyring),
+                    "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
+                    "url_fullt_resultat" to testKoeyring.lenker?.urlFulltResultat?.toString(),
+                    "url_brot" to testKoeyring.lenker?.urlBrot?.toString(),
+                    "url_agg_tr" to testKoeyring.lenker?.urlAggregeringTR?.toString(),
+                    "url_agg_sk" to testKoeyring.lenker?.urlAggregeringSK?.toString(),
+                    "url_agg_side" to testKoeyring.lenker?.urlAggregeringSide?.toString(),
+                    "url_agg_side_tr" to testKoeyring.lenker?.urlAggregeringSideTR?.toString(),
+                    "url_agg_loeysing" to testKoeyring.lenker?.urlAggregeringLoeysing?.toString()),
+                Int::class.java)
+          }
+          else -> {
+            jdbcTemplate.queryForObject(
+                """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding) 
                 values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :feilmelding)
                 returning id
             """

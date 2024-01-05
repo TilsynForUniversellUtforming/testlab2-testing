@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.testregel
 
-import java.time.LocalDate
+import java.time.Instant
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateTestregelId
@@ -12,9 +12,9 @@ data class Testregel(
     val namn: String,
     val krav: String,
     val status: TestregelStatus,
-    val datoSistEndra: LocalDate,
+    val datoSistEndra: Instant = Instant.now(),
     val type: TestregelInnholdstype,
-    val modus: TestregelType,
+    val modus: TestregelModus,
     val spraak: TestlabLocale,
     val tema: Int?,
     val testobjekt: Int?,
@@ -27,7 +27,6 @@ data class Testregel(
       val krav = validateKrav(this.krav).getOrThrow()
       val testregelId = validateTestregelId(this.testregelId).getOrThrow()
       val schema = validateSchema(this.testregelSchema, this.modus).getOrThrow()
-      val sistEndra = LocalDate.now()
 
       Testregel(
           this.id,
@@ -36,7 +35,7 @@ data class Testregel(
           name,
           krav,
           this.status,
-          sistEndra,
+          this.datoSistEndra,
           this.type,
           modus,
           this.spraak,

@@ -1,14 +1,13 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import java.net.URI
-import java.time.LocalDate
+import java.time.Instant
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHandling
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
-import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
-import no.uutilsynet.testlab2testing.testregel.TestregelResponse.Companion.validateTestregel
+import no.uutilsynet.testlab2testing.testregel.TestregelDTO.Companion.validateTestregel
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -30,7 +29,7 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
   private val locationForId: (Int) -> URI = { id -> URI("/v1/testreglar/${id}") }
 
   @GetMapping("{id}")
-  fun getTestregel(@PathVariable id: Int): ResponseEntity<TestregelResponse> =
+  fun getTestregel(@PathVariable id: Int): ResponseEntity<TestregelDTO> =
       testregelDAO.getTestregelResponse(id)?.let { ResponseEntity.ok(it) }
           ?: ResponseEntity.notFound().build()
 
@@ -65,7 +64,7 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
           locationForId)
 
   @PutMapping
-  fun updateTestregel(@RequestBody testregelrequest: TestregelResponse): ResponseEntity<out Any> =
+  fun updateTestregel(@RequestBody testregelrequest: TestregelDTO): ResponseEntity<out Any> =
       executeWithErrorHandling {
         testregelrequest.validateTestregel().getOrThrow()
         val testregel = testregelResponseToTestregel(testregelrequest)
@@ -91,28 +90,28 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
         testregelDAO.deleteTestregel(testregelId)
       }
 
-  fun testregelResponseToTestregel(testregelResponse: TestregelResponse): Testregel {
+  fun testregelResponseToTestregel(testregelDTO: TestregelDTO): Testregel {
     return Testregel(
-        testregelResponse.id,
-        testregelResponse.name,
+        testregelDTO.id,
+        testregelDTO.name,
         1,
-        testregelResponse.name,
-        testregelResponse.krav,
+        testregelDTO.name,
+        testregelDTO.krav,
         TestregelStatus.publisert,
-        LocalDate.now(),
+        Instant.now(),
         TestregelInnholdstype.nett,
-        testregelResponse.type,
+        testregelDTO.type,
         TestlabLocale.nb,
         1,
         1,
-        testregelResponse.krav,
-        testregelResponse.testregelSchema,
+        testregelDTO.krav,
+        testregelDTO.testregelSchema,
     )
   }
 
   fun testregelListToTestregelResponseList(
       testregelResultList: Result<List<Testregel>>
-  ): Result<List<TestregelResponse>> {
-    return testregelResultList.map { it.map { TestregelResponse(it) } }
+  ): Result<List<TestregelDTO>> {
+    return testregelResultList.map { it.map { TestregelDTO(it) } }
   }
 }

@@ -67,7 +67,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
   fun updateTestregel() {
     val testregelInit =
         TestregelInit(
-            "test_skal_slettes_1", "QW-ACT-R69", "1.4.12 Tekstavstand", TestregelType.forenklet)
+            "test_skal_slettes_1", "QW-ACT-R69", "1.4.12 Tekstavstand", TestregelModus.forenklet)
     val id = createTestregel(testregelInit)
 
     val oldTestregel = testregelDAO.getTestregel(id)
@@ -87,13 +87,44 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
     Assertions.assertThat(updatedTestregel?.namn).isEqualTo(name)
   }
 
+  @Test
+  fun updateTestregelSetDatoSistEndra() {
+    val testregelInit =
+        TestregelInit(
+            "test_skal_slettes_1", "QW-ACT-R69", "1.4.12 Tekstavstand", TestregelModus.forenklet)
+    val id = createTestregel(testregelInit)
+
+    val oldTestregel = testregelDAO.getTestregel(id)
+    Assertions.assertThat(oldTestregel).isNotNull
+    Assertions.assertThat(oldTestregel?.krav).isEqualTo(testregelInit.krav)
+    Assertions.assertThat(oldTestregel?.testregelSchema).isEqualTo(testregelInit.testregelSchema)
+    Assertions.assertThat(oldTestregel?.namn).isEqualTo(testregelInit.name)
+
+    val oldDate = oldTestregel?.datoSistEndra
+    println(oldDate)
+
+    oldTestregel
+        ?.copy(krav = testregelTestKrav, testregelSchema = testregelSchemaForenklet, namn = name)
+        ?.let { testregelDAO.updateTestregel(it) }
+
+    val updatedTestregel = testregelDAO.getTestregel(id)
+    Assertions.assertThat(updatedTestregel).isNotNull
+    Assertions.assertThat(updatedTestregel?.krav).isEqualTo(testregelTestKrav)
+    Assertions.assertThat(updatedTestregel?.testregelSchema).isEqualTo(testregelSchemaForenklet)
+    Assertions.assertThat(updatedTestregel?.namn).isEqualTo(name)
+
+    val newDate = updatedTestregel?.datoSistEndra
+
+    Assertions.assertThat(newDate).isNotEqualTo(oldDate)
+  }
+
   private fun createTestregel(
       testregelInit: TestregelInit =
           TestregelInit(
               name,
               testregelTestKrav,
               testregelSchemaForenklet,
-              TestregelType.forenklet,
+              TestregelModus.forenklet,
           )
   ) = testregelDAO.createTestregel(testregelInit)
 }
