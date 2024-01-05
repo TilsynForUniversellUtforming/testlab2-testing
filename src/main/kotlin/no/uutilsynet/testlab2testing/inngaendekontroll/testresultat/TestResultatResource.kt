@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.time.Instant
+import no.uutilsynet.testlab2testing.common.Brukar
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
 import org.springframework.http.ResponseEntity
@@ -74,6 +75,7 @@ class TestResultatResource(val testResultatDAO: TestResultatDAO) {
       val loeysingId: Int,
       val testregelId: Int,
       val nettsideId: Int,
+      val brukar: Brukar,
       val elementOmtale: String? = null,
       val elementResultat: String? = null,
       val elementUtfall: String? = null,

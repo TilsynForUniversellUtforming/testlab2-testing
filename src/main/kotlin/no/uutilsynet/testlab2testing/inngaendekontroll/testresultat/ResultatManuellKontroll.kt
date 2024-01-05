@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.time.Instant
+import no.uutilsynet.testlab2testing.common.Brukar
 
 data class ResultatManuellKontroll(
     val id: Int,
@@ -8,6 +9,7 @@ data class ResultatManuellKontroll(
     val loeysingId: Int,
     val testregelId: Int,
     val nettsideId: Int,
+    val brukar: Brukar,
     val elementOmtale: String?,
     val elementResultat: String?,
     val elementUtfall: String?,
