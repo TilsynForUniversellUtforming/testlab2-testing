@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.sql.Timestamp
 import java.time.Instant
+import no.uutilsynet.testlab2testing.common.Brukar
 import org.simpleflatmapper.jdbc.spring.JdbcTemplateMapperFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -9,13 +10,16 @@ import org.springframework.transaction.annotation.Transactional
 
 @Component
 class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+  @Transactional
   fun save(createTestResultat: TestResultatResource.CreateTestResultat): Result<Int> {
     return runCatching {
+      val brukarId: Int =
+          getBrukarId(createTestResultat.brukar) ?: saveBrukar(createTestResultat.brukar)
       jdbcTemplate.queryForObject(
           """
-        insert into testresultat (sak_id, loeysing_id, testregel_id, nettside_id, element_omtale, element_resultat,
+        insert into testresultat (sak_id, loeysing_id, testregel_id, nettside_id, brukar_id, element_omtale, element_resultat,
                                      element_utfall, test_vart_utfoert)
-        values (:sakId, :loeysingId, :testregelId, :nettsideId, :elementOmtale, :elementResultat, :elementUtfall,
+        values (:sakId, :loeysingId, :testregelId, :nettsideId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
                 :testVartUtfoert)
         returning id
       """
@@ -25,12 +29,35 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "loeysingId" to createTestResultat.loeysingId,
               "testregelId" to createTestResultat.testregelId,
               "nettsideId" to createTestResultat.nettsideId,
+              "brukarId" to brukarId,
               "elementOmtale" to createTestResultat.elementOmtale,
               "elementResultat" to createTestResultat.elementResultat,
               "elementUtfall" to createTestResultat.elementUtfall,
               "testVartUtfoert" to createTestResultat.testVartUtfoert),
           Int::class.java)!!
     }
+  }
+
+  private fun getBrukarId(brukar: Brukar): Int? {
+    val queryResult =
+        jdbcTemplate.query(
+            "select id from brukar where brukarnamn = :brukarnamn",
+            mapOf("brukarnamn" to brukar.brukarnamn)) { rs, _ ->
+              rs.getInt("id")
+            }
+    return if (queryResult.isEmpty()) null else queryResult.first()
+  }
+
+  private fun saveBrukar(brukar: Brukar): Int {
+    return jdbcTemplate.queryForObject(
+        """
+              insert into brukar (brukarnamn, namn)
+              values (:brukarnamn, :namn)
+              returning id
+            """
+            .trimIndent(),
+        mapOf("brukarnamn" to brukar.brukarnamn, "namn" to brukar.namn),
+        Int::class.java)!!
   }
 
   fun getTestResultat(id: Int): Result<ResultatManuellKontroll> =
@@ -45,7 +72,7 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   ): Result<List<ResultatManuellKontroll>> = runCatching {
     val resultSetExtractor =
         JdbcTemplateMapperFactory.newInstance()
-            .addKeys("id", "svar_steg")
+            .addKeys("id", "svar_steg", "brukar_brukarnamn")
             .newResultSetExtractor(ResultatManuellKontroll::class.java)
     val testResultat =
         jdbcTemplate.query(
@@ -60,9 +87,12 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                        ti.element_utfall,
                        ti.test_vart_utfoert,
                        tis.steg as svar_steg,
-                       tis.svar as svar_svar
+                       tis.svar as svar_svar,
+                       b.brukarnamn as brukar_brukarnamn,
+                       b.namn as brukar_namn
                 from testresultat ti
                          left join testresultat_svar tis on ti.id = tis.testresultat_id
+                         join brukar b on ti.brukar_id = b.id
                 where ${if (resultatId != null) "ti.id = :id" else "true"}
                 and ${if (sakId != null) "ti.sak_id = :sakId" else "true"}
                 order by id, svar_steg
