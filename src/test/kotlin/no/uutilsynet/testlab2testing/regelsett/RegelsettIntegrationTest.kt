@@ -4,7 +4,7 @@ import java.net.URI
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettName
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestCreateRequestBody
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettType
-import no.uutilsynet.testlab2testing.testregel.TestregelType
+import no.uutilsynet.testlab2testing.testregel.TestregelModus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DisplayName
@@ -193,7 +193,7 @@ class RegelsettIntegrationTest(
   fun updateRegelsettIllegalTestregelType() {
     val location = createDefaultRegelsett()
     val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
-    assertThat(regelsett.type).isEqualTo(TestregelType.forenklet)
+    assertThat(regelsett.type).isEqualTo(TestregelModus.forenklet)
 
     val response =
         restTemplate.exchange(
@@ -242,7 +242,7 @@ class RegelsettIntegrationTest(
 
   private fun createDefaultRegelsett(
       namn: String = regelsettName,
-      type: TestregelType = regelsettType,
+      type: TestregelModus = regelsettType,
       standard: Boolean = RegelsettTestConstants.regelsettStandard,
       testregelIdList: List<Int> = RegelsettTestConstants.regelsettTestregelIdList,
   ): URI =

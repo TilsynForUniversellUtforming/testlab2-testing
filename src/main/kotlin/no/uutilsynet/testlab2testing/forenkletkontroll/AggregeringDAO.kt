@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
-import java.util.*
+import java.sql.ResultSet
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
@@ -34,7 +34,9 @@ class AggregeringDAO(
             .addValue("loeysing_id", aggregertResultatTestregel.loeysing.id, java.sql.Types.INTEGER)
             .addValue(
                 "suksesskriterium",
-                getKravFromSuksesskritterium(aggregertResultatTestregel.suksesskriterium),
+                kravregisterClient
+                    .getKravIdFromSuksesskritterium(aggregertResultatTestregel.suksesskriterium)
+                    .getOrThrow(),
                 java.sql.Types.INTEGER)
             .addValue(
                 "fleire_suksesskriterium",
@@ -86,7 +88,7 @@ class AggregeringDAO(
   fun saveAggregertResultatTestregel(testKoeyring: TestKoeyring.Ferdig) {
     val aggregeringUrl: URI? = testKoeyring.lenker?.urlAggregeringTR?.toURI()
 
-    if (aggregeringUrl != null) {
+    aggregeringUrl?.let {
       val aggregertResultatTestregel: List<AggregertResultatTestregel> =
           autoTesterClient.fetchResultatAggregering(
               aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggreggeringTR)
@@ -94,6 +96,7 @@ class AggregeringDAO(
 
       aggregertResultatTestregel.forEach { createAggregertResultatTestregel(it) }
     }
+        ?: throw RuntimeException("Aggregering url er null")
   }
 
   fun getAggregertResultatTestregelForMaaling(maalingId: Int): List<AggregertResultatTestregel> {
@@ -103,8 +106,8 @@ class AggregeringDAO(
       AggregertResultatTestregel(
           maalingId = rs.getInt("maaling_id"),
           testregelId = getTestregelId(rs.getInt("testregel_id")),
-          loeysing = getLoeysingFromId(rs.getInt("loeysing_id")),
-          suksesskriterium = getSuksesskriteriumFromKrav(rs.getInt("suksesskriterium")),
+          loeysing = getLoeysing(rs),
+          suksesskriterium = getSuksesskriterium(rs),
           fleireSuksesskriterium = sqlArrayToList(rs.getArray("fleire_suksesskriterium")),
           talElementSamsvar = rs.getInt("tal_element_samsvar"),
           talElementBrot = rs.getInt("tal_element_brot"),
@@ -120,18 +123,14 @@ class AggregeringDAO(
     }
   }
 
-  fun getLoeysingFromId(loeysingId: Int): Loeysing {
-    loeysingsRegisterClient.getMany(listOf(loeysingId)).let { loeysingList ->
-      loeysingList.getOrThrow().firstOrNull()?.let { loeysing ->
-        return loeysing
-      }
-    }
-    throw RuntimeException("Fant ikkje løsning med id $loeysingId")
-  }
+  private fun getSuksesskriterium(rs: ResultSet) =
+      kravregisterClient.getSuksesskriteriumFromKrav(rs.getInt("suksesskriterium")).getOrThrow()
+
+  private fun getLoeysing(rs: ResultSet): Loeysing =
+      loeysingsRegisterClient.getLoeysingFromId(rs.getInt("loeysing_id")).getOrThrow()
 
   fun sqlArrayToList(sqlArray: java.sql.Array): List<String> {
-    val array = Arrays.asList(sqlArray.getArray())
-    return array.map { it.toString() }
+    return listOf(sqlArray).map { it.toString() }
   }
 
   fun getTestregelIdFromSchema(testregelKey: String): Int? {
@@ -140,21 +139,10 @@ class AggregeringDAO(
     }
   }
 
-  fun getKravFromSuksesskritterium(suksesskriterium: String): Int {
-    kravregisterClient.getKrav(suksesskriterium).let { krav ->
-      return krav.getOrThrow().id
-    }
-  }
-
-  fun getSuksesskriteriumFromKrav(kravId: Int): String {
-    kravregisterClient.getWcagKrav(kravId).let { krav ->
-      return krav.getOrThrow().suksesskriterium
-    }
-  }
-
   fun getTestregelId(idTestregel: Int): String {
     testregelDAO.getTestregel(idTestregel).let { testregel ->
-      return testregel?.testregelId.toString()
+      return testregel?.testregelId
+          ?: throw RuntimeException("Fant ikkje testregel med id $idTestregel")
     }
   }
 }

@@ -1,11 +1,11 @@
 package no.uutilsynet.testlab2testing.regelsett
 
-import java.time.LocalDate
+import java.time.Instant
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
+import no.uutilsynet.testlab2testing.testregel.TestregelModus
 import no.uutilsynet.testlab2testing.testregel.TestregelStatus
-import no.uutilsynet.testlab2testing.testregel.TestregelType
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
@@ -25,9 +25,9 @@ class RegelsettValidatorsTest {
                 "QW-ACT-R12",
                 "1.1.1",
                 TestregelStatus.publisert,
-                LocalDate.now(),
+                Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelType.forenklet,
+                TestregelModus.forenklet,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -40,16 +40,16 @@ class RegelsettValidatorsTest {
                 "QW-ACT-R13",
                 "1.1.1",
                 TestregelStatus.publisert,
-                LocalDate.now(),
+                Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelType.forenklet,
+                TestregelModus.forenklet,
                 TestlabLocale.nb,
                 1,
                 1,
                 "QW-ACT-R13 HTML Page has a title",
                 "QW-ACT-R13"))
     val testregelIdList = listOf(1, 2)
-    val regelsettType = TestregelType.forenklet
+    val regelsettType = TestregelModus.forenklet
 
     assertTrue(validateRegelsettTestreglar(testregelIdList, regelsettType, testregelList).isSuccess)
   }
@@ -66,9 +66,9 @@ class RegelsettValidatorsTest {
                 "TR1",
                 "1.1.1",
                 TestregelStatus.publisert,
-                LocalDate.now(),
+                Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelType.inngaaende,
+                TestregelModus.inngaaende,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -81,9 +81,9 @@ class RegelsettValidatorsTest {
                 "TR2",
                 "1.1.1",
                 TestregelStatus.publisert,
-                LocalDate.now(),
+                Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelType.inngaaende,
+                TestregelModus.inngaaende,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -107,9 +107,9 @@ class RegelsettValidatorsTest {
                 "QW-ACT-R12",
                 "1.1.1",
                 TestregelStatus.publisert,
-                LocalDate.now(),
+                Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelType.forenklet,
+                TestregelModus.forenklet,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -122,9 +122,9 @@ class RegelsettValidatorsTest {
                 "QW-ACT-R13",
                 "1.1.1",
                 TestregelStatus.publisert,
-                LocalDate.now(),
+                Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelType.forenklet,
+                TestregelModus.forenklet,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -137,9 +137,9 @@ class RegelsettValidatorsTest {
                 "QW-ACT-R14",
                 "1.1.1",
                 TestregelStatus.publisert,
-                LocalDate.now(),
+                Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelType.forenklet,
+                TestregelModus.forenklet,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -147,7 +147,7 @@ class RegelsettValidatorsTest {
                 "QW-ACT-R14"),
         )
     val testregelIdList = listOf(1, 2)
-    val regelsettType = TestregelType.forenklet
+    val regelsettType = TestregelModus.forenklet
 
     val validation = validateRegelsettTestreglar(testregelIdList, regelsettType, testregelList)
 
@@ -166,9 +166,9 @@ class RegelsettValidatorsTest {
                 "QW-ACT-R12",
                 "1.1.1",
                 TestregelStatus.publisert,
-                LocalDate.now(),
+                Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelType.forenklet,
+                TestregelModus.forenklet,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -181,16 +181,16 @@ class RegelsettValidatorsTest {
                 "QW-ACT-R13",
                 "1.1.2",
                 TestregelStatus.publisert,
-                LocalDate.now(),
+                Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelType.inngaaende,
+                TestregelModus.inngaaende,
                 TestlabLocale.nb,
                 1,
                 1,
                 "QW-ACT-R13 HTML Page has a title",
                 "QW-ACT-R13"))
     val testregelIdList = listOf(1, 2)
-    val regelsettType = TestregelType.forenklet
+    val regelsettType = TestregelModus.forenklet
 
     assertTrue(validateRegelsettTestreglar(testregelIdList, regelsettType, testregelList).isFailure)
   }
@@ -207,9 +207,9 @@ class RegelsettValidatorsTest {
                 "QW-ACT-R12",
                 "1.1.1",
                 TestregelStatus.publisert,
-                LocalDate.now(),
+                Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelType.forenklet,
+                TestregelModus.forenklet,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -217,7 +217,7 @@ class RegelsettValidatorsTest {
                 "QW-ACT-R12"),
         )
     val testregelIdList = listOf(1, 2)
-    val regelsettType = TestregelType.forenklet
+    val regelsettType = TestregelModus.forenklet
 
     assertTrue(validateRegelsettTestreglar(testregelIdList, regelsettType, testregelList).isFailure)
   }

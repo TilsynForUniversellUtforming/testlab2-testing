@@ -9,6 +9,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakListeElement
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.tilfeldigOrgnummer
+import no.uutilsynet.testlab2testing.testregel.TestregelDTO
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
@@ -209,14 +210,14 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
 
       val testreglar =
           restTemplate
-              .getForObject("/v1/testreglar", Array<Testregel>::class.java)!!
+              .getForObject("/v1/testreglar", Array<TestregelDTO>::class.java)!!
               .toList()
               .take(3)
       assert(testreglar.isNotEmpty()) // testreglar blir lagt i databasen i migrasjon V24.
       val oppdatertSak = sak.copy(testreglar = testreglar)
       restTemplate.put(location, oppdatertSak)
 
-      val sakEtterOppdatering: Sak = restTemplate.getForObject(location)!!
+      val sakEtterOppdatering: SakDTO = restTemplate.getForObject(location)!!
       assertThat(sakEtterOppdatering.testreglar).containsExactlyInAnyOrderElementsOf(testreglar)
     }
   }

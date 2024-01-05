@@ -4,7 +4,7 @@ data class TestregelInit(
     val name: String,
     val testregelSchema: String,
     val krav: String,
-    val type: TestregelType
+    val type: TestregelModus
 )
 
 data class TestregelInitAutomatisk(
@@ -23,7 +23,7 @@ data class TestregelInitManuell(
     val testobjekt: Int,
     val krav: String,
     val testregelSchema: String,
-    val type: TestregelType,
+    val type: TestregelModus,
     val status: TestregelStatus,
     val versjon: Int,
     val innholdstype: Int,

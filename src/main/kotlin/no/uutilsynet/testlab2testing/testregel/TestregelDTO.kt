@@ -2,20 +2,24 @@ package no.uutilsynet.testlab2testing.testregel
 
 import no.uutilsynet.testlab2testing.common.validateNamn
 
-data class TestregelResponse(
+data class TestregelDTO(
     val id: Int,
     val name: String,
     val testregelSchema: String,
     val krav: String,
-    val type: TestregelType,
+    val type: TestregelModus,
 ) {
+  fun toTestregel() {
+    TODO("Not yet implemented")
+  }
+
   companion object {
-    fun TestregelResponse.validateTestregel(): Result<TestregelResponse> = runCatching {
+    fun TestregelDTO.validateTestregel(): Result<TestregelDTO> = runCatching {
       val name = validateNamn(this.name).getOrThrow()
       val krav = validateKrav(this.krav).getOrThrow()
       val schema = validateSchema(this.testregelSchema, this.type).getOrThrow()
 
-      TestregelResponse(this.id, name, krav, schema, type)
+      TestregelDTO(this.id, name, krav, schema, type)
     }
   }
 

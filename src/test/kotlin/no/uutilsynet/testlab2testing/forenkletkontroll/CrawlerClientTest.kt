@@ -2,7 +2,7 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
-import java.time.LocalDate
+import java.time.Instant
 import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
@@ -48,9 +48,9 @@ class CrawlerClientTest {
                 TestConstants.name,
                 "QW-ACT-12",
                 TestregelStatus.publisert,
-                LocalDate.now(),
+                Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelType.forenklet,
+                TestregelModus.forenklet,
                 TestlabLocale.nb,
                 1,
                 1,

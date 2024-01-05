@@ -9,6 +9,7 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.*
 import org.apache.commons.lang3.RandomStringUtils
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,23 +29,6 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
 
   @Autowired lateinit var testregelDAO: TestregelDAO
 
-  var aggregeringTestregel: AggregertResultatTestregel =
-      AggregertResultatTestregel(
-          maalingId = 1,
-          loeysing = Loeysing(1, "test", URL("http://localhost:8080/"), "123456789"),
-          testregelId = "QW-1",
-          suksesskriterium = "1.1.1",
-          fleireSuksesskriterium = listOf("1.1.1", "1.1.2"),
-          talElementSamsvar = 1,
-          talElementBrot = 2,
-          talElementVarsel = 1,
-          talElementIkkjeForekomst = 1,
-          talSiderSamsvar = 1,
-          talSiderBrot = 1,
-          talSiderIkkjeForekomst = 1,
-          testregelGjennomsnittlegSideSamsvarProsent = 1.0f,
-          testregelGjennomsnittlegSideBrotProsent = 1.0f)
-
   var krav: KravWcag2x =
       KravWcag2x(
           1,
@@ -63,15 +47,38 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
   @Test
   fun saveAggregeringTestregel() {
 
-    val testregelNoekkel = RandomStringUtils.randomAlphanumeric(5)
-    aggregeringTestregel.testregelId = testregelNoekkel
-
-    val maalingId = createTestMaaling(testregelNoekkel)
-    val testregelId = testregelDAO.getTestregelByTestregelId(testregelNoekkel)?.id
-    aggregeringTestregel.maalingId = maalingId
+    val aggregeringTestregel = createTestMaaling()
+    val maalingId = aggregeringTestregel.maalingId
 
     val testLoeysing = Loeysing(1, "test", URL("http://localhost:8080/"), "123456789")
 
+    val testKoeyring: TestKoeyring.Ferdig = setupTestKoeyring(testLoeysing)
+
+    Mockito.`when`(
+            autoTesterClient.fetchResultatAggregering(
+                URL("http://localhost:8080/").toURI(),
+                AutoTesterClient.ResultatUrls.urlAggreggeringTR))
+        .thenReturn(listOf(aggregeringTestregel))
+
+    Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1))
+        .thenReturn(Result.success(testLoeysing))
+
+    Mockito.`when`(kravregisterClient.getKravIdFromSuksesskritterium("1.1.1"))
+        .thenReturn(Result.success(1))
+    Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1))
+        .thenReturn(Result.success("1.1.1"))
+
+    aggregeringDAO.saveAggregertResultatTestregel(testKoeyring)
+
+    val retrievedAggregering = aggregeringDAO.getAggregertResultatTestregelForMaaling(maalingId)
+
+    assertThat(retrievedAggregering).isNotEmpty
+    assert(retrievedAggregering[0].maalingId == maalingId)
+    assert(retrievedAggregering[0].testregelId == aggregeringTestregel.testregelId)
+    assert(retrievedAggregering[0].suksesskriterium == aggregeringTestregel.suksesskriterium)
+  }
+
+  private fun setupTestKoeyring(testLoeysing: Loeysing): TestKoeyring.Ferdig {
     val testKoeyring: TestKoeyring.Ferdig =
         TestKoeyring.Ferdig(
             crawlResultat =
@@ -94,31 +101,12 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
                     urlAggregeringLoeysing = URL("http://localhost:8080/"),
                     urlAggregeringSK = URL("http://localhost:8080/")),
         )
-
-    Mockito.`when`(
-            autoTesterClient.fetchResultatAggregering(
-                URL("http://localhost:8080/").toURI(),
-                AutoTesterClient.ResultatUrls.urlAggreggeringTR))
-        .thenReturn(listOf(aggregeringTestregel))
-
-    Mockito.`when`(loeysingsRegisterClient.getMany(listOf(1)))
-        .thenReturn(Result.success(listOf(testLoeysing)))
-
-    Mockito.`when`(kravregisterClient.getKrav("1.1.1")).thenReturn(Result.success(krav))
-    Mockito.`when`(kravregisterClient.getWcagKrav(1)).thenReturn(Result.success(krav))
-
-    aggregeringDAO.saveAggregertResultatTestregel(testKoeyring)
-
-    val retrievedAggregering = aggregeringDAO.getAggregertResultatTestregelForMaaling(maalingId)
-
-    assert(!retrievedAggregering.isEmpty())
-    assert(retrievedAggregering[0].maalingId == maalingId)
-    assert(retrievedAggregering[0].testregelId == aggregeringTestregel.testregelId)
-    assert(retrievedAggregering[0].suksesskriterium == aggregeringTestregel.suksesskriterium)
+    return testKoeyring
   }
 
-  fun createTestMaaling(testregelNoekkel: String): Int {
+  fun createTestMaaling(): AggregertResultatTestregel {
     val crawlParameters = CrawlParameters(10, 10)
+    val testregelNoekkel = RandomStringUtils.randomAlphanumeric(5)
 
     val testregel =
         TestregelInitAutomatisk(testregelNoekkel, "QW-1", "1.1.1", 1, 1, testregelNoekkel)
@@ -133,6 +121,23 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
             listOf(testregelId),
             crawlParameters)
 
-    return maalingId
+    val aggregeringTestregel =
+        AggregertResultatTestregel(
+            maalingId = maalingId,
+            loeysing = Loeysing(1, "test", URL("http://localhost:8080/"), "123456789"),
+            testregelId = testregelNoekkel,
+            suksesskriterium = "1.1.1",
+            fleireSuksesskriterium = listOf("1.1.1", "1.1.2"),
+            talElementSamsvar = 1,
+            talElementBrot = 2,
+            talElementVarsel = 1,
+            talElementIkkjeForekomst = 1,
+            talSiderSamsvar = 1,
+            talSiderBrot = 1,
+            talSiderIkkjeForekomst = 1,
+            testregelGjennomsnittlegSideSamsvarProsent = 1.0f,
+            testregelGjennomsnittlegSideBrotProsent = 1.0f)
+
+    return aggregeringTestregel
   }
 }

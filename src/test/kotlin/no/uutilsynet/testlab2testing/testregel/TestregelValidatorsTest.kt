@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.testregel
 
-import java.time.LocalDate
+import java.time.Instant
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
@@ -27,9 +27,9 @@ class TestregelValidatorsTest {
               name,
               testregelTestKrav,
               TestregelStatus.publisert,
-              LocalDate.now(),
+              Instant.now(),
               TestregelInnholdstype.nett,
-              TestregelType.forenklet,
+              TestregelModus.forenklet,
               TestlabLocale.nb,
               1,
               1,
@@ -50,9 +50,9 @@ class TestregelValidatorsTest {
               name,
               testregelTestKrav,
               TestregelStatus.publisert,
-              LocalDate.now(),
+              Instant.now(),
               TestregelInnholdstype.nett,
-              TestregelType.inngaaende,
+              TestregelModus.inngaaende,
               TestlabLocale.nb,
               1,
               1,
@@ -77,9 +77,9 @@ class TestregelValidatorsTest {
               "",
               testregelTestKrav,
               TestregelStatus.publisert,
-              LocalDate.now(),
+              Instant.now(),
               TestregelInnholdstype.nett,
-              TestregelType.forenklet,
+              TestregelModus.forenklet,
               TestlabLocale.nb,
               1,
               1,
@@ -99,9 +99,9 @@ class TestregelValidatorsTest {
               name,
               "",
               TestregelStatus.publisert,
-              LocalDate.now(),
+              Instant.now(),
               TestregelInnholdstype.nett,
-              TestregelType.forenklet,
+              TestregelModus.forenklet,
               TestlabLocale.nb,
               1,
               1,
@@ -121,9 +121,9 @@ class TestregelValidatorsTest {
               name,
               testregelTestKrav,
               TestregelStatus.publisert,
-              LocalDate.now(),
+              Instant.now(),
               TestregelInnholdstype.nett,
-              TestregelType.forenklet,
+              TestregelModus.forenklet,
               TestlabLocale.nb,
               1,
               1,
@@ -143,9 +143,9 @@ class TestregelValidatorsTest {
               name,
               testregelTestKrav,
               TestregelStatus.publisert,
-              LocalDate.now(),
+              Instant.now(),
               TestregelInnholdstype.nett,
-              TestregelType.inngaaende,
+              TestregelModus.inngaaende,
               TestlabLocale.nb,
               1,
               1,
@@ -159,7 +159,7 @@ class TestregelValidatorsTest {
   @DisplayName(
       "TestregelSchema for forenklet kontroll må være på act-regel format og være riktig formattert")
   fun testregelSchemaActError() {
-    val schema = validateSchema("qw-act-r12", TestregelType.forenklet)
+    val schema = validateSchema("qw-act-r12", TestregelModus.forenklet)
     assertTrue(schema.isFailure)
   }
 
@@ -167,7 +167,7 @@ class TestregelValidatorsTest {
   @DisplayName(
       "TestregelSchema for forenklet kontroll med riktig act-regel format skal være gyldig")
   fun testregelSchemaActSuccess() {
-    val schema = validateSchema(testregelSchemaForenklet, TestregelType.forenklet)
+    val schema = validateSchema(testregelSchemaForenklet, TestregelModus.forenklet)
     assertTrue(schema.isSuccess)
   }
 
@@ -206,7 +206,7 @@ class TestregelValidatorsTest {
         "no.uutilsynet.testlab2testing.testregel.TestregelValidatorsTest#invalidParamsSource")
     @DisplayName("TestregelSchema være definert for forenklet kontroll")
     fun testregelSchemaErrorForenklet(invalidParam: String?) {
-      val schema = validateSchema(invalidParam, TestregelType.forenklet)
+      val schema = validateSchema(invalidParam, TestregelModus.forenklet)
       assertTrue(schema.isFailure)
     }
 
@@ -215,7 +215,7 @@ class TestregelValidatorsTest {
         "no.uutilsynet.testlab2testing.testregel.TestregelValidatorsTest#invalidParamsSource")
     @DisplayName("TestregelSchema være definert for manuell kontroll")
     fun testregelSchemaErrorManuell(invalidParam: String?) {
-      val schema = validateSchema(invalidParam, TestregelType.manuell)
+      val schema = validateSchema(invalidParam, TestregelModus.manuell)
       assertTrue(schema.isFailure)
     }
   }

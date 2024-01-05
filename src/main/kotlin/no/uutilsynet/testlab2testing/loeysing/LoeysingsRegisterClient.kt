@@ -63,4 +63,15 @@ class LoeysingsRegisterClient(
   fun delete(id: Int): Result<Unit> = runCatching {
     restTemplate.delete("${properties.host}/v1/loeysing/$id")
   }
+
+  fun getLoeysingFromId(loeysingId: Int): Result<Loeysing> {
+    return runCatching {
+      getMany(listOf(loeysingId)).let { loeysingList ->
+        loeysingList.getOrThrow().firstOrNull()?.let {
+          return Result.success(it)
+        }
+      }
+      throw RuntimeException("Fant ikkje løsning med id $loeysingId")
+    }
+  }
 }

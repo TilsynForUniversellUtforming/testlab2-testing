@@ -3,9 +3,9 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 
 data class AggregertResultatTestregel(
-    var maalingId: Int,
+    val maalingId: Int,
     val loeysing: Loeysing,
-    var testregelId: String,
+    val testregelId: String,
     val suksesskriterium: String,
     val fleireSuksesskriterium: List<String>,
     val talElementSamsvar: Int,
@@ -16,5 +16,5 @@ data class AggregertResultatTestregel(
     val talSiderBrot: Int,
     val talSiderIkkjeForekomst: Int,
     val testregelGjennomsnittlegSideSamsvarProsent: Float?,
-    var testregelGjennomsnittlegSideBrotProsent: Float?,
+    val testregelGjennomsnittlegSideBrotProsent: Float?,
 ) : AutotesterTestresultat

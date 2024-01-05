@@ -7,11 +7,11 @@ import org.springframework.web.client.RestTemplate
 @Service
 class KravregisterClient(val restTemplate: RestTemplate, val properties: KravRegisterProperties) {
 
-  fun getKrav(suksesskriterium: String): Result<Krav> {
+  fun getKrav(suksesskriterium: String): Result<KravWcag2x> {
     return runCatching {
       restTemplate.getForObject(
           "${properties.host}/v1/krav/wcag2krav/suksesskriterium/$suksesskriterium",
-          Krav::class.java)
+          KravWcag2x::class.java)
           ?: throw RuntimeException(
               "Kravregisteret returnerte null for suksesskriterium $suksesskriterium")
     }
@@ -23,6 +23,14 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
           "${properties.host}/v1/krav/wcag2krav/$kravId", KravWcag2x::class.java)
           ?: throw RuntimeException("Kravregisteret returnerte null for kravId $kravId")
     }
+  }
+
+  fun getKravIdFromSuksesskritterium(suksesskriterium: String): Result<Int> {
+    return runCatching { getKrav(suksesskriterium).getOrThrow().id }
+  }
+
+  fun getSuksesskriteriumFromKrav(kravId: Int): Result<String> {
+    return runCatching { getWcagKrav(kravId).getOrThrow().suksesskriterium }
   }
 }
 
