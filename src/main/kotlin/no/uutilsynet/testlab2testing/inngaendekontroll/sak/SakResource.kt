@@ -41,6 +41,11 @@ class SakResource(val sakDAO: SakDAO) {
             onFailure = { ResponseEntity.notFound().build() })
   }
 
+  @GetMapping
+  fun getAlleSaker(): ResponseEntity<List<SakListeElement>> {
+    return ResponseEntity.ok(sakDAO.getAlleSaker())
+  }
+
   @PutMapping("/{id}")
   fun updateSak(@PathVariable id: Int, @RequestBody sak: Sak): ResponseEntity<Sak> {
     require(sak.id == id) { "id i URL-en og id er ikkje den same" }
