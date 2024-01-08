@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.sak
 
+import java.time.Instant
 import no.uutilsynet.testlab2testing.testregel.Testregel
 
 data class Sak(
@@ -18,3 +19,6 @@ data class Sak(
       val begrunnelse: String
   )
 }
+
+/** Ein enklare versjon av Sak-klassen som brukast i lister. */
+data class SakListeElement(val id: Int, val virksomhet: String, val opprettet: Instant)
