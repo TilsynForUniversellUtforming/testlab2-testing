@@ -147,4 +147,10 @@ class SakDAO(
     }
     sak
   }
+
+  fun getAlleSaker(): List<SakListeElement> {
+    return jdbcTemplate.query(
+        "select id, virksomhet, opprettet from sak",
+        DataClassRowMapper.newInstance(SakListeElement::class.java))
+  }
 }

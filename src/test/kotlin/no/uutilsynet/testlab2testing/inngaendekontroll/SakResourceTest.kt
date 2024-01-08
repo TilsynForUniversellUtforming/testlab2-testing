@@ -2,10 +2,10 @@ package no.uutilsynet.testlab2testing.inngaendekontroll
 
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.tilfeldigOrgnummer
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -13,14 +13,20 @@ import org.springframework.boot.test.web.client.getForObject
 import org.springframework.http.HttpStatus
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
+  val orgnummer: MutableList<String> = mutableListOf()
+
   @DisplayName("oppretting av ei sak")
   @Nested
+  @TestMethodOrder(OrderAnnotation::class)
   inner class OpprettingAvEiSak {
     @DisplayName("når vi sender inn eit gyldig orgnummer, så skal vi få oppretta ei sak")
     @Test
+    @Order(1)
     fun opprettingAvEiSak() {
-      val virksomhet = "123456785"
+      val virksomhet = tilfeldigOrgnummer()
+      orgnummer.add(virksomhet)
       val result =
           restTemplate.postForEntity("/saker", mapOf("virksomhet" to virksomhet), Unit::class.java)
       assertThat(result.statusCode).isEqualTo(HttpStatus.CREATED)
@@ -29,6 +35,7 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
 
     @DisplayName("når vi sender inn eit ugyldig orgnummer, så skal vi bli avvist")
     @Test
+    @Order(2)
     fun ugyldigOrgnummer() {
       val virksomhet = "123456789"
       val result =
@@ -38,12 +45,25 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
 
     @DisplayName("når vi har oppretta ei sak, så skal vi kunne hente den ut på adressa i location")
     @Test
+    @Order(3)
     fun hentSak() {
-      val virksomhet = "123456785"
+      val virksomhet = tilfeldigOrgnummer()
+      orgnummer.add(virksomhet)
       val result =
           restTemplate.postForEntity("/saker", mapOf("virksomhet" to virksomhet), Unit::class.java)
       val sak: Sak = restTemplate.getForObject(result.headers.location!!, Sak::class.java)!!
       assertThat(sak.virksomhet).isEqualTo(virksomhet)
+    }
+
+    @DisplayName("når vi har oppretta to saker, så skal vi kunne liste dei ut")
+    @Test
+    @Order(4)
+    fun listUtSaker() {
+      val saker = restTemplate.getForObject("/saker", Array<Sak>::class.java)!!
+      assertThat(saker.size).isGreaterThanOrEqualTo(2)
+      orgnummer.forEach { virksomhet ->
+        assertThat(saker.any { it.virksomhet == virksomhet }).isTrue()
+      }
     }
   }
 
