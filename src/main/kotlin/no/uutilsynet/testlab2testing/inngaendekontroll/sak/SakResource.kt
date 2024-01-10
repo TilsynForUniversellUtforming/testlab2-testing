@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.sak
 
+import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateOrgNummer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,13 +14,14 @@ class SakResource(val sakDAO: SakDAO) {
 
   val logger: Logger = LoggerFactory.getLogger(SakResource::class.java)
 
-  data class NySak(val virksomhet: String)
+  data class NySak(val namn: String, val virksomhet: String)
 
   @PostMapping
   fun createSak(@RequestBody nySak: NySak): ResponseEntity<Unit> {
     return runCatching {
+          val namn = validateNamn(nySak.namn).getOrThrow()
           val virksomhet = validateOrgNummer(nySak.virksomhet).getOrThrow()
-          sakDAO.save(virksomhet).getOrThrow()
+          sakDAO.save(namn, virksomhet).getOrThrow()
         }
         .fold(
             onSuccess = { id -> ResponseEntity.created(location(id)).build() },
