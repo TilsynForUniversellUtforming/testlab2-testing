@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll
 
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
+import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakListeElement
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.tilfeldigOrgnummer
 import org.assertj.core.api.Assertions.assertThat
@@ -26,9 +27,11 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     @Order(1)
     fun opprettingAvEiSak() {
       val virksomhet = tilfeldigOrgnummer()
+      val namn = "Testheim kommune"
       orgnummer.add(virksomhet)
       val result =
-          restTemplate.postForEntity("/saker", mapOf("virksomhet" to virksomhet), Unit::class.java)
+          restTemplate.postForEntity(
+              "/saker", mapOf("virksomhet" to virksomhet, "namn" to namn), Unit::class.java)
       assertThat(result.statusCode).isEqualTo(HttpStatus.CREATED)
       assertThat(result.headers.location).isNotNull()
     }
@@ -48,18 +51,21 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     @Order(3)
     fun hentSak() {
       val virksomhet = tilfeldigOrgnummer()
+      val namn = "Testheim kommune"
       orgnummer.add(virksomhet)
       val result =
-          restTemplate.postForEntity("/saker", mapOf("virksomhet" to virksomhet), Unit::class.java)
+          restTemplate.postForEntity(
+              "/saker", mapOf("virksomhet" to virksomhet, "namn" to namn), Unit::class.java)
       val sak: Sak = restTemplate.getForObject(result.headers.location!!, Sak::class.java)!!
       assertThat(sak.virksomhet).isEqualTo(virksomhet)
+      assertThat(sak.namn).isEqualTo(namn)
     }
 
     @DisplayName("når vi har oppretta to saker, så skal vi kunne liste dei ut")
     @Test
     @Order(4)
     fun listUtSaker() {
-      val saker = restTemplate.getForObject("/saker", Array<Sak>::class.java)!!
+      val saker = restTemplate.getForObject("/saker", Array<SakListeElement>::class.java)!!
       assertThat(saker.size).isGreaterThanOrEqualTo(2)
       orgnummer.forEach { virksomhet ->
         assertThat(saker.any { it.virksomhet == virksomhet }).isTrue()
@@ -70,10 +76,12 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
   @DisplayName("oppdatering av ei sak")
   @Nested
   inner class OppdateringAvEiSak {
+    val nySak = mapOf("namn" to "Testheim kommune", "virksomhet" to tilfeldigOrgnummer())
+
     @DisplayName("vi skal kunne legge til løysingar på ei sak")
     @Test
     fun leggTilEiLoeysing() {
-      val location = restTemplate.postForLocation("/saker", mapOf("virksomhet" to "123456785"))!!
+      val location = restTemplate.postForLocation("/saker", nySak)!!
       val sak: Sak = restTemplate.getForObject(location)!!
 
       val sakMedLoeysingar: Sak = sak.copy(loeysingar = listOf(Sak.Loeysing(1), Sak.Loeysing(2)))
@@ -86,7 +94,7 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     @DisplayName("vi skal kunne fjerne løysingar på ei sak")
     @Test
     fun fjerneLoeysingar() {
-      val location = restTemplate.postForLocation("/saker", mapOf("virksomhet" to "123456785"))!!
+      val location = restTemplate.postForLocation("/saker", nySak)!!
       val sak: Sak = restTemplate.getForObject(location)!!
 
       val sakMedLoeysingar: Sak = sak.copy(loeysingar = listOf(Sak.Loeysing(1), Sak.Loeysing(2)))
@@ -105,7 +113,7 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     @DisplayName("vi skal kunne legge til nettsider på ei løysing")
     @Test
     fun leggTilNettside() {
-      val location = restTemplate.postForLocation("/saker", mapOf("virksomhet" to "123456785"))!!
+      val location = restTemplate.postForLocation("/saker", nySak)!!
       val sak: Sak = restTemplate.getForObject(location)!!
 
       val forside = Sak.Nettside(1, "forside", "https://www.uutilsynet.no/", "Forsida", "")
@@ -132,7 +140,7 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     @DisplayName("vi skal kunne fjerne nettsider frå ei løysing")
     @Test
     fun fjernNettside() {
-      val location = restTemplate.postForLocation("/saker", mapOf("virksomhet" to "123456785"))!!
+      val location = restTemplate.postForLocation("/saker", nySak)!!
       val sak: Sak = restTemplate.getForObject(location)!!
 
       val forside = Sak.Nettside(1, "forside", "https://www.uutilsynet.no/", "Forsida", "")
@@ -163,7 +171,7 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     @DisplayName("vi skal kunne legge til testreglar på ei sak")
     @Test
     fun leggeTilTestreglar() {
-      val location = restTemplate.postForLocation("/saker", mapOf("virksomhet" to "123456785"))!!
+      val location = restTemplate.postForLocation("/saker", nySak)!!
       val sak: Sak = restTemplate.getForObject(location)!!
 
       val testreglar =

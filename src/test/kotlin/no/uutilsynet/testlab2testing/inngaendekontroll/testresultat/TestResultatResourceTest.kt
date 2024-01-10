@@ -29,12 +29,13 @@ class TestResultatResourceTest(
   @Order(1)
   @DisplayName("vi skal kunne opprette et nytt testresultat")
   fun nyttTestresultat() {
-    sakId = sakDAO.save("000000000").getOrThrow()
+    sakId = sakDAO.save("Testheim kommune", "000000000").getOrThrow()
 
     sakDAO
         .update(
             Sak(
                 sakId,
+                "Testheim kommune",
                 "000000000",
                 listOf(
                     Sak.Loeysing(

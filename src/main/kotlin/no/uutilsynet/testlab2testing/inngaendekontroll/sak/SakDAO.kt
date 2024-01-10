@@ -16,10 +16,13 @@ class SakDAO(
     val dataSource: DataSource,
     val testregelDAO: TestregelDAO
 ) {
-  fun save(virksomhet: String): Result<Int> = runCatching {
+  fun save(namn: String, virksomhet: String): Result<Int> = runCatching {
     jdbcTemplate.queryForObject(
-        "insert into sak (virksomhet, opprettet) values (:virksomhet, :opprettet) returning id",
-        mapOf("virksomhet" to virksomhet, "opprettet" to Timestamp.from(Instant.now())),
+        "insert into sak (namn, virksomhet, opprettet) values (:namn, :virksomhet, :opprettet) returning id",
+        mapOf(
+            "namn" to namn,
+            "virksomhet" to virksomhet,
+            "opprettet" to Timestamp.from(Instant.now())),
         Int::class.java)!!
   }
 
@@ -32,12 +35,12 @@ class SakDAO(
             Sak.Loeysing(loeysingId, nettsider)
           }
       val testreglar = testregelDAO.getTestreglarBySak(sakId)
-      Sak(sakId, rs.getString("virksomhet"), loeysingar, testreglar)
+      Sak(sakId, rs.getString("namn"), rs.getString("virksomhet"), loeysingar, testreglar)
     }
     val sak =
         jdbcTemplate.queryForObject(
             """
-                select virksomhet, loeysingar
+                select namn, virksomhet, loeysingar
                 from sak
                 where id = :id
             """
