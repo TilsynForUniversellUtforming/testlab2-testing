@@ -90,9 +90,8 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
                     nettsider = emptyList()),
             sistOppdatert = Instant.now(),
             statusURL = URL("http://localhost:8080/"),
-            testResultat = emptyList(),
             lenker =
-                AutoTesterClient.AutoTesterOutput.Lenker(
+                AutoTesterClient.AutoTesterLenker(
                     urlFulltResultat = URL("http://localhost:8080/"),
                     urlBrot = URL("http://localhost:8080/"),
                     urlAggregeringSideTR = URL("http://localhost:8080/"),

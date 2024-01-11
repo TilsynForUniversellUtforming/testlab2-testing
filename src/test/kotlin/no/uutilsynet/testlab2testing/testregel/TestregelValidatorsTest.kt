@@ -52,12 +52,12 @@ class TestregelValidatorsTest {
               TestregelStatus.publisert,
               Instant.now(),
               TestregelInnholdstype.nett,
-              TestregelModus.inngaaende,
+              TestregelModus.manuell,
               TestlabLocale.nb,
               1,
               1,
               testregelTestKrav,
-              testregelSchemaInngaaende)
+              testregelSchemaManuell)
           .validateTestregel()
     }
   }
@@ -145,7 +145,7 @@ class TestregelValidatorsTest {
               TestregelStatus.publisert,
               Instant.now(),
               TestregelInnholdstype.nett,
-              TestregelModus.inngaaende,
+              TestregelModus.manuell,
               TestlabLocale.nb,
               1,
               1,
@@ -174,14 +174,14 @@ class TestregelValidatorsTest {
   @Test
   @DisplayName("TestregelSchema for manuell kontroll må ha gyldig json-format")
   fun testregelSchemaWcagJsonError() {
-    val schema = validateSchema("{1}", TestregelType.manuell)
+    val schema = validateSchema("{1}", TestregelModus.manuell)
     assertTrue(schema.isFailure)
   }
 
   @Test
   @DisplayName("TestregelSchema for manuell kontroll med riktig json-format skal være gyldig")
   fun testregelSchemaWcagJsonSuccess() {
-    val schema = validateSchema(testregelSchemaManuell, TestregelType.manuell)
+    val schema = validateSchema(testregelSchemaManuell, TestregelModus.manuell)
     assertTrue(schema.isSuccess)
   }
 

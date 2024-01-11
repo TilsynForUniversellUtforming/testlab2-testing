@@ -51,8 +51,8 @@ class SakResource(val sakDAO: SakDAO) {
 
   @PutMapping("/{id}")
   fun updateSak(@PathVariable id: Int, @RequestBody sak: SakDTO): ResponseEntity<SakDTO> {
-      require(sak.id == id) { "id i URL-en og id er ikkje den same" }
-      return sakDAO
+    require(sak.id == id) { "id i URL-en og id er ikkje den same" }
+    return sakDAO
         .updateSakDTO(sak)
         .fold(
             onSuccess = { ResponseEntity.ok(it) },

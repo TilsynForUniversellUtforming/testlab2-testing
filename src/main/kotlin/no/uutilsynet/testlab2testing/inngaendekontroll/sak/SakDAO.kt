@@ -76,7 +76,12 @@ class SakDAO(
   fun getSakDTO(sakId: Int): Result<SakDTO> {
     val sak = getSak(sakId).getOrThrow()
     return Result.success(
-        SakDTO(sak.virksomhet, sak.loeysingar, sak.testreglar.map { TestregelDTO(it) }))
+        SakDTO(
+            sak.id,
+            sak.namn,
+            sak.virksomhet,
+            sak.loeysingar,
+            sak.testreglar.map { TestregelDTO(it) }))
   }
 
   private fun findNettsiderBySakAndLoeysing(
@@ -223,15 +228,17 @@ class SakDAO(
         }
   }
 
-  fun updateSakDTO(sakId: Int, sakDTO: SakDTO): Result<SakDTO> {
-    val sak = getSak(sakId).getOrThrow()
+  fun updateSakDTO(sakDTO: SakDTO): Result<SakDTO> {
+    val sak = getSak(sakDTO.id).getOrThrow()
     val testreglar = getTestreglar(sakDTO.testreglar.map { it.id })
     val updatedSak =
         sak.copy(
             virksomhet = sakDTO.virksomhet, loeysingar = sakDTO.loeysingar, testreglar = testreglar)
-    update(sakId, updatedSak)
+    update(updatedSak)
     return Result.success(
         SakDTO(
+            updatedSak.id,
+            updatedSak.namn,
             updatedSak.virksomhet,
             updatedSak.loeysingar,
             updatedSak.testreglar.map { TestregelDTO(it) }))

@@ -17,7 +17,7 @@ fun validateSchema(testregelSchema: String?, type: TestregelModus): Result<Strin
   if (type == TestregelModus.forenklet &&
       !testregelSchema.matches("^(QW-ACT-R)[0-9]{1,2}$".toRegex())) {
     throw IllegalArgumentException("QualWeb regel id må vera på formen QW-ACT-RXX")
-  } else if (type == TestregelType.manuell && validateJSONString(testregelSchema).isFailure) {
+  } else if (type == TestregelModus.manuell && validateJSONString(testregelSchema).isFailure) {
     throw IllegalArgumentException("Skjema må væra på gylig json-format")
   }
 
