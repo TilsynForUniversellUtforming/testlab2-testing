@@ -254,15 +254,17 @@ class SakDAO(
     return testregelDAO.getTestregelList().filter { testregelIdList.contains(it.id) }
   }
 
-  fun updateSakDTO(sakId: Int, sakDTO: SakDTO): Result<SakDTO> {
-    val sak = getSak(sakId).getOrThrow()
+  fun updateSakDTO(sakDTO: SakDTO): Result<SakDTO> {
+    val sak = getSak(sakDTO.id).getOrThrow()
     val testreglar = getTestreglar(sakDTO.testreglar.map { it.id })
     val updatedSak =
         sak.copy(
             virksomhet = sakDTO.virksomhet, loeysingar = sakDTO.loeysingar, testreglar = testreglar)
-    update(sakId, updatedSak)
+    update(updatedSak)
     return Result.success(
         SakDTO(
+            updatedSak.id,
+            updatedSak.namn,
             updatedSak.virksomhet,
             updatedSak.loeysingar,
             updatedSak.testreglar.map { TestregelDTO(it) }))

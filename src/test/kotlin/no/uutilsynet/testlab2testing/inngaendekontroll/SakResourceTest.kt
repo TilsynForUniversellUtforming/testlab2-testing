@@ -11,6 +11,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakListeElement
 import no.uutilsynet.testlab2testing.testregel.TestregelDTO
 import no.uutilsynet.testlab2testing.tilfeldigOrgnummer
 import no.uutilsynet.testlab2testing.testregel.TestregelDTO
+import no.uutilsynet.testlab2testing.tilfeldigOrgnummer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
