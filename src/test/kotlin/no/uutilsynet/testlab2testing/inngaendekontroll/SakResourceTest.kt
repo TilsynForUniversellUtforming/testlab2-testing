@@ -6,10 +6,10 @@ import kotlin.properties.Delegates
 import kotlin.random.Random
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
+import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakDTO
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakListeElement
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.tilfeldigOrgnummer
 import no.uutilsynet.testlab2testing.testregel.TestregelDTO
+import no.uutilsynet.testlab2testing.tilfeldigOrgnummer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
@@ -206,7 +206,7 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     @Test
     fun leggeTilTestreglar() {
       val location = restTemplate.postForLocation("/saker", nySak)!!
-      val sak: Sak = restTemplate.getForObject(location)!!
+      val sak: SakDTO = restTemplate.getForObject(location)!!
 
       val testreglar =
           restTemplate

@@ -68,7 +68,7 @@ class RegelsettValidatorsTest {
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelModus.inngaaende,
+                TestregelModus.manuell,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -83,14 +83,14 @@ class RegelsettValidatorsTest {
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelModus.inngaaende,
+                TestregelModus.manuell,
                 TestlabLocale.nb,
                 1,
                 1,
                 "1.1.1",
                 """{"gaaTil": 1}"""))
     val testregelIdList = listOf(1, 2)
-    val regelsettType = TestregelType.manuell
+    val regelsettType = TestregelModus.manuell
 
     assertTrue(validateRegelsettTestreglar(testregelIdList, regelsettType, testregelList).isSuccess)
   }
@@ -183,7 +183,7 @@ class RegelsettValidatorsTest {
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelModus.inngaaende,
+                TestregelModus.manuell,
                 TestlabLocale.nb,
                 1,
                 1,

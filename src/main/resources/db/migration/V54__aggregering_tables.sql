@@ -1,4 +1,4 @@
-create table aggregering_testregel
+create table if not exists aggregering_testregel
 (
     id   serial primary key,
     maaling_id int references maalingv1 (id),
@@ -17,7 +17,7 @@ create table aggregering_testregel
     testregel_gjennomsnittleg_side_samsvar_prosent double precision
 );
 
-create table aggregering_side(
+create table if not exists  aggregering_side(
     id serial primary key,
     maaling_id int references maalingv1 (id),
     loeysing_id int not null,
@@ -28,7 +28,7 @@ create table aggregering_side(
     tal_ikkje_forekomst int
     );
 
-create table aggregering_suksesskriterium(
+create table if not exists  aggregering_suksesskriterium(
     id serial primary key,
     maaling_id int references maalingv1 (id),
     loeysing_id int not null,

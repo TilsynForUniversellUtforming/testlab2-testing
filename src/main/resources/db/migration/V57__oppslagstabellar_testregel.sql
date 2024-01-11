@@ -1,9 +1,9 @@
-CREATE TABLE testobjekt(
+CREATE TABLE IF NOT EXISTS testobjekt(
     id serial primary key,
     testobjekt text
 );
 
-CREATE TABLE tema (
+CREATE TABLE IF NOT EXISTS tema (
     id serial primary key,
     tema text)
 ;

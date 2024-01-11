@@ -61,7 +61,7 @@ class RegelsettIntegrationTest(
     val response =
         restTemplate.postForEntity(
             regelsettBaseUri,
-            regelsettTestCreateRequestBody(type = TestregelType.manuell),
+            regelsettTestCreateRequestBody(type = TestregelModus.manuell),
             String::class.java)
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
@@ -203,7 +203,7 @@ class RegelsettIntegrationTest(
                 RegelsettEdit(
                     id = regelsett.id,
                     namn = regelsett.namn,
-                    type = TestregelType.manuell,
+                    type = TestregelModus.manuell,
                     standard = regelsett.standard,
                     testregelIdList = regelsett.testregelList.map { it.id })),
             String::class.java)

@@ -113,7 +113,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "status" to TestregelStatus.publisert.value,
               "datoSistEndra" to Timestamp.from(Instant.now().truncatedTo(ChronoUnit.MINUTES)),
               "innholdstype" to TestregelInnholdstype.nett.value,
-              "type" to TestregelModus.inngaaende.value,
+              "type" to TestregelModus.manuell.value,
               "spraak" to TestlabLocale.nb.value,
               "tema" to testregelInitManuell.tema,
               "testobjekt" to testregelInitManuell.testobjekt,
