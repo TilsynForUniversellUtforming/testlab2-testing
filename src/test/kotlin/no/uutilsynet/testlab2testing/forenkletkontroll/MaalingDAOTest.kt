@@ -9,6 +9,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDate
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingTestName
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testRegelList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
+import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.assertj.core.api.Assertions.assertThat
@@ -22,10 +23,11 @@ import org.springframework.boot.test.mock.mockito.MockBean
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MaalingDAOTest(
     @Autowired val maalingDAO: MaalingDAO,
-    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient
+    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
+    @Autowired val crawlresultatDAO: CrawlresultatDAO
 ) {
 
-  @MockBean lateinit var aggregeringDao: AggregeringDAO
+  @MockBean lateinit var aggregeringService: AggregeringService
 
   @BeforeAll
   fun beforeAll() {
@@ -222,7 +224,7 @@ class MaalingDAOTest(
                 )))!!
     maalingDAO.save(kvalitetssikring).getOrThrow()
     val crawlResults =
-        maalingDAO.getCrawlResultatForMaaling(
+        crawlresultatDAO.getCrawlResultatForMaaling(
             maaling.id, listOf(digdirLoeysing, uutilsynetLoeysing))
     val digdirCrawlResult = crawlResults.find { it.loeysing == digdirLoeysing }
     assertThat(digdirCrawlResult).isInstanceOf(CrawlResultat.Ferdig::class.java)

@@ -1,5 +1,6 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll
+package no.uutilsynet.testlab2testing.forenkletkontroll.aggregering
 
+import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 
 data class AggregertResultatSideTestregel(
