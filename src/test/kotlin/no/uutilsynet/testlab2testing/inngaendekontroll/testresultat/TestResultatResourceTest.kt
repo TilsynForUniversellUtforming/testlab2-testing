@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 import java.net.URI
 import java.time.Instant
 import kotlin.properties.Delegates
-import no.uutilsynet.testlab2testing.common.Brukar
+import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll.Svar
@@ -37,16 +37,17 @@ class TestResultatResourceTest(
                 sakId,
                 "Testheim kommune",
                 "000000000",
-                listOf(
-                    Sak.Loeysing(
-                        1,
-                        listOf(
-                            Sak.Nettside(
-                                1,
-                                "Forside",
-                                "https://www.uutilsynet.no/",
-                                "forside",
-                                "forside"))))))
+                loeysingar =
+                    listOf(
+                        Sak.Loeysing(
+                            1,
+                            listOf(
+                                Sak.Nettside(
+                                    1,
+                                    "Forside",
+                                    "https://www.uutilsynet.no/",
+                                    "forside",
+                                    "forside"))))))
         .getOrThrow()
     val sak = sakDAO.getSak(sakId).getOrThrow()
     val nettside = sak.loeysingar.first().nettsider.first()

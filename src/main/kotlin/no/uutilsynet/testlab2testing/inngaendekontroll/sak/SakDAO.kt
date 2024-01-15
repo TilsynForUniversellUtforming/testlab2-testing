@@ -3,6 +3,8 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.sak
 import java.sql.Timestamp
 import java.time.Instant
 import javax.sql.DataSource
+import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.brukar.BrukarDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.RowMapper
@@ -14,7 +16,8 @@ import org.springframework.transaction.annotation.Transactional
 class SakDAO(
     val jdbcTemplate: NamedParameterJdbcTemplate,
     val dataSource: DataSource,
-    val testregelDAO: TestregelDAO
+    val testregelDAO: TestregelDAO,
+    val brukarDAO: BrukarDAO
 ) {
   fun save(namn: String, virksomhet: String): Result<Int> = runCatching {
     jdbcTemplate.queryForObject(
@@ -26,6 +29,7 @@ class SakDAO(
         Int::class.java)!!
   }
 
+  @Transactional
   fun getSak(sakId: Int): Result<Sak> {
     val rowMapper = RowMapper { rs, _ ->
       val loeysingIdArray = rs.getArray("loeysingar")?.array as? Array<Int> ?: emptyArray()
@@ -35,14 +39,26 @@ class SakDAO(
             Sak.Loeysing(loeysingId, nettsider)
           }
       val testreglar = testregelDAO.getTestreglarBySak(sakId)
-      Sak(sakId, rs.getString("namn"), rs.getString("virksomhet"), loeysingar, testreglar)
+      val brukarId = rs.getInt("ansvarleg_id")
+      val ansvarleg =
+          if (brukarId > 0)
+              Brukar(rs.getString("ansvarleg_brukarnamn"), rs.getString("ansvarleg_namn"))
+          else null
+      Sak(
+          sakId,
+          rs.getString("namn"),
+          rs.getString("virksomhet"),
+          ansvarleg = ansvarleg,
+          loeysingar = loeysingar,
+          testreglar = testreglar)
     }
     val sak =
         jdbcTemplate.queryForObject(
             """
-                select namn, virksomhet, loeysingar
+                select sak.namn, sak.virksomhet, sak.loeysingar, brukar.id as ansvarleg_id, brukar.namn as ansvarleg_namn, brukar.brukarnamn as ansvarleg_brukarnamn
                 from sak
-                where id = :id
+                left join brukar on brukar.id = sak.ansvarleg
+                where sak.id = :id
             """
                 .trimIndent(),
             mapOf("id" to sakId),
@@ -71,13 +87,18 @@ class SakDAO(
 
   @Transactional
   fun update(sak: Sak): Result<Sak> = runCatching {
-    // oppdater lista med virksomheter
+    // oppdater lista med virksomheter og lagre ansvarleg brukar
     val array =
         dataSource.connection.createArrayOf(
             "INTEGER", sak.loeysingar.map { it.loeysingId }.toTypedArray())
+    val brukarId: Int? = sak.ansvarleg?.let { brukarDAO.saveBrukar(it) }
     jdbcTemplate.update(
-        "update sak set virksomhet = :virksomhet, loeysingar = :loeysingar where id = :id",
-        mapOf("virksomhet" to sak.virksomhet, "loeysingar" to array, "id" to sak.id))
+        "update sak set virksomhet = :virksomhet, loeysingar = :loeysingar, ansvarleg = :brukarId where id = :id",
+        mapOf(
+            "virksomhet" to sak.virksomhet,
+            "loeysingar" to array,
+            "brukarId" to brukarId,
+            "id" to sak.id))
 
     // slett alle nettsider som er knyttet til saken
     jdbcTemplate.update(
