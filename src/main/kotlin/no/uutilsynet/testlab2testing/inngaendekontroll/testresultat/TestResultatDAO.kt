@@ -2,19 +2,18 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.sql.Timestamp
 import java.time.Instant
-import no.uutilsynet.testlab2testing.common.Brukar
+import no.uutilsynet.testlab2testing.brukar.BrukarDAO
 import org.simpleflatmapper.jdbc.spring.JdbcTemplateMapperFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val brukarDAO: BrukarDAO) {
   @Transactional
   fun save(createTestResultat: TestResultatResource.CreateTestResultat): Result<Int> {
     return runCatching {
-      val brukarId: Int =
-          getBrukarId(createTestResultat.brukar) ?: saveBrukar(createTestResultat.brukar)
+      val brukarId: Int = brukarDAO.saveBrukar(createTestResultat.brukar)
       jdbcTemplate.queryForObject(
           """
         insert into testresultat (sak_id, loeysing_id, testregel_id, nettside_id, brukar_id, element_omtale, element_resultat,
@@ -36,28 +35,6 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "testVartUtfoert" to createTestResultat.testVartUtfoert),
           Int::class.java)!!
     }
-  }
-
-  private fun getBrukarId(brukar: Brukar): Int? {
-    val queryResult =
-        jdbcTemplate.query(
-            "select id from brukar where brukarnamn = :brukarnamn",
-            mapOf("brukarnamn" to brukar.brukarnamn)) { rs, _ ->
-              rs.getInt("id")
-            }
-    return if (queryResult.isEmpty()) null else queryResult.first()
-  }
-
-  private fun saveBrukar(brukar: Brukar): Int {
-    return jdbcTemplate.queryForObject(
-        """
-              insert into brukar (brukarnamn, namn)
-              values (:brukarnamn, :namn)
-              returning id
-            """
-            .trimIndent(),
-        mapOf("brukarnamn" to brukar.brukarnamn, "namn" to brukar.namn),
-        Int::class.java)!!
   }
 
   fun getTestResultat(id: Int): Result<ResultatManuellKontroll> =
