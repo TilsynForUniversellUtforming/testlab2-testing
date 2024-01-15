@@ -23,7 +23,7 @@ import org.springframework.http.ResponseEntity
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
-  val orgnummer: MutableList<String> = mutableListOf()
+  var orgnummer: String by Delegates.notNull()
 
   @DisplayName("oppretting av ei sak")
   @Nested
@@ -38,13 +38,13 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     fun opprettingAvEiSak() {
       val virksomhet = tilfeldigOrgnummer()
       val namn = "Testheim kommune"
-      orgnummer.add(virksomhet)
       val result =
           restTemplate.postForEntity(
               "/saker", mapOf("virksomhet" to virksomhet, "namn" to namn), Unit::class.java)
       assertThat(result.statusCode).isEqualTo(HttpStatus.CREATED)
       assertThat(result.headers.location).isNotNull()
 
+      orgnummer = virksomhet
       location = result.headers.location!!
     }
 
@@ -58,12 +58,14 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
       assertThat(result.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
     }
 
+    private val testesen = Brukar("testesen@digdir.no", "Test Testesen")
+
     @DisplayName("når vi har oppretta ei sak, så skal vi kunne oppdatere den med ein ansvarleg")
     @Test
     @Order(2)
     fun oppdaterMedAnsvarleg() {
       val sak: Sak = restTemplate.getForObject(location, Sak::class.java)!!
-      val oppdatertSak = sak.copy(ansvarleg = Brukar("testesen@digdir.no", "Test Testesen"))
+      val oppdatertSak = sak.copy(ansvarleg = testesen)
       val responseEntity: ResponseEntity<Unit> =
           restTemplate.exchange<Unit>(location, HttpMethod.PUT, HttpEntity(oppdatertSak))
       assertThat(responseEntity.statusCode.is2xxSuccessful).isTrue()
@@ -76,7 +78,7 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
       val sak: Sak = restTemplate.getForObject(location, Sak::class.java)!!
       assertThat(sak.namn).isEqualTo("Testheim kommune")
       assertThat(sak.virksomhet).isNotNull()
-      assertThat(sak.ansvarleg).isEqualTo(Brukar("testesen@digdir.no", "Test Testesen"))
+      assertThat(sak.ansvarleg).isEqualTo(testesen)
     }
 
     @DisplayName("når vi har oppretta to saker, så skal vi kunne liste dei ut")
@@ -84,11 +86,11 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     @Order(4)
     fun listUtSaker() {
       val saker = restTemplate.getForObject("/saker", Array<SakListeElement>::class.java)!!
+      val sak = saker.find { it.virksomhet == orgnummer }
       assertThat(saker.size).isGreaterThanOrEqualTo(2)
-      orgnummer.forEach { virksomhet ->
-        assertThat(saker.any { it.virksomhet == virksomhet }).isTrue()
-      }
       saker.forEach { assertThat(it.namn).isNotBlank() }
+      assertThat(sak).isNotNull()
+      assertThat(sak!!.ansvarleg).isEqualTo(testesen)
     }
   }
 
