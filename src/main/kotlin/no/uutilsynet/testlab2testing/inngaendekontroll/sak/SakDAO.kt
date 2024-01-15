@@ -6,6 +6,7 @@ import javax.sql.DataSource
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import org.simpleflatmapper.jdbc.spring.JdbcTemplateMapperFactory
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -174,7 +175,17 @@ class SakDAO(
 
   fun getAlleSaker(): List<SakListeElement> {
     return jdbcTemplate.query(
-        "select id, namn, virksomhet from sak",
-        DataClassRowMapper.newInstance(SakListeElement::class.java))
+        """
+               select sak.id,
+               sak.namn,
+               sak.virksomhet,
+               brukar.brukarnamn as ansvarleg_brukarnamn,
+               brukar.namn as ansvarleg_namn
+               from sak
+                 left join brukar on sak.ansvarleg = brukar.id
+         """,
+        JdbcTemplateMapperFactory.newInstance()
+            .addKeys("id", "ansvarleg_brukarnamn")
+            .newResultSetExtractor(SakListeElement::class.java))!!
   }
 }
