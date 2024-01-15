@@ -21,4 +21,4 @@ data class Sak(
 }
 
 /** Ein enklare versjon av Sak-klassen som brukast i lister. */
-data class SakListeElement(val id: Int, val virksomhet: String)
+data class SakListeElement(val id: Int, val namn: String, val virksomhet: String)
