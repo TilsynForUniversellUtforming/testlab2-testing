@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.time.Instant
-import no.uutilsynet.testlab2testing.common.Brukar
+import no.uutilsynet.testlab2testing.brukar.Brukar
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
 import org.springframework.http.ResponseEntity

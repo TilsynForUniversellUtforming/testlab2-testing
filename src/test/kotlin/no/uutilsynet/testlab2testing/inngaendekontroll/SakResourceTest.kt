@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll
 
+import java.net.URI
+import kotlin.properties.Delegates
+import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakListeElement
 import no.uutilsynet.testlab2testing.testregel.Testregel
@@ -10,8 +13,12 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.client.exchange
 import org.springframework.boot.test.web.client.getForObject
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -21,8 +28,11 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
   @DisplayName("oppretting av ei sak")
   @Nested
   @TestMethodOrder(OrderAnnotation::class)
+  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
   inner class OpprettingAvEiSak {
-    @DisplayName("når vi sender inn eit gyldig orgnummer, så skal vi få oppretta ei sak")
+    private var location: URI by Delegates.notNull()
+
+    @DisplayName("vi skal kunne opprette ei sak")
     @Test
     @Order(1)
     fun opprettingAvEiSak() {
@@ -34,6 +44,8 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
               "/saker", mapOf("virksomhet" to virksomhet, "namn" to namn), Unit::class.java)
       assertThat(result.statusCode).isEqualTo(HttpStatus.CREATED)
       assertThat(result.headers.location).isNotNull()
+
+      location = result.headers.location!!
     }
 
     @DisplayName("når vi sender inn eit ugyldig orgnummer, så skal vi bli avvist")
@@ -46,19 +58,25 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
       assertThat(result.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
     }
 
+    @DisplayName("når vi har oppretta ei sak, så skal vi kunne oppdatere den med ein ansvarleg")
+    @Test
+    @Order(2)
+    fun oppdaterMedAnsvarleg() {
+      val sak: Sak = restTemplate.getForObject(location, Sak::class.java)!!
+      val oppdatertSak = sak.copy(ansvarleg = Brukar("testesen@digdir.no", "Test Testesen"))
+      val responseEntity: ResponseEntity<Unit> =
+          restTemplate.exchange<Unit>(location, HttpMethod.PUT, HttpEntity(oppdatertSak))
+      assertThat(responseEntity.statusCode.is2xxSuccessful).isTrue()
+    }
+
     @DisplayName("når vi har oppretta ei sak, så skal vi kunne hente den ut på adressa i location")
     @Test
     @Order(3)
     fun hentSak() {
-      val virksomhet = tilfeldigOrgnummer()
-      val namn = "Testheim kommune"
-      orgnummer.add(virksomhet)
-      val result =
-          restTemplate.postForEntity(
-              "/saker", mapOf("virksomhet" to virksomhet, "namn" to namn), Unit::class.java)
-      val sak: Sak = restTemplate.getForObject(result.headers.location!!, Sak::class.java)!!
-      assertThat(sak.virksomhet).isEqualTo(virksomhet)
-      assertThat(sak.namn).isEqualTo(namn)
+      val sak: Sak = restTemplate.getForObject(location, Sak::class.java)!!
+      assertThat(sak.namn).isEqualTo("Testheim kommune")
+      assertThat(sak.virksomhet).isNotNull()
+      assertThat(sak.ansvarleg).isEqualTo(Brukar("testesen@digdir.no", "Test Testesen"))
     }
 
     @DisplayName("når vi har oppretta to saker, så skal vi kunne liste dei ut")
