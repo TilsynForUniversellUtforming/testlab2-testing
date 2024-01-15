@@ -1,0 +1,179 @@
+package no.uutilsynet.testlab2testing.forenkletkontroll.aggregering
+
+import java.net.URI
+import java.util.*
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.stereotype.Component
+
+@Component
+class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+
+  fun createAggregertResultatTestregel(aggregertResultatTestregel: AggregeringPerTestregelDTO) {
+
+    println("DTO " + aggregertResultatTestregel)
+
+    val sql =
+        "insert into aggregering_testregel(maaling_id,loeysing_id,suksesskriterium,fleire_suksesskriterium,testregel_id,tal_element_samsvar,tal_element_brot,tal_element_varsel,tal_element_ikkje_forekomst,tal_sider_samsvar,tal_sider_brot,tal_sider_ikkje_forekomst,testregel_gjennomsnittleg_side_brot_prosent,testregel_gjennomsnittleg_side_samsvar_prosent) " +
+            "values(:maaling_id,:loeysing_id,:suksesskriterium,:fleire_suksesskriterium,:testregel_id,:tal_element_samsvar,:tal_element_brot,:tal_element_varsel,:tal_element_ikkje_forekomst,:tal_sider_samsvar,:tal_sider_brot,:tal_sider_ikkje_forekomst,:testregel_gjennomsnittleg_side_brot_prosent,:testregel_gjennomsnittleg_side_samsvar_prosent)"
+
+    val parameterSource =
+        MapSqlParameterSource()
+            .addValue("maaling_id", aggregertResultatTestregel.maalingId, java.sql.Types.INTEGER)
+            .addValue("loeysing_id", aggregertResultatTestregel.loeysingId, java.sql.Types.INTEGER)
+            .addValue(
+                "suksesskriterium",
+                aggregertResultatTestregel.suksesskriterium,
+                java.sql.Types.INTEGER)
+            .addValue(
+                "fleire_suksesskriterium",
+                aggregertResultatTestregel.fleireSuksesskriterium.map { it }.toTypedArray(),
+                java.sql.Types.ARRAY)
+            .addValue(
+                "testregel_id", aggregertResultatTestregel.testregelId, java.sql.Types.INTEGER)
+            .addValue(
+                "tal_element_samsvar",
+                aggregertResultatTestregel.talElementSamsvar,
+                java.sql.Types.INTEGER)
+            .addValue(
+                "tal_element_brot",
+                aggregertResultatTestregel.talElementBrot,
+                java.sql.Types.INTEGER)
+            .addValue(
+                "tal_element_varsel",
+                aggregertResultatTestregel.talElementVarsel,
+                java.sql.Types.INTEGER)
+            .addValue(
+                "tal_element_ikkje_forekomst",
+                aggregertResultatTestregel.talElementIkkjeForekomst,
+                java.sql.Types.INTEGER)
+            .addValue(
+                "tal_sider_samsvar",
+                aggregertResultatTestregel.talSiderSamsvar,
+                java.sql.Types.INTEGER)
+            .addValue(
+                "tal_sider_brot", aggregertResultatTestregel.talSiderBrot, java.sql.Types.INTEGER)
+            .addValue(
+                "tal_sider_ikkje_forekomst",
+                aggregertResultatTestregel.talSiderIkkjeForekomst,
+                java.sql.Types.INTEGER)
+            .addValue(
+                "testregel_gjennomsnittleg_side_brot_prosent",
+                aggregertResultatTestregel.testregelGjennomsnittlegSideBrotProsent,
+                java.sql.Types.FLOAT)
+            .addValue(
+                "testregel_gjennomsnittleg_side_samsvar_prosent",
+                aggregertResultatTestregel.testregelGjennomsnittlegSideSamsvarProsent,
+                java.sql.Types.FLOAT)
+
+    jdbcTemplate.update(sql, parameterSource)
+  }
+
+  fun createAggregertResultatSuksesskriterium(
+      aggregertResultatSuksesskriterium: AggregeringPerSuksesskriteriumDTO
+  ) {
+
+    val sql =
+        """insert into aggregering_suksesskriterium
+            (maaling_id, loeysing_id, suksesskriterium_id, tal_sider_samsvar, tal_sider_brot, tal_sider_ikkje_forekomst)
+            values(:maaling_id,:loeysing_id,:suksesskriterium,:tal_sider_samsvar,:tal_sider_brot,:tal_sider_ikkje_forekomst)"""
+
+    val parameterMap =
+        mapOf(
+            "maaling_id" to aggregertResultatSuksesskriterium.maalingId,
+            "loeysing_id" to aggregertResultatSuksesskriterium.loeysingId,
+            "suksesskriterium" to aggregertResultatSuksesskriterium.suksesskriteriumId,
+            "tal_sider_samsvar" to aggregertResultatSuksesskriterium.talSiderSamsvar,
+            "tal_sider_brot" to aggregertResultatSuksesskriterium.talSiderBrot,
+            "tal_sider_ikkje_forekomst" to aggregertResultatSuksesskriterium.talSiderIkkjeForekomst)
+
+    jdbcTemplate.update(sql, parameterMap)
+  }
+
+  fun createAggregeringSide(aggregertResultatSide: AggregeringPerSideDTO) {
+    val sql =
+        """insert into aggregering_side
+              (maaling_id, loeysing_id, side,
+   tal_element_samsvar,tal_element_brot,tal_element_ikkje_forekomst )
+              values(:maaling_id,loeysing_id,
+   :side,:tal_element_samsvar,:tal_element_brot,:tal_element_ikkje_forekomst)"""
+
+    val parameterMap =
+        mapOf(
+            "maaling_id" to aggregertResultatSide.maalingId,
+            "loeysing_id" to aggregertResultatSide.loeysingId,
+            "side" to aggregertResultatSide.sideUrl,
+            "side_nivaa" to aggregertResultatSide.sideNivaa,
+            "tal_element_samsvar" to aggregertResultatSide.talElementSamsvar,
+            "tal_element_brot" to aggregertResultatSide.talElementBrot,
+            "tal_element_varsel" to aggregertResultatSide.talElementVarsel,
+            "tal_element_ikkje_forekomst" to aggregertResultatSide.talElementIkkjeForekomst)
+
+    jdbcTemplate.update(sql, parameterMap)
+  }
+
+  fun getAggregertResultatTestregelForMaaling(maalingId: Int): List<AggregeringPerTestregelDTO> {
+    val query = "select * from aggregering_testregel where maaling_id = :maalingId"
+    val params = mapOf("maalingId" to maalingId)
+    return jdbcTemplate.query(query, params) { rs, _ ->
+      AggregeringPerTestregelDTO(
+          maalingId = rs.getInt("maaling_id"),
+          testregelId = rs.getInt("testregel_id"),
+          loeysingId = rs.getInt("loeysing_id"),
+          suksesskriterium = rs.getInt("suksesskriterium"),
+          fleireSuksesskriterium = sqlArrayToList(rs.getArray("fleire_suksesskriterium")),
+          talElementSamsvar = rs.getInt("tal_element_samsvar"),
+          talElementBrot = rs.getInt("tal_element_brot"),
+          talElementVarsel = rs.getInt("tal_element_varsel"),
+          talElementIkkjeForekomst = rs.getInt("tal_element_ikkje_forekomst"),
+          talSiderSamsvar = rs.getInt("tal_sider_samsvar"),
+          talSiderBrot = rs.getInt("tal_sider_brot"),
+          talSiderIkkjeForekomst = rs.getInt("tal_sider_ikkje_forekomst"),
+          testregelGjennomsnittlegSideBrotProsent =
+              rs.getFloat("testregel_gjennomsnittleg_side_brot_prosent"),
+          testregelGjennomsnittlegSideSamsvarProsent =
+              rs.getFloat("testregel_gjennomsnittleg_side_samsvar_prosent"))
+    }
+  }
+
+  fun getAggregertResultatSideForMaaling(maalingId: Int): List<AggregeringPerSideDTO> {
+    val query = "select * from aggregering_side where maaling_id = :maalingId"
+    val params = mapOf("maalingId" to maalingId)
+
+    return jdbcTemplate.query(query, params) { rs, _ ->
+      AggregeringPerSideDTO(
+          maalingId = rs.getInt("maaling_id"),
+          loeysingId = rs.getInt("loeysing_id"),
+          sideUrl = URI(rs.getString("side")).toURL(),
+          sideNivaa = rs.getInt("side_nivaa"),
+          gjennomsnittligBruddProsentTR = rs.getDouble("gjennomsnittleg_side_samsvar_prosent"),
+          talElementSamsvar = rs.getInt("tal_element_samsvar"),
+          talElementBrot = rs.getInt("tal_element_brot"),
+          talElementVarsel = rs.getInt("tal_element_varsel"),
+          talElementIkkjeForekomst = rs.getInt("tal_element_ikkje_forekomst"))
+    }
+  }
+
+  fun getAggregertResultatSuksesskriteriumForMaaling(
+      maalingId: Int
+  ): List<AggregeringPerSuksesskriteriumDTO> {
+    val query = "select * from aggregering_suksesskriterium where maaling_id = :maalingId"
+    val params = mapOf("maalingId" to maalingId)
+
+    return jdbcTemplate.query(query, params) { rs, _ ->
+      AggregeringPerSuksesskriteriumDTO(
+          maalingId = rs.getInt("maaling_id"),
+          loeysingId = rs.getInt("loeysing_id"),
+          suksesskriteriumId = rs.getInt("suksesskriterium"),
+          talSiderSamsvar = rs.getInt("tal_sider_samsvar"),
+          talSiderBrot = rs.getInt("tal_sider_brot"),
+          talSiderIkkjeForekomst = rs.getInt("tal_sider_ikkje_forekomst"))
+    }
+  }
+
+  fun sqlArrayToList(sqlArray: java.sql.Array): List<Int> {
+    val array = sqlArray.array as Array<Int>
+    return Arrays.asList(*array)
+
+  }
+}

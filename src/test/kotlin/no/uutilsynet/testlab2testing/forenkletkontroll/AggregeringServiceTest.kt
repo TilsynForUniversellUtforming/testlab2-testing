@@ -2,9 +2,9 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URL
 import java.time.Instant
-import no.uutilsynet.testlab2testing.krav.KravWcag2x
+import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.krav.WcagSamsvarsnivaa
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.*
@@ -17,7 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 
 @SpringBootTest
-class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
+class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringService) {
 
   @MockBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
@@ -28,21 +28,6 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
   @Autowired lateinit var maalingDao: MaalingDAO
 
   @Autowired lateinit var testregelDAO: TestregelDAO
-
-  var krav: KravWcag2x =
-      KravWcag2x(
-          1,
-          "1.1.1 Ikke-tekstlig innhold (Nivå A)",
-          "Gjeldande",
-          "Suksesskriterium",
-          false,
-          true,
-          true,
-          "http://example.com",
-          "Mulig å oppfatte",
-          "1.2 Tidsbaserte medier",
-          "1.1.1",
-          WcagSamsvarsnivaa.A)
 
   @Test
   fun saveAggregeringTestregel() {
@@ -68,9 +53,9 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1))
         .thenReturn(Result.success("1.1.1"))
 
-    aggregeringDAO.saveAggregertResultatTestregel(testKoeyring)
+    aggregeringService.saveAggregertResultatTestregel(testKoeyring)
 
-    val retrievedAggregering = aggregeringDAO.getAggregertResultatTestregelForMaaling(maalingId)
+    val retrievedAggregering = aggregeringService.getAggregertResultatTestregel(maalingId)
 
     assertThat(retrievedAggregering).isNotEmpty
     assert(retrievedAggregering[0].maalingId == maalingId)
@@ -126,7 +111,7 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
             loeysing = Loeysing(1, "test", URL("http://localhost:8080/"), "123456789"),
             testregelId = testregelNoekkel,
             suksesskriterium = "1.1.1",
-            fleireSuksesskriterium = listOf("1.1.1", "1.1.2"),
+            fleireSuksesskriterium = listOf("1.1.1", "1.1.1"),
             talElementSamsvar = 1,
             talElementBrot = 2,
             talElementVarsel = 1,
