@@ -70,6 +70,7 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
       orgnummer.forEach { virksomhet ->
         assertThat(saker.any { it.virksomhet == virksomhet }).isTrue()
       }
+      saker.forEach { assertThat(it.namn).isNotBlank() }
     }
   }
 

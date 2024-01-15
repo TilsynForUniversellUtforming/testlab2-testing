@@ -153,7 +153,7 @@ class SakDAO(
 
   fun getAlleSaker(): List<SakListeElement> {
     return jdbcTemplate.query(
-        "select id, virksomhet, opprettet from sak",
+        "select id, namn, virksomhet from sak",
         DataClassRowMapper.newInstance(SakListeElement::class.java))
   }
 }
