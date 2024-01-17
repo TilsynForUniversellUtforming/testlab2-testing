@@ -72,7 +72,7 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     @Test
     @Order(2)
     fun oppdaterMedAnsvarleg() {
-      val sak: Sak = restTemplate.getForObject(location, Sak::class.java)!!
+      val sak: SakDTO = restTemplate.getForObject(location, SakDTO::class.java)!!
       val oppdatertSak = sak.copy(ansvarleg = testesen)
       val responseEntity: ResponseEntity<Unit> =
           restTemplate.exchange<Unit>(location, HttpMethod.PUT, HttpEntity(oppdatertSak))
@@ -83,7 +83,7 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     @Test
     @Order(3)
     fun hentSak() {
-      val sak: Sak = restTemplate.getForObject(location, Sak::class.java)!!
+      val sak: SakDTO = restTemplate.getForObject(location, SakDTO::class.java)!!
       assertThat(sak.namn).isEqualTo("Testheim kommune")
       assertThat(sak.virksomhet).isNotNull()
       assertThat(sak.ansvarleg).isEqualTo(testesen)
