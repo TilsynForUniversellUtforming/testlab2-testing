@@ -3,6 +3,8 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
+import java.time.Instant
+import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.statusURL
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testRegelList
 import org.assertj.core.api.Assertions.assertThat
@@ -163,4 +165,69 @@ class AutoTesterClientTest {
     "testVartUtfoert": "3/23/2023, 11:15:54 AM"
   }]}"""
           .trimIndent()
+
+  @DisplayName("Aggregering skal returnere null-verdiar i json fil")
+  @Test()
+  fun aggregeringReturnNullValues() {
+    val jsonResult =
+        """[{
+            "fleireSuksesskriterium": [
+            "2.5.3"
+            ],
+            "loeysing": {
+            "id": 2429,
+            "url": "https://www.jarlsberg-ikt.no/",
+            "orgnummer": "919431016",
+            "namn": "JARLSBERG IKT - INTERKOMMUNALT SAMARBEID"
+        },
+            "maalingId": 280,
+            "suksesskriterium": "2.5.3",
+            "talElementBrot": 0,
+            "talElementSamsvar": 0,
+            "talElementVarsel": 0,
+            "talElementIkkjeForekomst": 0,
+            "talSiderBrot": 0,
+            "talSiderIkkjeForekomst": 10,
+            "talSiderSamsvar": 0,
+            "testregelId": "QW-ACT-R30",
+            "testregelGjennomsnittlegSideBrotProsent": null,
+            "testregelGjennomsnittlegSideSamsvarProsent": null
+        }]"""
+            .trimIndent()
+
+    val lenker =
+        AutoTesterClient.AutoTesterLenker(
+            URI("https://fullt.resultat").toURL(),
+            URI("https://brot.resultat").toURL(),
+            URI("https://aggregering.resultat").toURL(),
+            URI("https://aggregeringSK.resultat").toURL(),
+            URI("https://aggregeringSide.resultat").toURL(),
+            URI("https://aggregeringSideTR.resultat").toURL(),
+            URI("https://aggregeringLoeysing.resultat").toURL(),
+        )
+    val testKoeyring =
+        TestKoeyring.Ferdig(
+            TestConstants.crawlResultat, Instant.now(), URI(statusURL).toURL(), lenker = lenker)
+
+    server
+        .expect(
+            ExpectedCount.manyTimes(),
+            MockRestRequestMatchers.requestTo(
+                CoreMatchers.startsWith("https://aggregering.resultat")))
+        .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+        .andRespond(MockRestResponseCreators.withSuccess(jsonResult, MediaType.APPLICATION_JSON))
+
+    val response: AggregertResultatTestregel =
+        runBlocking {
+              autoTesterClient.fetchResultat(
+                  listOf(testKoeyring), AutoTesterClient.ResultatUrls.urlAggreggeringTR)
+            }
+            .values
+            .first()
+            .getOrThrow()
+            .first() as AggregertResultatTestregel
+
+    assertThat(response.testregelGjennomsnittlegSideBrotProsent).isNull()
+    assertThat(response.testregelGjennomsnittlegSideSamsvarProsent).isNull()
+  }
 }

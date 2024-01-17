@@ -8,7 +8,7 @@ data class AggregertResultatSideTestregel(
     val loeysing: Loeysing,
     val sideUrl: String,
     val sideNivaa: Int,
-    val bruddprosentTestregel: Int,
+    val bruddprosentTestregel: Float?,
     val talElementSamvar: Int,
     val talElementBrot: Int,
     val talElementVarsel: Int,
