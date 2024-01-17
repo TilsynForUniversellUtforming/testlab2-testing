@@ -1,7 +1,9 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.sak
 
+import java.sql.Date
 import java.sql.Timestamp
 import java.time.Instant
+import java.time.LocalDate
 import javax.sql.DataSource
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarDAO
@@ -20,12 +22,13 @@ class SakDAO(
     val testregelDAO: TestregelDAO,
     val brukarDAO: BrukarDAO
 ) {
-  fun save(namn: String, virksomhet: String): Result<Int> = runCatching {
+  fun save(namn: String, virksomhet: String, frist: LocalDate): Result<Int> = runCatching {
     jdbcTemplate.queryForObject(
-        "insert into sak (namn, virksomhet, opprettet) values (:namn, :virksomhet, :opprettet) returning id",
+        "insert into sak (namn, virksomhet, frist, opprettet) values (:namn, :virksomhet, :frist, :opprettet) returning id",
         mapOf(
             "namn" to namn,
             "virksomhet" to virksomhet,
+            "frist" to Date.valueOf(frist),
             "opprettet" to Timestamp.from(Instant.now())),
         Int::class.java)!!
   }
@@ -49,6 +52,7 @@ class SakDAO(
           sakId,
           rs.getString("namn"),
           rs.getString("virksomhet"),
+          rs.getDate("frist").toLocalDate(),
           ansvarleg = ansvarleg,
           loeysingar = loeysingar,
           testreglar = testreglar)
@@ -56,7 +60,7 @@ class SakDAO(
     val sak =
         jdbcTemplate.queryForObject(
             """
-                select sak.namn, sak.virksomhet, sak.loeysingar, brukar.id as ansvarleg_id, brukar.namn as ansvarleg_namn, brukar.brukarnamn as ansvarleg_brukarnamn
+                select sak.namn, sak.virksomhet, sak.frist, sak.loeysingar, brukar.id as ansvarleg_id, brukar.namn as ansvarleg_namn, brukar.brukarnamn as ansvarleg_brukarnamn
                 from sak
                 left join brukar on brukar.id = sak.ansvarleg
                 where sak.id = :id
@@ -179,6 +183,7 @@ class SakDAO(
                select sak.id,
                sak.namn,
                sak.virksomhet,
+               sak.frist,
                brukar.brukarnamn as ansvarleg_brukarnamn,
                brukar.namn as ansvarleg_namn
                from sak

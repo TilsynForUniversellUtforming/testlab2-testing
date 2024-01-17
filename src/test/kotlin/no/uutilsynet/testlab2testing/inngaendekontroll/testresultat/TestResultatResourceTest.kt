@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.net.URI
 import java.time.Instant
+import java.time.LocalDate
 import kotlin.properties.Delegates
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
@@ -29,7 +30,9 @@ class TestResultatResourceTest(
   @Order(1)
   @DisplayName("vi skal kunne opprette et nytt testresultat")
   fun nyttTestresultat() {
-    sakId = sakDAO.save("Testheim kommune", "000000000").getOrThrow()
+    val frist = LocalDate.now().plusMonths(3)
+
+    sakId = sakDAO.save("Testheim kommune", "000000000", frist).getOrThrow()
 
     sakDAO
         .update(
@@ -37,6 +40,7 @@ class TestResultatResourceTest(
                 sakId,
                 "Testheim kommune",
                 "000000000",
+                frist,
                 loeysingar =
                     listOf(
                         Sak.Loeysing(
