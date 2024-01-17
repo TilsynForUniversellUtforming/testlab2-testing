@@ -4,9 +4,10 @@
 
 For å komme i gang:
 
-1. Start lokale versjoner av eksterne systemer (se under) med `docker compose -f docker-compose.dev.yml up`.
-2. Kjør alle testene med `./mvnw test`
-3. Start applikasjonen med `./mvnw spring-boot:run`
+1. Autentiser deg mot docker registry: `az acr login -n acrddtprod`.
+2. Start lokale versjoner av eksterne systemer (se under) med `docker compose -f docker-compose.dev.yml up`.
+3. Kjør alle testene med `./mvnw test`
+4. Start applikasjonen med `./mvnw spring-boot:run`
 
 ### Eksterne systemer
 
