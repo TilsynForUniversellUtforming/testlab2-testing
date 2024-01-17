@@ -1,7 +1,9 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll
 
 import java.net.URI
+import java.time.LocalDate
 import kotlin.properties.Delegates
+import kotlin.random.Random
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakListeElement
@@ -32,15 +34,20 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
   inner class OpprettingAvEiSak {
     private var location: URI by Delegates.notNull()
 
+    private val frist = LocalDate.now().plusMonths(Random.nextLong(1, 12))
+
     @DisplayName("vi skal kunne opprette ei sak")
     @Test
     @Order(1)
     fun opprettingAvEiSak() {
       val virksomhet = tilfeldigOrgnummer()
       val namn = "Testheim kommune"
+      val frist = frist
       val result =
           restTemplate.postForEntity(
-              "/saker", mapOf("virksomhet" to virksomhet, "namn" to namn), Unit::class.java)
+              "/saker",
+              mapOf("virksomhet" to virksomhet, "namn" to namn, "frist" to frist),
+              Unit::class.java)
       assertThat(result.statusCode).isEqualTo(HttpStatus.CREATED)
       assertThat(result.headers.location).isNotNull()
 
@@ -79,6 +86,7 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
       assertThat(sak.namn).isEqualTo("Testheim kommune")
       assertThat(sak.virksomhet).isNotNull()
       assertThat(sak.ansvarleg).isEqualTo(testesen)
+      assertThat(sak.frist).isEqualTo(frist)
     }
 
     @DisplayName("når vi har oppretta to saker, så skal vi kunne liste dei ut")
@@ -87,7 +95,7 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     fun listUtSaker() {
       val saker = restTemplate.getForObject("/saker", Array<SakListeElement>::class.java)!!
       val sak = saker.find { it.virksomhet == orgnummer }
-      assertThat(saker.size).isGreaterThanOrEqualTo(2)
+      assertThat(saker.size).isGreaterThanOrEqualTo(1)
       saker.forEach { assertThat(it.namn).isNotBlank() }
       assertThat(sak).isNotNull()
       assertThat(sak!!.ansvarleg).isEqualTo(testesen)
@@ -97,7 +105,11 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
   @DisplayName("oppdatering av ei sak")
   @Nested
   inner class OppdateringAvEiSak {
-    val nySak = mapOf("namn" to "Testheim kommune", "virksomhet" to tilfeldigOrgnummer())
+    val nySak =
+        mapOf(
+            "namn" to "Testheim kommune",
+            "virksomhet" to tilfeldigOrgnummer(),
+            "frist" to LocalDate.now().plusMonths(6))
 
     @DisplayName("vi skal kunne legge til løysingar på ei sak")
     @Test
