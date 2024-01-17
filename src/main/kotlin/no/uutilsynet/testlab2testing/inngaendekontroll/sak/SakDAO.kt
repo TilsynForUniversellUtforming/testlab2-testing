@@ -80,6 +80,7 @@ class SakDAO(
             sak.id,
             sak.namn,
             sak.virksomhet,
+            sak.ansvarleg,
             sak.loeysingar,
             sak.testreglar.map { TestregelDTO(it) }))
   }
@@ -233,13 +234,17 @@ class SakDAO(
     val testreglar = getTestreglar(sakDTO.testreglar.map { it.id })
     val updatedSak =
         sak.copy(
-            virksomhet = sakDTO.virksomhet, loeysingar = sakDTO.loeysingar, testreglar = testreglar)
+            virksomhet = sakDTO.virksomhet,
+            ansvarleg = sakDTO.ansvarleg,
+            loeysingar = sakDTO.loeysingar,
+            testreglar = testreglar)
     update(updatedSak)
     return Result.success(
         SakDTO(
             updatedSak.id,
             updatedSak.namn,
             updatedSak.virksomhet,
+            updatedSak.ansvarleg,
             updatedSak.loeysingar,
             updatedSak.testreglar.map { TestregelDTO(it) }))
   }
