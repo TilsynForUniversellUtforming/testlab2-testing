@@ -8,7 +8,6 @@ import javax.sql.DataSource
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
-import org.simpleflatmapper.jdbc.spring.JdbcTemplateMapperFactory
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -197,9 +196,21 @@ class SakDAO(
                brukar.namn as ansvarleg_namn
                from sak
                  left join brukar on sak.ansvarleg = brukar.id
+               order by id
          """,
-        JdbcTemplateMapperFactory.newInstance()
-            .addKeys("id", "ansvarleg_brukarnamn")
-            .newResultSetExtractor(SakListeElement::class.java))!!
+        emptyMap<String, String>()) { rs, rowNum ->
+          val brukarnamn = rs.getString("ansvarleg_brukarnamn")
+          val namn = rs.getString("ansvarleg_namn")
+          val brukar =
+              if (brukarnamn != null) {
+                Brukar(brukarnamn, namn)
+              } else null
+          SakListeElement(
+              rs.getInt("id"),
+              rs.getString("namn"),
+              rs.getString("virksomhet"),
+              rs.getDate("frist").toLocalDate(),
+              brukar)
+        }
   }
 }
