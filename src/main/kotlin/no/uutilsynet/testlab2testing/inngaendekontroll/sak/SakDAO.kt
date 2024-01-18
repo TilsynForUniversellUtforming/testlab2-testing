@@ -92,70 +92,31 @@ class SakDAO(
 
   @Transactional
   fun update(sak: Sak): Result<Sak> = runCatching {
-    // oppdater lista med virksomheter og lagre ansvarleg brukar
+    updateAnsvarleg(sak)
+    updateVirksomheter(sak)
+    updateNettsider(sak)
+    updateTestreglar(sak)
+    sak
+  }
+
+  private fun updateAnsvarleg(sak: Sak) {
+    val brukarId: Int? = sak.ansvarleg?.let { brukarDAO.saveBrukar(it) }
+    jdbcTemplate.update(
+        "update sak set ansvarleg = :brukarId where id = :id",
+        mapOf("brukarId" to brukarId, "id" to sak.id))
+  }
+
+  private fun updateVirksomheter(sak: Sak) {
     val array =
         dataSource.connection.createArrayOf(
             "INTEGER", sak.loeysingar.map { it.loeysingId }.toTypedArray())
-    val brukarId: Int? = sak.ansvarleg?.let { brukarDAO.saveBrukar(it) }
     jdbcTemplate.update(
-        "update sak set virksomhet = :virksomhet, loeysingar = :loeysingar, ansvarleg = :brukarId where id = :id",
-        mapOf(
-            "virksomhet" to sak.virksomhet,
-            "loeysingar" to array,
-            "brukarId" to brukarId,
-            "id" to sak.id))
+        "update sak set virksomhet = :virksomhet, loeysingar = :loeysingar where id = :id",
+        mapOf("virksomhet" to sak.virksomhet, "loeysingar" to array, "id" to sak.id))
+  }
 
-    // slett alle nettsider som er knyttet til saken
-    jdbcTemplate.update(
-        """
-              delete from sak_loeysing_nettside
-              where sak_id = :sak_id
-          """
-            .trimIndent(),
-        mapOf("sak_id" to sak.id))
-    jdbcTemplate.update(
-        """
-        delete from nettside
-        where id in (
-            select nettside_id
-            from sak_loeysing_nettside
-            where sak_id = :sak_id
-        )
-    """
-            .trimIndent(),
-        mapOf("sak_id" to sak.id))
-
-    // legg til alle nye nettsider som er knyttet til saken
-    sak.loeysingar.forEach { loeysing ->
-      loeysing.nettsider.forEach { nettside ->
-        val nettsideId =
-            jdbcTemplate.queryForObject(
-                """
-                insert into nettside (type, url, beskrivelse, begrunnelse)
-                values (:type, :url, :beskrivelse, :begrunnelse)
-                returning id
-            """
-                    .trimIndent(),
-                mapOf(
-                    "type" to nettside.type,
-                    "url" to nettside.url,
-                    "beskrivelse" to nettside.beskrivelse,
-                    "begrunnelse" to nettside.begrunnelse),
-                Int::class.java)!!
-        jdbcTemplate.update(
-            """
-                  insert into sak_loeysing_nettside (sak_id, loeysing_id, nettside_id)
-                  values (:sak_id, :loeysing_id, :nettside_id)
-              """
-                .trimIndent(),
-            mapOf(
-                "sak_id" to sak.id,
-                "loeysing_id" to loeysing.loeysingId,
-                "nettside_id" to nettsideId))
-      }
-    }
-
-    // slett alle testreglar som er knyttet til saken
+  /** Sletter alle koblinger mellom denne saken og testregler, og lagrer de nye koblingene. */
+  private fun updateTestreglar(sak: Sak) {
     jdbcTemplate.update(
         """
             delete from sak_testregel
@@ -164,7 +125,6 @@ class SakDAO(
             .trimIndent(),
         mapOf("sak_id" to sak.id))
 
-    // legg til alle nye testreglar som er knyttet til saken
     sak.testreglar.forEach { testregel ->
       jdbcTemplate.update(
           """
@@ -174,7 +134,56 @@ class SakDAO(
               .trimIndent(),
           mapOf("sak_id" to sak.id, "testregel_id" to testregel.id))
     }
-    sak
+  }
+
+  /** Sletter alle nettsider som er lagret for denne saken, og lagrer de nye nettsidene. */
+  private fun updateNettsider(sak: Sak) {
+    jdbcTemplate.update(
+        """
+            delete from sak_loeysing_nettside
+            where sak_id = :sak_id
+        """
+            .trimIndent(),
+        mapOf("sak_id" to sak.id))
+    jdbcTemplate.update(
+        """
+            delete from nettside
+            where id not in (
+                select nettside_id
+                from sak_loeysing_nettside
+            )
+        """
+            .trimIndent(),
+        mapOf("sak_id" to sak.id))
+
+    sak.loeysingar.forEach { loeysing ->
+      loeysing.nettsider.forEach { nettside ->
+        val nettsideId =
+            jdbcTemplate.queryForObject(
+                """
+                    insert into nettside (type, url, beskrivelse, begrunnelse)
+                    values (:type, :url, :beskrivelse, :begrunnelse)
+                    returning id
+                """
+                    .trimIndent(),
+                mapOf(
+                    "type" to nettside.type,
+                    "url" to nettside.url,
+                    "beskrivelse" to nettside.beskrivelse,
+                    "begrunnelse" to nettside.begrunnelse),
+                Int::class.java)!!
+        jdbcTemplate.update(
+            """
+                      insert into sak_loeysing_nettside (sak_id, loeysing_id, nettside_id)
+                      values (:sak_id, :loeysing_id, :nettside_id)
+                  """
+                .trimIndent(),
+            mapOf(
+                "sak_id" to sak.id,
+                "loeysing_id" to loeysing.loeysingId,
+                "nettside_id" to nettsideId))
+      }
+    }
   }
 
   fun getAlleSaker(): List<SakListeElement> {
