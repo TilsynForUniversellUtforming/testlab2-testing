@@ -6,6 +6,7 @@ import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -20,9 +21,13 @@ class AggregeringDAO(
     val testregelDAO: TestregelDAO,
 ) {
 
+  private val logger = LoggerFactory.getLogger(AggregeringDAO::class.java)
+
   private fun createAggregertResultatTestregel(
       aggregertResultatTestregel: AggregertResultatTestregel
   ) {
+
+    logger.info("createAggregertResultatTestregel: $aggregertResultatTestregel")
 
     val sql =
         "insert into aggregering_testregel(maaling_id,loeysing_id,suksesskriterium,fleire_suksesskriterium,testregel_id,tal_element_samsvar,tal_element_brot,tal_element_varsel,tal_element_ikkje_forekomst,tal_sider_samsvar,tal_sider_brot,tal_sider_ikkje_forekomst,testregel_gjennomsnittleg_side_brot_prosent,testregel_gjennomsnittleg_side_samsvar_prosent) " +
@@ -87,6 +92,8 @@ class AggregeringDAO(
   @Transactional
   fun saveAggregertResultatTestregel(testKoeyring: TestKoeyring.Ferdig) {
     val aggregeringUrl: URI? = testKoeyring.lenker?.urlAggregeringTR?.toURI()
+    println(
+        "Hentar aggregert resultat for ${testKoeyring.loeysing.id}} frå url testKoeyring.lenker?.urlAggregeringTR?.toURI() ${testKoeyring.lenker?.urlAggregeringTR?.toURI()}")
 
     aggregeringUrl?.let {
       val aggregertResultatTestregel: List<AggregertResultatTestregel> =
@@ -100,6 +107,7 @@ class AggregeringDAO(
   }
 
   fun getAggregertResultatTestregelForMaaling(maalingId: Int): List<AggregertResultatTestregel> {
+    println("Hent aggregering for maalingId: $maalingId")
     val query = "select * from aggregering_testregel where maaling_id = :maalingId"
     val params = mapOf("maalingId" to maalingId)
     return jdbcTemplate.query(query, params) { rs, _ ->
@@ -144,5 +152,31 @@ class AggregeringDAO(
       return testregel?.testregelId
           ?: throw RuntimeException("Fant ikkje testregel med id $idTestregel")
     }
+  }
+
+  fun harMaalingLagraAggregering(maalingId: Int, aggregeringstype: String): Boolean {
+
+    val aggregeringsTabell =
+        when (aggregeringstype) {
+          "testresultat" -> "aggregering_testregel"
+          else -> throw RuntimeException("Ugyldig aggregeringstype")
+        }
+
+    val queryString = "select count(*) from $aggregeringsTabell where maaling_id = :maalingId"
+
+    val list = jdbcTemplate.queryForList(queryString, mapOf("maalingId" to maalingId))
+
+    println("List: $list")
+
+    val count =
+        jdbcTemplate.queryForObject(
+            queryString,
+            mapOf("maalingId" to maalingId, "aggregeringstype" to aggregeringsTabell),
+            Int::class.java)
+
+    if (count != null && count > 0) {
+      return true
+    }
+    return false
   }
 }

@@ -58,7 +58,12 @@ class CrawlerClientTest {
                 TestConstants.testregelSchemaForenklet))
     val maaling =
         Maaling.Planlegging(
-            1, "testmåling", maalingDateStart, loeysingList, testregelList, CrawlParameters())
+            1,
+            "testmåling",
+            maalingDateStart,
+            loeysingList,
+            testregelList.map { TestregelDTO(it) },
+            CrawlParameters())
     runBlocking {
       val oppdatertMaaling = crawlerClient.start(maaling)
 
