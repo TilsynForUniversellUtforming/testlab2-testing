@@ -26,6 +26,7 @@ import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelDTO
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
@@ -192,6 +193,13 @@ class MaalingResource(
       @RequestParam aggregeringstype: String = "testregel"
   ): ResponseEntity<Any> {
     if (aggregeringstype == "testresultat") {
+      if (!aggregeringDAO.harMaalingLagraAggregering(maalingId, "testresultat")) {
+        val testKoeyringar =
+            maalingDAO.getMaaling(maalingId)?.let { maaling ->
+              Maaling.findFerdigeTestKoeyringar(maaling)
+            }
+        testKoeyringar?.forEach { aggregeringDAO.saveAggregertResultatTestregel(it) }
+      }
       return aggregeringDAO.getAggregertResultatTestregelForMaaling(maalingId).let {
         ResponseEntity.ok(it)
       }
@@ -220,6 +228,7 @@ class MaalingResource(
               autoTesterClient
                   .fetchResultat(ferdigeTestKoeyringar, aggregeringURL)
                   .toSingleResult()
+                  .map { it.values.flatten() }
                   .getOrThrow()
             }
           }
@@ -416,7 +425,7 @@ class MaalingResource(
         maaling.copy(
             navn = navn,
             loeysingList = loeysingList,
-            testregelList = testregelList,
+            testregelList = testregelList.map { TestregelDTO(it) },
             crawlParameters = this.crawlParameters ?: maaling.crawlParameters)
       }
       is Maaling.Crawling -> maaling.copy(navn = this.navn)
