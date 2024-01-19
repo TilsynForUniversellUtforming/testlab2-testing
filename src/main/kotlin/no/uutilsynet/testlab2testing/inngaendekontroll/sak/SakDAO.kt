@@ -10,7 +10,6 @@ import no.uutilsynet.testlab2testing.brukar.BrukarDAO
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelDTO
-import org.simpleflatmapper.jdbc.spring.JdbcTemplateMapperFactory
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -80,6 +79,7 @@ class SakDAO(
             sak.id,
             sak.namn,
             sak.virksomhet,
+            sak.frist,
             sak.ansvarleg,
             sak.loeysingar,
             sak.testreglar.map { TestregelDTO(it) }))
@@ -244,6 +244,7 @@ class SakDAO(
             updatedSak.id,
             updatedSak.namn,
             updatedSak.virksomhet,
+            updatedSak.frist,
             updatedSak.ansvarleg,
             updatedSak.loeysingar,
             updatedSak.testreglar.map { TestregelDTO(it) }))
