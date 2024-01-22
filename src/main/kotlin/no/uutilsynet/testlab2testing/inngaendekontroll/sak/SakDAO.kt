@@ -7,7 +7,9 @@ import java.time.LocalDate
 import javax.sql.DataSource
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarDAO
+import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelDTO
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -68,6 +70,19 @@ class SakDAO(
             mapOf("id" to sakId),
             rowMapper)
     return if (sak != null) Result.success(sak) else Result.failure(IllegalArgumentException())
+  }
+
+  fun getSakDTO(sakId: Int): Result<SakDTO> {
+    val sak = getSak(sakId).getOrThrow()
+    return Result.success(
+        SakDTO(
+            sak.id,
+            sak.namn,
+            sak.virksomhet,
+            sak.frist,
+            sak.ansvarleg,
+            sak.loeysingar,
+            sak.testreglar.map { TestregelDTO(it) }))
   }
 
   private fun findNettsiderBySakAndLoeysing(
@@ -212,5 +227,30 @@ class SakDAO(
               rs.getDate("frist").toLocalDate(),
               brukar)
         }
+  }
+
+  fun updateSakDTO(sakDTO: SakDTO): Result<SakDTO> {
+    val sak = getSak(sakDTO.id).getOrThrow()
+    val testreglar = getTestreglar(sakDTO.testreglar.map { it.id })
+    val updatedSak =
+        sak.copy(
+            virksomhet = sakDTO.virksomhet,
+            ansvarleg = sakDTO.ansvarleg,
+            loeysingar = sakDTO.loeysingar,
+            testreglar = testreglar)
+    update(updatedSak)
+    return Result.success(
+        SakDTO(
+            updatedSak.id,
+            updatedSak.namn,
+            updatedSak.virksomhet,
+            updatedSak.frist,
+            updatedSak.ansvarleg,
+            updatedSak.loeysingar,
+            updatedSak.testreglar.map { TestregelDTO(it) }))
+  }
+
+  fun getTestreglar(testregelIdList: List<Int>): List<Testregel> {
+    return testregelDAO.getTestregelList().filter { testregelIdList.contains(it.id) }
   }
 }

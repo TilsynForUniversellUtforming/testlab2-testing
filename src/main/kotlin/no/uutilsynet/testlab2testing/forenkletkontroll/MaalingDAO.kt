@@ -23,6 +23,7 @@ import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
+import no.uutilsynet.testlab2testing.testregel.TestregelDTO
 import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
@@ -35,7 +36,8 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class MaalingDAO(
     val jdbcTemplate: NamedParameterJdbcTemplate,
-    val loeysingsRegisterClient: LoeysingsRegisterClient
+    val loeysingsRegisterClient: LoeysingsRegisterClient,
+    val aggregeringDao: AggregeringDAO,
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
@@ -196,7 +198,9 @@ class MaalingDAO(
     return when (status) {
       planlegging -> {
         val testregelList =
-            jdbcTemplate.query(maalingTestregelSql, mapOf("id" to id), testregelRowMapper)
+            jdbcTemplate.query(maalingTestregelSql, mapOf("id" to id), testregelRowMapper).map {
+              TestregelDTO(it)
+            }
         Planlegging(
             id, navn, datoStart, loeysingList, testregelList, CrawlParameters(maxLenker, talLenker))
       }
@@ -449,7 +453,10 @@ class MaalingDAO(
         maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling.id) }
       }
       is TestingFerdig -> {
-        maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling.id) }
+        maaling.testKoeyringar.forEach {
+          saveTestKoeyring(it, maaling.id)
+          aggregeringDao.saveAggregertResultatTestregel(it as TestKoeyring.Ferdig)
+        }
       }
     }
     maaling

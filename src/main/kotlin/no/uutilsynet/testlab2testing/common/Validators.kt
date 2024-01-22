@@ -28,6 +28,11 @@ fun validateNamn(s: String?): Result<String> = runCatching {
   s
 }
 
+fun validateTestregelId(s: String?): Result<String> = runCatching {
+  require(!(s == null || s == "")) { "mangler testregelId" }
+  s
+}
+
 fun validateStatus(s: String?): Result<Status> =
     when (s) {
       "crawling" -> Result.success(Status.Crawling)

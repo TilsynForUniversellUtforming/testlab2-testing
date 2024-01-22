@@ -15,6 +15,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 
 @DisplayName("Tester for MaalingDAO")
 @SpringBootTest
@@ -23,6 +24,8 @@ class MaalingDAOTest(
     @Autowired val maalingDAO: MaalingDAO,
     @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
+
+  @MockBean lateinit var aggregeringDao: AggregeringDAO
 
   @BeforeAll
   fun beforeAll() {

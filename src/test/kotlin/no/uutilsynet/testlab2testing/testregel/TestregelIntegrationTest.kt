@@ -29,7 +29,7 @@ class TestregelIntegrationTests(
   @AfterAll
   fun cleanup() {
     testregelDAO.jdbcTemplate.update(
-        "delete from testregel where name = :name", mapOf("name" to name))
+        "delete from testregel where namn = :name", mapOf("name" to name))
   }
 
   @Test
@@ -61,12 +61,12 @@ class TestregelIntegrationTests(
   @DisplayName("Skal kunne slette testregel")
   fun deleteTestregel() {
     val location = createDefaultTestregel()
-    val testregel = restTemplate.getForObject(location, Testregel::class.java)
+    val testregel = restTemplate.getForObject(location, TestregelDTO::class.java)
 
     Assertions.assertThat(testregel).isNotNull
     restTemplate.delete(location)
 
-    val deletedTestregel = restTemplate.getForObject(location, Testregel::class.java)
+    val deletedTestregel = restTemplate.getForObject(location, TestregelDTO::class.java)
     Assertions.assertThat(deletedTestregel).isNull()
   }
 
@@ -74,14 +74,14 @@ class TestregelIntegrationTests(
   @DisplayName("Skal kunne oppdatere testregel")
   fun updateTestregel() {
     val location = createDefaultTestregel()
-    val testregel = restTemplate.getForObject(location, Testregel::class.java)
+    val testregel = restTemplate.getForObject(location, TestregelDTO::class.java)
     val krav = "4.1.3 Statusbeskjeder"
     Assertions.assertThat(testregel.krav).isNotEqualTo(krav)
 
     restTemplate.exchange(
         "/v1/testreglar", HttpMethod.PUT, HttpEntity(testregel.copy(krav = krav)), Int::class.java)
 
-    val updatedTestregel = restTemplate.getForObject(location, Testregel::class.java)
+    val updatedTestregel = restTemplate.getForObject(location, TestregelDTO::class.java)
     Assertions.assertThat(updatedTestregel.krav).isEqualTo(krav)
   }
 
@@ -93,7 +93,7 @@ class TestregelIntegrationTests(
     @Test
     @DisplayName("Skal hente testregel")
     fun getTestregel() {
-      val testregel = restTemplate.getForObject(location, Testregel::class.java)
+      val testregel = restTemplate.getForObject(location, TestregelDTO::class.java)
       Assertions.assertThat(testregel.krav).isEqualTo(testregelTestKrav)
       Assertions.assertThat(testregel.testregelSchema).isEqualTo(testregelSchemaForenklet)
       Assertions.assertThat(testregel.name).isEqualTo(name)
@@ -102,9 +102,9 @@ class TestregelIntegrationTests(
     @Test
     @DisplayName("Skal hente liste med testregel")
     fun getTestregelList() {
-      val testregel = restTemplate.getForObject(location, Testregel::class.java)
+      val testregel = restTemplate.getForObject(location, TestregelDTO::class.java)
 
-      val testregelListType = object : ParameterizedTypeReference<List<Testregel>>() {}
+      val testregelListType = object : ParameterizedTypeReference<List<TestregelDTO>>() {}
 
       val testregelFromList =
           restTemplate

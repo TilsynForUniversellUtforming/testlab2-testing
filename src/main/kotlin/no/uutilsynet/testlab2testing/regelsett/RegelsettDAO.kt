@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.regelsett
 
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
+import no.uutilsynet.testlab2testing.testregel.TestregelDTO
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -14,16 +15,30 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val testregelList =
         jdbcTemplate.query(
             """
-        select tr.id, tr.name, tr.krav, tr.testregel_schema, tr.type
+        select tr.id, tr.testregel_id,tr.versjon,tr.namn, tr.krav, tr.status, tr.dato_sist_endra,tr.type , tr.modus ,tr.spraak,tr.tema,tr.testobjekt,tr.krav_til_samsvar,tr.testregel_schema
         from regelsett_testregel rt
           join testregel tr on tr.id = rt.testregel_id
         where rt.regelsett_id = :regelsett_id
+        order by tr.id
       """
                 .trimIndent(),
             mapOf("regelsett_id" to this.id),
             testregelRowMapper)
 
     return Regelsett(this.id, this.namn, this.type, this.standard, testregelList)
+  }
+
+  fun toRegelsettResponse(regelsett: Regelsett): RegelsettResponse {
+    return RegelsettResponse(
+        regelsett.id,
+        regelsett.namn,
+        regelsett.type,
+        regelsett.standard,
+        regelsett.testregelList.map { TestregelDTO(it) })
+  }
+
+  fun getRegelsettResponse(int: Int): RegelsettResponse? {
+    return getRegelsett(int)?.let { toRegelsettResponse(it) }
   }
 
   fun getRegelsett(id: Int): Regelsett? {
@@ -47,6 +62,9 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getRegelsettTestreglarList(includeInactive: Boolean): List<Regelsett> =
       getRegelsettBaseList(includeInactive).map { it.toRegelsett() }
+
+  fun getRegelsettResponseList(includeInactive: Boolean): List<RegelsettResponse> =
+      getRegelsettTestreglarList(includeInactive).map { toRegelsettResponse(it)!! }
 
   @Transactional
   fun createRegelsett(regelsett: RegelsettCreate): Int {

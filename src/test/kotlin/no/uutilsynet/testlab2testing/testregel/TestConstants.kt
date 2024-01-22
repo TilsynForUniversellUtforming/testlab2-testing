@@ -5,7 +5,7 @@ object TestConstants {
   val testregelTestKrav = "2.1.1 Tastatur"
   val testregelSchemaForenklet = "QW-ACT-R70"
   val testregelSchemaManuell = """{ "gaaTil": 1 }"""
-  val type = TestregelType.forenklet
+  val type = TestregelModus.forenklet
 
   val testregelRequestBody =
       mapOf(

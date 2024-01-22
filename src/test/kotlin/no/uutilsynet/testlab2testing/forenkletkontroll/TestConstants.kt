@@ -2,25 +2,35 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
 import java.time.Instant
+import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.testregel.*
 import no.uutilsynet.testlab2testing.testregel.TestConstants
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelType
 
 object TestConstants {
   val uutilsynetLoeysing =
       Loeysing(1, "UUTilsynet", URI("https://www.uutilsynet.no/").toURL(), "991825827")
   val digdirLoeysing = Loeysing(2, "Digdir", URI("https://www.digdir.no/").toURL(), "991825827")
   val loeysingList = listOf(uutilsynetLoeysing, digdirLoeysing)
+  val loeysingListId = loeysingList.map { it.id }
+
   val maalingTestName = "test_skal_slettes"
   val testregel =
       Testregel(
           1,
-          TestConstants.name,
           "QW-ACT-12",
+          1,
+          TestConstants.name,
           TestConstants.testregelTestKrav,
-          TestregelType.forenklet,
-      )
+          TestregelStatus.publisert,
+          Instant.now(),
+          TestregelInnholdstype.nett,
+          TestregelModus.forenklet,
+          TestlabLocale.nb,
+          1,
+          1,
+          "QW-ACT-12",
+          TestConstants.testregelSchemaForenklet)
 
   val testRegelList = listOf(testregel)
 
