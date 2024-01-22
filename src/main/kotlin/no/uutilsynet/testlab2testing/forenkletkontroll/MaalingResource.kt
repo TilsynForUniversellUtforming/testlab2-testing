@@ -212,64 +212,48 @@ class MaalingResource(
       @PathVariable maalingId: Int,
       @RequestParam aggregeringstype: String = "testregel"
   ): ResponseEntity<Any> {
-    if (aggregeringstype == "testresultat") {
-      if (!aggregeringDAO.harMaalingLagraAggregering(maalingId, "testresultat")) {
-        val testKoeyringar =
-            maalingDAO.getMaaling(maalingId)?.let { maaling ->
-              Maaling.findFerdigeTestKoeyringar(maaling)
-            }
-        testKoeyringar?.forEach { aggregeringDAO.saveAggregertResultatTestregel(it) }
-      }
-      return aggregeringDAO.getAggregertResultatTestregelForMaaling(maalingId).let {
-        ResponseEntity.ok(it)
-      }
-    } else {
-
-      val aggregeringURL =
-          when (aggregeringstype) {
-            "testresultat" -> AutoTesterClient.ResultatUrls.urlAggreggeringTR
-            "suksesskriterium" -> AutoTesterClient.ResultatUrls.urlAggregeringSK
-            "side" -> AutoTesterClient.ResultatUrls.urlAggregeringSide
-            "sideTestregel" -> AutoTesterClient.ResultatUrls.urlAggregeringSideTR
-            else -> throw IllegalArgumentException("Ugyldig aggregeringstype: $aggregeringstype")
-          }
-      return maalingDAO
-          .getMaaling(maalingId)
-          ?.let { maaling ->
-            runCatching {
-              if (maaling is Maaling.TestingFerdig) maaling
-              else throw IllegalArgumentException("Måling $maalingId er ikkje ferdig testa")
-            }
-          }
-          ?.map(Maaling.TestingFerdig::testKoeyringar)
-          ?.map { testKoeyringar -> testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>() }
-          ?.mapCatching { ferdigeTestKoeyringar ->
-            runBlocking(Dispatchers.IO) {
-              autoTesterClient
-                  .fetchResultat(ferdigeTestKoeyringar, aggregeringURL)
-                  .toSingleResult()
-                  .map { it.values.flatten() }
-                  .getOrThrow()
-            }
-          }
-          ?.fold(
-              { testResultatList -> ResponseEntity.ok(testResultatList) },
-              { error ->
-                logger.error("Feila da vi skulle hente aggregering for målinga $maalingId", error)
-                ResponseEntity.internalServerError().body(error.firstMessage())
-              })
-          ?: ResponseEntity.notFound().build()
 
     return when (aggregeringstype) {
-      "testresultat" ->
-          aggregeringService.getAggregertResultatTestregel(maalingId).let { ResponseEntity.ok(it) }
-      "suksesskriterium" ->
-          aggregeringService.getAggregertResultatSuksesskriterium(maalingId).let {
-            ResponseEntity.ok(it)
-          }
-      "side" -> aggregeringService.getAggregertResultatSide(maalingId).let { ResponseEntity.ok(it) }
+      "testresultat" -> return hentEllerGenererAggregeringPrTestregel(maalingId)
+      "suksesskriterium" -> return hentEllerGenererAggregeringPrSuksesskriterium(maalingId)
+      "side" -> return hentEllerGenererAggregeringPrSide(maalingId)
       else -> throw IllegalArgumentException("Ugyldig aggregeringstype: $aggregeringstype")
     }
+  }
+
+  private fun hentEllerGenererAggregeringPrSide(maalingId: Int): ResponseEntity<Any> {
+    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "side")) {
+      val testKoeyringar =
+          maalingDAO.getMaaling(maalingId)?.let { maaling ->
+            Maaling.findFerdigeTestKoeyringar(maaling)
+          }
+      testKoeyringar?.forEach { aggregeringService.saveAggregeringSide(it) }
+    }
+    return aggregeringService.getAggregertResultatSide(maalingId).let { ResponseEntity.ok(it) }
+  }
+
+  private fun hentEllerGenererAggregeringPrSuksesskriterium(maalingId: Int): ResponseEntity<Any> {
+    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "suksesskriterium")) {
+      val testKoeyringar =
+          maalingDAO.getMaaling(maalingId)?.let { maaling ->
+            Maaling.findFerdigeTestKoeyringar(maaling)
+          }
+      testKoeyringar?.forEach { aggregeringService.saveAggregertResultatSuksesskriterium(it) }
+    }
+    return aggregeringService.getAggregertResultatSuksesskriterium(maalingId).let {
+      ResponseEntity.ok(it)
+    }
+  }
+
+  private fun hentEllerGenererAggregeringPrTestregel(maalingId: Int): ResponseEntity<Any> {
+    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "testresultat")) {
+      val testKoeyringar =
+          maalingDAO.getMaaling(maalingId)?.let { maaling ->
+            Maaling.findFerdigeTestKoeyringar(maaling)
+          }
+      testKoeyringar?.forEach { aggregeringService.saveAggregertResultatTestregel(it) }
+    }
+    return aggregeringService.getAggregertResultatTestregel(maalingId).let { ResponseEntity.ok(it) }
   }
 
   @GetMapping("{maalingId}/crawlresultat/nettsider")

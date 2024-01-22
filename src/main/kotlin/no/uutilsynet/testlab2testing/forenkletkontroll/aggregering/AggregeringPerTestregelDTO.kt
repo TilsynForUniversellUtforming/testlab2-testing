@@ -13,6 +13,6 @@ data class AggregeringPerTestregelDTO(
     val talSiderSamsvar: Int,
     val talSiderBrot: Int,
     val talSiderIkkjeForekomst: Int,
-    val testregelGjennomsnittlegSideSamsvarProsent: Float,
-    val testregelGjennomsnittlegSideBrotProsent: Float
+    val testregelGjennomsnittlegSideSamsvarProsent: Float?,
+    val testregelGjennomsnittlegSideBrotProsent: Float?
 )

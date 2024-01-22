@@ -220,4 +220,8 @@ class AggregeringService(
       dtoTOAggregertResultatSuksesskriterium(it)
     }
   }
+
+  fun harMaalingLagraAggregering(maalingId: Int, aggregeringstype: String): Boolean {
+    return aggregeringDAO.harMaalingLagraAggregering(maalingId, aggregeringstype)
+  }
 }
