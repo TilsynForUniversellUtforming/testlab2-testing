@@ -1,11 +1,13 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import java.net.URI
+import java.time.Instant
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHandling
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
+import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
-import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
+import no.uutilsynet.testlab2testing.testregel.TestregelDTO.Companion.validateTestregel
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -27,8 +29,8 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
   private val locationForId: (Int) -> URI = { id -> URI("/v1/testreglar/${id}") }
 
   @GetMapping("{id}")
-  fun getTestregel(@PathVariable id: Int): ResponseEntity<Testregel> =
-      testregelDAO.getTestregel(id)?.let { ResponseEntity.ok(it) }
+  fun getTestregel(@PathVariable id: Int): ResponseEntity<TestregelDTO> =
+      testregelDAO.getTestregelResponse(id)?.let { ResponseEntity.ok(it) }
           ?: ResponseEntity.notFound().build()
 
   @GetMapping
@@ -36,9 +38,9 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
       runCatching {
             if (maalingId != null) {
               logger.debug("Henter testreglar for måling $maalingId")
-              ResponseEntity.ok(testregelDAO.getTestreglarForMaaling(maalingId))
+              ResponseEntity.ok(testregelDAO.getTestregelResponseForMaaling(maalingId))
             } else {
-              ResponseEntity.ok(testregelDAO.getTestregelList())
+              ResponseEntity.ok(testregelDAO.getTestregelListResponse())
             }
           }
           .getOrElse {
@@ -53,19 +55,19 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
   fun createTestregel(@RequestBody testregelInit: TestregelInit): ResponseEntity<out Any> =
       createWithErrorHandling(
           {
-            val name = validateNamn(testregelInit.name).getOrThrow()
-            val krav = validateKrav(testregelInit.krav).getOrThrow()
-            val schema =
-                validateSchema(testregelInit.testregelSchema, testregelInit.type).getOrThrow()
+            validateNamn(testregelInit.name).getOrThrow()
+            validateKrav(testregelInit.krav).getOrThrow()
+            validateSchema(testregelInit.testregelSchema, testregelInit.type).getOrThrow()
 
-            testregelDAO.createTestregel(TestregelInit(name, schema, krav, testregelInit.type))
+            testregelDAO.createTestregel(testregelInit)
           },
           locationForId)
 
   @PutMapping
-  fun updateTestregel(@RequestBody testregel: Testregel): ResponseEntity<out Any> =
+  fun updateTestregel(@RequestBody testregelrequest: TestregelDTO): ResponseEntity<out Any> =
       executeWithErrorHandling {
-        testregel.validateTestregel().getOrThrow()
+        testregelrequest.validateTestregel().getOrThrow()
+        val testregel = testregelResponseToTestregel(testregelrequest)
         testregelDAO.updateTestregel(testregel)
       }
 
@@ -87,4 +89,29 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
         }
         testregelDAO.deleteTestregel(testregelId)
       }
+
+  fun testregelResponseToTestregel(testregelDTO: TestregelDTO): Testregel {
+    return Testregel(
+        testregelDTO.id,
+        testregelDTO.name,
+        1,
+        testregelDTO.name,
+        testregelDTO.krav,
+        TestregelStatus.publisert,
+        Instant.now(),
+        TestregelInnholdstype.nett,
+        testregelDTO.type,
+        TestlabLocale.nb,
+        1,
+        1,
+        testregelDTO.krav,
+        testregelDTO.testregelSchema,
+    )
+  }
+
+  fun testregelListToTestregelResponseList(
+      testregelResultList: Result<List<Testregel>>
+  ): Result<List<TestregelDTO>> {
+    return testregelResultList.map { it.map { TestregelDTO(it) } }
+  }
 }

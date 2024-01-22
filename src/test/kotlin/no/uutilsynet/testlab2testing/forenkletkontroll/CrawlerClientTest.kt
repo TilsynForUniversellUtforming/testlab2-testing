@@ -2,12 +2,13 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
+import java.time.Instant
 import kotlinx.coroutines.runBlocking
+import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.testregel.*
 import no.uutilsynet.testlab2testing.testregel.TestConstants
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelType
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.startsWith
 import org.junit.jupiter.api.DisplayName
@@ -42,13 +43,27 @@ class CrawlerClientTest {
         listOf(
             Testregel(
                 1,
+                TestConstants.testregelSchemaForenklet,
+                1,
                 TestConstants.name,
                 "QW-ACT-12",
-                TestConstants.testregelTestKrav,
-                TestregelType.forenklet))
+                TestregelStatus.publisert,
+                Instant.now(),
+                TestregelInnholdstype.nett,
+                TestregelModus.forenklet,
+                TestlabLocale.nb,
+                1,
+                1,
+                "Er rett",
+                TestConstants.testregelSchemaForenklet))
     val maaling =
         Maaling.Planlegging(
-            1, "testmåling", maalingDateStart, loeysingList, testregelList, CrawlParameters())
+            1,
+            "testmåling",
+            maalingDateStart,
+            loeysingList,
+            testregelList.map { TestregelDTO(it) },
+            CrawlParameters())
     runBlocking {
       val oppdatertMaaling = crawlerClient.start(maaling)
 

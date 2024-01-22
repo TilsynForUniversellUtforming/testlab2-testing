@@ -19,7 +19,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
   @AfterAll
   fun cleanup() {
     testregelDAO.jdbcTemplate.update(
-        "delete from testregel where name = :name", mapOf("name" to name))
+        "delete from testregel where namn = :name", mapOf("name" to name))
   }
 
   @Test
@@ -28,7 +28,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
     val id = createTestregel()
     val testregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(testregel).isNotNull
-    Assertions.assertThat(testregel?.name).isEqualTo(name)
+    Assertions.assertThat(testregel?.namn).isEqualTo(name)
   }
 
   @Test
@@ -67,25 +67,55 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
   fun updateTestregel() {
     val testregelInit =
         TestregelInit(
-            "test_skal_slettes_1", "QW-ACT-R69", "1.4.12 Tekstavstand", TestregelType.forenklet)
-
+            "test_skal_slettes_1", "QW-ACT-R69", "1.4.12 Tekstavstand", TestregelModus.forenklet)
     val id = createTestregel(testregelInit)
 
     val oldTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(oldTestregel).isNotNull
     Assertions.assertThat(oldTestregel?.krav).isEqualTo(testregelInit.krav)
     Assertions.assertThat(oldTestregel?.testregelSchema).isEqualTo(testregelInit.testregelSchema)
-    Assertions.assertThat(oldTestregel?.name).isEqualTo(testregelInit.name)
+    Assertions.assertThat(oldTestregel?.namn).isEqualTo(testregelInit.name)
 
     oldTestregel
-        ?.copy(krav = testregelTestKrav, testregelSchema = testregelSchemaForenklet, name = name)
+        ?.copy(krav = testregelTestKrav, testregelSchema = testregelSchemaForenklet, namn = name)
         ?.let { testregelDAO.updateTestregel(it) }
 
     val updatedTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(updatedTestregel).isNotNull
     Assertions.assertThat(updatedTestregel?.krav).isEqualTo(testregelTestKrav)
     Assertions.assertThat(updatedTestregel?.testregelSchema).isEqualTo(testregelSchemaForenklet)
-    Assertions.assertThat(updatedTestregel?.name).isEqualTo(name)
+    Assertions.assertThat(updatedTestregel?.namn).isEqualTo(name)
+  }
+
+  @Test
+  fun updateTestregelSetDatoSistEndra() {
+    val testregelInit =
+        TestregelInit(
+            "test_skal_slettes_1", "QW-ACT-R69", "1.4.12 Tekstavstand", TestregelModus.forenklet)
+    val id = createTestregel(testregelInit)
+
+    val oldTestregel = testregelDAO.getTestregel(id)
+    Assertions.assertThat(oldTestregel).isNotNull
+    Assertions.assertThat(oldTestregel?.krav).isEqualTo(testregelInit.krav)
+    Assertions.assertThat(oldTestregel?.testregelSchema).isEqualTo(testregelInit.testregelSchema)
+    Assertions.assertThat(oldTestregel?.namn).isEqualTo(testregelInit.name)
+
+    val oldDate = oldTestregel?.datoSistEndra
+    println(oldDate)
+
+    oldTestregel
+        ?.copy(krav = testregelTestKrav, testregelSchema = testregelSchemaForenklet, namn = name)
+        ?.let { testregelDAO.updateTestregel(it) }
+
+    val updatedTestregel = testregelDAO.getTestregel(id)
+    Assertions.assertThat(updatedTestregel).isNotNull
+    Assertions.assertThat(updatedTestregel?.krav).isEqualTo(testregelTestKrav)
+    Assertions.assertThat(updatedTestregel?.testregelSchema).isEqualTo(testregelSchemaForenklet)
+    Assertions.assertThat(updatedTestregel?.namn).isEqualTo(name)
+
+    val newDate = updatedTestregel?.datoSistEndra
+
+    Assertions.assertThat(newDate).isNotEqualTo(oldDate)
   }
 
   private fun createTestregel(
@@ -94,7 +124,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
               name,
               testregelTestKrav,
               testregelSchemaForenklet,
-              TestregelType.forenklet,
+              TestregelModus.forenklet,
           )
   ) = testregelDAO.createTestregel(testregelInit)
 }

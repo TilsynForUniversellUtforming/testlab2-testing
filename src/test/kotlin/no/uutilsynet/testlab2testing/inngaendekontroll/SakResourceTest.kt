@@ -6,8 +6,9 @@ import kotlin.properties.Delegates
 import kotlin.random.Random
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
+import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakDTO
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakListeElement
-import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.TestregelDTO
 import no.uutilsynet.testlab2testing.tilfeldigOrgnummer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
@@ -71,7 +72,7 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     @Test
     @Order(2)
     fun oppdaterMedAnsvarleg() {
-      val sak: Sak = restTemplate.getForObject(location, Sak::class.java)!!
+      val sak: SakDTO = restTemplate.getForObject(location, SakDTO::class.java)!!
       val oppdatertSak = sak.copy(ansvarleg = testesen)
       val responseEntity: ResponseEntity<Unit> =
           restTemplate.exchange<Unit>(location, HttpMethod.PUT, HttpEntity(oppdatertSak))
@@ -82,7 +83,7 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     @Test
     @Order(3)
     fun hentSak() {
-      val sak: Sak = restTemplate.getForObject(location, Sak::class.java)!!
+      val sak: SakDTO = restTemplate.getForObject(location, SakDTO::class.java)!!
       assertThat(sak.namn).isEqualTo("Testheim kommune")
       assertThat(sak.virksomhet).isNotNull()
       assertThat(sak.ansvarleg).isEqualTo(testesen)
@@ -205,18 +206,18 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
     @Test
     fun leggeTilTestreglar() {
       val location = restTemplate.postForLocation("/saker", nySak)!!
-      val sak: Sak = restTemplate.getForObject(location)!!
+      val sak: SakDTO = restTemplate.getForObject(location)!!
 
       val testreglar =
           restTemplate
-              .getForObject("/v1/testreglar", Array<Testregel>::class.java)!!
+              .getForObject("/v1/testreglar", Array<TestregelDTO>::class.java)!!
               .toList()
               .take(3)
       assert(testreglar.isNotEmpty()) // testreglar blir lagt i databasen i migrasjon V24.
       val oppdatertSak = sak.copy(testreglar = testreglar)
       restTemplate.put(location, oppdatertSak)
 
-      val sakEtterOppdatering: Sak = restTemplate.getForObject(location)!!
+      val sakEtterOppdatering: SakDTO = restTemplate.getForObject(location)!!
       assertThat(sakEtterOppdatering.testreglar).containsExactlyInAnyOrderElementsOf(testreglar)
     }
   }

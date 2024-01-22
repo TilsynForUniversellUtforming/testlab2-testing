@@ -36,9 +36,9 @@ class SakResource(val sakDAO: SakDAO) {
       ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
 
   @GetMapping("/{id}")
-  fun getSak(@PathVariable id: Int): ResponseEntity<Sak> {
+  fun getSak(@PathVariable id: Int): ResponseEntity<SakDTO> {
     return sakDAO
-        .getSak(id)
+        .getSakDTO(id)
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
             onFailure = { ResponseEntity.notFound().build() })
@@ -50,10 +50,10 @@ class SakResource(val sakDAO: SakDAO) {
   }
 
   @PutMapping("/{id}")
-  fun updateSak(@PathVariable id: Int, @RequestBody sak: Sak): ResponseEntity<Sak> {
+  fun updateSak(@PathVariable id: Int, @RequestBody sak: SakDTO): ResponseEntity<SakDTO> {
     require(sak.id == id) { "id i URL-en og id er ikkje den same" }
     return sakDAO
-        .update(sak)
+        .updateSakDTO(sak)
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
             onFailure = { ResponseEntity.notFound().build() })

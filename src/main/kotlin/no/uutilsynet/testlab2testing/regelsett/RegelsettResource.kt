@@ -84,7 +84,7 @@ Returnerer ei liste med regelsett, eller ei tom liste om ingen finst. Ein kan sp
       @RequestParam(required = false, defaultValue = "false") includeTestreglar: Boolean = false
   ): List<RegelsettBase> =
       if (includeTestreglar) {
-        regelsettDAO.getRegelsettTestreglarList(includeInactive)
+        regelsettDAO.getRegelsettResponseList(includeInactive)
       } else {
         regelsettDAO.getRegelsettBaseList(includeInactive)
       }
@@ -98,8 +98,8 @@ Returnerer ei liste med regelsett, eller ei tom liste om ingen finst. Ein kan sp
               ApiResponse(responseCode = "404", description = "Ingen regelsett funne for gitt id"),
               ApiResponse(responseCode = "500", description = "Andre feil")])
   @GetMapping("{id}")
-  fun getRegelsett(@PathVariable id: Int): ResponseEntity<Regelsett> =
-      regelsettDAO.getRegelsett(id)?.let { ResponseEntity.ok(it) }
+  fun getRegelsett(@PathVariable id: Int): ResponseEntity<RegelsettResponse> =
+      regelsettDAO.getRegelsettResponse(id)?.let { ResponseEntity.ok(it) }
           ?: ResponseEntity.notFound().build()
 
   @Operation(
