@@ -146,7 +146,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           loeysingId = rs.getInt("loeysing_id"),
           sideUrl = URI(rs.getString("side")).toURL(),
           sideNivaa = rs.getInt("side_nivaa"),
-          gjennomsnittligBruddProsentTR = rs.getDouble("gjennomsnittleg_side_samsvar_prosent"),
+          gjennomsnittligBruddProsentTR = rs.getFloat("gjennomsnittleg_side_samsvar_prosent"),
           talElementSamsvar = rs.getInt("tal_element_samsvar"),
           talElementBrot = rs.getInt("tal_element_brot"),
           talElementVarsel = rs.getInt("tal_element_varsel"),
@@ -174,6 +174,31 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun sqlArrayToList(sqlArray: java.sql.Array): List<Int> {
     val array = sqlArray.array as Array<Int>
     return Arrays.asList(*array)
+  }
 
+  fun harMaalingLagraAggregering(maalingId: Int, aggregeringstype: String): Boolean {
+
+    val aggregeringsTabell =
+        when (aggregeringstype) {
+          "testresultat" -> "aggregering_testregel"
+          else -> throw RuntimeException("Ugyldig aggregeringstype")
+        }
+
+    val queryString = "select count(*) from $aggregeringsTabell where maaling_id = :maalingId"
+
+    val list = jdbcTemplate.queryForList(queryString, mapOf("maalingId" to maalingId))
+
+    println("List: $list")
+
+    val count =
+        jdbcTemplate.queryForObject(
+            queryString,
+            mapOf("maalingId" to maalingId, "aggregeringstype" to aggregeringsTabell),
+            Int::class.java)
+
+    if (count != null && count > 0) {
+      return true
+    }
+    return false
   }
 }
