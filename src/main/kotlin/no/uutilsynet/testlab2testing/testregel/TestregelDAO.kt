@@ -203,4 +203,16 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       testregelInit.testregelSchema
     } else testregelInit.name
   }
+
+  fun getInnhaldstypeForTesting(): List<InnhaldstypeTesting> =
+      jdbcTemplate.query(
+          "select * from innhaldstype_testing",
+          DataClassRowMapper.newInstance(InnhaldstypeTesting::class.java))
+
+  fun getTemaForTestregel(): List<Tema> =
+      jdbcTemplate.query("select * from tema", DataClassRowMapper.newInstance(Tema::class.java))
+
+  fun getTestobjekt(): List<Testobjekt> =
+      jdbcTemplate.query(
+          "select * from testobjekt", DataClassRowMapper.newInstance(Testobjekt::class.java))
 }
