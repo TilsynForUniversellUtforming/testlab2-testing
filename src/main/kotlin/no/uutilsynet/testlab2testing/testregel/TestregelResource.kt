@@ -90,6 +90,30 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
         testregelDAO.deleteTestregel(testregelId)
       }
 
+  @GetMapping("innhaldstypeForTesting")
+  fun getInnhaldstypeForTesting(): ResponseEntity<out Any> =
+      runCatching { ResponseEntity.ok(testregelDAO.getInnhaldstypeForTesting()) }
+          .getOrElse {
+            logger.error("Feila ved henting av innhaldstype for testing", it)
+            ResponseEntity.internalServerError().body(it.message)
+          }
+
+  @GetMapping("temaForTestreglar")
+  fun getTemaForTesreglar(): ResponseEntity<out Any> =
+      runCatching { ResponseEntity.ok(testregelDAO.getTemaForTestregel()) }
+          .getOrElse {
+            logger.error("Feila ved henting av tema for testreglar", it)
+            ResponseEntity.internalServerError().body(it.message)
+          }
+
+  @GetMapping("temaForTestreglar")
+  fun getTestobjektForTestreglar(): ResponseEntity<out Any> =
+      runCatching { ResponseEntity.ok(testregelDAO.getTestobjekt()) }
+          .getOrElse {
+            logger.error("Feila ved henting av tema for testreglar", it)
+            ResponseEntity.internalServerError().body(it.message)
+          }
+
   fun testregelResponseToTestregel(testregelDTO: TestregelDTO): Testregel {
     return Testregel(
         testregelDTO.id,
