@@ -9,7 +9,8 @@ alter table aggregering_side
 rename column tal_ikkje_forekomst to tal_element_ikkje_forekomst;
 alter table aggregering_side
 add column side_nivaa int not null default 1,
-alter column side type text;
+alter column side type text,
+add column tal_element_varsel int not null default 0;
 
 alter table aggregering_suksesskriterium
 rename column tal_sider_sider_ikkje_forekomst to tal_sider_ikkje_forekomst;
