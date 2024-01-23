@@ -1,6 +1,7 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll
+package no.uutilsynet.testlab2testing.forenkletkontroll.aggregering
 
 import java.net.URL
+import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 
 data class AggregertResultatSide(

@@ -9,6 +9,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.crawlResult
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testKoeyringList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
+import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.testregel.*
@@ -46,7 +47,9 @@ class MaalingResourceMockedTest {
 
   @MockBean private lateinit var crawlerClient: CrawlerClient
 
-  @MockBean private lateinit var aggregeringDAO: AggregeringDAO
+  @MockBean private lateinit var aggregeringService: AggregeringService
+
+  @MockBean private lateinit var crawlresultatDAO: CrawlresultatDAO
 
   private lateinit var maalingResource: MaalingResource
 
@@ -64,7 +67,8 @@ class MaalingResourceMockedTest {
             utvalDAO,
             crawlerClient,
             autoTesterClient,
-            aggregeringDAO)
+            aggregeringService,
+            crawlresultatDAO)
   }
 
   @Test
@@ -150,7 +154,8 @@ class MaalingResourceMockedTest {
 
     `when`(maalingDAO.getMaaling(id)).thenReturn(maaling)
     `when`(maalingDAO.save(maalingTesting)).thenReturn(Result.success(maalingTesting))
-    `when`(maalingDAO.getCrawlResultatNettsider(id, uutilsynetLoeysing.id)).thenReturn(nettsider)
+    `when`(crawlresultatDAO.getCrawlResultatNettsider(id, uutilsynetLoeysing.id))
+        .thenReturn(nettsider)
     `when`(testregelDAO.getTestreglarForMaaling(id)).thenReturn(Result.success(testregelList))
     `when`(loeysingsRegisterClient.getMany(listOf(uutilsynetLoeysing.id)))
         .thenReturn(Result.success(listOf(uutilsynetLoeysing)))

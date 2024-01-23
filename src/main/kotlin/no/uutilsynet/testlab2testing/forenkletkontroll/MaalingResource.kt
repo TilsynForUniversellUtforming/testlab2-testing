@@ -20,6 +20,7 @@ import no.uutilsynet.testlab2testing.common.validateStatus
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.firstMessage
 import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters.Companion.validateParameters
+import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
@@ -50,7 +51,8 @@ class MaalingResource(
     val utvalDAO: UtvalDAO,
     val crawlerClient: CrawlerClient,
     val autoTesterClient: AutoTesterClient,
-    val aggregeringDAO: AggregeringDAO
+    val aggregeringService: AggregeringService,
+    val crawlresultatDAO: CrawlresultatDAO
 ) {
 
   data class NyMaalingDTO(
@@ -67,37 +69,16 @@ class MaalingResource(
   fun nyMaaling(@RequestBody dto: NyMaalingDTO): ResponseEntity<Any> =
       runCatching {
             val navn = validateNamn(dto.navn).getOrThrow()
-            val loeysingIdList =
-                dto.loeysingIdList?.let {
-                  val loeysingar = loeysingsRegisterClient.getMany(it).getOrThrow()
-                  validateIdList(dto.loeysingIdList, loeysingar.map { it.id }, "loeysingIdList")
-                      .getOrThrow()
-                }
-            val utvalIdList = utvalDAO.getUtvalList().getOrDefault(emptyList()).map { it.id }
-            val utvalId =
-                dto.utvalId?.let {
-                  validateIdList(listOf(it), utvalIdList, "utvalId").getOrThrow().first()
-                }
-            val testregelIdList =
-                validateIdList(
-                        dto.testregelIdList,
-                        testregelDAO.getTestregelList().map { it.id },
-                        "testregelIdList")
-                    .getOrThrow()
+            val loeysingIdList = validateLoeyingsIdList(dto)
+            val utvalId = validatedUtvalId(dto)
+            val testregelIdList = validatedTestregeldList(dto)
             val crawlParameters = dto.crawlParameters ?: CrawlParameters()
             crawlParameters.validateParameters()
 
             val localDateNorway = Instant.now()
 
             if (utvalId != null) {
-              val utval =
-                  utvalDAO
-                      .getUtval(utvalId)
-                      .mapCatching {
-                        val loeysingar = loeysingsRegisterClient.getMany(it.loeysingar).getOrThrow()
-                        Utval(it.id, it.namn, loeysingar)
-                      }
-                      .getOrThrow()
+              val utval = getUtval(utvalId)
               maalingDAO.createMaaling(
                   navn, localDateNorway, utval, testregelIdList, crawlParameters)
             } else if (loeysingIdList != null) {
@@ -113,6 +94,45 @@ class MaalingResource(
                 ResponseEntity.created(location).build()
               },
               { exception -> handleErrors(exception) })
+
+  private fun getUtval(utvalId: Int): Utval {
+    val utval =
+        utvalDAO
+            .getUtval(utvalId)
+            .mapCatching {
+              val loeysingar = loeysingsRegisterClient.getMany(it.loeysingar).getOrThrow()
+              Utval(it.id, it.namn, loeysingar)
+            }
+            .getOrThrow()
+    return utval
+  }
+
+  private fun validatedTestregeldList(dto: NyMaalingDTO): List<Int> {
+    val testregelIdList =
+        validateIdList(
+                dto.testregelIdList,
+                testregelDAO.getTestregelList().map { it.id },
+                "testregelIdList")
+            .getOrThrow()
+    return testregelIdList
+  }
+
+  private fun validatedUtvalId(dto: NyMaalingDTO): Int? {
+    val utvalIdList = utvalDAO.getUtvalList().getOrDefault(emptyList()).map { it.id }
+    val utvalId =
+        dto.utvalId?.let { validateIdList(listOf(it), utvalIdList, "utvalId").getOrThrow().first() }
+    return utvalId
+  }
+
+  private fun validateLoeyingsIdList(dto: NyMaalingDTO): List<Int>? {
+    val loeysingIdList =
+        dto.loeysingIdList?.let {
+          val loeysingar = loeysingsRegisterClient.getMany(it).getOrThrow()
+          validateIdList(dto.loeysingIdList, loeysingar.map { it.id }, "loeysingIdList")
+              .getOrThrow()
+        }
+    return loeysingIdList
+  }
 
   @PutMapping
   fun updateMaaling(@RequestBody dto: EditMaalingDTO): ResponseEntity<out Any> =
@@ -192,54 +212,49 @@ class MaalingResource(
       @PathVariable maalingId: Int,
       @RequestParam aggregeringstype: String = "testregel"
   ): ResponseEntity<Any> {
-    if (aggregeringstype == "testresultat") {
-      if (!aggregeringDAO.harMaalingLagraAggregering(maalingId, "testresultat")) {
-        val testKoeyringar =
-            maalingDAO.getMaaling(maalingId)?.let { maaling ->
-              Maaling.findFerdigeTestKoeyringar(maaling)
-            }
-        testKoeyringar?.forEach { aggregeringDAO.saveAggregertResultatTestregel(it) }
-      }
-      return aggregeringDAO.getAggregertResultatTestregelForMaaling(maalingId).let {
-        ResponseEntity.ok(it)
-      }
-    } else {
 
-      val aggregeringURL =
-          when (aggregeringstype) {
-            "testresultat" -> AutoTesterClient.ResultatUrls.urlAggreggeringTR
-            "suksesskriterium" -> AutoTesterClient.ResultatUrls.urlAggregeringSK
-            "side" -> AutoTesterClient.ResultatUrls.urlAggregeringSide
-            "sideTestregel" -> AutoTesterClient.ResultatUrls.urlAggregeringSideTR
-            else -> throw IllegalArgumentException("Ugyldig aggregeringstype: $aggregeringstype")
-          }
-      return maalingDAO
-          .getMaaling(maalingId)
-          ?.let { maaling ->
-            runCatching {
-              if (maaling is Maaling.TestingFerdig) maaling
-              else throw IllegalArgumentException("Måling $maalingId er ikkje ferdig testa")
-            }
-          }
-          ?.map(Maaling.TestingFerdig::testKoeyringar)
-          ?.map { testKoeyringar -> testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>() }
-          ?.mapCatching { ferdigeTestKoeyringar ->
-            runBlocking(Dispatchers.IO) {
-              autoTesterClient
-                  .fetchResultat(ferdigeTestKoeyringar, aggregeringURL)
-                  .toSingleResult()
-                  .map { it.values.flatten() }
-                  .getOrThrow()
-            }
-          }
-          ?.fold(
-              { testResultatList -> ResponseEntity.ok(testResultatList) },
-              { error ->
-                logger.error("Feila da vi skulle hente aggregering for målinga $maalingId", error)
-                ResponseEntity.internalServerError().body(error.firstMessage())
-              })
-          ?: ResponseEntity.notFound().build()
+    return when (aggregeringstype) {
+      "testresultat" -> hentEllerGenererAggregeringPrTestregel(maalingId)
+      "suksesskriterium" -> hentEllerGenererAggregeringPrSuksesskriterium(maalingId)
+      "side" -> hentEllerGenererAggregeringPrSide(maalingId)
+      else -> throw IllegalArgumentException("Ugyldig aggregeringstype: $aggregeringstype")
     }
+  }
+
+  private fun hentEllerGenererAggregeringPrSide(maalingId: Int): ResponseEntity<Any> {
+    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "side")) {
+      val testKoeyringar =
+          maalingDAO.getMaaling(maalingId)?.let { maaling ->
+            Maaling.findFerdigeTestKoeyringar(maaling)
+          }
+      testKoeyringar?.forEach { aggregeringService.saveAggregeringSide(it) }
+    }
+    return aggregeringService.getAggregertResultatSide(maalingId).let { ResponseEntity.ok(it) }
+  }
+
+  private fun hentEllerGenererAggregeringPrSuksesskriterium(maalingId: Int): ResponseEntity<Any> {
+    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "suksesskriterium")) {
+      val testKoeyringar =
+          maalingDAO.getMaaling(maalingId)?.let { maaling ->
+            Maaling.findFerdigeTestKoeyringar(maaling)
+          }
+      testKoeyringar?.forEach { aggregeringService.saveAggregertResultatSuksesskriterium(it) }
+    }
+    return aggregeringService.getAggregertResultatSuksesskriterium(maalingId).let {
+      ResponseEntity.ok(it)
+    }
+  }
+
+  private fun hentEllerGenererAggregeringPrTestregel(maalingId: Int): ResponseEntity<Any> {
+    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "testresultat")) {
+      logger.info("Aggregering er ikkje generert for måling $maalingId, genererer no")
+      val testKoeyringar =
+          maalingDAO.getMaaling(maalingId)?.let { maaling ->
+            Maaling.findFerdigeTestKoeyringar(maaling)
+          }
+      testKoeyringar?.forEach { aggregeringService.saveAggregertResultatTestregel(it) }
+    }
+    return aggregeringService.getAggregertResultatTestregel(maalingId).let { ResponseEntity.ok(it) }
   }
 
   @GetMapping("{maalingId}/crawlresultat/nettsider")
@@ -247,7 +262,9 @@ class MaalingResource(
       @PathVariable maalingId: Int,
       @RequestParam loeysingId: Int
   ): ResponseEntity<List<URL>> =
-      maalingDAO.getCrawlResultatNettsider(maalingId, loeysingId).let { ResponseEntity.ok(it) }
+      crawlresultatDAO.getCrawlResultatNettsider(maalingId, loeysingId).let {
+        ResponseEntity.ok(it)
+      }
 
   @PutMapping("{id}/status")
   fun putNewStatus(@PathVariable id: Int, @RequestBody statusDTO: StatusDTO): ResponseEntity<Any> {
@@ -258,29 +275,13 @@ class MaalingResource(
 
           when (maaling) {
             is Maaling.Planlegging -> {
-              runBlocking(Dispatchers.IO) {
-                maaling.crawlParameters.validateParameters()
-                when (newStatus) {
-                  Status.Crawling -> startCrawling(maaling)
-                  else -> badRequest
-                }
-              }
+              putNewStatusMaalingPlanlegging(maaling, newStatus, badRequest)
             }
             is Maaling.Kvalitetssikring -> {
-              runBlocking(Dispatchers.IO) {
-                when (newStatus) {
-                  Status.Crawling -> restartCrawling(statusDTO, maaling)
-                  Status.Testing -> startTesting(maaling)
-                }
-              }
+              putNewStatusMaalingKvalitetssikring(newStatus, statusDTO, maaling)
             }
             is Maaling.TestingFerdig -> {
-              runBlocking(Dispatchers.IO) {
-                when (newStatus) {
-                  Status.Testing -> restartTesting(statusDTO, maaling)
-                  else -> badRequest
-                }
-              }
+              putNewStatusMaalingTestingFerdig(newStatus, statusDTO, maaling, badRequest)
             }
             else -> badRequest
           }
@@ -296,6 +297,47 @@ class MaalingResource(
             else -> ResponseEntity.internalServerError().body(exception.message)
           }
         }
+  }
+
+  private fun putNewStatusMaalingTestingFerdig(
+      newStatus: Status,
+      statusDTO: StatusDTO,
+      maaling: Maaling.TestingFerdig,
+      badRequest: ResponseEntity<Any>
+  ): ResponseEntity<Any> {
+    return runBlocking(Dispatchers.IO) {
+      when (newStatus) {
+        Status.Testing -> restartTesting(statusDTO, maaling)
+        else -> badRequest
+      }
+    }
+  }
+
+  private fun putNewStatusMaalingKvalitetssikring(
+      newStatus: Status,
+      statusDTO: StatusDTO,
+      maaling: Maaling.Kvalitetssikring
+  ): ResponseEntity<Any> {
+    return runBlocking(Dispatchers.IO) {
+      when (newStatus) {
+        Status.Crawling -> restartCrawling(statusDTO, maaling)
+        Status.Testing -> startTesting(maaling)
+      }
+    }
+  }
+
+  private fun putNewStatusMaalingPlanlegging(
+      maaling: Maaling.Planlegging,
+      newStatus: Status,
+      badRequest: ResponseEntity<Any>
+  ): ResponseEntity<Any> {
+    return runBlocking(Dispatchers.IO) {
+      maaling.crawlParameters.validateParameters()
+      when (newStatus) {
+        Status.Crawling -> startCrawling(maaling)
+        else -> badRequest
+      }
+    }
   }
 
   private fun restartCrawling(
@@ -380,7 +422,7 @@ class MaalingResource(
           async {
             val nettsider =
                 withContext(Dispatchers.IO) {
-                  maalingDAO.getCrawlResultatNettsider(maalingId, it.loeysing.id)
+                  crawlresultatDAO.getCrawlResultatNettsider(maalingId, it.loeysing.id)
                 }
             if (nettsider.isEmpty()) {
               throw RuntimeException(
