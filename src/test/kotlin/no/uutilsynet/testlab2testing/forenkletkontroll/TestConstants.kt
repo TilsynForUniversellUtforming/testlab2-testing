@@ -30,7 +30,8 @@ object TestConstants {
           1,
           1,
           "QW-ACT-12",
-          TestConstants.testregelSchemaForenklet)
+          TestConstants.testregelSchemaForenklet,
+          1)
 
   val testRegelList = listOf(testregel)
 

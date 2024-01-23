@@ -67,7 +67,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
   fun updateTestregel() {
     val testregelInit =
         TestregelInit(
-            "test_skal_slettes_1", "QW-ACT-R69", "1.4.12 Tekstavstand", TestregelModus.forenklet)
+            "test_skal_slettes_1", "QW-ACT-R69", "1.4.12 Tekstavstand", TestregelModus.forenklet, 1)
     val id = createTestregel(testregelInit)
 
     val oldTestregel = testregelDAO.getTestregel(id)
@@ -91,7 +91,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
   fun updateTestregelSetDatoSistEndra() {
     val testregelInit =
         TestregelInit(
-            "test_skal_slettes_1", "QW-ACT-R69", "1.4.12 Tekstavstand", TestregelModus.forenklet)
+            "test_skal_slettes_1", "QW-ACT-R69", "1.4.12 Tekstavstand", TestregelModus.forenklet, 1)
     val id = createTestregel(testregelInit)
 
     val oldTestregel = testregelDAO.getTestregel(id)
@@ -121,10 +121,6 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
   private fun createTestregel(
       testregelInit: TestregelInit =
           TestregelInit(
-              name,
-              testregelTestKrav,
-              testregelSchemaForenklet,
-              TestregelModus.forenklet,
-          )
+              name, testregelTestKrav, testregelSchemaForenklet, TestregelModus.forenklet, 1)
   ) = testregelDAO.createTestregel(testregelInit)
 }

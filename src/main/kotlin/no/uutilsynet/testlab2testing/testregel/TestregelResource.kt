@@ -106,7 +106,7 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
         1,
         testregelDTO.krav,
         testregelDTO.testregelSchema,
-    )
+        testregelDTO.innhaldstypeTesting)
   }
 
   fun testregelListToTestregelResponseList(

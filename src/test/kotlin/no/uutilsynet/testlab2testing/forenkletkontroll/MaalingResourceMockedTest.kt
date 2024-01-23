@@ -98,7 +98,8 @@ class MaalingResourceMockedTest {
                         1,
                         1,
                         "QW",
-                        "1.2.3"))))
+                        "1.2.3",
+                        1))))
 
     val result = maalingResource.putNewStatus(id, status)
 
@@ -132,7 +133,8 @@ class MaalingResourceMockedTest {
                 1,
                 1,
                 "QW-ACT-R12",
-                "QW-ACT-R12"))
+                "QW-ACT-R12",
+                1))
 
     val nettsider =
         listOf(
