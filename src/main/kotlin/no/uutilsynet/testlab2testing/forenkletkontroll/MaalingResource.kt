@@ -247,6 +247,7 @@ class MaalingResource(
 
   private fun hentEllerGenererAggregeringPrTestregel(maalingId: Int): ResponseEntity<Any> {
     if (!aggregeringService.harMaalingLagraAggregering(maalingId, "testresultat")) {
+      logger.info("Aggregering er ikkje generert for måling $maalingId, genererer no")
       val testKoeyringar =
           maalingDAO.getMaaling(maalingId)?.let { maaling ->
             Maaling.findFerdigeTestKoeyringar(maaling)

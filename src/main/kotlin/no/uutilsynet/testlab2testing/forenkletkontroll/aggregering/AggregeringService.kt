@@ -7,6 +7,7 @@ import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -19,6 +20,8 @@ class AggregeringService(
     val aggregeringDAO: AggregeringDAO
 ) {
 
+  private val logger = LoggerFactory.getLogger(AggregeringService::class.java)
+
   fun saveAggregering(testKoeyring: TestKoeyring.Ferdig) {
     saveAggregertResultatTestregel(testKoeyring)
     saveAggregeringSide(testKoeyring)
@@ -27,6 +30,8 @@ class AggregeringService(
 
   @Transactional
   fun saveAggregertResultatTestregel(testKoeyring: TestKoeyring.Ferdig) {
+    logger.info(
+        "Lagrer aggregert resultat for testregel for testkoeyring ${testKoeyring.loeysing.namn}}")
     val aggregeringUrl: URI? = testKoeyring.lenker?.urlAggregeringTR?.toURI()
 
     aggregeringUrl?.let {
@@ -137,7 +142,7 @@ class AggregeringService(
   fun dtoToAggregertResultatTestregel(
       aggregeringPerTestregelDTO: AggregeringPerTestregelDTO
   ): AggregertResultatTestregel {
-    println(aggregeringPerTestregelDTO)
+    logger.info("Mapping av testregel til dto ${aggregeringPerTestregelDTO.testregelId}")
     aggregeringPerTestregelDTO.fleireSuksesskriterium.forEach { println(it.toInt()) }
 
     return AggregertResultatTestregel(
@@ -204,6 +209,7 @@ class AggregeringService(
   }
 
   fun getAggregertResultatTestregel(maalingId: Int): List<AggregertResultatTestregel> {
+    logger.info("Henter aggregert resultat for testregel med id $maalingId")
     return aggregeringDAO.getAggregertResultatTestregelForMaaling(maalingId).map {
       dtoToAggregertResultatTestregel(it)
     }
