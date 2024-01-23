@@ -20,6 +20,7 @@ data class Testregel(
     val testobjekt: Int?,
     val kravTilSamsvar: String?,
     val testregelSchema: String,
+    val innhaldstypeTesting: Int?
 ) {
   companion object {
     fun Testregel.validateTestregel(): Result<Testregel> = runCatching {
@@ -42,7 +43,8 @@ data class Testregel(
           this.tema,
           this.testobjekt,
           this.kravTilSamsvar,
-          schema)
+          schema,
+          this.innhaldstypeTesting)
     }
   }
 }

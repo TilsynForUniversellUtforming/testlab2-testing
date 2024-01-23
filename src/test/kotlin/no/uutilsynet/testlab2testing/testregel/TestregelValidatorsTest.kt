@@ -34,7 +34,8 @@ class TestregelValidatorsTest {
               1,
               1,
               testregelTestKrav,
-              testregelSchemaForenklet)
+              testregelSchemaForenklet,
+              1)
           .validateTestregel()
     }
   }
@@ -57,7 +58,8 @@ class TestregelValidatorsTest {
               1,
               1,
               testregelTestKrav,
-              testregelSchemaManuell)
+              testregelSchemaManuell,
+              1)
           .validateTestregel()
     }
   }
@@ -84,7 +86,8 @@ class TestregelValidatorsTest {
               1,
               1,
               testregelTestKrav,
-              testregelSchemaForenklet)
+              testregelSchemaForenklet,
+              1)
       assertTrue(testregel.validateTestregel().isFailure)
     }
 
@@ -106,7 +109,8 @@ class TestregelValidatorsTest {
               1,
               1,
               "",
-              testregelSchemaForenklet)
+              testregelSchemaForenklet,
+              1)
       assertTrue(testregel.validateTestregel().isFailure)
     }
 
@@ -128,7 +132,8 @@ class TestregelValidatorsTest {
               1,
               1,
               testregelTestKrav,
-              "")
+              "",
+              1)
       assertTrue(testregel.validateTestregel().isFailure)
     }
 
@@ -150,7 +155,8 @@ class TestregelValidatorsTest {
               1,
               1,
               testregelTestKrav,
-              "")
+              "",
+              1)
       assertTrue(testregel.validateTestregel().isFailure)
     }
   }

@@ -29,7 +29,8 @@ object RegelsettTestConstants {
               1,
               1,
               "HTML Page has a title",
-              "QW-ACT-R1"),
+              "QW-ACT-R1",
+              1),
           Testregel(
               2,
               "QW-ACT-R2",
@@ -44,7 +45,8 @@ object RegelsettTestConstants {
               1,
               1,
               "Språk på siden",
-              "QW-ACT-R2"))
+              "QW-ACT-R2",
+              1))
 
   val regelsettTestregelIdList = regelsettTestregelList.map { it.id }
 
