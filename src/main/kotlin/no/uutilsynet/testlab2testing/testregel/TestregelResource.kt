@@ -106,7 +106,7 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
             ResponseEntity.internalServerError().body(it.message)
           }
 
-  @GetMapping("temaForTestreglar")
+  @GetMapping("testobjektForTestreglar")
   fun getTestobjektForTestreglar(): ResponseEntity<out Any> =
       runCatching { ResponseEntity.ok(testregelDAO.getTestobjekt()) }
           .getOrElse {
