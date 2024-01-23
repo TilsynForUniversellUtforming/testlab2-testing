@@ -11,8 +11,6 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun createAggregertResultatTestregel(aggregertResultatTestregel: AggregeringPerTestregelDTO) {
 
-    println("DTO " + aggregertResultatTestregel)
-
     val sql =
         "insert into aggregering_testregel(maaling_id,loeysing_id,suksesskriterium,fleire_suksesskriterium,testregel_id,tal_element_samsvar,tal_element_brot,tal_element_varsel,tal_element_ikkje_forekomst,tal_sider_samsvar,tal_sider_brot,tal_sider_ikkje_forekomst,testregel_gjennomsnittleg_side_brot_prosent,testregel_gjennomsnittleg_side_samsvar_prosent) " +
             "values(:maaling_id,:loeysing_id,:suksesskriterium,:fleire_suksesskriterium,:testregel_id,:tal_element_samsvar,:tal_element_brot,:tal_element_varsel,:tal_element_ikkje_forekomst,:tal_sider_samsvar,:tal_sider_brot,:tal_sider_ikkje_forekomst,:testregel_gjennomsnittleg_side_brot_prosent,:testregel_gjennomsnittleg_side_samsvar_prosent)"
@@ -95,14 +93,14 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         """insert into aggregering_side
               (maaling_id, loeysing_id, side,
    tal_element_samsvar,tal_element_brot,tal_element_ikkje_forekomst )
-              values(:maaling_id,loeysing_id,
+              values(:maaling_id,:loeysing_id,
    :side,:tal_element_samsvar,:tal_element_brot,:tal_element_ikkje_forekomst)"""
 
     val parameterMap =
         mapOf(
             "maaling_id" to aggregertResultatSide.maalingId,
             "loeysing_id" to aggregertResultatSide.loeysingId,
-            "side" to aggregertResultatSide.sideUrl,
+            "side" to aggregertResultatSide.sideUrl.toURI().toString(),
             "side_nivaa" to aggregertResultatSide.sideNivaa,
             "tal_element_samsvar" to aggregertResultatSide.talElementSamsvar,
             "tal_element_brot" to aggregertResultatSide.talElementBrot,
@@ -146,7 +144,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           loeysingId = rs.getInt("loeysing_id"),
           sideUrl = URI(rs.getString("side")).toURL(),
           sideNivaa = rs.getInt("side_nivaa"),
-          gjennomsnittligBruddProsentTR = rs.getFloat("gjennomsnittleg_side_samsvar_prosent"),
+          gjennomsnittligBruddProsentTR = rs.getFloat("gjennomsnittlig_brudd_prosent_tr"),
           talElementSamsvar = rs.getInt("tal_element_samsvar"),
           talElementBrot = rs.getInt("tal_element_brot"),
           talElementVarsel = rs.getInt("tal_element_varsel"),
@@ -164,7 +162,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       AggregeringPerSuksesskriteriumDTO(
           maalingId = rs.getInt("maaling_id"),
           loeysingId = rs.getInt("loeysing_id"),
-          suksesskriteriumId = rs.getInt("suksesskriterium"),
+          suksesskriteriumId = rs.getInt("suksesskriterium_id"),
           talSiderSamsvar = rs.getInt("tal_sider_samsvar"),
           talSiderBrot = rs.getInt("tal_sider_brot"),
           talSiderIkkjeForekomst = rs.getInt("tal_sider_ikkje_forekomst"))
@@ -181,14 +179,12 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val aggregeringsTabell =
         when (aggregeringstype) {
           "testresultat" -> "aggregering_testregel"
+          "side" -> "aggregering_side"
+          "suksesskriterium" -> "aggregering_suksesskriterium"
           else -> throw RuntimeException("Ugyldig aggregeringstype")
         }
 
     val queryString = "select count(*) from $aggregeringsTabell where maaling_id = :maalingId"
-
-    val list = jdbcTemplate.queryForList(queryString, mapOf("maalingId" to maalingId))
-
-    println("List: $list")
 
     val count =
         jdbcTemplate.queryForObject(

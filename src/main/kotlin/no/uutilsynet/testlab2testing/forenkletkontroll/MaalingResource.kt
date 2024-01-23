@@ -214,9 +214,9 @@ class MaalingResource(
   ): ResponseEntity<Any> {
 
     return when (aggregeringstype) {
-      "testresultat" -> return hentEllerGenererAggregeringPrTestregel(maalingId)
-      "suksesskriterium" -> return hentEllerGenererAggregeringPrSuksesskriterium(maalingId)
-      "side" -> return hentEllerGenererAggregeringPrSide(maalingId)
+      "testresultat" -> hentEllerGenererAggregeringPrTestregel(maalingId)
+      "suksesskriterium" -> hentEllerGenererAggregeringPrSuksesskriterium(maalingId)
+      "side" -> hentEllerGenererAggregeringPrSide(maalingId)
       else -> throw IllegalArgumentException("Ugyldig aggregeringstype: $aggregeringstype")
     }
   }
