@@ -22,13 +22,13 @@ class AggregeringService(
 
   private val logger = LoggerFactory.getLogger(AggregeringService::class.java)
 
+  @Transactional
   fun saveAggregering(testKoeyring: TestKoeyring.Ferdig) {
     saveAggregertResultatTestregel(testKoeyring)
     saveAggregeringSide(testKoeyring)
     saveAggregertResultatSuksesskriterium(testKoeyring)
   }
 
-  @Transactional
   fun saveAggregertResultatTestregel(testKoeyring: TestKoeyring.Ferdig) {
     logger.info(
         "Lagrer aggregert resultat for testregel for testkoeyring ${testKoeyring.loeysing.namn}}")
@@ -46,7 +46,6 @@ class AggregeringService(
     }
   }
 
-  @Transactional
   fun saveAggregeringSide(testKoeyring: TestKoeyring.Ferdig) {
     val aggregeringUrl: URI? = testKoeyring.lenker?.urlAggregeringSide?.toURI()
 
@@ -63,7 +62,6 @@ class AggregeringService(
         ?: throw RuntimeException("Aggregering url er null")
   }
 
-  @Transactional
   fun saveAggregertResultatSuksesskriterium(testKoeyring: TestKoeyring.Ferdig) {
     val aggregeringUrl: URI? = testKoeyring.lenker?.urlAggregeringSK?.toURI()
 
@@ -142,8 +140,6 @@ class AggregeringService(
   fun dtoToAggregertResultatTestregel(
       aggregeringPerTestregelDTO: AggregeringPerTestregelDTO
   ): AggregertResultatTestregel {
-    logger.info("Mapping av testregel til dto ${aggregeringPerTestregelDTO.testregelId}")
-    aggregeringPerTestregelDTO.fleireSuksesskriterium.forEach { println(it.toInt()) }
 
     return AggregertResultatTestregel(
         aggregeringPerTestregelDTO.maalingId,
