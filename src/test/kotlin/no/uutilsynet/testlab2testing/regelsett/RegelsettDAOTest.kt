@@ -16,6 +16,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.cache.annotation.CacheEvict
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

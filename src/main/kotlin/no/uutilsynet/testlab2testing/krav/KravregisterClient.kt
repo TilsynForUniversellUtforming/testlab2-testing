@@ -1,13 +1,18 @@
 package no.uutilsynet.testlab2testing.krav
 
+import no.uutilsynet.testlab2testing.forenkletkontroll.logger
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
 @Service
 class KravregisterClient(val restTemplate: RestTemplate, val properties: KravRegisterProperties) {
 
+  @Cacheable("kravFromSuksesskriterium", unless = "#result.id==null")
   fun getKrav(suksesskriterium: String): Result<KravWcag2x> {
+    logger.info(
+        "Henter krav fra ${properties.host}/v1/krav/wcag2krav/suksesskriterium/$suksesskriterium .")
     return runCatching {
       restTemplate.getForObject(
           "${properties.host}/v1/krav/wcag2krav/suksesskriterium/$suksesskriterium",
@@ -17,6 +22,7 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
     }
   }
 
+  @Cacheable("kravFromId", unless = "#result.id==null")
   fun getWcagKrav(kravId: Int): Result<KravWcag2x> {
     return runCatching {
       restTemplate.getForObject(
@@ -25,10 +31,12 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
     }
   }
 
+  @Cacheable("suksesskriteriumFromId", unless = "#result==null")
   fun getKravIdFromSuksesskritterium(suksesskriterium: String): Result<Int> {
     return runCatching { getKrav(suksesskriterium).getOrThrow().id }
   }
 
+  @Cacheable("suksesskriteriumFromKrav", unless = "#result == null")
   fun getSuksesskriteriumFromKrav(kravId: Int): Result<String> {
     return runCatching { getWcagKrav(kravId).getOrThrow().suksesskriterium }
   }

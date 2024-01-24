@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication
 import org.springframework.boot.web.client.RestTemplateBuilder
+import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
 import org.springframework.http.MediaType
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
@@ -16,6 +17,7 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter
 @SpringBootApplication
 @ConfigurationPropertiesScan
 @EnableScheduling
+@EnableCaching
 class Testlab2TestingApplication {
   @Bean
   fun restTemplate(restTemplateBuilder: RestTemplateBuilder): RestTemplate {

@@ -2,6 +2,8 @@ package no.uutilsynet.testlab2testing.regelsett
 
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
 import no.uutilsynet.testlab2testing.testregel.TestregelDTO
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -52,6 +54,7 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return regelsettDTO?.toRegelsett()
   }
 
+  @Cacheable("regelsettlistbase", unless = "#result.isEmpty()")
   fun getRegelsettBaseList(includeInactive: Boolean): List<RegelsettBase> {
     val activeSql = if (includeInactive) "1=1" else "aktiv = true"
 
@@ -60,6 +63,7 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         DataClassRowMapper.newInstance(RegelsettBase::class.java))
   }
 
+  @Cacheable("regelsettlist", unless = "#result.isEmpty()")
   fun getRegelsettTestreglarList(includeInactive: Boolean): List<Regelsett> =
       getRegelsettBaseList(includeInactive).map { it.toRegelsett() }
 
@@ -67,6 +71,7 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       getRegelsettTestreglarList(includeInactive).map { toRegelsettResponse(it)!! }
 
   @Transactional
+  @CacheEvict(key = "#regelsett.namn", cacheNames = ["regelsett", "regelsettlist","regelsettlistbase"])
   fun createRegelsett(regelsett: RegelsettCreate): Int {
     val id =
         jdbcTemplate.queryForObject(
@@ -89,6 +94,7 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   @Transactional
+  @CacheEvict(key = "#regelsett.id", cacheNames = ["regelsett", "regelsettlist","regelsettlistbase"])
   fun updateRegelsett(regelsett: RegelsettEdit) {
     jdbcTemplate.update(
         "delete from regelsett_testregel where regelsett_id = :regelsett_id ",
@@ -115,6 +121,7 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   @Transactional
+  @CacheEvict(key = "#id", cacheNames = ["regelsett", "regelsettlist","regelsettlistbase"])
   fun deleteRegelsett(id: Int) =
       jdbcTemplate.update("update regelsett set aktiv = false where id = :id", mapOf("id" to id))
 }
