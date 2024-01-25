@@ -36,6 +36,7 @@ class SakDAO(
 
   @Transactional
   fun getSak(sakId: Int): Result<Sak> {
+    val testreglar = testregelDAO.getTestreglarBySak(sakId)
     val rowMapper = RowMapper { rs, _ ->
       val loeysingIdArray = rs.getArray("loeysingar")?.array as? Array<Int> ?: emptyArray()
       val loeysingar =
@@ -43,7 +44,6 @@ class SakDAO(
             val nettsider = findNettsiderBySakAndLoeysing(sakId, loeysingId)
             Sak.Loeysing(loeysingId, nettsider)
           }
-      val testreglar = testregelDAO.getTestreglarBySak(sakId)
       val brukarId = rs.getInt("ansvarleg_id")
       val ansvarleg =
           if (brukarId > 0)
