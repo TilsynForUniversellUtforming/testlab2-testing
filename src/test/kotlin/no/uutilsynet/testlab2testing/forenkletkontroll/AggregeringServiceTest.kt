@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
-import java.net.URL
 import java.time.Instant
 import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregertResultatTestregel
@@ -17,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 
-private const val TEST_URL = "http://localhost:8080/"
+private val TEST_URL = URI("http://localhost:8080/").toURL()
 
 private const val TEST_ORGNR = "123456789"
 
@@ -40,13 +39,13 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     val aggregeringTestregel = createTestMaaling()
     val maalingId = aggregeringTestregel.maalingId
 
-    val testLoeysing = Loeysing(1, "test", URL(TEST_URL), TEST_ORGNR)
+    val testLoeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR)
 
     val testKoeyring: TestKoeyring.Ferdig = setupTestKoeyring(testLoeysing)
 
     Mockito.`when`(
             autoTesterClient.fetchResultatAggregering(
-                URL(TEST_URL).toURI(), AutoTesterClient.ResultatUrls.urlAggreggeringTR))
+                TEST_URL.toURI(), AutoTesterClient.ResultatUrls.urlAggreggeringTR))
         .thenReturn(listOf(aggregeringTestregel))
 
     Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1))
@@ -73,21 +72,21 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
             crawlResultat =
                 CrawlResultat.Ferdig(
                     antallNettsider = 1,
-                    statusUrl = URI(TEST_URL).toURL(),
+                    statusUrl = TEST_URL,
                     loeysing = testLoeysing,
                     sistOppdatert = Instant.now(),
                     nettsider = emptyList()),
             sistOppdatert = Instant.now(),
-            statusURL = URI(TEST_URL).toURL(),
+            statusURL = TEST_URL,
             lenker =
                 AutoTesterClient.AutoTesterLenker(
-                    urlFulltResultat = URI(TEST_URL).toURL(),
-                    urlBrot = URI(TEST_URL).toURL(),
-                    urlAggregeringSideTR = URI(TEST_URL).toURL(),
-                    urlAggregeringTR = URI(TEST_URL).toURL(),
-                    urlAggregeringSide = URI(TEST_URL).toURL(),
-                    urlAggregeringLoeysing = URI(TEST_URL).toURL(),
-                    urlAggregeringSK = URI(TEST_URL).toURL()),
+                    urlFulltResultat = TEST_URL,
+                    urlBrot = TEST_URL,
+                    urlAggregeringSideTR = TEST_URL,
+                    urlAggregeringTR = TEST_URL,
+                    urlAggregeringSide = TEST_URL,
+                    urlAggregeringLoeysing = TEST_URL,
+                    urlAggregeringSK = TEST_URL),
         )
     return testKoeyring
   }
@@ -112,7 +111,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     val aggregeringTestregel =
         AggregertResultatTestregel(
             maalingId = maalingId,
-            loeysing = Loeysing(1, "test", URI(TEST_URL).toURL(), TEST_ORGNR),
+            loeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR),
             testregelId = testregelNoekkel,
             suksesskriterium = "1.1.1",
             fleireSuksesskriterium = listOf("1.1.1", "1.1.1"),
