@@ -25,13 +25,13 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   object TestregelParams {
 
     val getTestregelListSql =
-        "select id, testregel_id,versjon,namn, krav, status, dato_sist_endra,type , modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema  from testregel order by id"
+        "select id, testregel_id,versjon,namn, krav, status, dato_sist_endra,type , modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing  from testregel order by id"
 
     val getTestregelSql =
-        "select id, testregel_id,versjon,namn, krav, status, dato_sist_endra,type, modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema from testregel where id = :id order by id"
+        "select id, testregel_id,versjon,namn, krav, status, dato_sist_endra,type, modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing from testregel where id = :id order by id"
 
     val getTestregelByTestregelId =
-        "select id, testregel_id,versjon,namn, krav, status, dato_sist_endra,type, modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema from testregel where testregel_id = :testregelId and versjon=(select max(versjon) from testlab2_testing.testregel where testregel_id= :testregelId) order by id limit 1"
+        "select id, testregel_id,versjon,namn, krav, status, dato_sist_endra,type, modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing from testregel where testregel_id = :testregelId and versjon=(select max(versjon) from testlab2_testing.testregel where testregel_id= :testregelId) order by id limit 1"
 
     val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
 
@@ -42,7 +42,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     val maalingTestregelSql =
         """
-      select tr.id,tr.testregel_id,tr.versjon,tr.namn, tr.krav, tr.status, tr.dato_sist_endra,tr.type , tr.modus ,tr.spraak,tr.tema,tr.testobjekt,tr.krav_til_samsvar,tr.testregel_schema
+      select tr.id,tr.testregel_id,tr.versjon,tr.namn, tr.krav, tr.status, tr.dato_sist_endra,tr.type , tr.modus ,tr.spraak,tr.tema,tr.testobjekt,tr.krav_til_samsvar,tr.testregel_schema, tr.innhaldstype_testing
       from MaalingV1 m
         join Maaling_Testregel mt on m.id = mt.maaling_id
         join Testregel tr on mt.testregel_id = tr.id
@@ -73,7 +73,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Transactional
   fun createTestregel(testregelInit: TestregelInit): Int =
       jdbcTemplate.queryForObject(
-          "insert into testregel (namn, testregel_id, modus, krav, tema,testobjekt,krav_til_samsvar, testregel_schema) values (:name, :testregel_id, :modus, :krav,:tema,:testobject,:krav_til_samsvar, :testregel_schema) returning id",
+          "insert into testregel (namn, testregel_id, modus, krav, tema,testobjekt,krav_til_samsvar, testregel_schema, innhaldstype_testing) values (:name, :testregel_id, :modus, :krav,:tema,:testobject,:krav_til_samsvar, :testregel_schema, :innhaldstype_testing) returning id",
           mapOf(
               "name" to testregelInit.name,
               "testregel_id" to setTestregelId(testregelInit),
@@ -82,14 +82,15 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "krav" to testregelInit.krav,
               "tema" to 1,
               "testobject" to 1,
-              "krav_til_samsvar" to testregelInit.krav),
+              "krav_til_samsvar" to testregelInit.krav,
+              "innhaldstype_testing" to testregelInit.innhaldstypeTesting),
           Int::class.java)!!
 
   @Transactional
   fun createAutomatiskTestregel(testregelInit: TestregelInitAutomatisk): Int =
       jdbcTemplate.queryForObject(
-          """insert into testregel (testregel_id,versjon, namn, krav, status,dato_sist_endra, type,modus, spraak, tema,testobjekt,krav_til_samsvar, testregel_schema) values 
-                  (:testregelId,:versjon, :namn, :krav, :status,:datoSistEndra, :type,:modus, :spraak, :tema,:testobjekt,:kravTilSamsvar, :testregelSchema) returning id""",
+          """insert into testregel (testregel_id,versjon, namn, krav, status,dato_sist_endra, type,modus, spraak, tema,testobjekt,krav_til_samsvar, testregel_schema, innhaldstype_testing) values 
+                  (:testregelId,:versjon, :namn, :krav, :status,:datoSistEndra, :type,:modus, :spraak, :tema,:testobjekt,:kravTilSamsvar, :testregelSchema, :innhaldstype_testing) returning id""",
           mapOf(
               "testregelId" to testregelInit.testregelId,
               "versjon" to 1,
@@ -103,13 +104,14 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "tema" to testregelInit.tema,
               "testobjekt" to testregelInit.testobjekt,
               "kravTilSamsvar" to testregelInit.krav,
-              "testregelSchema" to testregelInit.testregelSchema),
+              "testregelSchema" to testregelInit.testregelSchema,
+              "innhaldstype_testing" to testregelInit.innhaldstypeTesting),
           Int::class.java)!!
 
   fun createManuellTestregel(testregelInitManuell: TestregelInitManuell): Int =
       jdbcTemplate.queryForObject(
-          """insert into testregel (testregel_id,versjon, namn, krav, status,dato_sist_endra, modus,type, spraak, tema,testobjekt,krav_til_samsvar, testregel_schema) values 
-                  (:testregelId,:versjon, :namn, :krav, :status,:datoSistEndra, :modus,:type, :spraak, :tema,:testobjekt,:kravTilSamsvar, :testregelSchema) returning id""",
+          """insert into testregel (testregel_id,versjon, namn, krav, status,dato_sist_endra, modus,type, spraak, tema,testobjekt,krav_til_samsvar, testregel_schema,innhaldstype_testing) values 
+                  (:testregelId,:versjon, :namn, :krav, :status,:datoSistEndra, :modus,:type, :spraak, :tema,:testobjekt,:kravTilSamsvar, :testregelSchema,:innhaldstype_testing) returning id""",
           mapOf(
               "testregelId" to testregelInitManuell.testregelId,
               "versjon" to 1,
@@ -122,7 +124,8 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "spraak" to TestlabLocale.nb.value,
               "tema" to testregelInitManuell.tema,
               "testobjekt" to testregelInitManuell.testobjekt,
-              "testregel_schema" to testregelInitManuell.testregelSchema),
+              "testregel_schema" to testregelInitManuell.testregelSchema,
+              "innhaldstype_testing" to testregelInitManuell.innhaldstypeTesting),
           Int::class.java)!!
 
   @Transactional
@@ -139,7 +142,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun updateTestregel(testregel: Testregel) =
       jdbcTemplate.update(
           " update testregel set namn = :namn, testregel_id = :testregel_id,krav = :krav, versjon = :versjon,status = :status, dato_sist_endra = :dato_sist_endra, type = :type, modus = :modus, " +
-              "spraak = :spaak, tema = :tema, testobjekt = :testobjekt, krav_til_samsvar = :krav_til_samsvar , testregel_schema = :testregel_schema where id = :id",
+              "spraak = :spaak, tema = :tema, testobjekt = :testobjekt, krav_til_samsvar = :krav_til_samsvar , testregel_schema = :testregel_schema, innhaldstype_testing = :innhaldstype_testing where id = :id",
           mapOf(
               "id" to testregel.id,
               "testregel_id" to testregel.testregelId,
@@ -155,7 +158,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "testobjekt" to testregel.testobjekt,
               "krav_til_samsvar" to testregel.kravTilSamsvar,
               "testregel_schema" to testregel.testregelSchema,
-          ))
+              "innhaldstype_testing" to (testregel.innhaldstypeTesting)))
 
   @Transactional
   @CacheEvict(
@@ -186,7 +189,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getTestreglarBySak(sakId: Int): List<Testregel> =
       jdbcTemplate.query(
           """
-          select t.id,t.testregel_id,t.versjon,t.namn, t.krav, t.status, t.dato_sist_endra,t.type , t.modus ,t.spraak,t.tema,t.testobjekt,t.krav_til_samsvar,t.testregel_schema
+          select t.id,t.testregel_id,t.versjon,t.namn, t.krav, t.status, t.dato_sist_endra,t.type , t.modus ,t.spraak,t.tema,t.testobjekt,t.krav_til_samsvar,t.testregel_schema,t.innhaldstype_testing
           from testregel t
           join sak_testregel st on t.id = st.testregel_id
           where st.sak_id = :sak_id
@@ -200,4 +203,16 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       testregelInit.testregelSchema
     } else testregelInit.name
   }
+
+  fun getInnhaldstypeForTesting(): List<InnhaldstypeTesting> =
+      jdbcTemplate.query(
+          "select * from innhaldstype_testing",
+          DataClassRowMapper.newInstance(InnhaldstypeTesting::class.java))
+
+  fun getTemaForTestregel(): List<Tema> =
+      jdbcTemplate.query("select * from tema", DataClassRowMapper.newInstance(Tema::class.java))
+
+  fun getTestobjekt(): List<Testobjekt> =
+      jdbcTemplate.query(
+          "select * from testobjekt", DataClassRowMapper.newInstance(Testobjekt::class.java))
 }

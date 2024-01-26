@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import java.net.URL
+import java.net.URI
 import java.time.Instant
 import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregertResultatTestregel
@@ -15,6 +15,10 @@ import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+
+private val TEST_URL = URI("http://localhost:8080/").toURL()
+
+private const val TEST_ORGNR = "123456789"
 
 @SpringBootTest
 class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringService) {
@@ -35,14 +39,13 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     val aggregeringTestregel = createTestMaaling()
     val maalingId = aggregeringTestregel.maalingId
 
-    val testLoeysing = Loeysing(1, "test", URL("http://localhost:8080/"), "123456789")
+    val testLoeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR)
 
     val testKoeyring: TestKoeyring.Ferdig = setupTestKoeyring(testLoeysing)
 
     Mockito.`when`(
             autoTesterClient.fetchResultatAggregering(
-                URL("http://localhost:8080/").toURI(),
-                AutoTesterClient.ResultatUrls.urlAggreggeringTR))
+                TEST_URL.toURI(), AutoTesterClient.ResultatUrls.urlAggreggeringTR))
         .thenReturn(listOf(aggregeringTestregel))
 
     Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1))
@@ -69,21 +72,21 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
             crawlResultat =
                 CrawlResultat.Ferdig(
                     antallNettsider = 1,
-                    statusUrl = URL("http://localhost:8080/"),
+                    statusUrl = TEST_URL,
                     loeysing = testLoeysing,
                     sistOppdatert = Instant.now(),
                     nettsider = emptyList()),
             sistOppdatert = Instant.now(),
-            statusURL = URL("http://localhost:8080/"),
+            statusURL = TEST_URL,
             lenker =
                 AutoTesterClient.AutoTesterLenker(
-                    urlFulltResultat = URL("http://localhost:8080/"),
-                    urlBrot = URL("http://localhost:8080/"),
-                    urlAggregeringSideTR = URL("http://localhost:8080/"),
-                    urlAggregeringTR = URL("http://localhost:8080/"),
-                    urlAggregeringSide = URL("http://localhost:8080/"),
-                    urlAggregeringLoeysing = URL("http://localhost:8080/"),
-                    urlAggregeringSK = URL("http://localhost:8080/")),
+                    urlFulltResultat = TEST_URL,
+                    urlBrot = TEST_URL,
+                    urlAggregeringSideTR = TEST_URL,
+                    urlAggregeringTR = TEST_URL,
+                    urlAggregeringSide = TEST_URL,
+                    urlAggregeringLoeysing = TEST_URL,
+                    urlAggregeringSK = TEST_URL),
         )
     return testKoeyring
   }
@@ -93,7 +96,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     val testregelNoekkel = RandomStringUtils.randomAlphanumeric(5)
 
     val testregel =
-        TestregelInitAutomatisk(testregelNoekkel, "QW-1", "1.1.1", 1, 1, testregelNoekkel)
+        TestregelInitAutomatisk(testregelNoekkel, "QW-1", "1.1.1", 1, 1, testregelNoekkel, 1)
 
     val testregelId = testregelDAO.createAutomatiskTestregel(testregel)
 
@@ -108,7 +111,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     val aggregeringTestregel =
         AggregertResultatTestregel(
             maalingId = maalingId,
-            loeysing = Loeysing(1, "test", URL("http://localhost:8080/"), "123456789"),
+            loeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR),
             testregelId = testregelNoekkel,
             suksesskriterium = "1.1.1",
             fleireSuksesskriterium = listOf("1.1.1", "1.1.1"),

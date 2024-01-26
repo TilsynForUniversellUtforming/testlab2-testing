@@ -8,6 +8,7 @@ data class TestregelDTO(
     val testregelSchema: String,
     val krav: String,
     val type: TestregelModus,
+    val innhaldstypeTesting: Int?,
 ) {
   fun toTestregel() {
     TODO("Not yet implemented")
@@ -19,11 +20,17 @@ data class TestregelDTO(
       val krav = validateKrav(this.krav).getOrThrow()
       val schema = validateSchema(this.testregelSchema, this.type).getOrThrow()
 
-      TestregelDTO(this.id, name, krav, schema, type)
+      TestregelDTO(this.id, name, krav, schema, type, this.innhaldstypeTesting)
     }
   }
 
   constructor(
       testregel: Testregel
-  ) : this(testregel.id, testregel.namn, testregel.testregelSchema, testregel.krav, testregel.modus)
+  ) : this(
+      testregel.id,
+      testregel.namn,
+      testregel.testregelSchema,
+      testregel.krav,
+      testregel.modus,
+      testregel.innhaldstypeTesting)
 }

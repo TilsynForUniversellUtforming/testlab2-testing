@@ -2,10 +2,7 @@ package no.uutilsynet.testlab2testing.regelsett
 
 import java.time.Instant
 import no.uutilsynet.testlab2testing.common.TestlabLocale
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
-import no.uutilsynet.testlab2testing.testregel.TestregelModus
-import no.uutilsynet.testlab2testing.testregel.TestregelStatus
+import no.uutilsynet.testlab2testing.testregel.*
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
@@ -32,7 +29,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R12 HTML Page has a title",
-                "QW-ACT-R12"),
+                "QW-ACT-R12",
+                1),
             Testregel(
                 2,
                 "TR2",
@@ -47,7 +45,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R13 HTML Page has a title",
-                "QW-ACT-R13"))
+                "QW-ACT-R13",
+                1))
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelModus.forenklet
 
@@ -73,7 +72,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "1.1.1",
-                """"{"gaaTil": 1}"""),
+                """"{"gaaTil": 1}""",
+                1),
             Testregel(
                 2,
                 "TR2",
@@ -88,7 +88,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "1.1.1",
-                """{"gaaTil": 1}"""))
+                """{"gaaTil": 1}""",
+                1))
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelModus.manuell
 
@@ -114,7 +115,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R12 HTML Page has a title",
-                "QW-ACT-R12"),
+                "QW-ACT-R12",
+                1),
             Testregel(
                 2,
                 "TR2",
@@ -129,7 +131,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R13 HTML Page has a title",
-                "QW-ACT-R13"),
+                "QW-ACT-R13",
+                1),
             Testregel(
                 3,
                 "TR3",
@@ -144,7 +147,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R14 HTML Page has a title",
-                "QW-ACT-R14"),
+                "QW-ACT-R14",
+                1),
         )
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelModus.forenklet
@@ -173,7 +177,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R12 HTML Page has a title",
-                "QW-ACT-R12"),
+                "QW-ACT-R12",
+                1),
             Testregel(
                 2,
                 "TR2",
@@ -188,7 +193,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R13 HTML Page has a title",
-                "QW-ACT-R13"))
+                "QW-ACT-R13",
+                1))
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelModus.forenklet
 
@@ -214,7 +220,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R12 HTML Page has a title",
-                "QW-ACT-R12"),
+                "QW-ACT-R12",
+                1),
         )
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelModus.forenklet
