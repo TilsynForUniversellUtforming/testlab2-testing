@@ -17,7 +17,7 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val testregelList =
         jdbcTemplate.query(
             """
-        select tr.id, tr.testregel_id,tr.versjon,tr.namn, tr.krav, tr.status, tr.dato_sist_endra,tr.type , tr.modus ,tr.spraak,tr.tema,tr.testobjekt,tr.krav_til_samsvar,tr.testregel_schema
+        select tr.id, tr.testregel_id,tr.versjon,tr.namn, tr.krav, tr.status, tr.dato_sist_endra,tr.type , tr.modus ,tr.spraak,tr.tema,tr.testobjekt,tr.krav_til_samsvar,tr.testregel_schema,tr.innhaldstype_testing
         from regelsett_testregel rt
           join testregel tr on tr.id = rt.testregel_id
         where rt.regelsett_id = :regelsett_id

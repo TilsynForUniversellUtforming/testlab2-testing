@@ -55,7 +55,8 @@ class CrawlerClientTest {
                 1,
                 1,
                 "Er rett",
-                TestConstants.testregelSchemaForenklet))
+                "QW-ACT-12",
+                1))
     val maaling =
         Maaling.Planlegging(
             1,
