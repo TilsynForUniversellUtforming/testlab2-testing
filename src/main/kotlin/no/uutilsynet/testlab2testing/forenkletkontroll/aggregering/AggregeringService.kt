@@ -86,7 +86,7 @@ class AggregeringService(
         aggregertResultatTestregel.maalingId,
         aggregertResultatTestregel.loeysing.id,
         getTestregelIdFromSchema(aggregertResultatTestregel.testregelId).let { testregelId ->
-          testregelId ?: throw RuntimeException("TestregelId er null")
+          testregelId ?: throw RuntimeException("Fant ikkje testregel med testregeId $testregelId")
         },
         kravregisterClient
             .getKravIdFromSuksesskritterium(aggregertResultatTestregel.suksesskriterium)
