@@ -218,6 +218,7 @@ class RegelsettDAOTest(
       testregelIdList: List<Int> = regelsettTestregelIdList,
   ): Int {
 
+    // For å sette ny datoSistEndra
     regelsettTestregelList.forEach { testregel -> testregelDAO.updateTestregel(testregel) }
 
     return regelsettDAO.createRegelsett(

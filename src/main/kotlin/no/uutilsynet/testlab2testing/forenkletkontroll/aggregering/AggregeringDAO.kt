@@ -111,7 +111,8 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun getAggregertResultatTestregelForMaaling(maalingId: Int): List<AggregeringPerTestregelDTO> {
-    val query = "select * from aggregering_testregel where maaling_id = :maalingId"
+    val query =
+        "select * from aggregering_testregel where maaling_id = :maalingId order by loeysing_id"
     val params = mapOf("maalingId" to maalingId)
     return jdbcTemplate.query(query, params) { rs, _ ->
       AggregeringPerTestregelDTO(
@@ -135,7 +136,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun getAggregertResultatSideForMaaling(maalingId: Int): List<AggregeringPerSideDTO> {
-    val query = "select * from aggregering_side where maaling_id = :maalingId"
+    val query = "select * from aggregering_side where maaling_id = :maalingId order by loeysing_id"
     val params = mapOf("maalingId" to maalingId)
 
     return jdbcTemplate.query(query, params) { rs, _ ->
@@ -155,7 +156,8 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getAggregertResultatSuksesskriteriumForMaaling(
       maalingId: Int
   ): List<AggregeringPerSuksesskriteriumDTO> {
-    val query = "select * from aggregering_suksesskriterium where maaling_id = :maalingId"
+    val query =
+        "select * from aggregering_suksesskriterium where maaling_id = :maalingId order by loeysing_id"
     val params = mapOf("maalingId" to maalingId)
 
     return jdbcTemplate.query(query, params) { rs, _ ->
