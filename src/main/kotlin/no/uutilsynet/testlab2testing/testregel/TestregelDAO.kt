@@ -11,6 +11,8 @@ import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getT
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelListByIdSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -49,17 +51,20 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .trimIndent()
   }
 
+  @Cacheable("testregel", unless = "#result==null")
   fun getTestregel(id: Int): Testregel? =
       DataAccessUtils.singleResult(
           jdbcTemplate.query(getTestregelSql, mapOf("id" to id), testregelRowMapper))
 
   fun getTestregelResponse(id: Int): TestregelDTO? = getTestregel(id)?.let { TestregelDTO(it) }
 
+  @Cacheable("testregelar", unless = "#result.isEmpty()")
   fun getTestregelList(): List<Testregel> =
       jdbcTemplate.query(getTestregelListSql, testregelRowMapper)
 
   fun getTestregelListResponse(): List<TestregelDTO> = getTestregelList().map { TestregelDTO(it) }
 
+  @Cacheable("testregelByTestregelId", unless = "#result==null")
   fun getTestregelByTestregelId(testregelId: String): Testregel? =
       DataAccessUtils.singleResult(
           jdbcTemplate.query(
@@ -121,6 +126,16 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           Int::class.java)!!
 
   @Transactional
+  @CacheEvict(
+      key = "#testregel.id",
+      cacheNames =
+          [
+              "testregel",
+              "testregelByTestregelId",
+              "testregelar",
+              "regelsett",
+              "regelsettlist",
+              "regelsettlistbase"])
   fun updateTestregel(testregel: Testregel) =
       jdbcTemplate.update(
           " update testregel set namn = :namn, testregel_id = :testregel_id,krav = :krav, versjon = :versjon,status = :status, dato_sist_endra = :dato_sist_endra, type = :type, modus = :modus, " +
@@ -143,6 +158,16 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           ))
 
   @Transactional
+  @CacheEvict(
+      key = "#testregelId",
+      cacheNames =
+          [
+              "testregel",
+              "testregelByTestregelId",
+              "testregelar",
+              "regelsett",
+              "regelsettlist",
+              "regelsettlistbase"])
   fun deleteTestregel(testregelId: Int) =
       jdbcTemplate.update(deleteTestregelSql, mapOf("id" to testregelId))
 
@@ -171,8 +196,8 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           DataClassRowMapper.newInstance(Testregel::class.java))
 
   fun setTestregelId(testregelInit: TestregelInit): String {
-    if (testregelInit.type == TestregelModus.forenklet) {
-      return testregelInit.testregelSchema
-    } else return testregelInit.name
+    return if (testregelInit.type == TestregelModus.forenklet) {
+      testregelInit.testregelSchema
+    } else testregelInit.name
   }
 }
