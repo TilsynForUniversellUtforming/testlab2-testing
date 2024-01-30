@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll.aggregering
+package no.uutilsynet.testlab2testing.aggregering
 
 import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.loeysing.Loeysing

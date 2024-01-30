@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.time.Instant
+import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
@@ -10,7 +11,10 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
 @RequestMapping("/testresultat")
-class TestResultatResource(val testResultatDAO: TestResultatDAO) {
+class TestResultatResource(
+    val testResultatDAO: TestResultatDAO,
+    val aggregeringService: AggregeringService
+) {
   val logger: Logger = getLogger(TestResultatResource::class.java)
 
   @PostMapping
@@ -66,6 +70,14 @@ class TestResultatResource(val testResultatDAO: TestResultatDAO) {
               ResponseEntity.internalServerError().build()
             })
   }
+
+  @PostMapping("/aggregert/{testgrunnlagId}")
+  fun createAggregertResultat(@PathVariable testgrunnlagId: Int) =
+      testResultatDAO.saveAggregertResultatTestregel(testgrunnlagId)
+
+  @GetMapping("/aggregert/{testgrunnlagId}")
+  fun getAggregertResultat(@PathVariable testgrunnlagId: Int) =
+      aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
 
   private fun location(id: Int) =
       ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
