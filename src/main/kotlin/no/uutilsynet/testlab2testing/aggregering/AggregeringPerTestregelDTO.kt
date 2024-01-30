@@ -1,7 +1,7 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll.aggregering
+package no.uutilsynet.testlab2testing.aggregering
 
 data class AggregeringPerTestregelDTO(
-    val maalingId: Int,
+    val maalingId: Int?,
     val loeysingId: Int,
     val testregelId: Int,
     val suksesskriterium: Int,
@@ -14,5 +14,6 @@ data class AggregeringPerTestregelDTO(
     val talSiderBrot: Int,
     val talSiderIkkjeForekomst: Int,
     val testregelGjennomsnittlegSideSamsvarProsent: Float?,
-    val testregelGjennomsnittlegSideBrotProsent: Float?
+    val testregelGjennomsnittlegSideBrotProsent: Float?,
+    val testgrunnlagId: Int?
 )

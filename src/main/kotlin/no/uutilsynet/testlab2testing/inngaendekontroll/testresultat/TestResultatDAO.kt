@@ -2,14 +2,25 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.sql.Timestamp
 import java.time.Instant
+import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
+import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
 import no.uutilsynet.testlab2testing.brukar.BrukarDAO
+import no.uutilsynet.testlab2testing.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.simpleflatmapper.jdbc.spring.JdbcTemplateMapperFactory
+import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val brukarDAO: BrukarDAO) {
+class TestResultatDAO(
+    val jdbcTemplate: NamedParameterJdbcTemplate,
+    val brukarDAO: BrukarDAO,
+    val testregelDAO: TestregelDAO,
+    val kravregisterClient: KravregisterClient,
+    val aggregeringDAO: AggregeringDAO
+) {
   @Transactional
   fun save(createTestResultat: TestResultatResource.CreateTestResultat): Result<Int> {
     return runCatching {
@@ -51,6 +62,7 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val brukarDA
         JdbcTemplateMapperFactory.newInstance()
             .addKeys("id", "svar_steg", "brukar_brukarnamn")
             .newResultSetExtractor(ResultatManuellKontroll::class.java)
+
     val testResultat =
         jdbcTemplate.query(
             """
@@ -130,4 +142,95 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val brukarDA
                 .trimIndent(),
             mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar))
       }
+
+  fun saveAggregertResultatTestregel(sakId: Int) {
+    val testresultatForSak = getTestresultatForSak(sakId)
+    val aggregertResultatTestregel = createAggregeringPerTestregelDTO(testresultatForSak)
+    aggregertResultatTestregel.forEach(aggregeringDAO::createAggregertResultatTestregel)
+  }
+
+  private fun createAggregeringPerTestregelDTO(
+      testresultatForSak: List<TestResultat>
+  ): List<AggregeringPerTestregelDTO> {
+    return testresultatForSak
+        .groupBy { it.testregelId }
+        .entries
+        .map {
+          val testresultat = it.value
+
+          val talElementBrot = testresultat.count { it.elementUtfall == "brudd" }
+          val talElementSamsvar = testresultat.count { it.elementUtfall == "samsvar" }
+          val talElementVarsel = testresultat.count { it.elementUtfall == "varsel" }
+          val talElementIkkjeForekomst = testresultat.count { it.elementUtfall == "ikkjeForekomst" }
+
+          val (talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst) =
+              countSideUtfall(testresultat)
+
+          val suksesskriterium = getKravIdFraTestregel(testresultat.first().testregelId)
+
+          AggregeringPerTestregelDTO(
+              null,
+              testresultat.first().loeysingId,
+              testresultat.first().testregelId,
+              suksesskriterium,
+              listOf(suksesskriterium),
+              talElementSamsvar,
+              talElementBrot,
+              talElementVarsel,
+              talElementIkkjeForekomst,
+              talSiderSamsvar,
+              talSiderBrot,
+              talSiderIkkjeForekomst,
+              0.0f,
+              0.0f,
+              testresultat.first().sakId)
+        }
+  }
+
+  private fun countSideUtfall(testresultat: List<TestResultat>): Triple<Int, Int, Int> {
+    var talSiderBrot = 0
+    var talSiderSamsvar = 0
+    var talSiderIkkjeForekomst = 0
+
+    testresultat
+        .groupBy { it.nettsideId }
+        .entries
+        .map { _ ->
+          {
+            when (calculateUtfall(testresultat.map { it.elementUtfall })) {
+              "brudd" -> talSiderBrot += 1
+              "samsvar" -> talSiderSamsvar += 1
+              "ikkjeForekomst" -> talSiderIkkjeForekomst += 1
+            }
+          }
+        }
+    return Triple(talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst)
+  }
+
+  fun getTestresultatForSak(sakId: Int): List<TestResultat> {
+    val sql = """select * from testresultat where sak_id = :sakId"""
+    return jdbcTemplate.query(
+        sql, mapOf("sakId" to sakId), DataClassRowMapper.newInstance(TestResultat::class.java))
+  }
+
+  fun getKravIdFraTestregel(id: Int): Int {
+    val krav = testregelDAO.getTestregel(id)?.krav
+    if (krav != null) {
+      return kravregisterClient.getKravIdFromSuksesskritterium(krav).getOrThrow()
+    }
+    throw RuntimeException("Fant ikkje krav for testregel med id $id")
+  }
+
+  fun calculateUtfall(utfall: List<String>): String {
+    if (utfall.contains("brudd")) {
+      return "brudd"
+    }
+    if (utfall.contains("varsel")) {
+      return "varsel"
+    }
+    if (utfall.contains("samsvar")) {
+      return "samsvar"
+    }
+    return "ikkjeForekomst"
+  }
 }
