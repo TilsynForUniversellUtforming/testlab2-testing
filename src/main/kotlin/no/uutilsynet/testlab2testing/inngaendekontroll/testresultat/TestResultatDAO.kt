@@ -8,7 +8,6 @@ import no.uutilsynet.testlab2testing.brukar.BrukarDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.simpleflatmapper.jdbc.spring.JdbcTemplateMapperFactory
-import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -150,7 +149,7 @@ class TestResultatDAO(
   }
 
   private fun createAggregeringPerTestregelDTO(
-      testresultatForSak: List<TestResultat>
+      testresultatForSak: List<ResultatManuellKontroll>
   ): List<AggregeringPerTestregelDTO> {
     return testresultatForSak
         .groupBy { it.testregelId }
@@ -187,7 +186,7 @@ class TestResultatDAO(
         }
   }
 
-  private fun countSideUtfall(testresultat: List<TestResultat>): Triple<Int, Int, Int> {
+  private fun countSideUtfall(testresultat: List<ResultatManuellKontroll>): Triple<Int, Int, Int> {
     var talSiderBrot = 0
     var talSiderSamsvar = 0
     var talSiderIkkjeForekomst = 0
@@ -207,10 +206,22 @@ class TestResultatDAO(
     return Triple(talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst)
   }
 
-  fun getTestresultatForSak(sakId: Int): List<TestResultat> {
+  fun getTestresultatForSak(sakId: Int): List<ResultatManuellKontroll> {
     val sql = """select * from testresultat where sak_id = :sakId"""
-    return jdbcTemplate.query(
-        sql, mapOf("sakId" to sakId), DataClassRowMapper.newInstance(TestResultat::class.java))
+    return jdbcTemplate.query(sql, mapOf("sakId" to sakId)) { rs, _ ->
+      ResultatManuellKontroll(
+          id = rs.getInt("id"),
+          sakId = rs.getInt("sak_id"),
+          loeysingId = rs.getInt("loeysing_id"),
+          testregelId = rs.getInt("testregel_id"),
+          nettsideId = rs.getInt("nettside_id"),
+          brukar = null,
+          elementOmtale = rs.getString("element_omtale"),
+          elementResultat = rs.getString("element_resultat"),
+          elementUtfall = rs.getString("element_utfall"),
+          svar = emptyList(),
+          testVartUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant())
+    }
   }
 
   fun getKravIdFraTestregel(id: Int): Int {
@@ -221,7 +232,7 @@ class TestResultatDAO(
     throw RuntimeException("Fant ikkje krav for testregel med id $id")
   }
 
-  fun calculateUtfall(utfall: List<String>): String {
+  fun calculateUtfall(utfall: List<String?>): String {
     if (utfall.contains("brudd")) {
       return "brudd"
     }
