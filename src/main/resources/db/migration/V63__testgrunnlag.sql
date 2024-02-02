@@ -1,10 +1,9 @@
 create table testgrunnlag
 (
     id                serial primary key,
-    sak_id            integer                  not null references sak (id),
+    sak_id            integer references sak (id),
     testgruppering_id integer,
     namn              text                     not null,
-    utval_id          integer references utval (id),
     type              text                     not null default 'OPPRINNELEG_TEST',
     dato_oppretta     timestamp with time zone not null default now()
 );
