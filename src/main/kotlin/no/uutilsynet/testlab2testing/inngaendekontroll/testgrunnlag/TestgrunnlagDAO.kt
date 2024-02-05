@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional
 class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getTestgrunnlag(id: Int): Result<Testgrunnlag> {
+
     val result =
         jdbcTemplate.query(
             "select id,sak_id,testgruppering_id,namn,type, dato_oppretta from testgrunnlag where id = :id",
@@ -22,16 +23,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val testgrunnlag: Testgrunnlag =
         result.firstOrNull() ?: return Result.failure(IllegalArgumentException())
 
-    val loeysingar =
-        jdbcTemplate.queryForList(
-            """select loeysing_id, nettside_id
-              |from testgrunnlag_loeysing_nettside tln join nettside n on tln.nettside_id = n.id
-              |
-              |where testgrunnlag_id = :id
-          """
-                .trimMargin(),
-            mapOf("id" to id),
-            Sak.Loeysing::class.java)
+    val loeysingar = getLoeysingar(id)
 
     val testreglar =
         jdbcTemplate.queryForList(
@@ -44,6 +36,21 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             Int::class.java)
 
     return Result.success(testgrunnlag.copy(loeysingar = loeysingar, testreglar = testreglar))
+  }
+
+  fun getLoeysingar(id: Int): MutableList<Sak.Loeysing> {
+    val loeysingar =
+        jdbcTemplate.query(
+            """select loeysing_id
+                  |from testgrunnlag_loeysing_nettside tln join nettside n on tln.nettside_id = n.id
+                  |where testgrunnlag_id = :id
+              """
+                .trimMargin(),
+            mapOf("id" to id)) { rs, _ ->
+              val nettsider = findNettsiderByTestgrunnlAndLoeysing(id, rs.getInt("loeysing_id"))
+              Sak.Loeysing(rs.getInt("loeysing_id"), nettsider)
+            }
+    return loeysingar
   }
 
   fun getTestgrunnlagForSak(sakId: Int, loeysingId: Int?): List<Testgrunnlag> {
@@ -125,7 +132,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "sakId" to testgrunnlag.sakId,
             "testgrupperingId" to testgrunnlag.testgrupperingId,
             "namn" to testgrunnlag.namn,
-            "type" to testgrunnlag.type))
+            "type" to testgrunnlag.type.name))
 
     updateTestgrunnlagLoeysingNettside(testgrunnlag.id, testgrunnlag.loeysingar)
     updateTestgrunnlagTestregel(testgrunnlag.id, testgrunnlag.testreglar.map { it })
@@ -156,19 +163,13 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   private fun testgrunnlagRowMapper(testgrunnlagId: Int) = RowMapper { rs, _ ->
-    val loeysingIdArray = rs.getArray("loeysingar")?.array as? Array<Int> ?: emptyArray()
-    val loeysingar =
-        loeysingIdArray.map { loeysingId ->
-          val nettsider = findNettsiderByTestgrunnlAndLoeysing(testgrunnlagId, loeysingId)
-          Sak.Loeysing(loeysingId, nettsider)
-        }
     Testgrunnlag(
         testgrunnlagId,
         rs.getInt("sak_id"),
         rs.getInt("testgruppering_id"),
         rs.getString("namn"),
         emptyList(),
-        loeysingar,
+        emptyList(),
         Testgrunnlag.TestgrunnlagType.valueOf(rs.getString("type")),
         emptyList(),
         rs.getTimestamp("dato_oppretta").toInstant())
@@ -185,7 +186,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     where id in (
                         select nettside_id
                         from testlab2_testing.testgrunnlag_loeysing_nettside
-                        where testgrunnlag_id = :sak_id
+                        where testgrunnlag_id = :testgrunnlag_id
                             and loeysing_id = :loeysing_id
                     )
                 """
