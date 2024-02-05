@@ -71,6 +71,6 @@ data class NyttTestgrunnlag(
     val testgrupperingId: Int?,
     val namn: String?,
     val type: Testgrunnlag.TestgrunnlagType,
-    val loeysingar: List<Sak.Loeysing>,
+    val loeysingar: Sak.Loeysing,
     val testregelar: List<Int>
 )
