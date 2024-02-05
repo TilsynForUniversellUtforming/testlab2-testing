@@ -16,7 +16,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     val result =
         jdbcTemplate.query(
-            "select id,sak_id,testgruppering_id,namn,type, dato_oppretta from testgrunnlag where id = :id",
+            "select id,sak_id,namn,type, dato_oppretta from testgrunnlag where id = :id",
             mapOf("id" to id),
             testgrunnlagRowMapper(id))
 
@@ -67,14 +67,13 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun createTestgrunnlag(testgrunnlag: NyttTestgrunnlag): Result<Int> {
     val testgrunnlagId =
         jdbcTemplate.queryForObject(
-            """insert into testgrunnlag (sak_id, testgruppering_id, namn, type, dato_oppretta)
-                |values (:sakId, :testgrupperingId, :namn, :type, :datoOppretta)
+            """insert into testgrunnlag (sak_id, namn, type, dato_oppretta)
+                |values (:sakId, :namn, :type, :datoOppretta)
                 |returning id
             """
                 .trimMargin(),
             mapOf(
-                "sakId" to testgrunnlag.sakId,
-                "testgrupperingId" to testgrunnlag.testgrupperingId,
+                "sakId" to testgrunnlag.parentId,
                 "namn" to testgrunnlag.namn,
                 "type" to testgrunnlag.type.name,
                 "datoOppretta" to Timestamp.from(Instant.now())),
@@ -121,14 +120,13 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun updateTestgrunnlag(testgrunnlag: Testgrunnlag): Result<Testgrunnlag> {
     jdbcTemplate.update(
-        """update testgrunnlag set sak_id = :sakId, testgruppering_id = :testgrupperingId, namn = :namn, type = :type
+        """update testgrunnlag set sak_id = :sakId, namn = :namn, type = :type
                 |where id = :id
             """
             .trimMargin(),
         mapOf(
             "id" to testgrunnlag.id,
-            "sakId" to testgrunnlag.sakId,
-            "testgrupperingId" to testgrunnlag.testgrupperingId,
+            "sakId" to testgrunnlag.parentId,
             "namn" to testgrunnlag.namn,
             "type" to testgrunnlag.type.name))
 
@@ -164,7 +162,6 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     Testgrunnlag(
         testgrunnlagId,
         rs.getInt("sak_id"),
-        rs.getInt("testgruppering_id"),
         rs.getString("namn"),
         emptyList(),
         getLoeysing(testgrunnlagId),

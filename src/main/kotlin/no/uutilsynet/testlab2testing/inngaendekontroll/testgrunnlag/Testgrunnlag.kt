@@ -6,8 +6,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 
 data class Testgrunnlag(
     val id: Int,
-    val sakId: Int?,
-    val testgrupperingId: Int?,
+    val parentId: Int?,
     val namn: String,
     val testreglar: List<Int> = emptyList(),
     val loeysing: Sak.Loeysing,

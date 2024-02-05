@@ -33,8 +33,7 @@ class TestgrunnlagDAOTest(
 
     val nyttTestgrunnlagManuell =
         NyttTestgrunnlag(
-            sakId = testSak?.id,
-            testgrupperingId = 1,
+            parentId = testSak?.id,
             namn = "Testgrunnlag",
             type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
             testregelar = listOf(1),
@@ -94,8 +93,7 @@ class TestgrunnlagDAOTest(
 
     val nyttTestgrunnlag =
         NyttTestgrunnlag(
-            sakId = testSak?.id,
-            testgrupperingId = 1,
+            parentId = testSak?.id,
             namn = "Testgrunnlag",
             type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
             testregelar = listOf(1),
@@ -116,8 +114,7 @@ class TestgrunnlagDAOTest(
 
     val nyttTestgrunnlagManuell =
         NyttTestgrunnlag(
-            sakId = testSak?.id,
-            testgrupperingId = 1,
+            parentId = testSak?.id,
             namn = "Testgrunnlag",
             type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
             testregelar = listOf(1),
@@ -141,8 +138,7 @@ class TestgrunnlagDAOTest(
 
     val nyttTestgrunnlagManuell =
         NyttTestgrunnlag(
-            sakId = testSak?.id,
-            testgrupperingId = 1,
+            parentId = testSak?.id,
             namn = "Testgrunnlag",
             type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
             testregelar = listOf(1),
