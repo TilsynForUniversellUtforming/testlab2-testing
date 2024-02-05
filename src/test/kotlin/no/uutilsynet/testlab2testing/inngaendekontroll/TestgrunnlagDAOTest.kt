@@ -31,23 +31,23 @@ class TestgrunnlagDAOTest(
   fun createTestgrunnlag() {
     val loeysingar = testSak?.loeysingar ?: emptyList()
 
-    val nyttTestgrunnlag =
+    val nyttTestgrunnlagManuell =
         NyttTestgrunnlag(
             sakId = testSak?.id,
             testgrupperingId = 1,
             namn = "Testgrunnlag",
             type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
             testregelar = listOf(1),
-            loeysingar = loeysingar)
+            loeysingar = loeysingar.first())
 
-    val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag)
+    val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlagManuell)
     assertDoesNotThrow { id }
     val testgrunnlag = testgrunnlagDAO.getTestgrunnlag(id.getOrThrow()).getOrThrow()
 
     assertThat(testgrunnlag).isNotNull
     assertThat(testgrunnlag.namn).isEqualTo("Testgrunnlag")
     assertThat(testgrunnlag.testreglar).isEqualTo(listOf(1))
-    assertThat(testgrunnlag.loeysingar).isEqualTo(nyttTestgrunnlag.loeysingar)
+    assertThat(testgrunnlag.loeysing).isEqualTo(nyttTestgrunnlagManuell.loeysingar)
     assertThat(testgrunnlag.type).isEqualTo(Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST)
   }
 
@@ -88,6 +88,10 @@ class TestgrunnlagDAOTest(
 
   @Test
   fun testGetLoeysingar() {
+
+    val loeysing: Sak.Loeysing =
+        testSak?.loeysingar?.first() ?: throw IllegalStateException("TestSak har ingen loeysingar")
+
     val nyttTestgrunnlag =
         NyttTestgrunnlag(
             sakId = testSak?.id,
@@ -95,31 +99,31 @@ class TestgrunnlagDAOTest(
             namn = "Testgrunnlag",
             type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
             testregelar = listOf(1),
-            loeysingar = testSak?.loeysingar ?: emptyList())
+            loeysingar = loeysing)
 
     val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag)
 
     val expected = testSak?.loeysingar ?: emptyList()
 
-    val actual = testgrunnlagDAO.getLoeysingar(id.getOrThrow())
+    val actual = testgrunnlagDAO.getLoeysing(id.getOrThrow())
 
-    assertThat(actual).isEqualTo(expected)
+    assertThat(actual).isEqualTo(expected.first())
   }
 
   @Test
   fun testUpdateTestgrunnlag() {
     val loeysingar = testSak?.loeysingar ?: emptyList()
 
-    val nyttTestgrunnlag =
+    val nyttTestgrunnlagManuell =
         NyttTestgrunnlag(
             sakId = testSak?.id,
             testgrupperingId = 1,
             namn = "Testgrunnlag",
             type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
             testregelar = listOf(1),
-            loeysingar = loeysingar)
+            loeysingar = loeysingar.first())
 
-    val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag)
+    val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlagManuell)
     assertDoesNotThrow { id }
     val testgrunnlag = testgrunnlagDAO.getTestgrunnlag(id.getOrThrow()).getOrThrow()
 
@@ -135,23 +139,21 @@ class TestgrunnlagDAOTest(
   fun testSlettTestgrunnlag() {
     val loeysingar = testSak?.loeysingar ?: emptyList()
 
-    val nyttTestgrunnlag =
+    val nyttTestgrunnlagManuell =
         NyttTestgrunnlag(
             sakId = testSak?.id,
             testgrupperingId = 1,
             namn = "Testgrunnlag",
             type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
             testregelar = listOf(1),
-            loeysingar = loeysingar)
+            loeysingar = loeysingar.first())
 
-    val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag)
+    val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlagManuell)
 
     testgrunnlagDAO.deleteTestgrunnlag(id.getOrThrow())
 
     assertThat(testgrunnlagDAO.getTestgrunnlag(id.getOrThrow()).isFailure).isTrue()
 
-    val loeysingarTestgrunnlag = testgrunnlagDAO.getLoeysingar(id.getOrThrow())
-
-    assertThat(loeysingarTestgrunnlag.isEmpty()).isTrue()
+    assertThrows<IllegalArgumentException> { testgrunnlagDAO.getLoeysing(id.getOrThrow()) }
   }
 }

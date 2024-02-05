@@ -10,7 +10,7 @@ data class Testgrunnlag(
     val testgrupperingId: Int?,
     val namn: String,
     val testreglar: List<Int> = emptyList(),
-    val loeysingar: List<Sak.Loeysing> = emptyList(),
+    val loeysing: Sak.Loeysing,
     val type: TestgrunnlagType,
     val aktivitet: List<Aktivitet>?,
     val datoOppretta: Instant

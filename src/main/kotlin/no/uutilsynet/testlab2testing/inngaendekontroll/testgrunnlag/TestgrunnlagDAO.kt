@@ -23,8 +23,6 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val testgrunnlag: Testgrunnlag =
         result.firstOrNull() ?: return Result.failure(IllegalArgumentException())
 
-    val loeysingar = getLoeysingar(id)
-
     val testreglar =
         jdbcTemplate.queryForList(
             """select testregel_id
@@ -35,10 +33,10 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             mapOf("id" to id),
             Int::class.java)
 
-    return Result.success(testgrunnlag.copy(loeysingar = loeysingar, testreglar = testreglar))
+    return Result.success(testgrunnlag.copy(testreglar = testreglar))
   }
 
-  fun getLoeysingar(id: Int): MutableList<Sak.Loeysing> {
+  fun getLoeysing(id: Int): Sak.Loeysing {
     val loeysingar =
         jdbcTemplate.query(
             """select loeysing_id
@@ -50,7 +48,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               val nettsider = findNettsiderByTestgrunnlAndLoeysing(id, rs.getInt("loeysing_id"))
               Sak.Loeysing(rs.getInt("loeysing_id"), nettsider)
             }
-    return loeysingar
+    return loeysingar.firstOrNull() ?: throw IllegalArgumentException()
   }
 
   fun getTestgrunnlagForSak(sakId: Int, loeysingId: Int?): List<Testgrunnlag> {
@@ -83,7 +81,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             Int::class.java)
 
     if (testgrunnlagId != null) {
-      saveTestgrunnlagLoeysingNettside(testgrunnlagId, testgrunnlag.loeysingar)
+      saveTestgrunnlagLoeysingNettside(testgrunnlagId, listOf(testgrunnlag.loeysingar))
       saveTestgrunnlagTestregel(testgrunnlagId, testgrunnlag.testregelar)
     }
 
@@ -134,7 +132,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "namn" to testgrunnlag.namn,
             "type" to testgrunnlag.type.name))
 
-    updateTestgrunnlagLoeysingNettside(testgrunnlag.id, testgrunnlag.loeysingar)
+    updateTestgrunnlagLoeysingNettside(testgrunnlag.id, listOf(testgrunnlag.loeysing))
     updateTestgrunnlagTestregel(testgrunnlag.id, testgrunnlag.testreglar.map { it })
 
     return Result.success(testgrunnlag)
@@ -169,7 +167,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         rs.getInt("testgruppering_id"),
         rs.getString("namn"),
         emptyList(),
-        emptyList(),
+        getLoeysing(testgrunnlagId),
         Testgrunnlag.TestgrunnlagType.valueOf(rs.getString("type")),
         emptyList(),
         rs.getTimestamp("dato_oppretta").toInstant())
