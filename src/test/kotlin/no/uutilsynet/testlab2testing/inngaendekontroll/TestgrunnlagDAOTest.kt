@@ -9,10 +9,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.testregel.*
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 
@@ -87,5 +84,74 @@ class TestgrunnlagDAOTest(
 
     sakDAO.update(sakTilOppdatering)
     return sakDAO.getSak(sakId.getOrThrow()).getOrThrow()
+  }
+
+  @Test
+  fun testGetLoeysingar() {
+    val nyttTestgrunnlag =
+        NyttTestgrunnlag(
+            sakId = testSak?.id,
+            testgrupperingId = 1,
+            namn = "Testgrunnlag",
+            type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
+            testregelar = listOf(1),
+            loeysingar = testSak?.loeysingar ?: emptyList())
+
+    val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag)
+
+    val expected = testSak?.loeysingar ?: emptyList()
+
+    val actual = testgrunnlagDAO.getLoeysingar(id.getOrThrow())
+
+    assertThat(actual).isEqualTo(expected)
+  }
+
+  @Test
+  fun testUpdateTestgrunnlag() {
+    val loeysingar = testSak?.loeysingar ?: emptyList()
+
+    val nyttTestgrunnlag =
+        NyttTestgrunnlag(
+            sakId = testSak?.id,
+            testgrupperingId = 1,
+            namn = "Testgrunnlag",
+            type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
+            testregelar = listOf(1),
+            loeysingar = loeysingar)
+
+    val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag)
+    assertDoesNotThrow { id }
+    val testgrunnlag = testgrunnlagDAO.getTestgrunnlag(id.getOrThrow()).getOrThrow()
+
+    val oppdatertTestgrunlag =
+        testgrunnlag.copy(namn = "Oppdatert testgrunnlag", testreglar = listOf(1, 2))
+
+    val result = testgrunnlagDAO.updateTestgrunnlag(oppdatertTestgrunlag)
+
+    assertThat(result.getOrThrow()).isEqualTo(oppdatertTestgrunlag)
+  }
+
+  @Test
+  fun testSlettTestgrunnlag() {
+    val loeysingar = testSak?.loeysingar ?: emptyList()
+
+    val nyttTestgrunnlag =
+        NyttTestgrunnlag(
+            sakId = testSak?.id,
+            testgrupperingId = 1,
+            namn = "Testgrunnlag",
+            type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
+            testregelar = listOf(1),
+            loeysingar = loeysingar)
+
+    val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag)
+
+    testgrunnlagDAO.deleteTestgrunnlag(id.getOrThrow())
+
+    assertThat(testgrunnlagDAO.getTestgrunnlag(id.getOrThrow()).isFailure).isTrue()
+
+    val loeysingarTestgrunnlag = testgrunnlagDAO.getLoeysingar(id.getOrThrow())
+
+    assertThat(loeysingarTestgrunnlag.isEmpty()).isTrue()
   }
 }
