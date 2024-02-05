@@ -19,7 +19,7 @@ class TestgrunnlagResource(val testgrunnlagDAO: TestgrunnlagDAO) {
   }
 
   @PostMapping
-  fun createTestgrunnlag(@RequestBody testgrunnlag: NyttTestgrunnlag): ResponseEntity<Unit> {
+  fun createTestgrunnlag(@RequestBody testgrunnlag: NyttTestgrunnlag): ResponseEntity<Int> {
     return runCatching { testgrunnlagDAO.createTestgrunnlag(testgrunnlag).getOrThrow() }
         .fold(
             onSuccess = { id -> ResponseEntity.created(location(id)).build() },
@@ -67,8 +67,7 @@ class TestgrunnlagResource(val testgrunnlagDAO: TestgrunnlagDAO) {
 }
 
 data class NyttTestgrunnlag(
-    val sakId: Int?,
-    val testgrupperingId: Int?,
+    val parentId: Int?,
     val namn: String?,
     val type: Testgrunnlag.TestgrunnlagType,
     val loeysingar: Sak.Loeysing,
