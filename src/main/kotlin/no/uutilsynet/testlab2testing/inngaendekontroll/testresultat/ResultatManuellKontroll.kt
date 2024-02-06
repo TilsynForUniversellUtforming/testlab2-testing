@@ -6,7 +6,7 @@ import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 
 data class ResultatManuellKontroll(
     val id: Int,
-    val sakId: Int,
+    val testgrunnlagId: Int,
     val loeysingId: Int,
     val testregelId: Int, // Databaseid for testregel
     val nettsideId: Int,

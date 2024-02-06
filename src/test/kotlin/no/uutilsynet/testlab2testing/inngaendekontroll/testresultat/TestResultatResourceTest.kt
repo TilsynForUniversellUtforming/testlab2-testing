@@ -9,6 +9,9 @@ import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll.Svar
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -34,9 +37,11 @@ import org.springframework.test.context.ActiveProfiles
 class TestResultatResourceTest(
     @Autowired val sakDAO: SakDAO,
     @Autowired val restTemplate: TestRestTemplate,
+    @Autowired val testgrunnlagDAO: TestgrunnlagDAO
 ) {
   private var sakId: Int by Delegates.notNull()
   private var location: URI by Delegates.notNull()
+  private var testgrunnlagId: Int by Delegates.notNull()
 
   @SpyBean lateinit var brukarService: BrukarService
 
@@ -74,15 +79,27 @@ class TestResultatResourceTest(
     val sak = sakDAO.getSak(sakId).getOrThrow()
     val nettside = sak.loeysingar.first().nettsider.first()
 
+    val nyttTestgrunnlag =
+        NyttTestgrunnlag(
+            sakId,
+            "Testgrunnlag",
+            Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
+            sak.loeysingar.first(),
+            sak.testreglar.map { it.id })
+
+    val testgrunnlag = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag)
+    testgrunnlagId = testgrunnlag.getOrThrow()
+
     val responseEntity =
         restTemplate.postForEntity(
             "/testresultat",
             mapOf(
-                "sakId" to sakId,
+                "testgrunnlagId" to testgrunnlagId,
                 "loeysingId" to 1,
                 "testregelId" to 1,
                 "nettsideId" to nettside.id,
-                "brukar" to mapOf("brukarnamn" to "testbrukar@digdir.no", "namn" to "Test Brukar")),
+                "brukar" to mapOf("brukarnamn" to "testbrukar@digdir.no", "namn" to "Test Brukar"),
+            ),
             Unit::class.java)
 
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.CREATED)
@@ -207,7 +224,8 @@ class TestResultatResourceTest(
   @DisplayName("vi kan hente alle resultater for en gitt sak")
   fun henteAlleResultaterForSak() {
     val resultatForSak =
-        restTemplate.getForObject("/testresultat?sakId=$sakId", ResultatForSak::class.java)!!
+        restTemplate.getForObject(
+            "/testresultat?sakId=$testgrunnlagId", ResultatForSak::class.java)!!
     assertThat(resultatForSak.resultat).hasSize(1)
     val resultat = resultatForSak.resultat.first()
     assertThat(resultat.elementOmtale).isEqualTo("iframe nummer 1")

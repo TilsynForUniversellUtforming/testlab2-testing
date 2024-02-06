@@ -26,17 +26,18 @@ class TestResultatDAO(
     return runCatching {
       val brukarId: Int =
           brukarService.getUserId() ?: throw RuntimeException("No authenticated user")
+
       jdbcTemplate.queryForObject(
           """
-        insert into testresultat (sak_id, loeysing_id, testregel_id, nettside_id, brukar_id, element_omtale, element_resultat,
+        insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, nettside_id, brukar_id, element_omtale, element_resultat,
                                      element_utfall, test_vart_utfoert, status, kommentar)
-        values (:sakId, :loeysingId, :testregelId, :nettsideId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
+        values (:testgrunnlagId, :loeysingId, :testregelId, :nettsideId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
                 :testVartUtfoert,:status, :kommentar)
         returning id
       """
               .trimIndent(),
           mapOf(
-              "sakId" to createTestResultat.sakId,
+              "testgrunnlagId" to createTestResultat.testgrunnlagId,
               "loeysingId" to createTestResultat.loeysingId,
               "testregelId" to createTestResultat.testregelId,
               "nettsideId" to createTestResultat.nettsideId,
@@ -55,12 +56,12 @@ class TestResultatDAO(
   fun getTestResultat(id: Int): Result<ResultatManuellKontroll> =
       getTestResultat(resultatId = id).map { it.first() }
 
-  fun getManyResults(sakId: Int): Result<List<ResultatManuellKontroll>> =
-      getTestResultat(sakId = sakId)
+  fun getManyResults(testgrunnlagId: Int): Result<List<ResultatManuellKontroll>> =
+      getTestResultat(testgrunnlagId = testgrunnlagId)
 
   private fun getTestResultat(
       resultatId: Int? = null,
-      sakId: Int? = null
+      testgrunnlagId: Int? = null
   ): Result<List<ResultatManuellKontroll>> = runCatching {
     val resultSetExtractor =
         JdbcTemplateMapperFactory.newInstance()
@@ -71,7 +72,7 @@ class TestResultatDAO(
         jdbcTemplate.query(
             """
                 select ti.id    as id,
-                       ti.sak_id,
+                       ti.testgrunnlag_id,
                        ti.loeysing_id,
                        ti.testregel_id,
                        ti.nettside_id,
@@ -89,11 +90,11 @@ class TestResultatDAO(
                          left join testresultat_svar tis on ti.id = tis.testresultat_id
                          join brukar b on ti.brukar_id = b.id
                 where ${if (resultatId != null) "ti.id = :id" else "true"}
-                and ${if (sakId != null) "ti.sak_id = :sakId" else "true"}
+                and ${if (testgrunnlagId != null) "ti.testgrunnlag_id = :testgrunnlag_id" else "true"}
                 order by id, svar_steg
             """
                 .trimIndent(),
-            mapOf("id" to resultatId, "sakId" to sakId),
+            mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId),
             resultSetExtractor)
     testResultat ?: emptyList()
   }

@@ -36,8 +36,8 @@ class TestgrunnlagDAOTest(
             parentId = testSak?.id,
             namn = "Testgrunnlag",
             type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
-            testregelar = listOf(1),
-            loeysingar = loeysingar.first())
+            testreglar = listOf(1),
+            loeysing = loeysingar.first())
 
     val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlagManuell)
     assertDoesNotThrow { id }
@@ -45,8 +45,8 @@ class TestgrunnlagDAOTest(
 
     assertThat(testgrunnlag).isNotNull
     assertThat(testgrunnlag.namn).isEqualTo("Testgrunnlag")
-    assertThat(testgrunnlag.testreglar).isEqualTo(listOf(1))
-    assertThat(testgrunnlag.loeysing).isEqualTo(nyttTestgrunnlagManuell.loeysingar)
+    assertThat(testgrunnlag.testreglar.map { it.id }).isEqualTo(listOf(1))
+    assertThat(testgrunnlag.loeysing).isEqualTo(nyttTestgrunnlagManuell.loeysing)
     assertThat(testgrunnlag.type).isEqualTo(Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST)
   }
 
@@ -69,7 +69,7 @@ class TestgrunnlagDAOTest(
                         "1.2.2a",
                         1,
                         "Testregelamn",
-                        "1.2.2",
+                        1,
                         TestregelStatus.publisert,
                         Instant.now(),
                         TestregelInnholdstype.nett,
@@ -96,8 +96,8 @@ class TestgrunnlagDAOTest(
             parentId = testSak?.id,
             namn = "Testgrunnlag",
             type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
-            testregelar = listOf(1),
-            loeysingar = loeysing)
+            testreglar = listOf(1),
+            loeysing = loeysing)
 
     val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag)
 
@@ -117,19 +117,20 @@ class TestgrunnlagDAOTest(
             parentId = testSak?.id,
             namn = "Testgrunnlag",
             type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
-            testregelar = listOf(1),
-            loeysingar = loeysingar.first())
+            testreglar = listOf(1),
+            loeysing = loeysingar.first())
 
     val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlagManuell)
     assertDoesNotThrow { id }
     val testgrunnlag = testgrunnlagDAO.getTestgrunnlag(id.getOrThrow()).getOrThrow()
 
     val oppdatertTestgrunlag =
-        testgrunnlag.copy(namn = "Oppdatert testgrunnlag", testreglar = listOf(1, 2))
+        testgrunnlag.copy(namn = "Oppdatert testgrunnlag", testreglar = listOf())
 
     val result = testgrunnlagDAO.updateTestgrunnlag(oppdatertTestgrunlag)
 
-    assertThat(result.getOrThrow()).isEqualTo(oppdatertTestgrunlag)
+    assertThat(result.getOrThrow().testreglar.map { it.id })
+        .isEqualTo(oppdatertTestgrunlag.testreglar.map { it.id })
   }
 
   @Test
@@ -141,8 +142,8 @@ class TestgrunnlagDAOTest(
             parentId = testSak?.id,
             namn = "Testgrunnlag",
             type = Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
-            testregelar = listOf(1),
-            loeysingar = loeysingar.first())
+            testreglar = listOf(1),
+            loeysing = loeysingar.first())
 
     val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlagManuell)
 

@@ -3,6 +3,9 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
+import no.uutilsynet.testlab2testing.testregel.Testregel
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -11,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional
 
 @Component
 class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+
+  val logger: Logger = LoggerFactory.getLogger(TestgrunnlagDAO::class.java)
 
   fun getTestgrunnlag(id: Int): Result<Testgrunnlag> {
 
@@ -24,14 +29,14 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         result.firstOrNull() ?: return Result.failure(IllegalArgumentException())
 
     val testreglar =
-        jdbcTemplate.queryForList(
-            """select testregel_id
-              |from testgrunnlag_testregel
+        jdbcTemplate.query(
+            """select t.id, krav_id, testregel_schema, namn, modus, t.testregel_id, versjon, status, dato_sist_endra, modus, spraak, tema, type, testobjekt, krav_til_samsvar, innhaldstype_testing
+              |from testgrunnlag_testregel tt join testregel t on t.id = tt.testregel_id
               |where testgrunnlag_id = :id
           """
                 .trimMargin(),
             mapOf("id" to id),
-            Int::class.java)
+            DataClassRowMapper.newInstance(Testregel::class.java))
 
     return Result.success(testgrunnlag.copy(testreglar = testreglar))
   }
@@ -51,16 +56,20 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return loeysingar.firstOrNull() ?: throw IllegalArgumentException()
   }
 
-  fun getTestgrunnlagForSak(sakId: Int, loeysingId: Int?): List<Testgrunnlag> {
-    return jdbcTemplate.queryForList(
-        """select t.id, t.sak_id,testgruppering_id,namn,type,dato_oppretta 
+  fun getTestgrunnlagForSak(sakId: Int?, loeysingId: Int?): List<Testgrunnlag> {
+    logger.info("Henter testgrunnlag for sak $sakId og loeysing $loeysingId")
+    val testgrunnlagIds =
+        jdbcTemplate.queryForList(
+            """select t.id
                 |from testgrunnlag t left join testgrunnlag_loeysing_nettside tln on t.id = tln.testgrunnlag_id 
                 |where sak_id = :sakId
                 | and ${if (loeysingId != null) "loeysing_id = :loeysingId" else "true"}
                  """
-            .trimMargin(),
-        mapOf("sakId" to sakId, "loeysingId" to loeysingId),
-        Testgrunnlag::class.java)
+                .trimMargin(),
+            mapOf("sakId" to sakId, "loeysingId" to loeysingId),
+            Int::class.java)
+
+    return testgrunnlagIds.map { id -> getTestgrunnlag(id).getOrThrow() }
   }
 
   @Transactional
@@ -80,8 +89,8 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             Int::class.java)
 
     if (testgrunnlagId != null) {
-      saveTestgrunnlagLoeysingNettside(testgrunnlagId, listOf(testgrunnlag.loeysingar))
-      saveTestgrunnlagTestregel(testgrunnlagId, testgrunnlag.testregelar)
+      saveTestgrunnlagLoeysingNettside(testgrunnlagId, listOf(testgrunnlag.loeysing))
+      saveTestgrunnlagTestregel(testgrunnlagId, testgrunnlag.testreglar)
     }
 
     return if (testgrunnlagId != null) {
@@ -92,8 +101,9 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun saveTestgrunnlagLoeysingNettside(testgrunnlagId: Int, loeysingar: List<Sak.Loeysing>) {
-    loeysingar.forEach() { loeysing ->
-      loeysing.nettsider.forEach() { nettside ->
+    logger.debug("Save loeysing testgrunnlag {} {}", loeysingar, testgrunnlagId)
+    loeysingar.forEach { loeysing ->
+      loeysing.nettsider.forEach { nettside ->
         jdbcTemplate.update(
             """insert into testgrunnlag_loeysing_nettside (testgrunnlag_id, loeysing_id, nettside_id)
                 |values (:testgrunnlagId, :loeysingId, :nettsideId)
@@ -126,12 +136,12 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .trimMargin(),
         mapOf(
             "id" to testgrunnlag.id,
-            "sakId" to testgrunnlag.parentId,
+            "sakId" to testgrunnlag.sakId,
             "namn" to testgrunnlag.namn,
             "type" to testgrunnlag.type.name))
 
     updateTestgrunnlagLoeysingNettside(testgrunnlag.id, listOf(testgrunnlag.loeysing))
-    updateTestgrunnlagTestregel(testgrunnlag.id, testgrunnlag.testreglar.map { it })
+    updateTestgrunnlagTestregel(testgrunnlag.id, testgrunnlag.testreglar.map { it.id })
 
     return Result.success(testgrunnlag)
   }
