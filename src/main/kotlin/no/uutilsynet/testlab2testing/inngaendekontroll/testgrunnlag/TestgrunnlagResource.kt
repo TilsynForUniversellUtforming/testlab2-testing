@@ -14,19 +14,35 @@ class TestgrunnlagResource(val testgrunnlagDAO: TestgrunnlagDAO) {
   val logger: Logger = LoggerFactory.getLogger(TestgrunnlagResource::class.java)
 
   @GetMapping
-  fun getTestgrunnlagList(sakId: Int, loeysingId: Int?): ResponseEntity<List<Testgrunnlag>> {
+  fun getTestgrunnlagList(
+      @RequestParam sakId: Int,
+      @RequestParam loeysingId: Int?
+  ): ResponseEntity<List<Testgrunnlag>> {
     return ResponseEntity.ok(testgrunnlagDAO.getTestgrunnlagForSak(sakId, loeysingId))
   }
 
   @PostMapping
   fun createTestgrunnlag(@RequestBody testgrunnlag: NyttTestgrunnlag): ResponseEntity<Int> {
-    return runCatching { testgrunnlagDAO.createTestgrunnlag(testgrunnlag).getOrThrow() }
-        .fold(
-            onSuccess = { id -> ResponseEntity.created(location(id)).build() },
-            onFailure = {
-              logger.error("Feil ved oppretting av testgrunnlag", it)
-              ResponseEntity.badRequest().build()
-            })
+    logger.info(
+        "Opprett testgrunnlag for sak ${testgrunnlag.parentId} og loeysing ${testgrunnlag.loeysing}")
+
+    val eksisterende =
+        testgrunnlagDAO.getTestgrunnlagForSak(
+            testgrunnlag.parentId!!, testgrunnlag.loeysing.loeysingId)
+    return if (eksisterende.isEmpty()) {
+      runCatching { testgrunnlagDAO.createTestgrunnlag(testgrunnlag).getOrThrow() }
+          .fold(
+              onSuccess = { id ->
+                logger.info("Oppretta testgrunnlag med id $id")
+                ResponseEntity.created(location(id)).build()
+              },
+              onFailure = {
+                logger.error("Feil ved oppretting av testgrunnlag", it)
+                ResponseEntity.badRequest().build()
+              })
+    } else {
+      ResponseEntity.created(location(eksisterende.first().id)).build()
+    }
   }
 
   @GetMapping("/{id}")
@@ -70,6 +86,6 @@ data class NyttTestgrunnlag(
     val parentId: Int?,
     val namn: String?,
     val type: Testgrunnlag.TestgrunnlagType,
-    val loeysingar: Sak.Loeysing,
-    val testregelar: List<Int>
+    val loeysing: Sak.Loeysing,
+    val testreglar: List<Int>
 )

@@ -117,7 +117,7 @@ class TestResultatResource(
       ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
 
   data class CreateTestResultat(
-      val sakId: Int,
+      val testgrunnlagId: Int,
       val loeysingId: Int,
       val testregelId: Int,
       val nettsideId: Int,
