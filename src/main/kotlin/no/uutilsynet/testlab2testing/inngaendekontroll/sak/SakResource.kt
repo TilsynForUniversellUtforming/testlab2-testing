@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.sak
 
 import java.time.LocalDate
+import no.uutilsynet.testlab2testing.brukar.BrukarDAO
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateOrgNummer
 import org.slf4j.Logger
@@ -11,7 +12,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
 @RequestMapping("/saker")
-class SakResource(val sakDAO: SakDAO) {
+class SakResource(val sakDAO: SakDAO, val brukarDAO: BrukarDAO) {
 
   val logger: Logger = LoggerFactory.getLogger(SakResource::class.java)
 
