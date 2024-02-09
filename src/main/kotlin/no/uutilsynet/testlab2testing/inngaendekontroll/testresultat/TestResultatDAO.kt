@@ -157,7 +157,7 @@ class TestResultatDAO(
         .map {
           val testresultat = it.value
 
-          val talElementBrot = testresultat.count { it.elementResultat == "brudd" }
+          val talElementBrot = testresultat.count { it.elementResultat == "brot" }
           val talElementSamsvar = testresultat.count { it.elementResultat == "samsvar" }
           val talElementVarsel = testresultat.count { it.elementResultat == "varsel" }
           val talElementIkkjeForekomst = testresultat.count { it.elementUtfall == "ikkjeForekomst" }
