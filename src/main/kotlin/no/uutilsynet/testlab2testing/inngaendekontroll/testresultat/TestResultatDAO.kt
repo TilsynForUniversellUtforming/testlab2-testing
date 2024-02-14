@@ -143,7 +143,7 @@ class TestResultatDAO(
       }
 
   fun saveAggregertResultatTestregel(sakId: Int) {
-    val testresultatForSak = getTestresultatForSak(sakId)
+    val testresultatForSak = getTestResultat(sakId = sakId).getOrThrow()
     val aggregertResultatTestregel = createAggregeringPerTestregelDTO(testresultatForSak)
     aggregertResultatTestregel.forEach(aggregeringDAO::createAggregertResultatTestregel)
   }
@@ -194,7 +194,7 @@ class TestResultatDAO(
     testresultat
         .groupBy { it.nettsideId }
         .entries
-        .map { _ ->
+        .forEach { _ ->
           {
             when (calculateUtfall(testresultat.map { it.elementUtfall })) {
               "brudd" -> talSiderBrot += 1
@@ -204,24 +204,6 @@ class TestResultatDAO(
           }
         }
     return Triple(talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst)
-  }
-
-  fun getTestresultatForSak(sakId: Int): List<ResultatManuellKontroll> {
-    val sql = """select * from testresultat where sak_id = :sakId"""
-    return jdbcTemplate.query(sql, mapOf("sakId" to sakId)) { rs, _ ->
-      ResultatManuellKontroll(
-          id = rs.getInt("id"),
-          sakId = rs.getInt("sak_id"),
-          loeysingId = rs.getInt("loeysing_id"),
-          testregelId = rs.getInt("testregel_id"),
-          nettsideId = rs.getInt("nettside_id"),
-          brukar = null,
-          elementOmtale = rs.getString("element_omtale"),
-          elementResultat = rs.getString("element_resultat"),
-          elementUtfall = rs.getString("element_utfall"),
-          svar = emptyList(),
-          testVartUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant())
-    }
   }
 
   fun getKravIdFraTestregel(id: Int): Int {
