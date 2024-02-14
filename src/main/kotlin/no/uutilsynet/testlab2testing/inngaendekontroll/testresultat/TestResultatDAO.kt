@@ -17,9 +17,9 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val brukarDA
       jdbcTemplate.queryForObject(
           """
         insert into testresultat (sak_id, loeysing_id, testregel_id, nettside_id, brukar_id, element_omtale, element_resultat,
-                                     element_utfall, test_vart_utfoert)
+                                     element_utfall, test_vart_utfoert, status)
         values (:sakId, :loeysingId, :testregelId, :nettsideId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
-                :testVartUtfoert)
+                :testVartUtfoert,:status)
         returning id
       """
               .trimIndent(),
@@ -32,7 +32,8 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val brukarDA
               "elementOmtale" to createTestResultat.elementOmtale,
               "elementResultat" to createTestResultat.elementResultat,
               "elementUtfall" to createTestResultat.elementUtfall,
-              "testVartUtfoert" to createTestResultat.testVartUtfoert),
+              "testVartUtfoert" to createTestResultat.testVartUtfoert,
+              "status" to ResultatManuellKontroll.Status.IkkjePaabegynt.name),
           Int::class.java)!!
     }
   }
@@ -66,7 +67,8 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val brukarDA
                        tis.steg as svar_steg,
                        tis.svar as svar_svar,
                        b.brukarnamn as brukar_brukarnamn,
-                       b.namn as brukar_namn
+                       b.namn as brukar_namn,
+                       ti.status
                 from testresultat ti
                          left join testresultat_svar tis on ti.id = tis.testresultat_id
                          join brukar b on ti.brukar_id = b.id
@@ -94,7 +96,8 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val brukarDA
       set element_omtale    = :elementOmtale,
           element_resultat  = :elementResultat,
           element_utfall    = :elementUtfall,
-          test_vart_utfoert = :testVartUtfoert
+          test_vart_utfoert = :testVartUtfoert,
+          status = :status
       where id = :id
     """
             .trimIndent(),
@@ -103,6 +106,7 @@ class TestResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate, val brukarDA
             "elementResultat" to testResultat.elementResultat,
             "elementUtfall" to testResultat.elementUtfall,
             "testVartUtfoert" to testVartUtfoert,
+            "status" to testResultat.status.name,
             "id" to testResultat.id))
 
     // slett gamle svar og lagre de nye
