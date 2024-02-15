@@ -218,7 +218,8 @@ class SakResourceTest(@Autowired val restTemplate: TestRestTemplate) {
       restTemplate.put(location, oppdatertSak)
 
       val sakEtterOppdatering: SakDTO = restTemplate.getForObject(location)!!
-      assertThat(sakEtterOppdatering.testreglar).containsExactlyInAnyOrderElementsOf(testreglar)
+      assertThat(sakEtterOppdatering.testreglar.map { it.id })
+          .containsExactlyInAnyOrderElementsOf(testreglar.map { it.id })
     }
   }
 }

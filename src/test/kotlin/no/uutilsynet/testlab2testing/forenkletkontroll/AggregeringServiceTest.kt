@@ -109,7 +109,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
             type = TestregelInnholdstype.nett,
             modus = TestregelModus.forenklet,
             spraak = TestlabLocale.nb,
-            testregelSchema = "",
+            testregelSchema = testregelNoekkel,
             innhaldstypeTesting = 1,
             tema = 1,
             testobjekt = 1,
