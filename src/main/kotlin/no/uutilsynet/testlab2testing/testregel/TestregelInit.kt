@@ -1,33 +1,20 @@
 package no.uutilsynet.testlab2testing.testregel
 
-data class TestregelInit(
-    val name: String,
-    val testregelSchema: String,
-    val krav: String,
-    val type: TestregelModus,
-    val innhaldstypeTesting: Int?,
-)
+import java.time.Instant
+import no.uutilsynet.testlab2testing.common.TestlabLocale
 
-data class TestregelInitAutomatisk(
+data class TestregelInit(
     val testregelId: String,
     val namn: String,
     val krav: String,
-    val tema: Int,
-    val testobjekt: Int,
+    val status: TestregelStatus,
+    val datoSistEndra: Instant = Instant.now(),
+    val type: TestregelInnholdstype,
+    val modus: TestregelModus,
+    val spraak: TestlabLocale,
+    val tema: Int?,
+    val testobjekt: Int?,
+    val kravTilSamsvar: String?,
     val testregelSchema: String,
     val innhaldstypeTesting: Int?
-)
-
-data class TestregelInitManuell(
-    val testregelId: String,
-    val namn: String,
-    val tema: Int,
-    val testobjekt: Int,
-    val krav: String,
-    val testregelSchema: String,
-    val type: TestregelModus,
-    val status: TestregelStatus,
-    val versjon: Int,
-    val innholdstype: Int,
-    val innhaldstypeTesting: Int?,
 )

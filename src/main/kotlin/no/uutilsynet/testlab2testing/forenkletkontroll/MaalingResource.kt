@@ -25,9 +25,9 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
+import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelDTO
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
@@ -467,7 +467,7 @@ class MaalingResource(
         maaling.copy(
             navn = navn,
             loeysingList = loeysingList,
-            testregelList = testregelList.map { TestregelDTO(it) },
+            testregelList = testregelList.map { it.toTestregelBase() },
             crawlParameters = this.crawlParameters ?: maaling.crawlParameters)
       }
       is Maaling.Crawling -> maaling.copy(navn = this.navn)

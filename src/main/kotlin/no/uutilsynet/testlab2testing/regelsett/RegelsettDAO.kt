@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.regelsett
 
+import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
-import no.uutilsynet.testlab2testing.testregel.TestregelDTO
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.dao.support.DataAccessUtils
@@ -36,7 +36,7 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         regelsett.namn,
         regelsett.type,
         regelsett.standard,
-        regelsett.testregelList.map { TestregelDTO(it) })
+        regelsett.testregelList.map { it.toTestregelBase() })
   }
 
   fun getRegelsettResponse(int: Int): RegelsettResponse? {
@@ -68,7 +68,7 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       getRegelsettBaseList(includeInactive).map { it.toRegelsett() }
 
   fun getRegelsettResponseList(includeInactive: Boolean): List<RegelsettResponse> =
-      getRegelsettTestreglarList(includeInactive).map { toRegelsettResponse(it)!! }
+      getRegelsettTestreglarList(includeInactive).map { toRegelsettResponse(it) }
 
   @Transactional
   @CacheEvict(cacheNames = ["regelsett", "regelsettlist", "regelsettlistbase"], allEntries = true)

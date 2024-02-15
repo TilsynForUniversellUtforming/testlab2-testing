@@ -9,15 +9,15 @@ fun validateKrav(krav: String?): Result<String> = runCatching {
   krav
 }
 
-fun validateSchema(testregelSchema: String?, type: TestregelModus): Result<String> = runCatching {
+fun validateSchema(testregelSchema: String?, modus: TestregelModus): Result<String> = runCatching {
   if (testregelSchema.isNullOrBlank()) {
     throw IllegalArgumentException("Testregel-skjema kan ikkje vera blank")
   }
 
-  if (type == TestregelModus.forenklet &&
+  if (modus == TestregelModus.forenklet &&
       !testregelSchema.matches("^(QW-ACT-R)[0-9]{1,2}$".toRegex())) {
     throw IllegalArgumentException("QualWeb regel id må vera på formen QW-ACT-RXX")
-  } else if (type == TestregelModus.manuell && validateJSONString(testregelSchema).isFailure) {
+  } else if (modus == TestregelModus.manuell && validateJSONString(testregelSchema).isFailure) {
     throw IllegalArgumentException("Skjema må væra på gylig json-format")
   }
 

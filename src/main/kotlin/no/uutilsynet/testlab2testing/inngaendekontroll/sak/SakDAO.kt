@@ -8,8 +8,8 @@ import javax.sql.DataSource
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarDAO
 import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelDTO
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -34,7 +34,6 @@ class SakDAO(
         Int::class.java)!!
   }
 
-  @Transactional
   fun getSak(sakId: Int): Result<Sak> {
     val testreglar = testregelDAO.getTestreglarBySak(sakId)
     val rowMapper = RowMapper { rs, _ ->
@@ -82,7 +81,7 @@ class SakDAO(
             sak.frist,
             sak.ansvarleg,
             sak.loeysingar,
-            sak.testreglar.map { TestregelDTO(it) }))
+            sak.testreglar.map { it.toTestregelBase() }))
   }
 
   private fun findNettsiderBySakAndLoeysing(
@@ -229,6 +228,7 @@ class SakDAO(
         }
   }
 
+  @Transactional
   fun updateSakDTO(sakDTO: SakDTO): Result<SakDTO> {
     val sak = getSak(sakDTO.id).getOrThrow()
     val testreglar = getTestreglar(sakDTO.testreglar.map { it.id })
@@ -247,7 +247,7 @@ class SakDAO(
             updatedSak.frist,
             updatedSak.ansvarleg,
             updatedSak.loeysingar,
-            updatedSak.testreglar.map { TestregelDTO(it) }))
+            updatedSak.testreglar.map { it.toTestregelBase() }))
   }
 
   fun getTestreglar(testregelIdList: List<Int>): List<Testregel> {

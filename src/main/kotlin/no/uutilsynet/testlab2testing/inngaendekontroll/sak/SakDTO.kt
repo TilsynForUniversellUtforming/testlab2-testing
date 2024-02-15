@@ -2,7 +2,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.sak
 
 import java.time.LocalDate
 import no.uutilsynet.testlab2testing.brukar.Brukar
-import no.uutilsynet.testlab2testing.testregel.TestregelDTO
+import no.uutilsynet.testlab2testing.testregel.TestregelBase
 
 data class SakDTO(
     val id: Int,
@@ -11,5 +11,5 @@ data class SakDTO(
     val frist: LocalDate,
     val ansvarleg: Brukar?,
     val loeysingar: List<Sak.Loeysing> = emptyList(),
-    val testreglar: List<TestregelDTO> = emptyList()
-) {}
+    val testreglar: List<TestregelBase> = emptyList()
+)

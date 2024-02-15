@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.testregel
 
+import java.time.Instant
+import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKrav
@@ -67,14 +69,25 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
   fun updateTestregel() {
     val testregelInit =
         TestregelInit(
-            "test_skal_slettes_1", "QW-ACT-R69", "1.4.12 Tekstavstand", TestregelModus.forenklet, 1)
+            testregelId = "QW-ACT-R1",
+            namn = "test_skal_slettes_1",
+            krav = "1.1.1",
+            status = TestregelStatus.publisert,
+            type = TestregelInnholdstype.nett,
+            modus = TestregelModus.forenklet,
+            spraak = TestlabLocale.nb,
+            testregelSchema = "",
+            innhaldstypeTesting = 1,
+            tema = 1,
+            testobjekt = 1,
+            kravTilSamsvar = "")
     val id = createTestregel(testregelInit)
 
     val oldTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(oldTestregel).isNotNull
     Assertions.assertThat(oldTestregel?.krav).isEqualTo(testregelInit.krav)
     Assertions.assertThat(oldTestregel?.testregelSchema).isEqualTo(testregelInit.testregelSchema)
-    Assertions.assertThat(oldTestregel?.namn).isEqualTo(testregelInit.name)
+    Assertions.assertThat(oldTestregel?.namn).isEqualTo(testregelInit.namn)
 
     oldTestregel
         ?.copy(krav = testregelTestKrav, testregelSchema = testregelSchemaForenklet, namn = name)
@@ -91,17 +104,28 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
   fun updateTestregelSetDatoSistEndra() {
     val testregelInit =
         TestregelInit(
-            "test_skal_slettes_1", "QW-ACT-R69", "1.4.12 Tekstavstand", TestregelModus.forenklet, 1)
+            testregelId = "QW-ACT-R1",
+            namn = "test_skal_slettes_1",
+            krav = "1.1.1",
+            status = TestregelStatus.publisert,
+            type = TestregelInnholdstype.nett,
+            modus = TestregelModus.forenklet,
+            spraak = TestlabLocale.nb,
+            datoSistEndra = Instant.now().minusSeconds(61),
+            testregelSchema = "",
+            innhaldstypeTesting = 1,
+            tema = 1,
+            testobjekt = 1,
+            kravTilSamsvar = "")
     val id = createTestregel(testregelInit)
 
     val oldTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(oldTestregel).isNotNull
     Assertions.assertThat(oldTestregel?.krav).isEqualTo(testregelInit.krav)
     Assertions.assertThat(oldTestregel?.testregelSchema).isEqualTo(testregelInit.testregelSchema)
-    Assertions.assertThat(oldTestregel?.namn).isEqualTo(testregelInit.name)
+    Assertions.assertThat(oldTestregel?.namn).isEqualTo(testregelInit.namn)
 
     val oldDate = oldTestregel?.datoSistEndra
-    println(oldDate)
 
     oldTestregel
         ?.copy(krav = testregelTestKrav, testregelSchema = testregelSchemaForenklet, namn = name)
@@ -115,12 +139,23 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
 
     val newDate = updatedTestregel?.datoSistEndra
 
-    Assertions.assertThat(newDate).isNotEqualTo(oldDate)
+    Assertions.assertThat(newDate).isAfter(oldDate)
   }
 
   private fun createTestregel(
       testregelInit: TestregelInit =
           TestregelInit(
-              name, testregelTestKrav, testregelSchemaForenklet, TestregelModus.forenklet, 1)
+              testregelId = "QW-ACT-R1",
+              namn = name,
+              krav = testregelTestKrav,
+              status = TestregelStatus.publisert,
+              type = TestregelInnholdstype.nett,
+              modus = TestregelModus.forenklet,
+              spraak = TestlabLocale.nb,
+              testregelSchema = testregelSchemaForenklet,
+              innhaldstypeTesting = 1,
+              tema = 1,
+              testobjekt = 1,
+              kravTilSamsvar = "")
   ) = testregelDAO.createTestregel(testregelInit)
 }

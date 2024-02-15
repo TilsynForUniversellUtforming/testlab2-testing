@@ -7,8 +7,12 @@ import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.testregel.*
 import no.uutilsynet.testlab2testing.testregel.TestConstants
+import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
+import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
+import no.uutilsynet.testlab2testing.testregel.TestregelModus
+import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.startsWith
 import org.junit.jupiter.api.DisplayName
@@ -63,7 +67,7 @@ class CrawlerClientTest {
             "testmåling",
             maalingDateStart,
             loeysingList,
-            testregelList.map { TestregelDTO(it) },
+            testregelList.map { it.toTestregelBase() },
             CrawlParameters())
     runBlocking {
       val oppdatertMaaling = crawlerClient.start(maaling)

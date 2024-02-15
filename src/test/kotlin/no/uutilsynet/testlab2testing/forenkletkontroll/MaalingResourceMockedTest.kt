@@ -12,7 +12,11 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetL
 import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
-import no.uutilsynet.testlab2testing.testregel.*
+import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
+import no.uutilsynet.testlab2testing.testregel.TestregelModus
+import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 import org.assertj.core.api.Assertions
 import org.hamcrest.CoreMatchers
 import org.junit.jupiter.api.BeforeEach
