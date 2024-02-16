@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.regelsett
 
-import java.time.*
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettName
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettStandard
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestregelIdList
@@ -108,17 +107,6 @@ class RegelsettDAOTest(
 
     val regelsettListAfterDelete = regelsettDAO.getRegelsettBaseList(false)
     assertThat(regelsettListAfterDelete.map { it.id }).doesNotContain(id)
-  }
-
-  companion object {
-    @JvmStatic
-    fun regelsettBeforeUpdateList(): List<RegelsettCreate> =
-        listOf(
-            RegelsettCreate(
-                "${regelsettName}_1", regelsettType, regelsettStandard, regelsettTestregelIdList),
-            RegelsettCreate(regelsettName, regelsettType, true, regelsettTestregelIdList),
-            RegelsettCreate(regelsettName, regelsettType, regelsettStandard, listOf(1)),
-        )
   }
 
   @Test
