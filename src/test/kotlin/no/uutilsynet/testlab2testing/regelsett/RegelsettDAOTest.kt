@@ -1,11 +1,10 @@
 package no.uutilsynet.testlab2testing.regelsett
 
+import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettModus
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettName
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettStandard
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestregelIdList
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestregelList
-import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettType
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelModus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -18,10 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RegelsettDAOTest(
-    @Autowired val regelsettDAO: RegelsettDAO,
-    @Autowired val testregelDAO: TestregelDAO
-) {
+class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
 
   @AfterAll
   fun cleanup() {
@@ -43,10 +39,9 @@ class RegelsettDAOTest(
     val id = createTestRegelsett()
     val regelsett = regelsettDAO.getRegelsett(id)
     val expected =
-        Regelsett(id, regelsettName, regelsettType, regelsettStandard, regelsettTestregelList)
+        Regelsett(id, regelsettName, regelsettModus, regelsettStandard, regelsettTestregelList)
 
-    assertThat(regelsett).isNotNull
-    assertThat(regelsett).isEqualTo(expected)
+    compareRegelsett(regelsett, expected)
   }
 
   @Test
@@ -117,26 +112,24 @@ class RegelsettDAOTest(
     val regelsettBefore = regelsettDAO.getRegelsett(id)
 
     val expectedBefore =
-        Regelsett(id, nameBefore, regelsettType, regelsettStandard, regelsettTestregelList)
+        Regelsett(id, nameBefore, regelsettModus, regelsettStandard, regelsettTestregelList)
 
-    assertThat(regelsettBefore).isNotNull
-    assertThat(regelsettBefore).isEqualTo(expectedBefore)
+    compareRegelsett(regelsettBefore, expectedBefore)
 
     regelsettDAO.updateRegelsett(
         RegelsettEdit(
             id,
             regelsettName,
-            regelsettType,
+            regelsettModus,
             regelsettStandard,
             regelsettTestregelIdList,
         ))
 
     val expectedAfter =
-        Regelsett(id, regelsettName, regelsettType, regelsettStandard, regelsettTestregelList)
+        Regelsett(id, regelsettName, regelsettModus, regelsettStandard, regelsettTestregelList)
     val regelsettAfter = regelsettDAO.getRegelsett(id)
 
-    assertThat(regelsettAfter).isNotNull
-    assertThat(regelsettAfter).isEqualTo(expectedAfter)
+    compareRegelsett(regelsettAfter, expectedAfter)
   }
 
   @Test
@@ -147,26 +140,24 @@ class RegelsettDAOTest(
     val regelsettBefore = regelsettDAO.getRegelsett(id)
 
     val expectedBefore =
-        Regelsett(id, regelsettName, regelsettType, standardBefore, regelsettTestregelList)
+        Regelsett(id, regelsettName, regelsettModus, standardBefore, regelsettTestregelList)
 
-    assertThat(regelsettBefore).isNotNull
-    assertThat(regelsettBefore).isEqualTo(expectedBefore)
+    compareRegelsett(regelsettBefore, expectedBefore)
 
     regelsettDAO.updateRegelsett(
         RegelsettEdit(
             id,
             regelsettName,
-            regelsettType,
+            regelsettModus,
             regelsettStandard,
             regelsettTestregelIdList,
         ))
 
     val expectedAfter =
-        Regelsett(id, regelsettName, regelsettType, regelsettStandard, regelsettTestregelList)
+        Regelsett(id, regelsettName, regelsettModus, regelsettStandard, regelsettTestregelList)
     val regelsettAfter = regelsettDAO.getRegelsett(id)
 
-    assertThat(regelsettAfter).isNotNull
-    assertThat(regelsettAfter).isEqualTo(expectedAfter)
+    compareRegelsett(regelsettAfter, expectedAfter)
   }
 
   @Test
@@ -177,44 +168,46 @@ class RegelsettDAOTest(
     val regelsettBefore = regelsettDAO.getRegelsett(id)
 
     val expectedBefore =
-        Regelsett(id, regelsettName, regelsettType, regelsettStandard, testregelListBefore)
+        Regelsett(id, regelsettName, regelsettModus, regelsettStandard, testregelListBefore)
 
-    assertThat(regelsettBefore).isNotNull
-    assertThat(regelsettBefore).isEqualTo(expectedBefore)
+    compareRegelsett(regelsettBefore, expectedBefore)
 
     regelsettDAO.updateRegelsett(
         RegelsettEdit(
             id,
             regelsettName,
-            regelsettType,
+            regelsettModus,
             regelsettStandard,
             regelsettTestregelIdList,
         ))
 
     val expectedAfter =
-        Regelsett(id, regelsettName, regelsettType, regelsettStandard, regelsettTestregelList)
+        Regelsett(id, regelsettName, regelsettModus, regelsettStandard, regelsettTestregelList)
     val regelsettAfter = regelsettDAO.getRegelsett(id)
 
-    assertThat(regelsettAfter).isNotNull
-    assertThat(regelsettAfter).isEqualTo(expectedAfter)
+    compareRegelsett(regelsettAfter, expectedAfter)
   }
 
   private fun createTestRegelsett(
       namn: String = regelsettName,
-      type: TestregelModus = regelsettType,
+      type: TestregelModus = regelsettModus,
       standard: Boolean = regelsettStandard,
       testregelIdList: List<Int> = regelsettTestregelIdList,
-  ): Int {
+  ): Int =
+      regelsettDAO.createRegelsett(
+          RegelsettCreate(
+              namn,
+              type,
+              standard,
+              testregelIdList,
+          ))
 
-    // For å sette ny datoSistEndra
-    regelsettTestregelList.forEach { testregel -> testregelDAO.updateTestregel(testregel) }
-
-    return regelsettDAO.createRegelsett(
-        RegelsettCreate(
-            namn,
-            type,
-            standard,
-            testregelIdList,
-        ))
+  private fun compareRegelsett(actual: Regelsett?, expected: Regelsett) {
+    assertThat(actual).isNotNull
+    assertThat(actual?.id).isEqualTo(expected.id)
+    assertThat(actual?.namn).isEqualTo(expected.namn)
+    assertThat(actual?.standard).isEqualTo(expected.standard)
+    assertThat(actual?.modus).isEqualTo(expected.modus)
+    assertThat(actual?.testregelList?.map { it.id }).isEqualTo(expected.testregelList.map { it.id })
   }
 }

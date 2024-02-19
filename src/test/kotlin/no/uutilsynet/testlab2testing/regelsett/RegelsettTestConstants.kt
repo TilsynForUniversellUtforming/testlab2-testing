@@ -10,7 +10,7 @@ import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 
 object RegelsettTestConstants {
   val regelsettName = "regelsett_slett"
-  val regelsettType = TestregelModus.forenklet
+  val regelsettModus = TestregelModus.forenklet
   val regelsettStandard = false
 
   val regelsettTestregelList =
@@ -52,13 +52,13 @@ object RegelsettTestConstants {
 
   fun regelsettTestCreateRequestBody(
       namn: String = regelsettName,
-      type: TestregelModus = regelsettType,
+      modus: TestregelModus = regelsettModus,
       standard: Boolean = regelsettStandard,
       testregelIdList: List<Int> = regelsettTestregelIdList,
   ) =
       mapOf(
           "namn" to namn,
-          "type" to type,
+          "modus" to modus,
           "standard" to standard,
           "testregelIdList" to testregelIdList)
 }
