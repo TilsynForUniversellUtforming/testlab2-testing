@@ -60,9 +60,9 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getTestregelList(): List<Testregel> =
       jdbcTemplate.query(getTestregelListSql, testregelRowMapper)
 
-  @Cacheable("testregelar", unless = "#result.isEmpty()")
+  @Cacheable("testregelListResponse", unless = "#result.isEmpty()")
   fun getTestregelListResponse(): List<TestregelBase> =
-      getTestregelList().map { it.toTestregelBase() }
+      jdbcTemplate.query(getTestregelListSql, testregelRowMapper).map { it.toTestregelBase() }
 
   @Cacheable("testregelByTestregelId", unless = "#result==null")
   fun getTestregelByTestregelId(testregelId: String): Testregel? =
@@ -71,6 +71,17 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               getTestregelByTestregelId, mapOf("testregelId" to testregelId), testregelRowMapper))
 
   @Transactional
+  @CacheEvict(
+      value =
+          [
+              "testregel",
+              "testregelByTestregelId",
+              "testregelar",
+              "testregelListResponse",
+              "regelsett",
+              "regelsettlist",
+              "regelsettlistbase"],
+      allEntries = true)
   fun createTestregel(testregelInit: TestregelInit): Int =
       jdbcTemplate.queryForObject(
           """
@@ -135,9 +146,11 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "testregel",
               "testregelByTestregelId",
               "testregelar",
+              "testregelListResponse",
               "regelsett",
               "regelsettlist",
-              "regelsettlistbase"])
+              "regelsettlistbase"],
+      beforeInvocation = true)
   fun updateTestregel(testregel: Testregel) =
       jdbcTemplate.update(
           " update testregel set namn = :namn, testregel_id = :testregel_id,krav = :krav, versjon = :versjon,status = :status, dato_sist_endra = :dato_sist_endra, type = :type, modus = :modus, " +
@@ -167,9 +180,11 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "testregel",
               "testregelByTestregelId",
               "testregelar",
+              "testregelListResponse",
               "regelsett",
               "regelsettlist",
-              "regelsettlistbase"])
+              "regelsettlistbase"],
+      beforeInvocation = true)
   fun deleteTestregel(testregelId: Int) =
       jdbcTemplate.update(deleteTestregelSql, mapOf("id" to testregelId))
 

@@ -8,6 +8,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregertResu
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
+import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelInit
 import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
@@ -15,7 +16,9 @@ import no.uutilsynet.testlab2testing.testregel.TestregelModus
 import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -26,6 +29,7 @@ private val TEST_URL = URI("http://localhost:8080/").toURL()
 private const val TEST_ORGNR = "123456789"
 
 @SpringBootTest
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringService) {
 
   @MockBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
@@ -37,6 +41,14 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
   @Autowired lateinit var maalingDao: MaalingDAO
 
   @Autowired lateinit var testregelDAO: TestregelDAO
+
+  @AfterAll
+  fun cleanup() {
+    maalingDao.jdbcTemplate.update(
+        "delete from maalingv1 where navn = :namn", mapOf("namn" to "Testmaaling_aggregering"))
+    testregelDAO.jdbcTemplate.update(
+        "delete from testregel where namn = :namn", mapOf("namn" to name))
+  }
 
   @Test
   fun saveAggregeringTestregel() {
@@ -103,7 +115,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     val testregel =
         TestregelInit(
             testregelId = testregelNoekkel,
-            namn = "QW-1",
+            namn = name,
             krav = "1.1.1",
             status = TestregelStatus.publisert,
             type = TestregelInnholdstype.nett,
