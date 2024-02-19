@@ -34,6 +34,7 @@ class SakDAO(
         Int::class.java)!!
   }
 
+  @Transactional
   fun getSak(sakId: Int): Result<Sak> {
     val testreglar = testregelDAO.getTestreglarBySak(sakId)
     val rowMapper = RowMapper { rs, _ ->
