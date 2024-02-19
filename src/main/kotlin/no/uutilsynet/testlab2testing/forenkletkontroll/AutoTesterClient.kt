@@ -7,10 +7,10 @@ import java.net.URL
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregertResultatSide
-import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregertResultatSideTestregel
-import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregertResultatSuksesskriterium
-import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregertResultatTestregel
+import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSide
+import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSideTestregel
+import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSuksesskriterium
+import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component

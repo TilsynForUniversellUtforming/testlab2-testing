@@ -101,7 +101,6 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
     Assertions.assertThat(oldTestregel?.namn).isEqualTo(testregelInit.name)
 
     val oldDate = oldTestregel?.datoSistEndra
-    println(oldDate)
 
     oldTestregel
         ?.copy(krav = testregelTestKrav, testregelSchema = testregelSchemaForenklet, namn = name)

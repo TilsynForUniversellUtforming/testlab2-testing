@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll.aggregering
+package no.uutilsynet.testlab2testing.aggregering
 
 import java.net.URI
 import no.uutilsynet.testlab2testing.forenkletkontroll.AutoTesterClient
@@ -104,7 +104,8 @@ class AggregeringService(
         aggregertResultatTestregel.talSiderBrot,
         aggregertResultatTestregel.talSiderIkkjeForekomst,
         aggregertResultatTestregel.testregelGjennomsnittlegSideSamsvarProsent,
-        aggregertResultatTestregel.testregelGjennomsnittlegSideBrotProsent)
+        aggregertResultatTestregel.testregelGjennomsnittlegSideBrotProsent,
+        null)
   }
 
   fun aggregerteResultatSideTODTO(
@@ -144,7 +145,7 @@ class AggregeringService(
   ): AggregertResultatTestregel {
 
     return AggregertResultatTestregel(
-        aggregeringPerTestregelDTO.maalingId,
+        aggregeringPerTestregelDTO.maalingId ?: aggregeringPerTestregelDTO.testgrunnlagId,
         getLoeysing(aggregeringPerTestregelDTO.loeysingId),
         getTestregelId(aggregeringPerTestregelDTO.testregelId),
         getSuksesskriterium(aggregeringPerTestregelDTO.suksesskriterium),
@@ -227,5 +228,14 @@ class AggregeringService(
 
   fun harMaalingLagraAggregering(maalingId: Int, aggregeringstype: String): Boolean {
     return aggregeringDAO.harMaalingLagraAggregering(maalingId, aggregeringstype)
+  }
+
+  fun getAggregertResultatTestregelForTestgrunnlag(
+      testgrunnlagId: Int
+  ): List<AggregertResultatTestregel> {
+    logger.info("Henter aggregert resultat for testgrunnlag med id $testgrunnlagId")
+    return aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId).map {
+      dtoToAggregertResultatTestregel(it)
+    }
   }
 }
