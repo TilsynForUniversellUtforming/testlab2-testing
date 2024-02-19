@@ -5,9 +5,9 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import java.time.Instant
 import kotlinx.coroutines.runBlocking
+import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.statusURL
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testRegelList
-import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregertResultatTestregel
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers
 import org.junit.jupiter.api.DisplayName

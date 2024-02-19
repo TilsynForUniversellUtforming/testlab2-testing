@@ -1,10 +1,10 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll.aggregering
+package no.uutilsynet.testlab2testing.aggregering
 
 import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 
 data class AggregertResultatTestregel(
-    val maalingId: Int,
+    val maalingId: Int?,
     val loeysing: Loeysing,
     val testregelId: String,
     val suksesskriterium: String,

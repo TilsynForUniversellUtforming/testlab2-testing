@@ -2,8 +2,8 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
 import java.time.Instant
-import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregeringService
-import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregertResultatTestregel
+import no.uutilsynet.testlab2testing.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
@@ -58,12 +58,13 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
 
     aggregeringService.saveAggregertResultatTestregel(testKoeyring)
 
-    val retrievedAggregering = aggregeringService.getAggregertResultatTestregel(maalingId)
+    val retrievedAggregering =
+        maalingId?.let { aggregeringService.getAggregertResultatTestregel(it) }
 
     assertThat(retrievedAggregering).isNotEmpty
-    assert(retrievedAggregering[0].maalingId == maalingId)
-    assert(retrievedAggregering[0].testregelId == aggregeringTestregel.testregelId)
-    assert(retrievedAggregering[0].suksesskriterium == aggregeringTestregel.suksesskriterium)
+    assert(retrievedAggregering?.get(0)?.maalingId == maalingId)
+    assert(retrievedAggregering?.get(0)?.testregelId == aggregeringTestregel.testregelId)
+    assert(retrievedAggregering?.get(0)?.suksesskriterium == aggregeringTestregel.suksesskriterium)
   }
 
   private fun setupTestKoeyring(testLoeysing: Loeysing): TestKoeyring.Ferdig {
