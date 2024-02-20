@@ -3,7 +3,6 @@ package no.uutilsynet.testlab2testing.testregel
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.deleteTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelByTestregelId
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelListSql
@@ -60,10 +59,6 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getTestregelList(): List<Testregel> =
       jdbcTemplate.query(getTestregelListSql, testregelRowMapper)
 
-  @Cacheable("testregelListResponse", unless = "#result.isEmpty()")
-  fun getTestregelListResponse(): List<TestregelBase> =
-      jdbcTemplate.query(getTestregelListSql, testregelRowMapper).map { it.toTestregelBase() }
-
   @Cacheable("testregelByTestregelId", unless = "#result==null")
   fun getTestregelByTestregelId(testregelId: String): Testregel? =
       DataAccessUtils.singleResult(
@@ -77,7 +72,6 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "testregel",
               "testregelByTestregelId",
               "testregelar",
-              "testregelListResponse",
               "regelsett",
               "regelsettlist",
               "regelsettlistbase"],
@@ -146,7 +140,6 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "testregel",
               "testregelByTestregelId",
               "testregelar",
-              "testregelListResponse",
               "regelsett",
               "regelsettlist",
               "regelsettlistbase"],
@@ -180,7 +173,6 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "testregel",
               "testregelByTestregelId",
               "testregelar",
-              "testregelListResponse",
               "regelsett",
               "regelsettlist",
               "regelsettlistbase"],
@@ -194,10 +186,6 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getTestreglarForMaaling(maalingId: Int): Result<List<Testregel>> = runCatching {
     jdbcTemplate.query(maalingTestregelSql, mapOf("id" to maalingId), testregelRowMapper)
-  }
-
-  fun getTestregelResponseForMaaling(maalingId: Int): Result<List<TestregelBase>> = runCatching {
-    getTestreglarForMaaling(maalingId).getOrThrow().map { it.toTestregelBase() }
   }
 
   fun getTestreglarBySak(sakId: Int): List<Testregel> =

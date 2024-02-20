@@ -5,6 +5,7 @@ import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHan
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -33,15 +34,21 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
 
   @GetMapping
   fun getTestregelList(
-      @RequestParam(required = false) maalingId: Int?
+      @RequestParam(required = false) maalingId: Int?,
+      @RequestParam(required = false) includeMetadata: Boolean = false
   ): ResponseEntity<List<TestregelBase>> =
       runCatching {
-            if (maalingId != null) {
-              logger.debug("Henter testreglar for måling $maalingId")
-              ResponseEntity.ok(testregelDAO.getTestregelResponseForMaaling(maalingId).getOrThrow())
-            } else {
-              ResponseEntity.ok(testregelDAO.getTestregelListResponse())
-            }
+            val testregelList =
+                if (maalingId != null) {
+                  logger.debug("Henter testreglar for måling $maalingId")
+                  testregelDAO.getTestreglarForMaaling(maalingId).getOrThrow()
+                } else {
+                  testregelDAO.getTestregelList()
+                }
+            ResponseEntity.ok(
+                testregelList.let {
+                  if (includeMetadata) it else it.map { tr -> tr.toTestregelBase() }
+                })
           }
           .getOrElse {
             val errorMessage =
