@@ -31,9 +31,12 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
     }
   }
 
-  @Cacheable("suksesskriteriumFromId", unless = "#result==null")
+  // @Cacheable("suksesskriteriumFromId", unless = "#result==null")
   fun getKravIdFromSuksesskritterium(suksesskriterium: String): Result<Int> {
-    return runCatching { getKrav(suksesskriterium).getOrThrow().id }
+    return runCatching {
+      val krav = getKrav(suksesskriterium).getOrThrow()
+      return Result.success(krav.id)
+    }
   }
 
   @Cacheable("suksesskriteriumFromKrav", unless = "#result == null")

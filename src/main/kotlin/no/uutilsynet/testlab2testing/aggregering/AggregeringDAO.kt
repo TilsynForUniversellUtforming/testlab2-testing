@@ -1,6 +1,7 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll.aggregering
+package no.uutilsynet.testlab2testing.aggregering
 
 import java.net.URI
+import java.sql.ResultSet
 import java.util.*
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -12,8 +13,8 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun createAggregertResultatTestregel(aggregertResultatTestregel: AggregeringPerTestregelDTO) {
 
     val sql =
-        "insert into aggregering_testregel(maaling_id,loeysing_id,suksesskriterium,fleire_suksesskriterium,testregel_id,tal_element_samsvar,tal_element_brot,tal_element_varsel,tal_element_ikkje_forekomst,tal_sider_samsvar,tal_sider_brot,tal_sider_ikkje_forekomst,testregel_gjennomsnittleg_side_brot_prosent,testregel_gjennomsnittleg_side_samsvar_prosent) " +
-            "values(:maaling_id,:loeysing_id,:suksesskriterium,:fleire_suksesskriterium,:testregel_id,:tal_element_samsvar,:tal_element_brot,:tal_element_varsel,:tal_element_ikkje_forekomst,:tal_sider_samsvar,:tal_sider_brot,:tal_sider_ikkje_forekomst,:testregel_gjennomsnittleg_side_brot_prosent,:testregel_gjennomsnittleg_side_samsvar_prosent)"
+        "insert into aggregering_testregel(maaling_id,loeysing_id,suksesskriterium,fleire_suksesskriterium,testregel_id,tal_element_samsvar,tal_element_brot,tal_element_varsel,tal_element_ikkje_forekomst,tal_sider_samsvar,tal_sider_brot,tal_sider_ikkje_forekomst,testregel_gjennomsnittleg_side_brot_prosent,testregel_gjennomsnittleg_side_samsvar_prosent,testgrunnlag_id) " +
+            "values(:maaling_id,:loeysing_id,:suksesskriterium,:fleire_suksesskriterium,:testregel_id,:tal_element_samsvar,:tal_element_brot,:tal_element_varsel,:tal_element_ikkje_forekomst,:tal_sider_samsvar,:tal_sider_brot,:tal_sider_ikkje_forekomst,:testregel_gjennomsnittleg_side_brot_prosent,:testregel_gjennomsnittleg_side_samsvar_prosent,:testgrunnlag_id)"
 
     val parameterSource =
         MapSqlParameterSource()
@@ -63,6 +64,10 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 "testregel_gjennomsnittleg_side_samsvar_prosent",
                 aggregertResultatTestregel.testregelGjennomsnittlegSideSamsvarProsent,
                 java.sql.Types.FLOAT)
+            .addValue(
+                "testgrunnlag_id",
+                aggregertResultatTestregel.testgrunnlagId,
+                java.sql.Types.INTEGER)
 
     jdbcTemplate.update(sql, parameterSource)
   }
@@ -114,25 +119,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val query =
         "select * from aggregering_testregel where maaling_id = :maalingId order by loeysing_id"
     val params = mapOf("maalingId" to maalingId)
-    return jdbcTemplate.query(query, params) { rs, _ ->
-      AggregeringPerTestregelDTO(
-          maalingId = rs.getInt("maaling_id"),
-          testregelId = rs.getInt("testregel_id"),
-          loeysingId = rs.getInt("loeysing_id"),
-          suksesskriterium = rs.getInt("suksesskriterium"),
-          fleireSuksesskriterium = sqlArrayToList(rs.getArray("fleire_suksesskriterium")),
-          talElementSamsvar = rs.getInt("tal_element_samsvar"),
-          talElementBrot = rs.getInt("tal_element_brot"),
-          talElementVarsel = rs.getInt("tal_element_varsel"),
-          talElementIkkjeForekomst = rs.getInt("tal_element_ikkje_forekomst"),
-          talSiderSamsvar = rs.getInt("tal_sider_samsvar"),
-          talSiderBrot = rs.getInt("tal_sider_brot"),
-          talSiderIkkjeForekomst = rs.getInt("tal_sider_ikkje_forekomst"),
-          testregelGjennomsnittlegSideBrotProsent =
-              rs.getFloat("testregel_gjennomsnittleg_side_brot_prosent"),
-          testregelGjennomsnittlegSideSamsvarProsent =
-              rs.getFloat("testregel_gjennomsnittleg_side_samsvar_prosent"))
-    }
+    return jdbcTemplate.query(query, params) { rs, _ -> aggregeringPerTestregelRowmapper(rs) }
   }
 
   fun getAggregertResultatSideForMaaling(maalingId: Int): List<AggregeringPerSideDTO> {
@@ -199,4 +186,37 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
     return false
   }
+
+  fun getAggregertResultatTestregelForTestgrunnlag(
+      testgrunnlagId: Int
+  ): List<AggregeringPerTestregelDTO> {
+    val query =
+        """
+            select * from aggregering_testregel where testgrunnlag_id = :testgrunnlagId order by testregel_id
+        """
+
+    return jdbcTemplate.query(query, mapOf("testgrunnlagId" to testgrunnlagId)) { rs, _ ->
+      aggregeringPerTestregelRowmapper(rs)
+    }
+  }
+
+  private fun aggregeringPerTestregelRowmapper(rs: ResultSet) =
+      AggregeringPerTestregelDTO(
+          maalingId = rs.getInt("maaling_id"),
+          testregelId = rs.getInt("testregel_id"),
+          loeysingId = rs.getInt("loeysing_id"),
+          suksesskriterium = rs.getInt("suksesskriterium"),
+          fleireSuksesskriterium = sqlArrayToList(rs.getArray("fleire_suksesskriterium")),
+          talElementSamsvar = rs.getInt("tal_element_samsvar"),
+          talElementBrot = rs.getInt("tal_element_brot"),
+          talElementVarsel = rs.getInt("tal_element_varsel"),
+          talElementIkkjeForekomst = rs.getInt("tal_element_ikkje_forekomst"),
+          talSiderSamsvar = rs.getInt("tal_sider_samsvar"),
+          talSiderBrot = rs.getInt("tal_sider_brot"),
+          talSiderIkkjeForekomst = rs.getInt("tal_sider_ikkje_forekomst"),
+          testregelGjennomsnittlegSideBrotProsent =
+              rs.getFloat("testregel_gjennomsnittleg_side_brot_prosent"),
+          testregelGjennomsnittlegSideSamsvarProsent =
+              rs.getFloat("testregel_gjennomsnittleg_side_samsvar_prosent"),
+          testgrunnlagId = rs.getInt("testgrunnlag_id"))
 }

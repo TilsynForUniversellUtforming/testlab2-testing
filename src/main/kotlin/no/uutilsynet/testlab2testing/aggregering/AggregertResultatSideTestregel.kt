@@ -1,16 +1,16 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll.aggregering
+package no.uutilsynet.testlab2testing.aggregering
 
-import java.net.URL
 import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 
-data class AggregertResultatSide(
+data class AggregertResultatSideTestregel(
     val maalingId: Int,
+    val testregelId: String,
     val loeysing: Loeysing,
-    val sideUrl: URL,
+    val sideUrl: String,
     val sideNivaa: Int,
-    val gjennomsnittligBruddProsentTR: Float?,
-    val talElementSamsvar: Int,
+    val bruddprosentTestregel: Float?,
+    val talElementSamvar: Int,
     val talElementBrot: Int,
     val talElementVarsel: Int,
     val talElementIkkjeForekomst: Int

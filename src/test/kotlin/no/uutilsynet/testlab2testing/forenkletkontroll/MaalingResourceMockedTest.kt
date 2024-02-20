@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import java.time.Instant
+import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.crawlResultat
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testKoeyringList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
-import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.testregel.Testregel

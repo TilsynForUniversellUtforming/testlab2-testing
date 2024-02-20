@@ -4,6 +4,7 @@ import java.net.URI
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
+import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.Crawling
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.Kvalitetssikring
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.Planlegging
@@ -24,7 +25,6 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingStatus.kvalitetssi
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingStatus.planlegging
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingStatus.testing
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingStatus.testing_ferdig
-import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval

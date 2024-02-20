@@ -3,13 +3,13 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 import java.net.URI
 import java.net.URL
 import java.time.Instant
+import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingTestName
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testRegelList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
-import no.uutilsynet.testlab2testing.forenkletkontroll.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.assertj.core.api.Assertions.assertThat

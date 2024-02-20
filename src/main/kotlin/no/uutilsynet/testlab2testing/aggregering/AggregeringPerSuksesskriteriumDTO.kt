@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll.aggregering
+package no.uutilsynet.testlab2testing.aggregering
 
 data class AggregeringPerSuksesskriteriumDTO(
     val maalingId: Int,
