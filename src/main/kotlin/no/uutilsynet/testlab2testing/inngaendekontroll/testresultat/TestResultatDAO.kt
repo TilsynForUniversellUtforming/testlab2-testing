@@ -147,9 +147,12 @@ class TestResultatDAO(
       }
 
   fun saveAggregertResultatTestregel(sakId: Int) {
-    val testresultatForSak = getTestResultat(sakId = sakId).getOrThrow()
-    val aggregertResultatTestregel = createAggregeringPerTestregelDTO(testresultatForSak)
-    aggregertResultatTestregel.forEach(aggregeringDAO::createAggregertResultatTestregel)
+    val eksisterande = aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(sakId)
+    if (eksisterande.isEmpty()) {
+      val testresultatForSak = getTestResultat(sakId = sakId).getOrThrow()
+      val aggregertResultatTestregel = createAggregeringPerTestregelDTO(testresultatForSak)
+      aggregertResultatTestregel.forEach(aggregeringDAO::createAggregertResultatTestregel)
+    }
   }
 
   private fun createAggregeringPerTestregelDTO(
