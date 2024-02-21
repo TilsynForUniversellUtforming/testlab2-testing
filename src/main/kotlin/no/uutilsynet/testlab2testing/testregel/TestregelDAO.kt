@@ -134,7 +134,6 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   @Transactional
   @CacheEvict(
-      key = "#testregel.id",
       cacheNames =
           [
               "testregel",
@@ -143,7 +142,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "regelsett",
               "regelsettlist",
               "regelsettlistbase"],
-      beforeInvocation = true)
+      allEntries = true)
   fun updateTestregel(testregel: Testregel) =
       jdbcTemplate.update(
           " update testregel set namn = :namn, testregel_id = :testregel_id,krav = :krav, versjon = :versjon,status = :status, dato_sist_endra = :dato_sist_endra, type = :type, modus = :modus, " +
@@ -167,7 +166,6 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   @Transactional
   @CacheEvict(
-      key = "#testregelId",
       cacheNames =
           [
               "testregel",
@@ -176,7 +174,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "regelsett",
               "regelsettlist",
               "regelsettlistbase"],
-      beforeInvocation = true)
+      allEntries = true)
   fun deleteTestregel(testregelId: Int) =
       jdbcTemplate.update(deleteTestregelSql, mapOf("id" to testregelId))
 
