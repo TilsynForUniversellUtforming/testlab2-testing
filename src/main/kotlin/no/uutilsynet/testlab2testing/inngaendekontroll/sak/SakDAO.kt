@@ -72,6 +72,7 @@ class SakDAO(
     return if (sak != null) Result.success(sak) else Result.failure(IllegalArgumentException())
   }
 
+  @Transactional
   fun getSakDTO(sakId: Int): Result<SakDTO> {
     val sak = getSak(sakId).getOrThrow()
     return Result.success(
