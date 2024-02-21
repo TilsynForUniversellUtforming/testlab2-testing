@@ -5,7 +5,11 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
-import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.*
+import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.Crawling
+import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.Kvalitetssikring
+import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.Planlegging
+import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.Testing
+import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.TestingFerdig
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.createMaalingParams
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.createMaalingSql
@@ -16,14 +20,18 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByStatus
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.updateMaalingParams
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.updateMaalingSql
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingStatus.*
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingStatus.crawling
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingStatus.kvalitetssikring
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingStatus.planlegging
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingStatus.testing
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingStatus.testing_ferdig
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
+import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
-import no.uutilsynet.testlab2testing.testregel.TestregelDTO
 import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
@@ -198,7 +206,7 @@ class MaalingDAO(
       planlegging -> {
         val testregelList =
             jdbcTemplate.query(maalingTestregelSql, mapOf("id" to id), testregelRowMapper).map {
-              TestregelDTO(it)
+              it.toTestregelBase()
             }
         Planlegging(
             id, navn, datoStart, loeysingList, testregelList, CrawlParameters(maxLenker, talLenker))

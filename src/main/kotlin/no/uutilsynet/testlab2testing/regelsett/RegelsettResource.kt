@@ -49,14 +49,14 @@ class RegelsettResource(val regelsettDAO: RegelsettDAO, val testregelDAO: Testre
             val testregelList = testregelDAO.getTestregelList()
             val testregelIdList =
                 validateRegelsettTestreglar(
-                        regelsett.testregelIdList, regelsett.type, testregelList)
+                        regelsett.testregelIdList, regelsett.modus, testregelList)
                     .getOrThrow()
 
             val id =
                 regelsettDAO.createRegelsett(
                     RegelsettCreate(
                         namn,
-                        regelsett.type,
+                        regelsett.modus,
                         regelsett.standard,
                         testregelIdList,
                     ))
@@ -126,13 +126,13 @@ Returnerer ei liste med regelsett, eller ei tom liste om ingen finst. Ein kan sp
             val namn = validateNamn(regelsett.namn)
             val testregelIdList =
                 validateRegelsettTestreglar(
-                    regelsett.testregelIdList, regelsett.type, testregelList)
+                    regelsett.testregelIdList, regelsett.modus, testregelList)
 
             regelsettDAO.updateRegelsett(
                 RegelsettEdit(
                     regelsett.id,
                     namn.getOrThrow(),
-                    regelsett.type,
+                    regelsett.modus,
                     regelsett.standard,
                     testregelIdList.getOrThrow()))
 

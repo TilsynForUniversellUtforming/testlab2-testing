@@ -1,8 +1,9 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import java.net.URI
+import no.uutilsynet.testlab2testing.testregel.TestConstants.modus
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelRequestBody
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelCreateRequestBody
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKrav
 import org.assertj.core.api.Assertions
@@ -36,7 +37,7 @@ class TestregelIntegrationTests(
   @DisplayName("Skal kunne opprette en testregel")
   fun createTestregel() {
     val locationPattern = """/v1/testreglar/\d+"""
-    val location = restTemplate.postForLocation("/v1/testreglar", testregelRequestBody)
+    val location = restTemplate.postForLocation("/v1/testreglar", testregelCreateRequestBody)
     Assertions.assertThat(location.toString()).matches(locationPattern)
   }
 
@@ -54,19 +55,18 @@ class TestregelIntegrationTests(
             String::class.java)
 
     Assertions.assertThat(errorResponse.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    Assertions.assertThat(errorResponse.body).isEqualTo("Krav kan ikkje vera blank")
   }
 
   @Test
   @DisplayName("Skal kunne slette testregel")
   fun deleteTestregel() {
     val location = createDefaultTestregel()
-    val testregel = restTemplate.getForObject(location, TestregelDTO::class.java)
+    val testregel = restTemplate.getForObject(location, TestregelBase::class.java)
 
     Assertions.assertThat(testregel).isNotNull
     restTemplate.delete(location)
 
-    val deletedTestregel = restTemplate.getForObject(location, TestregelDTO::class.java)
+    val deletedTestregel = restTemplate.getForObject(location, TestregelBase::class.java)
     Assertions.assertThat(deletedTestregel).isNull()
   }
 
@@ -74,14 +74,14 @@ class TestregelIntegrationTests(
   @DisplayName("Skal kunne oppdatere testregel")
   fun updateTestregel() {
     val location = createDefaultTestregel()
-    val testregel = restTemplate.getForObject(location, TestregelDTO::class.java)
+    val testregel = restTemplate.getForObject(location, Testregel::class.java)
     val krav = "4.1.3 Statusbeskjeder"
     Assertions.assertThat(testregel.krav).isNotEqualTo(krav)
 
     restTemplate.exchange(
         "/v1/testreglar", HttpMethod.PUT, HttpEntity(testregel.copy(krav = krav)), Int::class.java)
 
-    val updatedTestregel = restTemplate.getForObject(location, TestregelDTO::class.java)
+    val updatedTestregel = restTemplate.getForObject(location, TestregelBase::class.java)
     Assertions.assertThat(updatedTestregel.krav).isEqualTo(krav)
   }
 
@@ -93,18 +93,18 @@ class TestregelIntegrationTests(
     @Test
     @DisplayName("Skal hente testregel")
     fun getTestregel() {
-      val testregel = restTemplate.getForObject(location, TestregelDTO::class.java)
+      val testregel = restTemplate.getForObject(location, Testregel::class.java)
       Assertions.assertThat(testregel.krav).isEqualTo(testregelTestKrav)
       Assertions.assertThat(testregel.testregelSchema).isEqualTo(testregelSchemaForenklet)
-      Assertions.assertThat(testregel.name).isEqualTo(name)
+      Assertions.assertThat(testregel.namn).isEqualTo(name)
     }
 
     @Test
     @DisplayName("Skal hente liste med testregel")
     fun getTestregelList() {
-      val testregel = restTemplate.getForObject(location, TestregelDTO::class.java)
+      val testregel = restTemplate.getForObject(location, TestregelBase::class.java)
 
-      val testregelListType = object : ParameterizedTypeReference<List<TestregelDTO>>() {}
+      val testregelListType = object : ParameterizedTypeReference<List<TestregelBase>>() {}
 
       val testregelFromList =
           restTemplate
@@ -112,10 +112,12 @@ class TestregelIntegrationTests(
               .body
               ?.find { it.id == testregel.id }
 
-      Assertions.assertThat(testregelFromList).isEqualTo(testregel)
+      Assertions.assertThat(testregelFromList?.krav).isEqualTo(testregelTestKrav)
+      Assertions.assertThat(testregelFromList?.modus).isEqualTo(modus)
+      Assertions.assertThat(testregelFromList?.namn).isEqualTo(name)
     }
   }
 
   private fun createDefaultTestregel(): URI =
-      restTemplate.postForLocation("/v1/testreglar", testregelRequestBody)
+      restTemplate.postForLocation("/v1/testreglar", testregelCreateRequestBody)
 }

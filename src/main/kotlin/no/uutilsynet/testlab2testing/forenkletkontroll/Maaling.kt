@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
 import java.time.Instant
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.testregel.TestregelDTO
+import no.uutilsynet.testlab2testing.testregel.TestregelBase
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "status")
 @JsonSubTypes(
@@ -25,7 +25,7 @@ sealed class Maaling {
       override val navn: String,
       override val datoStart: Instant,
       val loeysingList: List<Loeysing>,
-      val testregelList: List<TestregelDTO>,
+      val testregelList: List<TestregelBase>,
       val crawlParameters: CrawlParameters
   ) : Maaling() {
     override val aksjoner: List<Aksjon>
