@@ -6,22 +6,22 @@ import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateTestregelId
 
 data class Testregel(
-    val id: Int,
+    override val id: Int,
     val testregelId: String,
     val versjon: Int,
-    val namn: String,
-    val krav: String,
+    override val namn: String,
+    override val krav: String,
     val status: TestregelStatus,
     val datoSistEndra: Instant = Instant.now(),
     val type: TestregelInnholdstype,
-    val modus: TestregelModus,
+    override val modus: TestregelModus,
     val spraak: TestlabLocale,
     val tema: Int?,
     val testobjekt: Int?,
     val kravTilSamsvar: String?,
     val testregelSchema: String,
     val innhaldstypeTesting: Int?
-) {
+) : TestregelBase(id, namn, krav, modus) {
   companion object {
     fun Testregel.validateTestregel(): Result<Testregel> = runCatching {
       val name = validateNamn(this.namn).getOrThrow()
@@ -46,5 +46,8 @@ data class Testregel(
           schema,
           this.innhaldstypeTesting)
     }
+
+    fun Testregel.toTestregelBase(): TestregelBase =
+        TestregelBase(id = this.id, namn = this.namn, krav = this.krav, modus = this.modus)
   }
 }

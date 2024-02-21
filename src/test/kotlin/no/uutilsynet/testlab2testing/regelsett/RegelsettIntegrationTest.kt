@@ -1,9 +1,9 @@
 package no.uutilsynet.testlab2testing.regelsett
 
 import java.net.URI
+import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettModus
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettName
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestCreateRequestBody
-import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettType
 import no.uutilsynet.testlab2testing.testregel.TestregelModus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -61,7 +61,7 @@ class RegelsettIntegrationTest(
     val response =
         restTemplate.postForEntity(
             regelsettBaseUri,
-            regelsettTestCreateRequestBody(type = TestregelModus.manuell),
+            regelsettTestCreateRequestBody(modus = TestregelModus.manuell),
             String::class.java)
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
@@ -151,7 +151,7 @@ class RegelsettIntegrationTest(
             RegelsettEdit(
                 id = regelsett.id,
                 namn = nameUpdate,
-                type = regelsett.type,
+                modus = regelsett.modus,
                 standard = regelsett.standard,
                 testregelIdList = regelsett.testregelList.map { it.id })),
         Unit::class.java)
@@ -178,7 +178,7 @@ class RegelsettIntegrationTest(
                 RegelsettEdit(
                     id = regelsett.id,
                     namn = nameUpdate,
-                    type = regelsett.type,
+                    modus = regelsett.modus,
                     standard = regelsett.standard,
                     testregelIdList = regelsett.testregelList.map { it.id })),
             String::class.java)
@@ -193,7 +193,7 @@ class RegelsettIntegrationTest(
   fun updateRegelsettIllegalTestregelType() {
     val location = createDefaultRegelsett()
     val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
-    assertThat(regelsett.type).isEqualTo(TestregelModus.forenklet)
+    assertThat(regelsett.modus).isEqualTo(TestregelModus.forenklet)
 
     val response =
         restTemplate.exchange(
@@ -203,7 +203,7 @@ class RegelsettIntegrationTest(
                 RegelsettEdit(
                     id = regelsett.id,
                     namn = regelsett.namn,
-                    type = TestregelModus.manuell,
+                    modus = TestregelModus.manuell,
                     standard = regelsett.standard,
                     testregelIdList = regelsett.testregelList.map { it.id })),
             String::class.java)
@@ -242,7 +242,7 @@ class RegelsettIntegrationTest(
 
   private fun createDefaultRegelsett(
       namn: String = regelsettName,
-      type: TestregelModus = regelsettType,
+      type: TestregelModus = regelsettModus,
       standard: Boolean = RegelsettTestConstants.regelsettStandard,
       testregelIdList: List<Int> = RegelsettTestConstants.regelsettTestregelIdList,
   ): URI =

@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.regelsett
 
+import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
-import no.uutilsynet.testlab2testing.testregel.TestregelDTO
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.dao.support.DataAccessUtils
@@ -27,16 +27,13 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             mapOf("regelsett_id" to this.id),
             testregelRowMapper)
 
-    return Regelsett(this.id, this.namn, this.type, this.standard, testregelList)
+    return Regelsett(
+        this.id, this.namn, this.modus, this.standard, testregelList.map { it.toTestregelBase() })
   }
 
   fun toRegelsettResponse(regelsett: Regelsett): RegelsettResponse {
     return RegelsettResponse(
-        regelsett.id,
-        regelsett.namn,
-        regelsett.type,
-        regelsett.standard,
-        regelsett.testregelList.map { TestregelDTO(it) })
+        regelsett.id, regelsett.namn, regelsett.modus, regelsett.standard, regelsett.testregelList)
   }
 
   fun getRegelsettResponse(int: Int): RegelsettResponse? {
@@ -47,7 +44,7 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val regelsettDTO =
         DataAccessUtils.singleResult(
             jdbcTemplate.query(
-                "select id, namn, type, standard from regelsett where id = :id",
+                "select id, namn, modus, standard from regelsett where id = :id",
                 mapOf("id" to id),
                 DataClassRowMapper.newInstance(RegelsettBase::class.java)))
 
@@ -59,7 +56,7 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val activeSql = if (includeInactive) "1=1" else "aktiv = true"
 
     return jdbcTemplate.query(
-        "select id, namn, type, standard from regelsett where $activeSql",
+        "select id, namn, modus, standard from regelsett where $activeSql",
         DataClassRowMapper.newInstance(RegelsettBase::class.java))
   }
 
@@ -68,17 +65,17 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       getRegelsettBaseList(includeInactive).map { it.toRegelsett() }
 
   fun getRegelsettResponseList(includeInactive: Boolean): List<RegelsettResponse> =
-      getRegelsettTestreglarList(includeInactive).map { toRegelsettResponse(it)!! }
+      getRegelsettTestreglarList(includeInactive).map { toRegelsettResponse(it) }
 
   @Transactional
   @CacheEvict(cacheNames = ["regelsett", "regelsettlist", "regelsettlistbase"], allEntries = true)
   fun createRegelsett(regelsett: RegelsettCreate): Int {
     val id =
         jdbcTemplate.queryForObject(
-            "insert into regelsett (namn, type, standard, aktiv) values (:namn, :type, :standard, true) returning id",
+            "insert into regelsett (namn, modus, standard, aktiv) values (:namn, :modus, :standard, true) returning id",
             mapOf(
                 "namn" to regelsett.namn,
-                "type" to regelsett.type.value,
+                "modus" to regelsett.modus.value,
                 "standard" to regelsett.standard,
             ),
             Int::class.java)!!

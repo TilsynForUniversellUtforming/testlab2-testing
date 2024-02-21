@@ -9,7 +9,7 @@ import org.springframework.web.client.RestTemplate
 @Service
 class KravregisterClient(val restTemplate: RestTemplate, val properties: KravRegisterProperties) {
 
-  @Cacheable("kravFromSuksesskriterium", unless = "#result.id==null")
+  @Cacheable("kravFromSuksesskriterium", unless = "#result?.id==null")
   fun getKrav(suksesskriterium: String): Result<KravWcag2x> {
     logger.info(
         "Henter krav fra ${properties.host}/v1/krav/wcag2krav/suksesskriterium/$suksesskriterium .")
@@ -22,7 +22,7 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
     }
   }
 
-  @Cacheable("kravFromId", unless = "#result.id==null")
+  @Cacheable("kravFromId", unless = "#result?.id==null")
   fun getWcagKrav(kravId: Int): Result<KravWcag2x> {
     return runCatching {
       restTemplate.getForObject(

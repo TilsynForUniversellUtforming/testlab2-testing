@@ -69,7 +69,7 @@ class LoeysingsRegisterClient(
     restTemplate.delete("${properties.host}/v1/loeysing/$id")
   }
 
-  @Cacheable("loeysing", unless = "#result.id==null")
+  @Cacheable("loeysing", unless = "#result?.id==null")
   fun getLoeysingFromId(loeysingId: Int): Result<Loeysing> {
     return runCatching {
       getMany(listOf(loeysingId)).let { loeysingList ->

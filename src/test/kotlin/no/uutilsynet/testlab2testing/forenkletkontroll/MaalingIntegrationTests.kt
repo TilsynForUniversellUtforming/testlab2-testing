@@ -16,10 +16,20 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.greaterThan
+import org.hamcrest.Matchers.instanceOf
+import org.hamcrest.Matchers.matchesPattern
+import org.hamcrest.Matchers.notNullValue
+import org.hamcrest.Matchers.oneOf
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -143,7 +153,8 @@ class MaalingIntegrationTests(
 
       assertThat(id, instanceOf(Int::class.java))
       assertThat(navn, equalTo(maalingTestName))
-      Assertions.assertThat(loeysingListFromApi).containsExactlyInAnyOrderElementsOf(loeysingList)
+      Assertions.assertThat(loeysingListFromApi?.map { it.id })
+          .containsExactlyInAnyOrderElementsOf(loeysingList.map { it.id })
     }
 
     @Test
