@@ -33,49 +33,70 @@ class AggregeringService(
     logger.info(
         "Lagrer aggregert resultat for testregel for testkoeyring ${testKoeyring.loeysing.namn}}")
     val aggregeringUrl: URI? = testKoeyring.lenker?.urlAggregeringTR?.toURI()
+    runCatching {
+          aggregeringUrl?.let {
+            val aggregertResultatTestregel: List<AggregertResultatTestregel> =
+                autoTesterClient.fetchResultatAggregering(
+                    aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggreggeringTR)
+                    as List<AggregertResultatTestregel>
 
-    aggregeringUrl?.let {
-      val aggregertResultatTestregel: List<AggregertResultatTestregel> =
-          autoTesterClient.fetchResultatAggregering(
-              aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggreggeringTR)
-              as List<AggregertResultatTestregel>
-
-      aggregertResultatTestregel
-          .map { aggregertResultatTestregelToDTO(it) }
-          .forEach { aggregeringDAO.createAggregertResultatTestregel(it) }
-    }
+            aggregertResultatTestregel
+                .map { aggregertResultatTestregelToDTO(it) }
+                .forEach { aggregeringDAO.createAggregertResultatTestregel(it) }
+          }
+        }
+        .onFailure {
+          throw RuntimeException(
+              "Kunne ikkje lagre aggregert resultat for testregel for testkoeyring ${testKoeyring.loeysing.namn}")
+        }
   }
 
   fun saveAggregeringSide(testKoeyring: TestKoeyring.Ferdig) {
+    logger.info(
+        "Lagrer aggregert resultat for side for testkoeyring ${testKoeyring.loeysing.namn}}")
     val aggregeringUrl: URI? = testKoeyring.lenker?.urlAggregeringSide?.toURI()
 
-    aggregeringUrl?.let {
-      val aggregeringSide: List<AggregertResultatSide> =
-          autoTesterClient.fetchResultatAggregering(
-              aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggregeringSide)
-              as List<AggregertResultatSide>
+    runCatching {
+          aggregeringUrl?.let {
+            val aggregeringSide: List<AggregertResultatSide> =
+                autoTesterClient.fetchResultatAggregering(
+                    aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggregeringSide)
+                    as List<AggregertResultatSide>
 
-      aggregeringSide
-          .map { aggregertResultatSide -> aggregerteResultatSideTODTO(aggregertResultatSide) }
-          .forEach { aggregeringDAO.createAggregeringSide(it) }
-    }
-        ?: throw RuntimeException("Aggregering url er null")
+            aggregeringSide
+                .map { aggregertResultatSide -> aggregerteResultatSideTODTO(aggregertResultatSide) }
+                .forEach { aggregeringDAO.createAggregeringSide(it) }
+          }
+              ?: throw RuntimeException("Aggregering url er null")
+        }
+        .onFailure {
+          throw RuntimeException(
+              "Kunne ikkje lagre aggregert resultat for side for testkoeyring ${testKoeyring.loeysing.namn}")
+        }
   }
 
   fun saveAggregertResultatSuksesskriterium(testKoeyring: TestKoeyring.Ferdig) {
+    logger.info(
+        "Lagrer aggregert resultat for suksesskriterium for testkoeyring ${testKoeyring.loeysing.namn}}")
     val aggregeringUrl: URI? = testKoeyring.lenker?.urlAggregeringSK?.toURI()
 
-    aggregeringUrl?.let {
-      val aggregertResultatSuksesskriterium: List<AggregertResultatSuksesskriterium> =
-          autoTesterClient.fetchResultatAggregering(
-              aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggregeringSK)
-              as List<AggregertResultatSuksesskriterium>
+    runCatching {
+          aggregeringUrl?.let {
+            val aggregertResultatSuksesskriterium: List<AggregertResultatSuksesskriterium> =
+                autoTesterClient.fetchResultatAggregering(
+                    aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggregeringSK)
+                    as List<AggregertResultatSuksesskriterium>
 
-      aggregertResultatSuksesskriterium
-          .map { aggregertResultatSuksesskritieriumToDTO(it) }
-          .forEach { aggregeringDAO.createAggregertResultatSuksesskriterium(it) }
-    }
-        ?: throw RuntimeException("Aggregering url er null")
+            aggregertResultatSuksesskriterium
+                .map { aggregertResultatSuksesskritieriumToDTO(it) }
+                .forEach { aggregeringDAO.createAggregertResultatSuksesskriterium(it) }
+          }
+              ?: throw RuntimeException("Aggregering url er null")
+        }
+        .onFailure {
+          throw RuntimeException(
+              "Kunne ikkje lagre aggregert resultat for suksesskriterium for testkoeyring ${testKoeyring.loeysing.namn}")
+        }
   }
 
   fun aggregertResultatTestregelToDTO(
