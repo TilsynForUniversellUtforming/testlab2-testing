@@ -46,8 +46,10 @@ class AggregeringService(
           }
         }
         .onFailure {
-          throw RuntimeException(
-              "Kunne ikkje lagre aggregert resultat for testregel for testkoeyring ${testKoeyring.loeysing.namn}")
+          logger.error(
+              "Kunne ikkje lagre aggregert resultat for testregel for testkoeyring ${testKoeyring.loeysing.namn}",
+              it)
+          throw it
         }
   }
 
@@ -70,8 +72,10 @@ class AggregeringService(
               ?: throw RuntimeException("Aggregering url er null")
         }
         .onFailure {
-          throw RuntimeException(
-              "Kunne ikkje lagre aggregert resultat for side for testkoeyring ${testKoeyring.loeysing.namn}")
+          logger.error(
+              "Kunne ikkje lagre aggregert resultat for side for testkoeyring ${testKoeyring.loeysing.namn}",
+              it)
+          throw it
         }
   }
 
@@ -94,8 +98,10 @@ class AggregeringService(
               ?: throw RuntimeException("Aggregering url er null")
         }
         .onFailure {
-          throw RuntimeException(
-              "Kunne ikkje lagre aggregert resultat for suksesskriterium for testkoeyring ${testKoeyring.loeysing.namn}")
+          logger.error(
+              "Kunne ikkje lagre aggregert resultat for suksesskriterium for testkoeyring ${testKoeyring.loeysing.namn}",
+              it)
+          throw it
         }
   }
 
