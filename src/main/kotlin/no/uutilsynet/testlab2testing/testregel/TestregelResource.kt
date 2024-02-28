@@ -69,9 +69,7 @@ class TestregelResource(
           {
             validateNamn(testregelInit.namn).getOrThrow()
             validateSchema(testregelInit.testregelSchema, testregelInit.modus).getOrThrow()
-            kravregisterClient.getWcagKrav(testregelInit.kravId).getOrElse {
-              throw RuntimeException("Krav med id ${testregelInit.kravId} finns ikkje")
-            }
+            validateKrav(testregelInit.kravId).getOrThrow()
 
             testregelDAO.createTestregel(testregelInit)
           },
@@ -80,6 +78,7 @@ class TestregelResource(
   @PutMapping
   fun updateTestregel(@RequestBody testregel: Testregel): ResponseEntity<out Any> =
       executeWithErrorHandling {
+        validateKrav(testregel.kravId).getOrThrow()
         testregel.validateTestregel().getOrThrow()
         testregelDAO.updateTestregel(testregel)
       }
@@ -126,4 +125,10 @@ class TestregelResource(
             logger.error("Feila ved henting av tema for testreglar", it)
             ResponseEntity.internalServerError().body(it.message)
           }
+
+  fun validateKrav(kravId: Int) = runCatching {
+    kravregisterClient.getWcagKrav(kravId).getOrElse {
+      throw IllegalArgumentException("Krav med id $kravId finns ikkje")
+    }
+  }
 }

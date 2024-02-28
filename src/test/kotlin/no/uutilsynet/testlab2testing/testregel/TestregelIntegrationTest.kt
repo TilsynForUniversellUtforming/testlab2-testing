@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.client.postForEntity
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -81,6 +82,17 @@ class TestregelIntegrationTests(
                 "name" to name,
                 "type" to "forenklet"),
             String::class.java)
+
+    Assertions.assertThat(errorResponse.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+  }
+
+  @Test
+  @DisplayName("Skal ikke kunne opprette en testregel hvis krav ikke finnes")
+  fun createTestregelKravError() {
+    Mockito.`when`(kravregisterClient.getWcagKrav(1)).thenReturn(Result.failure(RuntimeException()))
+
+    val errorResponse =
+        restTemplate.postForEntity("/v1/testreglar", testregelCreateRequestBody, String::class.java)
 
     Assertions.assertThat(errorResponse.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
   }
