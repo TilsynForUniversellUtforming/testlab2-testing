@@ -4,7 +4,9 @@ alter table testregel
 alter table testregel
     alter column krav drop not null;
 
-update testregel t
-set krav_id = (select k.id
-               from testlab2_krav.wcag2krav k
-               where split_part(t.krav, ' ', 1) = k.suksesskriterium);
+-- Gjøres manuelt
+
+-- update testregel t
+-- set krav_id = (select k.id
+--                from testlab2_krav.wcag2krav k
+--                where split_part(t.krav, ' ', 1) = k.suksesskriterium);
