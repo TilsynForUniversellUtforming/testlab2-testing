@@ -1,20 +1,27 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import java.net.URI
+import no.uutilsynet.testlab2testing.krav.KravWcag2x
+import no.uutilsynet.testlab2testing.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.krav.WcagSamsvarsnivaa
 import no.uutilsynet.testlab2testing.testregel.TestConstants.modus
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelCreateRequestBody
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKrav
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.client.postForEntity
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -24,8 +31,30 @@ import org.springframework.http.HttpStatus
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestregelIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
-    @Autowired val testregelDAO: TestregelDAO
+    @Autowired val testregelDAO: TestregelDAO,
 ) {
+
+  @MockBean private lateinit var kravregisterClient: KravregisterClient
+
+  @BeforeAll
+  fun beforeAll() {
+    Mockito.`when`(kravregisterClient.getWcagKrav(1))
+        .thenReturn(
+            Result.success(
+                KravWcag2x(
+                    1,
+                    "1.1.1 Ikke-tekstlig innhold,Gjeldande",
+                    "I bruk",
+                    "Innhald",
+                    false,
+                    false,
+                    false,
+                    "https://www.uutilsynet.no/wcag-standarden/111-ikke-tekstlig-innhold-niva/87",
+                    "1. Mulig å oppfatte",
+                    "1.2 Tidsbasert media",
+                    "1.1.1",
+                    WcagSamsvarsnivaa.A)))
+  }
 
   @AfterAll
   fun cleanup() {
@@ -42,17 +71,28 @@ class TestregelIntegrationTests(
   }
 
   @Test
-  @DisplayName("Skal ikke kunne opprette en testregel med feil")
+  @DisplayName("Skal ikke kunne opprette en testregel med feil request")
   fun createTestregelErrors() {
     val errorResponse =
         restTemplate.postForEntity(
             "/v1/testreglar",
             mapOf(
-                "krav" to "",
+                "kravId" to "1",
                 "testregelSchema" to testregelSchemaForenklet,
                 "name" to name,
                 "type" to "forenklet"),
             String::class.java)
+
+    Assertions.assertThat(errorResponse.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+  }
+
+  @Test
+  @DisplayName("Skal ikke kunne opprette en testregel hvis krav ikke finnes")
+  fun createTestregelKravError() {
+    Mockito.`when`(kravregisterClient.getWcagKrav(1)).thenReturn(Result.failure(RuntimeException()))
+
+    val errorResponse =
+        restTemplate.postForEntity("/v1/testreglar", testregelCreateRequestBody, String::class.java)
 
     Assertions.assertThat(errorResponse.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
   }
@@ -75,14 +115,17 @@ class TestregelIntegrationTests(
   fun updateTestregel() {
     val location = createDefaultTestregel()
     val testregel = restTemplate.getForObject(location, Testregel::class.java)
-    val krav = "4.1.3 Statusbeskjeder"
-    Assertions.assertThat(testregel.krav).isNotEqualTo(krav)
+    val kravId = 2
+    Assertions.assertThat(testregel.kravId).isNotEqualTo(kravId)
 
     restTemplate.exchange(
-        "/v1/testreglar", HttpMethod.PUT, HttpEntity(testregel.copy(krav = krav)), Int::class.java)
+        "/v1/testreglar",
+        HttpMethod.PUT,
+        HttpEntity(testregel.copy(kravId = kravId)),
+        Int::class.java)
 
     val updatedTestregel = restTemplate.getForObject(location, TestregelBase::class.java)
-    Assertions.assertThat(updatedTestregel.krav).isEqualTo(krav)
+    Assertions.assertThat(updatedTestregel.kravId).isEqualTo(kravId)
   }
 
   @Nested
@@ -94,7 +137,7 @@ class TestregelIntegrationTests(
     @DisplayName("Skal hente testregel")
     fun getTestregel() {
       val testregel = restTemplate.getForObject(location, Testregel::class.java)
-      Assertions.assertThat(testregel.krav).isEqualTo(testregelTestKrav)
+      Assertions.assertThat(testregel.kravId).isEqualTo(testregelTestKravId)
       Assertions.assertThat(testregel.testregelSchema).isEqualTo(testregelSchemaForenklet)
       Assertions.assertThat(testregel.namn).isEqualTo(name)
     }
@@ -112,7 +155,7 @@ class TestregelIntegrationTests(
               .body
               ?.find { it.id == testregel.id }
 
-      Assertions.assertThat(testregelFromList?.krav).isEqualTo(testregelTestKrav)
+      Assertions.assertThat(testregelFromList?.kravId).isEqualTo(testregelTestKravId)
       Assertions.assertThat(testregelFromList?.modus).isEqualTo(modus)
       Assertions.assertThat(testregelFromList?.namn).isEqualTo(name)
     }

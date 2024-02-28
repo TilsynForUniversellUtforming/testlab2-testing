@@ -5,6 +5,7 @@ import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHan
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import org.slf4j.LoggerFactory
@@ -21,7 +22,11 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("v1/testreglar")
-class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingDAO) {
+class TestregelResource(
+    val testregelDAO: TestregelDAO,
+    val maalingDAO: MaalingDAO,
+    val kravregisterClient: KravregisterClient
+) {
 
   val logger = LoggerFactory.getLogger(TestregelResource::class.java)
 
@@ -63,8 +68,8 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
       createWithErrorHandling(
           {
             validateNamn(testregelInit.namn).getOrThrow()
-            validateKrav(testregelInit.krav).getOrThrow()
             validateSchema(testregelInit.testregelSchema, testregelInit.modus).getOrThrow()
+            validateKrav(testregelInit.kravId).getOrThrow()
 
             testregelDAO.createTestregel(testregelInit)
           },
@@ -73,6 +78,7 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
   @PutMapping
   fun updateTestregel(@RequestBody testregel: Testregel): ResponseEntity<out Any> =
       executeWithErrorHandling {
+        validateKrav(testregel.kravId).getOrThrow()
         testregel.validateTestregel().getOrThrow()
         testregelDAO.updateTestregel(testregel)
       }
@@ -119,4 +125,10 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
             logger.error("Feila ved henting av tema for testreglar", it)
             ResponseEntity.internalServerError().body(it.message)
           }
+
+  fun validateKrav(kravId: Int) = runCatching {
+    kravregisterClient.getWcagKrav(kravId).getOrElse {
+      throw IllegalArgumentException("Krav med id $kravId finns ikkje")
+    }
+  }
 }

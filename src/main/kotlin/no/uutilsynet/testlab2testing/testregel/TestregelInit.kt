@@ -6,7 +6,7 @@ import no.uutilsynet.testlab2testing.common.TestlabLocale
 data class TestregelInit(
     val testregelId: String,
     val namn: String,
-    val krav: String,
+    val kravId: Int,
     val status: TestregelStatus,
     val datoSistEndra: Instant = Instant.now(),
     val type: TestregelInnholdstype,

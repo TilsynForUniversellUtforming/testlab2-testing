@@ -2,7 +2,10 @@ package no.uutilsynet.testlab2testing.regelsett
 
 import java.time.Instant
 import no.uutilsynet.testlab2testing.common.TestlabLocale
-import no.uutilsynet.testlab2testing.testregel.*
+import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
+import no.uutilsynet.testlab2testing.testregel.TestregelModus
+import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
@@ -20,7 +23,7 @@ class RegelsettValidatorsTest {
                 "TR1",
                 1,
                 "QW-ACT-R12",
-                "1.1.1",
+                1,
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
@@ -36,7 +39,7 @@ class RegelsettValidatorsTest {
                 "TR2",
                 1,
                 "QW-ACT-R13",
-                "1.1.1",
+                2,
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
@@ -63,7 +66,7 @@ class RegelsettValidatorsTest {
                 "TR1",
                 1,
                 "TR1",
-                "1.1.1",
+                1,
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
@@ -79,7 +82,7 @@ class RegelsettValidatorsTest {
                 "TR2",
                 1,
                 "TR2",
-                "1.1.1",
+                2,
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
@@ -106,7 +109,7 @@ class RegelsettValidatorsTest {
                 "TR1",
                 1,
                 "QW-ACT-R12",
-                "1.1.1",
+                1,
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
@@ -122,7 +125,7 @@ class RegelsettValidatorsTest {
                 "TR2",
                 1,
                 "QW-ACT-R13",
-                "1.1.1",
+                2,
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
@@ -138,7 +141,7 @@ class RegelsettValidatorsTest {
                 "TR3",
                 1,
                 "QW-ACT-R14",
-                "1.1.1",
+                3,
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
@@ -168,7 +171,7 @@ class RegelsettValidatorsTest {
                 "TR1",
                 1,
                 "QW-ACT-R12",
-                "1.1.1",
+                1,
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
@@ -184,7 +187,7 @@ class RegelsettValidatorsTest {
                 "TR2",
                 1,
                 "QW-ACT-R13",
-                "1.1.2",
+                2,
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
@@ -211,7 +214,7 @@ class RegelsettValidatorsTest {
                 "TR1",
                 1,
                 "QW-ACT-R12",
-                "1.1.1",
+                1,
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,

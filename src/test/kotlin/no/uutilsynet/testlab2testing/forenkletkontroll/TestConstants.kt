@@ -21,7 +21,7 @@ object TestConstants {
           "QW-ACT-12",
           1,
           TestConstants.name,
-          TestConstants.testregelTestKrav,
+          TestConstants.testregelTestKravId,
           TestregelStatus.publisert,
           Instant.now(),
           TestregelInnholdstype.nett,
