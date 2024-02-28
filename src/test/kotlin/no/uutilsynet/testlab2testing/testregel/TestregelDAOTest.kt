@@ -4,7 +4,7 @@ import java.time.Instant
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKrav
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DisplayName
@@ -71,7 +71,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
         TestregelInit(
             testregelId = "QW-ACT-R1",
             namn = "test_skal_slettes_1",
-            krav = "1.1.1",
+            kravId = 1,
             status = TestregelStatus.publisert,
             type = TestregelInnholdstype.nett,
             modus = TestregelModus.forenklet,
@@ -85,17 +85,18 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
 
     val oldTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(oldTestregel).isNotNull
-    Assertions.assertThat(oldTestregel?.krav).isEqualTo(testregelInit.krav)
+    Assertions.assertThat(oldTestregel?.kravId).isEqualTo(testregelInit.kravId)
     Assertions.assertThat(oldTestregel?.testregelSchema).isEqualTo(testregelInit.testregelSchema)
     Assertions.assertThat(oldTestregel?.namn).isEqualTo(testregelInit.namn)
 
     oldTestregel
-        ?.copy(krav = testregelTestKrav, testregelSchema = testregelSchemaForenklet, namn = name)
+        ?.copy(
+            kravId = testregelTestKravId, testregelSchema = testregelSchemaForenklet, namn = name)
         ?.let { testregelDAO.updateTestregel(it) }
 
     val updatedTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(updatedTestregel).isNotNull
-    Assertions.assertThat(updatedTestregel?.krav).isEqualTo(testregelTestKrav)
+    Assertions.assertThat(updatedTestregel?.kravId).isEqualTo(testregelTestKravId)
     Assertions.assertThat(updatedTestregel?.testregelSchema).isEqualTo(testregelSchemaForenklet)
     Assertions.assertThat(updatedTestregel?.namn).isEqualTo(name)
   }
@@ -106,7 +107,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
         TestregelInit(
             testregelId = "QW-ACT-R1",
             namn = "test_skal_slettes_1",
-            krav = "1.1.1",
+            kravId = 1,
             status = TestregelStatus.publisert,
             type = TestregelInnholdstype.nett,
             modus = TestregelModus.forenklet,
@@ -121,19 +122,20 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
 
     val oldTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(oldTestregel).isNotNull
-    Assertions.assertThat(oldTestregel?.krav).isEqualTo(testregelInit.krav)
+    Assertions.assertThat(oldTestregel?.kravId).isEqualTo(testregelInit.kravId)
     Assertions.assertThat(oldTestregel?.testregelSchema).isEqualTo(testregelInit.testregelSchema)
     Assertions.assertThat(oldTestregel?.namn).isEqualTo(testregelInit.namn)
 
     val oldDate = oldTestregel?.datoSistEndra
 
     oldTestregel
-        ?.copy(krav = testregelTestKrav, testregelSchema = testregelSchemaForenklet, namn = name)
+        ?.copy(
+            kravId = testregelTestKravId, testregelSchema = testregelSchemaForenklet, namn = name)
         ?.let { testregelDAO.updateTestregel(it) }
 
     val updatedTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(updatedTestregel).isNotNull
-    Assertions.assertThat(updatedTestregel?.krav).isEqualTo(testregelTestKrav)
+    Assertions.assertThat(updatedTestregel?.kravId).isEqualTo(testregelTestKravId)
     Assertions.assertThat(updatedTestregel?.testregelSchema).isEqualTo(testregelSchemaForenklet)
     Assertions.assertThat(updatedTestregel?.namn).isEqualTo(name)
 
@@ -147,7 +149,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
           TestregelInit(
               testregelId = "QW-ACT-R1",
               namn = name,
-              krav = testregelTestKrav,
+              kravId = testregelTestKravId,
               status = TestregelStatus.publisert,
               type = TestregelInnholdstype.nett,
               modus = TestregelModus.forenklet,

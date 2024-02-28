@@ -4,7 +4,7 @@ import no.uutilsynet.testlab2testing.common.TestlabLocale
 
 object TestConstants {
   val name = "test_skal_slettes"
-  val testregelTestKrav = "2.1.1 Tastatur"
+  val testregelTestKravId = 1
   val testregelSchemaForenklet = "QW-ACT-R70"
   val testregelSchemaManuell = """{ "gaaTil": 1 }"""
   val modus = TestregelModus.forenklet
@@ -13,7 +13,7 @@ object TestConstants {
       mapOf(
           "testregelId" to testregelSchemaForenklet,
           "namn" to name,
-          "krav" to testregelTestKrav,
+          "kravId" to testregelTestKravId,
           "status" to TestregelStatus.publisert,
           "type" to TestregelInnholdstype.nett,
           "modus" to modus,

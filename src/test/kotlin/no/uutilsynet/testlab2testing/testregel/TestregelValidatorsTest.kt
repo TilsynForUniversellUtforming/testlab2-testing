@@ -5,7 +5,7 @@ import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaManuell
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKrav
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
@@ -25,7 +25,7 @@ class TestregelValidatorsTest {
               name,
               1,
               name,
-              testregelTestKrav,
+              testregelTestKravId,
               TestregelStatus.publisert,
               Instant.now(),
               TestregelInnholdstype.nett,
@@ -33,7 +33,7 @@ class TestregelValidatorsTest {
               TestlabLocale.nb,
               1,
               1,
-              testregelTestKrav,
+              "",
               testregelSchemaForenklet,
               1)
           .validateTestregel()
@@ -49,7 +49,7 @@ class TestregelValidatorsTest {
               name,
               1,
               name,
-              testregelTestKrav,
+              testregelTestKravId,
               TestregelStatus.publisert,
               Instant.now(),
               TestregelInnholdstype.nett,
@@ -57,7 +57,7 @@ class TestregelValidatorsTest {
               TestlabLocale.nb,
               1,
               1,
-              testregelTestKrav,
+              "",
               testregelSchemaManuell,
               1)
           .validateTestregel()
@@ -77,30 +77,7 @@ class TestregelValidatorsTest {
               "",
               1,
               "",
-              testregelTestKrav,
-              TestregelStatus.publisert,
-              Instant.now(),
-              TestregelInnholdstype.nett,
-              TestregelModus.forenklet,
-              TestlabLocale.nb,
-              1,
-              1,
-              testregelTestKrav,
-              testregelSchemaForenklet,
-              1)
-      assertTrue(testregel.validateTestregel().isFailure)
-    }
-
-    @Test
-    @DisplayName("ugyldig krav feile")
-    fun invalidKrav() {
-      val testregel =
-          Testregel(
-              1,
-              name,
-              1,
-              name,
-              "",
+              testregelTestKravId,
               TestregelStatus.publisert,
               Instant.now(),
               TestregelInnholdstype.nett,
@@ -123,7 +100,7 @@ class TestregelValidatorsTest {
               name,
               1,
               name,
-              testregelTestKrav,
+              testregelTestKravId,
               TestregelStatus.publisert,
               Instant.now(),
               TestregelInnholdstype.nett,
@@ -131,7 +108,7 @@ class TestregelValidatorsTest {
               TestlabLocale.nb,
               1,
               1,
-              testregelTestKrav,
+              "",
               "",
               1)
       assertTrue(testregel.validateTestregel().isFailure)
@@ -146,7 +123,7 @@ class TestregelValidatorsTest {
               name,
               1,
               name,
-              testregelTestKrav,
+              testregelTestKravId,
               TestregelStatus.publisert,
               Instant.now(),
               TestregelInnholdstype.nett,
@@ -154,7 +131,7 @@ class TestregelValidatorsTest {
               TestlabLocale.nb,
               1,
               1,
-              testregelTestKrav,
+              "",
               "",
               1)
       assertTrue(testregel.validateTestregel().isFailure)
@@ -198,15 +175,6 @@ class TestregelValidatorsTest {
   @Nested
   @DisplayName("For påkrevde felter må")
   inner class ValidateRequiredFields {
-    @ParameterizedTest
-    @MethodSource(
-        "no.uutilsynet.testlab2testing.testregel.TestregelValidatorsTest#invalidParamsSource")
-    @DisplayName("krav være definert")
-    fun kravError(invalidParam: String?) {
-      val krav = validateKrav(invalidParam)
-      assertTrue(krav.isFailure)
-    }
-
     @ParameterizedTest
     @MethodSource(
         "no.uutilsynet.testlab2testing.testregel.TestregelValidatorsTest#invalidParamsSource")

@@ -161,8 +161,9 @@ class TestResultatDAO(
     return testresultatForSak
         .groupBy { it.testregelId }
         .entries
-        .map {
-          val testresultat = it.value
+        .map { entry ->
+          val testresultat = entry.value
+          val (_, sakId, loeysingId, testregelId) = testresultat.first()
 
           val talElementBrot = testresultat.count { it.elementResultat == "brot" }
           val talElementSamsvar = testresultat.count { it.elementResultat == "samsvar" }
@@ -172,12 +173,14 @@ class TestResultatDAO(
           val (talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst) =
               countSideUtfall(testresultat)
 
-          val suksesskriterium = getKravIdFraTestregel(testresultat.first().testregelId)
+          val suksesskriterium =
+              testregelDAO.getTestregel(testregelId)?.kravId
+                  ?: throw RuntimeException("Fant ikkje krav for testregel med id $testregelId")
 
           AggregeringPerTestregelDTO(
               null,
-              testresultat.first().loeysingId,
-              testresultat.first().testregelId,
+              loeysingId,
+              testregelId,
               suksesskriterium,
               listOf(suksesskriterium),
               talElementSamsvar,
@@ -189,7 +192,7 @@ class TestResultatDAO(
               talSiderIkkjeForekomst,
               0.0f,
               0.0f,
-              testresultat.first().sakId)
+              sakId)
         }
   }
 
@@ -211,14 +214,6 @@ class TestResultatDAO(
           }
         }
     return Triple(talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst)
-  }
-
-  fun getKravIdFraTestregel(id: Int): Int {
-    val krav = testregelDAO.getTestregel(id)?.krav
-    if (krav != null) {
-      return kravregisterClient.getKravIdFromSuksesskritterium(krav).getOrThrow()
-    }
-    throw RuntimeException("Fant ikkje krav for testregel med id $id")
   }
 
   fun calculateUtfall(utfall: List<String?>): String {

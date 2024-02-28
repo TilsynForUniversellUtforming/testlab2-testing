@@ -5,6 +5,7 @@ import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHan
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import org.slf4j.LoggerFactory
@@ -21,7 +22,11 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("v1/testreglar")
-class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingDAO) {
+class TestregelResource(
+    val testregelDAO: TestregelDAO,
+    val maalingDAO: MaalingDAO,
+    val kravregisterClient: KravregisterClient
+) {
 
   val logger = LoggerFactory.getLogger(TestregelResource::class.java)
 
@@ -63,8 +68,10 @@ class TestregelResource(val testregelDAO: TestregelDAO, val maalingDAO: MaalingD
       createWithErrorHandling(
           {
             validateNamn(testregelInit.namn).getOrThrow()
-            validateKrav(testregelInit.krav).getOrThrow()
             validateSchema(testregelInit.testregelSchema, testregelInit.modus).getOrThrow()
+            kravregisterClient.getWcagKrav(testregelInit.kravId).getOrElse {
+              throw RuntimeException("Krav med id ${testregelInit.kravId} finns ikkje")
+            }
 
             testregelDAO.createTestregel(testregelInit)
           },

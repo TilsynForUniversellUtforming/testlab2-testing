@@ -117,7 +117,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
         TestregelInit(
             testregelId = testregelNoekkel,
             namn = name,
-            krav = "1.1.1",
+            kravId = 1,
             status = TestregelStatus.publisert,
             type = TestregelInnholdstype.nett,
             modus = TestregelModus.forenklet,

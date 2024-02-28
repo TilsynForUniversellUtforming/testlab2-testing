@@ -5,7 +5,7 @@ import no.uutilsynet.testlab2testing.testregel.TestConstants.modus
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelCreateRequestBody
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKrav
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DisplayName
@@ -42,13 +42,13 @@ class TestregelIntegrationTests(
   }
 
   @Test
-  @DisplayName("Skal ikke kunne opprette en testregel med feil")
+  @DisplayName("Skal ikke kunne opprette en testregel med feil request")
   fun createTestregelErrors() {
     val errorResponse =
         restTemplate.postForEntity(
             "/v1/testreglar",
             mapOf(
-                "krav" to "",
+                "kravId" to "1",
                 "testregelSchema" to testregelSchemaForenklet,
                 "name" to name,
                 "type" to "forenklet"),
@@ -75,14 +75,17 @@ class TestregelIntegrationTests(
   fun updateTestregel() {
     val location = createDefaultTestregel()
     val testregel = restTemplate.getForObject(location, Testregel::class.java)
-    val krav = "4.1.3 Statusbeskjeder"
-    Assertions.assertThat(testregel.krav).isNotEqualTo(krav)
+    val kravId = 2
+    Assertions.assertThat(testregel.kravId).isNotEqualTo(kravId)
 
     restTemplate.exchange(
-        "/v1/testreglar", HttpMethod.PUT, HttpEntity(testregel.copy(krav = krav)), Int::class.java)
+        "/v1/testreglar",
+        HttpMethod.PUT,
+        HttpEntity(testregel.copy(kravId = kravId)),
+        Int::class.java)
 
     val updatedTestregel = restTemplate.getForObject(location, TestregelBase::class.java)
-    Assertions.assertThat(updatedTestregel.krav).isEqualTo(krav)
+    Assertions.assertThat(updatedTestregel.kravId).isEqualTo(kravId)
   }
 
   @Nested
@@ -94,7 +97,7 @@ class TestregelIntegrationTests(
     @DisplayName("Skal hente testregel")
     fun getTestregel() {
       val testregel = restTemplate.getForObject(location, Testregel::class.java)
-      Assertions.assertThat(testregel.krav).isEqualTo(testregelTestKrav)
+      Assertions.assertThat(testregel.kravId).isEqualTo(testregelTestKravId)
       Assertions.assertThat(testregel.testregelSchema).isEqualTo(testregelSchemaForenklet)
       Assertions.assertThat(testregel.namn).isEqualTo(name)
     }
@@ -112,7 +115,7 @@ class TestregelIntegrationTests(
               .body
               ?.find { it.id == testregel.id }
 
-      Assertions.assertThat(testregelFromList?.krav).isEqualTo(testregelTestKrav)
+      Assertions.assertThat(testregelFromList?.kravId).isEqualTo(testregelTestKravId)
       Assertions.assertThat(testregelFromList?.modus).isEqualTo(modus)
       Assertions.assertThat(testregelFromList?.namn).isEqualTo(name)
     }
