@@ -1,6 +1,9 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import java.net.URI
+import no.uutilsynet.testlab2testing.krav.KravWcag2x
+import no.uutilsynet.testlab2testing.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.krav.WcagSamsvarsnivaa
 import no.uutilsynet.testlab2testing.testregel.TestConstants.modus
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelCreateRequestBody
@@ -8,12 +11,15 @@ import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaFore
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
@@ -24,8 +30,30 @@ import org.springframework.http.HttpStatus
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestregelIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
-    @Autowired val testregelDAO: TestregelDAO
+    @Autowired val testregelDAO: TestregelDAO,
 ) {
+
+  @MockBean private lateinit var kravregisterClient: KravregisterClient
+
+  @BeforeAll
+  fun beforeAll() {
+    Mockito.`when`(kravregisterClient.getWcagKrav(1))
+        .thenReturn(
+            Result.success(
+                KravWcag2x(
+                    1,
+                    "1.1.1 Ikke-tekstlig innhold,Gjeldande",
+                    "I bruk",
+                    "Innhald",
+                    false,
+                    false,
+                    false,
+                    "https://www.uutilsynet.no/wcag-standarden/111-ikke-tekstlig-innhold-niva/87",
+                    "1. Mulig å oppfatte",
+                    "1.2 Tidsbasert media",
+                    "1.1.1",
+                    WcagSamsvarsnivaa.A)))
+  }
 
   @AfterAll
   fun cleanup() {
