@@ -2,13 +2,6 @@ package no.uutilsynet.testlab2testing.testregel
 
 import no.uutilsynet.testlab2testing.common.validateJSONString
 
-fun validateKrav(krav: String?): Result<String> = runCatching {
-  if (krav.isNullOrBlank()) {
-    throw IllegalArgumentException("Krav kan ikkje vera blank")
-  }
-  krav
-}
-
 fun validateSchema(testregelSchema: String?, modus: TestregelModus): Result<String> = runCatching {
   if (testregelSchema.isNullOrBlank()) {
     throw IllegalArgumentException("Testregel-skjema kan ikkje vera blank")

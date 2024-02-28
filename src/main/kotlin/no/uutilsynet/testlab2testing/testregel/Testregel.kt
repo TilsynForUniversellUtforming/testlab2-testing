@@ -10,7 +10,7 @@ data class Testregel(
     val testregelId: String,
     val versjon: Int,
     override val namn: String,
-    override val krav: String,
+    override val kravId: Int,
     val status: TestregelStatus,
     val datoSistEndra: Instant = Instant.now(),
     val type: TestregelInnholdstype,
@@ -21,11 +21,10 @@ data class Testregel(
     val kravTilSamsvar: String?,
     val testregelSchema: String,
     val innhaldstypeTesting: Int?
-) : TestregelBase(id, namn, krav, modus) {
+) : TestregelBase(id, namn, kravId, modus) {
   companion object {
     fun Testregel.validateTestregel(): Result<Testregel> = runCatching {
       val name = validateNamn(this.namn).getOrThrow()
-      val krav = validateKrav(this.krav).getOrThrow()
       val testregelId = validateTestregelId(this.testregelId).getOrThrow()
       val schema = validateSchema(this.testregelSchema, this.modus).getOrThrow()
 
@@ -34,7 +33,7 @@ data class Testregel(
           testregelId,
           this.versjon,
           name,
-          krav,
+          kravId,
           this.status,
           this.datoSistEndra,
           this.type,
@@ -48,6 +47,6 @@ data class Testregel(
     }
 
     fun Testregel.toTestregelBase(): TestregelBase =
-        TestregelBase(id = this.id, namn = this.namn, krav = this.krav, modus = this.modus)
+        TestregelBase(id = this.id, namn = this.namn, kravId = this.kravId, modus = this.modus)
   }
 }

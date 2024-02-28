@@ -50,7 +50,7 @@ class CrawlerClientTest {
                 TestConstants.testregelSchemaForenklet,
                 1,
                 TestConstants.name,
-                "QW-ACT-12",
+                1,
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
