@@ -7,7 +7,7 @@ data class ResultatManuellKontroll(
     val id: Int,
     val sakId: Int,
     val loeysingId: Int,
-    val testregelId: Int,
+    val testregelId: Int, // Databaseid for testregel
     val nettsideId: Int,
     val brukar: Brukar,
     val elementOmtale: String?,

@@ -7,10 +7,10 @@ import java.time.LocalDate
 import javax.sql.DataSource
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
-import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -21,7 +21,8 @@ class SakDAO(
     val jdbcTemplate: NamedParameterJdbcTemplate,
     val dataSource: DataSource,
     val testregelDAO: TestregelDAO,
-    val brukarDAO: BrukarDAO
+    val brukarDAO: BrukarDAO,
+    val sideutvalDAO: SideutvalDAO
 ) {
   fun save(namn: String, virksomhet: String, frist: LocalDate): Result<Int> = runCatching {
     jdbcTemplate.queryForObject(
@@ -41,7 +42,7 @@ class SakDAO(
       val loeysingIdArray = rs.getArray("loeysingar")?.array as? Array<Int> ?: emptyArray()
       val loeysingar =
           loeysingIdArray.map { loeysingId ->
-            val nettsider = findNettsiderBySakAndLoeysing(sakId, loeysingId)
+            val nettsider = sideutvalDAO.findNettsiderBySakAndLoeysing(sakId, loeysingId)
             Sak.Loeysing(loeysingId, nettsider)
           }
       val brukarId = rs.getInt("ansvarleg_id")
@@ -85,25 +86,6 @@ class SakDAO(
             sak.loeysingar,
             sak.testreglar.map { it.toTestregelBase() }))
   }
-
-  private fun findNettsiderBySakAndLoeysing(
-      sakId: Int,
-      loeysingId: Int
-  ): MutableList<Sak.Nettside> =
-      jdbcTemplate.query(
-          """
-                    select id, type, url, beskrivelse, begrunnelse
-                    from nettside
-                    where id in (
-                        select nettside_id
-                        from sak_loeysing_nettside
-                        where sak_id = :sak_id
-                            and loeysing_id = :loeysing_id
-                    )
-                """
-              .trimIndent(),
-          mapOf("sak_id" to sakId, "loeysing_id" to loeysingId),
-          DataClassRowMapper.newInstance(Sak.Nettside::class.java))
 
   @Transactional
   fun update(sak: Sak): Result<Sak> = runCatching {
@@ -153,51 +135,9 @@ class SakDAO(
 
   /** Sletter alle nettsider som er lagret for denne saken, og lagrer de nye nettsidene. */
   private fun updateNettsider(sak: Sak) {
-    jdbcTemplate.update(
-        """
-            delete from sak_loeysing_nettside
-            where sak_id = :sak_id
-        """
-            .trimIndent(),
-        mapOf("sak_id" to sak.id))
-    jdbcTemplate.update(
-        """
-            delete from nettside
-            where id not in (
-                select nettside_id
-                from sak_loeysing_nettside
-            )
-        """
-            .trimIndent(),
-        mapOf("sak_id" to sak.id))
-
+    sideutvalDAO.deleteNettsiderForSak(sak.id)
     sak.loeysingar.forEach { loeysing ->
-      loeysing.nettsider.forEach { nettside ->
-        val nettsideId =
-            jdbcTemplate.queryForObject(
-                """
-                    insert into nettside (type, url, beskrivelse, begrunnelse)
-                    values (:type, :url, :beskrivelse, :begrunnelse)
-                    returning id
-                """
-                    .trimIndent(),
-                mapOf(
-                    "type" to nettside.type,
-                    "url" to nettside.url,
-                    "beskrivelse" to nettside.beskrivelse,
-                    "begrunnelse" to nettside.begrunnelse),
-                Int::class.java)!!
-        jdbcTemplate.update(
-            """
-                      insert into sak_loeysing_nettside (sak_id, loeysing_id, nettside_id)
-                      values (:sak_id, :loeysing_id, :nettside_id)
-                  """
-                .trimIndent(),
-            mapOf(
-                "sak_id" to sak.id,
-                "loeysing_id" to loeysing.loeysingId,
-                "nettside_id" to nettsideId))
-      }
+      sideutvalDAO.insertNettsiderForSak(sak.id, loeysing.loeysingId, loeysing.nettsider)
     }
   }
 

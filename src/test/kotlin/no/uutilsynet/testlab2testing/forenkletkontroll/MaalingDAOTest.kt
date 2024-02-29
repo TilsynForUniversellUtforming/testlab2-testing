@@ -24,7 +24,7 @@ import org.springframework.boot.test.mock.mockito.MockBean
 class MaalingDAOTest(
     @Autowired val maalingDAO: MaalingDAO,
     @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
-    @Autowired val crawlresultatDAO: CrawlresultatDAO
+    @Autowired val sideutvalDAO: SideutvalDAO
 ) {
 
   @MockBean lateinit var aggregeringService: AggregeringService
@@ -224,7 +224,7 @@ class MaalingDAOTest(
                 )))!!
     maalingDAO.save(kvalitetssikring).getOrThrow()
     val crawlResults =
-        crawlresultatDAO.getCrawlResultatForMaaling(
+        sideutvalDAO.getCrawlResultatForMaaling(
             maaling.id, listOf(digdirLoeysing, uutilsynetLoeysing))
     val digdirCrawlResult = crawlResults.find { it.loeysing == digdirLoeysing }
     assertThat(digdirCrawlResult).isInstanceOf(CrawlResultat.Ferdig::class.java)

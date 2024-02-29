@@ -3,7 +3,6 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
-import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
 import no.uutilsynet.testlab2testing.brukar.BrukarDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
@@ -131,6 +130,16 @@ class TestResultatDAO(
     testResultat.svar.forEach { saveSvar(testResultat.id, it) }
   }
 
+    fun delete(id: Int): Result<Unit> = runCatching {
+        jdbcTemplate.update(
+            """
+            delete from testresultat
+            where id = :id
+        """
+                .trimIndent(),
+            mapOf("id" to id))
+    }
+
   fun saveSvar(testresultatId: Int, stegOgSvar: ResultatManuellKontroll.Svar): Result<Unit> =
       runCatching {
         val (steg, svar) = stegOgSvar
@@ -145,97 +154,4 @@ class TestResultatDAO(
                 .trimIndent(),
             mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar))
       }
-
-  fun delete(id: Int): Result<Unit> = runCatching {
-    jdbcTemplate.update(
-        """
-            delete from testresultat
-            where id = :id
-        """
-            .trimIndent(),
-        mapOf("id" to id))
-  }
-
-  fun saveAggregertResultatTestregel(sakId: Int) {
-    val eksisterande = aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(sakId)
-    if (eksisterande.isEmpty()) {
-      val testresultatForSak = getTestResultat(sakId = sakId).getOrThrow()
-      val aggregertResultatTestregel = createAggregeringPerTestregelDTO(testresultatForSak)
-      aggregertResultatTestregel.forEach(aggregeringDAO::createAggregertResultatTestregel)
-    }
-  }
-
-  private fun createAggregeringPerTestregelDTO(
-      testresultatForSak: List<ResultatManuellKontroll>
-  ): List<AggregeringPerTestregelDTO> {
-    return testresultatForSak
-        .groupBy { it.testregelId }
-        .entries
-        .map { entry ->
-          val testresultat = entry.value
-          val (_, sakId, loeysingId, testregelId) = testresultat.first()
-
-          val talElementBrot = testresultat.count { it.elementResultat == "brot" }
-          val talElementSamsvar = testresultat.count { it.elementResultat == "samsvar" }
-          val talElementVarsel = testresultat.count { it.elementResultat == "varsel" }
-          val talElementIkkjeForekomst = testresultat.count { it.elementUtfall == "ikkjeForekomst" }
-
-          val (talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst) =
-              countSideUtfall(testresultat)
-
-          val suksesskriterium =
-              testregelDAO.getTestregel(testregelId)?.kravId
-                  ?: throw RuntimeException("Fant ikkje krav for testregel med id $testregelId")
-
-          AggregeringPerTestregelDTO(
-              null,
-              loeysingId,
-              testregelId,
-              suksesskriterium,
-              listOf(suksesskriterium),
-              talElementSamsvar,
-              talElementBrot,
-              talElementVarsel,
-              talElementIkkjeForekomst,
-              talSiderSamsvar,
-              talSiderBrot,
-              talSiderIkkjeForekomst,
-              0.0f,
-              0.0f,
-              sakId)
-        }
-  }
-
-  private fun countSideUtfall(testresultat: List<ResultatManuellKontroll>): Triple<Int, Int, Int> {
-    var talSiderBrot = 0
-    var talSiderSamsvar = 0
-    var talSiderIkkjeForekomst = 0
-
-    testresultat
-        .groupBy { it.nettsideId }
-        .entries
-        .forEach { _ ->
-          {
-            when (calculateUtfall(testresultat.map { it.elementUtfall })) {
-              "brudd" -> talSiderBrot += 1
-              "samsvar" -> talSiderSamsvar += 1
-              "ikkjeForekomst" -> talSiderIkkjeForekomst += 1
-            }
-          }
-        }
-    return Triple(talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst)
-  }
-
-  fun calculateUtfall(utfall: List<String?>): String {
-    if (utfall.contains("brudd")) {
-      return "brudd"
-    }
-    if (utfall.contains("varsel")) {
-      return "varsel"
-    }
-    if (utfall.contains("samsvar")) {
-      return "samsvar"
-    }
-    return "ikkjeForekomst"
-  }
 }
