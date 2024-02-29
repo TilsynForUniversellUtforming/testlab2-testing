@@ -73,7 +73,7 @@ class TestResultatResource(
 
   @PostMapping("/aggregert/{testgrunnlagId}")
   fun createAggregertResultat(@PathVariable testgrunnlagId: Int) =
-      testResultatDAO.saveAggregertResultatTestregel(testgrunnlagId)
+      aggregeringService.saveAggregertResultatTestregel(testgrunnlagId)
 
   @DeleteMapping("/{id}")
   fun deleteTestResultat(@PathVariable id: Int): ResponseEntity<Unit> {

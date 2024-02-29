@@ -3,6 +3,8 @@ package no.uutilsynet.testlab2testing.aggregering
 import java.net.URI
 import no.uutilsynet.testlab2testing.forenkletkontroll.AutoTesterClient
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestKoeyring
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
@@ -17,7 +19,8 @@ class AggregeringService(
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val kravregisterClient: KravregisterClient,
     val testregelDAO: TestregelDAO,
-    val aggregeringDAO: AggregeringDAO
+    val aggregeringDAO: AggregeringDAO,
+    val testResultatDAO: TestResultatDAO
 ) {
 
   private val logger = LoggerFactory.getLogger(AggregeringService::class.java)
@@ -264,5 +267,93 @@ class AggregeringService(
     return aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId).map {
       dtoToAggregertResultatTestregel(it)
     }
+  }
+
+  fun saveAggregertResultatTestregel(sakId: Int) {
+    val eksisterande = aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(sakId)
+    if (eksisterande.isEmpty()) {
+      val testresultatForSak = testResultatDAO.getManyResults(sakId = sakId).getOrThrow()
+      val aggregertResultatTestregel = createAggregeringPerTestregelDTO(testresultatForSak)
+      aggregertResultatTestregel.forEach(aggregeringDAO::createAggregertResultatTestregel)
+    }
+  }
+
+  private fun createAggregeringPerTestregelDTO(
+      testresultatForSak: List<ResultatManuellKontroll>
+  ): List<AggregeringPerTestregelDTO> {
+    return testresultatForSak
+        .groupBy { it.testregelId }
+        .entries
+        .map {
+          val testresultat = it.value
+
+          val talElementBrot = testresultat.count { it.elementResultat == "brot" }
+          val talElementSamsvar = testresultat.count { it.elementResultat == "samsvar" }
+          val talElementVarsel = testresultat.count { it.elementResultat == "varsel" }
+          val talElementIkkjeForekomst = testresultat.count { it.elementUtfall == "ikkjeForekomst" }
+
+          val (talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst) =
+              countSideUtfall(testresultat)
+
+          val suksesskriterium = getKravIdFraTestregel(testresultat.first().testregelId)
+
+          AggregeringPerTestregelDTO(
+              null,
+              testresultat.first().loeysingId,
+              testresultat.first().testregelId,
+              suksesskriterium,
+              listOf(suksesskriterium),
+              talElementSamsvar,
+              talElementBrot,
+              talElementVarsel,
+              talElementIkkjeForekomst,
+              talSiderSamsvar,
+              talSiderBrot,
+              talSiderIkkjeForekomst,
+              0.0f,
+              0.0f,
+              testresultat.first().sakId)
+        }
+  }
+
+  private fun countSideUtfall(testresultat: List<ResultatManuellKontroll>): Triple<Int, Int, Int> {
+    var talSiderBrot = 0
+    var talSiderSamsvar = 0
+    var talSiderIkkjeForekomst = 0
+
+    testresultat
+        .groupBy { it.nettsideId }
+        .entries
+        .forEach { _ ->
+          run {
+            when (calculateUtfall(testresultat.map { it.elementUtfall })) {
+              "brudd" -> talSiderBrot += 1
+              "samsvar" -> talSiderSamsvar += 1
+              "ikkjeForekomst" -> talSiderIkkjeForekomst += 1
+            }
+          }
+        }
+    return Triple(talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst)
+  }
+
+  fun getKravIdFraTestregel(id: Int): Int {
+    val krav = testregelDAO.getTestregel(id)?.krav
+    if (krav != null) {
+      return kravregisterClient.getKravIdFromSuksesskritterium(krav).getOrThrow()
+    }
+    throw RuntimeException("Fant ikkje krav for testregel med id $id")
+  }
+
+  fun calculateUtfall(utfall: List<String?>): String {
+    if (utfall.contains("brudd")) {
+      return "brudd"
+    }
+    if (utfall.contains("varsel")) {
+      return "varsel"
+    }
+    if (utfall.contains("samsvar")) {
+      return "samsvar"
+    }
+    return "ikkjeForekomst"
   }
 }
