@@ -146,6 +146,16 @@ class TestResultatDAO(
             mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar))
       }
 
+  fun delete(id: Int): Result<Unit> = runCatching {
+    jdbcTemplate.update(
+        """
+            delete from testresultat
+            where id = :id
+        """
+            .trimIndent(),
+        mapOf("id" to id))
+  }
+
   fun saveAggregertResultatTestregel(sakId: Int) {
     val eksisterande = aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(sakId)
     if (eksisterande.isEmpty()) {
