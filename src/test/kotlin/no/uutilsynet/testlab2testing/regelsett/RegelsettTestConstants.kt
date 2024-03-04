@@ -10,7 +10,7 @@ import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 
 object RegelsettTestConstants {
   val regelsettName = "regelsett_slett"
-  val regelsettModus = TestregelModus.forenklet
+  val regelsettModus = TestregelModus.automatisk
   val regelsettStandard = false
 
   val regelsettTestregelList =
@@ -24,7 +24,7 @@ object RegelsettTestConstants {
               TestregelStatus.publisert,
               Instant.now().truncatedTo(ChronoUnit.MINUTES),
               TestregelInnholdstype.nett,
-              TestregelModus.forenklet,
+              TestregelModus.automatisk,
               TestlabLocale.nb,
               1,
               1,
@@ -40,7 +40,7 @@ object RegelsettTestConstants {
               TestregelStatus.publisert,
               Instant.now().truncatedTo(ChronoUnit.MINUTES),
               TestregelInnholdstype.nett,
-              TestregelModus.forenklet,
+              TestregelModus.automatisk,
               TestlabLocale.nb,
               1,
               1,

@@ -120,7 +120,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
             kravId = 1,
             status = TestregelStatus.publisert,
             type = TestregelInnholdstype.nett,
-            modus = TestregelModus.forenklet,
+            modus = TestregelModus.automatisk,
             spraak = TestlabLocale.nb,
             testregelSchema = testregelNoekkel,
             innhaldstypeTesting = 1,
