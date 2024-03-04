@@ -9,13 +9,8 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll.Svar
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
-import org.junit.jupiter.api.Order
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.TestMethodOrder
-import org.junit.jupiter.api.assertDoesNotThrow
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -189,6 +184,16 @@ class TestResultatResourceTest(
     val expected =
         (svar + restenAvSvarene).map { if (it.steg == "3.4") it.copy(svar = "nei") else it }
     assertThat(resultat.svar).containsExactlyElementsOf(expected)
+  }
+
+  @Test
+  @Order(9)
+  @DisplayName("vi skal kunne slette et testresultat")
+  fun sletteTestresultat() {
+    restTemplate.delete(location)
+    val resultatForSak =
+        restTemplate.getForObject("/testresultat?sakId=$sakId", ResultatForSak::class.java)!!
+    assertThat(resultatForSak.resultat).isEmpty()
   }
 
   data class ResultatForSak(val resultat: List<ResultatManuellKontroll>)
