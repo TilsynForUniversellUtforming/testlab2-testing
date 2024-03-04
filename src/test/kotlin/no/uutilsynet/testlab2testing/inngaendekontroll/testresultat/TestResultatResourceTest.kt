@@ -14,6 +14,7 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -188,8 +189,23 @@ class TestResultatResourceTest(
 
   @Test
   @Order(9)
-  @DisplayName("vi skal kunne slette et testresultat")
+  @DisplayName("vi skal ikke kunne slette et testresultat hvis status er 'Ferdig'")
+  fun sletteFerdigTestresultat() {
+    val resultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
+    val endret = resultat.copy(status = ResultatManuellKontroll.Status.Ferdig)
+    restTemplate.put(location, endret)
+    val responseEntity = restTemplate.exchange(location, HttpMethod.DELETE, null, Unit::class.java)
+    assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+  }
+
+  @Test
+  @Order(10)
+  @DisplayName("vi skal kunne slette et testresultat hvis status er noe annet enn 'Ferdig'")
   fun sletteTestresultat() {
+    val resultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
+    val endret = resultat.copy(status = ResultatManuellKontroll.Status.UnderArbeid)
+    restTemplate.put(location, endret)
+
     restTemplate.delete(location)
     val resultatForSak =
         restTemplate.getForObject("/testresultat?sakId=$sakId", ResultatForSak::class.java)!!
