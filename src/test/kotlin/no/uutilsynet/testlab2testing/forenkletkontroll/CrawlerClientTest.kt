@@ -47,14 +47,14 @@ class CrawlerClientTest {
         listOf(
             Testregel(
                 1,
-                TestConstants.testregelSchemaForenklet,
+                TestConstants.testregelSchemaAutomatisk,
                 1,
                 TestConstants.name,
                 1,
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelModus.forenklet,
+                TestregelModus.automatisk,
                 TestlabLocale.nb,
                 1,
                 1,

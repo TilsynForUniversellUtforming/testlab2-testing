@@ -7,7 +7,7 @@ import no.uutilsynet.testlab2testing.krav.WcagSamsvarsnivaa
 import no.uutilsynet.testlab2testing.testregel.TestConstants.modus
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelCreateRequestBody
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaAutomatisk
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.boot.test.web.client.postForEntity
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -78,9 +77,9 @@ class TestregelIntegrationTests(
             "/v1/testreglar",
             mapOf(
                 "kravId" to "1",
-                "testregelSchema" to testregelSchemaForenklet,
+                "testregelSchema" to testregelSchemaAutomatisk,
                 "name" to name,
-                "type" to "forenklet"),
+                "type" to "automatisk"),
             String::class.java)
 
     Assertions.assertThat(errorResponse.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
@@ -138,7 +137,7 @@ class TestregelIntegrationTests(
     fun getTestregel() {
       val testregel = restTemplate.getForObject(location, Testregel::class.java)
       Assertions.assertThat(testregel.kravId).isEqualTo(testregelTestKravId)
-      Assertions.assertThat(testregel.testregelSchema).isEqualTo(testregelSchemaForenklet)
+      Assertions.assertThat(testregel.testregelSchema).isEqualTo(testregelSchemaAutomatisk)
       Assertions.assertThat(testregel.namn).isEqualTo(name)
     }
 

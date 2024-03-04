@@ -27,7 +27,7 @@ class RegelsettValidatorsTest {
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelModus.forenklet,
+                TestregelModus.automatisk,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -43,7 +43,7 @@ class RegelsettValidatorsTest {
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelModus.forenklet,
+                TestregelModus.automatisk,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -51,7 +51,7 @@ class RegelsettValidatorsTest {
                 "QW-ACT-R13",
                 1))
     val testregelIdList = listOf(1, 2)
-    val regelsettType = TestregelModus.forenklet
+    val regelsettType = TestregelModus.automatisk
 
     assertTrue(validateRegelsettTestreglar(testregelIdList, regelsettType, testregelList).isSuccess)
   }
@@ -113,7 +113,7 @@ class RegelsettValidatorsTest {
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelModus.forenklet,
+                TestregelModus.automatisk,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -129,7 +129,7 @@ class RegelsettValidatorsTest {
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelModus.forenklet,
+                TestregelModus.automatisk,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -145,7 +145,7 @@ class RegelsettValidatorsTest {
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelModus.forenklet,
+                TestregelModus.automatisk,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -154,7 +154,7 @@ class RegelsettValidatorsTest {
                 1),
         )
     val testregelIdList = listOf(1, 2)
-    val regelsettType = TestregelModus.forenklet
+    val regelsettType = TestregelModus.automatisk
 
     val validation = validateRegelsettTestreglar(testregelIdList, regelsettType, testregelList)
 
@@ -175,7 +175,7 @@ class RegelsettValidatorsTest {
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelModus.forenklet,
+                TestregelModus.automatisk,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -199,7 +199,7 @@ class RegelsettValidatorsTest {
                 "QW-ACT-R13",
                 1))
     val testregelIdList = listOf(1, 2)
-    val regelsettType = TestregelModus.forenklet
+    val regelsettType = TestregelModus.automatisk
 
     assertTrue(validateRegelsettTestreglar(testregelIdList, regelsettType, testregelList).isFailure)
   }
@@ -218,7 +218,7 @@ class RegelsettValidatorsTest {
                 TestregelStatus.publisert,
                 Instant.now(),
                 TestregelInnholdstype.nett,
-                TestregelModus.forenklet,
+                TestregelModus.automatisk,
                 TestlabLocale.nb,
                 1,
                 1,
@@ -227,7 +227,7 @@ class RegelsettValidatorsTest {
                 1),
         )
     val testregelIdList = listOf(1, 2)
-    val regelsettType = TestregelModus.forenklet
+    val regelsettType = TestregelModus.automatisk
 
     assertTrue(validateRegelsettTestreglar(testregelIdList, regelsettType, testregelList).isFailure)
   }

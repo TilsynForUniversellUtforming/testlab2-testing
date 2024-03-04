@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.testregel
 import java.time.Instant
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaAutomatisk
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
@@ -74,7 +74,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
             kravId = 1,
             status = TestregelStatus.publisert,
             type = TestregelInnholdstype.nett,
-            modus = TestregelModus.forenklet,
+            modus = TestregelModus.automatisk,
             spraak = TestlabLocale.nb,
             testregelSchema = "",
             innhaldstypeTesting = 1,
@@ -91,13 +91,13 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
 
     oldTestregel
         ?.copy(
-            kravId = testregelTestKravId, testregelSchema = testregelSchemaForenklet, namn = name)
+            kravId = testregelTestKravId, testregelSchema = testregelSchemaAutomatisk, namn = name)
         ?.let { testregelDAO.updateTestregel(it) }
 
     val updatedTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(updatedTestregel).isNotNull
     Assertions.assertThat(updatedTestregel?.kravId).isEqualTo(testregelTestKravId)
-    Assertions.assertThat(updatedTestregel?.testregelSchema).isEqualTo(testregelSchemaForenklet)
+    Assertions.assertThat(updatedTestregel?.testregelSchema).isEqualTo(testregelSchemaAutomatisk)
     Assertions.assertThat(updatedTestregel?.namn).isEqualTo(name)
   }
 
@@ -110,7 +110,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
             kravId = 1,
             status = TestregelStatus.publisert,
             type = TestregelInnholdstype.nett,
-            modus = TestregelModus.forenklet,
+            modus = TestregelModus.automatisk,
             spraak = TestlabLocale.nb,
             datoSistEndra = Instant.now().minusSeconds(61),
             testregelSchema = "",
@@ -130,13 +130,13 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
 
     oldTestregel
         ?.copy(
-            kravId = testregelTestKravId, testregelSchema = testregelSchemaForenklet, namn = name)
+            kravId = testregelTestKravId, testregelSchema = testregelSchemaAutomatisk, namn = name)
         ?.let { testregelDAO.updateTestregel(it) }
 
     val updatedTestregel = testregelDAO.getTestregel(id)
     Assertions.assertThat(updatedTestregel).isNotNull
     Assertions.assertThat(updatedTestregel?.kravId).isEqualTo(testregelTestKravId)
-    Assertions.assertThat(updatedTestregel?.testregelSchema).isEqualTo(testregelSchemaForenklet)
+    Assertions.assertThat(updatedTestregel?.testregelSchema).isEqualTo(testregelSchemaAutomatisk)
     Assertions.assertThat(updatedTestregel?.namn).isEqualTo(name)
 
     val newDate = updatedTestregel?.datoSistEndra
@@ -152,9 +152,9 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
               kravId = testregelTestKravId,
               status = TestregelStatus.publisert,
               type = TestregelInnholdstype.nett,
-              modus = TestregelModus.forenklet,
+              modus = TestregelModus.automatisk,
               spraak = TestlabLocale.nb,
-              testregelSchema = testregelSchemaForenklet,
+              testregelSchema = testregelSchemaAutomatisk,
               innhaldstypeTesting = 1,
               tema = 1,
               testobjekt = 1,

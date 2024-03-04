@@ -193,7 +193,7 @@ class RegelsettIntegrationTest(
   fun updateRegelsettIllegalTestregelType() {
     val location = createDefaultRegelsett()
     val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
-    assertThat(regelsett.modus).isEqualTo(TestregelModus.forenklet)
+    assertThat(regelsett.modus).isEqualTo(TestregelModus.automatisk)
 
     val response =
         restTemplate.exchange(

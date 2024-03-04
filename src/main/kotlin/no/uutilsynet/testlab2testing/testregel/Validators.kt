@@ -7,7 +7,7 @@ fun validateSchema(testregelSchema: String?, modus: TestregelModus): Result<Stri
     throw IllegalArgumentException("Testregel-skjema kan ikkje vera blank")
   }
 
-  if (modus == TestregelModus.forenklet &&
+  if (modus == TestregelModus.automatisk &&
       !testregelSchema.matches("^(QW-ACT-R)[0-9]{1,2}$".toRegex())) {
     throw IllegalArgumentException("QualWeb regel id må vera på formen QW-ACT-RXX")
   } else if (modus == TestregelModus.manuell && validateJSONString(testregelSchema).isFailure) {
