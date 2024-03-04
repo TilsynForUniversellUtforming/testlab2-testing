@@ -1,7 +1,9 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
+import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -11,14 +13,18 @@ class ResultatResource(
     val resultatService: ResultatService
 ) {
 
+  private val logger = LoggerFactory.getLogger(ResultatResource::class.java)
+
   @GetMapping
   fun getResultatList(
-      @RequestParam sakId: Int?,
+      @RequestParam testgrunnlagId: Int?,
       @RequestParam maalingId: Int?,
-      @RequestParam loeysingId: Int?
+      @RequestParam loeysingId: Int?,
+      @RequestParam testregelNoekkel: String?
   ): List<TestresultatDetaljert> {
-    if (sakId != null) {
-      return resultatService.getResulatForManuellKontroll(sakId)
+    logger.debug("Henter resultat for testgrunnlagId: $testgrunnlagId, maalingId: $maalingId")
+    if (testgrunnlagId != null) {
+      return resultatService.getResulatForManuellKontroll(testgrunnlagId, testregelNoekkel)
     }
     if (maalingId != null) {
       return resultatService.getResultatForAutomatiskMaaling(maalingId, loeysingId)
@@ -31,6 +37,6 @@ class ResultatResource(
       aggregeringService.saveAggregertResultatTestregel(testgrunnlagId)
 
   @GetMapping("/aggregert/{testgrunnlagId}")
-  fun getAggregertResultat(@PathVariable testgrunnlagId: Int) =
+  fun getAggregertResultat(@PathVariable testgrunnlagId: Int): List<AggregertResultatTestregel> =
       aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
 }
