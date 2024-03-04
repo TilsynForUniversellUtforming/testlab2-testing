@@ -78,14 +78,19 @@ class TestResultatResource(
   @DeleteMapping("/{id}")
   fun deleteTestResultat(@PathVariable id: Int): ResponseEntity<Unit> {
     logger.info("Sletter testresultat med id $id")
-    return testResultatDAO
-        .delete(id)
-        .fold(
-            onSuccess = { ResponseEntity.ok().build() },
-            onFailure = {
-              logger.error("Feil ved sletting av testresultat", it)
-              ResponseEntity.internalServerError().build()
-            })
+    val resultat = testResultatDAO.getTestResultat(id).getOrThrow()
+    return if (resultat.status == ResultatManuellKontroll.Status.Ferdig) {
+      ResponseEntity.badRequest().build()
+    } else {
+      testResultatDAO
+          .delete(id)
+          .fold(
+              onSuccess = { ResponseEntity.ok().build() },
+              onFailure = {
+                logger.error("Feil ved sletting av testresultat", it)
+                ResponseEntity.internalServerError().build()
+              })
+    }
   }
 
   @GetMapping("/aggregert/{testgrunnlagId}")
