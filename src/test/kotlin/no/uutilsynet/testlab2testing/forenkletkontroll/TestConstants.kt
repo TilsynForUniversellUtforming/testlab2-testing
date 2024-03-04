@@ -4,8 +4,11 @@ import java.net.URI
 import java.time.Instant
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.testregel.*
 import no.uutilsynet.testlab2testing.testregel.TestConstants
+import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
+import no.uutilsynet.testlab2testing.testregel.TestregelModus
+import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 
 object TestConstants {
   val uutilsynetLoeysing =
@@ -25,12 +28,12 @@ object TestConstants {
           TestregelStatus.publisert,
           Instant.now(),
           TestregelInnholdstype.nett,
-          TestregelModus.forenklet,
+          TestregelModus.automatisk,
           TestlabLocale.nb,
           1,
           1,
           "QW-ACT-12",
-          TestConstants.testregelSchemaForenklet,
+          TestConstants.testregelSchemaAutomatisk,
           1)
 
   val testRegelList = listOf(testregel)

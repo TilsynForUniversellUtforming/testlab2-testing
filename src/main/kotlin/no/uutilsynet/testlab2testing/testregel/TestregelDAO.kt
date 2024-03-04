@@ -199,7 +199,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           DataClassRowMapper.newInstance(Testregel::class.java))
 
   fun setTestregelId(testregelInit: TestregelInit): String {
-    return if (testregelInit.modus == TestregelModus.forenklet) {
+    return if (testregelInit.modus == TestregelModus.automatisk) {
       testregelInit.testregelSchema
     } else testregelInit.namn
   }

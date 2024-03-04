@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.testregel
 import java.time.Instant
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
-import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaForenklet
+import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaAutomatisk
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaManuell
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
@@ -29,12 +29,12 @@ class TestregelValidatorsTest {
               TestregelStatus.publisert,
               Instant.now(),
               TestregelInnholdstype.nett,
-              TestregelModus.forenklet,
+              TestregelModus.automatisk,
               TestlabLocale.nb,
               1,
               1,
               "",
-              testregelSchemaForenklet,
+              testregelSchemaAutomatisk,
               1)
           .validateTestregel()
     }
@@ -81,12 +81,12 @@ class TestregelValidatorsTest {
               TestregelStatus.publisert,
               Instant.now(),
               TestregelInnholdstype.nett,
-              TestregelModus.forenklet,
+              TestregelModus.automatisk,
               TestlabLocale.nb,
               1,
               1,
               "",
-              testregelSchemaForenklet,
+              testregelSchemaAutomatisk,
               1)
       assertTrue(testregel.validateTestregel().isFailure)
     }
@@ -104,7 +104,7 @@ class TestregelValidatorsTest {
               TestregelStatus.publisert,
               Instant.now(),
               TestregelInnholdstype.nett,
-              TestregelModus.forenklet,
+              TestregelModus.automatisk,
               TestlabLocale.nb,
               1,
               1,
@@ -142,7 +142,7 @@ class TestregelValidatorsTest {
   @DisplayName(
       "TestregelSchema for forenklet kontroll må være på act-regel format og være riktig formattert")
   fun testregelSchemaActError() {
-    val schema = validateSchema("qw-act-r12", TestregelModus.forenklet)
+    val schema = validateSchema("qw-act-r12", TestregelModus.automatisk)
     assertTrue(schema.isFailure)
   }
 
@@ -150,7 +150,7 @@ class TestregelValidatorsTest {
   @DisplayName(
       "TestregelSchema for forenklet kontroll med riktig act-regel format skal være gyldig")
   fun testregelSchemaActSuccess() {
-    val schema = validateSchema(testregelSchemaForenklet, TestregelModus.forenklet)
+    val schema = validateSchema(testregelSchemaAutomatisk, TestregelModus.automatisk)
     assertTrue(schema.isSuccess)
   }
 
@@ -180,7 +180,7 @@ class TestregelValidatorsTest {
         "no.uutilsynet.testlab2testing.testregel.TestregelValidatorsTest#invalidParamsSource")
     @DisplayName("TestregelSchema være definert for forenklet kontroll")
     fun testregelSchemaErrorForenklet(invalidParam: String?) {
-      val schema = validateSchema(invalidParam, TestregelModus.forenklet)
+      val schema = validateSchema(invalidParam, TestregelModus.automatisk)
       assertTrue(schema.isFailure)
     }
 
