@@ -337,11 +337,8 @@ class AggregeringService(
   }
 
   fun getKravIdFraTestregel(id: Int): Int {
-    val krav = testregelDAO.getTestregel(id)?.krav
-    if (krav != null) {
-      return kravregisterClient.getKravIdFromSuksesskritterium(krav).getOrThrow()
-    }
-    throw RuntimeException("Fant ikkje krav for testregel med id $id")
+    return testregelDAO.getTestregel(id)?.kravId
+        ?: throw RuntimeException("Fant ikkje krav for testregel med id $id")
   }
 
   fun calculateUtfall(utfall: List<String?>): String {

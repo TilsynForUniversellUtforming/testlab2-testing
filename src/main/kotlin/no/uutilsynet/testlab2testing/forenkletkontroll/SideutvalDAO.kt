@@ -6,6 +6,7 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -304,9 +305,10 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun getNettside(nettsideId: Int): Sak.Nettside? {
-    return jdbcTemplate.queryForObject(
-        "select * from nettside where id = :id",
-        mapOf("id" to nettsideId),
-        Sak.Nettside::class.java)
+    return DataAccessUtils.singleResult(
+        jdbcTemplate.query(
+            "select id,type,url, beskrivelse,begrunnelse from nettside where id = :id",
+            mapOf("id" to nettsideId),
+            DataClassRowMapper.newInstance(Sak.Nettside::class.java)))
   }
 }

@@ -5,10 +5,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingResource
-import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.TestResultat
+import no.uutilsynet.testlab2testing.forenkletkontroll.*
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.Testregel
@@ -54,27 +51,41 @@ class ResultatService(
     return emptyList()
   }
 
-  fun getResulatForManuellKontroll(sakId: Int): List<TestresultatDetaljert> {
+  fun getResulatForManuellKontroll(
+      sakId: Int,
+      testregelNoekkel: String?
+  ): List<TestresultatDetaljert> {
     val testresultat = testResultatDAO.getManyResults(sakId).getOrThrow()
 
-    return testresultat.map {
-      val testregel: Testregel = getTestregel(it.testregelId)
-      // it.testregel er databaseId ikkje feltet testregelId i db
-      TestresultatDetaljert(
-          it.id,
-          it.loeysingId,
-          it.testregelId,
-          testregel.testregelId,
-          it.sakId,
-          URI(getUrlFromNettside(it.nettsideId)).toURL(),
-          listOf(testregel.krav),
-          testVartUtfoertToLocalTime(it.testVartUtfoert),
-          it.elementUtfall,
-          it.elementResultat,
-          TestresultatDetaljert.ElementOmtale(
-              htmlCode = null, pointer = null, description = it.elementOmtale),
-          it.brukar)
+    val filterTestregelId = getTestregelIdFromSchema(testregelNoekkel.toString())
+
+    return testresultat
+        .filter { filterByTestregel(it.testregelId, filterTestregelId) }
+        .map {
+          val testregel: Testregel = getTestregel(it.testregelId)
+          // it.testregel er databaseId ikkje feltet testregelId i db
+          TestresultatDetaljert(
+              it.id,
+              it.loeysingId,
+              it.testregelId,
+              testregel.testregelId,
+              it.sakId,
+              URI(getUrlFromNettside(it.nettsideId)).toURL(),
+              getSuksesskriteriumFromTestregel(testregel.kravId),
+              testVartUtfoertToLocalTime(it.testVartUtfoert),
+              it.elementUtfall,
+              it.elementResultat,
+              TestresultatDetaljert.ElementOmtale(
+                  htmlCode = null, pointer = null, description = it.elementOmtale),
+              it.brukar)
+        }
+  }
+
+  fun filterByTestregel(testregelId: Int, testregelIdFilter: Int?): Boolean {
+    if (testregelIdFilter != null) {
+      return testregelId == testregelIdFilter
     }
+    return true
   }
 
   fun getTestregel(idTestregel: Int): Testregel {
@@ -98,9 +109,7 @@ class ResultatService(
   }
 
   fun getSuksesskriteriumFromTestregel(kravId: Int): List<String> {
-    return kravregisterClient.getWcagKrav(kravId).getOrNull()?.suksesskriterium?.let { it ->
-      listOf(it)
-    }
+    return kravregisterClient.getWcagKrav(kravId).getOrNull()?.suksesskriterium?.let { listOf(it) }
         ?: emptyList()
   }
 }
