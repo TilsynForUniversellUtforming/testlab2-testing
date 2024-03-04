@@ -75,6 +75,19 @@ class TestResultatResource(
   fun createAggregertResultat(@PathVariable testgrunnlagId: Int) =
       testResultatDAO.saveAggregertResultatTestregel(testgrunnlagId)
 
+  @DeleteMapping("/{id}")
+  fun deleteTestResultat(@PathVariable id: Int): ResponseEntity<Unit> {
+    logger.info("Sletter testresultat med id $id")
+    return testResultatDAO
+        .delete(id)
+        .fold(
+            onSuccess = { ResponseEntity.ok().build() },
+            onFailure = {
+              logger.error("Feil ved sletting av testresultat", it)
+              ResponseEntity.internalServerError().build()
+            })
+  }
+
   @GetMapping("/aggregert/{testgrunnlagId}")
   fun getAggregertResultat(@PathVariable testgrunnlagId: Int) =
       aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
