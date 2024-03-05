@@ -130,15 +130,15 @@ class TestResultatDAO(
     testResultat.svar.forEach { saveSvar(testResultat.id, it) }
   }
 
-    fun delete(id: Int): Result<Unit> = runCatching {
-        jdbcTemplate.update(
-            """
+  fun delete(id: Int): Result<Unit> = runCatching {
+    jdbcTemplate.update(
+        """
             delete from testresultat
             where id = :id
         """
-                .trimIndent(),
-            mapOf("id" to id))
-    }
+            .trimIndent(),
+        mapOf("id" to id))
+  }
 
   fun saveSvar(testresultatId: Int, stegOgSvar: ResultatManuellKontroll.Svar): Result<Unit> =
       runCatching {

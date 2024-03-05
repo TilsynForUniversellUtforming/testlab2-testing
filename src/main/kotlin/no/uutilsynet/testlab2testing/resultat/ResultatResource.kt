@@ -1,9 +1,11 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.net.URI
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import org.slf4j.LoggerFactory
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -33,8 +35,18 @@ class ResultatResource(
   }
 
   @PostMapping("/aggregert/{testgrunnlagId}")
-  fun createAggregertResultat(@PathVariable testgrunnlagId: Int) =
-      aggregeringService.saveAggregertResultatTestregel(testgrunnlagId)
+  fun createAggregertResultat(@PathVariable testgrunnlagId: Int): ResponseEntity<Any> =
+      aggregeringService
+          .saveAggregertResultatTestregel(testgrunnlagId)
+          .fold(
+              onSuccess = {
+                return ResponseEntity.created(URI.create("/resultat/aggregert/${testgrunnlagId}"))
+                    .build()
+              },
+              onFailure = {
+                logger.error("Feil ved oppretting av aggregert resultat", it)
+                ResponseEntity.internalServerError().build()
+              })
 
   @GetMapping("/aggregert/{testgrunnlagId}")
   fun getAggregertResultat(@PathVariable testgrunnlagId: Int): List<AggregertResultatTestregel> =
