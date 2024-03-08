@@ -14,7 +14,7 @@ data class TestresultatDetaljert(
     val suksesskriterium: List<String>,
     val testVartUtfoert: LocalDateTime?,
     val elementUtfall: String?,
-    val elementResultat: String?,
+    val elementResultat: TestresultatUtfall?,
     val elementOmtale: ElementOmtale?,
     val brukarId: Brukar?
 ) {

@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 import java.time.Instant
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
 import org.springframework.http.ResponseEntity
@@ -107,7 +108,7 @@ class TestResultatResource(
       val nettsideId: Int,
       val brukar: Brukar,
       val elementOmtale: String? = null,
-      val elementResultat: String? = null,
+      val elementResultat: TestresultatUtfall? = null,
       val elementUtfall: String? = null,
       val testVartUtfoert: Instant? = null
   )

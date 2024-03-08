@@ -113,7 +113,7 @@ class TestResultatDAO(
             .trimIndent(),
         mapOf(
             "elementOmtale" to testResultat.elementOmtale,
-            "elementResultat" to testResultat.elementResultat,
+            "elementResultat" to testResultat.elementResultat?.name,
             "elementUtfall" to testResultat.elementUtfall,
             "testVartUtfoert" to testVartUtfoert,
             "status" to testResultat.status.name,

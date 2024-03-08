@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
+import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 
 data class TestResultat(
     val suksesskriterium: List<String>,
@@ -15,7 +16,7 @@ data class TestResultat(
     val sideNivaa: Int,
     val testVartUtfoert: LocalDateTime,
     val elementUtfall: String,
-    val elementResultat: String,
+    val elementResultat: TestresultatUtfall,
     val elementOmtale: TestresultatDetaljert.ElementOmtale?
 ) : AutotesterTestresultat {
   data class ACTElement(val htmlCode: String, val pointer: String)
@@ -31,7 +32,7 @@ data class TestResultat(
         sideNivaa: Int,
         testVartUtfoert: String,
         elementUtfall: String,
-        elementResultat: String,
+        elementResultat: TestresultatUtfall,
         elementOmtale: List<TestresultatDetaljert.ElementOmtale>? = null
     ): TestResultat {
       return TestResultat(

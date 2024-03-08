@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.aggregering
 
 import java.net.URI
+import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.forenkletkontroll.AutoTesterClient
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestKoeyring
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
@@ -303,11 +304,13 @@ class AggregeringService(
         .map {
           val testresultat = it.value
 
-          val talElementBrot = testresultat.count { it.elementResultat == "brot" }
-          val talElementSamsvar = testresultat.count { it.elementResultat == "samsvar" }
-          val talElementVarsel = testresultat.count { it.elementResultat == "varsel" }
+          val talElementBrot = testresultat.count { it.elementResultat == TestresultatUtfall.brot }
+          val talElementSamsvar =
+              testresultat.count { it.elementResultat == TestresultatUtfall.samsvar }
+          val talElementVarsel =
+              testresultat.count { it.elementResultat == TestresultatUtfall.varsel }
           val talElementIkkjeForekomst =
-              testresultat.count { it.elementResultat == "ikkjeForekomst" }
+              testresultat.count { it.elementResultat == TestresultatUtfall.ikkjeforekomst }
 
           val (talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst) =
               countSideUtfall(testresultat)
@@ -342,10 +345,11 @@ class AggregeringService(
         .groupBy { it.nettsideId }
         .entries
         .forEach { _ ->
-          when (calculateUtfall(testresultat.map { it.elementUtfall })) {
-            "brudd" -> talSiderBrot += 1
-            "samsvar" -> talSiderSamsvar += 1
-            "ikkjeForekomst" -> talSiderIkkjeForekomst += 1
+          when (calculateUtfall(testresultat.map { it.elementResultat })) {
+            TestresultatUtfall.brot -> talSiderBrot += 1
+            TestresultatUtfall.samsvar -> talSiderSamsvar += 1
+            TestresultatUtfall.ikkjeforekomst -> talSiderIkkjeForekomst += 1
+            TestresultatUtfall.varsel -> TODO()
           }
         }
     return TalUtfall(talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst)
@@ -356,16 +360,16 @@ class AggregeringService(
         ?: throw RuntimeException("Fant ikkje krav for testregel med id $id")
   }
 
-  fun calculateUtfall(utfall: List<String?>): String {
-    if (utfall.contains("brudd")) {
-      return "brudd"
+  fun calculateUtfall(utfall: List<TestresultatUtfall?>): TestresultatUtfall {
+    if (utfall.contains(TestresultatUtfall.brot)) {
+      return TestresultatUtfall.brot
     }
-    if (utfall.contains("varsel")) {
-      return "varsel"
+    if (utfall.contains(TestresultatUtfall.varsel)) {
+      return TestresultatUtfall.varsel
     }
-    if (utfall.contains("samsvar")) {
-      return "samsvar"
+    if (utfall.contains(TestresultatUtfall.samsvar)) {
+      return TestresultatUtfall.samsvar
     }
-    return "ikkjeForekomst"
+    return TestresultatUtfall.ikkjeforekomst
   }
 }
