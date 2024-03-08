@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 
 data class ResultatManuellKontroll(
     val id: Int,
@@ -11,7 +12,7 @@ data class ResultatManuellKontroll(
     val nettsideId: Int,
     val brukar: Brukar,
     val elementOmtale: String?,
-    val elementResultat: String?,
+    val elementResultat: TestresultatUtfall?,
     val elementUtfall: String?,
     val svar: List<Svar>,
     val testVartUtfoert: Instant?,
