@@ -20,9 +20,9 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Transactional
   fun saveCrawlResultat(crawlResultat: CrawlResultat, maalingId: Int) {
 
-    if (crawlResultat is CrawlResultat.Ferdig) {
-      if (crawlresultatAlreadyFinished(crawlResultat, maalingId)) return
-    }
+    if (crawlResultat is CrawlResultat.Ferdig &&
+        crawlresultatAlreadyFinished(crawlResultat, maalingId))
+        return
 
     jdbcTemplate.update(
         "delete from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id",
@@ -246,7 +246,7 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return crawlResultat
   }
 
-  fun findNettsiderBySakAndLoeysing(sakId: Int, loeysingId: Int): MutableList<Sak.Nettside> =
+  fun findNettsiderBySakAndLoeysing(sakId: Int, loeysingId: Int): List<Sak.Nettside> =
       jdbcTemplate.query(
           """
                     select id, type, url, beskrivelse, begrunnelse
@@ -262,6 +262,7 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           mapOf("sak_id" to sakId, "loeysing_id" to loeysingId),
           DataClassRowMapper.newInstance(Sak.Nettside::class.java))
 
+  @Transactional
   fun deleteNettsiderForSak(sakId: Int) {
     jdbcTemplate.update(
         "delete from sak_loeysing_nettside where sak_id = :sak_id", mapOf("sak_id" to sakId))
@@ -278,6 +279,7 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         mapOf("sak_id" to sakId))
   }
 
+  @Transactional
   fun insertNettsiderForSak(sakId: Int, loeysingId: Int, nettsider: List<Sak.Nettside>) {
     nettsider.forEach { nettside ->
       val nettsideId =

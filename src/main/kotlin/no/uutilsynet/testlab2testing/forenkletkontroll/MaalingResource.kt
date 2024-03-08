@@ -174,7 +174,7 @@ class MaalingResource(
               })
           ?: ResponseEntity.notFound().build()
 
-  fun getTestresultat(maalingId: Int, loeysingId: Int?): Result<List<AutotesterTestresultat>>? {
+  fun getTestresultat(maalingId: Int, loeysingId: Int?): Result<List<AutotesterTestresultat>> {
     return runBlocking(Dispatchers.IO) {
       maalingDAO
           .getMaaling(maalingId)
@@ -185,6 +185,7 @@ class MaalingResource(
           }
           ?.toSingleResult()
           ?.map { it.values.flatten() }
+          ?: Result.failure(NullPointerException("Testresultat vart ikkje funne"))
     }
   }
 
