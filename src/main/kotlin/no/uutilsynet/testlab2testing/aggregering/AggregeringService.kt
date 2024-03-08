@@ -269,6 +269,7 @@ class AggregeringService(
     }
   }
 
+  @Transactional
   fun saveAggregertResultatTestregel(sakId: Int): Result<Boolean> {
     runCatching {
           val eksisterande = aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(sakId)
@@ -305,7 +306,8 @@ class AggregeringService(
           val talElementBrot = testresultat.count { it.elementResultat == "brot" }
           val talElementSamsvar = testresultat.count { it.elementResultat == "samsvar" }
           val talElementVarsel = testresultat.count { it.elementResultat == "varsel" }
-          val talElementIkkjeForekomst = testresultat.count { it.elementUtfall == "ikkjeForekomst" }
+          val talElementIkkjeForekomst =
+              testresultat.count { it.elementResultat == "ikkjeForekomst" }
 
           val (talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst) =
               countSideUtfall(testresultat)
@@ -331,7 +333,7 @@ class AggregeringService(
         }
   }
 
-  private fun countSideUtfall(testresultat: List<ResultatManuellKontroll>): Triple<Int, Int, Int> {
+  private fun countSideUtfall(testresultat: List<ResultatManuellKontroll>): TalUtfall {
     var talSiderBrot = 0
     var talSiderSamsvar = 0
     var talSiderIkkjeForekomst = 0
@@ -340,15 +342,13 @@ class AggregeringService(
         .groupBy { it.nettsideId }
         .entries
         .forEach { _ ->
-          run {
-            when (calculateUtfall(testresultat.map { it.elementUtfall })) {
-              "brudd" -> talSiderBrot += 1
-              "samsvar" -> talSiderSamsvar += 1
-              "ikkjeForekomst" -> talSiderIkkjeForekomst += 1
-            }
+          when (calculateUtfall(testresultat.map { it.elementUtfall })) {
+            "brudd" -> talSiderBrot += 1
+            "samsvar" -> talSiderSamsvar += 1
+            "ikkjeForekomst" -> talSiderIkkjeForekomst += 1
           }
         }
-    return Triple(talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst)
+    return TalUtfall(talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst)
   }
 
   fun getKravIdFraTestregel(id: Int): Int {
