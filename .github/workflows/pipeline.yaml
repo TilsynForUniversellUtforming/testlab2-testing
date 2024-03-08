@@ -59,7 +59,7 @@ jobs:
                 "password": "${{ secrets.PAT }}"
             }]
       - name: Build, test and push image
-        run: mvn --batch-mode --update-snapshots verify jib:build
+        run: mvn --batch-mode --update-snapshots verify jib:build -Dspring.profiles.active=test
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/postgres
           SPRING_DATASOURCE_USERNAME: postgres
