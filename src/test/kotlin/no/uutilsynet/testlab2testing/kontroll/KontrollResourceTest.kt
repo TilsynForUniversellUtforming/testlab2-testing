@@ -16,17 +16,15 @@ class KontrollResourceTest {
   @Test
   @DisplayName("når vi oppretter en kontroll så skal vi få en URI som resultat i location")
   fun createKontroll() {
+    val body =
+        mapOf(
+            "tittel" to "testkontroll",
+            "saksbehandler" to "Ola Nordmann",
+            "sakstype" to "Forvaltningssak",
+            "arkivreferanse" to "1234")
     given()
         .port(port)
-        .body(
-            """
-          {
-            "tittel": "testkontroll",
-            "saksbehandler": "Ola Nordmann",
-            "sakstype": "Forvaltningssak",
-            "arkivreferanse": "1234"
-          }
-          """)
+        .body(body)
         .contentType("application/json")
         .post("/kontroller")
         .then()
