@@ -7,8 +7,8 @@ data class OpprettetKontroll(
     val sakstype: Sakstype,
     val arkivreferanse: String,
 ) {
-    enum class Sakstype {
-        Forvaltningssak,
-        Arkivsak
-    }
+  enum class Sakstype {
+    Forvaltningssak,
+    Arkivsak
+  }
 }
