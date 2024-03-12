@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
-import no.uutilsynet.testlab2testing.brukar.BrukarDAO
+import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.simpleflatmapper.jdbc.spring.JdbcTemplateMapperFactory
@@ -14,15 +14,16 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class TestResultatDAO(
     val jdbcTemplate: NamedParameterJdbcTemplate,
-    val brukarDAO: BrukarDAO,
     val testregelDAO: TestregelDAO,
     val kravregisterClient: KravregisterClient,
-    val aggregeringDAO: AggregeringDAO
+    val aggregeringDAO: AggregeringDAO,
+    val brukarService: BrukarService
 ) {
   @Transactional
   fun save(createTestResultat: TestResultatResource.CreateTestResultat): Result<Int> {
     return runCatching {
-      val brukarId: Int = brukarDAO.saveBrukar(createTestResultat.brukar)
+      val brukarId: Int =
+          brukarService.getUserId() ?: throw RuntimeException("No authenticated user")
       jdbcTemplate.queryForObject(
           """
         insert into testresultat (sak_id, loeysing_id, testregel_id, nettside_id, brukar_id, element_omtale, element_resultat,

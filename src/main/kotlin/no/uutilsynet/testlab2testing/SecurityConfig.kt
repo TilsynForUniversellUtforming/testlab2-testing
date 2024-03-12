@@ -38,6 +38,7 @@ class SecurityConfig {
     http {
       authorizeHttpRequests { authorize(anyRequest, permitAll) }
       cors {}
+      csrf { disable() }
     }
     return http.build()
   }
@@ -49,8 +50,7 @@ class SecurityConfig {
         listOf(
             "https://user.difi.no",
             "https://test-testlab.uutilsynet.no",
-            "https://beta-testlab.uutilsynet.no",
-            "https://user.difi.no")
+            "https://beta-testlab.uutilsynet.no")
     val source = UrlBasedCorsConfigurationSource()
     source.registerCorsConfiguration("/**", configuration)
     return source

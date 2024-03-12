@@ -23,4 +23,34 @@ class BrukarDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         mapOf("brukarnamn" to brukar.brukarnamn, "namn" to brukar.namn),
         Int::class.java)!!
   }
+
+  fun getBrukar(brukarnamn: String): Brukar? {
+    return jdbcTemplate
+        .query(
+            """
+                select brukarnamn, namn
+                from brukar
+                where brukarnamn = :brukarnamn
+            """
+                .trimIndent(),
+            mapOf("brukarnamn" to brukarnamn)) { rs, _ ->
+              Brukar(rs.getString("brukarnamn"), rs.getString("namn"))
+            }
+        .firstOrNull()
+  }
+
+  fun getBrukarId(brukarnamn: String): Int? {
+    return jdbcTemplate
+        .query(
+            """
+                    select id
+                    from brukar
+                    where brukarnamn = :brukarnamn
+                """
+                .trimIndent(),
+            mapOf("brukarnamn" to brukarnamn)) { rs, _ ->
+              rs.getInt("id")
+            }
+        .firstOrNull()
+  }
 }
