@@ -10,7 +10,9 @@ import org.springframework.stereotype.Component
 @Component
 class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
-  fun createAggregertResultatTestregel(aggregertResultatTestregel: AggregeringPerTestregelDTO) {
+  fun createAggregertResultatTestregel(
+      aggregertResultatTestregel: AggregeringPerTestregelDTO
+  ): Int {
 
     val sql =
         "insert into aggregering_testregel(maaling_id,loeysing_id,suksesskriterium,fleire_suksesskriterium,testregel_id,tal_element_samsvar,tal_element_brot,tal_element_varsel,tal_element_ikkje_forekomst,tal_sider_samsvar,tal_sider_brot,tal_sider_ikkje_forekomst,testregel_gjennomsnittleg_side_brot_prosent,testregel_gjennomsnittleg_side_samsvar_prosent,testgrunnlag_id) " +
@@ -69,12 +71,12 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 aggregertResultatTestregel.testgrunnlagId,
                 java.sql.Types.INTEGER)
 
-    jdbcTemplate.update(sql, parameterSource)
+    return jdbcTemplate.update(sql, parameterSource)
   }
 
   fun createAggregertResultatSuksesskriterium(
       aggregertResultatSuksesskriterium: AggregeringPerSuksesskriteriumDTO
-  ) {
+  ): Int {
 
     val sql =
         """insert into aggregering_suksesskriterium
@@ -90,10 +92,10 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "tal_sider_brot" to aggregertResultatSuksesskriterium.talSiderBrot,
             "tal_sider_ikkje_forekomst" to aggregertResultatSuksesskriterium.talSiderIkkjeForekomst)
 
-    jdbcTemplate.update(sql, parameterMap)
+    return jdbcTemplate.update(sql, parameterMap)
   }
 
-  fun createAggregeringSide(aggregertResultatSide: AggregeringPerSideDTO) {
+  fun createAggregeringSide(aggregertResultatSide: AggregeringPerSideDTO): Int {
     val sql =
         """insert into aggregering_side
               (maaling_id, loeysing_id, side,
@@ -112,7 +114,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "tal_element_varsel" to aggregertResultatSide.talElementVarsel,
             "tal_element_ikkje_forekomst" to aggregertResultatSide.talElementIkkjeForekomst)
 
-    jdbcTemplate.update(sql, parameterMap)
+    return jdbcTemplate.update(sql, parameterMap)
   }
 
   fun getAggregertResultatTestregelForMaaling(maalingId: Int): List<AggregeringPerTestregelDTO> {

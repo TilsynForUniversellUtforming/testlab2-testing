@@ -53,7 +53,7 @@ class MaalingResourceMockedTest {
 
   @MockBean private lateinit var aggregeringService: AggregeringService
 
-  @MockBean private lateinit var crawlresultatDAO: CrawlresultatDAO
+  @MockBean private lateinit var sideutvalDAO: SideutvalDAO
 
   private lateinit var maalingResource: MaalingResource
 
@@ -72,7 +72,7 @@ class MaalingResourceMockedTest {
             crawlerClient,
             autoTesterClient,
             aggregeringService,
-            crawlresultatDAO)
+            sideutvalDAO)
   }
 
   @Test
@@ -160,8 +160,7 @@ class MaalingResourceMockedTest {
 
     `when`(maalingDAO.getMaaling(id)).thenReturn(maaling)
     `when`(maalingDAO.save(maalingTesting)).thenReturn(Result.success(maalingTesting))
-    `when`(crawlresultatDAO.getCrawlResultatNettsider(id, uutilsynetLoeysing.id))
-        .thenReturn(nettsider)
+    `when`(sideutvalDAO.getCrawlResultatNettsider(id, uutilsynetLoeysing.id)).thenReturn(nettsider)
     `when`(testregelDAO.getTestreglarForMaaling(id)).thenReturn(Result.success(testregelList))
     `when`(loeysingsRegisterClient.getMany(listOf(uutilsynetLoeysing.id)))
         .thenReturn(Result.success(listOf(uutilsynetLoeysing)))

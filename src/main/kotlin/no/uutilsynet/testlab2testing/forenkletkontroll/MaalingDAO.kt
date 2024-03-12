@@ -44,7 +44,7 @@ class MaalingDAO(
     val jdbcTemplate: NamedParameterJdbcTemplate,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val aggregeringService: AggregeringService,
-    val crawlresultatDAO: CrawlresultatDAO
+    val sideutvalDAO: SideutvalDAO
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
@@ -213,7 +213,7 @@ class MaalingDAO(
       }
       crawling,
       kvalitetssikring -> {
-        val crawlResultat = crawlresultatDAO.getCrawlResultatForMaaling(id, loeysingList)
+        val crawlResultat = sideutvalDAO.getCrawlResultatForMaaling(id, loeysingList)
         if (status == crawling) {
           Crawling(this.id, this.navn, this.datoStart, crawlResultat)
         } else {
@@ -250,7 +250,7 @@ class MaalingDAO(
       maalingId: Int,
       loeysingList: List<Loeysing>
   ): List<TestKoeyring> {
-    val crawlResultat = crawlresultatDAO.getCrawlResultatForMaaling(maalingId, loeysingList)
+    val crawlResultat = sideutvalDAO.getCrawlResultatForMaaling(maalingId, loeysingList)
     return jdbcTemplate.query<TestKoeyring>(
         """
               select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, t.lenker_testa, url_fullt_resultat, url_brot,url_agg_tr,url_agg_sk,url_agg_side,url_agg_side_tr,url_agg_loeysing
@@ -357,10 +357,10 @@ class MaalingDAO(
     when (maaling) {
       is Planlegging -> {}
       is Crawling -> {
-        maaling.crawlResultat.forEach { crawlresultatDAO.saveCrawlResultat(it, maaling.id) }
+        maaling.crawlResultat.forEach { sideutvalDAO.saveCrawlResultat(it, maaling.id) }
       }
       is Kvalitetssikring -> {
-        maaling.crawlResultat.forEach { crawlresultatDAO.saveCrawlResultat(it, maaling.id) }
+        maaling.crawlResultat.forEach { sideutvalDAO.saveCrawlResultat(it, maaling.id) }
       }
       is Testing -> {
         maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling.id) }
