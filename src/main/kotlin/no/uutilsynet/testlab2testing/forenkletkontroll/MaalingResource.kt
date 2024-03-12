@@ -52,7 +52,7 @@ class MaalingResource(
     val crawlerClient: CrawlerClient,
     val autoTesterClient: AutoTesterClient,
     val aggregeringService: AggregeringService,
-    val crawlresultatDAO: CrawlresultatDAO
+    val sideutvalDAO: SideutvalDAO
 ) {
 
   data class NyMaalingDTO(
@@ -164,25 +164,30 @@ class MaalingResource(
       @PathVariable maalingId: Int,
       @RequestParam loeysingId: Int?
   ): ResponseEntity<Any> =
-      runBlocking(Dispatchers.IO) {
-        maalingDAO
-            .getMaaling(maalingId)
-            ?.let { maaling -> Maaling.findFerdigeTestKoeyringar(maaling, loeysingId) }
-            ?.let { ferdigeTestKoeyringar ->
-              autoTesterClient.fetchResultat(
-                  ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlBrot)
-            }
-            ?.toSingleResult()
-            ?.map { it.values.flatten() }
-            ?.fold(
-                { testResultatList -> ResponseEntity.ok(testResultatList) },
-                { error ->
-                  logger.error(
-                      "Feila da vi skulle hente fullt resultat for målinga $maalingId", error)
-                  ResponseEntity.internalServerError().body(error.firstMessage())
-                })
-            ?: ResponseEntity.notFound().build()
-      }
+      getTestresultat(maalingId, loeysingId)
+          ?.fold(
+              { testResultatList -> ResponseEntity.ok(testResultatList) },
+              { error ->
+                logger.error(
+                    "Feila da vi skulle hente fullt resultat for målinga $maalingId", error)
+                ResponseEntity.internalServerError().body(error.firstMessage())
+              })
+          ?: ResponseEntity.notFound().build()
+
+  fun getTestresultat(maalingId: Int, loeysingId: Int?): Result<List<AutotesterTestresultat>> {
+    return runBlocking(Dispatchers.IO) {
+      maalingDAO
+          .getMaaling(maalingId)
+          ?.let { maaling -> Maaling.findFerdigeTestKoeyringar(maaling, loeysingId) }
+          ?.let { ferdigeTestKoeyringar ->
+            autoTesterClient.fetchResultat(
+                ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlBrot)
+          }
+          ?.toSingleResult()
+          ?.map { it.values.flatten() }
+          ?: Result.failure(NullPointerException("Testresultat vart ikkje funne"))
+    }
+  }
 
   @Operation(
       summary = "Hentar aggregert resultat for ei måling",
@@ -262,9 +267,7 @@ class MaalingResource(
       @PathVariable maalingId: Int,
       @RequestParam loeysingId: Int
   ): ResponseEntity<List<URL>> =
-      crawlresultatDAO.getCrawlResultatNettsider(maalingId, loeysingId).let {
-        ResponseEntity.ok(it)
-      }
+      sideutvalDAO.getCrawlResultatNettsider(maalingId, loeysingId).let { ResponseEntity.ok(it) }
 
   @PutMapping("{id}/status")
   fun putNewStatus(@PathVariable id: Int, @RequestBody statusDTO: StatusDTO): ResponseEntity<Any> {
@@ -422,7 +425,7 @@ class MaalingResource(
           async {
             val nettsider =
                 withContext(Dispatchers.IO) {
-                  crawlresultatDAO.getCrawlResultatNettsider(maalingId, it.loeysing.id)
+                  sideutvalDAO.getCrawlResultatNettsider(maalingId, it.loeysing.id)
                 }
             if (nettsider.isEmpty()) {
               throw RuntimeException(

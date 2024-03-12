@@ -5,6 +5,7 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlin.properties.Delegates
 import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll.Svar
@@ -156,7 +157,7 @@ class TestResultatResourceTest(
     val testresultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
     val elementUtfall =
         "Iframe har et tilgjengelig navn, som ikke beskriver formålet med innholdet i iframe."
-    val elementResultat = "brudd"
+    val elementResultat = TestresultatUtfall.brot
     val endret = testresultat.copy(elementResultat = elementResultat, elementUtfall = elementUtfall)
 
     restTemplate.put(location, endret)
@@ -177,7 +178,7 @@ class TestResultatResourceTest(
     assertThat(resultatForSak.resultat).hasSize(1)
     val resultat = resultatForSak.resultat.first()
     assertThat(resultat.elementOmtale).isEqualTo("iframe nummer 1")
-    assertThat(resultat.elementResultat).isEqualTo("brudd")
+    assertThat(resultat.elementResultat).isEqualTo(resultat.elementResultat)
     assertThat(resultat.elementUtfall)
         .isEqualTo(
             "Iframe har et tilgjengelig navn, som ikke beskriver formålet med innholdet i iframe.")
