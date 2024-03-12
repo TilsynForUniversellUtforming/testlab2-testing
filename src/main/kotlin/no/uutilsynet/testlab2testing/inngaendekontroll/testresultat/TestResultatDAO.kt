@@ -165,6 +165,22 @@ class TestResultatDAO(
     }
   }
 
+  fun saveBilde(testresultatId: Int, bildePath: String, isThumbnail: Boolean) = runCatching {
+    jdbcTemplate.update(
+        "insert into testresultat_bilde (testresultat_id, bilde_path, thumbnail) values (:testresultat_id, :bilde_path, :thumbnail)",
+        mapOf(
+            "testresultat_id" to testresultatId,
+            "bilde_path" to bildePath,
+            "thumbnail" to isThumbnail))
+  }
+
+  fun getBildePaths(testresultatId: Int, isThumbnail: Boolean) = runCatching {
+    jdbcTemplate.queryForList(
+        "select bilde_path from testresultat_bilde where testresultat_id = :testresultat_id and thumbnail = :thumbnail",
+        mapOf("testresultat_id" to testresultatId, "thumbnail" to isThumbnail),
+        String::class.java)
+  }
+
   private fun createAggregeringPerTestregelDTO(
       testresultatForSak: List<ResultatManuellKontroll>
   ): List<AggregeringPerTestregelDTO> {

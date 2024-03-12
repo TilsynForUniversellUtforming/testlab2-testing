@@ -2,14 +2,13 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.awt.Image
 import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.time.Instant
 import javax.imageio.ImageIO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -112,39 +111,84 @@ class TestResultatResource(
   fun getAggregertResultat(@PathVariable testgrunnlagId: Int) =
       aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
 
-  @PostMapping("/bilder")
-  fun createBilder(@RequestParam("bilde") bilde: MultipartFile) = runCatching {
-    val image = ImageIO.read(bilde.inputStream)
-    val thumbnail = createThumbnailImage(image)
+  @PostMapping("/bilder/{testresultatId}")
+  fun createImages(
+      @PathVariable testresultatId: Int,
+      @RequestParam("bilder") bilder: List<MultipartFile>
+  ): ResponseEntity<Any> =
+      runCatching {
+            val imageDetails = multipartFilesToImageDetails(bilder).getOrThrow()
 
-    val originalFileName =
-        bilde.originalFilename ?: throw IllegalArgumentException("Namn på bilete er tomt")
-    val fileExtension = originalFileName.substringAfterLast('.')
-    val fileName = originalFileName.substringBeforeLast('.')
+            blobContainerClient.uploadImages(imageDetails).forEach { imageResult ->
+              if (imageResult.isSuccess) {
+                val imageDetail = imageResult.getOrThrow()
+                testResultatDAO.saveBilde(
+                    testresultatId, imageDetail.fileName, imageDetail.isThumbnail)
+              }
+            }
+          }
+          .fold(
+              { ResponseEntity.noContent().build() },
+              {
+                logger.error("Feil ved opplasting av bilder", it)
+                ResponseEntity.internalServerError().body("Feil ved opplasting av bilder")
+              })
 
-    val newFileName = "$fileName.$fileExtension"
-    val newFileNameThumb = "${fileName}_thumb.$fileExtension"
-
-    bilde.inputStream.use { inputStream ->
-      val originalImageBytes = inputStream.readAllBytes()
-      blobContainerClient.uploadImage(ByteArrayInputStream(originalImageBytes), newFileName)
-    }
-
-    ByteArrayOutputStream().use { os ->
-      ImageIO.write(thumbnail, fileExtension, os)
-      val thumbBytes = os.toByteArray()
-      blobContainerClient.uploadImage(ByteArrayInputStream(thumbBytes), newFileNameThumb)
-    }
-  }
+  @GetMapping("/bilder/{testresultatId}")
+  fun getImages(
+      @PathVariable testresultatId: Int,
+      @RequestParam thumbnail: Boolean
+  ): ResponseEntity<Any> =
+      runCatching {
+            val paths = testResultatDAO.getBildePaths(testresultatId, thumbnail).getOrThrow()
+            // TODO - GENERATE SAS
+            blobContainerClient.download(paths.first())
+          }
+          .fold(
+              { ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(it.getOrThrow()) },
+              {
+                logger.error("Feil ved opplasting av bilder", it)
+                ResponseEntity.internalServerError().body("Feil ved opplasting av bilder")
+              })
 
   private fun createThumbnailImage(originalImage: BufferedImage): BufferedImage {
-    val imageTargetSize = 150
+    val imageTargetSize = 100
     val resultingImage =
         originalImage.getScaledInstance(imageTargetSize, imageTargetSize, Image.SCALE_DEFAULT)
     val outputImage = BufferedImage(imageTargetSize, imageTargetSize, BufferedImage.TYPE_INT_RGB)
     outputImage.graphics.drawImage(resultingImage, 0, 0, null)
 
     return outputImage
+  }
+
+  private fun multipartFilesToImageDetails(
+      bildeList: List<MultipartFile>
+  ): Result<List<ImageDetail>> {
+    val allowedMIMETypes = listOf("jpg", "jepg", "png", "bmp")
+
+    return runCatching {
+      bildeList.flatMap { bilde ->
+        val originalFileName =
+            bilde.originalFilename ?: throw IllegalArgumentException("Filnamn er tomt")
+        val fileExtension = originalFileName.substringAfterLast('.')
+
+        if (!allowedMIMETypes.contains(fileExtension)) {
+          throw IllegalArgumentException(
+              "$originalFileName har annen filtype enn ${allowedMIMETypes.joinToString(",")}")
+        }
+
+        val image = ImageIO.read(bilde.inputStream)
+        val thumbnail = createThumbnailImage(image)
+        val fileName = originalFileName.substringBeforeLast('.')
+
+        val newFileName = "$fileName.$fileExtension"
+        val newFileNameThumb = "${fileName}_thumb.$fileExtension"
+
+        listOf(
+            ImageDetail(image, newFileName, fileExtension, false),
+            ImageDetail(thumbnail, newFileNameThumb, fileExtension, true))
+      }
+    }
   }
 
   private fun location(id: Int) =
