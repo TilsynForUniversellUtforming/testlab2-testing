@@ -310,7 +310,7 @@ class AggregeringService(
           val talElementVarsel =
               testresultat.count { it.elementResultat == TestresultatUtfall.varsel }
           val talElementIkkjeForekomst =
-              testresultat.count { it.elementResultat == TestresultatUtfall.ikkjeforekomst }
+              testresultat.count { it.elementResultat == TestresultatUtfall.ikkjeForekomst }
 
           val (talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst) =
               countSideUtfall(testresultat)
@@ -348,7 +348,7 @@ class AggregeringService(
           when (calculateUtfall(testresultat.map { it.elementResultat })) {
             TestresultatUtfall.brot -> talSiderBrot += 1
             TestresultatUtfall.samsvar -> talSiderSamsvar += 1
-            TestresultatUtfall.ikkjeforekomst -> talSiderIkkjeForekomst += 1
+            TestresultatUtfall.ikkjeForekomst -> talSiderIkkjeForekomst += 1
             TestresultatUtfall.varsel -> TODO()
           }
         }
@@ -370,6 +370,6 @@ class AggregeringService(
     if (utfall.contains(TestresultatUtfall.samsvar)) {
       return TestresultatUtfall.samsvar
     }
-    return TestresultatUtfall.ikkjeforekomst
+    return TestresultatUtfall.ikkjeForekomst
   }
 }
