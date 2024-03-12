@@ -5,6 +5,7 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlin.properties.Delegates
 import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakDAO
@@ -12,8 +13,10 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManu
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
+import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -25,10 +28,12 @@ import org.springframework.test.context.ActiveProfiles
 @ActiveProfiles("test")
 class TestResultatResourceTest(
     @Autowired val sakDAO: SakDAO,
-    @Autowired val restTemplate: TestRestTemplate
+    @Autowired val restTemplate: TestRestTemplate,
 ) {
   private var sakId: Int by Delegates.notNull()
   private var location: URI by Delegates.notNull()
+
+  @SpyBean lateinit var brukarService: BrukarService
 
   @Test
   @Order(1)
@@ -37,6 +42,10 @@ class TestResultatResourceTest(
     val frist = LocalDate.now().plusMonths(3)
 
     sakId = sakDAO.save("Testheim kommune", "000000000", frist).getOrThrow()
+
+    doReturn(Brukar("testbrukar@digdir.no", "Test Brukar")).`when`(brukarService).getCurrentUser()
+
+    brukarService.saveIfNotExists(Brukar("testbrukar@digdir.no", "Test Brukar"))
 
     sakDAO
         .update(
