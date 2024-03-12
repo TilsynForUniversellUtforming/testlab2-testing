@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component
 @Component
 class BrukarService(val brukarDAO: BrukarDAO) {
 
-  @Throws(RuntimeException::class)
   fun getCurrentUser(): Brukar {
     val authentication: Authentication = SecurityContextHolder.getContext().authentication
     if (authentication !is AnonymousAuthenticationToken) {
@@ -20,7 +19,7 @@ class BrukarService(val brukarDAO: BrukarDAO) {
 
       return Brukar(username, fullName)
     }
-    throw RuntimeException("No authenticated user")
+    return Brukar("anonym", "anonymous")
   }
 
   fun saveIfNotExists(brukar: Brukar): Int {
