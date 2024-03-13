@@ -22,4 +22,16 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           Int::class.java)!!
     }
   }
+
+  fun deleteKontroll(id: Int): Result<Unit> {
+    return kotlin.runCatching {
+      jdbcTemplate.update(
+          """
+            delete from kontroll
+            where id = :id
+          """
+              .trimIndent(),
+          mapOf("id" to id))
+    }
+  }
 }

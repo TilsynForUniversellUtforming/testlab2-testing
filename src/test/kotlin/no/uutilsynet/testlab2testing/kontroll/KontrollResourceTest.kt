@@ -31,4 +31,26 @@ class KontrollResourceTest {
         .statusCode(equalTo(201))
         .header("Location", startsWith("http://localhost:$port/kontroller/"))
   }
+
+  @Test
+  @DisplayName("gitt at vi har opprettet en kontroll, så skal vi kunne slette den")
+  fun deleteKontroll() {
+    val body =
+        mapOf(
+            "tittel" to "testkontroll",
+            "saksbehandler" to "Ola Nordmann",
+            "sakstype" to "Forvaltningssak",
+            "arkivreferanse" to "1234")
+    val location =
+        given()
+            .port(port)
+            .body(body)
+            .contentType("application/json")
+            .post("/kontroller")
+            .then()
+            .statusCode(equalTo(201))
+            .extract()
+            .header("Location")
+    given().port(port).delete(location).then().statusCode(equalTo(204))
+  }
 }
