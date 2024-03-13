@@ -273,16 +273,13 @@ class AggregeringService(
   @Transactional
   fun saveAggregertResultatTestregel(sakId: Int): Result<Boolean> {
     runCatching {
-          val eksisterande = aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(sakId)
-          if (eksisterande.isEmpty()) {
-            val testresultatForSak = testResultatDAO.getManyResults(sakId = sakId).getOrThrow()
-            val aggregertResultatTestregel = createAggregeringPerTestregelDTO(testresultatForSak)
-            aggregertResultatTestregel.forEach {
-              val result = aggregeringDAO.createAggregertResultatTestregel(it)
-              if (result < 1) {
-                throw RuntimeException(
-                    "Kunne ikkje lagre aggregert resultat for testregel for testgrunnlag $sakId og testregel ${it.testregelId}")
-              }
+          val testresultatForSak = testResultatDAO.getManyResults(sakId = sakId).getOrThrow()
+          val aggregertResultatTestregel = createAggregeringPerTestregelDTO(testresultatForSak)
+          aggregertResultatTestregel.forEach {
+            val result = aggregeringDAO.createAggregertResultatTestregel(it)
+            if (result < 1) {
+              throw RuntimeException(
+                  "Kunne ikkje lagre aggregert resultat for testregel for testgrunnlag $sakId og testregel ${it.testregelId}")
             }
           }
         }

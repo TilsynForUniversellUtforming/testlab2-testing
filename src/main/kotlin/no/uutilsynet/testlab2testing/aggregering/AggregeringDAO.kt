@@ -14,6 +14,8 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       aggregertResultatTestregel: AggregeringPerTestregelDTO
   ): Int {
 
+    aggregertResultatTestregel.maalingId?.let { deleteAggregertResultatTestregel(it) }
+
     val sql =
         "insert into aggregering_testregel(maaling_id,loeysing_id,suksesskriterium,fleire_suksesskriterium,testregel_id,tal_element_samsvar,tal_element_brot,tal_element_varsel,tal_element_ikkje_forekomst,tal_sider_samsvar,tal_sider_brot,tal_sider_ikkje_forekomst,testregel_gjennomsnittleg_side_brot_prosent,testregel_gjennomsnittleg_side_samsvar_prosent,testgrunnlag_id) " +
             "values(:maaling_id,:loeysing_id,:suksesskriterium,:fleire_suksesskriterium,:testregel_id,:tal_element_samsvar,:tal_element_brot,:tal_element_varsel,:tal_element_ikkje_forekomst,:tal_sider_samsvar,:tal_sider_brot,:tal_sider_ikkje_forekomst,:testregel_gjennomsnittleg_side_brot_prosent,:testregel_gjennomsnittleg_side_samsvar_prosent,:testgrunnlag_id)"
@@ -78,6 +80,8 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       aggregertResultatSuksesskriterium: AggregeringPerSuksesskriteriumDTO
   ): Int {
 
+    deleteAggregertResultatSuksesskriterium(aggregertResultatSuksesskriterium.maalingId)
+
     val sql =
         """insert into aggregering_suksesskriterium
             (maaling_id, loeysing_id, suksesskriterium_id, tal_sider_samsvar, tal_sider_brot, tal_sider_ikkje_forekomst)
@@ -96,6 +100,8 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun createAggregeringSide(aggregertResultatSide: AggregeringPerSideDTO): Int {
+
+    deleteAggregertResultatSide(aggregertResultatSide.maalingId)
     val sql =
         """insert into aggregering_side
               (maaling_id, loeysing_id, side,
@@ -115,6 +121,21 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "tal_element_ikkje_forekomst" to aggregertResultatSide.talElementIkkjeForekomst)
 
     return jdbcTemplate.update(sql, parameterMap)
+  }
+
+  fun deleteAggregertResultatTestregel(maalingId: Int): Int {
+    val sql = "delete from aggregering_testregel where maaling_id = :maalingId"
+    return jdbcTemplate.update(sql, mapOf("maalingId" to maalingId))
+  }
+
+  fun deleteAggregertResultatSuksesskriterium(maalingId: Int): Int {
+    val sql = "delete from aggregering_suksesskriterium where maaling_id = :maalingId"
+    return jdbcTemplate.update(sql, mapOf("maalingId" to maalingId))
+  }
+
+  fun deleteAggregertResultatSide(maalingId: Int): Int {
+    val sql = "delete from aggregering_side where maaling_id = :maalingId"
+    return jdbcTemplate.update(sql, mapOf("maalingId" to maalingId))
   }
 
   fun getAggregertResultatTestregelForMaaling(maalingId: Int): List<AggregeringPerTestregelDTO> {
