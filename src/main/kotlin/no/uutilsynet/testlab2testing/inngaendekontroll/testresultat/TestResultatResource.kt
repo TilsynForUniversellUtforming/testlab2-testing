@@ -89,7 +89,7 @@ class TestResultatResource(
 
   @PostMapping("/aggregert/{testgrunnlagId}")
   fun createAggregertResultat(@PathVariable testgrunnlagId: Int) =
-      aggregeringService.saveAggregertResultatTestregel(testgrunnlagId)
+      aggregeringService.saveAggregertResultatSak(testgrunnlagId)
 
   @DeleteMapping("/{id}")
   fun deleteTestResultat(@PathVariable id: Int): ResponseEntity<Unit> {

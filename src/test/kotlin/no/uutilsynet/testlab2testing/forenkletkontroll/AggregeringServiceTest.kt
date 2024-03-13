@@ -73,7 +73,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1))
         .thenReturn(Result.success("1.1.1"))
 
-    aggregeringService.saveAggregertResultatTestregel(testKoeyring)
+    aggregeringService.saveAggregertResultat(testKoeyring)
 
     val retrievedAggregering =
         maalingId?.let { aggregeringService.getAggregertResultatTestregel(it) }
