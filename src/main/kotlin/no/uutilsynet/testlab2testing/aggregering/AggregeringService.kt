@@ -1,9 +1,12 @@
 package no.uutilsynet.testlab2testing.aggregering
 
 import java.net.URI
+import java.net.URL
 import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.forenkletkontroll.AutoTesterClient
+import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestKoeyring
+import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
@@ -21,19 +24,20 @@ class AggregeringService(
     val kravregisterClient: KravregisterClient,
     val testregelDAO: TestregelDAO,
     val aggregeringDAO: AggregeringDAO,
-    val testResultatDAO: TestResultatDAO
+    val testResultatDAO: TestResultatDAO,
+    val sideutvalDAO: SideutvalDAO,
 ) {
 
   private val logger = LoggerFactory.getLogger(AggregeringService::class.java)
 
   @Transactional
   fun saveAggregering(testKoeyring: TestKoeyring.Ferdig) {
-    saveAggregertResultatTestregel(testKoeyring)
+    saveAggregertResultat(testKoeyring)
     saveAggregeringSide(testKoeyring)
     saveAggregertResultatSuksesskriterium(testKoeyring)
   }
 
-  fun saveAggregertResultatTestregel(testKoeyring: TestKoeyring.Ferdig) {
+  fun saveAggregertResultat(testKoeyring: TestKoeyring.Ferdig) {
     logger.info(
         "Lagrer aggregert resultat for testregel for testkoeyring ${testKoeyring.loeysing.namn}}")
     val aggregeringUrl: URI? = testKoeyring.lenker?.urlAggregeringTR?.toURI()
@@ -196,7 +200,7 @@ class AggregeringService(
       aggregeringPerSideDTO: AggregeringPerSideDTO
   ): AggregertResultatSide {
     return AggregertResultatSide(
-        aggregeringPerSideDTO.maalingId,
+        aggregeringPerSideDTO.maalingId ?: aggregeringPerSideDTO.testgrunnlagId,
         getLoeysing(aggregeringPerSideDTO.loeysingId),
         aggregeringPerSideDTO.sideUrl,
         aggregeringPerSideDTO.sideNivaa,
@@ -211,7 +215,8 @@ class AggregeringService(
       aggregeringPerSuksesskriteriumDTO: AggregeringPerSuksesskriteriumDTO
   ): AggregertResultatSuksesskriterium {
     return AggregertResultatSuksesskriterium(
-        aggregeringPerSuksesskriteriumDTO.maalingId,
+        aggregeringPerSuksesskriteriumDTO.maalingId
+            ?: aggregeringPerSuksesskriteriumDTO.testgrunnlagId,
         getLoeysing(aggregeringPerSuksesskriteriumDTO.loeysingId),
         getSuksesskriterium(aggregeringPerSuksesskriteriumDTO.suksesskriteriumId),
         aggregeringPerSuksesskriteriumDTO.talSiderSamsvar,
@@ -271,15 +276,81 @@ class AggregeringService(
   }
 
   @Transactional
-  fun saveAggregertResultatTestregel(sakId: Int): Result<Boolean> {
+  fun saveAggregertResultatSak(sakId: Int): Result<Boolean> {
+
     runCatching {
           val testresultatForSak = testResultatDAO.getManyResults(sakId = sakId).getOrThrow()
+          saveAggregertResultatTestregel(testresultatForSak).getOrThrow()
+          saveAggregertResultatSuksesskriterium(testresultatForSak).getOrThrow()
+          saveAggregertResultatSide(testresultatForSak).getOrThrow()
+        }
+        .fold(
+            onSuccess = {
+              return Result.success(true)
+            },
+            onFailure = {
+              return Result.failure(it)
+            })
+  }
+
+  @Transactional
+  fun saveAggregertResultatTestregel(
+      testresultatForSak: List<ResultatManuellKontroll>
+  ): Result<Boolean> {
+    runCatching {
           val aggregertResultatTestregel = createAggregeringPerTestregelDTO(testresultatForSak)
           aggregertResultatTestregel.forEach {
             val result = aggregeringDAO.createAggregertResultatTestregel(it)
             if (result < 1) {
               throw RuntimeException(
-                  "Kunne ikkje lagre aggregert resultat for testregel for testgrunnlag $sakId og testregel ${it.testregelId}")
+                  "Kunne ikkje lagre aggregert resultat for testregel for testgrunnlag ${it.testgrunnlagId} og testregel ${it.testregelId}")
+            }
+          }
+        }
+        .fold(
+            onSuccess = {
+              return Result.success(true)
+            },
+            onFailure = {
+              return Result.failure(it)
+            })
+  }
+
+  @Transactional
+  fun saveAggregertResultatSuksesskriterium(
+      testresultatForSak: List<ResultatManuellKontroll>
+  ): Result<Boolean> {
+    runCatching {
+          val aggregertResultatSuksesskriterium =
+              createAggregeringPerSuksesskriteriumDTO(testresultatForSak)
+          aggregertResultatSuksesskriterium.forEach {
+            val result = aggregeringDAO.createAggregertResultatSuksesskriterium(it)
+            if (result < 1) {
+              throw RuntimeException(
+                  "Kunne ikkje lagre aggregert resultat for testregel for testgrunnlag ${it.testgrunnlagId} og suksesskriterium ${it.suksesskriteriumId}")
+            }
+          }
+        }
+        .fold(
+            onSuccess = {
+              return Result.success(true)
+            },
+            onFailure = {
+              return Result.failure(it)
+            })
+  }
+
+  fun saveAggregertResultatSide(
+      testresultatForSak: List<ResultatManuellKontroll>
+  ): Result<Boolean> {
+    runCatching {
+          val aggregertResultatSide = createAggregeringPerSideDTO(testresultatForSak)
+
+          aggregertResultatSide.forEach {
+            val result = aggregeringDAO.createAggregeringSide(it)
+            if (result < 1) {
+              throw RuntimeException(
+                  "Kunne ikkje lagre aggregert resultat for side for testgrunnlag ${it.testgrunnlagId} og side ${it.sideUrl}")
             }
           }
         }
@@ -333,6 +404,63 @@ class AggregeringService(
         }
   }
 
+  private fun createAggregeringPerSuksesskriteriumDTO(
+      testresultatForSak: List<ResultatManuellKontroll>
+  ): List<AggregeringPerSuksesskriteriumDTO> {
+    return testresultatForSak
+        .groupBy { it.kravId() }
+        .entries
+        .map {
+          val testresultat = it.value
+          val (talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst) =
+              countSideUtfall(testresultat)
+          AggregeringPerSuksesskriteriumDTO(
+              null,
+              testresultat.first().loeysingId,
+              testresultat.first().kravId(),
+              talSiderSamsvar,
+              talSiderBrot,
+              talSiderIkkjeForekomst,
+              testresultat.first().sakId)
+        }
+  }
+
+  private fun createAggregeringPerSideDTO(
+      testresultatForSak: List<ResultatManuellKontroll>
+  ): List<AggregeringPerSideDTO> {
+    return testresultatForSak
+        .groupBy { it.nettsideId }
+        .entries
+        .map {
+          val testresultat = it.value
+          val sideUrl: URL = getUrlFromNettsideId(it.key)
+
+          val (talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst) =
+              countSideUtfall(testresultat)
+          AggregeringPerSideDTO(
+              null,
+              testresultat.first().loeysingId,
+              sideUrl,
+              sideUrl.path.split("/").size,
+              0.0f,
+              talSiderSamsvar,
+              talSiderBrot,
+              0,
+              talSiderIkkjeForekomst,
+              testresultat.first().sakId)
+        }
+  }
+
+  private fun getUrlFromNettsideId(nettsideId: Int): URL {
+    return runCatching {
+          val nettside: Sak.Nettside =
+              sideutvalDAO.getNettside(nettsideId)
+                  ?: throw RuntimeException("Fant ikkje nettside med id $nettsideId")
+          URI(nettside.url).toURL()
+        }
+        .getOrThrow()
+  }
+
   private fun countSideUtfall(testresultat: List<ResultatManuellKontroll>): TalUtfall {
     var talSiderBrot = 0
     var talSiderSamsvar = 0
@@ -368,5 +496,10 @@ class AggregeringService(
       return TestresultatUtfall.samsvar
     }
     return TestresultatUtfall.ikkjeForekomst
+  }
+
+  fun ResultatManuellKontroll.kravId(): Int {
+    return testregelDAO.getTestregel(this.testregelId)?.kravId
+        ?: throw RuntimeException("Fant ikkje krav for testregel med id ${this.testregelId}")
   }
 }

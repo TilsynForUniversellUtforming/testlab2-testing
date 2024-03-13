@@ -244,7 +244,7 @@ class MaalingResource(
           maalingDAO.getMaaling(maalingId)?.let { maaling ->
             Maaling.findFerdigeTestKoeyringar(maaling)
           }
-      testKoeyringar?.forEach { aggregeringService.saveAggregertResultatTestregel(it) }
+      testKoeyringar?.forEach { aggregeringService.saveAggregertResultat(it) }
     }
     return aggregeringService.getAggregertResultatTestregel(maalingId).let { ResponseEntity.ok(it) }
   }
