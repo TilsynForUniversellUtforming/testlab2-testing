@@ -3,10 +3,7 @@ package no.uutilsynet.testlab2testing.kontroll
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
@@ -25,6 +22,17 @@ class KontrollResource(val kontrollDAO: KontrollDAO) {
             onFailure = {
               logger.error("Feil ved oppretting av kontroll", it)
               ResponseEntity.badRequest().build()
+            })
+  }
+
+  @DeleteMapping("/{id}")
+  fun deleteKontroll(@PathVariable id: Int): ResponseEntity<Unit> {
+    return runCatching { kontrollDAO.deleteKontroll(id).getOrThrow() }
+        .fold(
+            onSuccess = { ResponseEntity.noContent().build() },
+            onFailure = {
+              logger.error("Feil ved sletting av kontroll", it)
+              ResponseEntity.internalServerError().build()
             })
   }
 
