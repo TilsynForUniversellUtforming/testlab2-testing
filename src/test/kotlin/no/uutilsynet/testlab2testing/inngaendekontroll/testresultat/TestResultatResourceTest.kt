@@ -11,8 +11,13 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll.Svar
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
+import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.TestMethodOrder
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -181,7 +186,24 @@ class TestResultatResourceTest(
   }
 
   @Test
-  @Order(8)
+  @Order(7)
+  @DisplayName("vi skal kunne oppdatere testresultat med frivillig kommentar")
+  fun oppdatereTestresultatMedKommentar() {
+    val start = Instant.now()
+    val testresultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
+    val kommentar = "Dette var en bra test"
+    val endret = testresultat.copy(kommentar = kommentar)
+
+    restTemplate.put(location, endret)
+
+    val oppdatert = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
+
+    assertThat(oppdatert.kommentar).isEqualTo(kommentar)
+    assertThat(oppdatert.testVartUtfoert).isBetween(start, Instant.now())
+  }
+
+  @Test
+  @Order(9)
   @DisplayName("vi kan hente alle resultater for en gitt sak")
   fun henteAlleResultaterForSak() {
     val resultatForSak =
@@ -200,7 +222,7 @@ class TestResultatResourceTest(
   }
 
   @Test
-  @Order(9)
+  @Order(10)
   @DisplayName("vi skal ikke kunne slette et testresultat hvis status er 'Ferdig'")
   fun sletteFerdigTestresultat() {
     val resultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
@@ -211,7 +233,7 @@ class TestResultatResourceTest(
   }
 
   @Test
-  @Order(10)
+  @Order(11)
   @DisplayName("vi skal kunne slette et testresultat hvis status er noe annet enn 'Ferdig'")
   fun sletteTestresultat() {
     val resultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)

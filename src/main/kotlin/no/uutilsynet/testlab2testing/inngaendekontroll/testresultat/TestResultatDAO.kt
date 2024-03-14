@@ -27,9 +27,9 @@ class TestResultatDAO(
       jdbcTemplate.queryForObject(
           """
         insert into testresultat (sak_id, loeysing_id, testregel_id, nettside_id, brukar_id, element_omtale, element_resultat,
-                                     element_utfall, test_vart_utfoert, status)
+                                     element_utfall, test_vart_utfoert, status, kommentar)
         values (:sakId, :loeysingId, :testregelId, :nettsideId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
-                :testVartUtfoert,:status)
+                :testVartUtfoert,:status, :kommentar)
         returning id
       """
               .trimIndent(),
@@ -42,8 +42,10 @@ class TestResultatDAO(
               "elementOmtale" to createTestResultat.elementOmtale,
               "elementResultat" to createTestResultat.elementResultat,
               "elementUtfall" to createTestResultat.elementUtfall,
+              "kommentar" to createTestResultat.kommentar,
               "testVartUtfoert" to createTestResultat.testVartUtfoert,
-              "status" to ResultatManuellKontroll.Status.IkkjePaabegynt.name),
+              "status" to ResultatManuellKontroll.Status.IkkjePaabegynt.name,
+              "kommentar" to createTestResultat.kommentar),
           Int::class.java)!!
     }
   }
@@ -75,6 +77,7 @@ class TestResultatDAO(
                        ti.element_resultat,
                        ti.element_utfall,
                        ti.test_vart_utfoert,
+                       ti.kommentar,
                        tis.steg as svar_steg,
                        tis.svar as svar_svar,
                        b.brukarnamn as brukar_brukarnamn,
@@ -108,7 +111,8 @@ class TestResultatDAO(
           element_resultat  = :elementResultat,
           element_utfall    = :elementUtfall,
           test_vart_utfoert = :testVartUtfoert,
-          status = :status
+          status = :status,
+          kommentar = :kommentar
       where id = :id
     """
             .trimIndent(),
@@ -118,7 +122,8 @@ class TestResultatDAO(
             "elementUtfall" to testResultat.elementUtfall,
             "testVartUtfoert" to testVartUtfoert,
             "status" to testResultat.status.name,
-            "id" to testResultat.id))
+            "id" to testResultat.id,
+            "kommentar" to testResultat.kommentar))
 
     // slett gamle svar og lagre de nye
     jdbcTemplate.update(
