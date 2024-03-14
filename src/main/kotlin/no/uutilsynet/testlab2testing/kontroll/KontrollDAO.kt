@@ -47,6 +47,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           mapOf("id" to id)) { rs, _ ->
             OpprettetKontroll(
                 rs.getInt("id"),
+                OpprettetKontroll.KontrollType.ManuellKontroll,
                 rs.getString("tittel"),
                 rs.getString("saksbehandler"),
                 OpprettetKontroll.Sakstype.valueOf(rs.getString("sakstype")),

@@ -22,9 +22,10 @@ class KontrollResourceTest {
   fun createKontroll() {
     val body =
         mapOf(
+            "kontrolltype" to "manuell-kontroll",
             "tittel" to "testkontroll",
             "saksbehandler" to "Ola Nordmann",
-            "sakstype" to "Forvaltningssak",
+            "sakstype" to "forvaltningssak",
             "arkivreferanse" to "1234")
     given()
         .port(port)
@@ -41,9 +42,10 @@ class KontrollResourceTest {
   fun deleteKontroll() {
     val body =
         mapOf(
+            "kontrolltype" to "manuell-kontroll",
             "tittel" to "testkontroll",
             "saksbehandler" to "Ola Nordmann",
-            "sakstype" to "Forvaltningssak",
+            "sakstype" to "forvaltningssak",
             "arkivreferanse" to "1234")
     val location =
         given()
@@ -64,9 +66,10 @@ class KontrollResourceTest {
   fun getKontrollById() {
     val body =
         mapOf(
+            "kontrolltype" to "manuell-kontroll",
             "tittel" to "testkontroll",
             "saksbehandler" to "Ola Nordmann",
-            "sakstype" to "Forvaltningssak",
+            "sakstype" to "forvaltningssak",
             "arkivreferanse" to "1234")
     val location =
         given()
@@ -83,7 +86,7 @@ class KontrollResourceTest {
 
     assertThat(json.get<String>("tittel")).isEqualTo("testkontroll")
     assertThat(json.get<String>("saksbehandler")).isEqualTo("Ola Nordmann")
-    assertThat(json.get<String>("sakstype")).isEqualTo("Forvaltningssak")
+    assertThat(json.get<String>("sakstype")).isEqualTo("forvaltningssak")
     assertThat(json.get<String>("arkivreferanse")).isEqualTo("1234")
   }
 }
