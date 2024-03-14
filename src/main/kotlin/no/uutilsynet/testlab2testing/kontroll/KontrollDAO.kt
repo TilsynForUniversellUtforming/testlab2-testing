@@ -34,4 +34,24 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           mapOf("id" to id))
     }
   }
+
+  fun getKontroll(id: Int): Result<OpprettetKontroll?> {
+    return runCatching {
+      jdbcTemplate.queryForObject(
+          """
+            select id, tittel, saksbehandler, sakstype, arkivreferanse
+            from kontroll
+            where id = :id
+          """
+              .trimIndent(),
+          mapOf("id" to id)) { rs, _ ->
+            OpprettetKontroll(
+                rs.getInt("id"),
+                rs.getString("tittel"),
+                rs.getString("saksbehandler"),
+                OpprettetKontroll.Sakstype.valueOf(rs.getString("sakstype")),
+                rs.getString("arkivreferanse"))
+          }
+    }
+  }
 }
