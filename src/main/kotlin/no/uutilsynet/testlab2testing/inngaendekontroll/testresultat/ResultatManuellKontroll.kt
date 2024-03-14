@@ -16,7 +16,8 @@ data class ResultatManuellKontroll(
     val elementUtfall: String?,
     val svar: List<Svar>,
     val testVartUtfoert: Instant?,
-    val status: Status = Status.IkkjePaabegynt
+    val status: Status = Status.IkkjePaabegynt,
+    val kommentar: String?,
 ) {
   data class Svar(val steg: String, val svar: String)
 
