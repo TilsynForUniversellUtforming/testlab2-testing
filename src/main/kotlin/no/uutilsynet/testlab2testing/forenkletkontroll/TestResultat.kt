@@ -5,16 +5,19 @@ import java.net.URL
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
+import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 
 data class TestResultat(
     val suksesskriterium: List<String>,
     val side: URL,
     val testregelId: String,
+    val loeysingId: Int,
     val sideNivaa: Int,
     val testVartUtfoert: LocalDateTime,
     val elementUtfall: String,
-    val elementResultat: String,
-    val elementOmtale: ACTElement?
+    val elementResultat: TestresultatUtfall,
+    val elementOmtale: TestresultatDetaljert.ElementOmtale?
 ) : AutotesterTestresultat {
   data class ACTElement(val htmlCode: String, val pointer: String)
 
@@ -25,16 +28,18 @@ data class TestResultat(
         suksesskriterium: List<String>,
         side: URL,
         testregelId: String,
+        loeysingId: Int,
         sideNivaa: Int,
         testVartUtfoert: String,
         elementUtfall: String,
-        elementResultat: String,
-        elementOmtale: List<ACTElement>? = null
+        elementResultat: TestresultatUtfall,
+        elementOmtale: List<TestresultatDetaljert.ElementOmtale>? = null
     ): TestResultat {
       return TestResultat(
           suksesskriterium,
           side,
           testregelId,
+          loeysingId,
           sideNivaa,
           parseLocalDateTime(testVartUtfoert),
           elementUtfall,

@@ -6,6 +6,8 @@ import java.time.Instant
 import javax.imageio.ImageIO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.brukar.BrukarService
+import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
 import org.springframework.http.MediaType
@@ -28,6 +30,7 @@ class TestResultatResource(
     val testResultatDAO: TestResultatDAO,
     val aggregeringService: AggregeringService,
     val blobContainerClient: BlobContainerClient,
+    val brukarService: BrukarService
 ) {
   val logger: Logger = getLogger(TestResultatResource::class.java)
 
@@ -35,7 +38,10 @@ class TestResultatResource(
   fun createTestResultat(
       @RequestBody createTestResultat: CreateTestResultat
   ): ResponseEntity<Unit> =
-      runCatching { testResultatDAO.save(createTestResultat).getOrThrow() }
+      runCatching {
+            val brukar = brukarService.getCurrentUser()
+            testResultatDAO.save(createTestResultat.copy(brukar = brukar)).getOrThrow()
+          }
           .fold(
               { id -> ResponseEntity.created(location(id)).build() },
               {
@@ -87,7 +93,7 @@ class TestResultatResource(
 
   @PostMapping("/aggregert/{testgrunnlagId}")
   fun createAggregertResultat(@PathVariable testgrunnlagId: Int) =
-      testResultatDAO.saveAggregertResultatTestregel(testgrunnlagId)
+      aggregeringService.saveAggregertResultatTestregel(testgrunnlagId)
 
   @DeleteMapping("/{id}")
   fun deleteTestResultat(@PathVariable id: Int): ResponseEntity<Unit> {
@@ -199,9 +205,9 @@ class TestResultatResource(
       val loeysingId: Int,
       val testregelId: Int,
       val nettsideId: Int,
-      val brukar: Brukar,
+      val brukar: Brukar?,
       val elementOmtale: String? = null,
-      val elementResultat: String? = null,
+      val elementResultat: TestresultatUtfall? = null,
       val elementUtfall: String? = null,
       val testVartUtfoert: Instant? = null
   )
