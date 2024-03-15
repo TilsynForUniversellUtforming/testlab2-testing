@@ -25,6 +25,19 @@ class KontrollResource(val kontrollDAO: KontrollDAO) {
             })
   }
 
+  @GetMapping("/{id}")
+  fun getKontroll(@PathVariable id: Int): ResponseEntity<OpprettetKontroll> {
+    return runCatching { kontrollDAO.getKontroll(id).getOrThrow() }
+        .fold(
+            onSuccess = {
+              if (it != null) ResponseEntity.ok(it) else ResponseEntity.notFound().build()
+            },
+            onFailure = {
+              logger.error("Feil ved henting av kontroll", it)
+              ResponseEntity.internalServerError().build()
+            })
+  }
+
   @DeleteMapping("/{id}")
   fun deleteKontroll(@PathVariable id: Int): ResponseEntity<Unit> {
     return runCatching { kontrollDAO.deleteKontroll(id).getOrThrow() }

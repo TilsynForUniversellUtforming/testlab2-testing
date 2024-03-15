@@ -81,8 +81,10 @@ class TestResultatResource(
       @RequestBody testResultat: ResultatManuellKontroll
   ): ResponseEntity<Unit> {
     require(testResultat.id == id) { "id i URL-en og id i dei innsendte dataene er ikkje den same" }
+    val brukar = brukarService.getCurrentUser()
+
     return testResultatDAO
-        .update(testResultat)
+        .update(testResultat.copy(brukar = brukar))
         .fold(
             onSuccess = { ResponseEntity.ok().build() },
             onFailure = {
@@ -209,6 +211,7 @@ class TestResultatResource(
       val elementOmtale: String? = null,
       val elementResultat: TestresultatUtfall? = null,
       val elementUtfall: String? = null,
-      val testVartUtfoert: Instant? = null
+      val testVartUtfoert: Instant? = null,
+      val kommentar: String? = null,
   )
 }
