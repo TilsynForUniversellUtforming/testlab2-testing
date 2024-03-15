@@ -2,9 +2,10 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.awt.image.BufferedImage
 
-data class ImageDetail(
+data class CloudImageDetails(
     val image: BufferedImage,
+    val thumbnail: BufferedImage,
     val fileName: String,
-    val fileExtension: String,
-    val isThumbnail: Boolean
+    val thumbnailName: String,
+    val fileExtension: String
 )

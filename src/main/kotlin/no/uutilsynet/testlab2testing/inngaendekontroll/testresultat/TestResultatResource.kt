@@ -10,7 +10,6 @@ import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -129,9 +128,9 @@ class TestResultatResource(
 
             blobContainerClient.uploadImages(imageDetails).forEach { imageResult ->
               if (imageResult.isSuccess) {
-                val imageDetail = imageResult.getOrThrow()
+                val bildeDetalj = imageResult.getOrThrow()
                 testResultatDAO.saveBilde(
-                    testresultatId, imageDetail.fileName, imageDetail.isThumbnail)
+                    testresultatId, bildeDetalj.fileName, bildeDetalj.thumbnailName)
               }
             }
           }
@@ -143,20 +142,16 @@ class TestResultatResource(
               })
 
   @GetMapping("/bilder/{testresultatId}")
-  fun getImages(
-      @PathVariable testresultatId: Int,
-      @RequestParam thumbnail: Boolean
-  ): ResponseEntity<Any> =
+  fun getImages(@PathVariable testresultatId: Int): ResponseEntity<List<CloudImageUris>> =
       runCatching {
-            val paths = testResultatDAO.getBildePaths(testresultatId, thumbnail).getOrThrow()
-            // TODO - GENERATE SAS
-            blobContainerClient.download(paths.first())
+            val paths = testResultatDAO.getBildePaths(testresultatId).getOrThrow()
+            blobContainerClient.getImageUrls(paths)
           }
           .fold(
-              { ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(it.getOrThrow()) },
+              { ResponseEntity.ok(it.getOrThrow()) },
               {
                 logger.error("Feil ved opplasting av bilder", it)
-                ResponseEntity.internalServerError().body("Feil ved opplasting av bilder")
+                ResponseEntity.internalServerError().build()
               })
 
   private fun createThumbnailImage(originalImage: BufferedImage): BufferedImage {
@@ -171,11 +166,11 @@ class TestResultatResource(
 
   private fun multipartFilesToImageDetails(
       bildeList: List<MultipartFile>
-  ): Result<List<ImageDetail>> {
+  ): Result<List<CloudImageDetails>> {
     val allowedMIMETypes = listOf("jpg", "jepg", "png", "bmp")
 
     return runCatching {
-      bildeList.flatMap { bilde ->
+      bildeList.map { bilde ->
         val originalFileName =
             bilde.originalFilename ?: throw IllegalArgumentException("Filnamn er tomt")
         val fileExtension = originalFileName.substringAfterLast('.')
@@ -192,9 +187,7 @@ class TestResultatResource(
         val newFileName = "$fileName.$fileExtension"
         val newFileNameThumb = "${fileName}_thumb.$fileExtension"
 
-        listOf(
-            ImageDetail(image, newFileName, fileExtension, false),
-            ImageDetail(thumbnail, newFileNameThumb, fileExtension, true))
+        CloudImageDetails(image, thumbnail, newFileName, newFileNameThumb, fileExtension)
       }
     }
   }

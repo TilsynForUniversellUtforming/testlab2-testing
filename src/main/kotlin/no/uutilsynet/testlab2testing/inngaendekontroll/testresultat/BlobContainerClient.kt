@@ -1,15 +1,25 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import com.azure.storage.blob.BlobContainerClientBuilder
+import com.azure.storage.blob.sas.BlobSasPermission
+import com.azure.storage.blob.sas.BlobServiceSasSignatureValues
+import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.net.URI
+import java.time.OffsetDateTime
 import javax.imageio.ImageIO
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 
 @ConfigurationProperties(prefix = "blobstorage")
-data class BlobStorageProperties(val connection: String, val container: String)
+data class BlobStorageProperties(
+    val connection: String,
+    val account: String,
+    val container: String,
+    val sasDurationMinutes: Int,
+)
 
 @Component
 class BlobContainerClient(private final val blobStorageProperties: BlobStorageProperties) {
@@ -22,13 +32,21 @@ class BlobContainerClient(private final val blobStorageProperties: BlobStoragePr
           .containerName(blobStorageProperties.container)
           .buildClient()
 
-  fun uploadImages(imageDetails: List<ImageDetail>): List<Result<ImageDetail>> =
-      imageDetails.map { detail ->
+  fun uploadImage(image: BufferedImage, fileName: String, fileExtension: String) {
+    ByteArrayOutputStream().use { os ->
+      ImageIO.write(image, fileExtension, os)
+      upload(ByteArrayInputStream(os.toByteArray()), fileName)
+    }
+  }
+
+  fun uploadImages(cloudImageDetails: List<CloudImageDetails>): List<Result<CloudImageDetails>> =
+      cloudImageDetails.map { detail ->
         runCatching {
-              ByteArrayOutputStream().use { os ->
-                ImageIO.write(detail.image, detail.fileExtension, os)
-                val imageBytes = os.toByteArray()
-                upload(ByteArrayInputStream(imageBytes), detail.fileName)
+              val imagesToUpload =
+                  listOf(detail.image to detail.fileName, detail.thumbnail to detail.thumbnailName)
+
+              imagesToUpload.forEach { (image, fileName) ->
+                uploadImage(image, fileName, detail.fileExtension)
               }
               detail
             }
@@ -42,15 +60,23 @@ class BlobContainerClient(private final val blobStorageProperties: BlobStoragePr
           }
           .onFailure { logger.error("Kunne ikkje laste opp fil $fileName") }
 
-  fun download(fileName: String): Result<ByteArray> = runCatching {
-    val blobClient = blobContainerClient.getBlobClient(fileName)
-    if (!blobClient.exists()) {
-      throw IllegalArgumentException("$fileName finns ikkje")
-    }
+  fun getImageUrls(cloudImagePathsList: List<CloudImagePaths>): Result<List<CloudImageUris>> =
+      runCatching {
+            val expiryTime =
+                OffsetDateTime.now().plusMinutes(blobStorageProperties.sasDurationMinutes.toLong())
+            val permission = BlobSasPermission().setReadPermission(true).setWritePermission(false)
+            val sasValues = BlobServiceSasSignatureValues(expiryTime, permission)
+            val sasToken = blobContainerClient.generateSas(sasValues)
+            cloudImagePathsList.map { bilde ->
+              CloudImageUris(
+                  imageURI = toBlobUri(bilde.bilde, sasToken),
+                  thumbnailURI = toBlobUri(bilde.thumbnail, sasToken),
+              )
+            }
+          }
+          .onFailure { logger.error("Kunne ikkje hente bilder", it) }
 
-    ByteArrayOutputStream().use { output ->
-      blobClient.downloadStream(output)
-      output.toByteArray()
-    }
-  }
+  private fun toBlobUri(filnamn: String, sasToken: String) =
+      URI(
+          "https://${blobStorageProperties.account}.blob.core.windows.net/screenshots/${filnamn}?$sasToken")
 }

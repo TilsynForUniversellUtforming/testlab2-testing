@@ -7,6 +7,7 @@ import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.simpleflatmapper.jdbc.spring.JdbcTemplateMapperFactory
+import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -161,19 +162,19 @@ class TestResultatDAO(
             mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar))
       }
 
-  fun saveBilde(testresultatId: Int, bildePath: String, isThumbnail: Boolean) = runCatching {
+  fun saveBilde(testresultatId: Int, bildePath: String, thumbnailPath: String) = runCatching {
     jdbcTemplate.update(
-      "insert into testresultat_bilde (testresultat_id, bilde_path, thumbnail) values (:testresultat_id, :bilde_path, :thumbnail)",
-      mapOf(
-        "testresultat_id" to testresultatId,
-        "bilde_path" to bildePath,
-        "thumbnail" to isThumbnail))
+        "insert into testresultat_bilde (testresultat_id, bilde, thumbnail) values (:testresultat_id, :bilde, :thumbnail)",
+        mapOf(
+            "testresultat_id" to testresultatId,
+            "bilde" to bildePath,
+            "thumbnail" to thumbnailPath))
   }
 
-  fun getBildePaths(testresultatId: Int, isThumbnail: Boolean) = runCatching {
-    jdbcTemplate.queryForList(
-      "select bilde_path from testresultat_bilde where testresultat_id = :testresultat_id and thumbnail = :thumbnail",
-      mapOf("testresultat_id" to testresultatId, "thumbnail" to isThumbnail),
-      String::class.java)
+  fun getBildePaths(testresultatId: Int) = runCatching {
+    jdbcTemplate.query(
+        "select bilde, thumbnail from testresultat_bilde where testresultat_id = :testresultat_id",
+        mapOf("testresultat_id" to testresultatId),
+        DataClassRowMapper.newInstance(CloudImagePaths::class.java))
   }
 }
