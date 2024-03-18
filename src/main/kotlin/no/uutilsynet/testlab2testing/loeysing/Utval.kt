@@ -1,5 +1,12 @@
 package no.uutilsynet.testlab2testing.loeysing
 
-data class Utval(val id: Int, val namn: String, val loeysingar: List<Loeysing>)
+import java.time.Instant
 
-data class UtvalListItem(val id: UtvalId, val namn: String)
+data class Utval(
+    val id: Int,
+    val namn: String,
+    val loeysingar: List<Loeysing>,
+    val oppretta: Instant
+)
+
+data class UtvalListItem(val id: UtvalId, val namn: String, val oppretta: Instant)
