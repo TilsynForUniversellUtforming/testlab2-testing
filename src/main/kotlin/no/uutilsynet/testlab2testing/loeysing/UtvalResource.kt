@@ -90,7 +90,7 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
         .getUtval(id)
         .mapCatching {
           val loeysingar = loeysingsRegisterClient.getMany(it.loeysingar).getOrThrow()
-          Utval(it.id, it.namn, loeysingar)
+          Utval(it.id, it.namn, loeysingar, it.oppretta)
         }
         .map { utval -> ResponseEntity.ok(utval) }
         .getOrElse {
