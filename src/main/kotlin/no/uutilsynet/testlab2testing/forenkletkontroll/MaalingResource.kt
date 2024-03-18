@@ -219,7 +219,7 @@ class MaalingResource(
           maalingDAO.getMaaling(maalingId)?.let { maaling ->
             Maaling.findFerdigeTestKoeyringar(maaling)
           }
-      testKoeyringar?.forEach { aggregeringService.saveAggregeringSide(it) }
+      testKoeyringar?.forEach { aggregeringService.saveAggregeringSideAutomatisk(it) }
     }
     return aggregeringService.getAggregertResultatSide(maalingId).let { ResponseEntity.ok(it) }
   }
@@ -230,7 +230,9 @@ class MaalingResource(
           maalingDAO.getMaaling(maalingId)?.let { maaling ->
             Maaling.findFerdigeTestKoeyringar(maaling)
           }
-      testKoeyringar?.forEach { aggregeringService.saveAggregertResultatSuksesskriterium(it) }
+      testKoeyringar?.forEach {
+        aggregeringService.saveAggregertResultatSuksesskriteriumAutomatisk(it)
+      }
     }
     return aggregeringService.getAggregertResultatSuksesskriterium(maalingId).let {
       ResponseEntity.ok(it)
@@ -244,7 +246,7 @@ class MaalingResource(
           maalingDAO.getMaaling(maalingId)?.let { maaling ->
             Maaling.findFerdigeTestKoeyringar(maaling)
           }
-      testKoeyringar?.forEach { aggregeringService.saveAggregertResultat(it) }
+      testKoeyringar?.forEach { aggregeringService.saveAggregertResultatTestregelAutomatisk(it) }
     }
     return aggregeringService.getAggregertResultatTestregel(maalingId).let { ResponseEntity.ok(it) }
   }
