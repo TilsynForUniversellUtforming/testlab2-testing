@@ -399,7 +399,6 @@ class AggregeringService(
         .entries
         .map {
           val testresultat = it.value
-
           val talElementBrot = testresultat.count { it.elementResultat == TestresultatUtfall.brot }
           val talElementSamsvar =
               testresultat.count { it.elementResultat == TestresultatUtfall.samsvar }
@@ -411,12 +410,12 @@ class AggregeringService(
           val (talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst) =
               countSideUtfall(testresultat)
 
-          val suksesskriterium = getKravIdFraTestregel(testresultat.first().testregelId)
+          val suksesskriterium = getKravIdFraTestregel(it.key)
 
           AggregeringPerTestregelDTO(
               null,
               testresultat.first().loeysingId,
-              testresultat.first().testregelId,
+              it.key,
               suksesskriterium,
               listOf(suksesskriterium),
               talElementSamsvar,
