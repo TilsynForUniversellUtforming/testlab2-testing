@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.aggregering
 import java.net.URL
 
 data class AggregeringPerSideDTO(
-    val maalingId: Int,
+    val maalingId: Int?,
     val loeysingId: Int,
     val sideUrl: URL,
     val sideNivaa: Int,
@@ -11,5 +11,6 @@ data class AggregeringPerSideDTO(
     val talElementSamsvar: Int,
     val talElementBrot: Int,
     val talElementVarsel: Int,
-    val talElementIkkjeForekomst: Int
-)
+    val talElementIkkjeForekomst: Int,
+    val testgrunnlagId: Int? = 0
+) {}

@@ -2,9 +2,15 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
 import java.time.Instant
+import java.time.LocalDate
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
+import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestlabLocale
+import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
+import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
+import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
@@ -38,9 +44,13 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
 
   @MockBean lateinit var autoTesterClient: AutoTesterClient
 
+  @MockBean lateinit var sideutvalDAO: SideutvalDAO
+
   @Autowired lateinit var maalingDao: MaalingDAO
 
   @Autowired lateinit var testregelDAO: TestregelDAO
+
+  @Autowired lateinit var sakDao: SakDAO
 
   @AfterAll
   fun cleanup() {
@@ -73,7 +83,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1))
         .thenReturn(Result.success("1.1.1"))
 
-    aggregeringService.saveAggregertResultatTestregel(testKoeyring)
+    aggregeringService.saveAggregertResultatTestregelAutomatisk(testKoeyring)
 
     val retrievedAggregering =
         maalingId?.let { aggregeringService.getAggregertResultatTestregel(it) }
@@ -156,5 +166,89 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
             testregelGjennomsnittlegSideBrotProsent = 1.0f)
 
     return aggregeringTestregel
+  }
+
+  @Test
+  fun updateEqualsDeleteAndInsert() {
+    val testLoeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR)
+
+    Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1))
+        .thenReturn(Result.success(testLoeysing))
+
+    Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1))
+        .thenReturn(Result.success("1.1.1"))
+
+    Mockito.`when`(sideutvalDAO.getNettside(1))
+        .thenReturn(Sak.Nettside(1, "Framside", "https://www.example.com", "test", "test"))
+
+    val sakId = createTestSak()
+    val resultatKontroll1 =
+        ResultatManuellKontroll(
+            1,
+            sakId,
+            loeysingId = 1,
+            testregelId = 1,
+            nettsideId = 1,
+            brukar = Brukar("testar", "test"),
+            elementOmtale = "Hovedoverskrift",
+            elementResultat = TestresultatUtfall.brot,
+            elementUtfall = "Feil",
+            svar = listOf(ResultatManuellKontroll.Svar("Steg 1", "Svar 1")),
+            testVartUtfoert = Instant.now(),
+            status = ResultatManuellKontroll.Status.Ferdig,
+            "Kommentar")
+
+    val resultatKontrol2 =
+        ResultatManuellKontroll(
+            1,
+            sakId,
+            loeysingId = 1,
+            testregelId = 1,
+            nettsideId = 1,
+            brukar = Brukar("testar", "test"),
+            elementOmtale = "Bilde",
+            elementResultat = TestresultatUtfall.samsvar,
+            elementUtfall = "Heilt ok",
+            svar = listOf(ResultatManuellKontroll.Svar("Steg 1", "Svar 1")),
+            testVartUtfoert = Instant.now(),
+            status = ResultatManuellKontroll.Status.Ferdig,
+            "Kommentar")
+
+    val status =
+        aggregeringService.saveAggregertResultatTestregel(
+            listOf(resultatKontroll1, resultatKontrol2))
+    assertThat(status.isSuccess).isEqualTo(true)
+
+    val status2 =
+        aggregeringService.saveAggregertResultatTestregel(
+            listOf(resultatKontroll1, resultatKontrol2))
+    assertThat(status2.isSuccess).isEqualTo(true)
+
+    val result = aggregeringService.getAggregertResultatTestregel(testgrunnlagId = sakId)
+    assertThat(result).hasSize(1)
+    assertThat(result.get(0).talElementBrot).isEqualTo(1)
+    assertThat(result.get(0).talElementSamsvar).isEqualTo(1)
+
+    aggregeringService.saveAggregertResultatSide(listOf(resultatKontroll1, resultatKontrol2))
+    aggregeringService.saveAggregertResultatSide(listOf(resultatKontroll1, resultatKontrol2))
+    val result2 = aggregeringService.getAggregertResultatSide(testgrunnlagId = sakId)
+    assertThat(result2).hasSize(1)
+    assertThat(result2.get(0).talElementBrot).isEqualTo(1)
+    assertThat(result2.get(0).talElementSamsvar).isEqualTo(1)
+
+    aggregeringService.saveAggregertResultatSuksesskriterium(
+        listOf(resultatKontroll1, resultatKontrol2))
+    aggregeringService.saveAggregertResultatSuksesskriterium(
+        listOf(resultatKontroll1, resultatKontrol2))
+
+    val result3 = aggregeringService.getAggregertResultatSuksesskriterium(testgrunnlagId = sakId)
+
+    assertThat(result3).hasSize(1)
+    assertThat(result3.get(0).talSiderBrot).isEqualTo(1)
+    assertThat(result3.get(0).talSiderSamsvar).isEqualTo(0)
+  }
+
+  private fun createTestSak(): Int {
+    return sakDao.save("Testsak", "111222333", LocalDate.now()).getOrThrow()
   }
 }

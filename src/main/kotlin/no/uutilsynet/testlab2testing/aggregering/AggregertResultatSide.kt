@@ -5,7 +5,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 
 data class AggregertResultatSide(
-    val maalingId: Int,
+    val maalingId: Int?,
     val loeysing: Loeysing,
     val sideUrl: URL,
     val sideNivaa: Int,
