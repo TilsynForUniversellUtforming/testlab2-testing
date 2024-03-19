@@ -37,7 +37,7 @@ class ResultatResource(
   @PostMapping("/aggregert/{testgrunnlagId}")
   fun createAggregertResultat(@PathVariable testgrunnlagId: Int): ResponseEntity<Any> =
       aggregeringService
-          .saveAggregertResultatTestregel(testgrunnlagId)
+          .saveAggregertResultatSak(testgrunnlagId)
           .fold(
               onSuccess = {
                 return ResponseEntity.created(URI.create("/resultat/aggregert/${testgrunnlagId}"))
