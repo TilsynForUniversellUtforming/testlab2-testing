@@ -133,10 +133,11 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun deleteAggregertResultatTestregel(aggregering: AggregeringPerTestregelDTO): Int {
     val sql =
-        "delete from aggregering_testregel where loeysing_id=:loeysingId and (maaling_id=:maalingId or testgrunnlag_id=:testgrunnlagId)"
+        "delete from aggregering_testregel where testregel_id = :testregelId and  loeysing_id=:loeysingId and (maaling_id=:maalingId or testgrunnlag_id=:testgrunnlagId)"
     return jdbcTemplate.update(
         sql,
         mapOf(
+            "testregelId" to aggregering.testregelId,
             "maalingId" to aggregering.maalingId,
             "loeysingId" to aggregering.loeysingId,
             "testgrunnlagId" to aggregering.testgrunnlagId))
@@ -144,10 +145,11 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun deleteAggregertResultatSuksesskriterium(aggregering: AggregeringPerSuksesskriteriumDTO): Int {
     val sql =
-        "delete from aggregering_suksesskriterium where loeysing_id=:loeysingId and (maaling_id=:maalingId or testgrunnlag_id=:testgrunnlagId)"
+        "delete from aggregering_suksesskriterium where suksesskriterium_id=:suksesskriteriumId and loeysing_id=:loeysingId and (maaling_id=:maalingId or testgrunnlag_id=:testgrunnlagId)"
     return jdbcTemplate.update(
         sql,
         mapOf(
+            "suksesskriteriumId" to aggregering.suksesskriteriumId,
             "maalingId" to aggregering.maalingId,
             "loeysingId" to aggregering.loeysingId,
             "testgrunnlagId" to aggregering.testgrunnlagId))
@@ -155,10 +157,11 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun deleteAggregertResultatSide(aggregering: AggregeringPerSideDTO): Int {
     val sql =
-        "delete from aggregering_side where loeysing_id=:loeysingId and (maaling_id=:maalingId or testgrunnlag_id=:testgrunnlagId)"
+        "delete from aggregering_side where side=:side and loeysing_id=:loeysingId and (maaling_id=:maalingId or testgrunnlag_id=:testgrunnlagId)"
     return jdbcTemplate.update(
         sql,
         mapOf(
+            "side" to aggregering.sideUrl.toURI().toString(),
             "maalingId" to aggregering.maalingId,
             "loeysingId" to aggregering.loeysingId,
             "testgrunnlagId" to aggregering.testgrunnlagId))
