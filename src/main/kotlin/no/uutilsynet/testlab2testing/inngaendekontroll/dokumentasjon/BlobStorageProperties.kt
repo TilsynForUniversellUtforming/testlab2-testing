@@ -7,5 +7,5 @@ data class BlobStorageProperties(
     val connection: String,
     val account: String,
     val container: String,
-    val sasTTL: Int,
+    val sasttl: Int,
 )
