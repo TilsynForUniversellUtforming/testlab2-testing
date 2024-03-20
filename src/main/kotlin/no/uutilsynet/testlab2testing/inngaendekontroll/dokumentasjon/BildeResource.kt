@@ -118,7 +118,7 @@ class BildeResource(
               })
 
   @CacheEvict(value = ["bildeCache"], allEntries = true)
-  @Scheduled(fixedRateString = "\${blobstorage.sasTTL}")
+  @Scheduled(fixedRateString = "\${blobstorage.sasttl}")
   fun emptyBildeCache() {
     logger.info("Tømmer bildeCache")
   }

@@ -56,7 +56,7 @@ class BlobStorageClient(
       runCatching {
             val expiryTime =
                 OffsetDateTime.ofInstant(
-                    Instant.now().plusMillis(blobStorageProperties.sasTTL.toLong()),
+                    Instant.now().plusMillis(blobStorageProperties.sasttl.toLong()),
                     ZoneId.of("Europe/Oslo"))
             val permission = BlobSasPermission().setReadPermission(true).setWritePermission(false)
             val sasValues = BlobServiceSasSignatureValues(expiryTime, permission)
