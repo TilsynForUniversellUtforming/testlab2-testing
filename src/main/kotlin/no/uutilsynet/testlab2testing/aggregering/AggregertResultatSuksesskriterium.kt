@@ -4,7 +4,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 
 data class AggregertResultatSuksesskriterium(
-    val maalingId: Int,
+    val maalingId: Int?,
     val loeysing: Loeysing,
     val suksesskriterium: String,
     val talSiderSamsvar: Int,

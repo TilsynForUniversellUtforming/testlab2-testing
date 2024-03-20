@@ -68,6 +68,7 @@ class UtvalResourceTest(
 
     assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir"))
+    assertThat(utval.oppretta).isNotNull()
   }
 
   @DisplayName(
@@ -118,6 +119,7 @@ class UtvalResourceTest(
     response.body!!.forEach {
       assertThat(it.id).isNotNull()
       assertThat(it.namn).isNotBlank()
+      assertThat(it.oppretta).isNotNull()
     }
   }
 

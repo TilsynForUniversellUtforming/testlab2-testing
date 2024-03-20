@@ -7,12 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import java.net.URL
 import java.time.Instant
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.common.validateIdList
@@ -32,15 +27,7 @@ import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("v1/maalinger")
@@ -101,7 +88,7 @@ class MaalingResource(
             .getUtval(utvalId)
             .mapCatching {
               val loeysingar = loeysingsRegisterClient.getMany(it.loeysingar).getOrThrow()
-              Utval(it.id, it.namn, loeysingar)
+              Utval(it.id, it.namn, loeysingar, it.oppretta)
             }
             .getOrThrow()
     return utval
@@ -232,7 +219,7 @@ class MaalingResource(
           maalingDAO.getMaaling(maalingId)?.let { maaling ->
             Maaling.findFerdigeTestKoeyringar(maaling)
           }
-      testKoeyringar?.forEach { aggregeringService.saveAggregeringSide(it) }
+      testKoeyringar?.forEach { aggregeringService.saveAggregeringSideAutomatisk(it) }
     }
     return aggregeringService.getAggregertResultatSide(maalingId).let { ResponseEntity.ok(it) }
   }
@@ -243,7 +230,9 @@ class MaalingResource(
           maalingDAO.getMaaling(maalingId)?.let { maaling ->
             Maaling.findFerdigeTestKoeyringar(maaling)
           }
-      testKoeyringar?.forEach { aggregeringService.saveAggregertResultatSuksesskriterium(it) }
+      testKoeyringar?.forEach {
+        aggregeringService.saveAggregertResultatSuksesskriteriumAutomatisk(it)
+      }
     }
     return aggregeringService.getAggregertResultatSuksesskriterium(maalingId).let {
       ResponseEntity.ok(it)
@@ -257,7 +246,7 @@ class MaalingResource(
           maalingDAO.getMaaling(maalingId)?.let { maaling ->
             Maaling.findFerdigeTestKoeyringar(maaling)
           }
-      testKoeyringar?.forEach { aggregeringService.saveAggregertResultatTestregel(it) }
+      testKoeyringar?.forEach { aggregeringService.saveAggregertResultatTestregelAutomatisk(it) }
     }
     return aggregeringService.getAggregertResultatTestregel(maalingId).let { ResponseEntity.ok(it) }
   }
