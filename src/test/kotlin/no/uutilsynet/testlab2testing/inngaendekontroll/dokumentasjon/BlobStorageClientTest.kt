@@ -5,8 +5,8 @@ import com.azure.storage.blob.BlobContainerClient
 import com.azure.storage.blob.sas.BlobServiceSasSignatureValues
 import java.awt.image.BufferedImage
 import java.time.Instant
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.CloudImageDetails
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -78,7 +78,7 @@ class BlobStorageClientTest {
     val image = BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB)
     val thumbnail = BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB)
     val cloudImageDetails =
-        listOf(CloudImageDetails(image, thumbnail, "1_0.png", "1_0_thumb.png", "png"))
+        listOf(BildeRequest(image, thumbnail, "1_0.png", "1_0_thumb.png", "png"))
 
     val blobStorageClient =
         BlobStorageClient(mockBlockStorageProperties, mockBlobContainerClientFactory)

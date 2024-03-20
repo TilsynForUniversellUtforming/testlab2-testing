@@ -5,7 +5,7 @@ import java.awt.image.BufferedImage
 import java.time.Instant
 import javax.imageio.ImageIO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.CloudImageDetails
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -134,7 +134,7 @@ class BildeResource(
       testresultatId: Int,
       indexOffset: Int,
       bildeList: List<MultipartFile>
-  ): Result<List<CloudImageDetails>> {
+  ): Result<List<BildeRequest>> {
     val allowedMIMETypes = listOf("jpg", "jpeg", "png", "bmp")
 
     return runCatching {
@@ -155,7 +155,7 @@ class BildeResource(
         val newFileName = "${testresultatId}_${bildeIndex}.$fileExtension"
         val newFileNameThumb = "${testresultatId}_${bildeIndex}_thumb.$fileExtension"
 
-        CloudImageDetails(image, thumbnail, newFileName, newFileNameThumb, fileExtension)
+        BildeRequest(image, thumbnail, newFileName, newFileNameThumb, fileExtension)
       }
     }
   }

@@ -11,8 +11,8 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import javax.imageio.ImageIO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.CloudImageDetails
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -26,7 +26,7 @@ class BlobStorageClient(
 
   private val blobContainerClient = blobContainerClientFactory.createBlobContainerClient()
 
-  fun uploadBilder(cloudImageDetails: List<CloudImageDetails>): List<Result<CloudImageDetails>> =
+  fun uploadBilder(cloudImageDetails: List<BildeRequest>): List<Result<BildeRequest>> =
       cloudImageDetails.map { detail ->
         runCatching {
               val imagesToUpload =
