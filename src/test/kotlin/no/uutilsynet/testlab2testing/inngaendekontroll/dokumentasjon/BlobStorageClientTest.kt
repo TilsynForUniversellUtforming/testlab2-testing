@@ -11,20 +11,16 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import org.springframework.boot.test.context.SpringBootTest
 
-@SpringBootTest
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BlobStorageClientTest {
 
-  val expectedSasToken = "sasToken123"
+  private val expectedSasToken = "sasToken123"
   private val mockBlobContainerClientFactory = mock(BlobContainerClientFactory::class.java)
   private val mockBlobContainerClient: BlobContainerClient = mock(BlobContainerClient::class.java)
   private val mockBlobClient: BlobClient = mock(BlobClient::class.java)
