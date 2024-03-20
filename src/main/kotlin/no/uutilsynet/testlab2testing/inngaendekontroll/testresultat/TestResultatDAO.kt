@@ -7,6 +7,7 @@ import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.simpleflatmapper.jdbc.spring.JdbcTemplateMapperFactory
+import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -162,19 +163,42 @@ class TestResultatDAO(
             mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar))
       }
 
-  fun saveBilde(testresultatId: Int, bildePath: String, thumbnailPath: String) = runCatching {
+  @Transactional
+  fun saveBilde(testresultatId: Int, bildePath: String, thumbnailPath: String, opprettet: Instant) =
+      runCatching {
+        jdbcTemplate.update(
+            """
+              insert into testresultat_bilde (testresultat_id, bilde, thumbnail, opprettet)
+              values (:testresultat_id, :bilde, :thumbnail, :opprettet)
+              on conflict (testresultat_id, bilde, thumbnail) do update
+              set opprettet = excluded.opprettet;
+            """
+                .trimMargin(),
+            mapOf(
+                "testresultat_id" to testresultatId,
+                "bilde" to bildePath,
+                "thumbnail" to thumbnailPath,
+                "opprettet" to Timestamp.from(opprettet)))
+      }
+
+  @Transactional
+  fun deleteBilde(bildeId: Int) = runCatching {
     jdbcTemplate.update(
-        "insert into testresultat_bilde (testresultat_id, bilde, thumbnail) values (:testresultat_id, :bilde, :thumbnail)",
-        mapOf(
-            "testresultat_id" to testresultatId,
-            "bilde" to bildePath,
-            "thumbnail" to thumbnailPath))
+        "delete from testresultat_bilde where id = :bilde_id", mapOf("bilde_id" to bildeId))
   }
 
-  fun getBildePaths(testresultatId: Int) = runCatching {
+  fun getBildeSti(bildeId: Int) = runCatching {
+    DataAccessUtils.singleResult(
+        jdbcTemplate.query(
+            "select id, bilde, thumbnail, opprettet from testresultat_bilde where id = :id",
+            mapOf("id" to bildeId),
+            DataClassRowMapper.newInstance(BildeSti::class.java)))
+  }
+
+  fun getBildePathsForTestresultat(testresultatId: Int) = runCatching {
     jdbcTemplate.query(
-        "select bilde, thumbnail from testresultat_bilde where testresultat_id = :testresultat_id",
+        "select id, bilde, thumbnail, opprettet from testresultat_bilde where testresultat_id = :testresultat_id",
         mapOf("testresultat_id" to testresultatId),
-        DataClassRowMapper.newInstance(CloudImagePaths::class.java))
+        DataClassRowMapper.newInstance(BildeSti::class.java))
   }
 }

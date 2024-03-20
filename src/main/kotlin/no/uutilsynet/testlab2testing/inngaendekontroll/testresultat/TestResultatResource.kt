@@ -1,9 +1,6 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
-import java.awt.Image
-import java.awt.image.BufferedImage
 import java.time.Instant
-import javax.imageio.ImageIO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
@@ -20,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
@@ -28,7 +24,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 class TestResultatResource(
     val testResultatDAO: TestResultatDAO,
     val aggregeringService: AggregeringService,
-    val blobContainerClient: BlobContainerClient,
     val brukarService: BrukarService
 ) {
   val logger: Logger = getLogger(TestResultatResource::class.java)
@@ -117,80 +112,6 @@ class TestResultatResource(
   @GetMapping("/aggregert/{testgrunnlagId}")
   fun getAggregertResultat(@PathVariable testgrunnlagId: Int) =
       aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
-
-  @PostMapping("/bilder/{testresultatId}")
-  fun createImages(
-      @PathVariable testresultatId: Int,
-      @RequestParam("bilder") bilder: List<MultipartFile>
-  ): ResponseEntity<Any> =
-      runCatching {
-            val imageDetails = multipartFilesToImageDetails(bilder).getOrThrow()
-
-            blobContainerClient.uploadImages(imageDetails).forEach { imageResult ->
-              if (imageResult.isSuccess) {
-                val bildeDetalj = imageResult.getOrThrow()
-                testResultatDAO.saveBilde(
-                    testresultatId, bildeDetalj.fileName, bildeDetalj.thumbnailName)
-              }
-            }
-          }
-          .fold(
-              { ResponseEntity.noContent().build() },
-              {
-                logger.error("Feil ved opplasting av bilder", it)
-                ResponseEntity.internalServerError().body("Feil ved opplasting av bilder")
-              })
-
-  @GetMapping("/bilder/{testresultatId}")
-  fun getImages(@PathVariable testresultatId: Int): ResponseEntity<List<CloudImageUris>> =
-      runCatching {
-            val paths = testResultatDAO.getBildePaths(testresultatId).getOrThrow()
-            blobContainerClient.getImageUrls(paths)
-          }
-          .fold(
-              { ResponseEntity.ok(it.getOrThrow()) },
-              {
-                logger.error("Feil ved opplasting av bilder", it)
-                ResponseEntity.internalServerError().build()
-              })
-
-  private fun createThumbnailImage(originalImage: BufferedImage): BufferedImage {
-    val imageTargetSize = 100
-    val resultingImage =
-        originalImage.getScaledInstance(imageTargetSize, imageTargetSize, Image.SCALE_DEFAULT)
-    val outputImage = BufferedImage(imageTargetSize, imageTargetSize, BufferedImage.TYPE_INT_RGB)
-    outputImage.graphics.drawImage(resultingImage, 0, 0, null)
-
-    return outputImage
-  }
-
-  private fun multipartFilesToImageDetails(
-      bildeList: List<MultipartFile>
-  ): Result<List<CloudImageDetails>> {
-    val allowedMIMETypes = listOf("jpg", "jepg", "png", "bmp")
-
-    return runCatching {
-      bildeList.map { bilde ->
-        val originalFileName =
-            bilde.originalFilename ?: throw IllegalArgumentException("Filnamn er tomt")
-        val fileExtension = originalFileName.substringAfterLast('.')
-
-        if (!allowedMIMETypes.contains(fileExtension)) {
-          throw IllegalArgumentException(
-              "$originalFileName har annen filtype enn ${allowedMIMETypes.joinToString(",")}")
-        }
-
-        val image = ImageIO.read(bilde.inputStream)
-        val thumbnail = createThumbnailImage(image)
-        val fileName = originalFileName.substringBeforeLast('.')
-
-        val newFileName = "$fileName.$fileExtension"
-        val newFileNameThumb = "${fileName}_thumb.$fileExtension"
-
-        CloudImageDetails(image, thumbnail, newFileName, newFileNameThumb, fileExtension)
-      }
-    }
-  }
 
   private fun location(id: Int) =
       ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
