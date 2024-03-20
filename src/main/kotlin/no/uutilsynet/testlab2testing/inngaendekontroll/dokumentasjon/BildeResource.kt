@@ -32,7 +32,7 @@ class BildeResource(
 
   @CacheEvict(value = ["bildeCache"], key = "#testresultatId")
   @PostMapping("/{testresultatId}")
-  fun createImages(
+  fun createBilde(
       @PathVariable testresultatId: Int,
       @RequestParam("bilder") bilder: List<MultipartFile>
   ): ResponseEntity<Any> =
@@ -48,7 +48,10 @@ class BildeResource(
                 val bildeDetalj = bildeResultat.getOrThrow()
                 testResultatDAO
                     .saveBilde(
-                        testresultatId, bildeDetalj.fileName, bildeDetalj.thumbnailName, opprettet)
+                        testresultatId,
+                        bildeDetalj.fullFileName,
+                        bildeDetalj.fullThumbnailName,
+                        opprettet)
                     .getOrThrow()
               }
             }
@@ -152,10 +155,9 @@ class BildeResource(
         val thumbnail = createThumbnailImage(image)
 
         val bildeIndex = indexOffset + index
-        val newFileName = "${testresultatId}_${bildeIndex}.$fileExtension"
-        val newFileNameThumb = "${testresultatId}_${bildeIndex}_thumb.$fileExtension"
+        val newFileName = "${testresultatId}_${bildeIndex}"
 
-        BildeRequest(image, thumbnail, newFileName, newFileNameThumb, fileExtension)
+        BildeRequest(image, thumbnail, newFileName, fileExtension)
       }
     }
   }

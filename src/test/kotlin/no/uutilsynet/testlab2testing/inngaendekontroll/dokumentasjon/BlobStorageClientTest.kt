@@ -73,8 +73,7 @@ class BlobStorageClientTest {
   fun `uploadImages skal laste opp bilder og thumbnails`() {
     val image = BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB)
     val thumbnail = BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB)
-    val cloudImageDetails =
-        listOf(BildeRequest(image, thumbnail, "1_0.png", "1_0_thumb.png", "png"))
+    val cloudImageDetails = listOf(BildeRequest(image, thumbnail, "1_0", "png"))
 
     val blobStorageClient =
         BlobStorageClient(mockBlockStorageProperties, mockBlobContainerClientFactory)

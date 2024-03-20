@@ -6,6 +6,11 @@ data class BildeRequest(
     val image: BufferedImage,
     val thumbnail: BufferedImage,
     val fileName: String,
-    val thumbnailName: String,
     val fileExtension: String
-)
+) {
+  val fullFileName: String
+    get() = "${fileName}.${fileExtension}"
+
+  val fullThumbnailName: String
+    get() = "${fileName}_thumb.${fileExtension}"
+}

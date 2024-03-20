@@ -30,7 +30,9 @@ class BlobStorageClient(
       cloudImageDetails.map { detail ->
         runCatching {
               val imagesToUpload =
-                  listOf(detail.image to detail.fileName, detail.thumbnail to detail.thumbnailName)
+                  listOf(
+                      detail.image to detail.fullFileName,
+                      detail.thumbnail to detail.fullThumbnailName)
 
               imagesToUpload.forEach { (image, fileName) ->
                 uploadSingleBilde(image, fileName, detail.fileExtension)
