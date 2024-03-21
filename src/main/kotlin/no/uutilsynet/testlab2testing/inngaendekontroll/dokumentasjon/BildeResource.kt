@@ -13,6 +13,7 @@ import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.util.MimeTypeUtils
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -138,18 +139,20 @@ class BildeResource(
       indexOffset: Int,
       bildeList: List<MultipartFile>
   ): Result<List<BildeRequest>> {
-    val allowedMIMETypes = listOf("jpg", "jpeg", "png", "bmp")
+    val allowedMIMETypes =
+        listOf(MimeTypeUtils.IMAGE_JPEG_VALUE, MimeTypeUtils.IMAGE_PNG_VALUE, "image/bmp")
 
     return runCatching {
       bildeList.mapIndexed { index, bilde ->
         val originalFileName =
             bilde.originalFilename ?: throw IllegalArgumentException("Filnamn er tomt")
-        val fileExtension = originalFileName.substringAfterLast('.')
 
-        if (!allowedMIMETypes.contains(fileExtension)) {
+        if (!allowedMIMETypes.contains(bilde.contentType)) {
           throw IllegalArgumentException(
               "$originalFileName har annen filtype enn ${allowedMIMETypes.joinToString(",")}")
         }
+
+        val fileExtension = originalFileName.substringAfterLast('.').lowercase()
 
         val image = ImageIO.read(bilde.inputStream)
         val thumbnail = createThumbnailImage(image)
