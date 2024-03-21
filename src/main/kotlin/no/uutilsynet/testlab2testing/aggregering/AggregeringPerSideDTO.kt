@@ -12,5 +12,5 @@ data class AggregeringPerSideDTO(
     val talElementBrot: Int,
     val talElementVarsel: Int,
     val talElementIkkjeForekomst: Int,
-    val testgrunnlagId: Int? = 0
+    val testgrunnlagId: Int?
 ) {}
