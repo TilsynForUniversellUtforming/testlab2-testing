@@ -156,7 +156,7 @@ class AggregeringService(
         aggregertResultatSide.talElementBrot,
         aggregertResultatSide.talElementVarsel,
         aggregertResultatSide.talElementIkkjeForekomst,
-    )
+        null)
   }
 
   fun aggregertResultatSuksesskritieriumToDTO(
@@ -172,7 +172,7 @@ class AggregeringService(
         aggregertResultatSuksesskriterium.talSiderSamsvar,
         aggregertResultatSuksesskriterium.talSiderBrot,
         aggregertResultatSuksesskriterium.talSiderIkkjeForekomst,
-    )
+        null)
   }
 
   fun dtoToAggregertResultatTestregel(
