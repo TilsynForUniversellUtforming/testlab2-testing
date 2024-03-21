@@ -7,5 +7,5 @@ data class AggregeringPerSuksesskriteriumDTO(
     val talSiderSamsvar: Int,
     val talSiderBrot: Int,
     val talSiderIkkjeForekomst: Int,
-    val testgrunnlagId: Int? = 0
+    val testgrunnlagId: Int?
 ) {}
