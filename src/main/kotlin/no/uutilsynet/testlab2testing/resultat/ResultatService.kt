@@ -69,7 +69,7 @@ class ResultatService(
               it.loeysingId,
               it.testregelId,
               testregel.testregelId,
-              it.sakId,
+              it.testgrunnlagId,
               URI(getUrlFromNettside(it.nettsideId)).toURL(),
               getSuksesskriteriumFromTestregel(testregel.kravId),
               testVartUtfoertToLocalTime(it.testVartUtfoert),

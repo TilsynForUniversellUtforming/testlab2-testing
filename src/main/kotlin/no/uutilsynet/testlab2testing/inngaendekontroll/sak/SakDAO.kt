@@ -24,6 +24,7 @@ class SakDAO(
     val brukarDAO: BrukarDAO,
     val sideutvalDAO: SideutvalDAO
 ) {
+
   fun save(namn: String, virksomhet: String, frist: LocalDate): Result<Int> = runCatching {
     jdbcTemplate.queryForObject(
         "insert into sak (namn, virksomhet, frist, opprettet) values (:namn, :virksomhet, :frist, :opprettet) returning id",

@@ -312,7 +312,9 @@ class AggregeringService(
   fun saveAggregertResultatSak(sakId: Int): Result<Boolean> {
 
     runCatching {
-          val testresultatForSak = testResultatDAO.getManyResults(sakId = sakId).getOrThrow()
+          val testresultatForSak =
+              testResultatDAO.getManyResults(testgrunnlagId = sakId).getOrThrow()
+
           saveAggregertResultatTestregel(testresultatForSak).getOrThrow()
           saveAggregertResultatSuksesskriterium(testresultatForSak).getOrThrow()
           saveAggregertResultatSide(testresultatForSak).getOrThrow()
@@ -427,7 +429,7 @@ class AggregeringService(
               talSiderIkkjeForekomst,
               0.0f,
               0.0f,
-              testresultat.first().sakId)
+              testresultat.first().testgrunnlagId)
         }
   }
 
@@ -448,7 +450,7 @@ class AggregeringService(
               talSiderSamsvar,
               talSiderBrot,
               talSiderIkkjeForekomst,
-              testresultat.first().sakId)
+              testresultat.first().testgrunnlagId)
         }
   }
 
@@ -472,7 +474,7 @@ class AggregeringService(
               testresultat.count { it.elementResultat == TestresultatUtfall.brot },
               0,
               testresultat.count { it.elementResultat == TestresultatUtfall.ikkjeForekomst },
-              testresultat.first().sakId)
+              testresultat.first().testgrunnlagId)
         }
   }
 
