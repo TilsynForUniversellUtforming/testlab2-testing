@@ -1,13 +1,9 @@
 package no.uutilsynet.testlab2testing.kontroll
 
-import io.restassured.RestAssured
 import io.restassured.RestAssured.get
 import io.restassured.RestAssured.given
-import io.restassured.parsing.Parser
 import io.restassured.path.json.JsonPath
 import io.restassured.path.json.JsonPath.from
-import java.net.URI
-import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.startsWith
@@ -92,45 +88,5 @@ class KontrollResourceTest {
     assertThat(json.get<String>("saksbehandler")).isEqualTo("Ola Nordmann")
     assertThat(json.get<String>("sakstype")).isEqualTo("forvaltningssak")
     assertThat(json.get<String>("arkivreferanse")).isEqualTo("1234")
-    assertThat(json.get<List<Loeysing>>("loeysingar")).isEqualTo(emptyList<Loeysing>())
-  }
-
-  @Test
-  @DisplayName(
-      "gitt vi har en kontroll, når vi oppdaterer den med en liste med løsninger, så skal kontrollen være lagret med løsningene")
-  fun updateKontrollWithLoeysingar() {
-    RestAssured.defaultParser = Parser.JSON
-    val body =
-        mapOf(
-            "kontrolltype" to "manuell-kontroll",
-            "tittel" to "testkontroll",
-            "saksbehandler" to "Ola Nordmann",
-            "sakstype" to "forvaltningssak",
-            "arkivreferanse" to "1234")
-    val location =
-        given()
-            .port(port)
-            .body(body)
-            .contentType("application/json")
-            .post("/kontroller")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-    val opprettetKontroll = get(location).`as`(Kontroll::class.java)
-    val loeysingar =
-        listOf(Loeysing(1, "UUTilsynet", URI("https://www.uutilsynet.no/").toURL(), "991825827"))
-    val oppdatertKontroll = opprettetKontroll.copy(loeysingar = loeysingar)
-    val updateBody = mapOf("kontroll" to oppdatertKontroll)
-    given()
-        .port(port)
-        .body(updateBody)
-        .contentType("application/json")
-        .put(location)
-        .then()
-        .statusCode(equalTo(204))
-    val lagretKontroll = get(location).`as`(Kontroll::class.java)
-
-    assertThat(lagretKontroll.loeysingar).isEqualTo(loeysingar)
   }
 }

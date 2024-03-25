@@ -38,20 +38,16 @@ class LoeysingsRegisterClient(
 
   fun getMany(idList: List<Int>, tidspunkt: Instant): Result<List<Loeysing>> {
     return runCatching {
-      if (idList.isEmpty()) {
-        emptyList()
-      } else {
-        val uri =
-            UriComponentsBuilder.fromUriString(properties.host)
-                .pathSegment("v1", "loeysing")
-                .queryParam("ids", idList.joinToString(","))
-                .queryParam("atTime", ISO_INSTANT.format(tidspunkt))
-                .build()
-                .toUri()
-        restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
-            ?: throw RuntimeException(
-                "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}")
-      }
+      val uri =
+          UriComponentsBuilder.fromUriString(properties.host)
+              .pathSegment("v1", "loeysing")
+              .queryParam("ids", idList.joinToString(","))
+              .queryParam("atTime", ISO_INSTANT.format(tidspunkt))
+              .build()
+              .toUri()
+      restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
+          ?: throw RuntimeException(
+              "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}")
     }
   }
 
