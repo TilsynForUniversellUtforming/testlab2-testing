@@ -225,7 +225,7 @@ class TestResultatResourceTest(
   fun henteAlleResultaterForSak() {
     val resultatForSak =
         restTemplate.getForObject(
-            "/testresultat?sakId=$testgrunnlagId", ResultatForSak::class.java)!!
+            "/testresultat?testgrunnlagId=$testgrunnlagId", ResultatForSak::class.java)!!
     assertThat(resultatForSak.resultat).hasSize(1)
     val resultat = resultatForSak.resultat.first()
     assertThat(resultat.elementOmtale).isEqualTo("iframe nummer 1")
@@ -260,7 +260,8 @@ class TestResultatResourceTest(
 
     restTemplate.delete(location)
     val resultatForSak =
-        restTemplate.getForObject("/testresultat?sakId=$sakId", ResultatForSak::class.java)!!
+        restTemplate.getForObject(
+            "/testresultat?testgrunnlagId=$sakId", ResultatForSak::class.java)!!
     assertThat(resultatForSak.resultat).isEmpty()
   }
 
