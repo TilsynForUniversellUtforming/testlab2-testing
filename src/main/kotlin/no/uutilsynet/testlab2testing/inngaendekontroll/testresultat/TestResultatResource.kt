@@ -5,6 +5,7 @@ import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
+import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
 import org.springframework.http.ResponseEntity
@@ -24,7 +25,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 class TestResultatResource(
     val testResultatDAO: TestResultatDAO,
     val aggregeringService: AggregeringService,
-    val brukarService: BrukarService
+    val brukarService: BrukarService,
+    val bildeService: BildeService,
 ) {
   val logger: Logger = getLogger(TestResultatResource::class.java)
 
@@ -101,7 +103,15 @@ class TestResultatResource(
       testResultatDAO
           .delete(id)
           .fold(
-              onSuccess = { ResponseEntity.ok().build() },
+              onSuccess = {
+                runCatching { bildeService.deleteBilder(id) }
+                    .fold(
+                        { ResponseEntity.ok().build() },
+                        {
+                          logger.error("Slettet testresultat, men feil ved sletting av bilder")
+                          ResponseEntity.internalServerError().build()
+                        })
+              },
               onFailure = {
                 logger.error("Feil ved sletting av testresultat", it)
                 ResponseEntity.internalServerError().build()

@@ -1,19 +1,12 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
-import java.awt.Image
-import java.awt.image.BufferedImage
-import java.time.Instant
-import javax.imageio.ImageIO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.util.MimeTypeUtils
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -25,38 +18,15 @@ import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/bilder")
-class BildeResource(
-    val testResultatDAO: TestResultatDAO,
-    val blobClient: BlobStorageClient,
-) {
+class BildeResource(val bildeService: BildeService) {
   val logger: Logger = LoggerFactory.getLogger(BildeResource::class.java)
 
-  @CacheEvict(value = ["bildeCache"], key = "#testresultatId")
   @PostMapping("/{testresultatId}")
   fun createBilde(
       @PathVariable testresultatId: Int,
       @RequestParam("bilder") bilder: List<MultipartFile>
   ): ResponseEntity<Any> =
-      runCatching {
-            val antallBilder =
-                testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
-            val imageDetails =
-                multipartFilesToImageDetails(testresultatId, antallBilder.size, bilder).getOrThrow()
-
-            blobClient.uploadBilder(imageDetails).forEach { bildeResultat ->
-              if (bildeResultat.isSuccess) {
-                val opprettet = Instant.now()
-                val bildeDetalj = bildeResultat.getOrThrow()
-                testResultatDAO
-                    .saveBilde(
-                        testresultatId,
-                        bildeDetalj.fullFileName,
-                        bildeDetalj.fullThumbnailName,
-                        opprettet)
-                    .getOrThrow()
-              }
-            }
-          }
+      runCatching { bildeService.createBilde(testresultatId, bilder) }
           .fold(
               { ResponseEntity.noContent().build() },
               {
@@ -64,39 +34,10 @@ class BildeResource(
                 ResponseEntity.internalServerError().build()
               })
 
-  @CacheEvict(value = ["bildeCache"], key = "#testresultatId")
   @DeleteMapping("{testresultatId}/{bildeId}")
   fun deleteBilde(@PathVariable testresultatId: Int, @PathVariable bildeId: Int) =
       runCatching {
-            val bildeSti =
-                testResultatDAO.getBildeSti(bildeId).getOrThrow()
-                    ?: throw IllegalArgumentException("Fann ikkje bilde for bilde-id $bildeId")
-
-            blobClient.deleteBilde(bildeSti.bilde).onFailure {
-              logger.error("Kunne ikkje slette bilde frå blob storage", it)
-              throw it
-            }
-
-            blobClient.deleteBilde(bildeSti.thumbnail).onFailure {
-              blobClient.restoreBilde(bildeSti.bilde).onFailure { ex ->
-                logger.error("Kunne ikkje gjenopprette bilde", ex)
-              }
-              logger.error("Kunne ikkje slette thumbnail frå blob storage")
-              throw it
-            }
-
-            testResultatDAO.deleteBilde(bildeId).onFailure {
-              logger.error("Kunne ikkje slette bilde frå database", it)
-              blobClient.restoreBilde(bildeSti.bilde).onFailure { ex ->
-                logger.error("Kunne ikkje gjenopprette bilde", ex)
-              }
-              blobClient.restoreBilde(bildeSti.thumbnail).onFailure { ex ->
-                logger.error("Kunne ikkje gjenopprette bilde", ex)
-              }
-
-              throw it
-            }
-
+            bildeService.deleteBilder(testresultatId, bildeId)
             ResponseEntity.noContent().build<Unit>()
           }
           .onFailure {
@@ -107,10 +48,7 @@ class BildeResource(
   @Cacheable("bildeCache", key = "#testresultatId")
   @GetMapping("/{testresultatId}")
   fun getBildeListForTestresultat(@PathVariable testresultatId: Int): ResponseEntity<List<Bilde>> =
-      runCatching {
-            val paths = testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
-            blobClient.getBildeStiList(paths)
-          }
+      runCatching { bildeService.getBildeListForTestresultat(testresultatId) }
           .fold(
               { ResponseEntity.ok(it.getOrThrow()) },
               {
@@ -122,46 +60,5 @@ class BildeResource(
   @Scheduled(fixedRateString = "\${blobstorage.sasttl}")
   fun emptyBildeCache() {
     logger.info("Tømmer bildeCache")
-  }
-
-  private fun createThumbnailImage(originalImage: BufferedImage): BufferedImage {
-    val imageTargetSize = 100
-    val resultingImage =
-        originalImage.getScaledInstance(imageTargetSize, imageTargetSize, Image.SCALE_DEFAULT)
-    val outputImage = BufferedImage(imageTargetSize, imageTargetSize, BufferedImage.TYPE_INT_RGB)
-    outputImage.graphics.drawImage(resultingImage, 0, 0, null)
-
-    return outputImage
-  }
-
-  private fun multipartFilesToImageDetails(
-      testresultatId: Int,
-      indexOffset: Int,
-      bildeList: List<MultipartFile>
-  ): Result<List<BildeRequest>> {
-    val allowedMIMETypes =
-        listOf(MimeTypeUtils.IMAGE_JPEG_VALUE, MimeTypeUtils.IMAGE_PNG_VALUE, "image/bmp")
-
-    return runCatching {
-      bildeList.mapIndexed { index, bilde ->
-        val originalFileName =
-            bilde.originalFilename ?: throw IllegalArgumentException("Filnamn er tomt")
-
-        if (!allowedMIMETypes.contains(bilde.contentType)) {
-          throw IllegalArgumentException(
-              "$originalFileName har annen filtype enn ${allowedMIMETypes.joinToString(",")}")
-        }
-
-        val fileExtension = originalFileName.substringAfterLast('.').lowercase()
-
-        val image = ImageIO.read(bilde.inputStream)
-        val thumbnail = createThumbnailImage(image)
-
-        val bildeIndex = indexOffset + index
-        val newFileName = "${testresultatId}_${bildeIndex}"
-
-        BildeRequest(image, thumbnail, newFileName, fileExtension)
-      }
-    }
   }
 }
