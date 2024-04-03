@@ -13,9 +13,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
 
-@SpringBootTest(
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = ["spring.cache.type=NONE"])
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
 class UtvalResourceTest(
@@ -28,6 +26,9 @@ class UtvalResourceTest(
 
   @BeforeAll
   fun beforeAll() {
+    println("HEI")
+    println(loeysingsRegisterClient.getMany(listOf(1)))
+    println("NEI")
     loeysingsRegisterClient
         .saveLoeysing("UUTilsynet", URI("https://www.uutilsynet.no/").toURL(), "991825827")
         .getOrThrow()
