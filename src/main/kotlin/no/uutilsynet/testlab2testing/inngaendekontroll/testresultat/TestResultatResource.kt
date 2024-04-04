@@ -57,12 +57,12 @@ class TestResultatResource(
             })
   }
 
-  @GetMapping("")
+  @GetMapping
   fun getManyResults(
-      @RequestParam sakId: Int
+      @RequestParam testgrunnlagId: Int
   ): ResponseEntity<Map<String, List<ResultatManuellKontroll>>> {
     return testResultatDAO
-        .getManyResults(sakId)
+        .getManyResults(testgrunnlagId)
         .fold(
             onSuccess = { ResponseEntity.ok(mapOf("resultat" to it)) },
             onFailure = {
