@@ -4,5 +4,6 @@ enum class TestresultatUtfall {
   samsvar,
   brot,
   ikkjeForekomst,
+  ikkjeTesta,
   varsel
 }

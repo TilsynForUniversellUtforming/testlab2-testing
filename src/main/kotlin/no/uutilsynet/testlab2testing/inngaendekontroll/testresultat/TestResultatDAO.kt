@@ -139,6 +139,7 @@ class TestResultatDAO(
     testResultat.svar.forEach { saveSvar(testResultat.id, it) }
   }
 
+  @Transactional
   fun delete(id: Int): Result<Unit> = runCatching {
     jdbcTemplate.update(
         """
@@ -165,22 +166,21 @@ class TestResultatDAO(
       }
 
   @Transactional
-  fun saveBilde(testresultatId: Int, bildePath: String, thumbnailPath: String, opprettet: Instant) =
-      runCatching {
-        jdbcTemplate.update(
-            """
+  fun saveBilde(testresultatId: Int, bildePath: String, thumbnailPath: String) = runCatching {
+    jdbcTemplate.update(
+        """
               insert into testresultat_bilde (testresultat_id, bilde, thumbnail, opprettet)
               values (:testresultat_id, :bilde, :thumbnail, :opprettet)
               on conflict (testresultat_id, bilde, thumbnail) do update
               set opprettet = excluded.opprettet;
             """
-                .trimMargin(),
-            mapOf(
-                "testresultat_id" to testresultatId,
-                "bilde" to bildePath,
-                "thumbnail" to thumbnailPath,
-                "opprettet" to Timestamp.from(opprettet)))
-      }
+            .trimMargin(),
+        mapOf(
+            "testresultat_id" to testresultatId,
+            "bilde" to bildePath,
+            "thumbnail" to thumbnailPath,
+            "opprettet" to Timestamp.from(Instant.now())))
+  }
 
   @Transactional
   fun deleteBilde(bildeId: Int) = runCatching {
