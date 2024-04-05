@@ -42,12 +42,13 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val result =
           jdbcTemplate.query(
               """
-            select k.id as id,
-                   k.tittel as tittel,
-                   k.saksbehandler as saksbehandler,
-                   k.sakstype as sakstype,
+            select k.id             as id,
+                   k.tittel         as tittel,
+                   k.saksbehandler  as saksbehandler,
+                   k.sakstype       as sakstype,
                    k.arkivreferanse as arkivreferanse,
-                   kl.loeysing_id as loeysingar_id
+                   kl.loeysing_id   as loeysingar_id,
+                   k.utval_id
             from kontroll k
                      left join kontroll_loeysing kl on k.id = kl.kontroll_id
             where k.id = :id
@@ -63,6 +64,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                         rs.getString("saksbehandler"),
                         rs.getString("sakstype"),
                         rs.getString("arkivreferanse"),
+                        rs.getInt("utval_id").let { if (it != 0) it else null },
                         emptyList())
                 val loeysingar =
                     rs.getInt("loeysingar_id").let {
@@ -87,6 +89,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val saksbehandler: String,
       val sakstype: String,
       val arkivreferanse: String,
+      val utvalId: Int?,
       val loeysingar: List<Loeysing>
   ) {
     data class Loeysing(val id: Int)
@@ -101,7 +104,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             set tittel = :tittel,
                 saksbehandler = :saksbehandler,
                 sakstype = :sakstype,
-                arkivreferanse = :arkivreferanse
+                arkivreferanse = :arkivreferanse,
+                utval_id = :utvalId
             where id = :id
           """
               .trimIndent(),
@@ -110,25 +114,29 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "saksbehandler" to kontroll.saksbehandler,
               "sakstype" to kontroll.sakstype.name,
               "arkivreferanse" to kontroll.arkivreferanse,
+              "utvalId" to kontroll.utval?.id,
               "id" to kontroll.id))
-      kontroll.loeysingar.forEach { loeysing ->
-        jdbcTemplate.update(
-            """
+
+      if (kontroll.loeysingar.isNotEmpty()) {
+        kontroll.loeysingar.forEach { loeysing ->
+          jdbcTemplate.update(
+              """
                 insert into kontroll_loeysing (kontroll_id, loeysing_id)
                 values (:kontrollId, :loeysingId)
                 on conflict (kontroll_id, loeysing_id) do nothing
             """
-                .trimIndent(),
-            mapOf("kontrollId" to kontroll.id, "loeysingId" to loeysing.id))
-      }
-      jdbcTemplate.update(
-          """
+                  .trimIndent(),
+              mapOf("kontrollId" to kontroll.id, "loeysingId" to loeysing.id))
+        }
+        jdbcTemplate.update(
+            """
                 delete from kontroll_loeysing
                 where kontroll_id = :kontrollId
                 and loeysing_id not in (:loeysingIds)
             """
-              .trimIndent(),
-          mapOf("kontrollId" to kontroll.id, "loeysingIds" to kontroll.loeysingar.map { it.id }))
+                .trimIndent(),
+            mapOf("kontrollId" to kontroll.id, "loeysingIds" to kontroll.loeysingar.map { it.id }))
+      }
     }
   }
 }

@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.kontroll
 
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
+import no.uutilsynet.testlab2testing.loeysing.UtvalResource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -11,7 +12,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 @RequestMapping("/kontroller")
 class KontrollResource(
     val kontrollDAO: KontrollDAO,
-    val loeysingsRegisterClient: LoeysingsRegisterClient
+    val loeysingsRegisterClient: LoeysingsRegisterClient,
+    val utvalResource: UtvalResource
 ) {
   private val logger: Logger = LoggerFactory.getLogger(KontrollResource::class.java)
 
@@ -35,6 +37,7 @@ class KontrollResource(
           val kontrollDB = kontrollDAO.getKontroll(id).getOrThrow()
           val loeysingar =
               loeysingsRegisterClient.getMany(kontrollDB.loeysingar.map { it.id }).getOrThrow()
+          val utval = kontrollDB.utvalId?.let { utvalResource.fetchUtval(it).getOrThrow() }
           Kontroll(
               kontrollDB.id,
               Kontroll.KontrollType.ManuellKontroll,
@@ -42,7 +45,8 @@ class KontrollResource(
               kontrollDB.saksbehandler,
               Kontroll.Sakstype.valueOf(kontrollDB.sakstype),
               kontrollDB.arkivreferanse,
-              loeysingar)
+              loeysingar,
+              utval)
         }
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
