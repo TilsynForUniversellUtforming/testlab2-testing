@@ -502,6 +502,7 @@ class AggregeringService(
             TestresultatUtfall.samsvar -> talSiderSamsvar += 1
             TestresultatUtfall.ikkjeForekomst -> talSiderIkkjeForekomst += 1
             TestresultatUtfall.varsel -> TODO()
+            TestresultatUtfall.ikkjeTesta -> TODO()
           }
         }
     return TalUtfall(talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst)

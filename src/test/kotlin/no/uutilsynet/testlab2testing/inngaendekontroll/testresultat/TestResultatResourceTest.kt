@@ -221,13 +221,13 @@ class TestResultatResourceTest(
 
   @Test
   @Order(9)
-  @DisplayName("vi kan hente alle resultater for en gitt sak")
-  fun henteAlleResultaterForSak() {
-    val resultatForSak =
+  @DisplayName("vi kan hente alle resultater for et gitt tesgrunnlag")
+  fun henteAlleResultaterForTestgrunnlag() {
+    val resultatForTestgrunnlag =
         restTemplate.getForObject(
-            "/testresultat?testgrunnlagId=$testgrunnlagId", ResultatForSak::class.java)!!
-    assertThat(resultatForSak.resultat).hasSize(1)
-    val resultat = resultatForSak.resultat.first()
+            "/testresultat?testgrunnlagId=$testgrunnlagId", ResultatForTestgrunnlag::class.java)!!
+    assertThat(resultatForTestgrunnlag.resultat).hasSize(1)
+    val resultat = resultatForTestgrunnlag.resultat.first()
     assertThat(resultat.elementOmtale).isEqualTo("iframe nummer 1")
     assertThat(resultat.elementResultat).isEqualTo(resultat.elementResultat)
     assertThat(resultat.elementUtfall)
@@ -259,11 +259,11 @@ class TestResultatResourceTest(
     restTemplate.put(location, endret)
 
     restTemplate.delete(location)
-    val resultatForSak =
+    val resultatForTestgrunnlag =
         restTemplate.getForObject(
-            "/testresultat?testgrunnlagId=$sakId", ResultatForSak::class.java)!!
-    assertThat(resultatForSak.resultat).isEmpty()
+            "/testresultat?testgrunnlagId=$testgrunnlagId", ResultatForTestgrunnlag::class.java)!!
+    assertThat(resultatForTestgrunnlag.resultat).isEmpty()
   }
 
-  data class ResultatForSak(val resultat: List<ResultatManuellKontroll>)
+  data class ResultatForTestgrunnlag(val resultat: List<ResultatManuellKontroll>)
 }
