@@ -22,7 +22,7 @@ class BildeService(
 ) {
 
   @CacheEvict(value = ["bildeCache"], key = "#testresultatId")
-  fun createBilde(testresultatId: Int, bilder: List<MultipartFile>) {
+  fun createBilde(testresultatId: Int, bilder: List<MultipartFile>) = runCatching {
     val antallBilder = testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
     val imageDetails =
         multipartFilesToImageDetails(testresultatId, antallBilder.size, bilder).getOrThrow()
@@ -38,7 +38,7 @@ class BildeService(
   }
 
   @CacheEvict(value = ["bildeCache"], key = "#testresultatId")
-  fun deleteBilder(testresultatId: Int, bildeId: Int? = null) {
+  fun deleteBilder(testresultatId: Int, bildeId: Int? = null) = runCatching {
     val bildeStiList: List<BildeSti> =
         if (bildeId != null) {
           listOf(
@@ -79,7 +79,7 @@ class BildeService(
   }
 
   @Cacheable("bildeCache", key = "#testresultatId")
-  fun getBildeListForTestresultat(testresultatId: Int): Result<List<Bilde>> {
+  fun getBildeListForTestresultat(testresultatId: Int): Result<List<Bilde>> = runCatching {
     val paths = testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
     return blobClient.getBildeStiList(paths)
   }

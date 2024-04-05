@@ -26,7 +26,8 @@ class BildeResource(val bildeService: BildeService) {
       @PathVariable testresultatId: Int,
       @RequestParam("bilder") bilder: List<MultipartFile>
   ): ResponseEntity<Any> =
-      runCatching { bildeService.createBilde(testresultatId, bilder) }
+      bildeService
+          .createBilde(testresultatId, bilder)
           .fold(
               { ResponseEntity.noContent().build() },
               {
@@ -36,21 +37,22 @@ class BildeResource(val bildeService: BildeService) {
 
   @DeleteMapping("{testresultatId}/{bildeId}")
   fun deleteBilde(@PathVariable testresultatId: Int, @PathVariable bildeId: Int) =
-      runCatching {
-            bildeService.deleteBilder(testresultatId, bildeId)
-            ResponseEntity.noContent().build<Unit>()
-          }
-          .onFailure {
-            logger.error("Kunne ikkje slette bilde", it)
-            ResponseEntity.internalServerError().build<Unit>()
-          }
+      bildeService
+          .deleteBilder(testresultatId, bildeId)
+          .fold(
+              { ResponseEntity.noContent().build<Unit>() },
+              {
+                logger.error("Kunne ikkje slette bilde", it)
+                ResponseEntity.internalServerError().build<Unit>()
+              })
 
   @Cacheable("bildeCache", key = "#testresultatId")
   @GetMapping("/{testresultatId}")
   fun getBildeListForTestresultat(@PathVariable testresultatId: Int): ResponseEntity<List<Bilde>> =
-      runCatching { bildeService.getBildeListForTestresultat(testresultatId) }
+      bildeService
+          .getBildeListForTestresultat(testresultatId)
           .fold(
-              { ResponseEntity.ok(it.getOrThrow()) },
+              { ResponseEntity.ok(it) },
               {
                 logger.error("Feil ved opplasting av bilder", it)
                 ResponseEntity.internalServerError().build()

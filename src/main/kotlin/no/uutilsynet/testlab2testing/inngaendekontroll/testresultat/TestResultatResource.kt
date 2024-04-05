@@ -94,30 +94,28 @@ class TestResultatResource(
       aggregeringService.saveAggregertResultatSak(testgrunnlagId)
 
   @DeleteMapping("/{id}")
-  fun deleteTestResultat(@PathVariable id: Int): ResponseEntity<Unit> {
-    logger.info("Sletter testresultat med id $id")
-    val resultat = testResultatDAO.getTestResultat(id).getOrThrow()
-    return if (resultat.status == ResultatManuellKontroll.Status.Ferdig) {
-      ResponseEntity.badRequest().build()
-    } else {
-      testResultatDAO
-          .delete(id)
+  fun deleteTestResultat(@PathVariable id: Int): ResponseEntity<Unit> =
+      runCatching {
+            logger.info("Sletter testresultat med id $id")
+            val resultat = testResultatDAO.getTestResultat(id).getOrThrow()
+            if (resultat.status == ResultatManuellKontroll.Status.Ferdig) {
+              throw IllegalArgumentException("Resultat er ferdig og kan ikke slettes")
+            } else {
+              testResultatDAO.delete(id).getOrThrow()
+              bildeService.deleteBilder(id).getOrThrow()
+            }
+          }
           .fold(
-              onSuccess = {
-                runCatching { bildeService.deleteBilder(id) }
-                    .fold(
-                        { ResponseEntity.ok().build() },
-                        {
-                          logger.error("Slettet testresultat, men feil ved sletting av bilder")
-                          ResponseEntity.internalServerError().build()
-                        })
-              },
-              onFailure = {
-                logger.error("Feil ved sletting av testresultat", it)
-                ResponseEntity.internalServerError().build()
+              { ResponseEntity.ok().build() },
+              {
+                if (it is IllegalArgumentException) {
+                  logger.error("Testresultat har status ferdig", it)
+                  ResponseEntity.badRequest().build()
+                } else {
+                  logger.error("Feil ved sletting av testresultat eller bilde", it)
+                  ResponseEntity.internalServerError().build()
+                }
               })
-    }
-  }
 
   @GetMapping("/aggregert/{testgrunnlagId}")
   fun getAggregertResultat(@PathVariable testgrunnlagId: Int) =
