@@ -401,18 +401,14 @@ class AggregeringService(
         .entries
         .map {
           val testresultat = it.value
-          val talElementBrot = testresultat.count { it.elementResultat == TestresultatUtfall.brot }
-          val talElementSamsvar =
-              testresultat.count { it.elementResultat == TestresultatUtfall.samsvar }
-          val talElementVarsel =
-              testresultat.count { it.elementResultat == TestresultatUtfall.varsel }
-          val talElementIkkjeForekomst =
-              testresultat.count { it.elementResultat == TestresultatUtfall.ikkjeForekomst }
+          val talElementUtfall = countElementUtfall(testresultat)
 
           val (talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst) =
               countSideUtfall(testresultat)
 
           val suksesskriterium = getKravIdFraTestregel(it.key)
+
+          val gjennomsnittTestresultat = calculateTestregelGjennomsnitt(testresultat)
 
           AggregeringPerTestregelDTO(
               null,
@@ -420,17 +416,79 @@ class AggregeringService(
               it.key,
               suksesskriterium,
               listOf(suksesskriterium),
-              talElementSamsvar,
-              talElementBrot,
-              talElementVarsel,
-              talElementIkkjeForekomst,
+              talElementUtfall.talSamsvar,
+              talElementUtfall.talBrot,
+              talElementUtfall.talVarsel,
+              talElementUtfall.talIkkjeForekomst,
               talSiderSamsvar,
               talSiderBrot,
               talSiderIkkjeForekomst,
-              0.0f,
-              0.0f,
+              gjennomsnittTestresultat.testregelGjennomsnittlegSideSamsvarProsent,
+              gjennomsnittTestresultat.testregelGjennomsnittlegSideBrotProsent,
               testresultat.first().testgrunnlagId)
         }
+  }
+
+  fun processPrNettside(values: List<ResultatManuellKontroll>): ResultatPerTestregelPerSide {
+    val talElementUtfall = countElementUtfall(values)
+
+    return ResultatPerTestregelPerSide(
+        brotprosentTrSide =
+            (talElementUtfall.talBrot.toFloat() /
+                (talElementUtfall.talBrot + talElementUtfall.talSamsvar).toFloat()),
+        samsvarsprosentTrSide =
+            (talElementUtfall.talSamsvar.toFloat() /
+                (talElementUtfall.talBrot + talElementUtfall.talSamsvar).toFloat()),
+        ikkjeForekomst = talElementUtfall.talIkkjeForekomst > 0)
+  }
+
+  private fun countElementUtfall(values: List<ResultatManuellKontroll>): TalUtfall {
+    val talElementBrot = values.count { it.elementResultat == TestresultatUtfall.brot }
+    val talElementSamsvar = values.count { it.elementResultat == TestresultatUtfall.samsvar }
+    val talElementIkkjeForekomst =
+        values.count { it.elementResultat == TestresultatUtfall.ikkjeForekomst }
+    val talElementVarsel = values.count { it.elementResultat == TestresultatUtfall.varsel }
+    val talElementIkkjeTesta = values.count { it.elementResultat == TestresultatUtfall.ikkjeTesta }
+    return TalUtfall(
+        talBrot = talElementBrot,
+        talSamsvar = talElementSamsvar,
+        talIkkjeForekomst = talElementIkkjeForekomst,
+        talVarsel = talElementVarsel,
+        talIkkjeTesta = talElementIkkjeTesta)
+  }
+
+  fun calculateTestregelGjennomsnitt(
+      values: List<ResultatManuellKontroll>
+  ): GjennomsnittTestresultat {
+    val resultatPerTestregelPerSide: List<ResultatPerTestregelPerSide> =
+        values.groupBy { it.nettsideId }.entries.map { processPrNettside(it.value) }
+
+    return gjennomsnittTestresultat(resultatPerTestregelPerSide)
+  }
+
+  private fun gjennomsnittTestresultat(
+      resultatPerTestregelPerSide: List<ResultatPerTestregelPerSide>
+  ): GjennomsnittTestresultat {
+    var talSiderMedForekomst: Int = 0
+    var summertBrotprosent: Float = 0f
+    var summertSamsvarprosent: Float = 0f
+
+    resultatPerTestregelPerSide.forEach {
+      summertBrotprosent += addIfIkkjeForekomst(it.brotprosentTrSide, it.ikkjeForekomst)
+      summertSamsvarprosent += addIfIkkjeForekomst(it.samsvarsprosentTrSide, it.ikkjeForekomst)
+      talSiderMedForekomst += addIfIkkjeForekomst(1f, it.ikkjeForekomst).toInt()
+    }
+    val testregelGjennomsnittlegSideBrot =
+        (summertBrotprosent / talSiderMedForekomst).takeUnless { it.isNaN() }
+    val testregelGjennomsnittlegSideSamsvar =
+        (summertSamsvarprosent / talSiderMedForekomst).takeUnless { it.isNaN() }
+
+    return GjennomsnittTestresultat(
+        testregelGjennomsnittlegSideSamsvar, testregelGjennomsnittlegSideBrot)
+  }
+
+  private fun addIfIkkjeForekomst(value: Float, ikkjeForekomst: Boolean): Float {
+    return if (!ikkjeForekomst) value else 0f
   }
 
   private fun createAggregeringPerSuksesskriteriumDTO(
@@ -492,6 +550,8 @@ class AggregeringService(
     var talSiderBrot = 0
     var talSiderSamsvar = 0
     var talSiderIkkjeForekomst = 0
+    var talSiderVarsel = 0
+    var talSiderIkkjeTesta = 0
 
     testresultat
         .groupBy { it.nettsideId }
@@ -501,11 +561,16 @@ class AggregeringService(
             TestresultatUtfall.brot -> talSiderBrot += 1
             TestresultatUtfall.samsvar -> talSiderSamsvar += 1
             TestresultatUtfall.ikkjeForekomst -> talSiderIkkjeForekomst += 1
-            TestresultatUtfall.varsel -> TODO()
-            TestresultatUtfall.ikkjeTesta -> TODO()
+            TestresultatUtfall.varsel -> talSiderVarsel += 1
+            TestresultatUtfall.ikkjeTesta -> talSiderIkkjeTesta += 1
           }
         }
-    return TalUtfall(talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst)
+    return TalUtfall(
+        talBrot = talSiderBrot,
+        talSamsvar = talSiderSamsvar,
+        talIkkjeForekomst = talSiderIkkjeForekomst,
+        talVarsel = talSiderVarsel,
+        talIkkjeTesta = talSiderIkkjeTesta)
   }
 
   fun getKravIdFraTestregel(id: Int): Int {
@@ -531,3 +596,14 @@ class AggregeringService(
         ?: throw RuntimeException("Fant ikkje krav for testregel med id ${this.testregelId}")
   }
 }
+
+data class GjennomsnittTestresultat(
+    val testregelGjennomsnittlegSideSamsvarProsent: Float?,
+    val testregelGjennomsnittlegSideBrotProsent: Float?
+)
+
+data class ResultatPerTestregelPerSide(
+    val brotprosentTrSide: Float,
+    val samsvarsprosentTrSide: Float,
+    val ikkjeForekomst: Boolean
+)
