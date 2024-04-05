@@ -76,7 +76,8 @@ class AggregeringService(
             aggregeringSide
                 .map { aggregertResultatSide -> aggregerteResultatSideTODTO(aggregertResultatSide) }
                 .forEach { aggregeringDAO.createAggregeringSide(it) }
-          } ?: throw RuntimeException("Aggregering url er null")
+          }
+              ?: throw RuntimeException("Aggregering url er null")
         }
         .onFailure {
           logger.error(
@@ -101,7 +102,8 @@ class AggregeringService(
             aggregertResultatSuksesskriterium
                 .map { aggregertResultatSuksesskritieriumToDTO(it) }
                 .forEach { aggregeringDAO.createAggregertResultatSuksesskriterium(it) }
-          } ?: throw RuntimeException("Aggregering url er null")
+          }
+              ?: throw RuntimeException("Aggregering url er null")
         }
         .onFailure {
           logger.error(
