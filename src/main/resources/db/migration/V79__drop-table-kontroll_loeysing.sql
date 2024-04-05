@@ -1,0 +1,1 @@
+drop table kontroll_loeysing

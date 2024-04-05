@@ -35,8 +35,6 @@ class KontrollResource(
   fun getKontroll(@PathVariable id: Int): ResponseEntity<Kontroll> {
     return runCatching {
           val kontrollDB = kontrollDAO.getKontroll(id).getOrThrow()
-          val loeysingar =
-              loeysingsRegisterClient.getMany(kontrollDB.loeysingar.map { it.id }).getOrThrow()
           val utval = kontrollDB.utvalId?.let { utvalResource.fetchUtval(it).getOrThrow() }
           Kontroll(
               kontrollDB.id,
@@ -45,7 +43,6 @@ class KontrollResource(
               kontrollDB.saksbehandler,
               Kontroll.Sakstype.valueOf(kontrollDB.sakstype),
               kontrollDB.arkivreferanse,
-              loeysingar,
               utval)
         }
         .fold(
@@ -81,9 +78,6 @@ class KontrollResource(
 
     return runCatching {
           require(kontroll.id == id) { "id i URL-en og id er ikkje den same" }
-          kontroll.loeysingar.forEach {
-            loeysingsRegisterClient.saveLoeysing(it.namn, it.url, it.orgnummer).getOrThrow()
-          }
           kontrollDAO.updateKontroll(kontroll).getOrThrow()
         }
         .fold(
