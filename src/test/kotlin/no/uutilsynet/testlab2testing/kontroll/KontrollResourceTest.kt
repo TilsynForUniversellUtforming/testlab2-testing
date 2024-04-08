@@ -6,9 +6,8 @@ import io.restassured.RestAssured.given
 import io.restassured.parsing.Parser
 import io.restassured.path.json.JsonPath
 import io.restassured.path.json.JsonPath.from
+import java.net.URI
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.loeysing.Utval
-import no.uutilsynet.testlab2testing.loeysing.UtvalResource
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.startsWith
@@ -93,30 +92,14 @@ class KontrollResourceTest {
     assertThat(json.get<String>("saksbehandler")).isEqualTo("Ola Nordmann")
     assertThat(json.get<String>("sakstype")).isEqualTo("forvaltningssak")
     assertThat(json.get<String>("arkivreferanse")).isEqualTo("1234")
+    assertThat(json.get<List<Loeysing>>("loeysingar")).isEqualTo(emptyList<Loeysing>())
   }
 
   @Test
   @DisplayName(
-      "gitt vi har en kontroll, når vi oppdaterer den med et utvalg, så skal kontrollen være lagret med utvalget")
-  fun oppdaterKontrollMedUtvalg() {
+      "gitt vi har en kontroll, når vi oppdaterer den med en liste med løsninger, så skal kontrollen være lagret med løsningene")
+  fun updateKontrollWithLoeysingar() {
     RestAssured.defaultParser = Parser.JSON
-
-    val nyttUtval =
-        UtvalResource.NyttUtval(
-            "testutvalg",
-            listOf(Loeysing.External("UUTilsynet", "https://www.uutilsynet.no/", "991825827")))
-    val utvalLocation =
-        given()
-            .port(port)
-            .body(nyttUtval)
-            .contentType("application/json")
-            .post("/v1/utval")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-    val utval = get(utvalLocation).`as`(Utval::class.java)
-
     val body =
         mapOf(
             "kontrolltype" to "manuell-kontroll",
@@ -135,7 +118,9 @@ class KontrollResourceTest {
             .extract()
             .header("Location")
     val opprettetKontroll = get(location).`as`(Kontroll::class.java)
-    val oppdatertKontroll = opprettetKontroll.copy(utval = utval)
+    val loeysingar =
+        listOf(Loeysing(1, "UUTilsynet", URI("https://www.uutilsynet.no/").toURL(), "991825827"))
+    val oppdatertKontroll = opprettetKontroll.copy(loeysingar = loeysingar)
     val updateBody = mapOf("kontroll" to oppdatertKontroll)
     given()
         .port(port)
@@ -146,6 +131,6 @@ class KontrollResourceTest {
         .statusCode(equalTo(204))
     val lagretKontroll = get(location).`as`(Kontroll::class.java)
 
-    assertThat(lagretKontroll.utval).isEqualTo(utval)
+    assertThat(lagretKontroll.loeysingar).isEqualTo(loeysingar)
   }
 }

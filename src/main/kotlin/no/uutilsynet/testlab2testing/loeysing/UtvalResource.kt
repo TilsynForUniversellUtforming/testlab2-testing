@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.loeysing
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
+import java.net.URI
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateOrgNummer
 import no.uutilsynet.testlab2testing.common.validateURL
@@ -11,7 +12,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
 @RequestMapping("v1/utval")
@@ -73,12 +73,7 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
         }
     logger.atInfo().log("lagrar eit nytt utval med namn ${nyttUtval.namn}")
     val utvalId = utvalDAO.createUtval(utvalNamn, loeysingar.map { it.id }).getOrThrow()
-    val location =
-        ServletUriComponentsBuilder.fromCurrentRequest()
-            .path("/{utvalId}")
-            .buildAndExpand(utvalId)
-            .toUri()
-    return ResponseEntity.created(location).build()
+    return ResponseEntity.created(URI("/v1/utval/$utvalId")).build()
   }
 
   @Operation(
@@ -91,7 +86,12 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
               ApiResponse(responseCode = "404", description = "Utvalet vart ikkje funne")])
   @GetMapping("{id}")
   fun getUtval(@PathVariable id: Int): ResponseEntity<Utval> {
-    return fetchUtval(id)
+    return utvalDAO
+        .getUtval(id)
+        .mapCatching {
+          val loeysingar = loeysingsRegisterClient.getMany(it.loeysingar).getOrThrow()
+          Utval(it.id, it.namn, loeysingar, it.oppretta)
+        }
         .map { utval -> ResponseEntity.ok(utval) }
         .getOrElse {
           when (it) {
@@ -99,14 +99,6 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
             else -> ResponseEntity.internalServerError().build()
           }
         }
-  }
-
-  fun fetchUtval(id: Int): Result<Utval> {
-    return kotlin.runCatching {
-      val utvalFromDatabase = utvalDAO.getUtval(id).getOrThrow()
-      val loeysingar = loeysingsRegisterClient.getMany(utvalFromDatabase.loeysingar).getOrThrow()
-      Utval(utvalFromDatabase.id, utvalFromDatabase.namn, loeysingar, utvalFromDatabase.oppretta)
-    }
   }
 
   @Operation(
