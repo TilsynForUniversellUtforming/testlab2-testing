@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.kontroll
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import no.uutilsynet.testlab2testing.loeysing.Utval
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 
 data class Kontroll(
     val id: Int,
@@ -10,7 +10,7 @@ data class Kontroll(
     val saksbehandler: String,
     val sakstype: Sakstype,
     val arkivreferanse: String,
-    val utval: Utval? = null
+    val loeysingar: List<Loeysing>
 ) {
   enum class Sakstype {
     @JsonProperty("forvaltningssak") Forvaltningssak,

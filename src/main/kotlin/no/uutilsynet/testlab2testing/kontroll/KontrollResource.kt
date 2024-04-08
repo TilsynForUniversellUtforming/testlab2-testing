@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.kontroll
 
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.loeysing.UtvalResource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -12,8 +11,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 @RequestMapping("/kontroller")
 class KontrollResource(
     val kontrollDAO: KontrollDAO,
-    val loeysingsRegisterClient: LoeysingsRegisterClient,
-    val utvalResource: UtvalResource
+    val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
   private val logger: Logger = LoggerFactory.getLogger(KontrollResource::class.java)
 
@@ -35,7 +33,8 @@ class KontrollResource(
   fun getKontroll(@PathVariable id: Int): ResponseEntity<Kontroll> {
     return runCatching {
           val kontrollDB = kontrollDAO.getKontroll(id).getOrThrow()
-          val utval = kontrollDB.utvalId?.let { utvalResource.fetchUtval(it).getOrThrow() }
+          val loeysingar =
+              loeysingsRegisterClient.getMany(kontrollDB.loeysingar.map { it.id }).getOrThrow()
           Kontroll(
               kontrollDB.id,
               Kontroll.KontrollType.ManuellKontroll,
@@ -43,7 +42,7 @@ class KontrollResource(
               kontrollDB.saksbehandler,
               Kontroll.Sakstype.valueOf(kontrollDB.sakstype),
               kontrollDB.arkivreferanse,
-              utval)
+              loeysingar)
         }
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
@@ -78,6 +77,9 @@ class KontrollResource(
 
     return runCatching {
           require(kontroll.id == id) { "id i URL-en og id er ikkje den same" }
+          kontroll.loeysingar.forEach {
+            loeysingsRegisterClient.saveLoeysing(it.namn, it.url, it.orgnummer).getOrThrow()
+          }
           kontrollDAO.updateKontroll(kontroll).getOrThrow()
         }
         .fold(
