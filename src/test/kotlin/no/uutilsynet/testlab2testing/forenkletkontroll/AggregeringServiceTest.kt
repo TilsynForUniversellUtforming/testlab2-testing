@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 import java.net.URI
 import java.time.Instant
 import java.time.LocalDate
+import kotlin.random.Random
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.brukar.Brukar
@@ -244,8 +245,68 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     val result3 = aggregeringService.getAggregertResultatSuksesskriterium(testgrunnlagId = sakId)
 
     assertThat(result3).hasSize(1)
-    assertThat(result3.get(0).talSiderBrot).isEqualTo(1)
-    assertThat(result3.get(0).talSiderSamsvar).isEqualTo(0)
+    assertThat(result3[0].talSiderBrot).isEqualTo(1)
+    assertThat(result3[0].talSiderSamsvar).isEqualTo(0)
+  }
+
+  @Test
+  fun calculateTestregelGjennomsnitt() {
+    val testresultat: ArrayList<ResultatManuellKontroll> = resultatManuellKontrollTestdata()
+
+    val gjennomsnittTestresultat = aggregeringService.calculateTestregelGjennomsnitt(testresultat)
+
+    assertThat(
+            gjennomsnittTestresultat.testregelGjennomsnittlegSideSamsvarProsent!! +
+                gjennomsnittTestresultat.testregelGjennomsnittlegSideBrotProsent!!)
+        .isEqualTo(1f)
+  }
+
+  @Test
+  fun resultatPrTestregelPrSide() {
+    val testresultat: ArrayList<ResultatManuellKontroll> = resultatManuellKontrollTestdata()
+
+    testresultat
+        .groupBy { it.nettsideId }
+        .forEach {
+          val result = aggregeringService.processPrNettside(testresultat)
+          assertThat(result.brotprosentTrSide + result.samsvarsprosentTrSide).isEqualTo(1f)
+          if (result.ikkjeForekomst) {
+            assertThat(result.brotprosentTrSide).isEqualTo(0f)
+            assertThat(result.samsvarsprosentTrSide).isEqualTo(0f)
+          }
+        }
+  }
+
+  private fun resultatManuellKontrollTestdata(): ArrayList<ResultatManuellKontroll> {
+    val testresultat: ArrayList<ResultatManuellKontroll> = ArrayList<ResultatManuellKontroll>()
+    val utfall: Map<Int, TestresultatUtfall> =
+        mapOf(
+            1 to TestresultatUtfall.brot,
+            2 to TestresultatUtfall.samsvar,
+            3 to TestresultatUtfall.ikkjeForekomst)
+    var id: Int = 1
+    for (side in 1..10) {
+      for (testregel in 1..10) {
+        val elementResultat = utfall.get(Random.nextInt(1, 3))
+        testresultat.add(
+            ResultatManuellKontroll(
+                id,
+                1,
+                loeysingId = 1,
+                testregelId = testregel,
+                nettsideId = side,
+                brukar = Brukar("testar", "test"),
+                elementOmtale = "Hovedoverskrift",
+                elementResultat = elementResultat,
+                elementUtfall = "elementUtfall",
+                svar = listOf(ResultatManuellKontroll.Svar("Steg 1", "Svar 1")),
+                testVartUtfoert = Instant.now(),
+                status = ResultatManuellKontroll.Status.Ferdig,
+                "Kommentar"))
+        id++
+      }
+    }
+    return testresultat
   }
 
   private fun createTestSak(): Int {
