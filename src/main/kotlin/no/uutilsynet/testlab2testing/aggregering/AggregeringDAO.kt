@@ -76,6 +76,13 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return jdbcTemplate.update(sql, parameterSource)
   }
 
+  fun floatNullVedIkkjeForekomst(value: Float, talElementSamsvar: Int, talElemenBrot: Int): Float? {
+    if (talElemenBrot == 0 && talElementSamsvar == 0) {
+      return null
+    }
+    return value
+  }
+
   fun createAggregertResultatSuksesskriterium(
       aggregertResultatSuksesskriterium: AggregeringPerSuksesskriteriumDTO
   ): Int {
@@ -259,38 +266,54 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
   }
 
-  private fun aggregeringPerTestregelRowmapper(rs: ResultSet) =
-      AggregeringPerTestregelDTO(
-          maalingId = rs.getInt("maaling_id").takeIf { it > 0 },
-          testregelId = rs.getInt("testregel_id"),
-          loeysingId = rs.getInt("loeysing_id"),
-          suksesskriterium = rs.getInt("suksesskriterium"),
-          fleireSuksesskriterium = sqlArrayToList(rs.getArray("fleire_suksesskriterium")),
-          talElementSamsvar = rs.getInt("tal_element_samsvar"),
-          talElementBrot = rs.getInt("tal_element_brot"),
-          talElementVarsel = rs.getInt("tal_element_varsel"),
-          talElementIkkjeForekomst = rs.getInt("tal_element_ikkje_forekomst"),
-          talSiderSamsvar = rs.getInt("tal_sider_samsvar"),
-          talSiderBrot = rs.getInt("tal_sider_brot"),
-          talSiderIkkjeForekomst = rs.getInt("tal_sider_ikkje_forekomst"),
-          testregelGjennomsnittlegSideBrotProsent =
-              rs.getFloat("testregel_gjennomsnittleg_side_brot_prosent"),
-          testregelGjennomsnittlegSideSamsvarProsent =
-              rs.getFloat("testregel_gjennomsnittleg_side_samsvar_prosent"),
-          testgrunnlagId = rs.getInt("testgrunnlag_id"))
+  private fun aggregeringPerTestregelRowmapper(rs: ResultSet): AggregeringPerTestregelDTO {
+    val talElementSamsvar = rs.getInt("tal_element_samsvar")
+    val talElemenBrot = rs.getInt("tal_element_brot")
 
-  private fun aggregeringPerSideRowmapper(rs: ResultSet) =
-      AggregeringPerSideDTO(
-          maalingId = rs.getInt("maaling_id").takeIf { it > 0 },
-          loeysingId = rs.getInt("loeysing_id"),
-          sideUrl = URI(rs.getString("side")).toURL(),
-          sideNivaa = rs.getInt("side_nivaa"),
-          gjennomsnittligBruddProsentTR = rs.getFloat("gjennomsnittlig_brudd_prosent_tr"),
-          talElementSamsvar = rs.getInt("tal_element_samsvar"),
-          talElementBrot = rs.getInt("tal_element_brot"),
-          talElementVarsel = rs.getInt("tal_element_varsel"),
-          talElementIkkjeForekomst = rs.getInt("tal_element_ikkje_forekomst"),
-          testgrunnlagId = rs.getInt("testgrunnlag_id"))
+    return AggregeringPerTestregelDTO(
+        maalingId = rs.getInt("maaling_id").takeIf { it > 0 },
+        testregelId = rs.getInt("testregel_id"),
+        loeysingId = rs.getInt("loeysing_id"),
+        suksesskriterium = rs.getInt("suksesskriterium"),
+        fleireSuksesskriterium = sqlArrayToList(rs.getArray("fleire_suksesskriterium")),
+        talElementSamsvar = rs.getInt("tal_element_samsvar"),
+        talElementBrot = rs.getInt("tal_element_brot"),
+        talElementVarsel = rs.getInt("tal_element_varsel"),
+        talElementIkkjeForekomst = rs.getInt("tal_element_ikkje_forekomst"),
+        talSiderSamsvar = rs.getInt("tal_sider_samsvar"),
+        talSiderBrot = rs.getInt("tal_sider_brot"),
+        talSiderIkkjeForekomst = rs.getInt("tal_sider_ikkje_forekomst"),
+        testregelGjennomsnittlegSideBrotProsent =
+            floatNullVedIkkjeForekomst(
+                rs.getFloat("testregel_gjennomsnittleg_side_brot_prosent"),
+                talElementSamsvar,
+                talElemenBrot),
+        testregelGjennomsnittlegSideSamsvarProsent =
+            floatNullVedIkkjeForekomst(
+                rs.getFloat("testregel_gjennomsnittleg_side_samsvar_prosent"),
+                talElementSamsvar,
+                talElemenBrot),
+        testgrunnlagId = rs.getInt("testgrunnlag_id"))
+  }
+
+  private fun aggregeringPerSideRowmapper(rs: ResultSet): AggregeringPerSideDTO {
+    val talElementSamsvar = rs.getInt("tal_element_samsvar")
+    val talElemenBrot = rs.getInt("tal_element_brot")
+
+    return AggregeringPerSideDTO(
+        maalingId = rs.getInt("maaling_id").takeIf { it > 0 },
+        loeysingId = rs.getInt("loeysing_id"),
+        sideUrl = URI(rs.getString("side")).toURL(),
+        sideNivaa = rs.getInt("side_nivaa"),
+        gjennomsnittligBruddProsentTR =
+            floatNullVedIkkjeForekomst(
+                rs.getFloat("gjennomsnittlig_brudd_prosent_tr"), talElementSamsvar, talElemenBrot),
+        talElementSamsvar = rs.getInt("tal_element_samsvar"),
+        talElementBrot = rs.getInt("tal_element_brot"),
+        talElementVarsel = rs.getInt("tal_element_varsel"),
+        talElementIkkjeForekomst = rs.getInt("tal_element_ikkje_forekomst"),
+        testgrunnlagId = rs.getInt("testgrunnlag_id"))
+  }
 
   private fun aggregeringPerSuksesskriteriumRowmapper(rs: ResultSet) =
       AggregeringPerSuksesskriteriumDTO(
