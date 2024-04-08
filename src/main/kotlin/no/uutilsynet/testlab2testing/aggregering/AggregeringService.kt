@@ -432,6 +432,13 @@ class AggregeringService(
   fun processPrNettside(values: List<ResultatManuellKontroll>): ResultatPerTestregelPerSide {
     val talElementUtfall = countElementUtfall(values)
 
+    val ikkjeForekomst = talElementUtfall.talIkkjeForekomst > 0
+
+    if (ikkjeForekomst) {
+      return ResultatPerTestregelPerSide(
+          brotprosentTrSide = 0f, samsvarsprosentTrSide = 0f, ikkjeForekomst = true)
+    }
+
     return ResultatPerTestregelPerSide(
         brotprosentTrSide =
             (talElementUtfall.talBrot.toFloat() /
@@ -439,7 +446,7 @@ class AggregeringService(
         samsvarsprosentTrSide =
             (talElementUtfall.talSamsvar.toFloat() /
                 (talElementUtfall.talBrot + talElementUtfall.talSamsvar).toFloat()),
-        ikkjeForekomst = talElementUtfall.talIkkjeForekomst > 0)
+        ikkjeForekomst = false)
   }
 
   private fun countElementUtfall(values: List<ResultatManuellKontroll>): TalUtfall {
@@ -474,9 +481,9 @@ class AggregeringService(
     var summertSamsvarprosent: Float = 0f
 
     resultatPerTestregelPerSide.forEach {
-      summertBrotprosent += addIfIkkjeForekomst(it.brotprosentTrSide, it.ikkjeForekomst)
-      summertSamsvarprosent += addIfIkkjeForekomst(it.samsvarsprosentTrSide, it.ikkjeForekomst)
-      talSiderMedForekomst += addIfIkkjeForekomst(1f, it.ikkjeForekomst).toInt()
+      summertBrotprosent += addIfNotIkkjeForekomst(it.brotprosentTrSide, it.ikkjeForekomst)
+      summertSamsvarprosent += addIfNotIkkjeForekomst(it.samsvarsprosentTrSide, it.ikkjeForekomst)
+      talSiderMedForekomst += addIfNotIkkjeForekomst(1f, it.ikkjeForekomst).toInt()
     }
     val testregelGjennomsnittlegSideBrot =
         (summertBrotprosent / talSiderMedForekomst).takeUnless { it.isNaN() }
@@ -487,7 +494,7 @@ class AggregeringService(
         testregelGjennomsnittlegSideSamsvar, testregelGjennomsnittlegSideBrot)
   }
 
-  private fun addIfIkkjeForekomst(value: Float, ikkjeForekomst: Boolean): Float {
+  private fun addIfNotIkkjeForekomst(value: Float, ikkjeForekomst: Boolean): Float {
     return if (!ikkjeForekomst) value else 0f
   }
 
