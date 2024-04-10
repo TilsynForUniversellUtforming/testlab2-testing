@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.kontroll
 
+import java.time.Instant
 import org.springframework.jdbc.core.ResultSetExtractor
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -42,17 +43,19 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val result =
           jdbcTemplate.query(
               """
-            select k.id as id,
-                   k.tittel as tittel,
-                   k.saksbehandler as saksbehandler,
-                   k.sakstype as sakstype,
-                   k.arkivreferanse as arkivreferanse,
-                   kl.loeysing_id as loeysingar_id
-            from kontroll k
-                     left join kontroll_loeysing kl on k.id = kl.kontroll_id
-            where k.id = :id
-          """
-                  .trimIndent(),
+                        select k.id             as id,
+                               k.tittel         as tittel,
+                               k.saksbehandler  as saksbehandler,
+                               k.sakstype       as sakstype,
+                               k.arkivreferanse as arkivreferanse,
+                               k.utval_id       as utval_id,
+                               k.utval_namn     as utval_namn,
+                               k.utval_oppretta as utval_oppretta,
+                               kl.loeysing_id   as loeysingar_id
+                        from kontroll k
+                                 left join kontroll_loeysing kl on k.id = kl.kontroll_id
+                        where k.id = :id
+                        """,
               mapOf("id" to id),
               ResultSetExtractor { rs ->
                 rs.next()
@@ -63,18 +66,27 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                         rs.getString("saksbehandler"),
                         rs.getString("sakstype"),
                         rs.getString("arkivreferanse"),
-                        emptyList())
-                val loeysingar =
-                    rs.getInt("loeysingar_id").let {
-                      if (it != 0) mutableListOf(KontrollDB.Loeysing(it)) else mutableListOf()
-                    }
-                while (rs.next()) {
-                  val loeysingId = rs.getInt("loeysingar_id")
-                  if (loeysingId != 0) {
-                    loeysingar.add(KontrollDB.Loeysing(loeysingId))
-                  }
-                }
-                kontroll.copy(loeysingar = loeysingar.toList())
+                        null)
+                val utval =
+                    rs.getInt("utval_id")
+                        .takeIf { it != 0 }
+                        ?.let { utvalId ->
+                          val utvalNamn = rs.getString("utval_namn")
+                          val utvalOppretta = rs.getTimestamp("utval_oppretta").toInstant()
+                          val loeysingar =
+                              rs.getInt("loeysingar_id").let {
+                                if (it != 0) mutableListOf(KontrollDB.Loeysing(it))
+                                else mutableListOf()
+                              }
+                          while (rs.next()) {
+                            val loeysingId = rs.getInt("loeysingar_id")
+                            if (loeysingId != 0) {
+                              loeysingar.add(KontrollDB.Loeysing(loeysingId))
+                            }
+                          }
+                          KontrollDB.Utval(utvalId, utvalNamn, utvalOppretta, loeysingar)
+                        }
+                kontroll.copy(utval = utval)
               })
 
       result ?: throw IllegalArgumentException("Fann ikkje kontroll med id $id")
@@ -87,13 +99,20 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val saksbehandler: String,
       val sakstype: String,
       val arkivreferanse: String,
-      val loeysingar: List<Loeysing>
+      val utval: Utval?
   ) {
+    data class Utval(
+        val id: Int,
+        val namn: String,
+        val oppretta: Instant,
+        val loeysingar: List<Loeysing>
+    )
+
     data class Loeysing(val id: Int)
   }
 
   @Transactional
-  fun updateKontroll(kontroll: Kontroll): Result<Unit> {
+  fun updateKontroll(kontroll: Kontroll, utvalId: Int): Result<Unit> {
     return runCatching {
       jdbcTemplate.update(
           """
@@ -101,8 +120,13 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             set tittel = :tittel,
                 saksbehandler = :saksbehandler,
                 sakstype = :sakstype,
-                arkivreferanse = :arkivreferanse
-            where id = :id
+                arkivreferanse = :arkivreferanse,
+                utval_id = utval.id,
+                utval_namn = utval.namn,
+                utval_oppretta = utval.oppretta
+            from utval
+            where kontroll.id = :kontrollId
+            and utval.id = :utvalId
           """
               .trimIndent(),
           mapOf(
@@ -110,25 +134,26 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "saksbehandler" to kontroll.saksbehandler,
               "sakstype" to kontroll.sakstype.name,
               "arkivreferanse" to kontroll.arkivreferanse,
-              "id" to kontroll.id))
-      kontroll.loeysingar.forEach { loeysing ->
-        jdbcTemplate.update(
-            """
-                insert into kontroll_loeysing (kontroll_id, loeysing_id)
-                values (:kontrollId, :loeysingId)
-                on conflict (kontroll_id, loeysing_id) do nothing
-            """
-                .trimIndent(),
-            mapOf("kontrollId" to kontroll.id, "loeysingId" to loeysing.id))
-      }
+              "kontrollId" to kontroll.id,
+              "utvalId" to utvalId))
       jdbcTemplate.update(
           """
-                delete from kontroll_loeysing
-                where kontroll_id = :kontrollId
-                and loeysing_id not in (:loeysingIds)
-            """
+                    insert into kontroll_loeysing (kontroll_id, loeysing_id)
+                    select :kontrollId, loeysing_id
+                    from utval_loeysing
+                    where utval_id = :utvalId
+                """
               .trimIndent(),
-          mapOf("kontrollId" to kontroll.id, "loeysingIds" to kontroll.loeysingar.map { it.id }))
+          mapOf("kontrollId" to kontroll.id, "utvalId" to utvalId))
+      jdbcTemplate.update(
+          """
+                    delete
+                    from kontroll_loeysing
+                    where kontroll_id = :kontrollId
+                    and loeysing_id not in (select loeysing_id from utval_loeysing where utval_id = :utvalId)
+                """
+              .trimIndent(),
+          mapOf("kontrollId" to kontroll.id, "utvalId" to utvalId))
     }
   }
 }
