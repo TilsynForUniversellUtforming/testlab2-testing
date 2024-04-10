@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.loeysing
 
+import io.restassured.RestAssured.given
+import io.restassured.http.ContentType
 import java.net.URI
 import java.util.*
 import no.uutilsynet.testlab2testing.loeysing.UtvalResource.NyttUtval
@@ -8,9 +10,7 @@ import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.context.ActiveProfiles
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -23,6 +23,8 @@ class UtvalResourceTest(
     @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
   val uuid = UUID.randomUUID().toString()
+
+  @LocalServerPort var port: Int = 0
 
   @BeforeAll
   fun beforeAll() {
@@ -56,17 +58,29 @@ class UtvalResourceTest(
   @Test
   @DisplayName("vi skal kunne opprette eit nytt utval")
   fun nyttUtval() {
-    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingar))
-    assertThat(response.statusCode).isEqualTo(HttpStatus.CREATED)
+    given()
+        .port(port)
+        .contentType(ContentType.JSON)
+        .body(NyttUtval(uuid, loeysingar))
+        .post("/v1/utval")
+        .then()
+        .statusCode(201)
   }
 
   @Test
   @DisplayName("når vi har laget et utvalg, skal vi kunne hente det ut igjen")
   fun hentUtval() {
-    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingar))
-    assert(response.statusCode.is2xxSuccessful)
+    val location =
+        given()
+            .port(port)
+            .contentType(ContentType.JSON)
+            .body(NyttUtval(uuid, loeysingar))
+            .post("/v1/utval")
+            .then()
+            .statusCode(201)
+            .extract()
+            .header("Location")
 
-    val location = response.headers.location
     val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
 
     assertThat(utval.namn).isEqualTo(uuid)
@@ -83,10 +97,17 @@ class UtvalResourceTest(
     val randomLoeysing = Loeysing.External(uuid, "https://www.$uuid.com", "000000000")
 
     val loeysingList = listOf(uutilsynet, digdir, randomLoeysing)
-    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingList))
-    assert(response.statusCode.is2xxSuccessful)
+    val location =
+        given()
+            .port(port)
+            .contentType(ContentType.JSON)
+            .body(NyttUtval(uuid, loeysingList))
+            .post("/v1/utval")
+            .then()
+            .statusCode(201)
+            .extract()
+            .header("Location")
 
-    val location = response.headers.location
     val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
 
     assertThat(utval.namn).isEqualTo(uuid)
@@ -101,10 +122,16 @@ class UtvalResourceTest(
     val digdir = Loeysing.External("Digdir", "www.digdir.no", "991825827")
 
     val loeysingList = listOf(uutilsynet, digdir)
-    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingList))
-    assert(response.statusCode.is2xxSuccessful)
-
-    val location = response.headers.location
+    val location =
+        given()
+            .port(port)
+            .contentType(ContentType.JSON)
+            .body(NyttUtval(uuid, loeysingList))
+            .post("/v1/utval")
+            .then()
+            .statusCode(201)
+            .extract()
+            .header("Location")
     val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
 
     assertThat(utval.namn).isEqualTo(uuid)
@@ -117,27 +144,34 @@ class UtvalResourceTest(
   @DisplayName("vi skal kunne hente ei liste med alle utval")
   @Test
   fun hentAlleUtval() {
-    val response = restTemplate.getForEntity("/v1/utval", Array<UtvalListItem>::class.java)
-    assertThat(response.statusCode.is2xxSuccessful).isTrue()
-    response.body!!.forEach {
-      assertThat(it.id).isNotNull()
-      assertThat(it.namn).isNotBlank()
-      assertThat(it.oppretta).isNotNull()
-    }
+    given()
+        .port(port)
+        .contentType(ContentType.JSON)
+        .get("/v1/utval")
+        .`as`(Array<UtvalListItem>::class.java)
+        .forEach {
+          assertThat(it.id).isNotNull()
+          assertThat(it.namn).isNotBlank()
+          assertThat(it.oppretta).isNotNull()
+        }
   }
 
   @DisplayName("vi skal kunne slette eit utval")
   @Test
   fun slettUtval() {
-    val response: ResponseEntity<Unit> = utvalResource.createUtval(NyttUtval(uuid, loeysingar))
-    assert(response.statusCode.is2xxSuccessful)
+    val location =
+        given()
+            .port(port)
+            .contentType(ContentType.JSON)
+            .body(NyttUtval(uuid, loeysingar))
+            .post("/v1/utval")
+            .then()
+            .statusCode(201)
+            .extract()
+            .header("Location")
 
-    val location = response.headers.location
+    given().port(port).delete(location).then().statusCode(200)
 
-    val deleteResponse = restTemplate.exchange(location, HttpMethod.DELETE, null, Unit::class.java)
-    assertThat(deleteResponse.statusCode.is2xxSuccessful).isTrue()
-
-    val getResponse = restTemplate.getForEntity(location, Utval::class.java)
-    assertThat(getResponse.statusCode.is2xxSuccessful).isFalse()
+    given().port(port).get(location).then().statusCode(404)
   }
 }
