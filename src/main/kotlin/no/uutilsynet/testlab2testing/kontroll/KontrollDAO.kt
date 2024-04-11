@@ -157,4 +157,40 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           mapOf("kontrollId" to kontroll.id, "utvalId" to utvalId))
     }
   }
+
+  @Transactional
+  fun updateKontroll(
+      kontroll: Kontroll,
+      regelsettId: Int?,
+      loeysingIdList: List<Int>
+  ): Result<Unit> = runCatching {
+    jdbcTemplate.update(
+        """
+              update kontroll
+              set tittel = :tittel,
+                  saksbehandler = :saksbehandler,
+                  sakstype = :sakstype,
+                  arkivreferanse = :arkivreferanse,
+                  regelsett_id = :regelsettId
+              where kontroll.id = :kontrollId
+            """
+            .trimIndent(),
+        mapOf(
+            "tittel" to kontroll.tittel,
+            "saksbehandler" to kontroll.saksbehandler,
+            "sakstype" to kontroll.sakstype.name,
+            "arkivreferanse" to kontroll.arkivreferanse,
+            "kontrollId" to kontroll.id,
+            "regelsettId" to regelsettId))
+    val updateBatchValuesLoeysing =
+        loeysingIdList.map { mapOf("kontrollId" to kontroll.id, "loeysingId" to it) }
+
+    jdbcTemplate.update(
+        "delete from kontroll_testreglar where kontroll_id = :kontrollId",
+        mapOf("kontrollId" to kontroll.id, "utvalId" to regelsettId))
+
+    jdbcTemplate.batchUpdate(
+        "insert into kontroll_testreglar (kontroll_id, testregel_id) values (:kontrollId, :testregelId)",
+        updateBatchValuesLoeysing.toTypedArray())
+  }
 }
