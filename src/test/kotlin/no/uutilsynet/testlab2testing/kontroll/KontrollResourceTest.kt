@@ -149,4 +149,55 @@ class KontrollResourceTest {
     assertThat(lagretKontroll.utval?.namn).isEqualTo(utval.namn)
     assertThat(lagretKontroll.utval?.loeysingar).isEqualTo(utval.loeysingar)
   }
+
+  @Test
+  @DisplayName(
+      "gitt at vi har opprettet en kontroll, så skal vi kunne oppdatere den flere ganger med samme utval")
+  fun oppdaterUtvalgFlereGanger() {
+    RestAssured.defaultParser = Parser.JSON
+    val body =
+        mapOf(
+            "kontrolltype" to "manuell-kontroll",
+            "tittel" to "testkontroll",
+            "saksbehandler" to "Ola Nordmann",
+            "sakstype" to "forvaltningssak",
+            "arkivreferanse" to "1234")
+    val location =
+        given()
+            .port(port)
+            .body(body)
+            .contentType("application/json")
+            .post("/kontroller")
+            .then()
+            .statusCode(equalTo(201))
+            .extract()
+            .header("Location")
+    val opprettetKontroll = get(location).`as`(Kontroll::class.java)
+
+    val loeysingar =
+        listOf(Loeysing.External("UUTilsynet", "https://www.uutilsynet.no/", "991825827"))
+    val nyttUtval = UtvalResource.NyttUtval("testutval", loeysingar)
+    val utvalLocation =
+        given()
+            .port(port)
+            .body(nyttUtval)
+            .contentType("application/json")
+            .post("/v1/utval")
+            .then()
+            .statusCode(equalTo(201))
+            .extract()
+            .header("Location")
+    val utval = get(utvalLocation).`as`(Utval::class.java)
+
+    val updateBody = mapOf("kontroll" to opprettetKontroll, "utvalId" to utval.id)
+    for (i in 1..3) {
+      given()
+          .port(port)
+          .body(updateBody)
+          .contentType("application/json")
+          .put(location)
+          .then()
+          .statusCode(equalTo(204))
+    }
+  }
 }

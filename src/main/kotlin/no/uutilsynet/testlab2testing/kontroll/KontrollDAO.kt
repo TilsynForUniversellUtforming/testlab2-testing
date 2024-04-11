@@ -142,6 +142,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     select :kontrollId, loeysing_id
                     from utval_loeysing
                     where utval_id = :utvalId
+                    on conflict do nothing
                 """
               .trimIndent(),
           mapOf("kontrollId" to kontroll.id, "utvalId" to utvalId))
