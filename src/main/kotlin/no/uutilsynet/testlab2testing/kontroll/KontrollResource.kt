@@ -1,7 +1,9 @@
 package no.uutilsynet.testlab2testing.kontroll
 
+import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -19,6 +21,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 @RequestMapping("/kontroller")
 class KontrollResource(
     val kontrollDAO: KontrollDAO,
+    val testregelDAO: TestregelDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
 ) {
   private val logger: Logger = LoggerFactory.getLogger(KontrollResource::class.java)
@@ -53,6 +56,10 @@ class KontrollResource(
                 val loeysingar = loeysingsRegisterClient.getMany(idList).getOrThrow()
 
                 Utval(utval.id, utval.namn, loeysingar, utval.oppretta)
+              },
+              kontrollDB.testreglar?.let { testreglar ->
+                val testregelList = testregelDAO.getMany(testreglar.testregelIdList)
+                Testreglar(testreglar.regelsettId, testregelList)
               })
         }
         .fold(

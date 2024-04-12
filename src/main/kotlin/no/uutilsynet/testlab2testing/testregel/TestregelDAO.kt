@@ -65,6 +65,12 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           jdbcTemplate.query(
               getTestregelByTestregelId, mapOf("testregelId" to testregelId), testregelRowMapper))
 
+  fun getMany(testregelIdList: List<Int>): List<TestregelBase> =
+      jdbcTemplate.query(
+          "select tr.id, tr.modus, tr.krav_id, tr.modus from testregel tr where tr.id in (:ids)",
+          mapOf("testregelId" to testregelIdList),
+          DataClassRowMapper.newInstance(TestregelBase::class.java))
+
   @Transactional
   @CacheEvict(
       value =

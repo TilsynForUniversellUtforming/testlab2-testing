@@ -12,7 +12,7 @@ data class Kontroll(
     val sakstype: Sakstype,
     val arkivreferanse: String,
     val utval: Utval? = null,
-    val testreglar: KontrollTestregler? = null,
+    val testreglar: Testreglar? = null,
 ) {
   enum class Sakstype {
     @JsonProperty("forvaltningssak") Forvaltningssak,
@@ -23,8 +23,5 @@ data class Kontroll(
     @JsonProperty("manuell-kontroll") ManuellKontroll
   }
 
-  data class KontrollTestregler(
-      val regelsettId: Int? = null,
-      val testregelList: List<TestregelBase>
-  )
+  data class Testreglar(val regelsettId: Int? = null, val testregelList: List<TestregelBase>)
 }

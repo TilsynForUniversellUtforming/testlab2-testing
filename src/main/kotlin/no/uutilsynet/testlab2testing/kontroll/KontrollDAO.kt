@@ -51,9 +51,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                                k.utval_id       as utval_id,
                                k.utval_namn     as utval_namn,
                                k.utval_oppretta as utval_oppretta,
-                               kl.loeysing_id   as loeysingar_id
+                               k.regelsett_id   as regelsett_id
                         from kontroll k
-                                 left join kontroll_loeysing kl on k.id = kl.kontroll_id
                         where k.id = :id
                         """,
               mapOf("id" to id),
@@ -66,27 +65,37 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                         rs.getString("saksbehandler"),
                         rs.getString("sakstype"),
                         rs.getString("arkivreferanse"),
+                        null,
                         null)
+
                 val utval =
                     rs.getInt("utval_id")
                         .takeIf { it != 0 }
                         ?.let { utvalId ->
                           val utvalNamn = rs.getString("utval_namn")
                           val utvalOppretta = rs.getTimestamp("utval_oppretta").toInstant()
-                          val loeysingar =
-                              rs.getInt("loeysingar_id").let {
-                                if (it != 0) mutableListOf(KontrollDB.Loeysing(it))
-                                else mutableListOf()
-                              }
-                          while (rs.next()) {
-                            val loeysingId = rs.getInt("loeysingar_id")
-                            if (loeysingId != 0) {
-                              loeysingar.add(KontrollDB.Loeysing(loeysingId))
-                            }
-                          }
-                          KontrollDB.Utval(utvalId, utvalNamn, utvalOppretta, loeysingar)
+                          val loeysingIdList =
+                              jdbcTemplate.queryForList(
+                                  "select loeysing_id as id from kontroll_loeysing where kontroll_id = :kontroll_id",
+                                  mapOf("kontroll_id" to kontroll.id),
+                                  Int::class.java)
+                          KontrollDB.Utval(
+                              utvalId,
+                              utvalNamn,
+                              utvalOppretta,
+                              loeysingIdList.map { KontrollDB.Loeysing(it) })
                         }
-                kontroll.copy(utval = utval)
+
+                val testreglar =
+                    KontrollDB.Testreglar(
+                            rs.getInt("regelsett_id").takeUnless { rs.wasNull() },
+                            jdbcTemplate.queryForList(
+                                "select loeysing_id as id from kontroll_loeysing where kontroll_id = :kontroll_id",
+                                mapOf("kontroll_id" to kontroll.id),
+                                Int::class.java))
+                        .takeIf { it.regelsettId != null || it.testregelIdList.isNotEmpty() }
+
+                kontroll.copy(utval = utval, testreglar = testreglar)
               })
 
       result ?: throw IllegalArgumentException("Fann ikkje kontroll med id $id")
@@ -99,7 +108,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val saksbehandler: String,
       val sakstype: String,
       val arkivreferanse: String,
-      val utval: Utval?
+      val utval: Utval?,
+      val testreglar: Testreglar?
   ) {
     data class Utval(
         val id: Int,
@@ -109,6 +119,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     )
 
     data class Loeysing(val id: Int)
+
+    data class Testreglar(val regelsettId: Int?, val testregelIdList: List<Int>)
   }
 
   @Transactional
