@@ -28,9 +28,6 @@ class UtvalResourceTest(
 
   @BeforeAll
   fun beforeAll() {
-    println("HEI")
-    println(loeysingsRegisterClient.getMany(listOf(1)))
-    println("NEI")
     loeysingsRegisterClient
         .saveLoeysing("UUTilsynet", URI("https://www.uutilsynet.no/").toURL(), "991825827")
         .getOrThrow()

@@ -6,29 +6,24 @@ import io.restassured.RestAssured.given
 import io.restassured.parsing.Parser
 import io.restassured.path.json.JsonPath
 import io.restassured.path.json.JsonPath.from
-import java.time.Instant
-import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalResource
 import no.uutilsynet.testlab2testing.regelsett.Regelsett
 import no.uutilsynet.testlab2testing.regelsett.RegelsettCreate
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelInit
-import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
-import no.uutilsynet.testlab2testing.testregel.TestregelModus
-import no.uutilsynet.testlab2testing.testregel.TestregelStatus
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.startsWith
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 
 @DisplayName("KontrollResource")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class KontrollResourceTest {
+class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
   @LocalServerPort var port: Int = 0
 
   val kontrollInitBody =
@@ -215,38 +210,13 @@ class KontrollResourceTest {
             .header("Location")
     val opprettetKontroll = get(location).`as`(Kontroll::class.java)
 
-    val testregelLocationForId =
-        given()
-            .port(port)
-            .body(
-                TestregelInit(
-                    testregelId = "testregel_skal_slettes",
-                    namn = "testregel_skal_slettes",
-                    kravId = 1,
-                    status = TestregelStatus.publisert,
-                    type = TestregelInnholdstype.nett,
-                    modus = TestregelModus.manuell,
-                    spraak = TestlabLocale.nb,
-                    datoSistEndra = Instant.now().minusSeconds(61),
-                    testregelSchema = "{\"gaaTil\": 1}",
-                    innhaldstypeTesting = 1,
-                    tema = 1,
-                    testobjekt = 1,
-                    kravTilSamsvar = ""))
-            .contentType("application/json")
-            .post("/v1/testreglar")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-
-    val testregel = get("http://localhost:$port$testregelLocationForId").`as`(Testregel::class.java)
+    val testregel = testregelDAO.getTestregelList().first()
 
     /* Create regelsett */
     val nyttRegelsett =
         RegelsettCreate(
             namn = "regelsett_skal_slettes",
-            modus = TestregelModus.manuell,
+            modus = testregel.modus,
             standard = false,
             testregelIdList = listOf(testregel.id))
 
@@ -303,32 +273,7 @@ class KontrollResourceTest {
             .header("Location")
     val opprettetKontroll = get(location).`as`(Kontroll::class.java)
 
-    val testregelLocationForId =
-        given()
-            .port(port)
-            .body(
-                TestregelInit(
-                    testregelId = "testregel_skal_slettes",
-                    namn = "testregel_skal_slettes",
-                    kravId = 1,
-                    status = TestregelStatus.publisert,
-                    type = TestregelInnholdstype.nett,
-                    modus = TestregelModus.manuell,
-                    spraak = TestlabLocale.nb,
-                    datoSistEndra = Instant.now().minusSeconds(61),
-                    testregelSchema = "{\"gaaTil\": 1}",
-                    innhaldstypeTesting = 1,
-                    tema = 1,
-                    testobjekt = 1,
-                    kravTilSamsvar = ""))
-            .contentType("application/json")
-            .post("/v1/testreglar")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-
-    val testregel = get("http://localhost:$port$testregelLocationForId").`as`(Testregel::class.java)
+    val testregel = testregelDAO.getTestregelList().first()
 
     val updateBody =
         mapOf(
