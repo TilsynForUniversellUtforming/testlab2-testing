@@ -13,8 +13,7 @@ import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalResource
 import no.uutilsynet.testlab2testing.regelsett.Regelsett
 import no.uutilsynet.testlab2testing.regelsett.RegelsettCreate
-import no.uutilsynet.testlab2testing.testregel.TestregelBase
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelInit
 import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
 import no.uutilsynet.testlab2testing.testregel.TestregelModus
@@ -22,30 +21,18 @@ import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.startsWith
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
 
 @DisplayName("KontrollResource")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
+class KontrollResourceTest {
   @LocalServerPort var port: Int = 0
-
-  @AfterAll
-  fun cleanup() {
-    testregelDAO.jdbcTemplate.update(
-        "delete from testregel where namn = :namn", mapOf("namn" to "testregel_skal_slettes"))
-
-    testregelDAO.jdbcTemplate.update(
-        "delete from regelsett where namn = :namn", mapOf("namn" to "regelsett_skal_slettes"))
-  }
 
   val kontrollInitBody =
       mapOf(
@@ -214,8 +201,8 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
 
   @Nested
   @DisplayName("Hvis det finnes en testregel i databasen")
-  inner class DatabaseHasAtLeastOneTestregel(@Autowired val restTemplate: TestRestTemplate) {
-    val testregelLocation = createDefaultTestregel()
+  inner class DatabaseHasAtLeastOneTestregel {
+    private val testregelLocationForId = createDefaultTestregel()
 
     @Test
     @DisplayName("gitt vi har en kontroll, så skal vi kunne oppdatere testreglar med regelsett")
@@ -236,7 +223,7 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
               .header("Location")
       val opprettetKontroll = get(location).`as`(Kontroll::class.java)
 
-      val testregel = get(testregelLocation).`as`(TestregelBase::class.java)
+      val testregel = get(testregelLocationForId).`as`(Testregel::class.java)
 
       /* Create regelsett */
       val nyttRegelsett =
@@ -246,7 +233,7 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
               standard = false,
               testregelIdList = listOf(testregel.id))
 
-      val regelsettLocation =
+      val regelsettLocationForId =
           given()
               .port(port)
               .body(nyttRegelsett)
@@ -256,12 +243,16 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
               .statusCode(equalTo(201))
               .extract()
               .header("Location")
-      val regelsett = get(regelsettLocation).`as`(Regelsett::class.java)
+      val regelsett =
+          get("http://localhost:$port$regelsettLocationForId").`as`(Regelsett::class.java)
 
       val updateBody =
           mapOf(
               "kontroll" to opprettetKontroll,
-              "testreglar" to mapOf("regelsettId" to 1, "testregelIdList" to listOf(1)),
+              "testreglar" to
+                  mapOf(
+                      "regelsettId" to regelsett.id,
+                      "testregelIdList" to regelsett.testregelList.map { it.id }),
               "kontrollSteg" to KontrollSteg.Testreglar)
       given()
           .port(port)
@@ -273,32 +264,78 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
       val lagretKontroll = get(location).`as`(Kontroll::class.java)
 
       assertThat(lagretKontroll.testreglar?.regelsettId).isEqualTo(regelsett.id)
-      assertThat(lagretKontroll.testreglar?.testregelList).isEqualTo(regelsett.testregelList)
+      assertThat(lagretKontroll.testreglar?.testregelList?.map { it.id })
+          .isEqualTo(regelsett.testregelList.map { it.id })
     }
 
-    private fun createDefaultTestregel(): String =
-        given()
-            .port(port)
-            .body(
-                TestregelInit(
-                    testregelId = "testregel_skal_slettes",
-                    namn = "testregel_skal_slettes",
-                    kravId = 1,
-                    status = TestregelStatus.publisert,
-                    type = TestregelInnholdstype.nett,
-                    modus = TestregelModus.manuell,
-                    spraak = TestlabLocale.nb,
-                    datoSistEndra = Instant.now().minusSeconds(61),
-                    testregelSchema = "{\"gaaTil\": 1}",
-                    innhaldstypeTesting = 1,
-                    tema = 1,
-                    testobjekt = 1,
-                    kravTilSamsvar = ""))
-            .contentType("application/json")
-            .post("/v1/testreglar")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
+    @Test
+    @DisplayName("gitt vi har en kontroll, så skal vi kunne legge inn egenvalgte testregler")
+    fun updateKontrollWithTestreglarManualSelection() {
+      RestAssured.defaultParser = Parser.JSON
+      val body = kontrollInitBody
+
+      /* Create default kontroll */
+      val location =
+          given()
+              .port(port)
+              .body(body)
+              .contentType("application/json")
+              .post("/kontroller")
+              .then()
+              .statusCode(equalTo(201))
+              .extract()
+              .header("Location")
+      val opprettetKontroll = get(location).`as`(Kontroll::class.java)
+
+      val testregel = get(testregelLocationForId).`as`(Testregel::class.java)
+
+      val updateBody =
+          mapOf(
+              "kontroll" to opprettetKontroll,
+              "testreglar" to
+                  mapOf("regelsettId" to null, "testregelIdList" to listOf(testregel.id)),
+              "kontrollSteg" to KontrollSteg.Testreglar)
+
+      given()
+          .port(port)
+          .body(updateBody)
+          .contentType("application/json")
+          .put(location)
+          .then()
+          .statusCode(equalTo(204))
+      val lagretKontroll = get(location).`as`(Kontroll::class.java)
+
+      assertThat(lagretKontroll.testreglar?.testregelList?.map { it.id })
+          .isEqualTo(listOf(testregel.id))
+    }
+
+    private fun createDefaultTestregel(): String {
+      val localtionForId =
+          given()
+              .port(port)
+              .body(
+                  TestregelInit(
+                      testregelId = "testregel_skal_slettes",
+                      namn = "testregel_skal_slettes",
+                      kravId = 1,
+                      status = TestregelStatus.publisert,
+                      type = TestregelInnholdstype.nett,
+                      modus = TestregelModus.manuell,
+                      spraak = TestlabLocale.nb,
+                      datoSistEndra = Instant.now().minusSeconds(61),
+                      testregelSchema = "{\"gaaTil\": 1}",
+                      innhaldstypeTesting = 1,
+                      tema = 1,
+                      testobjekt = 1,
+                      kravTilSamsvar = ""))
+              .contentType("application/json")
+              .post("/v1/testreglar")
+              .then()
+              .statusCode(equalTo(201))
+              .extract()
+              .header("Location")
+
+      return "http://localhost:$port$localtionForId"
+    }
   }
 }

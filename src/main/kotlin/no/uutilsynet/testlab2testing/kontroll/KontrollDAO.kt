@@ -90,7 +90,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     KontrollDB.Testreglar(
                             rs.getInt("regelsett_id").takeUnless { rs.wasNull() },
                             jdbcTemplate.queryForList(
-                                "select loeysing_id as id from kontroll_loeysing where kontroll_id = :kontroll_id",
+                                "select testregel_id from kontroll_testreglar where kontroll_id = :kontroll_id",
                                 mapOf("kontroll_id" to kontroll.id),
                                 Int::class.java))
                         .takeIf { it.regelsettId != null || it.testregelIdList.isNotEmpty() }
@@ -194,8 +194,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "arkivreferanse" to kontroll.arkivreferanse,
             "kontrollId" to kontroll.id,
             "regelsettId" to regelsettId))
-    val updateBatchValuesLoeysing =
-        loeysingIdList.map { mapOf("kontrollId" to kontroll.id, "loeysingId" to it) }
+    val updateBatchValuesTestreglar =
+        loeysingIdList.map { mapOf("kontrollId" to kontroll.id, "testregelId" to it) }
 
     jdbcTemplate.update(
         "delete from kontroll_testreglar where kontroll_id = :kontrollId",
@@ -203,6 +203,6 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     jdbcTemplate.batchUpdate(
         "insert into kontroll_testreglar (kontroll_id, testregel_id) values (:kontrollId, :testregelId)",
-        updateBatchValuesLoeysing.toTypedArray())
+        updateBatchValuesTestreglar.toTypedArray())
   }
 }
