@@ -1,17 +1,27 @@
 package no.uutilsynet.testlab2testing.kontroll
 
+import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
 @RequestMapping("/kontroller")
 class KontrollResource(
     val kontrollDAO: KontrollDAO,
+    val testregelDAO: TestregelDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
 ) {
   private val logger: Logger = LoggerFactory.getLogger(KontrollResource::class.java)
@@ -46,6 +56,10 @@ class KontrollResource(
                 val loeysingar = loeysingsRegisterClient.getMany(idList).getOrThrow()
 
                 Utval(utval.id, utval.namn, loeysingar, utval.oppretta)
+              },
+              kontrollDB.testreglar?.let { testreglar ->
+                val testregelList = testregelDAO.getMany(testreglar.testregelIdList)
+                Testreglar(testreglar.regelsettId, testregelList)
               })
         }
         .fold(
@@ -72,31 +86,36 @@ class KontrollResource(
             })
   }
 
-  data class UpdateBody(val kontroll: Kontroll, val utvalId: Int)
-
   @PutMapping("/{id}")
   fun updateKontroll(
       @PathVariable id: Int,
-      @RequestBody updateBody: UpdateBody
-  ): ResponseEntity<Unit> {
-    val (kontroll, utvalId) = updateBody
-
-    return runCatching {
-          require(kontroll.id == id) { "id i URL-en og id er ikkje den same" }
-          kontrollDAO.updateKontroll(kontroll, utvalId).getOrThrow()
-        }
-        .fold(
-            onSuccess = { ResponseEntity.noContent().build() },
-            onFailure = {
-              when (it) {
-                is IllegalArgumentException -> ResponseEntity.badRequest().build()
-                else -> {
-                  logger.error("Feil ved oppdatering av kontroll", it)
-                  ResponseEntity.internalServerError().build()
-                }
+      @RequestBody updateBody: KontrollUpdate
+  ): ResponseEntity<Unit> =
+      runCatching {
+            require(updateBody.kontroll.id == id) { "id i URL-en og id er ikkje den same" }
+            when (updateBody) {
+              is KontrollUpdate.Utval -> {
+                val (kontroll, utvalId) = updateBody
+                kontrollDAO.updateKontroll(kontroll, utvalId).getOrThrow()
               }
-            })
-  }
+              is KontrollUpdate.Testreglar -> {
+                val (kontroll, testreglar) = updateBody
+                val (regelsettId, testregelIdList) = testreglar
+                kontrollDAO.updateKontroll(kontroll, regelsettId, testregelIdList).getOrThrow()
+              }
+            }
+          }
+          .fold(
+              onSuccess = { ResponseEntity.noContent().build() },
+              onFailure = {
+                when (it) {
+                  is IllegalArgumentException -> ResponseEntity.badRequest().build()
+                  else -> {
+                    logger.error("Feil ved oppdatering av kontroll", it)
+                    ResponseEntity.internalServerError().build()
+                  }
+                }
+              })
 
   private fun location(id: Int) =
       ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()

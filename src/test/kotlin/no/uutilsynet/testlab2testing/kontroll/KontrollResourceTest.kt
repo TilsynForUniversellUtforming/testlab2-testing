@@ -9,29 +9,35 @@ import io.restassured.path.json.JsonPath.from
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalResource
+import no.uutilsynet.testlab2testing.regelsett.Regelsett
+import no.uutilsynet.testlab2testing.regelsett.RegelsettCreate
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.startsWith
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 
 @DisplayName("KontrollResource")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class KontrollResourceTest {
+class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
   @LocalServerPort var port: Int = 0
+
+  val kontrollInitBody =
+      mapOf(
+          "kontrolltype" to "manuell-kontroll",
+          "tittel" to "testkontroll",
+          "saksbehandler" to "Ola Nordmann",
+          "sakstype" to "forvaltningssak",
+          "arkivreferanse" to "1234")
 
   @Test
   @DisplayName("når vi oppretter en kontroll så skal vi få en URI som resultat i location")
   fun createKontroll() {
-    val body =
-        mapOf(
-            "kontrolltype" to "manuell-kontroll",
-            "tittel" to "testkontroll",
-            "saksbehandler" to "Ola Nordmann",
-            "sakstype" to "forvaltningssak",
-            "arkivreferanse" to "1234")
+    val body = kontrollInitBody
     given()
         .port(port)
         .body(body)
@@ -45,13 +51,7 @@ class KontrollResourceTest {
   @Test
   @DisplayName("gitt at vi har opprettet en kontroll, så skal vi kunne slette den")
   fun deleteKontroll() {
-    val body =
-        mapOf(
-            "kontrolltype" to "manuell-kontroll",
-            "tittel" to "testkontroll",
-            "saksbehandler" to "Ola Nordmann",
-            "sakstype" to "forvaltningssak",
-            "arkivreferanse" to "1234")
+    val body = kontrollInitBody
     val location =
         given()
             .port(port)
@@ -69,13 +69,7 @@ class KontrollResourceTest {
   @DisplayName(
       "gitt at vi har opprettet en kontroll, så skal vi kunne hente den ut igjen med url-en i location")
   fun getKontrollById() {
-    val body =
-        mapOf(
-            "kontrolltype" to "manuell-kontroll",
-            "tittel" to "testkontroll",
-            "saksbehandler" to "Ola Nordmann",
-            "sakstype" to "forvaltningssak",
-            "arkivreferanse" to "1234")
+    val body = kontrollInitBody
     val location =
         given()
             .port(port)
@@ -101,13 +95,7 @@ class KontrollResourceTest {
       "gitt vi har en kontroll, når vi oppdaterer den med et utvalg, så skal kontrollen være lagret med dataene fra utvalget")
   fun updateKontrollWithLoeysingar() {
     RestAssured.defaultParser = Parser.JSON
-    val body =
-        mapOf(
-            "kontrolltype" to "manuell-kontroll",
-            "tittel" to "testkontroll",
-            "saksbehandler" to "Ola Nordmann",
-            "sakstype" to "forvaltningssak",
-            "arkivreferanse" to "1234")
+    val body = kontrollInitBody
     val location =
         given()
             .port(port)
@@ -135,7 +123,11 @@ class KontrollResourceTest {
             .header("Location")
     val utval = get(utvalLocation).`as`(Utval::class.java)
 
-    val updateBody = mapOf("kontroll" to opprettetKontroll, "utvalId" to utval.id)
+    val updateBody =
+        mapOf(
+            "kontroll" to opprettetKontroll,
+            "utvalId" to utval.id,
+            "kontrollSteg" to KontrollSteg.Utval)
     given()
         .port(port)
         .body(updateBody)
@@ -155,13 +147,7 @@ class KontrollResourceTest {
       "gitt at vi har opprettet en kontroll, så skal vi kunne oppdatere den flere ganger med samme utval")
   fun oppdaterUtvalgFlereGanger() {
     RestAssured.defaultParser = Parser.JSON
-    val body =
-        mapOf(
-            "kontrolltype" to "manuell-kontroll",
-            "tittel" to "testkontroll",
-            "saksbehandler" to "Ola Nordmann",
-            "sakstype" to "forvaltningssak",
-            "arkivreferanse" to "1234")
+    val body = kontrollInitBody
     val location =
         given()
             .port(port)
@@ -189,7 +175,11 @@ class KontrollResourceTest {
             .header("Location")
     val utval = get(utvalLocation).`as`(Utval::class.java)
 
-    val updateBody = mapOf("kontroll" to opprettetKontroll, "utvalId" to utval.id)
+    val updateBody =
+        mapOf(
+            "kontroll" to opprettetKontroll,
+            "utvalId" to utval.id,
+            "kontrollSteg" to KontrollSteg.Utval)
     for (i in 1..3) {
       given()
           .port(port)
@@ -199,5 +189,108 @@ class KontrollResourceTest {
           .then()
           .statusCode(equalTo(204))
     }
+  }
+
+  @Test
+  @DisplayName("gitt vi har en kontroll, så skal vi kunne oppdatere testreglar med regelsett")
+  fun updateKontrollWithTestreglarRegelsett() {
+    RestAssured.defaultParser = Parser.JSON
+    val body = kontrollInitBody
+
+    /* Create default kontroll */
+    val location =
+        given()
+            .port(port)
+            .body(body)
+            .contentType("application/json")
+            .post("/kontroller")
+            .then()
+            .statusCode(equalTo(201))
+            .extract()
+            .header("Location")
+    val opprettetKontroll = get(location).`as`(Kontroll::class.java)
+
+    val testregel = testregelDAO.getTestregelList().first()
+
+    /* Create regelsett */
+    val nyttRegelsett =
+        RegelsettCreate(
+            namn = "regelsett_skal_slettes",
+            modus = testregel.modus,
+            standard = false,
+            testregelIdList = listOf(testregel.id))
+
+    val regelsettLocationForId =
+        given()
+            .port(port)
+            .body(nyttRegelsett)
+            .contentType("application/json")
+            .post("/v1/regelsett")
+            .then()
+            .statusCode(equalTo(201))
+            .extract()
+            .header("Location")
+    val regelsett = get("http://localhost:$port$regelsettLocationForId").`as`(Regelsett::class.java)
+
+    val updateBody =
+        mapOf(
+            "kontroll" to opprettetKontroll,
+            "testreglar" to
+                mapOf(
+                    "regelsettId" to regelsett.id,
+                    "testregelIdList" to regelsett.testregelList.map { it.id }),
+            "kontrollSteg" to KontrollSteg.Testreglar)
+    given()
+        .port(port)
+        .body(updateBody)
+        .contentType("application/json")
+        .put(location)
+        .then()
+        .statusCode(equalTo(204))
+    val lagretKontroll = get(location).`as`(Kontroll::class.java)
+
+    assertThat(lagretKontroll.testreglar?.regelsettId).isEqualTo(regelsett.id)
+    assertThat(lagretKontroll.testreglar?.testregelList?.map { it.id })
+        .isEqualTo(regelsett.testregelList.map { it.id })
+  }
+
+  @Test
+  @DisplayName("gitt vi har en kontroll, så skal vi kunne legge inn egenvalgte testregler")
+  fun updateKontrollWithTestreglarManualSelection() {
+    RestAssured.defaultParser = Parser.JSON
+    val body = kontrollInitBody
+
+    /* Create default kontroll */
+    val location =
+        given()
+            .port(port)
+            .body(body)
+            .contentType("application/json")
+            .post("/kontroller")
+            .then()
+            .statusCode(equalTo(201))
+            .extract()
+            .header("Location")
+    val opprettetKontroll = get(location).`as`(Kontroll::class.java)
+
+    val testregel = testregelDAO.getTestregelList().first()
+
+    val updateBody =
+        mapOf(
+            "kontroll" to opprettetKontroll,
+            "testreglar" to mapOf("regelsettId" to null, "testregelIdList" to listOf(testregel.id)),
+            "kontrollSteg" to KontrollSteg.Testreglar)
+
+    given()
+        .port(port)
+        .body(updateBody)
+        .contentType("application/json")
+        .put(location)
+        .then()
+        .statusCode(equalTo(204))
+    val lagretKontroll = get(location).`as`(Kontroll::class.java)
+
+    assertThat(lagretKontroll.testreglar?.testregelList?.map { it.id })
+        .isEqualTo(listOf(testregel.id))
   }
 }
