@@ -7,7 +7,7 @@ data class AggregeringPerSideDTO(
     val loeysingId: Int,
     val sideUrl: URL,
     val sideNivaa: Int,
-    val gjennomsnittligBruddProsentTR: Float?,
+    val gjennomsnittligBruddProsentTR: Double?,
     val talElementSamsvar: Int,
     val talElementBrot: Int,
     val talElementVarsel: Int,

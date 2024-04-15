@@ -68,7 +68,7 @@ class ResultatServiceTest(
 
     aggregertResultat =
         AggregeringPerTestregelDTO(
-            maalingId, 1, testregelId, 1, arrayListOf(1, 2), 1, 2, 1, 1, 1, 1, 1, 0.5f, 0.5f, null)
+            maalingId, 1, testregelId, 1, arrayListOf(1, 2), 1, 2, 1, 1, 1, 1, 1, 0.5, 0.5, null)
 
     aggregeringDAO.createAggregertResultatTestregel(aggregertResultat)
     maalingDao.updateKontrollId(kontrollId, maalingId)
