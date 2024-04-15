@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.kontroll
 
 import java.time.Instant
-import org.springframework.jdbc.core.ResultSetExtractor
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -41,7 +40,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getKontroll(id: Int): Result<KontrollDB> {
     return runCatching {
       val result =
-          jdbcTemplate.query(
+          jdbcTemplate.queryForObject(
               """
                         select k.id             as id,
                                k.tittel         as tittel,
@@ -55,29 +54,19 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                         from kontroll k
                         where k.id = :id
                         """,
-              mapOf("id" to id),
-              ResultSetExtractor { rs ->
-                rs.next()
-                val kontroll =
-                    KontrollDB(
-                        rs.getInt("id"),
-                        rs.getString("tittel"),
-                        rs.getString("saksbehandler"),
-                        rs.getString("sakstype"),
-                        rs.getString("arkivreferanse"),
-                        null,
-                        null)
+              mapOf("id" to id)) { rm, _ ->
+                val kontrollId = rm.getInt("id")
 
                 val utval =
-                    rs.getInt("utval_id")
+                    rm.getInt("utval_id")
                         .takeIf { it != 0 }
                         ?.let { utvalId ->
-                          val utvalNamn = rs.getString("utval_namn")
-                          val utvalOppretta = rs.getTimestamp("utval_oppretta").toInstant()
+                          val utvalNamn = rm.getString("utval_namn")
+                          val utvalOppretta = rm.getTimestamp("utval_oppretta").toInstant()
                           val loeysingIdList =
                               jdbcTemplate.queryForList(
                                   "select loeysing_id as id from kontroll_loeysing where kontroll_id = :kontroll_id",
-                                  mapOf("kontroll_id" to kontroll.id),
+                                  mapOf("kontroll_id" to kontrollId),
                                   Int::class.java)
                           KontrollDB.Utval(
                               utvalId,
@@ -88,15 +77,22 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
                 val testreglar =
                     KontrollDB.Testreglar(
-                            rs.getInt("regelsett_id").takeUnless { rs.wasNull() },
+                            rm.getInt("regelsett_id").takeUnless { rm.wasNull() },
                             jdbcTemplate.queryForList(
                                 "select testregel_id from kontroll_testreglar where kontroll_id = :kontroll_id",
-                                mapOf("kontroll_id" to kontroll.id),
+                                mapOf("kontroll_id" to kontrollId),
                                 Int::class.java))
                         .takeIf { it.regelsettId != null || it.testregelIdList.isNotEmpty() }
 
-                kontroll.copy(utval = utval, testreglar = testreglar)
-              })
+                KontrollDB(
+                    rm.getInt("id"),
+                    rm.getString("tittel"),
+                    rm.getString("saksbehandler"),
+                    rm.getString("sakstype"),
+                    rm.getString("arkivreferanse"),
+                    utval,
+                    testreglar)
+              }
 
       result ?: throw IllegalArgumentException("Fann ikkje kontroll med id $id")
     }
