@@ -1,9 +1,11 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.sak
 
 import java.time.LocalDate
-import no.uutilsynet.testlab2testing.brukar.BrukarDAO
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateOrgNummer
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -12,7 +14,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
 @RequestMapping("/saker")
-class SakResource(val sakDAO: SakDAO, val brukarDAO: BrukarDAO) {
+class SakResource(val sakDAO: SakDAO, val testgrunnlagService: TestgrunnlagService) {
 
   val logger: Logger = LoggerFactory.getLogger(SakResource::class.java)
 
@@ -53,10 +55,26 @@ class SakResource(val sakDAO: SakDAO, val brukarDAO: BrukarDAO) {
   @PutMapping("/{id}")
   fun updateSak(@PathVariable id: Int, @RequestBody sak: SakDTO): ResponseEntity<SakDTO> {
     require(sak.id == id) { "id i URL-en og id er ikkje den same" }
+
     return sakDAO
         .updateSakDTO(sak)
         .fold(
-            onSuccess = { ResponseEntity.ok(it) },
+            onSuccess = {
+              opprettTestgrunnlag(sak).onFailure { ResponseEntity.internalServerError() }
+              ResponseEntity.ok(it)
+            },
             onFailure = { ResponseEntity.notFound().build() })
+  }
+
+  fun opprettTestgrunnlag(sak: SakDTO): Result<Int> {
+    val testreglar = sak.testreglar.map { it.id }
+    val nyttTestgrunnlag =
+        NyttTestgrunnlag(
+            sak.id,
+            "Testgrunnlag for sak ${sak.namn}",
+            Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
+            sak.loeysingar,
+            testreglar)
+    return testgrunnlagService.createOrUpdate(nyttTestgrunnlag)
   }
 }
