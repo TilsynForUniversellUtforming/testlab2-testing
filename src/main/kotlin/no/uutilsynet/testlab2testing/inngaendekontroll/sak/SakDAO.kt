@@ -11,6 +11,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -24,6 +25,8 @@ class SakDAO(
     val brukarDAO: BrukarDAO,
     val sideutvalDAO: SideutvalDAO
 ) {
+
+  val logger = LoggerFactory.getLogger(SakDAO::class.java)
 
   fun save(namn: String, virksomhet: String, frist: LocalDate): Result<Int> = runCatching {
     jdbcTemplate.queryForObject(
@@ -181,7 +184,12 @@ class SakDAO(
             ansvarleg = sakDTO.ansvarleg,
             loeysingar = sakDTO.loeysingar,
             testreglar = testreglar)
-    update(updatedSak)
+    val updateStatus = update(updatedSak)
+    updateStatus.onFailure {
+      logger.error(it.message, it)
+      return Result.failure(it)
+    }
+
     return Result.success(
         SakDTO(
             updatedSak.id,

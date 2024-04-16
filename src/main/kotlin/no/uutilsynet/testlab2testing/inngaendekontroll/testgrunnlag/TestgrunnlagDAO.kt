@@ -116,7 +116,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun saveTestgrunnlagLoeysingNettside(testgrunnlagId: Int, loeysingar: List<Sak.Loeysing>) {
-    logger.debug("Save loeysing testgrunnlag {} {}", loeysingar, testgrunnlagId)
+    logger.info("Save loeysing testgrunnlag {} {}", loeysingar, testgrunnlagId)
     loeysingar.forEach { loeysing ->
       loeysing.nettsider.forEach { nettside ->
         jdbcTemplate.update(

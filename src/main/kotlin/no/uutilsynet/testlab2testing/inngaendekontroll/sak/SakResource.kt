@@ -60,7 +60,7 @@ class SakResource(val sakDAO: SakDAO, val testgrunnlagService: TestgrunnlagServi
         .updateSakDTO(sak)
         .fold(
             onSuccess = {
-              opprettTestgrunnlag(sak).onFailure { ResponseEntity.internalServerError() }
+              opprettTestgrunnlag(it).onFailure { ResponseEntity.internalServerError() }
               ResponseEntity.ok(it)
             },
             onFailure = { ResponseEntity.notFound().build() })
