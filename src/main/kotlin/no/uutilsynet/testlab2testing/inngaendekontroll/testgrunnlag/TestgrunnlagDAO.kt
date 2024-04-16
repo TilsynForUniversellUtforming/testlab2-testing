@@ -41,7 +41,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return Result.success(testgrunnlag.copy(testreglar = testreglar))
   }
 
-  fun getLoeysing(id: Int): Sak.Loeysing {
+  fun getLoeysingar(id: Int): List<Sak.Loeysing> {
     val loeysingar =
         jdbcTemplate.query(
             """select loeysing_id
@@ -53,7 +53,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               val nettsider = findNettsiderByTestgrunnlAndLoeysing(id, rs.getInt("loeysing_id"))
               Sak.Loeysing(rs.getInt("loeysing_id"), nettsider)
             }
-    return loeysingar.firstOrNull() ?: throw IllegalArgumentException()
+    return loeysingar
   }
 
   fun getTestgrunnlagForSak(sakId: Int?, loeysingId: Int?): List<Testgrunnlag> {
@@ -70,6 +70,21 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             Int::class.java)
 
     return testgrunnlagIds.map { id -> getTestgrunnlag(id).getOrThrow() }
+  }
+
+  fun getOpprinneligTestgrunnlag(sakId: Int): Result<Int> {
+    return jdbcTemplate
+        .queryForList(
+            """
+            select id from testgrunnlag where sak_id = :sakId and type = 'OPPRINNELEG_TEST'
+        """
+                .trimIndent(),
+            mapOf("sakId" to sakId),
+            Int::class.java)
+        .map { it.toInt() }
+        .firstOrNull()
+        ?.let { Result.success(it) }
+        ?: Result.failure(IllegalArgumentException())
   }
 
   @Transactional
@@ -89,7 +104,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             Int::class.java)
 
     if (testgrunnlagId != null) {
-      saveTestgrunnlagLoeysingNettside(testgrunnlagId, listOf(testgrunnlag.loeysing))
+      saveTestgrunnlagLoeysingNettside(testgrunnlagId, testgrunnlag.loeysingar)
       saveTestgrunnlagTestregel(testgrunnlagId, testgrunnlag.testreglar)
     }
 
@@ -140,7 +155,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "namn" to testgrunnlag.namn,
             "type" to testgrunnlag.type.name))
 
-    updateTestgrunnlagLoeysingNettside(testgrunnlag.id, listOf(testgrunnlag.loeysing))
+    updateTestgrunnlagLoeysingNettside(testgrunnlag.id, testgrunnlag.loeysingar)
     updateTestgrunnlagTestregel(testgrunnlag.id, testgrunnlag.testreglar.map { it.id })
 
     return Result.success(testgrunnlag)
@@ -174,7 +189,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         rs.getInt("sak_id"),
         rs.getString("namn"),
         emptyList(),
-        getLoeysing(testgrunnlagId),
+        getLoeysingar(testgrunnlagId),
         Testgrunnlag.TestgrunnlagType.valueOf(rs.getString("type")),
         emptyList(),
         rs.getTimestamp("dato_oppretta").toInstant())
