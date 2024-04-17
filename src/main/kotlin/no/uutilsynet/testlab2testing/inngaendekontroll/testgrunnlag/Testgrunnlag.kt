@@ -7,7 +7,7 @@ import no.uutilsynet.testlab2testing.testregel.Testregel
 
 data class Testgrunnlag(
     val id: Int,
-    val sakId: Int?,
+    val sakId: Int,
     val namn: String,
     val testreglar: List<Testregel> = emptyList(),
     val loeysingar: List<Sak.Loeysing> = emptyList(),

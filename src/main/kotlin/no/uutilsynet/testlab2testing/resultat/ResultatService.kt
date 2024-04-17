@@ -53,7 +53,8 @@ class ResultatService(
 
   fun getResulatForManuellKontroll(
       sakId: Int,
-      testregelNoekkel: String?
+      testregelNoekkel: String?,
+      loeysingId: Int?
   ): List<TestresultatDetaljert> {
     val testresultat = testResultatDAO.getManyResults(sakId).getOrThrow()
 
@@ -61,6 +62,7 @@ class ResultatService(
 
     return testresultat
         .filter { filterByTestregel(it.testregelId, filterTestregelId) }
+        .filter { filterByLoeysing(it.loeysingId, loeysingId) }
         .map {
           val testregel: Testregel = getTestregel(it.testregelId)
           // it.testregel er databaseId ikkje feltet testregelId i db
@@ -79,6 +81,13 @@ class ResultatService(
                   htmlCode = null, pointer = null, description = it.elementOmtale),
               it.brukar)
         }
+  }
+
+  private fun filterByLoeysing(loeysingId: Int, loeysingIdFilter: Int?): Boolean {
+    if (loeysingIdFilter != null) {
+      return loeysingId == loeysingIdFilter
+    }
+    return true
   }
 
   fun filterByTestregel(testregelId: Int, testregelIdFilter: Int?): Boolean {
