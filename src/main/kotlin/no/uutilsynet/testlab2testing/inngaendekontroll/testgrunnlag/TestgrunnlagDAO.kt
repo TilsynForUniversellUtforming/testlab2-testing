@@ -104,6 +104,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             Int::class.java)
 
     if (testgrunnlagId != null) {
+      logger.info("Create testgrunnlagNettside")
       saveTestgrunnlagLoeysingNettside(testgrunnlagId, testgrunnlag.loeysingar)
       saveTestgrunnlagTestregel(testgrunnlagId, testgrunnlag.testreglar)
     }
@@ -162,6 +163,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun updateTestgrunnlagLoeysingNettside(testgrunnlagId: Int, loeysingar: List<Sak.Loeysing>) {
+    logger.info("Update testgrunnlagNettside" + loeysingar)
     jdbcTemplate.update(
         """delete from testgrunnlag_loeysing_nettside where testgrunnlag_id = :testgrunnlagId"""
             .trimMargin(),

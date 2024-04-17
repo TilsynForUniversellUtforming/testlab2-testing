@@ -26,7 +26,7 @@ class TestgrunnlagService(
                   namn = testgrunnlag.namn,
                   testreglar = getTestreglar(testgrunnlag.testreglar),
                   loeysingar =
-                      oppdaterNettsideIdar(testgrunnlag.loeysingar, eksisterendeTestgrunnlag.id),
+                      oppdaterNettsideIdar(testgrunnlag.loeysingar, eksisterendeTestgrunnlag.sakId),
               ))
           .fold(
               onSuccess = {
