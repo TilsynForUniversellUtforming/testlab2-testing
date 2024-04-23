@@ -16,30 +16,29 @@ class TestgrunnlagService(
   fun createOrUpdate(testgrunnlag: NyttTestgrunnlag): Result<Int> {
     val eksisterende = testgrunnlagDAO.getOpprinneligTestgrunnlag(testgrunnlag.parentId)
 
-    if (eksisterende.isSuccess) {
-      val eksisterendeTestgrunnlag =
-          testgrunnlagDAO.getTestgrunnlag(eksisterende.getOrThrow()).getOrThrow()
-
-      testgrunnlagDAO
-          .updateTestgrunnlag(
-              eksisterendeTestgrunnlag.copy(
-                  namn = testgrunnlag.namn,
-                  testreglar = getTestreglar(testgrunnlag.testreglar),
-                  loeysingar =
-                      oppdaterNettsideIdar(testgrunnlag.loeysingar, eksisterendeTestgrunnlag.sakId),
-              ))
-          .fold(
-              onSuccess = {
-                return Result.success(it.id)
-              },
-              onFailure = {
-                return Result.failure(it)
-              })
+    return if (eksisterende.isSuccess) {
+      eksisterende
+          .mapCatching { testgrunnlagDAO.getTestgrunnlag(it) }
+          .mapCatching { updateExisting(it.getOrThrow(), testgrunnlag) }
+          .map { it.getOrThrow().id }
+    } else {
+      testgrunnlagDAO.createTestgrunnlag(
+          testgrunnlag.copy(
+              loeysingar = oppdaterNettsideIdar(testgrunnlag.loeysingar, testgrunnlag.parentId)))
     }
-    return testgrunnlagDAO.createTestgrunnlag(
-        testgrunnlag.copy(
-            loeysingar = oppdaterNettsideIdar(testgrunnlag.loeysingar, testgrunnlag.parentId)))
   }
+
+  private fun updateExisting(
+      eksisterendeTestgrunnlag: Testgrunnlag,
+      testgrunnlag: NyttTestgrunnlag
+  ) =
+      testgrunnlagDAO.updateTestgrunnlag(
+          eksisterendeTestgrunnlag.copy(
+              namn = testgrunnlag.namn,
+              testreglar = getTestreglar(testgrunnlag.testreglar),
+              loeysingar =
+                  oppdaterNettsideIdar(testgrunnlag.loeysingar, eksisterendeTestgrunnlag.sakId),
+          ))
 
   fun getTestreglar(testregelIdList: List<Int>): List<Testregel> {
     return testregelDAO.getTestregelList().filter { testregelIdList.contains(it.id) }
