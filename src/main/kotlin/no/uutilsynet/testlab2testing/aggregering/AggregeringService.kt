@@ -396,37 +396,50 @@ class AggregeringService(
   private fun createAggregeringPerTestregelDTO(
       testresultatForSak: List<ResultatManuellKontroll>
   ): List<AggregeringPerTestregelDTO> {
+
     return testresultatForSak
-        .groupBy { it.testregelId }
+        .groupBy { it.loeysingId }
         .entries
-        .map {
-          val testresultat = it.value
-          val talElementUtfall = countElementUtfall(testresultat)
+        .map { aggregeringPerTestregelDTOPrLoeysing(it.value) }
+        .flatten()
+  }
 
-          val (talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst) =
-              countSideUtfall(testresultat)
+  private fun aggregeringPerTestregelDTOPrLoeysing(
+      it: List<ResultatManuellKontroll>
+  ): List<AggregeringPerTestregelDTO> {
+    val testresultatForLoeysingPerTestregel =
+        it.groupBy { it.testregelId }.entries.map { aggregeringPerTestregelDTO(it) }
+    return testresultatForLoeysingPerTestregel
+  }
 
-          val suksesskriterium = getKravIdFraTestregel(it.key)
+  private fun aggregeringPerTestregelDTO(
+      it: Map.Entry<Int, List<ResultatManuellKontroll>>
+  ): AggregeringPerTestregelDTO {
+    val testresultat = it.value
+    val talElementUtfall = countElementUtfall(testresultat)
 
-          val gjennomsnittTestresultat = calculateTestregelGjennomsnitt(testresultat)
+    val (talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst) = countSideUtfall(testresultat)
 
-          AggregeringPerTestregelDTO(
-              null,
-              testresultat.first().loeysingId,
-              it.key,
-              suksesskriterium,
-              listOf(suksesskriterium),
-              talElementUtfall.talSamsvar,
-              talElementUtfall.talBrot,
-              talElementUtfall.talVarsel,
-              talElementUtfall.talIkkjeForekomst,
-              talSiderSamsvar,
-              talSiderBrot,
-              talSiderIkkjeForekomst,
-              gjennomsnittTestresultat.testregelGjennomsnittlegSideSamsvarProsent,
-              gjennomsnittTestresultat.testregelGjennomsnittlegSideBrotProsent,
-              testresultat.first().testgrunnlagId)
-        }
+    val suksesskriterium = getKravIdFraTestregel(it.key)
+
+    val gjennomsnittTestresultat = calculateTestregelGjennomsnitt(testresultat)
+
+    return AggregeringPerTestregelDTO(
+        null,
+        testresultat.first().loeysingId,
+        it.key,
+        suksesskriterium,
+        listOf(suksesskriterium),
+        talElementUtfall.talSamsvar,
+        talElementUtfall.talBrot,
+        talElementUtfall.talVarsel,
+        talElementUtfall.talIkkjeForekomst,
+        talSiderSamsvar,
+        talSiderBrot,
+        talSiderIkkjeForekomst,
+        gjennomsnittTestresultat.testregelGjennomsnittlegSideSamsvarProsent,
+        gjennomsnittTestresultat.testregelGjennomsnittlegSideBrotProsent,
+        testresultat.first().testgrunnlagId)
   }
 
   fun processPrNettside(values: List<ResultatManuellKontroll>): ResultatPerTestregelPerSide {
