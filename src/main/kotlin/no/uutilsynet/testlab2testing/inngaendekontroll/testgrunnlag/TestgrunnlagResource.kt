@@ -32,25 +32,18 @@ class TestgrunnlagResource(val testgrunnlagDAO: TestgrunnlagDAO) {
   @PostMapping
   fun createTestgrunnlag(@RequestBody testgrunnlag: NyttTestgrunnlag): ResponseEntity<Int> {
     logger.info(
-        "Opprett testgrunnlag for sak ${testgrunnlag.parentId} og loeysing ${testgrunnlag.loeysing}")
+        "Opprett testgrunnlag for sak ${testgrunnlag.parentId} og loeysing ${testgrunnlag.loeysingar}")
 
-    val eksisterende =
-        testgrunnlagDAO.getTestgrunnlagForSak(
-            testgrunnlag.parentId!!, testgrunnlag.loeysing.loeysingId)
-    return if (eksisterende.isEmpty()) {
-      runCatching { testgrunnlagDAO.createTestgrunnlag(testgrunnlag).getOrThrow() }
-          .fold(
-              onSuccess = { id ->
-                logger.info("Oppretta testgrunnlag med id $id")
-                ResponseEntity.created(location(id)).build()
-              },
-              onFailure = {
-                logger.error("Feil ved oppretting av testgrunnlag", it)
-                ResponseEntity.badRequest().build()
-              })
-    } else {
-      ResponseEntity.created(location(eksisterende.first().id)).build()
-    }
+    return runCatching { testgrunnlagDAO.createTestgrunnlag(testgrunnlag).getOrThrow() }
+        .fold(
+            onSuccess = { id ->
+              logger.info("Oppretta testgrunnlag med id $id")
+              ResponseEntity.created(location(id)).build()
+            },
+            onFailure = {
+              logger.error("Feil ved oppretting av testgrunnlag", it)
+              ResponseEntity.internalServerError().build()
+            })
   }
 
   @GetMapping("list/{sakId}")
@@ -95,9 +88,9 @@ class TestgrunnlagResource(val testgrunnlagDAO: TestgrunnlagDAO) {
 }
 
 data class NyttTestgrunnlag(
-    val parentId: Int?,
-    val namn: String?,
+    val parentId: Int,
+    val namn: String,
     val type: Testgrunnlag.TestgrunnlagType,
-    val loeysing: Sak.Loeysing,
+    val loeysingar: List<Sak.Loeysing>,
     val testreglar: List<Int>
 )

@@ -26,7 +26,8 @@ class ResultatResource(
   ): List<TestresultatDetaljert> {
     logger.debug("Henter resultat for testgrunnlagId: $testgrunnlagId, maalingId: $maalingId")
     if (testgrunnlagId != null) {
-      return resultatService.getResulatForManuellKontroll(testgrunnlagId, testregelNoekkel)
+      return resultatService.getResulatForManuellKontroll(
+          testgrunnlagId, testregelNoekkel, loeysingId)
     }
     if (maalingId != null) {
       return resultatService.getResultatForAutomatiskMaaling(maalingId, loeysingId)

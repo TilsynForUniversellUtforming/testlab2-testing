@@ -38,8 +38,6 @@ class AggregeringDAOTest(@Autowired val aggregeringDAO: AggregeringDAO) {
 
     val henta = aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(1)
 
-    println(henta[0])
-
     assertThat(henta[0].testregelGjennomsnittlegSideBrotProsent).isNull()
     assertThat(henta[0].testregelGjennomsnittlegSideSamsvarProsent).isNull()
 

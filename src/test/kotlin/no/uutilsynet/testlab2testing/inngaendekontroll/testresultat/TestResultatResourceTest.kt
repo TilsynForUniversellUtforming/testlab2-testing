@@ -84,7 +84,7 @@ class TestResultatResourceTest(
             sakId,
             "Testgrunnlag",
             Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
-            sak.loeysingar.first(),
+            sak.loeysingar,
             sak.testreglar.map { it.id })
 
     val testgrunnlag = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag)
