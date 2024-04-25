@@ -201,4 +201,67 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         "insert into kontroll_testreglar (kontroll_id, testregel_id) values (:kontrollId, :testregelId)",
         updateBatchValuesTestreglar.toTypedArray())
   }
+
+  @Transactional
+  fun updateKontroll(
+      kontroll: Kontroll,
+      sideutvalLoeysing: SideutvalLoeysing,
+  ): Result<Unit> = runCatching {
+    jdbcTemplate.update(
+        """
+              update kontroll
+              set tittel = :tittel,
+                  saksbehandler = :saksbehandler,
+                  sakstype = :sakstype,
+                  arkivreferanse = :arkivreferanse,
+                  regelsett_id = :regelsettId
+              where kontroll.id = :kontrollId
+            """
+            .trimIndent(),
+        mapOf(
+            "tittel" to kontroll.tittel,
+            "saksbehandler" to kontroll.saksbehandler,
+            "sakstype" to kontroll.sakstype.name,
+            "arkivreferanse" to kontroll.arkivreferanse,
+            "kontrollId" to kontroll.id,
+        ))
+
+    val updateBatchValuesSideutval =
+        sideutvalLoeysing.sideutval.flatMap { su ->
+          su.sideBegrunnelseList.map { side ->
+            mapOf(
+                "kontroll_id" to kontroll.id,
+                "innhaldstype_id" to su.type.id,
+                "loeysing_id" to sideutvalLoeysing.loeysingId,
+                "innhaldstype_beskrivelse" to (su.type.egendefinertType ?: su.type.innhaldstype),
+                "url" to side.url,
+                "beskrivelse" to side.begrunnelse)
+          }
+        }
+
+    jdbcTemplate.update(
+        "delete from kontroll_sideutval where kontroll_id = :kontrollId",
+        mapOf("kontrollId" to kontroll.id))
+
+    jdbcTemplate.batchUpdate(
+        """
+          insert into kontroll_sideutval (
+            kontroll_id,
+            innhaldstype_id,
+            loeysing_id,
+            innhaldstype_beskrivelse,
+            url,
+            beskrivelse
+          ) values (
+            :kontroll_id,
+            :innhaldstype_id,
+            :loeysing_id,
+            :innhaldstype_beskrivelse,
+            :url,
+            :beskrivelse
+          )
+          """
+            .trimIndent(),
+        updateBatchValuesSideutval.toTypedArray())
+  }
 }

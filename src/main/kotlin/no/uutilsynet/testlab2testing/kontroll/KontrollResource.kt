@@ -103,6 +103,10 @@ class KontrollResource(
                 val (regelsettId, testregelIdList) = testreglar
                 kontrollDAO.updateKontroll(kontroll, regelsettId, testregelIdList).getOrThrow()
               }
+              is KontrollUpdate.Sideutval -> {
+                val (kontroll, sideutval) = updateBody
+                kontrollDAO.updateKontroll(kontroll, sideutval.sideutval).getOrThrow()
+              }
             }
           }
           .fold(
