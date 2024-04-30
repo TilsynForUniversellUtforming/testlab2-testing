@@ -7,7 +7,10 @@ import java.time.ZoneId
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.*
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
+import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.springframework.stereotype.Component
@@ -18,7 +21,9 @@ class ResultatService(
     val testregelDAO: TestregelDAO,
     val testResultatDAO: TestResultatDAO,
     val sideutvalDAO: SideutvalDAO,
-    val kravregisterClient: KravregisterClient
+    val kravregisterClient: KravregisterClient,
+    val resultatDAO: ResultatDAO,
+    val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
 
   fun getResultatForAutomatiskMaaling(
@@ -27,7 +32,7 @@ class ResultatService(
   ): List<TestresultatDetaljert> {
 
     val testresultat: List<AutotesterTestresultat>? =
-        maalingResource.getTestresultat(maalingId, loeysingId)?.getOrThrow()
+        maalingResource.getTestresultat(maalingId, loeysingId).getOrThrow()
 
     if (!testresultat.isNullOrEmpty() && testresultat.first() is TestResultat) {
       return testresultat
@@ -120,5 +125,63 @@ class ResultatService(
   fun getSuksesskriteriumFromTestregel(kravId: Int): List<String> {
     return kravregisterClient.getWcagKrav(kravId).getOrNull()?.suksesskriterium?.let { listOf(it) }
         ?: emptyList()
+  }
+
+  fun getResultatList(type: Kontroll.KontrollType?): List<Resultat> {
+    return when (type) {
+      Kontroll.KontrollType.ManuellKontroll -> getManuellKontrollResultat()
+      Kontroll.KontrollType.AutomatiskKontroll -> getAutomatiskKontrollResultat()
+      else -> getKontrollResultat()
+    }
+  }
+
+  private fun getAutomatiskKontrollResultat(): List<Resultat> {
+    return resultatDAO
+        .getTestresultatTestgrunnlag()
+        .groupBy { it.id }
+        .map { (id, result) -> resultat(id, result) }
+  }
+
+  private fun getKontrollResultat(): List<Resultat> {
+    return resultatDAO.getResultat().groupBy { it.id }.map { (id, result) -> resultat(id, result) }
+  }
+
+  private fun getManuellKontrollResultat(): List<Resultat> {
+    return resultatDAO
+        .getTestresultatMaaling()
+        .groupBy { it.id }
+        .map { (id, result) -> resultat(id, result) }
+  }
+
+  private fun resultat(id: Int, result: List<ResultatLoeysing>): Resultat {
+    val loeysingar = getLoeysingMap(result).getOrThrow()
+
+    return Resultat(
+        id,
+        result.first().namn,
+        result.first().typeKontroll,
+        result.first().testar,
+        result.first().dato,
+        result.map {
+          LoeysingResultat(it.loeysingId, loeysingar.getNamn(it.loeysingId), it.score, it.testType)
+        })
+  }
+
+  private fun getLoeysingMap(result: List<ResultatLoeysing>): Result<LoysingList> {
+    return loeysingsRegisterClient.getMany(result.map { it.loeysingId }).mapCatching { loeysingList
+      ->
+      LoysingList(loeysingList.associateBy { it.id })
+    }
+  }
+
+  class LoysingList(val loeysingar: Map<Int, Loeysing>) {
+    fun getNamn(loeysingId: Int): String {
+      val loeysing = loeysingar[loeysingId]
+      return if (loeysing != null) {
+        loeysing.namn
+      } else {
+        ""
+      }
+    }
   }
 }
