@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.kontroll
 
+import java.net.URI
 import java.time.Instant
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -84,6 +85,28 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                                 Int::class.java))
                         .takeIf { it.regelsettId != null || it.testregelIdList.isNotEmpty() }
 
+                val sideutvalList =
+                    jdbcTemplate.query(
+                        """
+                select
+                testobjekt_id,
+                loeysing_id,
+                egendefinert_objekt,
+                url,
+                begrunnelse
+                from kontroll_sideutval
+                where kontroll_id = :kontroll_id
+              """
+                            .trimIndent(),
+                        mapOf("kontroll_id" to kontrollId)) { mapper, _ ->
+                          SideutvalItem(
+                              loeysingId = mapper.getInt("loeysing_id"),
+                              objektId = mapper.getInt("testobjekt_id"),
+                              begrunnelse = mapper.getString("begrunnelse"),
+                              url = URI(mapper.getString("url")),
+                              egendefinertObjekt = mapper.getString("egendefinert_objekt"))
+                        }
+
                 KontrollDB(
                     rm.getInt("id"),
                     rm.getString("tittel"),
@@ -91,7 +114,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     rm.getString("sakstype"),
                     rm.getString("arkivreferanse"),
                     utval,
-                    testreglar)
+                    testreglar,
+                    sideutvalList)
               }
 
       result ?: throw IllegalArgumentException("Fann ikkje kontroll med id $id")
@@ -105,7 +129,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val sakstype: String,
       val arkivreferanse: String,
       val utval: Utval?,
-      val testreglar: Testreglar?
+      val testreglar: Testreglar?,
+      val sideutval: List<SideutvalItem> = emptyList()
   ) {
     data class Utval(
         val id: Int,
@@ -205,38 +230,17 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Transactional
   fun updateKontroll(
       kontroll: Kontroll,
-      sideutvalLoeysing: SideutvalLoeysing,
+      sideutvalItem: List<SideutvalItem>,
   ): Result<Unit> = runCatching {
-    jdbcTemplate.update(
-        """
-              update kontroll
-              set tittel = :tittel,
-                  saksbehandler = :saksbehandler,
-                  sakstype = :sakstype,
-                  arkivreferanse = :arkivreferanse,
-                  regelsett_id = :regelsettId
-              where kontroll.id = :kontrollId
-            """
-            .trimIndent(),
-        mapOf(
-            "tittel" to kontroll.tittel,
-            "saksbehandler" to kontroll.saksbehandler,
-            "sakstype" to kontroll.sakstype.name,
-            "arkivreferanse" to kontroll.arkivreferanse,
-            "kontrollId" to kontroll.id,
-        ))
-
     val updateBatchValuesSideutval =
-        sideutvalLoeysing.sideutval.flatMap { su ->
-          su.sideBegrunnelseList.map { side ->
-            mapOf(
-                "kontroll_id" to kontroll.id,
-                "innhaldstype_id" to su.type.id,
-                "loeysing_id" to sideutvalLoeysing.loeysingId,
-                "innhaldstype_beskrivelse" to (su.type.egendefinertType ?: su.type.innhaldstype),
-                "url" to side.url,
-                "beskrivelse" to side.begrunnelse)
-          }
+        sideutvalItem.map { side ->
+          mapOf(
+              "kontroll_id" to kontroll.id,
+              "testobjekt_id" to side.objektId,
+              "loeysing_id" to side.loeysingId,
+              "egendefinert_objekt" to side.egendefinertObjekt,
+              "url" to side.url.toString(),
+              "begrunnelse" to side.begrunnelse)
         }
 
     jdbcTemplate.update(
@@ -247,18 +251,18 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         """
           insert into kontroll_sideutval (
             kontroll_id,
-            innhaldstype_id,
+            testobjekt_id,
             loeysing_id,
-            innhaldstype_beskrivelse,
+            egendefinert_objekt,
             url,
-            beskrivelse
+            begrunnelse
           ) values (
             :kontroll_id,
-            :innhaldstype_id,
+            :testobjekt_id,
             :loeysing_id,
-            :innhaldstype_beskrivelse,
+            :egendefinert_objekt,
             :url,
-            :beskrivelse
+            :begrunnelse
           )
           """
             .trimIndent(),

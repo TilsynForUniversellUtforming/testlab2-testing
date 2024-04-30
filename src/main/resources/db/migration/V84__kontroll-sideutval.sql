@@ -1,15 +1,15 @@
-insert into innhaldstype_testing (innhaldstype)
+insert into testobjekt (testobjekt)
 values ('Forside');
 
-insert into innhaldstype_testing (innhaldstype)
+insert into testobjekt (testobjekt)
 values ('Egendefinert');
 
 create table kontroll_sideutval
 (
-    kontroll_id              int references kontroll (id),
-    innhaldstype_id          int references innhaldstype_testing (id),
-    loeysing_id              int,
-    innhaldstype_beskrivelse varchar,
-    url                      varchar,
-    beskrivelse              varchar
+    kontroll_id         int references kontroll (id),
+    testobjekt_id       int references testobjekt (id),
+    loeysing_id         int,
+    egendefinert_objekt varchar,
+    url                 varchar,
+    begrunnelse         varchar
 )

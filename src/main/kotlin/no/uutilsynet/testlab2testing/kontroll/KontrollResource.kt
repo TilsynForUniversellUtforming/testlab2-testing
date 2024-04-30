@@ -60,7 +60,8 @@ class KontrollResource(
               kontrollDB.testreglar?.let { testreglar ->
                 val testregelList = testregelDAO.getMany(testreglar.testregelIdList)
                 Testreglar(testreglar.regelsettId, testregelList)
-              })
+              },
+              kontrollDB.sideutval)
         }
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
@@ -104,8 +105,12 @@ class KontrollResource(
                 kontrollDAO.updateKontroll(kontroll, regelsettId, testregelIdList).getOrThrow()
               }
               is KontrollUpdate.Sideutval -> {
-                val (kontroll, sideutval) = updateBody
-                kontrollDAO.updateKontroll(kontroll, sideutval.sideutval).getOrThrow()
+                val (kontroll, sideutvalList) = updateBody
+                if (sideutvalList.any { it.begrunnelse.isBlank() }) {
+                  logger.error("Ugyldig sideutval for kontroll: ${kontroll.id}")
+                  throw IllegalArgumentException("Ugyldige sider i sideutval")
+                }
+                kontrollDAO.updateKontroll(kontroll, sideutvalList).getOrThrow()
               }
             }
           }
