@@ -1,6 +1,8 @@
 package no.uutilsynet.testlab2testing.kontroll
 
+import java.net.URI
 import java.time.Instant
+import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -84,6 +86,28 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                                 Int::class.java))
                         .takeIf { it.regelsettId != null || it.testregelIdList.isNotEmpty() }
 
+                val sideutvalList =
+                    jdbcTemplate.query(
+                        """
+                select
+                sideutval_type_id,
+                loeysing_id,
+                egendefinert_objekt,
+                url,
+                begrunnelse
+                from kontroll_sideutval
+                where kontroll_id = :kontroll_id
+              """
+                            .trimIndent(),
+                        mapOf("kontroll_id" to kontrollId)) { mapper, _ ->
+                          SideutvalItem(
+                              loeysingId = mapper.getInt("loeysing_id"),
+                              typeId = mapper.getInt("sideutval_type_id"),
+                              begrunnelse = mapper.getString("begrunnelse"),
+                              url = URI(mapper.getString("url")),
+                              egendefinertType = mapper.getString("egendefinert_objekt"))
+                        }
+
                 KontrollDB(
                     rm.getInt("id"),
                     rm.getString("tittel"),
@@ -91,7 +115,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     rm.getString("sakstype"),
                     rm.getString("arkivreferanse"),
                     utval,
-                    testreglar)
+                    testreglar,
+                    sideutvalList)
               }
 
       result ?: throw IllegalArgumentException("Fann ikkje kontroll med id $id")
@@ -105,7 +130,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val sakstype: String,
       val arkivreferanse: String,
       val utval: Utval?,
-      val testreglar: Testreglar?
+      val testreglar: Testreglar?,
+      val sideutval: List<SideutvalItem> = emptyList()
   ) {
     data class Utval(
         val id: Int,
@@ -201,4 +227,51 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         "insert into kontroll_testreglar (kontroll_id, testregel_id) values (:kontrollId, :testregelId)",
         updateBatchValuesTestreglar.toTypedArray())
   }
+
+  @Transactional
+  fun updateKontroll(
+      kontroll: Kontroll,
+      sideutvalItem: List<SideutvalItem>,
+  ): Result<Unit> = runCatching {
+    val updateBatchValuesSideutval =
+        sideutvalItem.map { side ->
+          mapOf(
+              "kontroll_id" to kontroll.id,
+              "sideutval_type_id" to side.typeId,
+              "loeysing_id" to side.loeysingId,
+              "egendefinert_objekt" to side.egendefinertType,
+              "url" to side.url.toString(),
+              "begrunnelse" to side.begrunnelse)
+        }
+
+    jdbcTemplate.update(
+        "delete from kontroll_sideutval where kontroll_id = :kontrollId",
+        mapOf("kontrollId" to kontroll.id))
+
+    jdbcTemplate.batchUpdate(
+        """
+          insert into kontroll_sideutval (
+            kontroll_id,
+            sideutval_type_id,
+            loeysing_id,
+            egendefinert_objekt,
+            url,
+            begrunnelse
+          ) values (
+            :kontroll_id,
+            :sideutval_type_id,
+            :loeysing_id,
+            :egendefinert_objekt,
+            :url,
+            :begrunnelse
+          )
+          """
+            .trimIndent(),
+        updateBatchValuesSideutval.toTypedArray())
+  }
+
+  fun getSideutvalType(): List<SideutvalType> =
+      jdbcTemplate.query(
+          "select id, type from sideutval_type",
+          DataClassRowMapper.newInstance(SideutvalType::class.java))
 }

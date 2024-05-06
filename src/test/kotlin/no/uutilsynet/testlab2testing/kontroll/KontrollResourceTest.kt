@@ -6,6 +6,7 @@ import io.restassured.RestAssured.given
 import io.restassured.parsing.Parser
 import io.restassured.path.json.JsonPath
 import io.restassured.path.json.JsonPath.from
+import java.net.URI
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalResource
@@ -292,5 +293,86 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
 
     assertThat(lagretKontroll.testreglar?.testregelList?.map { it.id })
         .isEqualTo(listOf(testregel.id))
+  }
+
+  @Test
+  @DisplayName("gitt vi har en kontroll med løsyinger så skal vi kunne legge inn sideutval")
+  fun updateKontrollWithSideutval() {
+    RestAssured.defaultParser = Parser.JSON
+    val body = kontrollInitBody
+    val location =
+        given()
+            .port(port)
+            .body(body)
+            .contentType("application/json")
+            .post("/kontroller")
+            .then()
+            .statusCode(equalTo(201))
+            .extract()
+            .header("Location")
+    val opprettetKontroll = get(location).`as`(Kontroll::class.java)
+
+    /* Add loesying */
+    val loeysingar =
+        listOf(Loeysing.External("UUTilsynet", "https://www.uutilsynet.no/", "991825827"))
+    val nyttUtval = UtvalResource.NyttUtval("testutval", loeysingar)
+    val utvalLocation =
+        given()
+            .port(port)
+            .body(nyttUtval)
+            .contentType("application/json")
+            .post("/v1/utval")
+            .then()
+            .statusCode(equalTo(201))
+            .extract()
+            .header("Location")
+    val utval = get(utvalLocation).`as`(Utval::class.java)
+
+    val updateBodyUtval =
+        mapOf(
+            "kontroll" to opprettetKontroll,
+            "utvalId" to utval.id,
+            "kontrollSteg" to KontrollSteg.Utval)
+
+    given()
+        .port(port)
+        .body(updateBodyUtval)
+        .contentType("application/json")
+        .put(location)
+        .then()
+        .statusCode(equalTo(204))
+
+    /* Add sideutval */
+    val updateBody =
+        mapOf(
+            "kontroll" to opprettetKontroll,
+            "sideutvalList" to
+                listOf(
+                    mapOf(
+                        "loeysingId" to utval.loeysingar.first().id,
+                        "typeId" to 1,
+                        "begrunnelse" to "Side med elementer",
+                        "url" to "https://www.uutilsynet.no",
+                        "egendefinertObjekt" to "")),
+            "kontrollSteg" to KontrollSteg.Sideutval)
+
+    given()
+        .port(port)
+        .body(updateBody)
+        .contentType("application/json")
+        .put(location)
+        .then()
+        .statusCode(equalTo(204))
+    val lagretKontroll = get(location).`as`(Kontroll::class.java)
+
+    val expected =
+        SideutvalItem(
+            utval.loeysingar.first().id,
+            1,
+            "Side med elementer",
+            URI("https://www.uutilsynet.no"),
+            null)
+
+    assertThat(lagretKontroll.sideutvalList).contains(expected)
   }
 }

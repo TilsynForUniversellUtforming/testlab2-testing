@@ -60,7 +60,8 @@ class KontrollResource(
               kontrollDB.testreglar?.let { testreglar ->
                 val testregelList = testregelDAO.getMany(testreglar.testregelIdList)
                 Testreglar(testreglar.regelsettId, testregelList)
-              })
+              },
+              kontrollDB.sideutval)
         }
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
@@ -103,6 +104,14 @@ class KontrollResource(
                 val (regelsettId, testregelIdList) = testreglar
                 kontrollDAO.updateKontroll(kontroll, regelsettId, testregelIdList).getOrThrow()
               }
+              is KontrollUpdate.Sideutval -> {
+                val (kontroll, sideutvalList) = updateBody
+                if (sideutvalList.any { it.begrunnelse.isBlank() }) {
+                  logger.error("Ugyldig sideutval for kontroll: ${kontroll.id}")
+                  throw IllegalArgumentException("Ugyldige sider i sideutval")
+                }
+                kontrollDAO.updateKontroll(kontroll, sideutvalList).getOrThrow()
+              }
             }
           }
           .fold(
@@ -116,6 +125,14 @@ class KontrollResource(
                   }
                 }
               })
+
+  @GetMapping("sideutvaltype")
+  fun getSideutvalType(): ResponseEntity<out Any> =
+      runCatching { ResponseEntity.ok(kontrollDAO.getSideutvalType()) }
+          .getOrElse {
+            logger.error("Feila ved henting av sideutvaltyper", it)
+            ResponseEntity.internalServerError().body(it.message)
+          }
 
   private fun location(id: Int) =
       ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
