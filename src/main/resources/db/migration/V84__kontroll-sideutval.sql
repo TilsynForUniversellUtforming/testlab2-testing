@@ -1,13 +1,38 @@
-insert into testobjekt (testobjekt)
-values ('Forside');
+create table sideutval_type
+(
+    id   serial primary key,
+    type varchar
+);
 
-insert into testobjekt (testobjekt)
+insert into sideutval_type (type)
+values ('Forside');
+insert into sideutval_type (type)
 values ('Egendefinert');
+insert into sideutval_type (type)
+values ('Logg inn');
+insert into sideutval_type (type)
+values ('Nettstadkart');
+insert into sideutval_type (type)
+values ('Kontaktinformasjon');
+insert into sideutval_type (type)
+values ('Hjelpeside');
+insert into sideutval_type (type)
+values ('Juridisk informasjon');
+insert into sideutval_type (type)
+values ('Tjenesteområde');
+insert into sideutval_type (type)
+values ('Sidemal');
+insert into sideutval_type (type)
+values ('Nedlastbart dokument');
+insert into sideutval_type (type)
+values ('Andre relevante sider');
+insert into sideutval_type (type)
+values ('Prosess');
 
 create table kontroll_sideutval
 (
     kontroll_id         int references kontroll (id),
-    testobjekt_id       int references testobjekt (id),
+    sideutval_type_id   int references sideutval_type (id),
     loeysing_id         int,
     egendefinert_objekt varchar,
     url                 varchar,

@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.kontroll
 
 import java.net.URI
 import java.time.Instant
+import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -89,7 +90,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     jdbcTemplate.query(
                         """
                 select
-                testobjekt_id,
+                sideutval_type_id,
                 loeysing_id,
                 egendefinert_objekt,
                 url,
@@ -101,10 +102,10 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                         mapOf("kontroll_id" to kontrollId)) { mapper, _ ->
                           SideutvalItem(
                               loeysingId = mapper.getInt("loeysing_id"),
-                              objektId = mapper.getInt("testobjekt_id"),
+                              typeId = mapper.getInt("sideutval_type_id"),
                               begrunnelse = mapper.getString("begrunnelse"),
                               url = URI(mapper.getString("url")),
-                              egendefinertObjekt = mapper.getString("egendefinert_objekt"))
+                              egendefinertType = mapper.getString("egendefinert_objekt"))
                         }
 
                 KontrollDB(
@@ -236,9 +237,9 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         sideutvalItem.map { side ->
           mapOf(
               "kontroll_id" to kontroll.id,
-              "testobjekt_id" to side.objektId,
+              "sideutval_type_id" to side.typeId,
               "loeysing_id" to side.loeysingId,
-              "egendefinert_objekt" to side.egendefinertObjekt,
+              "egendefinert_objekt" to side.egendefinertType,
               "url" to side.url.toString(),
               "begrunnelse" to side.begrunnelse)
         }
@@ -251,14 +252,14 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         """
           insert into kontroll_sideutval (
             kontroll_id,
-            testobjekt_id,
+            sideutval_type_id,
             loeysing_id,
             egendefinert_objekt,
             url,
             begrunnelse
           ) values (
             :kontroll_id,
-            :testobjekt_id,
+            :sideutval_type_id,
             :loeysing_id,
             :egendefinert_objekt,
             :url,
@@ -268,4 +269,9 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .trimIndent(),
         updateBatchValuesSideutval.toTypedArray())
   }
+
+  fun getSideutvalType(): List<SideutvalType> =
+      jdbcTemplate.query(
+          "select id, type from sideutval_type",
+          DataClassRowMapper.newInstance(SideutvalType::class.java))
 }

@@ -126,6 +126,14 @@ class KontrollResource(
                 }
               })
 
+  @GetMapping("sideutvaltype")
+  fun getSideutvalType(): ResponseEntity<out Any> =
+      runCatching { ResponseEntity.ok(kontrollDAO.getSideutvalType()) }
+          .getOrElse {
+            logger.error("Feila ved henting av sideutvaltyper", it)
+            ResponseEntity.internalServerError().body(it.message)
+          }
+
   private fun location(id: Int) =
       ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
 

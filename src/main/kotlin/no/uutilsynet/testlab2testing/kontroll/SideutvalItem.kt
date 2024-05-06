@@ -4,8 +4,8 @@ import java.net.URI
 
 data class SideutvalItem(
     val loeysingId: Int,
-    val objektId: Int,
+    val typeId: Int,
     val begrunnelse: String,
     val url: URI,
-    val egendefinertObjekt: String?
+    val egendefinertType: String?
 )
