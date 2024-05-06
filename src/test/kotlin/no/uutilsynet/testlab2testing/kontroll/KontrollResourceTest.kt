@@ -350,7 +350,7 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
                 listOf(
                     mapOf(
                         "loeysingId" to utval.loeysingar.first().id,
-                        "objektId" to 1,
+                        "typeId" to 1,
                         "begrunnelse" to "Side med elementer",
                         "url" to "https://www.uutilsynet.no",
                         "egendefinertObjekt" to "")),
