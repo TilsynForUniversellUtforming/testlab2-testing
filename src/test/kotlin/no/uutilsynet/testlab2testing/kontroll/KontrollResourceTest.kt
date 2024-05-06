@@ -371,7 +371,7 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
             1,
             "Side med elementer",
             URI("https://www.uutilsynet.no"),
-            "")
+            null)
 
     assertThat(lagretKontroll.sideutvalList).contains(expected)
   }
