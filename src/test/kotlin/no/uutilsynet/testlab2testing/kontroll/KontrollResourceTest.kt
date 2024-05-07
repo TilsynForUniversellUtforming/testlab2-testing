@@ -14,8 +14,7 @@ import no.uutilsynet.testlab2testing.regelsett.Regelsett
 import no.uutilsynet.testlab2testing.regelsett.RegelsettCreate
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.assertj.core.api.Assertions.assertThat
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.CoreMatchers.startsWith
+import org.hamcrest.CoreMatchers.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -293,6 +292,26 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
 
     assertThat(lagretKontroll.testreglar?.testregelList?.map { it.id })
         .isEqualTo(listOf(testregel.id))
+  }
+
+  @Test
+  @DisplayName("vi skal kunne hente ut en liste med alle kontroller")
+  fun getKontrollerTest() {
+    RestAssured.defaultParser = Parser.JSON
+    val kontroller =
+        given()
+            .port(port)
+            .accept("application/json")
+            .get("/kontroller")
+            .then()
+            .statusCode(equalTo(200))
+            .extract()
+            .body()
+            .`as`(Array<KontrollResource.KontrollListItem>::class.java)
+    assertThat(kontroller).isNotNull()
+    kontroller.forEach { kontroll ->
+      assertThat(kontroll).isInstanceOf(KontrollResource.KontrollListItem::class.java)
+    }
   }
 
   @Test
