@@ -7,14 +7,7 @@ import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
@@ -25,6 +18,23 @@ class KontrollResource(
     val loeysingsRegisterClient: LoeysingsRegisterClient,
 ) {
   private val logger: Logger = LoggerFactory.getLogger(KontrollResource::class.java)
+
+  data class KontrollListItem(
+      val id: Int,
+      val tittel: String,
+      val saksbehandler: String,
+      val sakstype: Kontroll.Sakstype,
+      val arkivreferanse: String
+  )
+
+  @GetMapping
+  fun getKontroller(): List<KontrollListItem> {
+    return runCatching { kontrollDAO.getKontroller().getOrThrow() }
+        .getOrElse {
+          logger.error("Feilet da jeg skulle hente alle kontroller", it)
+          throw RuntimeException(it)
+        }
+  }
 
   @PostMapping
   fun createKontroll(@RequestBody opprettKontroll: OpprettKontroll): ResponseEntity<Unit> {
