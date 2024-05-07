@@ -1,10 +1,10 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.time.LocalDate
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
-import java.time.LocalDate
 
 @Component
 class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -114,10 +114,10 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
   }
 
-    fun handleDate(date: java.sql.Date?) : LocalDate  {
-        if(date!=null) {
-            return date.toLocalDate()
-        }
-        return LocalDate.now()
+  fun handleDate(date: java.sql.Date?): LocalDate {
+    if (date != null) {
+      return date.toLocalDate()
     }
+    return LocalDate.now()
+  }
 }
