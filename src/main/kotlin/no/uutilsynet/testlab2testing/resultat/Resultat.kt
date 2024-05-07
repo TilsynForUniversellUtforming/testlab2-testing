@@ -1,24 +1,26 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.util.*
+import java.time.LocalDate
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
-import java.time.LocalDate
 
 data class Resultat(
     val id: Int,
     val namn: String,
     val type: Kontroll.KontrollType,
-    val testar: String,
     val dato: LocalDate,
     val loeysingar: List<LoeysingResultat>
 )
 
 data class LoeysingResultat(
     val id: Int,
-    val namn: String,
+    val namnLoeysing: String,
     val score: Double,
-    val testType: Testgrunnlag.TestgrunnlagType
+    val testType: Testgrunnlag.TestgrunnlagType,
+    val talElementSamsvar: Int,
+    val talElementBrot: Int,
+    val testar: String,
+    val progresjon: Int = 0
 )
 
 data class ResultatLoeysing(
