@@ -279,7 +279,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return runCatching {
       jdbcTemplate.query(
           """
-                select id, tittel, saksbehandler, sakstype, arkivreferanse
+                select id, tittel, saksbehandler, sakstype, arkivreferanse, 'InngaaendeKontroll' as kontrolltype
                 from kontroll
             """
               .trimIndent(),
