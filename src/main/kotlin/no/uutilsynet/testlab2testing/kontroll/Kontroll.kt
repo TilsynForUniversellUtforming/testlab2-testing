@@ -21,7 +21,7 @@ data class Kontroll(
   }
 
   enum class KontrollType {
-    @JsonProperty("manuell-kontroll") ManuellKontroll
+    @JsonProperty("inngaaende-kontroll") InngaaendeKontroll
   }
 
   data class Testreglar(val regelsettId: Int? = null, val testregelList: List<TestregelBase>)

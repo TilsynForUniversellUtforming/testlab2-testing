@@ -24,7 +24,8 @@ class KontrollResource(
       val tittel: String,
       val saksbehandler: String,
       val sakstype: Kontroll.Sakstype,
-      val arkivreferanse: String
+      val arkivreferanse: String,
+      val kontrollType: Kontroll.KontrollType
   )
 
   @GetMapping
@@ -56,7 +57,7 @@ class KontrollResource(
           val kontrollDB = kontrollDAO.getKontroll(id).getOrThrow()
           Kontroll(
               kontrollDB.id,
-              Kontroll.KontrollType.ManuellKontroll,
+              Kontroll.KontrollType.InngaaendeKontroll,
               kontrollDB.tittel,
               kontrollDB.saksbehandler,
               Kontroll.Sakstype.valueOf(kontrollDB.sakstype),
