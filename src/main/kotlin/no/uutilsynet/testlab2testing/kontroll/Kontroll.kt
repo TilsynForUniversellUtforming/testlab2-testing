@@ -6,7 +6,7 @@ import no.uutilsynet.testlab2testing.testregel.TestregelBase
 
 data class Kontroll(
     val id: Int,
-    val kontrolltype: KontrollType,
+    val kontrolltype: Kontrolltype,
     val tittel: String,
     val saksbehandler: String,
     val sakstype: Sakstype,
@@ -20,7 +20,7 @@ data class Kontroll(
     @JsonProperty("arkivsak") Arkivsak
   }
 
-  enum class KontrollType {
+  enum class Kontrolltype {
     @JsonProperty("inngaaende-kontroll") InngaaendeKontroll
   }
 
