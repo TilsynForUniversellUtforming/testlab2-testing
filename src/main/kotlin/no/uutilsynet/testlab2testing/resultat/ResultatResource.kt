@@ -56,7 +56,7 @@ class ResultatResource(
       aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
 
   @GetMapping("list", produces = [MediaType.APPLICATION_JSON_VALUE])
-  fun getListTest(type: Kontroll.KontrollType?): ResponseEntity<List<Resultat>> {
+  fun getListTest(type: Kontroll.Kontrolltype?): ResponseEntity<List<Resultat>> {
     return ResponseEntity.ok(resultatService.getResultatList(type))
   }
 }

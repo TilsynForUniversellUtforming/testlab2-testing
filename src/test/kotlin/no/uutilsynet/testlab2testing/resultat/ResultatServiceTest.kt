@@ -29,7 +29,7 @@ class ResultatServiceTest(
     val testMaaling = createTestMaaling()
 
     val resultat =
-        resultatService.getResultatList(Kontroll.KontrollType.AutomatiskKontroll).filter {
+        resultatService.getResultatList(Kontroll.Kontrolltype.ForenklaKontroll).filter {
           it.id == testMaaling
         }
 

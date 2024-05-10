@@ -7,7 +7,7 @@ import no.uutilsynet.testlab2testing.kontroll.Kontroll
 data class Resultat(
     val id: Int,
     val namn: String,
-    val type: Kontroll.KontrollType,
+    val type: Kontroll.Kontrolltype,
     val dato: LocalDate,
     val loeysingar: List<LoeysingResultat>
 )
@@ -26,7 +26,7 @@ data class LoeysingResultat(
 data class ResultatLoeysing(
     val id: Int,
     val namn: String,
-    val typeKontroll: Kontroll.KontrollType,
+    val typeKontroll: Kontroll.Kontrolltype,
     val testType: Testgrunnlag.TestgrunnlagType,
     val dato: LocalDate,
     val testar: String,
