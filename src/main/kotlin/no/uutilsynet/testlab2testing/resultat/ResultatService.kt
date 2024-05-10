@@ -128,10 +128,10 @@ class ResultatService(
         ?: emptyList()
   }
 
-  fun getResultatList(type: Kontroll.KontrollType?): List<Resultat> {
+  fun getResultatList(type: Kontroll.Kontrolltype?): List<Resultat> {
     return when (type) {
-      Kontroll.KontrollType.ManuellKontroll -> getManuellKontrollResultat()
-      Kontroll.KontrollType.AutomatiskKontroll -> getAutomatiskKontrollResultat()
+      Kontroll.Kontrolltype.InngaaendeKontroll -> getManuellKontrollResultat()
+      Kontroll.Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat()
       else -> getKontrollResultat()
     }
   }
@@ -187,10 +187,10 @@ class ResultatService(
 
   fun progresjonPrLoeysing(
       testgrunnlagId: Int,
-      kontrollType: Kontroll.KontrollType,
+      Kontrolltype: Kontroll.Kontrolltype,
       loeysingar: LoysingList
   ): Map<Int, Int> {
-    if (kontrollType == Kontroll.KontrollType.AutomatiskKontroll) {
+    if (Kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
       return loeysingar.loeysingar.keys.associateWith { 100 }
     }
     val resultatPrSak = testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()

@@ -32,7 +32,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       ResultatLoeysing(
           maalingId,
           navn,
-          Kontroll.KontrollType.AutomatiskKontroll,
+          Kontroll.Kontrolltype.ForenklaKontroll,
           Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
           datoStart,
           "testar",
@@ -65,7 +65,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       ResultatLoeysing(
           testgrunnlag_id,
           namn,
-          Kontroll.KontrollType.ManuellKontroll,
+          Kontroll.Kontrolltype.ForenklaKontroll,
           Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
           datoOppretta,
           "testar",
@@ -94,7 +94,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val id = rs.getInt("id")
       val namn = rs.getString("namn") ?: ""
       val dato = handleDate(rs.getDate("dato"))
-      val kontrollType = Kontroll.KontrollType.valueOf(rs.getString("type_kontroll"))
+      val Kontrolltype = Kontroll.Kontrolltype.valueOf(rs.getString("type_kontroll"))
       val loeysingId = rs.getInt("loeysing_id")
       val testregelGjennomsnittlegSideSamsvarProsent =
           rs.getDouble("testregel_gjennomsnittleg_side_samsvar_prosent")
@@ -103,8 +103,8 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
       ResultatLoeysing(
           id,
-          getNamn(kontrollType,id,namn),
-          kontrollType,
+          getNamn(Kontrolltype, id, namn),
+          Kontrolltype,
           Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
           dato,
           "testar",
@@ -122,23 +122,26 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return LocalDate.now()
   }
 
-    fun getNamn(kontrollType: Kontroll.KontrollType, testgrunnlagId: Int, namn: String): String {
-        if(kontrollType == Kontroll.KontrollType.AutomatiskKontroll){
-            return namn
-        }
-        val query = """
+  fun getNamn(Kontrolltype: Kontroll.Kontrolltype, testgrunnlagId: Int, namn: String): String {
+    if (Kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
+      return namn
+    }
+    val query =
+        """
             select sak.namn
             from testgrunnlag 
             left join sak on sak.id =sak_id
             where testgrunnlag.id = :testgrunnlagId
-        """.trimIndent()
+        """
+            .trimIndent()
 
-        //Ekstra sjekk for periode med migrering mellom fleire datamodellar
-        return try {
-            jdbcTemplate.queryForObject(query, mapOf("testgrunnlagId" to testgrunnlagId), String::class.java) ?: ""
-        } catch (e: EmptyResultDataAccessException){
-            namn
-        }
-
+    // Ekstra sjekk for periode med migrering mellom fleire datamodellar
+    return try {
+      jdbcTemplate.queryForObject(
+          query, mapOf("testgrunnlagId" to testgrunnlagId), String::class.java)
+          ?: ""
+    } catch (e: EmptyResultDataAccessException) {
+      namn
     }
+  }
 }
