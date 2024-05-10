@@ -80,7 +80,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val query =
         """
                 select (case when maaling_id is not null then maaling_id else testgrunnlag_id end) as id, 
-                (case when maaling_id is not null then 'AutomatiskKontroll' else 'ManuellKontroll' end) as type_kontroll, 
+                (case when maaling_id is not null then 'ForenklaKontroll' else 'InngaaendeKontroll' end) as type_kontroll, 
                 (case when dato_start is not null then dato_start else dato_oppretta end) as dato,
                 (case when maaling_id is not null then navn else namn end) as namn,
                 loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot
