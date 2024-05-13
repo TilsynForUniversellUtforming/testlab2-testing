@@ -115,7 +115,6 @@ class TestgrunnlagKontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 .trimMargin(),
             mapOf("kontrollId" to kontrollId, "loeysingId" to loeysingId),
             Int::class.java)
-    // TODO - NOE GALT SKJER HER!!!
     return testgrunnlagIds.map { id -> getTestgrunnlag(id).getOrThrow() }
   }
 
