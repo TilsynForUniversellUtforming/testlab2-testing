@@ -9,7 +9,6 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestKoeyring
 import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
-import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
