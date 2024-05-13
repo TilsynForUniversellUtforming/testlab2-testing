@@ -98,8 +98,8 @@ class TestResultatDAO(
               testgrunnlagId = rs.getInt("testgrunnlag_id"),
               loeysingId = rs.getInt("loeysing_id"),
               testregelId = rs.getInt("testregel_id"),
-              nettsideId = rs.getInt("nettside_id"),
-              sideutvalId = rs.getInt("sideutval_id"),
+              nettsideId = rs.getInt("nettside_id").takeUnless { rs.wasNull() },
+              sideutvalId = rs.getInt("sideutval_id").takeUnless { rs.wasNull() },
               brukar = Brukar(rs.getString("brukar_brukarnamn"), rs.getString("brukar_namn")),
               elementOmtale = rs.getString("element_omtale"),
               elementResultat =
