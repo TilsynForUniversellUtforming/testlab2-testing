@@ -29,9 +29,9 @@ class TestResultatDAO(
 
       jdbcTemplate.queryForObject(
           """
-        insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, nettside_id, brukar_id, element_omtale, element_resultat,
+        insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, nettside_id, sideutval_id, brukar_id, element_omtale, element_resultat,
                                      element_utfall, test_vart_utfoert, status, kommentar)
-        values (:testgrunnlagId, :loeysingId, :testregelId, :nettsideId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
+        values (:testgrunnlagId, :loeysingId, :testregelId, :nettsideId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
                 :testVartUtfoert,:status, :kommentar)
         returning id
       """
@@ -41,6 +41,7 @@ class TestResultatDAO(
               "loeysingId" to createTestResultat.loeysingId,
               "testregelId" to createTestResultat.testregelId,
               "nettsideId" to createTestResultat.nettsideId,
+              "sideutvalId" to createTestResultat.sideutvalId,
               "brukarId" to brukarId,
               "elementOmtale" to createTestResultat.elementOmtale,
               "elementResultat" to createTestResultat.elementResultat,
@@ -76,6 +77,7 @@ class TestResultatDAO(
                        ti.loeysing_id,
                        ti.testregel_id,
                        ti.nettside_id,
+                       ti.sideutval_id,
                        ti.element_omtale,
                        ti.element_resultat,
                        ti.element_utfall,

@@ -385,12 +385,13 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
     val lagretKontroll = get(location).`as`(Kontroll::class.java)
 
     val expected =
-        SideutvalItem(
+        Sideutval(
             utval.loeysingar.first().id,
             1,
             "Side med elementer",
             URI("https://www.uutilsynet.no"),
-            null)
+            null,
+            1)
 
     assertThat(lagretKontroll.sideutvalList).contains(expected)
   }

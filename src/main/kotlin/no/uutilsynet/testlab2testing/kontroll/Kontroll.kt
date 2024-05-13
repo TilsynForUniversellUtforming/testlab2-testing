@@ -13,7 +13,7 @@ data class Kontroll(
     val arkivreferanse: String,
     val utval: Utval? = null,
     val testreglar: Testreglar? = null,
-    val sideutvalList: List<SideutvalItem> = emptyList()
+    val sideutvalList: List<Sideutval> = emptyList()
 ) {
   enum class Sakstype {
     @JsonProperty("forvaltningssak") Forvaltningssak,

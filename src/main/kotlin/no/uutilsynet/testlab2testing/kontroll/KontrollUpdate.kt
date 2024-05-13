@@ -18,7 +18,7 @@ sealed class KontrollUpdate {
   data class Testreglar(override val kontroll: Kontroll, val testreglar: KontrollTestreglarUpdate) :
       KontrollUpdate()
 
-  data class Sideutval(override val kontroll: Kontroll, val sideutvalList: List<SideutvalItem>) :
+  data class Sideutval(override val kontroll: Kontroll, val sideutvalList: List<SideutvalBase>) :
       KontrollUpdate()
 }
 
