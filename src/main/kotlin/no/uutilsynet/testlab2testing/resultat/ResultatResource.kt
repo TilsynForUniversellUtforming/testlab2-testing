@@ -6,7 +6,6 @@ import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import org.slf4j.LoggerFactory
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -55,7 +54,7 @@ class ResultatResource(
   fun getAggregertResultat(@PathVariable testgrunnlagId: Int): List<AggregertResultatTestregel> =
       aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
 
-  @GetMapping("list", produces = [MediaType.APPLICATION_JSON_VALUE])
+  @GetMapping("list")
   fun getListTest(type: Kontroll.Kontrolltype?): ResponseEntity<List<Resultat>> {
     return ResponseEntity.ok(resultatService.getResultatList(type))
   }
