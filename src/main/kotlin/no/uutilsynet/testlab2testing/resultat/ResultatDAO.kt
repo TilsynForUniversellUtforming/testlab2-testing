@@ -87,6 +87,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 from aggregering_testregel  
                 left join testlab2_testing.maalingv1 on maalingv1.id = aggregering_testregel.maaling_id
                 left join testlab2_testing.testgrunnlag on testgrunnlag.id = aggregering_testregel.testgrunnlag_id
+                where testregel_gjennomsnittleg_side_samsvar_prosent is not null
             """
             .trimIndent()
 
