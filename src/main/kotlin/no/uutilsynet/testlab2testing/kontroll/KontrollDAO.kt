@@ -90,6 +90,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     jdbcTemplate.query(
                         """
                 select
+                id,
                 sideutval_type_id,
                 loeysing_id,
                 egendefinert_objekt,
@@ -100,7 +101,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               """
                             .trimIndent(),
                         mapOf("kontroll_id" to kontrollId)) { mapper, _ ->
-                          SideutvalItem(
+                          Sideutval(
+                              id = mapper.getInt("id"),
                               loeysingId = mapper.getInt("loeysing_id"),
                               typeId = mapper.getInt("sideutval_type_id"),
                               begrunnelse = mapper.getString("begrunnelse"),
@@ -131,7 +133,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val arkivreferanse: String,
       val utval: Utval?,
       val testreglar: Testreglar?,
-      val sideutval: List<SideutvalItem> = emptyList()
+      val sideutval: List<Sideutval> = emptyList()
   ) {
     data class Utval(
         val id: Int,
@@ -231,10 +233,10 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Transactional
   fun updateKontroll(
       kontroll: Kontroll,
-      sideutvalItem: List<SideutvalItem>,
+      sideutvalBase: List<SideutvalBase>,
   ): Result<Unit> = runCatching {
     val updateBatchValuesSideutval =
-        sideutvalItem.map { side ->
+        sideutvalBase.map { side ->
           mapOf(
               "kontroll_id" to kontroll.id,
               "sideutval_type_id" to side.typeId,
@@ -269,6 +271,35 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .trimIndent(),
         updateBatchValuesSideutval.toTypedArray())
   }
+
+  fun findSideutvalByKontrollAndLoeysing(
+      kontrollId: Int,
+      loeysingIdList: List<Int>
+  ): List<Sideutval> =
+      jdbcTemplate.query(
+          """
+            select
+              id, 
+              kontroll_id,
+              sideutval_type_id,
+              loeysing_id,
+              egendefinert_objekt,
+              url,
+              begrunnelse
+            from kontroll_sideutval
+              where kontroll_id = :kontrollId and loeysing_id in (:loeysingIdList)
+          """
+              .trimIndent(),
+          mapOf("kontrollId" to kontrollId, "loeysingIdList" to loeysingIdList),
+      ) { mapper, _ ->
+        Sideutval(
+            id = mapper.getInt("id"),
+            loeysingId = mapper.getInt("loeysing_id"),
+            typeId = mapper.getInt("sideutval_type_id"),
+            begrunnelse = mapper.getString("begrunnelse"),
+            url = URI(mapper.getString("url")),
+            egendefinertType = mapper.getString("egendefinert_objekt"))
+      }
 
   fun getSideutvalType(): List<SideutvalType> =
       jdbcTemplate.query(

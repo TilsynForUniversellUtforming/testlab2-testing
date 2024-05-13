@@ -1,11 +1,15 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import java.net.URI
+import java.net.URL
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.forenkletkontroll.*
+import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingResource
+import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.TestResultat
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
@@ -58,11 +62,24 @@ class ResultatService(
   }
 
   fun getResulatForManuellKontroll(
-      sakId: Int,
+      testgrunnlagId: Int,
       testregelNoekkel: String?,
       loeysingId: Int?
   ): List<TestresultatDetaljert> {
-    val testresultat = testResultatDAO.getManyResults(sakId).getOrThrow()
+    val testresultat = testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
+    val isSak = testresultat.first().nettsideId != null
+
+    val sideutvalUrlMapKontroll: Map<Int, URL> =
+        if (isSak) {
+          emptyMap()
+        } else {
+          val sideutvalIds = testresultat.map { it.sideutvalId }.filterNotNull().toSet()
+          if (sideutvalIds.isNotEmpty()) {
+            sideutvalDAO.getSideutvalUrlMapKontroll(sideutvalIds.toList())
+          } else {
+            emptyMap()
+          }
+        }
 
     val filterTestregelId = getTestregelIdFromSchema(testregelNoekkel.toString())
 
@@ -71,6 +88,13 @@ class ResultatService(
         .filter { filterByLoeysing(it.loeysingId, loeysingId) }
         .map {
           val testregel: Testregel = getTestregel(it.testregelId)
+          val url =
+              if (isSak) URI(getUrlFromNettside(it.nettsideId!!)).toURL()
+              else sideutvalUrlMapKontroll[it.sideutvalId!!]
+          if (url == null) {
+            throw IllegalArgumentException("Ugyldig testresultat")
+          }
+
           // it.testregel er databaseId ikkje feltet testregelId i db
           TestresultatDetaljert(
               it.id,
@@ -78,7 +102,7 @@ class ResultatService(
               it.testregelId,
               testregel.testregelId,
               it.testgrunnlagId,
-              URI(getUrlFromNettside(it.nettsideId)).toURL(),
+              url,
               getSuksesskriteriumFromTestregel(testregel.kravId),
               testVartUtfoertToLocalTime(it.testVartUtfoert),
               it.elementUtfall,
