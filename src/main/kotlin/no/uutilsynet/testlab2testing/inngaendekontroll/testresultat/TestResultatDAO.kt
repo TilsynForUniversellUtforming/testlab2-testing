@@ -4,6 +4,7 @@ import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.brukar.BrukarService
+import no.uutilsynet.testlab2testing.forenkletkontroll.logger
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.simpleflatmapper.jdbc.spring.JdbcTemplateMapperFactory
@@ -70,8 +71,9 @@ class TestResultatDAO(
             .newResultSetExtractor(ResultatManuellKontroll::class.java)
 
     val testResultat =
-        jdbcTemplate.query(
-            """
+        try {
+          jdbcTemplate.query(
+              """
                 select ti.id    as id,
                        ti.testgrunnlag_id,
                        ti.loeysing_id,
@@ -95,9 +97,13 @@ class TestResultatDAO(
                 and ${if (testgrunnlagId != null) "ti.testgrunnlag_id = :testgrunnlag_id" else "true"}
                 order by id, svar_steg
             """
-                .trimIndent(),
-            mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId),
-            resultSetExtractor)
+                  .trimIndent(),
+              mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId),
+              resultSetExtractor)
+        } catch (e: Error) {
+          logger.error("Feil ved henting av testresultat", e)
+          emptyList()
+        }
     testResultat ?: emptyList()
   }
 
