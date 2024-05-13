@@ -3,11 +3,11 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
+import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
-import no.uutilsynet.testlab2testing.forenkletkontroll.logger
+import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
-import org.simpleflatmapper.jdbc.spring.JdbcTemplateMapperFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -61,19 +61,15 @@ class TestResultatDAO(
   fun getManyResults(testgrunnlagId: Int): Result<List<ResultatManuellKontroll>> =
       getTestResultat(testgrunnlagId = testgrunnlagId)
 
+  data class SvarDB(val resultatManuellKontrollId: Int, val svar: ResultatManuellKontroll.Svar)
+
   private fun getTestResultat(
       resultatId: Int? = null,
       testgrunnlagId: Int? = null
   ): Result<List<ResultatManuellKontroll>> = runCatching {
-    val resultSetExtractor =
-        JdbcTemplateMapperFactory.newInstance()
-            .addKeys("id", "svar_steg", "brukar_brukarnamn")
-            .newResultSetExtractor(ResultatManuellKontroll::class.java)
-
     val testResultat =
-        try {
-          jdbcTemplate.query(
-              """
+        jdbcTemplate.query(
+            """
                 select ti.id    as id,
                        ti.testgrunnlag_id,
                        ti.loeysing_id,
@@ -85,26 +81,60 @@ class TestResultatDAO(
                        ti.element_utfall,
                        ti.test_vart_utfoert,
                        ti.kommentar,
-                       tis.steg as svar_steg,
-                       tis.svar as svar_svar,
                        b.brukarnamn as brukar_brukarnamn,
                        b.namn as brukar_namn,
                        ti.status
                 from testresultat ti
-                         left join testresultat_svar tis on ti.id = tis.testresultat_id
                          join brukar b on ti.brukar_id = b.id
                 where ${if (resultatId != null) "ti.id = :id" else "true"}
                 and ${if (testgrunnlagId != null) "ti.testgrunnlag_id = :testgrunnlag_id" else "true"}
-                order by id, svar_steg
+                order by id
             """
-                  .trimIndent(),
-              mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId),
-              resultSetExtractor)
-        } catch (e: Error) {
-          logger.error("Feil ved henting av testresultat", e)
-          emptyList()
+                .trimIndent(),
+            mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId),
+        ) { rs, _ ->
+          ResultatManuellKontroll(
+              id = rs.getInt("id"),
+              testgrunnlagId = rs.getInt("testgrunnlag_id"),
+              loeysingId = rs.getInt("loeysing_id"),
+              testregelId = rs.getInt("testregel_id"),
+              nettsideId = rs.getInt("nettside_id"),
+              sideutvalId = rs.getInt("sideutval_id"),
+              brukar = Brukar(rs.getString("brukar_brukarnamn"), rs.getString("brukar_namn")),
+              elementOmtale = rs.getString("element_omtale"),
+              elementResultat =
+                  runCatching { enumValueOf<TestresultatUtfall>(rs.getString("element_resultat")) }
+                      .getOrNull(),
+              elementUtfall = rs.getString("element_utfall"),
+              svar = emptyList<ResultatManuellKontroll.Svar>(),
+              testVartUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant(),
+              status = enumValueOf<ResultatManuellKontroll.Status>(rs.getString("status")),
+              kommentar = rs.getString("kommentar"))
         }
-    testResultat ?: emptyList()
+
+    val svarMap =
+        jdbcTemplate
+            .query(
+                """
+                select 
+                    ti.id,
+                      tis.steg,
+                       tis.svar
+                from testresultat ti
+                  join testresultat_svar tis on ti.id = tis.testresultat_id
+                where ${if (resultatId != null) "ti.id = :id" else "true"}
+                and ${if (testgrunnlagId != null) "ti.testgrunnlag_id = :testgrunnlag_id" else "true"}
+                order by id, steg
+            """
+                    .trimIndent(),
+                mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId)) { rs, _ ->
+                  SvarDB(
+                      rs.getInt("id"),
+                      ResultatManuellKontroll.Svar(rs.getString("steg"), rs.getString("svar")))
+                }
+            .groupBy({ it.resultatManuellKontrollId }, { it.svar })
+
+    testResultat.map { it.copy(svar = svarMap[it.id] ?: emptyList()) }
   }
 
   @Transactional
