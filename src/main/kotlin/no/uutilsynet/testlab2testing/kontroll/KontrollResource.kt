@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.kontroll
 
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlagKontroll
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontroll.TestgrunnlagType.OPPRINNELEG_TEST
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagServiceKontroll
 import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
@@ -16,6 +19,7 @@ class KontrollResource(
     val kontrollDAO: KontrollDAO,
     val testregelDAO: TestregelDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
+    val testgrunnlagServiceKontroll: TestgrunnlagServiceKontroll
 ) {
   private val logger: Logger = LoggerFactory.getLogger(KontrollResource::class.java)
 
@@ -53,27 +57,7 @@ class KontrollResource(
 
   @GetMapping("/{id}")
   fun getKontroll(@PathVariable id: Int): ResponseEntity<Kontroll> {
-    return runCatching {
-          val kontrollDB = kontrollDAO.getKontroll(id).getOrThrow()
-          Kontroll(
-              kontrollDB.id,
-              Kontroll.Kontrolltype.InngaaendeKontroll,
-              kontrollDB.tittel,
-              kontrollDB.saksbehandler,
-              Kontroll.Sakstype.valueOf(kontrollDB.sakstype),
-              kontrollDB.arkivreferanse,
-              kontrollDB.utval?.let { utval ->
-                val idList = utval.loeysingar.map { it.id }
-                val loeysingar = loeysingsRegisterClient.getMany(idList).getOrThrow()
-
-                Utval(utval.id, utval.namn, loeysingar, utval.oppretta)
-              },
-              kontrollDB.testreglar?.let { testreglar ->
-                val testregelList = testregelDAO.getMany(testreglar.testregelIdList)
-                Testreglar(testreglar.regelsettId, testregelList)
-              },
-              kontrollDB.sideutval)
-        }
+    return getKontrollResult(id)
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
             onFailure = {
@@ -85,6 +69,29 @@ class KontrollResource(
                 }
               }
             })
+  }
+
+  private fun getKontrollResult(kontrollId: Int): Result<Kontroll> = runCatching {
+    val kontrollDB = kontrollDAO.getKontroll(kontrollId).getOrThrow()
+
+    Kontroll(
+        kontrollDB.id,
+        Kontroll.Kontrolltype.InngaaendeKontroll,
+        kontrollDB.tittel,
+        kontrollDB.saksbehandler,
+        Kontroll.Sakstype.valueOf(kontrollDB.sakstype),
+        kontrollDB.arkivreferanse,
+        kontrollDB.utval?.let { utval ->
+          val idList = utval.loeysingar.map { it.id }
+          val loeysingar = loeysingsRegisterClient.getMany(idList).getOrThrow()
+
+          Utval(utval.id, utval.namn, loeysingar, utval.oppretta)
+        },
+        kontrollDB.testreglar?.let { testreglar ->
+          val testregelList = testregelDAO.getMany(testreglar.testregelIdList)
+          Testreglar(testreglar.regelsettId, testregelList)
+        },
+        kontrollDB.sideutval)
   }
 
   @DeleteMapping("/{id}")
@@ -124,6 +131,8 @@ class KontrollResource(
                 kontrollDAO.updateKontroll(kontroll, sideutvalList).getOrThrow()
               }
             }
+
+            createOrUpdateTestgrunnlag(id)
           }
           .fold(
               onSuccess = { ResponseEntity.noContent().build() },
@@ -154,4 +163,28 @@ class KontrollResource(
       val sakstype: Kontroll.Sakstype,
       val arkivreferanse: String,
   )
+
+  fun createOrUpdateTestgrunnlag(kontrollId: Int): Result<Int> {
+    val kontroll = getKontrollResult(kontrollId).getOrThrow()
+    val testregelIdList = kontroll.testreglar?.testregelList?.map { it.id } ?: emptyList()
+    val sideutval =
+        kontroll.sideutvalList
+            .map { it.loeysingId }
+            .let { loeysingIdList ->
+              if (loeysingIdList.isNotEmpty()) {
+                kontrollDAO.findSideutvalByKontrollAndLoeysing(kontroll.id, loeysingIdList)
+              } else {
+                emptyList()
+              }
+            }
+
+    val nyttTestgrunnlag =
+        NyttTestgrunnlagKontroll(
+            kontroll.id,
+            "Testgrunnlag for kontroll ${kontroll.tittel}",
+            OPPRINNELEG_TEST,
+            sideutval,
+            testregelIdList)
+    return testgrunnlagServiceKontroll.createOrUpdate(nyttTestgrunnlag)
+  }
 }

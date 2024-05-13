@@ -313,4 +313,20 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             mapOf("id" to nettsideId),
             DataClassRowMapper.newInstance(Sak.Nettside::class.java)))
   }
+
+  fun getSideutvalUrlMapKontroll(sideutvalIds: List<Int>): Map<Int, URL> =
+      jdbcTemplate
+          .query(
+              """
+        select tsk.sideutval_id, ks.url
+        from testgrunnlag_sideutval_kontroll tsk
+        join kontroll_sideutval ks on ks.id = tsk.sideutval_id
+            where tsk.sideutval_id in (:sideutvalIds)
+      """
+                  .trimIndent(),
+              mapOf("sideutvalIds" to sideutvalIds),
+          ) { rs, _ ->
+            rs.getInt("sideutval_id") to URI(rs.getString("url")).toURL()
+          }
+          .toMap()
 }

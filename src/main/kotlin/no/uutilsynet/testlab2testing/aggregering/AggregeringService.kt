@@ -309,15 +309,15 @@ class AggregeringService(
   }
 
   @Transactional
-  fun saveAggregertResultatSak(sakId: Int): Result<Boolean> {
+  fun saveAggregertResultat(testgrunnlagId: Int): Result<Boolean> {
 
     runCatching {
-          val testresultatForSak =
-              testResultatDAO.getManyResults(testgrunnlagId = sakId).getOrThrow()
+          val testresultatList =
+              testResultatDAO.getManyResults(testgrunnlagId = testgrunnlagId).getOrThrow()
 
-          saveAggregertResultatTestregel(testresultatForSak).getOrThrow()
-          saveAggregertResultatSuksesskriterium(testresultatForSak).getOrThrow()
-          saveAggregertResultatSide(testresultatForSak).getOrThrow()
+          saveAggregertResultatTestregel(testresultatList).getOrThrow()
+          saveAggregertResultatSuksesskriterium(testresultatList).getOrThrow()
+          saveAggregertResultatSide(testresultatList).getOrThrow()
         }
         .fold(
             onSuccess = {
@@ -375,15 +375,11 @@ class AggregeringService(
             })
   }
 
-  fun saveAggregertResultatSide(
-      testresultatForSak: List<ResultatManuellKontroll>
-  ): Result<Boolean> =
+  fun saveAggregertResultatSide(testresultatList: List<ResultatManuellKontroll>): Result<Boolean> =
       runCatching {
-            val aggregertResultatSide = createAggregeringPerSideDTO(testresultatForSak)
+            val aggregertResultatSide = createAggregeringPerSideDTO(testresultatList)
 
-            aggregertResultatSide.forEach {
-              aggregeringDAO.createAggregeringSide(it).onFailure { e -> { throw e } }
-            }
+            aggregertResultatSide.forEach { aggregeringDAO.createAggregeringSide(it).getOrThrow() }
           }
           .fold(
               onSuccess = {
@@ -533,27 +529,57 @@ class AggregeringService(
   }
 
   private fun createAggregeringPerSideDTO(
-      testresultatForSak: List<ResultatManuellKontroll>
+      testresultatList: List<ResultatManuellKontroll>
   ): List<AggregeringPerSideDTO> {
-    return testresultatForSak
-        .groupBy { it.nettsideId }
-        .entries
-        .map {
-          val testresultat = it.value
-          val sideUrl: URL = getUrlFromNettsideId(it.key).getOrThrow()
+    val isSak = testresultatList.first().nettsideId != null
 
-          AggregeringPerSideDTO(
-              null,
-              testresultat.first().loeysingId,
-              sideUrl,
-              sideUrl.path.split("/").size,
-              0.0f,
-              testresultat.count { it.elementResultat == TestresultatUtfall.samsvar },
-              testresultat.count { it.elementResultat == TestresultatUtfall.brot },
-              0,
-              testresultat.count { it.elementResultat == TestresultatUtfall.ikkjeForekomst },
-              testresultat.first().testgrunnlagId)
+    val testresultatMapNullable =
+        if (isSak) {
+          testresultatList.groupBy { it.nettsideId }
+        } else {
+          testresultatList.groupBy { it.sideutvalId }
         }
+
+    if (testresultatMapNullable.keys.any { it == null }) {
+      throw IllegalArgumentException("Ugyldig testresultat")
+    }
+
+    val testresultatMap = testresultatMapNullable.filterKeys { it != null }.mapKeys { it.key!! }
+    val urlMap: Map<Int, URL> =
+        if (isSak) {
+          testresultatMap.entries.associate { entry ->
+            entry.key to getUrlFromNettsideId(entry.key).getOrThrow()
+          }
+        } else {
+          val sideutvalIds = testresultatMap.keys.toList()
+          if (sideutvalIds.isNotEmpty()) {
+            sideutvalDAO.getSideutvalUrlMapKontroll(testresultatMap.keys.toList())
+          } else {
+            emptyMap()
+          }
+        }
+
+    // Alle nettsideIder og sideutvalIder skal referere til en gyldig url
+    if (!testresultatMap.keys.containsAll(urlMap.keys)) {
+      throw IllegalArgumentException("Ugyldige nettsider i testresultat")
+    }
+
+    return testresultatMap.entries.map {
+      val sideUrl = urlMap[it.key]!!
+      val testresultat = it.value
+
+      AggregeringPerSideDTO(
+          null,
+          testresultat.first().loeysingId,
+          sideUrl,
+          sideUrl.path.split("/").size,
+          0.0f,
+          testresultat.count { it.elementResultat == TestresultatUtfall.samsvar },
+          testresultat.count { it.elementResultat == TestresultatUtfall.brot },
+          0,
+          testresultat.count { it.elementResultat == TestresultatUtfall.ikkjeForekomst },
+          testresultat.first().testgrunnlagId)
+    }
   }
 
   private fun getUrlFromNettsideId(nettsideId: Int): Result<URL> {
