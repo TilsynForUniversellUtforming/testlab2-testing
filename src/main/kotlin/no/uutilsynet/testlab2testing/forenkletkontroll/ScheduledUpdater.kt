@@ -148,7 +148,8 @@ class ScheduledUpdater(
           TestKoeyring.Feila(
               testKoeyring.crawlResultat,
               Instant.now(),
-              "Testing av ${testKoeyring.loeysing.url} feila. Eg klarte ikkje å hente status frå autotestaren.")
+              "Testing av ${testKoeyring.loeysing.url} feila. Eg klarte ikkje å hente status frå autotestaren.",
+              testKoeyring.brukar)
         }
       } else {
         failedTestingStatusAttempts.remove(testKoeyring)

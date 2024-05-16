@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 import java.net.URI
 import java.time.Instant
 import java.util.stream.Stream
+import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.crawlResultat
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.statusURL
 import org.assertj.core.api.Assertions.assertThat
@@ -17,7 +18,7 @@ class TestKoeyringTest {
   @Test
   @DisplayName("ei ny TestKøyring startar med status `ikkje starta`")
   fun nyTestKoeyring() {
-    val actual = TestKoeyring.from(crawlResultat, URI(statusURL).toURL())
+    val actual = TestKoeyring.from(crawlResultat, URI(statusURL).toURL(), Brukar("test", "testar"))
     assertThat(actual).isInstanceOf(TestKoeyring.IkkjeStarta::class.java)
     assertThat(actual.statusURL.toString()).isEqualTo(statusURL)
   }
@@ -28,7 +29,8 @@ class TestKoeyringTest {
       "gitt ei testkøyring med tilstand `ikkje starta`, test riktig kombinasjon av respons og ny tilstand")
   fun testUpdateStatus(response: AutoTesterClient.AutoTesterStatus, tilstand: Class<*>) {
     val testKoeyring =
-        TestKoeyring.IkkjeStarta(crawlResultat, Instant.now(), URI(statusURL).toURL())
+        TestKoeyring.IkkjeStarta(
+            crawlResultat, Instant.now(), URI(statusURL).toURL(), Brukar("test", "testar"))
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(tilstand)
   }
@@ -43,7 +45,8 @@ class TestKoeyringTest {
             crawlResultat,
             Instant.now(),
             URI(statusURL).toURL(),
-            Framgang(0, crawlResultat.nettsider.size))
+            Framgang(0, crawlResultat.nettsider.size),
+            Brukar("test", "testar"))
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(tilstand)
   }
@@ -56,7 +59,8 @@ class TestKoeyringTest {
             crawlResultat,
             Instant.now(),
             URI(statusURL).toURL(),
-            Framgang(0, crawlResultat.nettsider.size))
+            Framgang(0, crawlResultat.nettsider.size),
+            Brukar("test", "testar"))
     val actual =
         TestKoeyring.updateStatus(testKoeyring, AutoTesterClient.AutoTesterStatus.Terminated)
     assertThat(actual).isInstanceOf(TestKoeyring.Feila::class.java)
@@ -68,7 +72,12 @@ class TestKoeyringTest {
   @MethodSource("pairsOfResponseTilstand")
   fun testUpdateStatusFromFerdig(response: AutoTesterClient.AutoTesterStatus, tilstand: Class<*>) {
     val testKoeyring =
-        TestKoeyring.Ferdig(crawlResultat, Instant.now(), URI(statusURL).toURL(), lenker = null)
+        TestKoeyring.Ferdig(
+            crawlResultat,
+            Instant.now(),
+            URI(statusURL).toURL(),
+            lenker = null,
+            Brukar("test", "testar"))
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(TestKoeyring.Ferdig::class.java)
   }
@@ -78,7 +87,9 @@ class TestKoeyringTest {
   @ParameterizedTest
   @MethodSource("pairsOfResponseTilstand")
   fun testUpdateStatusFromFeila(response: AutoTesterClient.AutoTesterStatus, tilstand: Class<*>) {
-    val testKoeyring = TestKoeyring.Feila(crawlResultat, Instant.now(), "dette går ikkje")
+    val testKoeyring =
+        TestKoeyring.Feila(
+            crawlResultat, Instant.now(), "dette går ikkje", Brukar("test", "testar"))
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(TestKoeyring.Feila::class.java)
   }

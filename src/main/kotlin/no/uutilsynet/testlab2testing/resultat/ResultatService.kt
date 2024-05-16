@@ -186,7 +186,7 @@ class ResultatService(
                   resultLoeysing.first().testType,
                   resultLoeysing.map { it.talElementSamsvar }.sum(),
                   resultLoeysing.map { it.talElementBrot }.sum(),
-                  resultLoeysing.first().testar,
+                  getTestar(resultLoeysing.first().id, resultLoeysing.first().typeKontroll),
                   statusLoeysingar[loeysingId] ?: 0)
             }
     return resultLoeysingar
@@ -217,6 +217,13 @@ class ResultatService(
       ->
       LoysingList(loeysingList.associateBy { it.id })
     }
+  }
+
+  private fun getTestar(testgrunnlagId: Int, kontrolltype: Kontroll.Kontrolltype): String {
+    if (kontrolltype == Kontroll.Kontrolltype.InngaaendeKontroll) {
+      return testResultatDAO.getBrukarForTestgrunnlag(testgrunnlagId)
+    }
+    return "testar"
   }
 
   class LoysingList(val loeysingar: Map<Int, Loeysing>) {

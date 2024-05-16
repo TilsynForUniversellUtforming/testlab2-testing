@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
 import java.time.Instant
+import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateStatus
 import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters.Companion.validateParameters
@@ -185,7 +186,8 @@ class MaalingKtTest {
                       crawlResultatForUUTilsynet,
                       Instant.now(),
                       URI("https://www.status.url").toURL(),
-                      Framgang(0, 0))))
+                      Framgang(0, 0),
+                      Brukar("test", "testar"))))
       val result = Maaling.toTestingFerdig(maaling)
       assertThat(result).isNull()
     }
@@ -204,7 +206,8 @@ class MaalingKtTest {
                       crawlResultatForUUTilsynet,
                       Instant.now(),
                       URI("https://status.url").toURL(),
-                      lenker)))
+                      lenker,
+                      Brukar("test", "testar"))))
       val result = Maaling.toTestingFerdig(maaling)
       assertThat(result).isNotNull
     }
@@ -219,12 +222,17 @@ class MaalingKtTest {
               "navn",
               maalingDateStart,
               listOf(
-                  TestKoeyring.Feila(crawlResultatForDigdir, Instant.now(), "autotester krasja"),
+                  TestKoeyring.Feila(
+                      crawlResultatForDigdir,
+                      Instant.now(),
+                      "autotester krasja",
+                      Brukar("test", "testar")),
                   TestKoeyring.Ferdig(
                       crawlResultatForUUTilsynet,
                       Instant.now(),
                       URI("https://status.url").toURL(),
-                      lenker),
+                      lenker,
+                      Brukar("test", "testar")),
               ))
       val result = Maaling.toTestingFerdig(maaling)
       assertThat(result).isNotNull
@@ -248,13 +256,15 @@ class MaalingKtTest {
                         Instant.now()),
                     Instant.now(),
                     URI("https://www.status.url").toURL(),
-                    lenker),
+                    lenker,
+                    Brukar("test", "testar")),
                 TestKoeyring.Ferdig(
                     CrawlResultat.Ferdig(
                         1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now()),
                     Instant.now(),
                     URI("https://www.status.url").toURL(),
-                    lenker)))
+                    lenker,
+                    Brukar("test", "testar"))))
 
     @DisplayName(
         "når vi henter testkøyringar for ei måling, uten å spesifisere løysing, så skal vi få alle testkøyringane")
