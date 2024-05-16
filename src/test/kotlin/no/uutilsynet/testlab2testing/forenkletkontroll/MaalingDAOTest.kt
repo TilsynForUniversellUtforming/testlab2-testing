@@ -4,6 +4,7 @@ import java.net.URI
 import java.net.URL
 import java.time.Instant
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
@@ -325,7 +326,8 @@ class MaalingDAOTest(
                   URI("https://aggregeringSK.resultat").toURL(),
                   URI("https://aggregeringSide.resultat").toURL(),
                   URI("https://aggregeringSideTR.resultat").toURL(),
-                  URI("https://aggregeringLoeysing.resultat").toURL()))
+                  URI("https://aggregeringLoeysing.resultat").toURL()),
+              Brukar("test", "testar"))
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     val testingFerdig = Maaling.toTestingFerdig(testing)!!
@@ -387,7 +389,8 @@ class MaalingDAOTest(
     maalingDAO.save(kvalitetssikring)
     val testKoeyringar =
         crawlResultat.map {
-          TestKoeyring.IkkjeStarta(it, Instant.now(), URI("https://teststatus.url").toURL())
+          TestKoeyring.IkkjeStarta(
+              it, Instant.now(), URI("https://teststatus.url").toURL(), Brukar("test", "testar"))
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     maalingDAO.save(testing).getOrThrow()
@@ -409,7 +412,8 @@ class MaalingDAOTest(
               it,
               Instant.now(),
               URI("https://teststatus.url").toURL(),
-              Framgang(0, it.nettsider.size))
+              Framgang(0, it.nettsider.size),
+              Brukar("test", "testar"))
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     maalingDAO.save(testing).getOrThrow()

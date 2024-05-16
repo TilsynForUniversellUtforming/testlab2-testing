@@ -5,6 +5,8 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.Crawling
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.Kvalitetssikring
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.Planlegging
@@ -44,7 +46,8 @@ class MaalingDAO(
     val jdbcTemplate: NamedParameterJdbcTemplate,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val aggregeringService: AggregeringService,
-    val sideutvalDAO: SideutvalDAO
+    val sideutvalDAO: SideutvalDAO,
+    val brukarService: BrukarService,
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
@@ -253,7 +256,7 @@ class MaalingDAO(
     val crawlResultat = sideutvalDAO.getCrawlResultatForMaaling(maalingId, loeysingList)
     return jdbcTemplate.query<TestKoeyring>(
         """
-              select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, t.lenker_testa, url_fullt_resultat, url_brot,url_agg_tr,url_agg_sk,url_agg_side,url_agg_side_tr,url_agg_loeysing
+              select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, t.lenker_testa, url_fullt_resultat, url_brot,url_agg_tr,url_agg_sk,url_agg_side,url_agg_side_tr,url_agg_loeysing, brukar_id
               from testkoeyring t
               where maaling_id = :maaling_id
             """
@@ -266,6 +269,7 @@ class MaalingDAO(
               crawlResultat.find { it.loeysing.id == loeysingId }
                   ?: throw RuntimeException(
                       "finner ikkje crawlresultat for loeysing med id = $loeysingId")
+          val brukar = brukarService.getBrukarById(rs.getInt("brukar_id"))
           if (crawlResultatForLoeysing !is CrawlResultat.Ferdig) {
             throw RuntimeException(
                 "crawlresultat for loeysing med id = $loeysingId er ikkje ferdig")
@@ -275,18 +279,22 @@ class MaalingDAO(
           return when (status) {
             "ikkje_starta" -> {
               TestKoeyring.IkkjeStarta(
-                  crawlResultatForLoeysing, sistOppdatert, URI(rs.getString("status_url")).toURL())
+                  crawlResultatForLoeysing,
+                  sistOppdatert,
+                  URI(rs.getString("status_url")).toURL(),
+                  brukar)
             }
             "starta" -> {
               TestKoeyring.Starta(
                   crawlResultatForLoeysing,
                   sistOppdatert,
                   URI(rs.getString("status_url")).toURL(),
-                  Framgang(rs.getInt("lenker_testa"), crawlResultatForLoeysing.antallNettsider))
+                  Framgang(rs.getInt("lenker_testa"), crawlResultatForLoeysing.antallNettsider),
+                  brukar)
             }
             "feila" ->
                 TestKoeyring.Feila(
-                    crawlResultatForLoeysing, sistOppdatert, rs.getString("feilmelding"))
+                    crawlResultatForLoeysing, sistOppdatert, rs.getString("feilmelding"), brukar)
             "ferdig" -> {
               val urlFulltResultat = rs.getString("url_fullt_resultat")
               val urlBrot = rs.getString("url_brot")
@@ -311,7 +319,8 @@ class MaalingDAO(
                   crawlResultatForLoeysing,
                   sistOppdatert,
                   URI(rs.getString("status_url")).toURL(),
-                  lenker)
+                  lenker,
+                  brukar)
             }
             else -> throw RuntimeException("ukjent status $status")
           }
@@ -395,8 +404,8 @@ class MaalingDAO(
       }
       else -> {
         jdbcTemplate.queryForObject(
-            """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding) 
-                values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :feilmelding)
+            """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, brukar_id) 
+                values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :feilmelding, :brukar_id)
                 returning id
             """
                 .trimMargin(),
@@ -406,10 +415,18 @@ class MaalingDAO(
                 "status" to status(testKoeyring),
                 "status_url" to statusURL(testKoeyring),
                 "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
-                "feilmelding" to feilmelding(testKoeyring)),
+                "feilmelding" to feilmelding(testKoeyring),
+                "brukar_id" to getBrukar(testKoeyring.brukar)),
             Int::class.java)
       }
     }
+  }
+
+  private fun getBrukar(brukar: Brukar?): Int? {
+    if (brukar != null) {
+      return brukarService.getBrukarIdByBrukarnamn(brukar.brukarnamn)
+    }
+    return null
   }
 
   private fun saveTestKoeyringFerdig(maalingId: Int, testKoeyring: TestKoeyring.Ferdig) {

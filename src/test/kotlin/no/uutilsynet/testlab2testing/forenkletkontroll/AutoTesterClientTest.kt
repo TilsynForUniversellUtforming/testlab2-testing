@@ -6,6 +6,7 @@ import java.net.URI
 import java.time.Instant
 import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
+import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.statusURL
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testRegelList
 import org.assertj.core.api.Assertions.assertThat
@@ -147,7 +148,8 @@ class AutoTesterClientTest {
         .andRespond(MockRestResponseCreators.withSuccess(jsonFailure, MediaType.APPLICATION_JSON))
 
     val testKoeyringIkkjeStarta =
-        TestKoeyring.from(TestConstants.crawlResultat, URI(statusURL).toURL())
+        TestKoeyring.from(
+            TestConstants.crawlResultat, URI(statusURL).toURL(), Brukar("test", "testar"))
     val response = autoTesterClient.updateStatus(testKoeyringIkkjeStarta)
 
     assertThat(response.isFailure).isTrue
@@ -208,7 +210,11 @@ class AutoTesterClientTest {
         )
     val testKoeyring =
         TestKoeyring.Ferdig(
-            TestConstants.crawlResultat, Instant.now(), URI(statusURL).toURL(), lenker = lenker)
+            TestConstants.crawlResultat,
+            Instant.now(),
+            URI(statusURL).toURL(),
+            lenker = lenker,
+            Brukar("test", "testar"))
 
     server
         .expect(

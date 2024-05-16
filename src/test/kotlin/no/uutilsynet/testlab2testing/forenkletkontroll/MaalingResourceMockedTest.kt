@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import java.time.Instant
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.crawlResultat
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
@@ -55,6 +56,8 @@ class MaalingResourceMockedTest {
 
   @MockBean private lateinit var sideutvalDAO: SideutvalDAO
 
+  @MockBean private lateinit var brukarService: BrukarService
+
   private lateinit var maalingResource: MaalingResource
 
   private val objectMapper =
@@ -72,7 +75,8 @@ class MaalingResourceMockedTest {
             autoTesterClient,
             aggregeringService,
             sideutvalDAO,
-            MaalingService(maalingDAO, loeysingsRegisterClient, testregelDAO, utvalDAO))
+            MaalingService(maalingDAO, loeysingsRegisterClient, testregelDAO, utvalDAO),
+            brukarService)
   }
 
   @Test

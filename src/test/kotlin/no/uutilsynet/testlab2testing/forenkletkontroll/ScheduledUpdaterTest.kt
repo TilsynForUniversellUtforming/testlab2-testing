@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
 import java.time.Instant
+import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.forenkletkontroll.ScheduledUpdater.Companion.updateCrawlingStatus
 import no.uutilsynet.testlab2testing.forenkletkontroll.ScheduledUpdater.Companion.updateTestingStatus
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
@@ -64,7 +65,8 @@ class ScheduledUpdaterTest {
             crawlResultat = crawlResultat,
             sistOppdatert = Instant.now(),
             statusURL = URI("https://www.uutilsynet.no/status/1").toURL(),
-            framgang = Framgang(0, 0))
+            framgang = Framgang(0, 0),
+            Brukar("test", "testar"))
 
     var updatedTestKoeyring: TestKoeyring? = null
     for (i in 1..13) {
@@ -175,7 +177,8 @@ class ScheduledUpdaterTest {
         TestKoeyring.IkkjeStarta(
             crawlResultat = crawlResultat,
             sistOppdatert = Instant.now(),
-            statusURL = URI("https://www.uutilsynet.no/status/1").toURL())
+            statusURL = URI("https://www.uutilsynet.no/status/1").toURL(),
+            Brukar("test", "testar"))
     val maaling =
         Maaling.Testing(
             id = 1,
