@@ -11,7 +11,7 @@ class TestgrunnlagServiceKontroll(
     val testregelDAO: TestregelDAO,
 ) {
 
-  fun createOrUpdate(testgrunnlag: NyttTestgrunnlagKontroll): Result<Int> {
+  fun createOrUpdate(testgrunnlag: NyttTestgrunnlag): Result<Int> {
     val opprinneligTestgrunnlag = testgrunnlagDAO.getOpprinneligTestgrunnlag(testgrunnlag.parentId)
 
     return if (opprinneligTestgrunnlag.isSuccess) {
@@ -26,7 +26,7 @@ class TestgrunnlagServiceKontroll(
 
   private fun updateExisting(
       eksisterendeTestgrunnlag: TestgrunnlagKontroll,
-      testgrunnlag: NyttTestgrunnlagKontroll
+      testgrunnlag: NyttTestgrunnlag
   ) =
       testgrunnlagDAO.updateTestgrunnlag(
           eksisterendeTestgrunnlag.copy(

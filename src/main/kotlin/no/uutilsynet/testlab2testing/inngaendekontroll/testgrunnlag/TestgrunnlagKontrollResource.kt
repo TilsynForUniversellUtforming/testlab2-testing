@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlagKontroll
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
 import org.slf4j.Logger
@@ -32,7 +32,7 @@ class TestgrunnlagKontrollResource(val testgrunnlagDAO: TestgrunnlagKontrollDAO)
   }
 
   @PostMapping
-  fun createTestgrunnlag(@RequestBody testgrunnlag: NyttTestgrunnlagKontroll): ResponseEntity<Int> {
+  fun createTestgrunnlag(@RequestBody testgrunnlag: NyttTestgrunnlag): ResponseEntity<Int> {
     logger.info(
         "Opprett testgrunnlag for sak ${testgrunnlag.parentId} og loeysinger ${testgrunnlag.sideutval.map { it.loeysingId }}")
 

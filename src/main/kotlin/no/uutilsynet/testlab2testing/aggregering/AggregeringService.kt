@@ -6,7 +6,6 @@ import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.forenkletkontroll.AutoTesterClient
 import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestKoeyring
-import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
@@ -76,8 +75,7 @@ class AggregeringService(
             aggregeringSide
                 .map { aggregertResultatSide -> aggregerteResultatSideTODTO(aggregertResultatSide) }
                 .forEach { aggregeringDAO.createAggregeringSide(it) }
-          }
-              ?: throw RuntimeException("Aggregering url er null")
+          } ?: throw RuntimeException("Aggregering url er null")
         }
         .onFailure {
           logger.error(
@@ -102,8 +100,7 @@ class AggregeringService(
             aggregertResultatSuksesskriterium
                 .map { aggregertResultatSuksesskritieriumToDTO(it) }
                 .forEach { aggregeringDAO.createAggregertResultatSuksesskriterium(it) }
-          }
-              ?: throw RuntimeException("Aggregering url er null")
+          } ?: throw RuntimeException("Aggregering url er null")
         }
         .onFailure {
           logger.error(
@@ -438,7 +435,7 @@ class AggregeringService(
         testresultat.first().testgrunnlagId)
   }
 
-  fun processPrNettside(values: List<ResultatManuellKontroll>): ResultatPerTestregelPerSide {
+  fun processPrSideutval(values: List<ResultatManuellKontroll>): ResultatPerTestregelPerSide {
     val talElementUtfall = countElementUtfall(values)
 
     val ikkjeForekomst = talElementUtfall.talIkkjeForekomst > 0
@@ -477,7 +474,7 @@ class AggregeringService(
       values: List<ResultatManuellKontroll>
   ): GjennomsnittTestresultat {
     val resultatPerTestregelPerSide: List<ResultatPerTestregelPerSide> =
-        values.groupBy { it.nettsideId }.entries.map { processPrNettside(it.value) }
+        values.groupBy { it.sideutvalId }.entries.map { processPrSideutval(it.value) }
 
     return gjennomsnittTestresultat(resultatPerTestregelPerSide)
   }
@@ -531,31 +528,14 @@ class AggregeringService(
   private fun createAggregeringPerSideDTO(
       testresultatList: List<ResultatManuellKontroll>
   ): List<AggregeringPerSideDTO> {
-    val isSak = testresultatList.first().nettsideId != null
+    val testresultatMap = testresultatList.groupBy { it.sideutvalId }
 
-    val testresultatMapNullable =
-        if (isSak) {
-          testresultatList.groupBy { it.nettsideId }
-        } else {
-          testresultatList.groupBy { it.sideutvalId }
-        }
-
-    if (testresultatMapNullable.keys.any { it == null }) {
-      throw IllegalArgumentException("Ugyldig testresultat")
-    }
-
-    val testresultatMap = testresultatMapNullable.filterKeys { it != null }.mapKeys { it.key!! }
     val urlMap: Map<Int, URL> =
-        if (isSak) {
-          testresultatMap.entries.associate { entry ->
-            entry.key to getUrlFromNettsideId(entry.key).getOrThrow()
-          }
+        if (testresultatMap.keys.isEmpty()) {
+          emptyMap()
         } else {
-          val sideutvalIds = testresultatMap.keys.toList()
-          if (sideutvalIds.isNotEmpty()) {
+          testresultatMap.keys.toList().let {
             sideutvalDAO.getSideutvalUrlMapKontroll(testresultatMap.keys.toList())
-          } else {
-            emptyMap()
           }
         }
 
@@ -582,16 +562,6 @@ class AggregeringService(
     }
   }
 
-  private fun getUrlFromNettsideId(nettsideId: Int): Result<URL> {
-    return runCatching {
-          val nettside: Sak.Nettside =
-              sideutvalDAO.getNettside(nettsideId)
-                  ?: throw RuntimeException("Fant ikkje nettside med id $nettsideId")
-          URI(nettside.url).toURL()
-        }
-        .fold(onSuccess = { Result.success(it) }, onFailure = { Result.failure(it) })
-  }
-
   private fun countSideUtfall(testresultat: List<ResultatManuellKontroll>): TalUtfall {
     var talSiderBrot = 0
     var talSiderSamsvar = 0
@@ -600,7 +570,7 @@ class AggregeringService(
     var talSiderIkkjeTesta = 0
 
     testresultat
-        .groupBy { it.nettsideId }
+        .groupBy { it.sideutvalId }
         .entries
         .forEach { _ ->
           when (calculateUtfall(testresultat.map { it.elementResultat })) {

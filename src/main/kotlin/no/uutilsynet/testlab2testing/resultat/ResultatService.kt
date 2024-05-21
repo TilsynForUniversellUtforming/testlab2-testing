@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URI
 import java.net.URL
 import java.time.Instant
 import java.time.LocalDateTime
@@ -67,18 +66,13 @@ class ResultatService(
       loeysingId: Int?
   ): List<TestresultatDetaljert> {
     val testresultat = testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
-    val isSak = testresultat.first().nettsideId != null
 
+    val sideutvalIds = testresultat.map { it.sideutvalId }.distinct()
     val sideutvalUrlMapKontroll: Map<Int, URL> =
-        if (isSak) {
+        if (sideutvalIds.isEmpty()) {
           emptyMap()
         } else {
-          val sideutvalIds = testresultat.map { it.sideutvalId }.filterNotNull().toSet()
-          if (sideutvalIds.isNotEmpty()) {
-            sideutvalDAO.getSideutvalUrlMapKontroll(sideutvalIds.toList())
-          } else {
-            emptyMap()
-          }
+          sideutvalDAO.getSideutvalUrlMapKontroll(sideutvalIds)
         }
 
     val filterTestregelId = getTestregelIdFromSchema(testregelNoekkel.toString())
@@ -88,9 +82,7 @@ class ResultatService(
         .filter { filterByLoeysing(it.loeysingId, loeysingId) }
         .map {
           val testregel: Testregel = getTestregel(it.testregelId)
-          val url =
-              if (isSak) URI(getUrlFromNettside(it.nettsideId!!)).toURL()
-              else sideutvalUrlMapKontroll[it.sideutvalId!!]
+          val url = sideutvalUrlMapKontroll[it.sideutvalId]
           if (url == null) {
             throw IllegalArgumentException("Ugyldig testresultat")
           }
@@ -137,10 +129,6 @@ class ResultatService(
     testregelDAO.getTestregelByTestregelId(testregelKey).let { testregel ->
       return testregel?.id
     }
-  }
-
-  fun getUrlFromNettside(nettsideId: Int): String {
-    return sideutvalDAO.getNettside(nettsideId).let { it?.url ?: "" }
   }
 
   fun testVartUtfoertToLocalTime(testVartUtfoert: Instant?): LocalDateTime? {

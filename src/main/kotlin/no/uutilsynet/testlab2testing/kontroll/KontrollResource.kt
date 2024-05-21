@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.kontroll
 
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlagKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontroll.TestgrunnlagType.OPPRINNELEG_TEST
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagServiceKontroll
 import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
@@ -10,7 +10,14 @@ import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
@@ -190,7 +197,7 @@ class KontrollResource(
             }
 
     val nyttTestgrunnlag =
-        NyttTestgrunnlagKontroll(
+        NyttTestgrunnlag(
             kontroll.id,
             "Testgrunnlag for kontroll ${kontroll.tittel}",
             OPPRINNELEG_TEST,

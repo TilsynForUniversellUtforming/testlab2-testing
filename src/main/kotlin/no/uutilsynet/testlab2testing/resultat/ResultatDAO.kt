@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import java.time.LocalDate
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -33,7 +33,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           maalingId,
           navn,
           Kontroll.Kontrolltype.ForenklaKontroll,
-          Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
+          TestgrunnlagType.OPPRINNELEG_TEST,
           datoStart,
           "testar",
           loeysingId,
@@ -66,7 +66,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           testgrunnlag_id,
           namn,
           Kontroll.Kontrolltype.ForenklaKontroll,
-          Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
+          TestgrunnlagType.OPPRINNELEG_TEST,
           datoOppretta,
           "testar",
           loeysingId,
@@ -106,7 +106,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           id,
           getNamn(Kontrolltype, id, namn),
           Kontrolltype,
-          Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
+          TestgrunnlagType.OPPRINNELEG_TEST,
           dato,
           "testar",
           loeysingId,
