@@ -10,12 +10,7 @@ import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelCreateRequ
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaAutomatisk
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
 import org.assertj.core.api.Assertions
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.*
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -57,10 +52,11 @@ class TestregelIntegrationTests(
                     WcagSamsvarsnivaa.A)))
   }
 
+  val deleteThese: MutableList<Int> = mutableListOf()
+
   @AfterAll
   fun cleanup() {
-    testregelDAO.jdbcTemplate.update(
-        "delete from testregel where namn = :name", mapOf("name" to name))
+    deleteThese.forEach { testregelDAO.deleteTestregel(it) }
   }
 
   @Test
@@ -68,6 +64,9 @@ class TestregelIntegrationTests(
   fun createTestregel() {
     val locationPattern = """/v1/testreglar/\d+"""
     val location = restTemplate.postForLocation("/v1/testreglar", testregelCreateRequestBody)
+
+    deleteThese.add(idFromLocation(location))
+
     Assertions.assertThat(location.toString()).matches(locationPattern)
   }
 
@@ -132,7 +131,7 @@ class TestregelIntegrationTests(
   @Nested
   @DisplayName("Hvis det finnes en testregel i databasen")
   inner class DatabaseHasAtLeastOneTestregel(@Autowired val restTemplate: TestRestTemplate) {
-    val location = createDefaultTestregel()
+    private val location = createDefaultTestregel()
 
     @Test
     @DisplayName("Skal hente testregel")
@@ -163,5 +162,9 @@ class TestregelIntegrationTests(
   }
 
   private fun createDefaultTestregel(): URI =
-      restTemplate.postForLocation("/v1/testreglar", testregelCreateRequestBody)
+      restTemplate.postForLocation("/v1/testreglar", testregelCreateRequestBody).also {
+        deleteThese.add(idFromLocation(it))
+      }
+
+  private fun idFromLocation(location: URI) = location.path.split("/").last().toInt()
 }

@@ -34,7 +34,18 @@ class KontrollResource(
 
   @GetMapping
   fun getKontroller(): List<KontrollListItem> {
-    return runCatching { kontrollDAO.getKontroller().getOrThrow() }
+    return runCatching {
+          val rows = kontrollDAO.getKontroller().getOrThrow()
+          rows.map {
+            KontrollListItem(
+                it.id,
+                it.tittel,
+                it.saksbehandler,
+                Kontroll.Sakstype.valueOf(it.sakstype),
+                it.arkivreferanse,
+                Kontroll.Kontrolltype.InngaaendeKontroll)
+          }
+        }
         .getOrElse {
           logger.error("Feilet da jeg skulle hente alle kontroller", it)
           throw RuntimeException(it)
