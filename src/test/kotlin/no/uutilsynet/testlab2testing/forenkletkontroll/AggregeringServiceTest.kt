@@ -15,12 +15,8 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManu
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
+import no.uutilsynet.testlab2testing.testregel.*
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelInit
-import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
-import no.uutilsynet.testlab2testing.testregel.TestregelModus
-import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -53,12 +49,13 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
 
   @Autowired lateinit var sakDao: SakDAO
 
+  val testreglerSomSkalSlettes: MutableList<Int> = mutableListOf()
+
   @AfterAll
   fun cleanup() {
     maalingDao.jdbcTemplate.update(
         "delete from maalingv1 where navn = :namn", mapOf("namn" to "Testmaaling_aggregering"))
-    testregelDAO.jdbcTemplate.update(
-        "delete from testregel where namn = :namn", mapOf("namn" to name))
+    testreglerSomSkalSlettes.forEach { testregelDAO.deleteTestregel(it) }
   }
 
   @Test
@@ -139,7 +136,8 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
             testobjekt = 1,
             kravTilSamsvar = "")
 
-    val testregelId = testregelDAO.createTestregel(testregel)
+    val testregelId =
+        testregelDAO.createTestregel(testregel).also { testreglerSomSkalSlettes.add(it) }
 
     val maalingId =
         maalingDao.createMaaling(

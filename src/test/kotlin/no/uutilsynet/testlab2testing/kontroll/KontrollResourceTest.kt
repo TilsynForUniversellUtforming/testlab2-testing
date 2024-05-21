@@ -384,15 +384,12 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
         .statusCode(equalTo(204))
     val lagretKontroll = get(location).`as`(Kontroll::class.java)
 
-    val expected =
-        Sideutval(
-            utval.loeysingar.first().id,
-            1,
-            "Side med elementer",
-            URI("https://www.uutilsynet.no"),
-            null,
-            1)
-
-    assertThat(lagretKontroll.sideutvalList).contains(expected)
+    with(lagretKontroll.sideutvalList.first()) {
+      assertThat(loeysingId).isEqualTo(utval.loeysingar.first().id)
+      assertThat(typeId).isEqualTo(1)
+      assertThat(begrunnelse).isEqualTo("Side med elementer")
+      assertThat(url).isEqualTo(URI("https://www.uutilsynet.no"))
+      assertThat(egendefinertType).isNull()
+    }
   }
 }

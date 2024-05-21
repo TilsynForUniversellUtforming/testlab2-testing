@@ -306,7 +306,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           "select id, type from sideutval_type",
           DataClassRowMapper.newInstance(SideutvalType::class.java))
 
-  fun getKontroller(): Result<List<KontrollResource.KontrollListItem>> {
+  fun getKontroller(): Result<List<KontrollRow>> {
     return runCatching {
       jdbcTemplate.query(
           """
@@ -314,7 +314,16 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 from kontroll
             """
               .trimIndent(),
-          DataClassRowMapper.newInstance(KontrollResource.KontrollListItem::class.java))
+          DataClassRowMapper.newInstance(KontrollRow::class.java))
     }
   }
 }
+
+data class KontrollRow(
+    val id: Int,
+    val tittel: String,
+    val saksbehandler: String,
+    val sakstype: String,
+    val arkivreferanse: String,
+    val kontrolltype: String
+)

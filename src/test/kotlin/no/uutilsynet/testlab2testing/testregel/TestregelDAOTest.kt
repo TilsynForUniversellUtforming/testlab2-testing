@@ -6,11 +6,7 @@ import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaAutomatisk
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
 import org.assertj.core.api.Assertions
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 
@@ -18,10 +14,11 @@ import org.springframework.boot.test.context.SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
 
+  val deleteThese: MutableList<Int> = mutableListOf()
+
   @AfterAll
   fun cleanup() {
-    testregelDAO.jdbcTemplate.update(
-        "delete from testregel where namn = :name", mapOf("name" to name))
+    deleteThese.forEach { testregelDAO.deleteTestregel(it) }
   }
 
   @Test
@@ -159,5 +156,5 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
               tema = 1,
               testobjekt = 1,
               kravTilSamsvar = "")
-  ) = testregelDAO.createTestregel(testregelInit)
+  ) = testregelDAO.createTestregel(testregelInit).also { deleteThese.add(it) }
 }
