@@ -2,12 +2,9 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.sql.Timestamp
 import java.time.Instant
-import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -17,9 +14,6 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class TestResultatDAO(
     val jdbcTemplate: NamedParameterJdbcTemplate,
-    val testregelDAO: TestregelDAO,
-    val kravregisterClient: KravregisterClient,
-    val aggregeringDAO: AggregeringDAO,
     val brukarService: BrukarService
 ) {
   @Transactional
