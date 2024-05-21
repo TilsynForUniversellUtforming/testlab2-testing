@@ -50,7 +50,7 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
       - name: Setup github packages
-        uses: s4u/maven-settings-action@v2.3.0
+        uses: s4u/maven-settings-action@v3.0.0
         with:
           servers: |
             [{
@@ -79,7 +79,7 @@ jobs:
 
     steps:
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/login@v2.1.0
         with:
           client-id: ${{ secrets.CLIENT_ID }}
           tenant-id: ${{ secrets.TENANT_ID }}
@@ -87,7 +87,7 @@ jobs:
 
 
       - name: Deploy to containerapp
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             az config set extension.use_dynamic_install=yes_without_prompt
