@@ -123,8 +123,8 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return LocalDate.now()
   }
 
-  fun getNamn(Kontrolltype: Kontroll.Kontrolltype, testgrunnlagId: Int, namn: String): String {
-    if (Kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
+  fun getNamn(kontrolltype: Kontroll.Kontrolltype, testgrunnlagId: Int, namn: String): String {
+    if (kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
       return namn
     }
     val query =

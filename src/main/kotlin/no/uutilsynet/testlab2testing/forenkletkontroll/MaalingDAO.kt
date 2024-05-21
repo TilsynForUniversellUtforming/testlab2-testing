@@ -432,8 +432,8 @@ class MaalingDAO(
   private fun saveTestKoeyringFerdig(maalingId: Int, testKoeyring: TestKoeyring.Ferdig) {
     jdbcTemplate.queryForObject(
         """
-                  insert into testkoeyring(maaling_id, loeysing_id, status, status_url, sist_oppdatert, url_fullt_resultat, url_brot, url_agg_tr, url_agg_sk,url_agg_side, url_agg_side_tr, url_agg_loeysing)
-                  values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :url_fullt_resultat, :url_brot, :url_agg_tr, :url_agg_sk, :url_agg_side,:url_agg_side_tr,:url_agg_loeysing)
+                  insert into testkoeyring(maaling_id, loeysing_id, status, status_url, sist_oppdatert, url_fullt_resultat, url_brot, url_agg_tr, url_agg_sk,url_agg_side, url_agg_side_tr, url_agg_loeysing,brukar_id)
+                  values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :url_fullt_resultat, :url_brot, :url_agg_tr, :url_agg_sk, :url_agg_side,:url_agg_side_tr,:url_agg_loeysing,:brukar_id)
                   returning id
                 """
             .trimIndent(),
@@ -449,14 +449,15 @@ class MaalingDAO(
             "url_agg_sk" to testKoeyring.lenker?.urlAggregeringSK?.toString(),
             "url_agg_side" to testKoeyring.lenker?.urlAggregeringSide?.toString(),
             "url_agg_side_tr" to testKoeyring.lenker?.urlAggregeringSideTR?.toString(),
-            "url_agg_loeysing" to testKoeyring.lenker?.urlAggregeringLoeysing?.toString()),
+            "url_agg_loeysing" to testKoeyring.lenker?.urlAggregeringLoeysing?.toString(),
+            "brukar_id" to getBrukar(testKoeyring.brukar)),
         Int::class.java)
   }
 
   private fun saveTestKoeyringStarta(maalingId: Int, testKoeyring: TestKoeyring.Starta) {
     jdbcTemplate.queryForObject(
-        """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, lenker_testa) 
-                    values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :feilmelding, :lenker_testa)
+        """insert into testkoeyring (maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, lenker_testa, brukar_id) 
+                    values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :feilmelding, :lenker_testa,:brukar_id)
                     returning id
                 """
             .trimMargin(),
@@ -467,7 +468,8 @@ class MaalingDAO(
             "status_url" to statusURL(testKoeyring),
             "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
             "feilmelding" to feilmelding(testKoeyring),
-            "lenker_testa" to testKoeyring.framgang.prosessert),
+            "lenker_testa" to testKoeyring.framgang.prosessert,
+            "brukar_id" to getBrukar(testKoeyring.brukar)),
         Int::class.java)
   }
 
@@ -507,4 +509,20 @@ class MaalingDAO(
         is TestKoeyring.Ferdig -> testKoeyring.statusURL.toString()
         else -> null
       }
+
+  fun getBrukarForMaaling(maalingId: Int): String {
+    return jdbcTemplate
+        .queryForList(
+            """
+                select distinct b.namn as namn
+                from testkoeyring ti
+                join brukar b on ti.brukar_id = b.id
+                where ti.maaling_id = :maaling_id
+            """
+                .trimIndent(),
+            mapOf("maaling_id" to maalingId),
+            String::class.java)
+        .firstOrNull()
+        ?: "ingen testar"
+  }
 }

@@ -5,10 +5,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingResource
-import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.TestResultat
+import no.uutilsynet.testlab2testing.forenkletkontroll.*
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
@@ -27,6 +24,7 @@ class ResultatService(
     val sideutvalDAO: SideutvalDAO,
     val kravregisterClient: KravregisterClient,
     val resultatDAO: ResultatDAO,
+    val maalingDAO: MaalingDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
 
@@ -219,9 +217,11 @@ class ResultatService(
     }
   }
 
-  private fun getTestar(testgrunnlagId: Int, kontrolltype: Kontroll.Kontrolltype): String {
+  private fun getTestar(id: Int, kontrolltype: Kontroll.Kontrolltype): String {
     if (kontrolltype == Kontroll.Kontrolltype.InngaaendeKontroll) {
-      return testResultatDAO.getBrukarForTestgrunnlag(testgrunnlagId)
+      return testResultatDAO.getBrukarForTestgrunnlag(id)
+    } else if (kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
+      return maalingDAO.getBrukarForMaaling(id)
     }
     return "testar"
   }
