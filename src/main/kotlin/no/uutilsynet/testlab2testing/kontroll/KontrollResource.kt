@@ -29,21 +29,24 @@ class KontrollResource(
       val saksbehandler: String,
       val sakstype: Kontroll.Sakstype,
       val arkivreferanse: String,
-      val kontrolltype: Kontroll.Kontrolltype
+      val kontrolltype: Kontroll.Kontrolltype,
+      val virksomheter: List<String> // liste med orgnummer
   )
 
   @GetMapping
   fun getKontroller(): List<KontrollListItem> {
-    return runCatching {
-          val rows = kontrollDAO.getKontroller().getOrThrow()
-          rows.map {
+    return kontrollDAO
+        .getKontroller()
+        .mapCatching { kontrollRows ->
+          kontrollRows.map {
             KontrollListItem(
                 it.id,
                 it.tittel,
                 it.saksbehandler,
                 Kontroll.Sakstype.valueOf(it.sakstype),
                 it.arkivreferanse,
-                Kontroll.Kontrolltype.InngaaendeKontroll)
+                Kontroll.Kontrolltype.InngaaendeKontroll,
+                emptyList())
           }
         }
         .getOrElse {
@@ -83,7 +86,7 @@ class KontrollResource(
   }
 
   private fun getKontrollResult(kontrollId: Int): Result<Kontroll> = runCatching {
-    val kontrollDB = kontrollDAO.getKontroll(kontrollId).getOrThrow()
+    val kontrollDB = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
 
     Kontroll(
         kontrollDB.id,

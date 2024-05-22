@@ -39,89 +39,104 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
   }
 
-  fun getKontroll(id: Int): Result<KontrollDB> {
+  fun getKontroller(): Result<List<KontrollDB>> {
+    val ids =
+        jdbcTemplate.queryForList(
+            "select id from kontroll", emptyMap<String, String>(), Int::class.java)
+    return getKontroller(ids)
+  }
+
+  fun getKontroller(ids: List<Int>): Result<List<KontrollDB>> {
+    if (ids.isEmpty()) {
+      return Result.success(emptyList())
+    }
+
     return runCatching {
       val result =
-          jdbcTemplate.queryForObject(
+          jdbcTemplate.query(
               """
-                        select k.id             as id,
-                               k.tittel         as tittel,
-                               k.saksbehandler  as saksbehandler,
-                               k.sakstype       as sakstype,
-                               k.arkivreferanse as arkivreferanse,
-                               k.utval_id       as utval_id,
-                               k.utval_namn     as utval_namn,
-                               k.utval_oppretta as utval_oppretta,
-                               k.regelsett_id   as regelsett_id
-                        from kontroll k
-                        where k.id = :id
-                        """,
-              mapOf("id" to id)) { rm, _ ->
-                val kontrollId = rm.getInt("id")
+                    select k.id             as id,
+                           k.tittel         as tittel,
+                           k.saksbehandler  as saksbehandler,
+                           k.sakstype       as sakstype,
+                           k.arkivreferanse as arkivreferanse,
+                           k.utval_id       as utval_id,
+                           k.utval_namn     as utval_namn,
+                           k.utval_oppretta as utval_oppretta,
+                           k.regelsett_id   as regelsett_id
+                    from kontroll k
+                    where k.id in (:ids)
+                    """,
+              mapOf("ids" to ids),
+          ) { resultSet, _ ->
+            val kontrollId = resultSet.getInt("id")
 
-                val utval =
-                    rm.getInt("utval_id")
-                        .takeIf { it != 0 }
-                        ?.let { utvalId ->
-                          val utvalNamn = rm.getString("utval_namn")
-                          val utvalOppretta = rm.getTimestamp("utval_oppretta").toInstant()
-                          val loeysingIdList =
-                              jdbcTemplate.queryForList(
-                                  "select loeysing_id as id from kontroll_loeysing where kontroll_id = :kontroll_id",
-                                  mapOf("kontroll_id" to kontrollId),
-                                  Int::class.java)
-                          KontrollDB.Utval(
-                              utvalId,
-                              utvalNamn,
-                              utvalOppretta,
-                              loeysingIdList.map { KontrollDB.Loeysing(it) })
-                        }
+            val utval =
+                resultSet
+                    .getInt("utval_id")
+                    .takeIf { it != 0 }
+                    ?.let { utvalId ->
+                      val utvalNamn = resultSet.getString("utval_namn")
+                      val utvalOppretta = resultSet.getTimestamp("utval_oppretta").toInstant()
+                      val loeysingIdList =
+                          jdbcTemplate.queryForList(
+                              "select loeysing_id as id from kontroll_loeysing where kontroll_id = :kontroll_id",
+                              mapOf("kontroll_id" to kontrollId),
+                              Int::class.java)
+                      KontrollDB.Utval(
+                          utvalId,
+                          utvalNamn,
+                          utvalOppretta,
+                          loeysingIdList.map { KontrollDB.Loeysing(it) })
+                    }
 
-                val testreglar =
-                    KontrollDB.Testreglar(
-                            rm.getInt("regelsett_id").takeUnless { rm.wasNull() },
-                            jdbcTemplate.queryForList(
-                                "select testregel_id from kontroll_testreglar where kontroll_id = :kontroll_id",
-                                mapOf("kontroll_id" to kontrollId),
-                                Int::class.java))
-                        .takeIf { it.regelsettId != null || it.testregelIdList.isNotEmpty() }
+            val testreglar =
+                KontrollDB.Testreglar(
+                        resultSet.getInt("regelsett_id").takeUnless { resultSet.wasNull() },
+                        jdbcTemplate.queryForList(
+                            "select testregel_id from kontroll_testreglar where kontroll_id = :kontroll_id",
+                            mapOf("kontroll_id" to kontrollId),
+                            Int::class.java))
+                    .takeIf { it.regelsettId != null || it.testregelIdList.isNotEmpty() }
 
-                val sideutvalList =
-                    jdbcTemplate.query(
-                        """
-                select
-                id,
-                sideutval_type_id,
-                loeysing_id,
-                egendefinert_objekt,
-                url,
-                begrunnelse
-                from kontroll_sideutval
-                where kontroll_id = :kontroll_id
-              """
-                            .trimIndent(),
-                        mapOf("kontroll_id" to kontrollId)) { mapper, _ ->
-                          Sideutval(
-                              id = mapper.getInt("id"),
-                              loeysingId = mapper.getInt("loeysing_id"),
-                              typeId = mapper.getInt("sideutval_type_id"),
-                              begrunnelse = mapper.getString("begrunnelse"),
-                              url = URI(mapper.getString("url")),
-                              egendefinertType = mapper.getString("egendefinert_objekt"))
-                        }
+            val sideutvalList =
+                jdbcTemplate.query(
+                    """
+            select
+            id,
+            sideutval_type_id,
+            loeysing_id,
+            egendefinert_objekt,
+            url,
+            begrunnelse
+            from kontroll_sideutval
+            where kontroll_id = :kontroll_id
+          """
+                        .trimIndent(),
+                    mapOf("kontroll_id" to kontrollId)) { mapper, _ ->
+                      Sideutval(
+                          id = mapper.getInt("id"),
+                          loeysingId = mapper.getInt("loeysing_id"),
+                          typeId = mapper.getInt("sideutval_type_id"),
+                          begrunnelse = mapper.getString("begrunnelse"),
+                          url = URI(mapper.getString("url")),
+                          egendefinertType = mapper.getString("egendefinert_objekt"))
+                    }
 
-                KontrollDB(
-                    rm.getInt("id"),
-                    rm.getString("tittel"),
-                    rm.getString("saksbehandler"),
-                    rm.getString("sakstype"),
-                    rm.getString("arkivreferanse"),
-                    utval,
-                    testreglar,
-                    sideutvalList)
-              }
-
-      result ?: throw IllegalArgumentException("Fann ikkje kontroll med id $id")
+            KontrollDB(
+                resultSet.getInt("id"),
+                resultSet.getString("tittel"),
+                resultSet.getString("saksbehandler"),
+                resultSet.getString("sakstype"),
+                resultSet.getString("arkivreferanse"),
+                utval,
+                testreglar,
+                sideutvalList)
+          }
+      if (result.size == ids.size) result
+      else
+          throw IllegalArgumentException(
+              "Noen av kontrollene med id-ene $ids finnes ikke i databasen")
     }
   }
 
@@ -305,25 +320,4 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       jdbcTemplate.query(
           "select id, type from sideutval_type",
           DataClassRowMapper.newInstance(SideutvalType::class.java))
-
-  fun getKontroller(): Result<List<KontrollRow>> {
-    return runCatching {
-      jdbcTemplate.query(
-          """
-                select id, tittel, saksbehandler, sakstype, arkivreferanse, 'InngaaendeKontroll' as kontrolltype
-                from kontroll
-            """
-              .trimIndent(),
-          DataClassRowMapper.newInstance(KontrollRow::class.java))
-    }
-  }
 }
-
-data class KontrollRow(
-    val id: Int,
-    val tittel: String,
-    val saksbehandler: String,
-    val sakstype: String,
-    val arkivreferanse: String,
-    val kontrolltype: String
-)
