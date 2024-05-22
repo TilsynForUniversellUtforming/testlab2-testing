@@ -97,7 +97,7 @@ class TestResultatResourceTest(
             SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
         ))
 
-    val createdKontroll = kontrollDAO.getKontroll(kontrollId).getOrThrow()
+    val createdKontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
     val testregelId =
         createdKontroll.testreglar?.testregelIdList?.first()
             ?: throw IllegalArgumentException("Testregel finns ikkje")
