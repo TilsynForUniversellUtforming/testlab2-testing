@@ -47,6 +47,7 @@ class KontrollResource(
                       loeysingsRegisterClient.getMany(loeysingIdList).getOrThrow()
                     }
                     ?.map { it.orgnummer }
+                    ?.distinct()
                     ?: emptyList()
 
             KontrollListItem(
