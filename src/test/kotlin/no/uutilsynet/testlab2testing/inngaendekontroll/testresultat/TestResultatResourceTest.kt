@@ -2,18 +2,22 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.net.URI
 import java.time.Instant
-import java.time.LocalDate
 import kotlin.properties.Delegates
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
-import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
-import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakDAO
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlag
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll.Svar
+import no.uutilsynet.testlab2testing.kontroll.Kontroll
+import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
+import no.uutilsynet.testlab2testing.kontroll.KontrollResource
+import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
+import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.junit.jupiter.api.Order
@@ -35,57 +39,78 @@ import org.springframework.test.context.ActiveProfiles
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
 class TestResultatResourceTest(
-    @Autowired val sakDAO: SakDAO,
+    @Autowired val kontrollDAO: KontrollDAO,
+    @Autowired val testregelDAO: TestregelDAO,
+    @Autowired val utvalDAO: UtvalDAO,
     @Autowired val restTemplate: TestRestTemplate,
-    @Autowired val testgrunnlagDAO: TestgrunnlagDAO
+    @Autowired val testgrunnlagDAO: TestgrunnlagKontrollDAO
 ) {
-  private var sakId: Int by Delegates.notNull()
+  private var kontrollId: Int by Delegates.notNull()
+  private var utvalId: Int by Delegates.notNull()
   private var location: URI by Delegates.notNull()
   private var testgrunnlagId: Int by Delegates.notNull()
 
   @SpyBean lateinit var brukarService: BrukarService
 
+  @AfterAll
+  fun cleanup() {
+    utvalDAO.deleteUtval(utvalId)
+  }
+
   @Test
   @Order(1)
   @DisplayName("vi skal kunne opprette et nytt testresultat")
   fun nyttTestresultat() {
-    val frist = LocalDate.now().plusMonths(3)
+    val opprettKontroll =
+        KontrollResource.OpprettKontroll(
+            "manuell-kontroll", "Ola Nordmann", Kontroll.Sakstype.Arkivsak, "1234")
 
-    sakId = sakDAO.save("Testheim kommune", "000000000", frist).getOrThrow()
+    kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
     doReturn(Brukar("testbrukar@digdir.no", "Test Brukar")).`when`(brukarService).getCurrentUser()
 
     brukarService.saveIfNotExists(Brukar("testbrukar@digdir.no", "Test Brukar"))
 
-    sakDAO
-        .update(
-            Sak(
-                sakId,
-                "Testheim kommune",
-                "000000000",
-                frist,
-                loeysingar =
-                    listOf(
-                        Sak.Loeysing(
-                            1,
-                            listOf(
-                                Sak.Nettside(
-                                    1,
-                                    "Forside",
-                                    "https://www.uutilsynet.no/",
-                                    "forside",
-                                    "forside"))))))
-        .getOrThrow()
-    val sak = sakDAO.getSak(sakId).getOrThrow()
-    val nettside = sak.loeysingar.first().nettsider.first()
+    val kontroll =
+        Kontroll(
+            kontrollId,
+            Kontroll.Kontrolltype.InngaaendeKontroll,
+            opprettKontroll.tittel,
+            opprettKontroll.saksbehandler,
+            opprettKontroll.sakstype,
+            opprettKontroll.arkivreferanse,
+        )
+
+    /* Add utval */
+    val loeysingId = 1
+    utvalId = utvalDAO.createUtval("test-skal-slettes", listOf(loeysingId)).getOrThrow()
+    kontrollDAO.updateKontroll(kontroll, utvalId)
+
+    /* Add testreglar */
+    val testregel = testregelDAO.getTestregelList().first()
+    kontrollDAO.updateKontroll(kontroll, null, listOf(testregel.id))
+
+    /* Add sideutval */
+    kontrollDAO.updateKontroll(
+        kontroll,
+        listOf(
+            SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
+        ))
+
+    val createdKontroll = kontrollDAO.getKontroll(kontrollId).getOrThrow()
+    val testregelId =
+        createdKontroll.testreglar?.testregelIdList?.first()
+            ?: throw IllegalArgumentException("Testregel finns ikkje")
+    val sideutval = createdKontroll.sideutval.first()
 
     val nyttTestgrunnlag =
         NyttTestgrunnlag(
-            sakId,
+            kontrollId,
             "Testgrunnlag",
-            Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
-            sak.loeysingar,
-            sak.testreglar.map { it.id })
+            TestgrunnlagType.OPPRINNELEG_TEST,
+            listOf(sideutval),
+            listOf(testregelId),
+        )
 
     val testgrunnlag = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag)
     testgrunnlagId = testgrunnlag.getOrThrow()
@@ -95,9 +120,9 @@ class TestResultatResourceTest(
             "/testresultat",
             mapOf(
                 "testgrunnlagId" to testgrunnlagId,
-                "loeysingId" to 1,
-                "testregelId" to 1,
-                "nettsideId" to nettside.id,
+                "loeysingId" to loeysingId,
+                "testregelId" to testregelId,
+                "sideutvalId" to sideutval.id,
                 "brukar" to mapOf("brukarnamn" to "testbrukar@digdir.no", "namn" to "Test Brukar"),
             ),
             Unit::class.java)

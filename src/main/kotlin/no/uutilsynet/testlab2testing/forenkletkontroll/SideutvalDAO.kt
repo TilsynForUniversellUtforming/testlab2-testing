@@ -4,10 +4,7 @@ import java.net.URI
 import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
-import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import org.springframework.dao.support.DataAccessUtils
-import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
@@ -246,87 +243,24 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return crawlResultat
   }
 
-  fun findNettsiderBySakAndLoeysing(sakId: Int, loeysingId: Int): List<Sak.Nettside> =
-      jdbcTemplate.query(
-          """
-                    select id, type, url, beskrivelse, begrunnelse
-                    from nettside
-                    where id in (
-                        select nettside_id
-                        from sak_loeysing_nettside
-                        where sak_id = :sak_id
-                            and loeysing_id = :loeysing_id
-                    )
-                """
-              .trimIndent(),
-          mapOf("sak_id" to sakId, "loeysing_id" to loeysingId),
-          DataClassRowMapper.newInstance(Sak.Nettside::class.java))
-
-  @Transactional
-  fun deleteNettsiderForSak(sakId: Int) {
-    jdbcTemplate.update(
-        "delete from sak_loeysing_nettside where sak_id = :sak_id", mapOf("sak_id" to sakId))
-
-    jdbcTemplate.update(
-        """
-            delete from nettside
-            where id not in (
-                select nettside_id
-                from sak_loeysing_nettside
-            )
-        """
-            .trimIndent(),
-        mapOf("sak_id" to sakId))
-  }
-
-  @Transactional
-  fun insertNettsiderForSak(sakId: Int, loeysingId: Int, nettsider: List<Sak.Nettside>) {
-    nettsider.forEach { nettside ->
-      val nettsideId =
-          jdbcTemplate.queryForObject(
-              """
-                    insert into nettside (type, url, beskrivelse, begrunnelse)
-                    values (:type, :url, :beskrivelse, :begrunnelse)
-                    returning id
-                """
-                  .trimIndent(),
-              mapOf(
-                  "type" to nettside.type,
-                  "url" to nettside.url,
-                  "beskrivelse" to nettside.beskrivelse,
-                  "begrunnelse" to nettside.begrunnelse),
-              Int::class.java)!!
-      jdbcTemplate.update(
-          """
-                      insert into sak_loeysing_nettside (sak_id, loeysing_id, nettside_id)
-                      values (:sak_id, :loeysing_id, :nettside_id)
-                  """
-              .trimIndent(),
-          mapOf("sak_id" to sakId, "loeysing_id" to loeysingId, "nettside_id" to nettsideId))
+  fun getSideutvalUrlMapKontroll(sideutvalIds: List<Int>): Map<Int, URL> {
+    if (sideutvalIds.isEmpty()) {
+      return emptyMap()
     }
-  }
 
-  fun getNettside(nettsideId: Int): Sak.Nettside? {
-    return DataAccessUtils.singleResult(
-        jdbcTemplate.query(
-            "select id,type,url, beskrivelse,begrunnelse from nettside where id = :id",
-            mapOf("id" to nettsideId),
-            DataClassRowMapper.newInstance(Sak.Nettside::class.java)))
-  }
-
-  fun getSideutvalUrlMapKontroll(sideutvalIds: List<Int>): Map<Int, URL> =
-      jdbcTemplate
-          .query(
-              """
+    return jdbcTemplate
+        .query(
+            """
         select tsk.sideutval_id, ks.url
         from testgrunnlag_sideutval_kontroll tsk
         join kontroll_sideutval ks on ks.id = tsk.sideutval_id
             where tsk.sideutval_id in (:sideutvalIds)
       """
-                  .trimIndent(),
-              mapOf("sideutvalIds" to sideutvalIds),
-          ) { rs, _ ->
-            rs.getInt("sideutval_id") to URI(rs.getString("url")).toURL()
-          }
-          .toMap()
+                .trimIndent(),
+            mapOf("sideutvalIds" to sideutvalIds),
+        ) { rs, _ ->
+          rs.getInt("sideutval_id") to URI(rs.getString("url")).toURL()
+        }
+        .toMap()
+  }
 }

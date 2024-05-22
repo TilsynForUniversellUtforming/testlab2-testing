@@ -1,22 +1,30 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
+import java.net.URL
 import java.time.Instant
-import java.time.LocalDate
+import kotlin.properties.Delegates
 import kotlin.random.Random
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
-import no.uutilsynet.testlab2testing.inngaendekontroll.sak.Sak
-import no.uutilsynet.testlab2testing.inngaendekontroll.sak.SakDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
+import no.uutilsynet.testlab2testing.kontroll.Kontroll
+import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
+import no.uutilsynet.testlab2testing.kontroll.KontrollResource
+import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.testregel.*
+import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelInit
+import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
+import no.uutilsynet.testlab2testing.testregel.TestregelModus
+import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -47,7 +55,12 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
 
   @Autowired lateinit var testregelDAO: TestregelDAO
 
-  @Autowired lateinit var sakDao: SakDAO
+  @Autowired lateinit var kontrollDAO: KontrollDAO
+
+  @Autowired lateinit var utvalDAO: UtvalDAO
+
+  private var kontrollId: Int by Delegates.notNull()
+  private var utvalId: Int by Delegates.notNull()
 
   val testreglerSomSkalSlettes: MutableList<Int> = mutableListOf()
 
@@ -56,6 +69,9 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     maalingDao.jdbcTemplate.update(
         "delete from maalingv1 where navn = :namn", mapOf("namn" to "Testmaaling_aggregering"))
     testreglerSomSkalSlettes.forEach { testregelDAO.deleteTestregel(it) }
+
+    utvalDAO.deleteUtval(utvalId)
+    kontrollDAO.deleteKontroll(kontrollId)
   }
 
   @Test
@@ -177,18 +193,17 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1))
         .thenReturn(Result.success("1.1.1"))
 
-    Mockito.`when`(sideutvalDAO.getNettside(1))
-        .thenReturn(Sak.Nettside(1, "Framside", "https://www.example.com", "test", "test"))
+    Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1)))
+        .thenReturn(mapOf(1 to URL("https://www.example.com")))
 
-    val sakId = createTestSak()
+    val sakId = createTestKontroll()
     val resultatKontroll1 =
         ResultatManuellKontroll(
             1,
             sakId,
             loeysingId = 1,
             testregelId = 1,
-            nettsideId = 1,
-            0,
+            sideutvalId = 1,
             brukar = Brukar("testar", "test"),
             elementOmtale = "Hovedoverskrift",
             elementResultat = TestresultatUtfall.brot,
@@ -204,8 +219,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
             sakId,
             loeysingId = 1,
             testregelId = 1,
-            nettsideId = 1,
-            0,
+            sideutvalId = 1,
             brukar = Brukar("testar", "test"),
             elementOmtale = "Bilde",
             elementResultat = TestresultatUtfall.samsvar,
@@ -266,9 +280,9 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     val testresultat: ArrayList<ResultatManuellKontroll> = resultatManuellKontrollTestdata()
 
     testresultat
-        .groupBy { it.nettsideId }
+        .groupBy { it.sideutvalId }
         .forEach {
-          val result = aggregeringService.processPrNettside(testresultat)
+          val result = aggregeringService.processPrSideutval(testresultat)
           assertThat(result.brotprosentTrSide + result.samsvarsprosentTrSide).isEqualTo(1f)
           if (result.ikkjeForekomst) {
             assertThat(result.brotprosentTrSide).isEqualTo(0f)
@@ -284,7 +298,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
             1 to TestresultatUtfall.brot,
             2 to TestresultatUtfall.samsvar,
             3 to TestresultatUtfall.ikkjeForekomst)
-    var id: Int = 1
+    var id = 1
     for (side in 1..10) {
       for (testregel in 1..10) {
         val elementResultat = utfall.get(Random.nextInt(1, 3))
@@ -294,8 +308,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
                 1,
                 loeysingId = 1,
                 testregelId = testregel,
-                nettsideId = side,
-                0,
+                side,
                 brukar = Brukar("testar", "test"),
                 elementOmtale = "Hovedoverskrift",
                 elementResultat = elementResultat,
@@ -310,7 +323,39 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     return testresultat
   }
 
-  private fun createTestSak(): Int {
-    return sakDao.save("Testsak", "111222333", LocalDate.now()).getOrThrow()
+  private fun createTestKontroll(): Int {
+    val opprettKontroll =
+        KontrollResource.OpprettKontroll(
+            "manuell-kontroll", "Ola Nordmann", Kontroll.Sakstype.Arkivsak, "1234")
+
+    kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
+
+    val kontroll =
+        Kontroll(
+            kontrollId,
+            Kontroll.Kontrolltype.InngaaendeKontroll,
+            opprettKontroll.tittel,
+            opprettKontroll.saksbehandler,
+            opprettKontroll.sakstype,
+            opprettKontroll.arkivreferanse,
+        )
+
+    /* Add utval */
+    val loeysingId = 1
+    utvalId = utvalDAO.createUtval("test-skal-slettes", listOf(loeysingId)).getOrThrow()
+    kontrollDAO.updateKontroll(kontroll, utvalId)
+
+    /* Add testreglar */
+    val testregel = testregelDAO.getTestregelList().first()
+    kontrollDAO.updateKontroll(kontroll, null, listOf(testregel.id))
+
+    /* Add sideutval */
+    kontrollDAO.updateKontroll(
+        kontroll,
+        listOf(
+            SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
+        ))
+
+    return kontrollId
   }
 }
