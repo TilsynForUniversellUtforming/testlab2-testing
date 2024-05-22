@@ -68,12 +68,7 @@ class ResultatService(
     val testresultat = testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
 
     val sideutvalIds = testresultat.map { it.sideutvalId }.distinct()
-    val sideutvalUrlMapKontroll: Map<Int, URL> =
-        if (sideutvalIds.isEmpty()) {
-          emptyMap()
-        } else {
-          sideutvalDAO.getSideutvalUrlMapKontroll(sideutvalIds)
-        }
+    val sideutvalIdUrlMap: Map<Int, URL> = sideutvalDAO.getSideutvalUrlMapKontroll(sideutvalIds)
 
     val filterTestregelId = getTestregelIdFromSchema(testregelNoekkel.toString())
 
@@ -82,7 +77,7 @@ class ResultatService(
         .filter { filterByLoeysing(it.loeysingId, loeysingId) }
         .map {
           val testregel: Testregel = getTestregel(it.testregelId)
-          val url = sideutvalUrlMapKontroll[it.sideutvalId]
+          val url = sideutvalIdUrlMap[it.sideutvalId]
           if (url == null) {
             throw IllegalArgumentException("Ugyldig testresultat")
           }

@@ -75,7 +75,8 @@ class AggregeringService(
             aggregeringSide
                 .map { aggregertResultatSide -> aggregerteResultatSideTODTO(aggregertResultatSide) }
                 .forEach { aggregeringDAO.createAggregeringSide(it) }
-          } ?: throw RuntimeException("Aggregering url er null")
+          }
+              ?: throw RuntimeException("Aggregering url er null")
         }
         .onFailure {
           logger.error(
@@ -100,7 +101,8 @@ class AggregeringService(
             aggregertResultatSuksesskriterium
                 .map { aggregertResultatSuksesskritieriumToDTO(it) }
                 .forEach { aggregeringDAO.createAggregertResultatSuksesskriterium(it) }
-          } ?: throw RuntimeException("Aggregering url er null")
+          }
+              ?: throw RuntimeException("Aggregering url er null")
         }
         .onFailure {
           logger.error(
@@ -530,23 +532,17 @@ class AggregeringService(
   ): List<AggregeringPerSideDTO> {
     val testresultatMap = testresultatList.groupBy { it.sideutvalId }
 
-    val urlMap: Map<Int, URL> =
-        if (testresultatMap.keys.isEmpty()) {
-          emptyMap()
-        } else {
-          testresultatMap.keys.toList().let {
-            sideutvalDAO.getSideutvalUrlMapKontroll(testresultatMap.keys.toList())
-          }
-        }
+    val sideutvalIdUrlMap: Map<Int, URL> =
+        sideutvalDAO.getSideutvalUrlMapKontroll(testresultatMap.keys.toList())
 
-    // Alle nettsideIder og sideutvalIder skal referere til en gyldig url
-    if (!testresultatMap.keys.containsAll(urlMap.keys)) {
+    // Alle sideutvalIder skal referere til en gyldig url
+    if (!testresultatMap.keys.containsAll(sideutvalIdUrlMap.keys)) {
       throw IllegalArgumentException("Ugyldige nettsider i testresultat")
     }
 
-    return testresultatMap.entries.map {
-      val sideUrl = urlMap[it.key]!!
-      val testresultat = it.value
+    return testresultatMap.entries.map { entry ->
+      val sideUrl = sideutvalIdUrlMap[entry.key]!!
+      val testresultat = entry.value
 
       AggregeringPerSideDTO(
           null,
