@@ -30,9 +30,9 @@ class TestResultatDAO(
 
       jdbcTemplate.queryForObject(
           """
-        insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, nettside_id, sideutval_id, brukar_id, element_omtale, element_resultat,
+        insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
                                      element_utfall, test_vart_utfoert, status, kommentar)
-        values (:testgrunnlagId, :loeysingId, :testregelId, :nettsideId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
+        values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
                 :testVartUtfoert,:status, :kommentar)
         returning id
       """
@@ -41,7 +41,6 @@ class TestResultatDAO(
               "testgrunnlagId" to createTestResultat.testgrunnlagId,
               "loeysingId" to createTestResultat.loeysingId,
               "testregelId" to createTestResultat.testregelId,
-              "nettsideId" to createTestResultat.nettsideId,
               "sideutvalId" to createTestResultat.sideutvalId,
               "brukarId" to brukarId,
               "elementOmtale" to createTestResultat.elementOmtale,
@@ -74,7 +73,6 @@ class TestResultatDAO(
                        ti.testgrunnlag_id,
                        ti.loeysing_id,
                        ti.testregel_id,
-                       ti.nettside_id,
                        ti.sideutval_id,
                        ti.element_omtale,
                        ti.element_resultat,
@@ -98,8 +96,7 @@ class TestResultatDAO(
               testgrunnlagId = rs.getInt("testgrunnlag_id"),
               loeysingId = rs.getInt("loeysing_id"),
               testregelId = rs.getInt("testregel_id"),
-              nettsideId = rs.getInt("nettside_id").takeUnless { rs.wasNull() },
-              sideutvalId = rs.getInt("sideutval_id").takeUnless { rs.wasNull() },
+              sideutvalId = rs.getInt("sideutval_id"),
               brukar = Brukar(rs.getString("brukar_brukarnamn"), rs.getString("brukar_namn")),
               elementOmtale = rs.getString("element_omtale"),
               elementResultat =

@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.forenkletkontroll.logger
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.springframework.dao.support.DataAccessUtils
@@ -28,7 +29,7 @@ class TestgrunnlagKontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   rs.getString("namn"),
                   emptyList(),
                   emptyList(),
-                  TestgrunnlagKontroll.TestgrunnlagType.valueOf(rs.getString("type")),
+                  TestgrunnlagType.valueOf(rs.getString("type")),
                   emptyList(),
                   rs.getTimestamp("dato_oppretta").toInstant())
             })
@@ -124,7 +125,7 @@ class TestgrunnlagKontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   @Transactional
-  fun createTestgrunnlag(testgrunnlag: NyttTestgrunnlagKontroll): Result<Int> {
+  fun createTestgrunnlag(testgrunnlag: NyttTestgrunnlag): Result<Int> {
     val testgrunnlagId =
         jdbcTemplate.queryForObject(
             """
