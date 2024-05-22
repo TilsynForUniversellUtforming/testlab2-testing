@@ -140,6 +140,6 @@ class TestgrunnlagDAOTest(
             SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
         ))
 
-    return kontrollDAO.getKontroll(kontrollId).getOrThrow()
+    return kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
   }
 }
