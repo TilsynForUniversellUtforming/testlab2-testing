@@ -38,15 +38,25 @@ class KontrollResource(
     return kontrollDAO
         .getKontroller()
         .mapCatching { kontrollRows ->
-          kontrollRows.map {
+          kontrollRows.map { kontrollDB ->
+            val virksomheter =
+                kontrollDB.utval
+                    ?.loeysingar
+                    ?.map { it.id }
+                    ?.let { loeysingIdList ->
+                      loeysingsRegisterClient.getMany(loeysingIdList).getOrThrow()
+                    }
+                    ?.map { it.orgnummer }
+                    ?: emptyList()
+
             KontrollListItem(
-                it.id,
-                it.tittel,
-                it.saksbehandler,
-                Kontroll.Sakstype.valueOf(it.sakstype),
-                it.arkivreferanse,
+                kontrollDB.id,
+                kontrollDB.tittel,
+                kontrollDB.saksbehandler,
+                Kontroll.Sakstype.valueOf(kontrollDB.sakstype),
+                kontrollDB.arkivreferanse,
                 Kontroll.Kontrolltype.InngaaendeKontroll,
-                emptyList())
+                virksomheter)
           }
         }
         .getOrElse {
