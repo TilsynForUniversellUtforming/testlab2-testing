@@ -217,13 +217,13 @@ class ResultatService(
     }
   }
 
-  private fun getTestar(id: Int, kontrolltype: Kontroll.Kontrolltype): String {
+  private fun getTestar(id: Int, kontrolltype: Kontroll.Kontrolltype): List<String> {
     if (kontrolltype == Kontroll.Kontrolltype.InngaaendeKontroll) {
       return testResultatDAO.getBrukarForTestgrunnlag(id)
     } else if (kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
       return maalingDAO.getBrukarForMaaling(id)
     }
-    return "testar"
+    return listOf("testar")
   }
 
   class LoysingList(val loeysingar: Map<Int, Loeysing>) {

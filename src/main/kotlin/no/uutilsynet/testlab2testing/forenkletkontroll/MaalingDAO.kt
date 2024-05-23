@@ -510,19 +510,16 @@ class MaalingDAO(
         else -> null
       }
 
-  fun getBrukarForMaaling(maalingId: Int): String {
-    return jdbcTemplate
-        .queryForList(
-            """
+  fun getBrukarForMaaling(maalingId: Int): List<String> {
+    return jdbcTemplate.queryForList(
+        """
                 select distinct b.namn as namn
                 from testkoeyring ti
                 join brukar b on ti.brukar_id = b.id
                 where ti.maaling_id = :maaling_id
             """
-                .trimIndent(),
-            mapOf("maaling_id" to maalingId),
-            String::class.java)
-        .firstOrNull()
-        ?: "ingen testar"
+            .trimIndent(),
+        mapOf("maaling_id" to maalingId),
+        String::class.java)
   }
 }

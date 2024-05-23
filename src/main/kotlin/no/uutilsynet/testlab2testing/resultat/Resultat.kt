@@ -19,7 +19,7 @@ data class LoeysingResultat(
     val testType: TestgrunnlagType,
     val talElementSamsvar: Int,
     val talElementBrot: Int,
-    val testar: String,
+    val testar: List<String>,
     val progresjon: Int = 0
 )
 
@@ -29,7 +29,7 @@ data class ResultatLoeysing(
     val typeKontroll: Kontroll.Kontrolltype,
     val testType: TestgrunnlagType,
     val dato: LocalDate,
-    val testar: String,
+    val testar: List<String>,
     val loeysingId: Int,
     val score: Double,
     val talElementSamsvar: Int,

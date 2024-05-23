@@ -35,7 +35,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           Kontroll.Kontrolltype.ForenklaKontroll,
           TestgrunnlagType.OPPRINNELEG_TEST,
           datoStart,
-          "testar",
+          listOf("testar"),
           loeysingId,
           testregelGjennomsnittlegSideSamsvarProsent,
           talElementSamsvar,
@@ -68,7 +68,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           Kontroll.Kontrolltype.ForenklaKontroll,
           TestgrunnlagType.OPPRINNELEG_TEST,
           datoOppretta,
-          "testar",
+          listOf("testar"),
           loeysingId,
           testregelGjennomsnittlegSideSamsvarProsent,
           talElementSamsvar,
@@ -95,7 +95,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val id = rs.getInt("id")
       val namn = rs.getString("namn") ?: ""
       val dato = handleDate(rs.getDate("dato"))
-      val Kontrolltype = Kontroll.Kontrolltype.valueOf(rs.getString("type_kontroll"))
+      val kontrolltype = Kontroll.Kontrolltype.valueOf(rs.getString("type_kontroll"))
       val loeysingId = rs.getInt("loeysing_id")
       val testregelGjennomsnittlegSideSamsvarProsent =
           rs.getDouble("testregel_gjennomsnittleg_side_samsvar_prosent")
@@ -104,11 +104,11 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
       ResultatLoeysing(
           id,
-          getNamn(Kontrolltype, id, namn),
-          Kontrolltype,
-          TestgrunnlagType.OPPRINNELEG_TEST,
+          getNamn(kontrolltype, id, namn),
+          kontrolltype,
+          Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
           dato,
-          "testar",
+          listOf("testar"),
           loeysingId,
           testregelGjennomsnittlegSideSamsvarProsent,
           talElementSamsvar,
