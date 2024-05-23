@@ -232,19 +232,17 @@ class TestResultatDAO(
         DataClassRowMapper.newInstance(BildeSti::class.java))
   }
 
-  fun getBrukarForTestgrunnlag(testgrunnlagId: Int): String {
-    return jdbcTemplate
-        .queryForList(
-            """
+  fun getBrukarForTestgrunnlag(testgrunnlagId: Int): List<String> {
+
+    return jdbcTemplate.queryForList(
+        """
                 select distinct b.namn as namn
                 from testresultat ti
                 join brukar b on ti.brukar_id = b.id
                 where ti.testgrunnlag_id = :testgrunnlag_id
             """
-                .trimIndent(),
-            mapOf("testgrunnlag_id" to testgrunnlagId),
-            String::class.java)
-        .firstOrNull()
-        ?: "ingen testar"
+            .trimIndent(),
+        mapOf("testgrunnlag_id" to testgrunnlagId),
+        String::class.java)
   }
 }
