@@ -7,27 +7,36 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import java.net.URL
 import java.time.Instant
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
-import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
+import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
 import no.uutilsynet.testlab2testing.common.validateIdList
-import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateStatus
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.firstMessage
 import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters.Companion.validateParameters
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.loeysing.Utval
-import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
-import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("v1/maalinger")
@@ -35,11 +44,11 @@ class MaalingResource(
     val maalingDAO: MaalingDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val testregelDAO: TestregelDAO,
-    val utvalDAO: UtvalDAO,
     val crawlerClient: CrawlerClient,
     val autoTesterClient: AutoTesterClient,
     val aggregeringService: AggregeringService,
-    val sideutvalDAO: SideutvalDAO
+    val sideutvalDAO: SideutvalDAO,
+    val maalingService: MaalingService
 ) {
 
   data class NyMaalingDTO(
@@ -54,88 +63,31 @@ class MaalingResource(
 
   @PostMapping
   fun nyMaaling(@RequestBody dto: NyMaalingDTO): ResponseEntity<Any> =
-      runCatching {
-            val navn = validateNamn(dto.navn).getOrThrow()
-            val loeysingIdList = validateLoeyingsIdList(dto)
-            val utvalId = validatedUtvalId(dto)
-            val testregelIdList = validatedTestregeldList(dto)
-            val crawlParameters = dto.crawlParameters ?: CrawlParameters()
-            crawlParameters.validateParameters()
-
-            val localDateNorway = Instant.now()
-
-            if (utvalId != null) {
-              val utval = getUtval(utvalId)
-              maalingDAO.createMaaling(
-                  navn, localDateNorway, utval, testregelIdList, crawlParameters)
-            } else if (loeysingIdList != null) {
-              maalingDAO.createMaaling(
-                  navn, localDateNorway, loeysingIdList, testregelIdList, crawlParameters)
-            } else {
-              throw IllegalArgumentException("utvalId eller loeysingIdList må være gitt")
-            }
-          }
+      maalingService
+          .nyMaaling(dto)
           .fold(
               { id ->
                 val location = locationForId(id)
                 ResponseEntity.created(location).build()
               },
-              { exception -> handleErrors(exception) })
-
-  private fun getUtval(utvalId: Int): Utval {
-    val utval =
-        utvalDAO
-            .getUtval(utvalId)
-            .mapCatching {
-              val loeysingar = loeysingsRegisterClient.getMany(it.loeysingar).getOrThrow()
-              Utval(it.id, it.namn, loeysingar, it.oppretta)
-            }
-            .getOrThrow()
-    return utval
-  }
-
-  private fun validatedTestregeldList(dto: NyMaalingDTO): List<Int> {
-    val testregelIdList =
-        validateIdList(
-                dto.testregelIdList,
-                testregelDAO.getTestregelList().map { it.id },
-                "testregelIdList")
-            .getOrThrow()
-    return testregelIdList
-  }
-
-  private fun validatedUtvalId(dto: NyMaalingDTO): Int? {
-    val utvalIdList = utvalDAO.getUtvalList().getOrDefault(emptyList()).map { it.id }
-    val utvalId =
-        dto.utvalId?.let { validateIdList(listOf(it), utvalIdList, "utvalId").getOrThrow().first() }
-    return utvalId
-  }
-
-  private fun validateLoeyingsIdList(dto: NyMaalingDTO): List<Int>? {
-    val loeysingIdList =
-        dto.loeysingIdList?.let {
-          val loeysingar = loeysingsRegisterClient.getMany(it).getOrThrow()
-          validateIdList(dto.loeysingIdList, loeysingar.map { it.id }, "loeysingIdList")
-              .getOrThrow()
-        }
-    return loeysingIdList
-  }
+              { exception -> ErrorHandlingUtil.handleErrors(exception) })
 
   @PutMapping
   fun updateMaaling(@RequestBody dto: EditMaalingDTO): ResponseEntity<out Any> =
-      runCatching {
-            val maalingCopy = dto.toMaaling()
-            ResponseEntity.ok(maalingDAO.updateMaaling(maalingCopy))
-          }
-          .getOrElse { exception ->
-            logger.error("Feila da vi skulle oppdatere målinga ${dto.id}", exception)
-            handleErrors(exception)
-          }
+      maalingService
+          .updateMaaling(dto)
+          .fold(
+              { ResponseEntity.ok().build() },
+              { exception ->
+                logger.error("Feila da vi skulle oppdatere målinga ${dto.id}", exception)
+                ErrorHandlingUtil.handleErrors(exception)
+              })
 
   @DeleteMapping("{id}")
   fun deleteMaaling(@PathVariable id: Int): ResponseEntity<out Any> =
-      runCatching { ResponseEntity.ok(maalingDAO.deleteMaaling(id)) }
-          .getOrElse { exception -> handleErrors(exception) }
+      maalingService.deleteMaaling(id).fold({ ResponseEntity.ok().build() }) { exception ->
+        ErrorHandlingUtil.handleErrors(exception)
+      }
 
   @GetMapping
   fun list(): List<MaalingListElement> {
@@ -291,6 +243,12 @@ class MaalingResource(
         }
   }
 
+  @GetMapping("kontroll/{kontrollId}")
+  fun getMaalingIdFromKontrollId(@PathVariable kontrollId: Int): ResponseEntity<Int> {
+    return maalingDAO.getMaalingIdFromKontrollId(kontrollId)?.let { ResponseEntity.ok(it) }
+        ?: ResponseEntity.badRequest().build()
+  }
+
   private fun putNewStatusMaalingTestingFerdig(
       newStatus: Status,
       statusDTO: StatusDTO,
@@ -434,38 +392,5 @@ class MaalingResource(
                 TestKoeyring.Feila(crawlResultat, Instant.now(), feilmelding)
               })
         }
-  }
-
-  fun EditMaalingDTO.toMaaling(): Maaling {
-    val navn = validateNamn(this.navn).getOrThrow()
-    this.crawlParameters?.validateParameters()
-
-    val maaling =
-        maalingDAO.getMaaling(this.id) ?: throw IllegalArgumentException("Måling finnes ikkje")
-    return when (maaling) {
-      is Maaling.Planlegging -> {
-        val loeysingList =
-            this.loeysingIdList
-                ?.let { idList -> loeysingsRegisterClient.getMany(idList) }
-                ?.getOrThrow()
-                ?: throw IllegalArgumentException("Måling må ha løysingar")
-
-        val testregelList =
-            this.testregelIdList?.let { idList ->
-              testregelDAO.getTestregelList().filter { idList.contains(it.id) }
-            }
-                ?: throw IllegalArgumentException("Måling må ha testreglar")
-
-        maaling.copy(
-            navn = navn,
-            loeysingList = loeysingList,
-            testregelList = testregelList.map { it.toTestregelBase() },
-            crawlParameters = this.crawlParameters ?: maaling.crawlParameters)
-      }
-      is Maaling.Crawling -> maaling.copy(navn = this.navn)
-      is Maaling.Testing -> maaling.copy(navn = this.navn)
-      is Maaling.TestingFerdig -> maaling.copy(navn = this.navn)
-      is Maaling.Kvalitetssikring -> maaling.copy(navn = this.navn)
-    }
   }
 }

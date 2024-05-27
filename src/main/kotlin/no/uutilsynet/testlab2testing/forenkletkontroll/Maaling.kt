@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
 import java.time.Instant
+import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
+import no.uutilsynet.testlab2testing.kontroll.Kontroll
+import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.TestregelBase
 
@@ -154,3 +157,19 @@ enum class Status {
   Crawling,
   Testing
 }
+
+fun KontrollResource.OpprettKontroll.toNyMaaling(): MaalingResource.NyMaalingDTO =
+    MaalingResource.NyMaalingDTO(
+        navn = this.tittel,
+        crawlParameters = CrawlParameters(),
+        loeysingIdList = null,
+        testregelIdList = emptyList(),
+        utvalId = null)
+
+fun Kontroll.toMaalingEdit(maalingId: Int): EditMaalingDTO =
+    EditMaalingDTO(
+        id = maalingId,
+        navn = this.tittel,
+        testregelIdList = this.testreglar?.testregelList?.map { it.id },
+        loeysingIdList = this.utval?.loeysingar?.map { it.id },
+        crawlParameters = CrawlParameters())

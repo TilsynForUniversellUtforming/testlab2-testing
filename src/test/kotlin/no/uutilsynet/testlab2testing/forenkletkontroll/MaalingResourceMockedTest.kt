@@ -68,11 +68,11 @@ class MaalingResourceMockedTest {
             maalingDAO,
             loeysingsRegisterClient,
             testregelDAO,
-            utvalDAO,
             crawlerClient,
             autoTesterClient,
             aggregeringService,
-            sideutvalDAO)
+            sideutvalDAO,
+            MaalingService(maalingDAO, loeysingsRegisterClient, testregelDAO, utvalDAO))
   }
 
   @Test
