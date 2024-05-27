@@ -461,10 +461,13 @@ class MaalingDAO(
           mapOf("kontrollId" to kontrollId, "maalingId" to maalingId))
 
   fun getMaalingIdFromKontrollId(kontrollId: Int): Int? =
-      jdbcTemplate.queryForObject(
-          "select id from maalingv1 where kontrollId = :kontrollId",
-          mapOf("kontrollId" to kontrollId),
-          Int::class.java)
+      DataAccessUtils.singleResult(
+          jdbcTemplate.query(
+              "select id from maalingv1 where kontrollId = :kontrollId",
+              mapOf("kontrollId" to kontrollId),
+          ) { rs, _ ->
+            rs.getInt("id")
+          })
 
   private fun status(testKoeyring: TestKoeyring): String =
       when (testKoeyring) {
