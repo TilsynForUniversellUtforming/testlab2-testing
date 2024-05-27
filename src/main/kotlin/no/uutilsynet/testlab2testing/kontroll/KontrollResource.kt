@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.kontroll
 
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagServiceKontroll
@@ -25,6 +26,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 class KontrollResource(
     val kontrollDAO: KontrollDAO,
     val testregelDAO: TestregelDAO,
+    val maalingService: MaalingService,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val testgrunnlagServiceKontroll: TestgrunnlagServiceKontroll
 ) {
@@ -63,7 +65,7 @@ class KontrollResource(
                 kontrollDB.saksbehandler,
                 Kontroll.Sakstype.valueOf(kontrollDB.sakstype),
                 kontrollDB.arkivreferanse,
-                Kontroll.Kontrolltype.InngaaendeKontroll,
+                Kontroll.Kontrolltype.valueOf(kontrollDB.kontrolltype),
                 virksomheter)
           }
         }
@@ -77,6 +79,10 @@ class KontrollResource(
   fun createKontroll(@RequestBody opprettKontroll: OpprettKontroll): ResponseEntity<Unit> {
     return runCatching {
           val id = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
+          if (opprettKontroll.kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
+            maalingService.nyMaaling(id, opprettKontroll).getOrThrow()
+          }
+
           location(id)
         }
         .fold(
@@ -108,7 +114,7 @@ class KontrollResource(
 
     Kontroll(
         kontrollDB.id,
-        Kontroll.Kontrolltype.InngaaendeKontroll,
+        Kontroll.Kontrolltype.valueOf(kontrollDB.kontrolltype),
         kontrollDB.tittel,
         kontrollDB.saksbehandler,
         Kontroll.Sakstype.valueOf(kontrollDB.sakstype),
@@ -128,7 +134,10 @@ class KontrollResource(
 
   @DeleteMapping("/{id}")
   fun deleteKontroll(@PathVariable id: Int): ResponseEntity<Unit> {
-    return runCatching { kontrollDAO.deleteKontroll(id).getOrThrow() }
+    return runCatching {
+          kontrollDAO.deleteKontroll(id).getOrThrow()
+          maalingService.deleteKontrollMaaling(id).getOrThrow()
+        }
         .fold(
             onSuccess = { ResponseEntity.noContent().build() },
             onFailure = {
@@ -163,8 +172,11 @@ class KontrollResource(
                 kontrollDAO.updateKontroll(kontroll, sideutvalList).getOrThrow()
               }
             }
-
-            createOrUpdateTestgrunnlag(id)
+            if (updateBody.kontroll.kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
+              maalingService.updateMaaling(getKontrollResult(id).getOrThrow())
+            } else {
+              createOrUpdateTestgrunnlag(id)
+            }
           }
           .fold(
               onSuccess = { ResponseEntity.noContent().build() },
@@ -194,6 +206,7 @@ class KontrollResource(
       val saksbehandler: String,
       val sakstype: Kontroll.Sakstype,
       val arkivreferanse: String,
+      val kontrolltype: Kontroll.Kontrolltype,
   )
 
   fun createOrUpdateTestgrunnlag(kontrollId: Int): Result<Int> {

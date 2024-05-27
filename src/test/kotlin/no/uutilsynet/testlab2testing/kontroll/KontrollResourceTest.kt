@@ -32,6 +32,7 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
           "tittel" to "testkontroll",
           "saksbehandler" to "Ola Nordmann",
           "sakstype" to "forvaltningssak",
+          "kontrolltype" to "inngaaende-kontroll",
           "arkivreferanse" to "1234")
 
   @Test

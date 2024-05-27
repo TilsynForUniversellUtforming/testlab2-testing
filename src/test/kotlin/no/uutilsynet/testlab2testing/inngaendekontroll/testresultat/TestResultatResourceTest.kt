@@ -63,7 +63,11 @@ class TestResultatResourceTest(
   fun nyttTestresultat() {
     val opprettKontroll =
         KontrollResource.OpprettKontroll(
-            "manuell-kontroll", "Ola Nordmann", Kontroll.Sakstype.Arkivsak, "1234")
+            "manuell-kontroll",
+            "Ola Nordmann",
+            Kontroll.Sakstype.Arkivsak,
+            "1234",
+            Kontroll.Kontrolltype.InngaaendeKontroll)
 
     kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
