@@ -106,7 +106,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           id,
           getNamn(kontrolltype, id, namn),
           kontrolltype,
-          Testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST,
+          TestgrunnlagType.OPPRINNELEG_TEST,
           dato,
           listOf("testar"),
           loeysingId,
