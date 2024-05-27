@@ -14,7 +14,10 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
+import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateStatus
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
@@ -48,7 +51,8 @@ class MaalingResource(
     val autoTesterClient: AutoTesterClient,
     val aggregeringService: AggregeringService,
     val sideutvalDAO: SideutvalDAO,
-    val maalingService: MaalingService
+    val maalingService: MaalingService,
+    val brukarService: BrukarService
 ) {
 
   data class NyMaalingDTO(
@@ -255,9 +259,10 @@ class MaalingResource(
       maaling: Maaling.TestingFerdig,
       badRequest: ResponseEntity<Any>
   ): ResponseEntity<Any> {
+    val brukar: Brukar = brukarService.getCurrentUser()
     return runBlocking(Dispatchers.IO) {
       when (newStatus) {
-        Status.Testing -> restartTesting(statusDTO, maaling)
+        Status.Testing -> restartTesting(statusDTO, maaling, brukar)
         else -> badRequest
       }
     }
@@ -268,10 +273,11 @@ class MaalingResource(
       statusDTO: StatusDTO,
       maaling: Maaling.Kvalitetssikring
   ): ResponseEntity<Any> {
+    val brukar = brukarService.getCurrentUser()
     return runBlocking(Dispatchers.IO) {
       when (newStatus) {
         Status.Crawling -> restartCrawling(statusDTO, maaling)
-        Status.Testing -> startTesting(maaling)
+        Status.Testing -> startTesting(maaling, brukar)
       }
     }
   }
@@ -316,48 +322,57 @@ class MaalingResource(
 
   private suspend fun restartTesting(
       statusDTO: StatusDTO,
-      maaling: Maaling.TestingFerdig
-  ): ResponseEntity<Any> = coroutineScope {
-    logger.info("Restarter testing for måling ${maaling.id}")
-    val validIds =
-        if (statusDTO.loeysingIdList?.isNotEmpty() == true) {
-          loeysingsRegisterClient.getMany(statusDTO.loeysingIdList).getOrThrow().map { it.id }
-        } else {
-          emptyList()
-        }
-    val loeysingIdList =
-        validateIdList(statusDTO.loeysingIdList, validIds, "loeysingIdList").getOrThrow()
+      maaling: Maaling.TestingFerdig,
+      brukar: Brukar
+  ): ResponseEntity<Any> {
+    return coroutineScope {
+      logger.info("Restarter testing for måling ${maaling.id}")
+      val validIds =
+          if (statusDTO.loeysingIdList?.isNotEmpty() == true) {
+            loeysingsRegisterClient.getMany(statusDTO.loeysingIdList).getOrThrow().map { it.id }
+          } else {
+            emptyList()
+          }
+      val loeysingIdList =
+          validateIdList(statusDTO.loeysingIdList, validIds, "loeysingIdList").getOrThrow()
 
-    val (retestList, rest) =
-        maaling.testKoeyringar.partition { loeysingIdList.contains(it.loeysing.id) }
+      val (retestList, rest) =
+          maaling.testKoeyringar.partition { loeysingIdList.contains(it.loeysing.id) }
 
-    val testKoeyringar = startTesting(maaling.id, retestList.map { it.crawlResultat })
+      val testKoeyringar = startTesting(maaling.id, retestList.map { it.crawlResultat }, brukar)
 
-    val updated =
-        Maaling.Testing(
-            id = maaling.id,
-            navn = maaling.navn,
-            datoStart = maaling.datoStart,
-            testKoeyringar = rest.plus(testKoeyringar))
-    withContext(Dispatchers.IO) { maalingDAO.save(updated) }.getOrThrow()
-    ResponseEntity.ok().build()
+      val updated =
+          Maaling.Testing(
+              id = maaling.id,
+              navn = maaling.navn,
+              datoStart = maaling.datoStart,
+              testKoeyringar = rest.plus(testKoeyringar))
+      withContext(Dispatchers.IO) { maalingDAO.save(updated) }.getOrThrow()
+      ResponseEntity.ok().build()
+    }
   }
 
-  private suspend fun startTesting(maaling: Maaling.Kvalitetssikring): ResponseEntity<Any> =
-      coroutineScope {
-        val testKoeyringar =
-            startTesting(maaling.id, maaling.crawlResultat.filterIsInstance<CrawlResultat.Ferdig>())
+  private suspend fun startTesting(
+      maaling: Maaling.Kvalitetssikring,
+      brukar: Brukar
+  ): ResponseEntity<Any> {
+    return coroutineScope {
+      val testKoeyringar =
+          startTesting(
+              maaling.id, maaling.crawlResultat.filterIsInstance<CrawlResultat.Ferdig>(), brukar)
 
-        val updated = Maaling.toTesting(maaling, testKoeyringar)
-        withContext(Dispatchers.IO) { maalingDAO.save(updated) }.getOrThrow()
-        ResponseEntity.ok().build()
-      }
+      val updated = Maaling.toTesting(maaling, testKoeyringar)
+      withContext(Dispatchers.IO) { maalingDAO.save(updated) }.getOrThrow()
+      ResponseEntity.ok().build()
+    }
+  }
 
   data class StatusDTO(val status: String, val loeysingIdList: List<Int>?)
 
   private suspend fun startTesting(
       maalingId: Int,
       crawlResultat: List<CrawlResultat.Ferdig>,
+      brukar: Brukar
   ): List<TestKoeyring> = coroutineScope {
     val testreglar =
         withContext(Dispatchers.IO) { testregelDAO.getTestreglarForMaaling(maalingId) }
@@ -384,12 +399,12 @@ class MaalingResource(
         .awaitAll()
         .map { (crawlResultat, result) ->
           result.fold(
-              { statusURL -> TestKoeyring.from(crawlResultat, statusURL) },
+              { statusURL -> TestKoeyring.from(crawlResultat, statusURL, brukar) },
               { exception ->
                 val feilmelding =
                     exception.message
                         ?: "eg klarte ikkje å starte testing for ei løysing, og feilmeldinga manglar"
-                TestKoeyring.Feila(crawlResultat, Instant.now(), feilmelding)
+                TestKoeyring.Feila(crawlResultat, Instant.now(), feilmelding, brukar)
               })
         }
   }
