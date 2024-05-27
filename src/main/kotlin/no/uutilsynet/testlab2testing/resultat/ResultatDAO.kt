@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.sql.ResultSet
 import java.time.LocalDate
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
@@ -13,107 +14,61 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getTestresultatMaaling(): List<ResultatLoeysing> {
     val query =
         """
-            select maaling_id, navn,dato_start,loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot
-            from aggregering_testregel  
-            join testlab2_testing.maalingv1 on maalingv1.id = aggregering_testregel.maaling_id
+        select k.id, k.tittel as tittel,kontrolltype,
+        dato_start as dato,
+        loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot
+        from kontroll k
+        left join maalingv1 m on m.kontrollid=k.id
+        join aggregering_testregel agt on agt.maaling_id=m.id
         """
             .trimIndent()
 
-    return jdbcTemplate.query(query) { rs, _ ->
-      val maalingId = rs.getInt("maaling_id")
-      val navn = rs.getString("navn")
-      val datoStart = handleDate(rs.getDate("dato_start"))
-      val loeysingId = rs.getInt("loeysing_id")
-      val testregelGjennomsnittlegSideSamsvarProsent =
-          rs.getDouble("testregel_gjennomsnittleg_side_samsvar_prosent")
-      val talElementSamsvar = rs.getInt("tal_element_samsvar")
-      val talElementBrot = rs.getInt("tal_element_brot")
+    return jdbcTemplate.query(query) { rs, _ -> resultatLoeysingRowmapper(rs) }
+  }
 
-      ResultatLoeysing(
-          maalingId,
-          navn,
-          Kontroll.Kontrolltype.ForenklaKontroll,
-          TestgrunnlagType.OPPRINNELEG_TEST,
-          datoStart,
-          listOf("testar"),
-          loeysingId,
-          testregelGjennomsnittlegSideSamsvarProsent,
-          talElementSamsvar,
-          talElementBrot)
-    }
+  private fun resultatLoeysingRowmapper(rs: ResultSet): ResultatLoeysing {
+    val maalingId = rs.getInt("id")
+    val navn = rs.getString("tittel")
+    val dato = handleDate(rs.getDate("dato"))
+    val kontrolltype = Kontroll.Kontrolltype.valueOf(rs.getString("kontrolltype"))
+    val loeysingId = rs.getInt("loeysing_id")
+    val testregelGjennomsnittlegSideSamsvarProsent =
+        rs.getDouble("testregel_gjennomsnittleg_side_samsvar_prosent")
+    val talElementSamsvar = rs.getInt("tal_element_samsvar")
+    val talElementBrot = rs.getInt("tal_element_brot")
+
+    return ResultatLoeysing(
+        maalingId,
+        navn,
+        kontrolltype,
+        TestgrunnlagType.OPPRINNELEG_TEST,
+        dato,
+        listOf("testar"),
+        loeysingId,
+        testregelGjennomsnittlegSideSamsvarProsent,
+        talElementSamsvar,
+        talElementBrot)
   }
 
   fun getTestresultatTestgrunnlag(): List<ResultatLoeysing> {
     val query =
         """
-            select testgrunnlag_id, namn,dato_oppretta,loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot
-            from aggregering_testregel  
-            join testlab2_testing.testgrunnlag on testgrunnlag.id = aggregering_testregel.testgrunnlag_id
+           select k.id as id, k.tittel as tittel, kontrolltype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot,
+            dato_oppretta as dato
+            from kontroll k
+            left join testgrunnlag t on t.kontroll_id=k.id
+            left join maalingv1 m on m.kontrollid=k.id
+            join aggregering_testregel agt on agt.testgrunnlag_id=t.id
         """
             .trimIndent()
 
-    return jdbcTemplate.query(query) { rs, _ ->
-      val testgrunnlag_id = rs.getInt("testgrunnlag_id")
-      val namn = rs.getString("namn")
-      val datoOppretta = handleDate(rs.getDate("dato_oppretta"))
-      val loeysingId = rs.getInt("loeysing_id")
-      val testregelGjennomsnittlegSideSamsvarProsent =
-          rs.getDouble("testregel_gjennomsnittleg_side_samsvar_prosent")
-      val talElementSamsvar = rs.getInt("tal_element_samsvar")
-      val talElementBrot = rs.getInt("tal_element_brot")
-
-      ResultatLoeysing(
-          testgrunnlag_id,
-          namn,
-          Kontroll.Kontrolltype.ForenklaKontroll,
-          TestgrunnlagType.OPPRINNELEG_TEST,
-          datoOppretta,
-          listOf("testar"),
-          loeysingId,
-          testregelGjennomsnittlegSideSamsvarProsent,
-          talElementSamsvar,
-          talElementBrot)
-    }
+    return jdbcTemplate.query(query) { rs, _ -> resultatLoeysingRowmapper(rs) }
   }
 
   fun getResultat(): List<ResultatLoeysing> {
-    val query =
-        """
-                select (case when maaling_id is not null then maaling_id else testgrunnlag_id end) as id, 
-                (case when maaling_id is not null then 'ForenklaKontroll' else 'InngaaendeKontroll' end) as type_kontroll, 
-                (case when dato_start is not null then dato_start else dato_oppretta end) as dato,
-                (case when maaling_id is not null then navn else namn end) as namn,
-                loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot
-                from aggregering_testregel  
-                left join testlab2_testing.maalingv1 on maalingv1.id = aggregering_testregel.maaling_id
-                left join testlab2_testing.testgrunnlag on testgrunnlag.id = aggregering_testregel.testgrunnlag_id
-                where testregel_gjennomsnittleg_side_samsvar_prosent is not null
-            """
-            .trimIndent()
-
-    return jdbcTemplate.query(query) { rs, _ ->
-      val id = rs.getInt("id")
-      val namn = rs.getString("namn") ?: ""
-      val dato = handleDate(rs.getDate("dato"))
-      val kontrolltype = Kontroll.Kontrolltype.valueOf(rs.getString("type_kontroll"))
-      val loeysingId = rs.getInt("loeysing_id")
-      val testregelGjennomsnittlegSideSamsvarProsent =
-          rs.getDouble("testregel_gjennomsnittleg_side_samsvar_prosent")
-      val talElementSamsvar = rs.getInt("tal_element_samsvar")
-      val talElementBrot = rs.getInt("tal_element_brot")
-
-      ResultatLoeysing(
-          id,
-          getNamn(kontrolltype, id, namn),
-          kontrolltype,
-          TestgrunnlagType.OPPRINNELEG_TEST,
-          dato,
-          listOf("testar"),
-          loeysingId,
-          testregelGjennomsnittlegSideSamsvarProsent,
-          talElementSamsvar,
-          talElementBrot)
-    }
+    val testresultatMaaling = getTestresultatMaaling()
+    val testresultatTestgrunnlag = getTestresultatTestgrunnlag()
+    return (testresultatMaaling + testresultatTestgrunnlag).sortedBy { it.dato }
   }
 
   fun handleDate(date: java.sql.Date?): LocalDate {
