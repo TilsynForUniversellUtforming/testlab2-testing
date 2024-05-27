@@ -53,4 +53,19 @@ class BrukarDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             }
         .firstOrNull()
   }
+
+  fun getBrukarById(brukarId: Int): Brukar? {
+    return jdbcTemplate
+        .query(
+            """
+                    select brukarnamn, namn
+                    from brukar
+                    where id = :brukarId
+                """
+                .trimIndent(),
+            mapOf("brukarId" to brukarId)) { rs, _ ->
+              Brukar(rs.getString("brukarnamn"), rs.getString("namn"))
+            }
+        .firstOrNull()
+  }
 }

@@ -30,4 +30,12 @@ class BrukarService(val brukarDAO: BrukarDAO) {
     val brukar = getCurrentUser()
     return saveIfNotExists(brukar)
   }
+
+  fun getBrukarById(brukarId: Int): Brukar? {
+    return brukarDAO.getBrukarById(brukarId)
+  }
+
+  fun getBrukarIdByBrukarnamn(brukarnamn: String): Int? {
+    return brukarDAO.getBrukarId(brukarnamn)
+  }
 }

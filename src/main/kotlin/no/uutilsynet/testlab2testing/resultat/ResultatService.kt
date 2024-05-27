@@ -5,10 +5,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingResource
-import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.TestResultat
+import no.uutilsynet.testlab2testing.forenkletkontroll.*
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
@@ -27,6 +24,7 @@ class ResultatService(
     val sideutvalDAO: SideutvalDAO,
     val kravregisterClient: KravregisterClient,
     val resultatDAO: ResultatDAO,
+    val maalingDAO: MaalingDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
 
@@ -186,7 +184,7 @@ class ResultatService(
                   resultLoeysing.first().testType,
                   resultLoeysing.map { it.talElementSamsvar }.sum(),
                   resultLoeysing.map { it.talElementBrot }.sum(),
-                  resultLoeysing.first().testar,
+                  getTestar(resultLoeysing.first().id, resultLoeysing.first().typeKontroll),
                   statusLoeysingar[loeysingId] ?: 0)
             }
     return resultLoeysingar
@@ -217,6 +215,15 @@ class ResultatService(
       ->
       LoysingList(loeysingList.associateBy { it.id })
     }
+  }
+
+  private fun getTestar(id: Int, kontrolltype: Kontroll.Kontrolltype): List<String> {
+    if (kontrolltype == Kontroll.Kontrolltype.InngaaendeKontroll) {
+      return testResultatDAO.getBrukarForTestgrunnlag(id)
+    } else if (kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
+      return maalingDAO.getBrukarForMaaling(id)
+    }
+    return listOf("testar")
   }
 
   class LoysingList(val loeysingar: Map<Int, Loeysing>) {

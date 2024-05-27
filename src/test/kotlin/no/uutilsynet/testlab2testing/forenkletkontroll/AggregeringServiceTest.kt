@@ -129,7 +129,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
                     urlAggregeringSide = TEST_URL,
                     urlAggregeringLoeysing = TEST_URL,
                     urlAggregeringSK = TEST_URL),
-        )
+            Brukar("testar", "test"))
     return testKoeyring
   }
 

@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
 import java.time.Instant
+import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.TestConstants
@@ -67,7 +68,8 @@ object TestConstants {
               URI("https://aggregeringSide.resultat").toURL(),
               URI("https://aggregeringSideTR.resultat").toURL(),
               URI("https://aggregeringLoeysing.resultat").toURL(),
-          ))
+          ),
+          Brukar("test", "testar"))
 
   val testKoeyring2 =
       TestKoeyring.Ferdig(
@@ -82,7 +84,8 @@ object TestConstants {
               URI("https://aggregeringSide.resultat").toURL(),
               URI("https://aggregeringSideTR.resultat").toURL(),
               URI("https://aggregeringLoeysing.resultat").toURL(),
-          ))
+          ),
+          Brukar("test", "testar"))
 
   val testKoeyringList = listOf(testKoeyring, testKoeyring2)
 }
