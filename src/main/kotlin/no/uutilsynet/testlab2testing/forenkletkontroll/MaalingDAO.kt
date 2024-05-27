@@ -454,6 +454,21 @@ class MaalingDAO(
         Int::class.java)
   }
 
+  @Transactional
+  fun updateKontrollId(kontrollId: Int, maalingId: Int) =
+      jdbcTemplate.update(
+          "update maalingv1 set kontrollId = :kontrollId where id = :maalingId",
+          mapOf("kontrollId" to kontrollId, "maalingId" to maalingId))
+
+  fun getMaalingIdFromKontrollId(kontrollId: Int): Int? =
+      DataAccessUtils.singleResult(
+          jdbcTemplate.query(
+              "select id from maalingv1 where kontrollId = :kontrollId",
+              mapOf("kontrollId" to kontrollId),
+          ) { rs, _ ->
+            rs.getInt("id")
+          })
+
   private fun status(testKoeyring: TestKoeyring): String =
       when (testKoeyring) {
         is TestKoeyring.IkkjeStarta -> "ikkje_starta"

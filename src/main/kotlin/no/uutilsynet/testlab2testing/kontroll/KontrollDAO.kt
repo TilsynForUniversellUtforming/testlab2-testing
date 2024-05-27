@@ -13,8 +13,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return kotlin.runCatching {
       jdbcTemplate.queryForObject(
           """
-            insert into kontroll (tittel, saksbehandler, sakstype, arkivreferanse)
-            values (:tittel, :saksbehandler, :sakstype, :arkivreferanse)
+            insert into kontroll (tittel, saksbehandler, sakstype, arkivreferanse, kontrolltype)
+            values (:tittel, :saksbehandler, :sakstype, :arkivreferanse, :kontrolltype)
             returning id
             """
               .trimIndent(),
@@ -22,7 +22,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "tittel" to kontroll.tittel,
               "saksbehandler" to kontroll.saksbehandler,
               "sakstype" to kontroll.sakstype.name,
-              "arkivreferanse" to kontroll.arkivreferanse),
+              "arkivreferanse" to kontroll.arkivreferanse,
+              "kontrolltype" to kontroll.kontrolltype.name),
           Int::class.java)!!
     }
   }
@@ -60,6 +61,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                            k.saksbehandler  as saksbehandler,
                            k.sakstype       as sakstype,
                            k.arkivreferanse as arkivreferanse,
+                           k.kontrolltype   as kontrolltype,
                            k.utval_id       as utval_id,
                            k.utval_namn     as utval_namn,
                            k.utval_oppretta as utval_oppretta,
@@ -129,6 +131,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 resultSet.getString("saksbehandler"),
                 resultSet.getString("sakstype"),
                 resultSet.getString("arkivreferanse"),
+                resultSet.getString("kontrolltype"),
                 utval,
                 testreglar,
                 sideutvalList)
@@ -146,6 +149,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val saksbehandler: String,
       val sakstype: String,
       val arkivreferanse: String,
+      val kontrolltype: String,
       val utval: Utval?,
       val testreglar: Testreglar?,
       val sideutval: List<Sideutval> = emptyList()
