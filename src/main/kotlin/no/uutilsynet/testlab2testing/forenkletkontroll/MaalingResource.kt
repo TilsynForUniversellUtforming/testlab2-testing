@@ -14,9 +14,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
-import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
+import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateStatus
@@ -51,8 +51,7 @@ class MaalingResource(
     val autoTesterClient: AutoTesterClient,
     val aggregeringService: AggregeringService,
     val sideutvalDAO: SideutvalDAO,
-    val maalingService: MaalingService
-    val sideutvalDAO: SideutvalDAO,
+    val maalingService: MaalingService,
     val brukarService: BrukarService
 ) {
 
