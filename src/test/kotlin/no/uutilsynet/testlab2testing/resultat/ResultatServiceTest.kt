@@ -11,14 +11,19 @@ import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
+import no.uutilsynet.testlab2testing.loeysing.Verksemd
 import no.uutilsynet.testlab2testing.testregel.*
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -37,6 +42,8 @@ class ResultatServiceTest(
   private var testregelId: Int by Delegates.notNull()
   private var aggregertResultat: AggregeringPerTestregelDTO by Delegates.notNull()
 
+  @MockBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+
   @AfterAll
   fun cleanup() {
     utvalDAO.deleteUtval(utvalId)
@@ -48,11 +55,22 @@ class ResultatServiceTest(
   fun getTestresultatMaaling() {
     kontrollId = createTestKontroll()
     createTestMaaling()
-    val resultat = resultatService.getResultatList(Kontroll.Kontrolltype.ForenklaKontroll)
+    val testloeysing =
+        Loeysing.Expanded(
+            1,
+            "testloeysing",
+            URI.create("https://www.uutilsynet.no").toURL(),
+            Verksemd(1, "Testverksemd", "123456789"))
+    Mockito.`when`(loeysingsRegisterClient.getManyExpanded(Mockito.anyList()))
+        .thenReturn(Result.success(listOf(testloeysing)))
+    val resultat =
+        resultatService.getResultatList(Kontroll.Kontrolltype.ForenklaKontroll).filter {
+          it.id == kontrollId
+        }
 
     assert(resultat.isNotEmpty())
 
-    val resultatKontroll = resultat[0]
+    val resultatKontroll = resultat.first()
 
     assertEquals(resultatKontroll.id, kontrollId)
     assertEquals(resultatKontroll.loeysingar.size, 1)

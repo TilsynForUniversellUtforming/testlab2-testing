@@ -84,4 +84,20 @@ class LoeysingsRegisterClient(
       throw RuntimeException("Fant ikkje løsning med id $loeysingId")
     }
   }
+
+  @Cacheable("loeysingarExpanded", unless = "#result.isEmpty()")
+  fun getManyExpanded(idList: List<Int>): Result<List<Loeysing.Expanded>> {
+    return runCatching {
+      val uri =
+          UriComponentsBuilder.fromUriString(properties.host)
+              .pathSegment("v1", "loeysing", "expanded")
+              .queryParam("ids", idList.joinToString(","))
+              .queryParam("atTime", ISO_INSTANT.format(Instant.now()))
+              .build()
+              .toUri()
+      restTemplate.getForObject(uri, Array<Loeysing.Expanded>::class.java)?.toList()
+          ?: throw RuntimeException(
+              "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}")
+    }
+  }
 }
