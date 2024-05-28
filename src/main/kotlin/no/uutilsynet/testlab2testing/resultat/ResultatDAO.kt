@@ -11,12 +11,39 @@ import org.springframework.stereotype.Component
 @Component
 class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
+  val resultatQuery =
+      """select k.id as id, k.tittel as tittel, kontrolltype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot, kontroll_id,dato, testregel_id
+        from kontroll k
+        join (
+        select loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot, testregel_id, maaling_id, testgrunnlag_id,
+		case 
+			when maaling_id is not null
+				then m.kontrollid
+				else t.kontroll_id 
+			end as kontroll_id,
+		case 
+			when maaling_id is not null
+				then m.dato_start
+				else t.dato_oppretta 
+			end as dato
+		from aggregering_testregel agt
+		left join maalingv1 m on m.id=agt.maaling_id
+		left join testgrunnlag t on t.id=agt.testgrunnlag_id
+		where case 
+			when maaling_id is not null
+				then m.kontrollid
+				else t.kontroll_id 
+			end is not null
+		) as ag 
+        on k.id=ag.kontroll_id
+            """
+
   fun getTestresultatMaaling(): List<ResultatLoeysing> {
     val query =
         """
         select k.id, k.tittel as tittel,kontrolltype,
         dato_start as dato,
-        loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot
+        loeysing_id, testregel_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot
         from kontroll k
         left join maalingv1 m on m.kontrollid=k.id
         join aggregering_testregel agt on agt.maaling_id=m.id
@@ -36,6 +63,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         rs.getDouble("testregel_gjennomsnittleg_side_samsvar_prosent")
     val talElementSamsvar = rs.getInt("tal_element_samsvar")
     val talElementBrot = rs.getInt("tal_element_brot")
+    val testregelId = rs.getInt("testregel_id")
 
     return ResultatLoeysing(
         maalingId,
@@ -47,17 +75,18 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         loeysingId,
         testregelGjennomsnittlegSideSamsvarProsent,
         talElementSamsvar,
-        talElementBrot)
+        talElementBrot,
+        testregelId,
+        null)
   }
 
   fun getTestresultatTestgrunnlag(): List<ResultatLoeysing> {
     val query =
         """
-           select k.id as id, k.tittel as tittel, kontrolltype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot,
+               select k.id as id, k.tittel as tittel, kontrolltype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot,
             dato_oppretta as dato
             from kontroll k
             left join testgrunnlag t on t.kontroll_id=k.id
-            left join maalingv1 m on m.kontrollid=k.id
             join aggregering_testregel agt on agt.testgrunnlag_id=t.id
         """
             .trimIndent()
@@ -66,9 +95,14 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun getResultat(): List<ResultatLoeysing> {
-    val testresultatMaaling = getTestresultatMaaling()
-    val testresultatTestgrunnlag = getTestresultatTestgrunnlag()
-    return (testresultatMaaling + testresultatTestgrunnlag).sortedBy { it.dato }
+    return jdbcTemplate.query(resultatQuery) { rs, _ -> resultatLoeysingRowmapper(rs) }
+  }
+
+  fun getResultatKontroll(kontrollId: Int): List<ResultatLoeysing> {
+    val query = "$resultatQuery where k.id = :kontrollId"
+    return jdbcTemplate.query(query, mapOf("kontrollId" to kontrollId)) { rs, _ ->
+      resultatLoeysingRowmapper(rs)
+    }
   }
 
   fun handleDate(date: java.sql.Date?): LocalDate {
@@ -99,5 +133,13 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     } catch (e: EmptyResultDataAccessException) {
       namn
     }
+  }
+
+  fun getResultatKontrollLoeysing(kontrollId: Int, loeysingId: Int): List<ResultatLoeysing>? {
+    val query = "$resultatQuery where k.id = :kontrollId  and loeysing_id = :loeysingId"
+    return jdbcTemplate.query(
+        query, mapOf("kontrollId" to kontrollId, "loeysingId" to loeysingId)) { rs, _ ->
+          resultatLoeysingRowmapper(rs)
+        }
   }
 }

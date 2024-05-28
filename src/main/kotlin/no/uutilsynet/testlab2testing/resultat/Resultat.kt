@@ -13,8 +13,9 @@ data class Resultat(
 )
 
 data class LoeysingResultat(
-    val id: Int,
-    val namnLoeysing: String,
+    val loeysingId: Int,
+    val loeysingNamn: String,
+    val verksemdNamn: String,
     val score: Double,
     val testType: TestgrunnlagType,
     val talElementSamsvar: Int,
@@ -33,5 +34,19 @@ data class ResultatLoeysing(
     val loeysingId: Int,
     val score: Double,
     val talElementSamsvar: Int,
-    val talElementBrot: Int
+    val talElementBrot: Int,
+    val testregelId: Int,
+    val krav: String?
+)
+
+/** Uttrekk resultat per løysing */
+data class ResultatOversiktLoeysing(
+    val loeysingId: Int,
+    val loeysingNamn: String,
+    val typeKontroll: Kontroll.Kontrolltype,
+    val testar: List<String>,
+    val score: Double,
+    val krav: String,
+    val talElementBrot: Int,
+    val talElementSamsvar: Int,
 )
