@@ -48,7 +48,7 @@ class TestgrunnlagDAOTest(
   fun createTestgrunnlag() {
     val nyttTestgrunnlagManuell =
         NyttTestgrunnlag(
-            parentId = testKontroll!!.id,
+            kontrollId = testKontroll!!.id,
             namn = "Testgrunnlag",
             type = TestgrunnlagType.OPPRINNELEG_TEST,
             sideutval = testKontroll!!.sideutval,
@@ -69,7 +69,7 @@ class TestgrunnlagDAOTest(
   fun testUpdateTestgrunnlag() {
     val nyttTestgrunnlagManuell =
         NyttTestgrunnlag(
-            parentId = testKontroll!!.id,
+            kontrollId = testKontroll!!.id,
             namn = "Testgrunnlag",
             type = TestgrunnlagType.OPPRINNELEG_TEST,
             sideutval = testKontroll!!.sideutval,
@@ -92,7 +92,7 @@ class TestgrunnlagDAOTest(
   fun testSlettTestgrunnlag() {
     val nyttTestgrunnlagManuell =
         NyttTestgrunnlag(
-            parentId = testKontroll!!.id,
+            kontrollId = testKontroll!!.id,
             namn = "Testgrunnlag",
             type = TestgrunnlagType.OPPRINNELEG_TEST,
             sideutval = testKontroll!!.sideutval,
