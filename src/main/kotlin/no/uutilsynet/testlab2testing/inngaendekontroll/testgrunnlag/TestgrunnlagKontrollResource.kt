@@ -34,7 +34,7 @@ class TestgrunnlagKontrollResource(val testgrunnlagDAO: TestgrunnlagKontrollDAO)
   @PostMapping
   fun createTestgrunnlag(@RequestBody testgrunnlag: NyttTestgrunnlag): ResponseEntity<Int> {
     logger.info(
-        "Opprett testgrunnlag for sak ${testgrunnlag.parentId} og loeysinger ${testgrunnlag.sideutval.map { it.loeysingId }}")
+        "Opprett testgrunnlag for sak ${testgrunnlag.kontrollId} og loeysinger ${testgrunnlag.sideutval.map { it.loeysingId }}")
 
     return runCatching { testgrunnlagDAO.createTestgrunnlag(testgrunnlag).getOrThrow() }
         .fold(

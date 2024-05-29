@@ -4,7 +4,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
 
 data class NyttTestgrunnlag(
-    val parentId: Int,
+    val kontrollId: Int,
     val namn: String,
     val type: TestgrunnlagType,
     val sideutval: List<Sideutval>,

@@ -12,7 +12,8 @@ class TestgrunnlagServiceKontroll(
 ) {
 
   fun createOrUpdate(testgrunnlag: NyttTestgrunnlag): Result<Int> {
-    val opprinneligTestgrunnlag = testgrunnlagDAO.getOpprinneligTestgrunnlag(testgrunnlag.parentId)
+    val opprinneligTestgrunnlag =
+        testgrunnlagDAO.getOpprinneligTestgrunnlag(testgrunnlag.kontrollId)
 
     return if (opprinneligTestgrunnlag.isSuccess) {
       opprinneligTestgrunnlag
@@ -37,6 +38,6 @@ class TestgrunnlagServiceKontroll(
                   },
               sideutval =
                   kontrollDAO.findSideutvalByKontrollAndLoeysing(
-                      testgrunnlag.parentId, testgrunnlag.sideutval.map { it.loeysingId }),
+                      testgrunnlag.kontrollId, testgrunnlag.sideutval.map { it.loeysingId }),
           ))
 }

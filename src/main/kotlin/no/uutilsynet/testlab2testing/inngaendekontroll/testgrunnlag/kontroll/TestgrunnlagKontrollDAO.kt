@@ -135,7 +135,7 @@ class TestgrunnlagKontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             """
                 .trimMargin(),
             mapOf(
-                "kontrollId" to testgrunnlag.parentId,
+                "kontrollId" to testgrunnlag.kontrollId,
                 "namn" to testgrunnlag.namn,
                 "type" to testgrunnlag.type.name,
                 "datoOppretta" to Timestamp.from(Instant.now())),
