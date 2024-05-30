@@ -67,7 +67,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getMany(testregelIdList: List<Int>): List<TestregelBase> =
       jdbcTemplate.query(
-          "select tr.id, tr.namn, tr.krav_id, tr.modus from testregel tr where tr.id in (:ids)",
+          "select tr.id, tr.namn, tr.krav_id, tr.modus, tr.type from testregel tr where tr.id in (:ids)",
           mapOf("ids" to testregelIdList),
           DataClassRowMapper.newInstance(TestregelBase::class.java))
 
