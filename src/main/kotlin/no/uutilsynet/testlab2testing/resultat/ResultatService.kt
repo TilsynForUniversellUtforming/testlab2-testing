@@ -6,9 +6,12 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.*
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
+import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
@@ -26,12 +29,19 @@ class ResultatService(
     val resultatDAO: ResultatDAO,
     val maalingDAO: MaalingDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
+    val kontrollDAO: KontrollDAO,
+    val testgrunnlagDao: TestgrunnlagKontrollDAO,
 ) {
 
   fun getResultatForAutomatiskMaaling(
-      maalingId: Int,
-      loeysingId: Int?
+      kontrollId: Int,
+      loeysingId: Int,
+      kravId: Int
   ): List<TestresultatDetaljert> {
+    val maalingId =
+        maalingDAO.getMaalingIdFromKontrollId(kontrollId)
+            ?: throw RuntimeException("Fant ikkje maalingId for kontrollId $kontrollId")
+    val testregelIds: List<Int> = testregelDAO.getTestregelForKrav(kravId).map { it.id }
 
     val testresultat: List<AutotesterTestresultat> =
         maalingResource.getTestresultat(maalingId, loeysingId).getOrThrow()
@@ -39,6 +49,7 @@ class ResultatService(
     if (testresultat.isNotEmpty() && testresultat.first() is TestResultat) {
       return testresultat
           .map { it as TestResultat }
+          .filter { filterByTestregel(it.loeysingId, testregelIds) }
           .map {
             TestresultatDetaljert(
                 null,
@@ -59,20 +70,24 @@ class ResultatService(
   }
 
   fun getResulatForManuellKontroll(
-      testgrunnlagId: Int,
-      testregelNoekkel: String?,
-      loeysingId: Int?
+      kontrollId: Int,
+      loeysingId: Int,
+      kravId: Int
   ): List<TestresultatDetaljert> {
-    val testresultat = testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
+    val testgrunnlag =
+        testgrunnlagDao
+            .getTestgrunnlagForKontroll(kontrollId, loeysingId)
+            .filter { it.type == TestgrunnlagType.OPPRINNELEG_TEST }
+            .first()
+    val testresultat = testResultatDAO.getManyResults(testgrunnlag.id).getOrThrow()
+
+    val testregelIds: List<Int> = testregelDAO.getTestregelForKrav(kravId).map { it.id }
 
     val sideutvalIds = testresultat.map { it.sideutvalId }.distinct()
     val sideutvalIdUrlMap: Map<Int, URL> = sideutvalDAO.getSideutvalUrlMapKontroll(sideutvalIds)
 
-    val filterTestregelId = getTestregelIdFromSchema(testregelNoekkel.toString())
-
     return testresultat
-        .filter { filterByTestregel(it.testregelId, filterTestregelId) }
-        .filter { filterByLoeysing(it.loeysingId, loeysingId) }
+        .filter { filterByTestregel(it.testregelId, testregelIds) }
         .map {
           val testregel: Testregel = getTestregel(it.testregelId)
           val url = sideutvalIdUrlMap[it.sideutvalId]
@@ -103,11 +118,8 @@ class ResultatService(
     return true
   }
 
-  fun filterByTestregel(testregelId: Int, testregelIdFilter: Int?): Boolean {
-    if (testregelIdFilter != null) {
-      return testregelId == testregelIdFilter
-    }
-    return true
+  fun filterByTestregel(testregelId: Int, testregelIds: List<Int>): Boolean {
+    return testregelIds.contains(testregelId)
   }
 
   fun getTestregel(idTestregel: Int): Testregel {
@@ -238,12 +250,8 @@ class ResultatService(
   ): List<ResultatOversiktLoeysing>? {
     return resultatDAO
         .getResultatKontrollLoeysing(kontrollId, loeysingId)
-        ?.map {
-          it.copy(
-              krav = getKravFromTestregel(it.testregelId),
-              testar = getTestar(it.id, it.typeKontroll))
-        }
-        ?.groupBy { it.krav }
+        ?.map { krav -> mapKrav(krav) }
+        ?.groupBy { it.kravId }
         ?.map { (_, result) ->
           ResultatOversiktLoeysing(
               result.first().loeysingId,
@@ -251,18 +259,38 @@ class ResultatService(
               result.first().typeKontroll,
               result.map { it.testar }.flatten().distinct(),
               result.map { it.score }.average(),
-              result.first().krav ?: "",
+              result.first().kravId ?: 0,
+              result.first().kravTittel ?: "",
               result.map { it.talElementBrot }.sum(),
               result.map { it.talElementSamsvar }.sum())
         }
   }
 
-  fun getKravFromTestregel(testregelId: Int): String? {
-    val testregel: Testregel? = testregelDAO.getTestregel(testregelId)
-    if (testregel != null) {
-      return kravregisterClient.getWcagKrav(testregel.kravId).map { it.tittel }.getOrNull()
+  fun mapKrav(result: ResultatLoeysing): ResultatLoeysing {
+    val krav =
+        testregelDAO.getTestregel(result.testregelId)?.kravId?.let {
+          kravregisterClient.getWcagKrav(it).getOrNull()
+        }
+    return result.copy(
+        kravId = krav?.id,
+        kravTittel = krav?.tittel,
+        testar = getTestar(result.id, result.typeKontroll))
+  }
+
+  fun getResultatListKontroll(
+      kontrollId: Int,
+      loeysingId: Int,
+      kravid: Int
+  ): List<TestresultatDetaljert> {
+    val typeKontroll =
+        kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().kontrolltype
+    return when (typeKontroll) {
+      Kontroll.Kontrolltype.ForenklaKontroll.toString() ->
+          getResultatForAutomatiskMaaling(kontrollId, loeysingId, kravid)
+      Kontroll.Kontrolltype.InngaaendeKontroll.toString() ->
+          getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
+      else -> getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
     }
-    return null
   }
 
   class LoysingList(val loeysingar: Map<Int, Loeysing.Expanded>) {

@@ -221,4 +221,10 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getTestobjekt(): List<Testobjekt> =
       jdbcTemplate.query(
           "select * from testobjekt", DataClassRowMapper.newInstance(Testobjekt::class.java))
+
+  fun getTestregelForKrav(kravId: Int): List<Testregel> =
+      jdbcTemplate.query(
+          "select * from testregel where krav_id = :kravId",
+          mapOf("kravId" to kravId),
+          testregelRowMapper)
 }
