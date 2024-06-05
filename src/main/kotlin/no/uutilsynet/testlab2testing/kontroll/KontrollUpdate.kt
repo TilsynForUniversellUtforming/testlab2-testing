@@ -7,11 +7,14 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "kontrollSteg")
 @JsonSubTypes(
+    JsonSubTypes.Type(value = KontrollUpdate.Edit::class, name = "edit"),
     JsonSubTypes.Type(value = KontrollUpdate.Utval::class, name = "utval"),
     JsonSubTypes.Type(value = KontrollUpdate.Testreglar::class, name = "testreglar"),
     JsonSubTypes.Type(value = KontrollUpdate.Sideutval::class, name = "sideutval"))
 sealed class KontrollUpdate {
   abstract val kontroll: Kontroll
+
+  data class Edit(override val kontroll: Kontroll) : KontrollUpdate()
 
   data class Utval(override val kontroll: Kontroll, val utvalId: Int) : KontrollUpdate()
 
@@ -28,6 +31,7 @@ data class KontrollTestreglarUpdate(
 )
 
 enum class KontrollSteg {
+  @JsonProperty("edit") Edit,
   @JsonProperty("utval") Utval,
   @JsonProperty("testreglar") Testreglar,
   @JsonProperty("sideutval") Sideutval
