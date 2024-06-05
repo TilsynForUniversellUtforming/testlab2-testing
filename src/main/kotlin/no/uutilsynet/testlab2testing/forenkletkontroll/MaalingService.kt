@@ -7,9 +7,11 @@ import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters.Companion.validateParameters
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
+import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.springframework.stereotype.Service
@@ -133,13 +135,17 @@ class MaalingService(
             this.loeysingIdList
                 ?.let { idList -> loeysingsRegisterClient.getMany(idList) }
                 ?.getOrThrow()
-                ?: throw IllegalArgumentException("Måling må ha løysingar")
+                ?: emptyList<Loeysing>().also {
+                  logger.warn("Måling ${maaling.id} har ikkje løysingar")
+                }
 
         val testregelList =
             this.testregelIdList?.let { idList ->
               testregelDAO.getTestregelList().filter { idList.contains(it.id) }
             }
-                ?: throw IllegalArgumentException("Måling må ha testreglar")
+                ?: emptyList<Testregel>().also {
+                  logger.warn("Måling ${maaling.id} har ikkje testreglar")
+                }
 
         maaling.copy(
             navn = navn,
