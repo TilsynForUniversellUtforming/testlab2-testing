@@ -97,24 +97,18 @@ class TestgrunnlagKontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               rs.getInt("id")
             })
     if (result == null) {
-      throw IllegalArgumentException()
+      throw IllegalArgumentException("Testgrunnlag for kontroll finns ikkje")
     }
 
     result
   }
 
-  fun getTestgrunnlagForKontroll(kontrollId: Int, loeysingId: Int?): List<TestgrunnlagKontroll> {
-    logger.info("Henter testgrunnlag for sak $kontrollId og loeysing $loeysingId")
+  fun getTestgrunnlagForKontroll(kontrollId: Int): List<TestgrunnlagKontroll> {
+    logger.info("Henter testgrunnlag for sak $kontrollId")
     val testgrunnlagIds =
         jdbcTemplate.queryForList(
-            """
-          select t.id
-          from testgrunnlag t left join testgrunnlag_sideutval_kontroll tsk on t.id = tsk.testgrunnlag_id 
-          where t.kontroll_id = :kontrollId
-          and ${if (loeysingId != null) "loeysing_id = :loeysingId" else "true"}
-        """
-                .trimMargin(),
-            mapOf("kontrollId" to kontrollId, "loeysingId" to loeysingId),
+            "select t.id from testgrunnlag t where t.kontroll_id = :kontrollId",
+            mapOf("kontrollId" to kontrollId),
             Int::class.java)
     return testgrunnlagIds.map { id -> getTestgrunnlag(id).getOrThrow() }
   }
