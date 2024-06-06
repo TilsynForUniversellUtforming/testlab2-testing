@@ -28,7 +28,7 @@ class TestgrunnlagKontrollResource(val testgrunnlagDAO: TestgrunnlagKontrollDAO)
       @RequestParam kontrollId: Int,
       @RequestParam loeysingId: Int?
   ): ResponseEntity<List<TestgrunnlagKontroll>> {
-    return ResponseEntity.ok(testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId, loeysingId))
+    return ResponseEntity.ok(testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId))
   }
 
   @PostMapping
@@ -49,10 +49,10 @@ class TestgrunnlagKontrollResource(val testgrunnlagDAO: TestgrunnlagKontrollDAO)
   }
 
   @GetMapping("list/{kontrollId}")
-  fun listTestgrunnlagForSak(
+  fun listTestgrunnlagForKontroll(
       @PathVariable kontrollId: Int
   ): ResponseEntity<List<TestgrunnlagKontroll>> =
-      ResponseEntity.ok(testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId, null))
+      ResponseEntity.ok(testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId))
 
   @GetMapping("/{id}")
   fun getTestgrunnlag(@PathVariable id: Int): ResponseEntity<TestgrunnlagKontroll> {
