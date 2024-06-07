@@ -154,6 +154,9 @@ class KontrollResource(
       runCatching {
             require(updateBody.kontroll.id == id) { "id i URL-en og id er ikkje den same" }
             when (updateBody) {
+              is KontrollUpdate.Edit -> {
+                kontrollDAO.updateKontroll(updateBody.kontroll)
+              }
               is KontrollUpdate.Utval -> {
                 val (kontroll, utvalId) = updateBody
                 kontrollDAO.updateKontroll(kontroll, utvalId).getOrThrow()
