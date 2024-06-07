@@ -167,6 +167,28 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   @Transactional
+  fun updateKontroll(
+      kontroll: Kontroll,
+  ): Result<Unit> = runCatching {
+    jdbcTemplate.update(
+        """
+              update kontroll
+              set tittel = :tittel,
+                  saksbehandler = :saksbehandler,
+                  sakstype = :sakstype,
+                  arkivreferanse = :arkivreferanse
+              where kontroll.id = :kontrollId
+            """
+            .trimIndent(),
+        mapOf(
+            "tittel" to kontroll.tittel,
+            "saksbehandler" to kontroll.saksbehandler,
+            "sakstype" to kontroll.sakstype.name,
+            "arkivreferanse" to kontroll.arkivreferanse,
+            "kontrollId" to kontroll.id))
+  }
+
+  @Transactional
   fun updateKontroll(kontroll: Kontroll, utvalId: Int): Result<Unit> {
     return runCatching {
       jdbcTemplate.update(
