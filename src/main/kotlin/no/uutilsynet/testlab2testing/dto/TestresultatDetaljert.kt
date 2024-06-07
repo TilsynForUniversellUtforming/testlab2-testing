@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.dto
 import java.net.URL
 import java.time.LocalDateTime
 import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 
 data class TestresultatDetaljert(
     val resultatId: Int?, // databaseId
@@ -18,6 +19,7 @@ data class TestresultatDetaljert(
     val elementOmtale: ElementOmtale?,
     val brukarId: Brukar?,
     val kommentar: String? = "",
+    val bilde: List<Bilde>?
 ) {
 
   data class ElementOmtale(val htmlCode: String?, val pointer: String?, val description: String?)

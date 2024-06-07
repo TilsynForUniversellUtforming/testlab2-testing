@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.*
+import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
@@ -31,6 +32,7 @@ class ResultatService(
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val kontrollDAO: KontrollDAO,
     val testgrunnlagDao: TestgrunnlagKontrollDAO,
+    val bildeService: BildeService
 ) {
 
   fun getResultatForAutomatiskMaaling(
@@ -63,6 +65,8 @@ class ResultatService(
                 it.elementUtfall,
                 it.elementResultat,
                 it.elementOmtale,
+                null,
+                null,
                 null)
           }
     }
@@ -107,7 +111,10 @@ class ResultatService(
               it.elementResultat,
               TestresultatDetaljert.ElementOmtale(
                   htmlCode = null, pointer = null, description = it.elementOmtale),
-              it.brukar)
+              it.brukar,
+              it.kommentar,
+                bildeService.getBildeListForTestresultat(it.id).getOrNull()
+              )
         }
   }
 
@@ -209,24 +216,30 @@ class ResultatService(
   }
 
   fun progresjonPrLoeysing(
-      testgrunnlagId: Int,
+      kontrollId: Int,
       kontrolltype: Kontroll.Kontrolltype,
       loeysingar: LoysingList
   ): Map<Int, Int> {
     if (kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
       return loeysingar.loeysingar.keys.associateWith { 100 }
     }
+
+      val testgrunnlagId = testgrunnlagDao.getTestgrunnlagForKontroll(kontrollId,null).first { it.type == TestgrunnlagType.OPPRINNELEG_TEST }.id
+
     val resultatPrSak = testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
-    return resultatPrSak
+    val progresjon = resultatPrSak
         .groupBy { it.loeysingId }
         .entries
         .map { (loeysingId, result) -> Pair(loeysingId, percentageFerdig(result)) }
         .associateBy({ it.first }, { it.second })
+
+      return progresjon
   }
 
   private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =
-      (result.map { it.status }.count { it == ResultatManuellKontroll.Status.Ferdig } / result.size)
-          .times(100)
+      (result.map { it.status }.count { it == ResultatManuellKontroll.Status.Ferdig }.toDouble() / result.size)
+          .times(100).toInt()
+
 
   private fun getLoeysingMap(result: List<ResultatLoeysing>): Result<LoysingList> {
     return loeysingsRegisterClient.getManyExpanded(result.map { it.loeysingId }).mapCatching {
@@ -248,14 +261,17 @@ class ResultatService(
       kontrollId: Int,
       loeysingId: Int
   ): List<ResultatOversiktLoeysing>? {
-    return resultatDAO
+
+
+      return resultatDAO
         .getResultatKontrollLoeysing(kontrollId, loeysingId)
         ?.map { krav -> mapKrav(krav) }
         ?.groupBy { it.kravId }
         ?.map { (_, result) ->
+            val loeysingar = getLoeysingMap(result).getOrThrow()
           ResultatOversiktLoeysing(
               result.first().loeysingId,
-              result.first().namn,
+              loeysingar.getNamn(result.first().loeysingId),
               result.first().typeKontroll,
               result.map { it.testar }.flatten().distinct(),
               result.map { it.score }.average(),
