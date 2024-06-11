@@ -18,24 +18,6 @@ class ResultatResource(
 
   private val logger = LoggerFactory.getLogger(ResultatResource::class.java)
 
-  //  @GetMapping
-  //  fun getResultatList(
-  //      @RequestParam testgrunnlagId: Int?,
-  //      @RequestParam maalingId: Int?,
-  //      @RequestParam loeysingId: Int?,
-  //      @RequestParam testregelNoekkel: String?
-  //  ): List<TestresultatDetaljert> {
-  //    logger.debug("Henter resultat for testgrunnlagId: $testgrunnlagId, maalingId: $maalingId")
-  //    if (testgrunnlagId != null) {
-  //      return resultatService.getResulatForManuellKontroll(
-  //          testgrunnlagId, testregelNoekkel, loeysingId)
-  //    }
-  //    if (maalingId != null) {
-  //      return resultatService.getResultatForAutomatiskMaaling(maalingId, loeysingId)
-  //    }
-  //    return emptyList()
-  //  }
-
   @GetMapping("/kontroll/{kontrollId}/{loeysingId}/{kravId}")
   fun getResultatListKontroll(
       @PathVariable kontrollId: Int,

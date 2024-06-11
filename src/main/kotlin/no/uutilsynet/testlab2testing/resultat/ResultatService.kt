@@ -113,8 +113,7 @@ class ResultatService(
                   htmlCode = null, pointer = null, description = it.elementOmtale),
               it.brukar,
               it.kommentar,
-                bildeService.getBildeListForTestresultat(it.id).getOrNull()
-              )
+              bildeService.getBildeListForTestresultat(it.id).getOrNull())
         }
   }
 
@@ -224,22 +223,28 @@ class ResultatService(
       return loeysingar.loeysingar.keys.associateWith { 100 }
     }
 
-      val testgrunnlagId = testgrunnlagDao.getTestgrunnlagForKontroll(kontrollId,null).first { it.type == TestgrunnlagType.OPPRINNELEG_TEST }.id
+    val testgrunnlagId =
+        testgrunnlagDao
+            .getTestgrunnlagForKontroll(kontrollId, null)
+            .first { it.type == TestgrunnlagType.OPPRINNELEG_TEST }
+            .id
 
     val resultatPrSak = testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
-    val progresjon = resultatPrSak
-        .groupBy { it.loeysingId }
-        .entries
-        .map { (loeysingId, result) -> Pair(loeysingId, percentageFerdig(result)) }
-        .associateBy({ it.first }, { it.second })
+    val progresjon =
+        resultatPrSak
+            .groupBy { it.loeysingId }
+            .entries
+            .map { (loeysingId, result) -> Pair(loeysingId, percentageFerdig(result)) }
+            .associateBy({ it.first }, { it.second })
 
-      return progresjon
+    return progresjon
   }
 
   private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =
-      (result.map { it.status }.count { it == ResultatManuellKontroll.Status.Ferdig }.toDouble() / result.size)
-          .times(100).toInt()
-
+      (result.map { it.status }.count { it == ResultatManuellKontroll.Status.Ferdig }.toDouble() /
+              result.size)
+          .times(100)
+          .toInt()
 
   private fun getLoeysingMap(result: List<ResultatLoeysing>): Result<LoysingList> {
     return loeysingsRegisterClient.getManyExpanded(result.map { it.loeysingId }).mapCatching {
@@ -262,17 +267,17 @@ class ResultatService(
       loeysingId: Int
   ): List<ResultatOversiktLoeysing>? {
 
-
-      return resultatDAO
+    return resultatDAO
         .getResultatKontrollLoeysing(kontrollId, loeysingId)
         ?.map { krav -> mapKrav(krav) }
         ?.groupBy { it.kravId }
         ?.map { (_, result) ->
-            val loeysingar = getLoeysingMap(result).getOrThrow()
+          val loeysingar = getLoeysingMap(result).getOrThrow()
           ResultatOversiktLoeysing(
               result.first().loeysingId,
               loeysingar.getNamn(result.first().loeysingId),
               result.first().typeKontroll,
+              result.first().namn,
               result.map { it.testar }.flatten().distinct(),
               result.map { it.score }.average(),
               result.first().kravId ?: 0,
