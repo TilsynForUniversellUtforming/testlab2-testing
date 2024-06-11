@@ -45,6 +45,7 @@ data class ResultatOversiktLoeysing(
     val loeysingId: Int,
     val loeysingNamn: String,
     val typeKontroll: Kontroll.Kontrolltype,
+    val kontrollNamn: String,
     val testar: List<String>,
     val score: Double,
     val krav: Int,
