@@ -104,7 +104,9 @@ class TestgrunnlagDAOTest(
 
     assertThat(testgrunnlagDAO.getTestgrunnlag(id.getOrThrow()).isFailure).isTrue()
 
-    assertThat(testgrunnlagDAO.getTestgrunnlagForKontroll(testKontroll!!.id).isEmpty())
+    assertThat(
+        listOf(testgrunnlagDAO.getTestgrunnlagForKontroll(testKontroll!!.id).opprinneligTest)
+            .isEmpty())
   }
 
   private fun opprettTestsak(): KontrollDAO.KontrollDB {

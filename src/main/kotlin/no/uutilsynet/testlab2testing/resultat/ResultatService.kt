@@ -7,7 +7,6 @@ import java.time.ZoneId
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.*
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
@@ -35,7 +34,7 @@ class ResultatService(
     val bildeService: BildeService
 ) {
 
-  fun getResultatForAutomatiskMaaling(
+  fun getResultatForAutomatiskKontroll(
       kontrollId: Int,
       loeysingId: Int,
       kravId: Int
@@ -78,11 +77,7 @@ class ResultatService(
       loeysingId: Int,
       kravId: Int
   ): List<TestresultatDetaljert> {
-    val testgrunnlag =
-        testgrunnlagDao
-            .getTestgrunnlagForKontroll(kontrollId)
-            .filter { it.type == TestgrunnlagType.OPPRINNELEG_TEST }
-            .first()
+    val testgrunnlag = testgrunnlagDao.getTestgrunnlagForKontroll(kontrollId).opprinneligTest
     val testresultat = testResultatDAO.getManyResults(testgrunnlag.id).getOrThrow()
 
     val testregelIds: List<Int> = testregelDAO.getTestregelForKrav(kravId).map { it.id }
@@ -223,11 +218,7 @@ class ResultatService(
       return loeysingar.loeysingar.keys.associateWith { 100 }
     }
 
-    val testgrunnlagId =
-        testgrunnlagDao
-            .getTestgrunnlagForKontroll(kontrollId)
-            .first { it.type == TestgrunnlagType.OPPRINNELEG_TEST }
-            .id
+    val testgrunnlagId = testgrunnlagDao.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
 
     val resultatPrSak = testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
     val progresjon =
@@ -306,9 +297,9 @@ class ResultatService(
     val typeKontroll =
         kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().kontrolltype
     return when (typeKontroll) {
-      Kontroll.Kontrolltype.ForenklaKontroll.toString() ->
-          getResultatForAutomatiskMaaling(kontrollId, loeysingId, kravid)
-      Kontroll.Kontrolltype.InngaaendeKontroll.toString() ->
+      Kontroll.Kontrolltype.ForenklaKontroll ->
+          getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
+      Kontroll.Kontrolltype.InngaaendeKontroll ->
           getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
       else -> getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
     }
