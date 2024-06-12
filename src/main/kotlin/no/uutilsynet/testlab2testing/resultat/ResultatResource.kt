@@ -58,4 +58,17 @@ class ResultatResource(
   fun getListTest(type: Kontroll.Kontrolltype?): ResponseEntity<List<Resultat>> {
     return ResponseEntity.ok(resultatService.getResultatList(type))
   }
+
+  @GetMapping("/kontroll/{id}")
+  fun getResultatKontrolll(@PathVariable id: Int): ResponseEntity<List<Resultat>> {
+    return ResponseEntity.ok(resultatService.getKontrollResultat(id))
+  }
+
+  @GetMapping("/kontroll/{kontrollId}/{loeysingId}")
+  fun getResultatKontrollLoeysing(
+      @PathVariable kontrollId: Int,
+      @PathVariable loeysingId: Int
+  ): ResponseEntity<List<ResultatOversiktLoeysing>> {
+    return ResponseEntity.ok(resultatService.getKontrollLoeysingResultat(kontrollId, loeysingId))
+  }
 }
