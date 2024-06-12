@@ -48,8 +48,8 @@ data class ResultatOversiktLoeysing(
     val kontrollNamn: String,
     val testar: List<String>,
     val score: Double,
-    val krav: Int,
-    val kravTittel: String?,
+    val kravId: Int,
+    val kravTittel: String,
     val talElementBrot: Int,
     val talElementSamsvar: Int,
 )
