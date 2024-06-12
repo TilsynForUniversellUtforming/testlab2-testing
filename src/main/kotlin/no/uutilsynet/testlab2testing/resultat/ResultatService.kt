@@ -80,7 +80,7 @@ class ResultatService(
   ): List<TestresultatDetaljert> {
     val testgrunnlag =
         testgrunnlagDao
-            .getTestgrunnlagForKontroll(kontrollId, loeysingId)
+            .getTestgrunnlagForKontroll(kontrollId)
             .filter { it.type == TestgrunnlagType.OPPRINNELEG_TEST }
             .first()
     val testresultat = testResultatDAO.getManyResults(testgrunnlag.id).getOrThrow()
@@ -225,7 +225,7 @@ class ResultatService(
 
     val testgrunnlagId =
         testgrunnlagDao
-            .getTestgrunnlagForKontroll(kontrollId, null)
+            .getTestgrunnlagForKontroll(kontrollId)
             .first { it.type == TestgrunnlagType.OPPRINNELEG_TEST }
             .id
 
