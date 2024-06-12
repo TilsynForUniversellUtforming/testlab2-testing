@@ -444,16 +444,16 @@ class AggregeringService(
 
     if (ikkjeForekomst) {
       return ResultatPerTestregelPerSide(
-          brotprosentTrSide = 0f, samsvarsprosentTrSide = 0f, ikkjeForekomst = true)
+          brotprosentTrSide = 0.0, samsvarsprosentTrSide = 0.0, ikkjeForekomst = true)
     }
 
     return ResultatPerTestregelPerSide(
         brotprosentTrSide =
-            (talElementUtfall.talBrot.toFloat() /
-                (talElementUtfall.talBrot + talElementUtfall.talSamsvar).toFloat()),
+            (talElementUtfall.talBrot.toDouble() /
+                (talElementUtfall.talBrot + talElementUtfall.talSamsvar).toDouble()),
         samsvarsprosentTrSide =
-            (talElementUtfall.talSamsvar.toFloat() /
-                (talElementUtfall.talBrot + talElementUtfall.talSamsvar).toFloat()),
+            (talElementUtfall.talSamsvar.toDouble() /
+                (talElementUtfall.talBrot + talElementUtfall.talSamsvar).toDouble()),
         ikkjeForekomst = false)
   }
 
@@ -485,13 +485,13 @@ class AggregeringService(
       resultatPerTestregelPerSide: List<ResultatPerTestregelPerSide>
   ): GjennomsnittTestresultat {
     var talSiderMedForekomst: Int = 0
-    var summertBrotprosent: Float = 0f
-    var summertSamsvarprosent: Float = 0f
+    var summertBrotprosent = 0.0
+    var summertSamsvarprosent = 0.0
 
     resultatPerTestregelPerSide.forEach {
       summertBrotprosent += addIfNotIkkjeForekomst(it.brotprosentTrSide, it.ikkjeForekomst)
       summertSamsvarprosent += addIfNotIkkjeForekomst(it.samsvarsprosentTrSide, it.ikkjeForekomst)
-      talSiderMedForekomst += addIfNotIkkjeForekomst(1f, it.ikkjeForekomst).toInt()
+      talSiderMedForekomst += addIfNotIkkjeForekomst(1.0, it.ikkjeForekomst).toInt()
     }
     val testregelGjennomsnittlegSideBrot =
         (summertBrotprosent / talSiderMedForekomst).takeUnless { it.isNaN() }
@@ -502,8 +502,8 @@ class AggregeringService(
         testregelGjennomsnittlegSideSamsvar, testregelGjennomsnittlegSideBrot)
   }
 
-  private fun addIfNotIkkjeForekomst(value: Float, ikkjeForekomst: Boolean): Float {
-    return if (!ikkjeForekomst) value else 0f
+  private fun addIfNotIkkjeForekomst(value: Double, ikkjeForekomst: Boolean): Double {
+    return value.takeIf { !ikkjeForekomst } ?: 0.0
   }
 
   private fun createAggregeringPerSuksesskriteriumDTO(
@@ -549,7 +549,7 @@ class AggregeringService(
           testresultat.first().loeysingId,
           sideUrl,
           sideUrl.path.split("/").size,
-          0.0f,
+          0.0,
           testresultat.count { it.elementResultat == TestresultatUtfall.samsvar },
           testresultat.count { it.elementResultat == TestresultatUtfall.brot },
           0,
@@ -610,12 +610,12 @@ class AggregeringService(
 }
 
 data class GjennomsnittTestresultat(
-    val testregelGjennomsnittlegSideSamsvarProsent: Float?,
-    val testregelGjennomsnittlegSideBrotProsent: Float?
+    val testregelGjennomsnittlegSideSamsvarProsent: Double?,
+    val testregelGjennomsnittlegSideBrotProsent: Double?
 )
 
 data class ResultatPerTestregelPerSide(
-    val brotprosentTrSide: Float,
-    val samsvarsprosentTrSide: Float,
+    val brotprosentTrSide: Double,
+    val samsvarsprosentTrSide: Double,
     val ikkjeForekomst: Boolean
 )

@@ -27,6 +27,7 @@ import no.uutilsynet.testlab2testing.testregel.TestregelModus
 import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.data.Offset
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -177,8 +178,8 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
             talSiderSamsvar = 1,
             talSiderBrot = 1,
             talSiderIkkjeForekomst = 1,
-            testregelGjennomsnittlegSideSamsvarProsent = 1.0f,
-            testregelGjennomsnittlegSideBrotProsent = 1.0f)
+            testregelGjennomsnittlegSideSamsvarProsent = 1.0,
+            testregelGjennomsnittlegSideBrotProsent = 1.0)
 
     return aggregeringTestregel
   }
@@ -272,7 +273,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     assertThat(
             gjennomsnittTestresultat.testregelGjennomsnittlegSideSamsvarProsent!! +
                 gjennomsnittTestresultat.testregelGjennomsnittlegSideBrotProsent!!)
-        .isEqualTo(1f)
+        .isCloseTo(1.0, Offset.offset(0.00001))
   }
 
   @Test
@@ -283,10 +284,11 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
         .groupBy { it.sideutvalId }
         .forEach {
           val result = aggregeringService.processPrSideutval(testresultat)
-          assertThat(result.brotprosentTrSide + result.samsvarsprosentTrSide).isEqualTo(1f)
+          assertThat(result.brotprosentTrSide + result.samsvarsprosentTrSide)
+              .isCloseTo(1.0, Offset.offset(0.00001))
           if (result.ikkjeForekomst) {
-            assertThat(result.brotprosentTrSide).isEqualTo(0f)
-            assertThat(result.samsvarsprosentTrSide).isEqualTo(0f)
+            assertThat(result.brotprosentTrSide).isCloseTo(0.0, Offset.offset(0.00001))
+            assertThat(result.samsvarsprosentTrSide).isCloseTo(0.0, Offset.offset(0.00001))
           }
         }
   }

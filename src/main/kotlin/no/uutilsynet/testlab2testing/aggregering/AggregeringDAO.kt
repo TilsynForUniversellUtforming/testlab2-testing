@@ -76,7 +76,11 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return jdbcTemplate.update(sql, parameterSource)
   }
 
-  fun floatNullVedIkkjeForekomst(value: Float, talElementSamsvar: Int, talElemenBrot: Int): Float? {
+  fun floatNullVedIkkjeForekomst(
+      value: Double,
+      talElementSamsvar: Int,
+      talElemenBrot: Int
+  ): Double? {
     if (talElemenBrot == 0 && talElementSamsvar == 0) {
       return null
     }
@@ -285,12 +289,12 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         talSiderIkkjeForekomst = rs.getInt("tal_sider_ikkje_forekomst"),
         testregelGjennomsnittlegSideBrotProsent =
             floatNullVedIkkjeForekomst(
-                rs.getFloat("testregel_gjennomsnittleg_side_brot_prosent"),
+                rs.getDouble("testregel_gjennomsnittleg_side_brot_prosent"),
                 talElementSamsvar,
                 talElemenBrot),
         testregelGjennomsnittlegSideSamsvarProsent =
             floatNullVedIkkjeForekomst(
-                rs.getFloat("testregel_gjennomsnittleg_side_samsvar_prosent"),
+                rs.getDouble("testregel_gjennomsnittleg_side_samsvar_prosent"),
                 talElementSamsvar,
                 talElemenBrot),
         testgrunnlagId = rs.getInt("testgrunnlag_id"))
@@ -307,7 +311,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         sideNivaa = rs.getInt("side_nivaa"),
         gjennomsnittligBruddProsentTR =
             floatNullVedIkkjeForekomst(
-                rs.getFloat("gjennomsnittlig_brudd_prosent_tr"), talElementSamsvar, talElemenBrot),
+                rs.getDouble("gjennomsnittlig_brudd_prosent_tr"), talElementSamsvar, talElemenBrot),
         talElementSamsvar = rs.getInt("tal_element_samsvar"),
         talElementBrot = rs.getInt("tal_element_brot"),
         talElementVarsel = rs.getInt("tal_element_varsel"),
