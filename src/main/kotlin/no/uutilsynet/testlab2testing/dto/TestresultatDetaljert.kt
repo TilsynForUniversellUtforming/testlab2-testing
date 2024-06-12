@@ -19,7 +19,7 @@ data class TestresultatDetaljert(
     val elementOmtale: ElementOmtale?,
     val brukarId: Brukar?,
     val kommentar: String? = "",
-    val bilde: List<Bilde>?
+    val bilder: List<Bilde>?
 ) {
 
   data class ElementOmtale(val htmlCode: String?, val pointer: String?, val description: String?)
