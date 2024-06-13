@@ -78,4 +78,14 @@ class ResultatResource(
   ): List<TestresultatDetaljert> {
     return resultatService.getResultatListKontroll(kontrollId, loeysingId, kravId)
   }
+
+  @GetMapping("/tema")
+  fun getResultatPrTema(): List<ResultatTema> {
+    return resultatService.getResultatPrTema(null)
+  }
+
+  @GetMapping("/tema/kontroll/{kontrollId}")
+  fun getResultatPrTema(@PathVariable kontrollId: Int): List<ResultatTema> {
+    return resultatService.getResultatPrTema(kontrollId)
+  }
 }

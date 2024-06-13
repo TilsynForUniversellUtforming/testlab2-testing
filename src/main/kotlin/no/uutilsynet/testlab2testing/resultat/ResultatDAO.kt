@@ -143,4 +143,62 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           resultatLoeysingRowmapper(rs)
         }
   }
+
+  fun getResultatPrTema(): List<ResultatTema> {
+    val query =
+        """
+            select ta.tema, sum(tal_element_samsvar) as tal_element_samsvar,sum(tal_element_brot) as tal_element_brot,sum(tal_element_varsel) as tal_element_varsel,sum(tal_element_ikkje_forekomst) as tal_element_ikkje_forekomst, avg(testregel_gjennomsnittleg_side_samsvar_prosent ) as score
+            from testlab2_testing.aggregering_testregel at
+            left join testlab2_testing.testregel t on t.id=at.testregel_id
+            left join testlab2_testing.tema ta on t.tema=ta.id
+			group by ta.tema
+        """
+            .trimIndent()
+
+    return jdbcTemplate.query(query) { rs, _ -> resultatTemaRowmapper(rs) }
+  }
+
+  fun getResultatPrTema(kontrollId: Int): List<ResultatTema> {
+    val query =
+        """
+            select tema, sum(tal_element_samsvar) as tal_element_samsvar,sum(tal_element_brot) as tal_element_brot,sum(tal_element_varsel) as tal_element_varsel,sum(tal_element_ikkje_forekomst) as tal_element_ikkje_forekomst, avg(testregel_gjennomsnittleg_side_samsvar_prosent ) as score
+        from kontroll k
+        join (
+        select tm.tema,loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot,tal_element_varsel,tal_element_ikkje_forekomst,
+		case 
+			when maaling_id is not null
+				then m.kontrollid
+				else t.kontroll_id 
+			end as kontroll_id
+		from aggregering_testregel agt
+		left join maalingv1 m on m.id=agt.maaling_id
+		left join testgrunnlag t on t.id=agt.testgrunnlag_id
+		left join testregel tr on tr.id=agt.testregel_id
+		left join tema tm on tm.id=tr.tema
+		where case 
+			when maaling_id is not null
+				then m.kontrollid
+				else t.kontroll_id 
+			end is not null
+		) as ag 
+        on k.id=ag.kontroll_id
+		where k.id=58
+		group by tema
+        """
+
+    return jdbcTemplate.query(query) { rs, _ -> resultatTemaRowmapper(rs) }
+  }
+
+  private fun resultatTemaRowmapper(rs: ResultSet) =
+      ResultatTema(
+          rs.getString("tema") ?: "Null",
+          rs.getInt("score").toInt(),
+          rs.getInt("tal_element_samsvar") +
+              rs.getInt("tal_element_brot") +
+              rs.getInt("tal_element_varsel") +
+              rs.getInt("tal_element_ikkje_forekomst"),
+          rs.getInt("tal_element_samsvar"),
+          rs.getInt("tal_element_brot"),
+          rs.getInt("tal_element_varsel"),
+          rs.getInt("tal_element_ikkje_forekomst"))
 }

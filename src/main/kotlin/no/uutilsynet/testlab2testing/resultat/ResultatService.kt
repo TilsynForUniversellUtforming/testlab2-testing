@@ -337,6 +337,14 @@ class ResultatService(
     }
   }
 
+  fun getResultatPrTema(kontrollId: Int?): List<ResultatTema> {
+    return if (kontrollId == null) {
+      resultatDAO.getResultatPrTema()
+    } else {
+      resultatDAO.getResultatPrTema(kontrollId)
+    }
+  }
+
   class LoysingList(val loeysingar: Map<Int, Loeysing.Expanded>) {
     fun getNamn(loeysingId: Int): String {
       val loeysing = loeysingar[loeysingId]
