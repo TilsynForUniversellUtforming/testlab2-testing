@@ -4,6 +4,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagServiceKontroll
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestStatus
 import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
@@ -56,8 +57,7 @@ class KontrollResource(
                       loeysingsRegisterClient.getMany(loeysingIdList).getOrThrow()
                     }
                     ?.map { it.orgnummer }
-                    ?.distinct()
-                    ?: emptyList()
+                    ?.distinct() ?: emptyList()
 
             KontrollListItem(
                 kontrollDB.id,
@@ -153,6 +153,13 @@ class KontrollResource(
   ): ResponseEntity<Unit> =
       runCatching {
             require(updateBody.kontroll.id == id) { "id i URL-en og id er ikkje den same" }
+            val hasTestresultat = testgrunnlagServiceKontroll.kontrollHasTestresultat(id)
+
+            if (hasTestresultat && updateBody !is KontrollUpdate.Edit) {
+              logger.error("test er allereie starta for kontroll: ${id}")
+              throw IllegalArgumentException("Test er allereie starta")
+            }
+
             when (updateBody) {
               is KontrollUpdate.Edit -> {
                 kontrollDAO.updateKontroll(updateBody.kontroll)
@@ -200,6 +207,14 @@ class KontrollResource(
             logger.error("Feila ved henting av sideutvaltyper", it)
             ResponseEntity.internalServerError().body(it.message)
           }
+
+  @GetMapping("/test-status/{kontrollId}")
+  fun getTestStatus(
+      @PathVariable kontrollId: Int,
+  ): ResponseEntity<TestStatus> {
+    val hasTestresultat = testgrunnlagServiceKontroll.kontrollHasTestresultat(kontrollId)
+    return ResponseEntity.ok(if (hasTestresultat) TestStatus.Started else TestStatus.Pending)
+  }
 
   private fun location(id: Int) =
       ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()

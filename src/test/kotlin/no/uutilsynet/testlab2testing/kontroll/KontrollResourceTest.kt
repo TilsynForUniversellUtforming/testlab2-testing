@@ -7,6 +7,7 @@ import io.restassured.parsing.Parser
 import io.restassured.path.json.JsonPath
 import io.restassured.path.json.JsonPath.from
 import java.net.URI
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestStatus
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalResource
@@ -392,5 +393,28 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
       assertThat(url).isEqualTo(URI("https://www.uutilsynet.no"))
       assertThat(egendefinertType).isNull()
     }
+  }
+
+  @Test
+  @DisplayName("en kontroll som ikke er startet skal gi riktig test-status")
+  fun getKontrollStatus() {
+    val body = kontrollInitBody
+    val location =
+        given()
+            .port(port)
+            .body(body)
+            .contentType("application/json")
+            .post("/kontroller")
+            .then()
+            .statusCode(equalTo(201))
+            .extract()
+            .header("Location")
+
+    val opprettetKontroll = get(location).`as`(Kontroll::class.java)
+    val id = opprettetKontroll.id
+
+    val status =
+        get(location.replace(id.toString(), "test-status/$id")).`as`(TestStatus::class.java)
+    assertThat(status).isEqualTo(TestStatus.Pending)
   }
 }
