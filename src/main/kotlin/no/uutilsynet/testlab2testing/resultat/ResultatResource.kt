@@ -18,24 +18,6 @@ class ResultatResource(
 
   private val logger = LoggerFactory.getLogger(ResultatResource::class.java)
 
-  @GetMapping
-  fun getResultatList(
-      @RequestParam testgrunnlagId: Int?,
-      @RequestParam maalingId: Int?,
-      @RequestParam loeysingId: Int?,
-      @RequestParam testregelNoekkel: String?
-  ): List<TestresultatDetaljert> {
-    logger.debug("Henter resultat for testgrunnlagId: $testgrunnlagId, maalingId: $maalingId")
-    if (testgrunnlagId != null) {
-      return resultatService.getResulatForManuellKontroll(
-          testgrunnlagId, testregelNoekkel, loeysingId)
-    }
-    if (maalingId != null) {
-      return resultatService.getResultatForAutomatiskMaaling(maalingId, loeysingId)
-    }
-    return emptyList()
-  }
-
   @PostMapping("/aggregert/{testgrunnlagId}")
   fun createAggregertResultat(@PathVariable testgrunnlagId: Int): ResponseEntity<Any> =
       aggregeringService
@@ -64,11 +46,20 @@ class ResultatResource(
     return ResponseEntity.ok(resultatService.getKontrollResultat(id))
   }
 
-  @GetMapping("/kontroll/{kontrollId}/{loeysingId}")
+  @GetMapping("/kontroll/{kontrollId}/loeysing/{loeysingId}")
   fun getResultatKontrollLoeysing(
       @PathVariable kontrollId: Int,
       @PathVariable loeysingId: Int
   ): ResponseEntity<List<ResultatOversiktLoeysing>> {
     return ResponseEntity.ok(resultatService.getKontrollLoeysingResultat(kontrollId, loeysingId))
+  }
+
+  @GetMapping("/kontroll/{kontrollId}/loeysing/{loeysingId}/krav/{kravId}")
+  fun getResultatListKontroll(
+      @PathVariable kontrollId: Int,
+      @PathVariable loeysingId: Int,
+      @PathVariable kravId: Int
+  ): List<TestresultatDetaljert> {
+    return resultatService.getResultatListKontroll(kontrollId, loeysingId, kravId)
   }
 }

@@ -103,14 +103,18 @@ class TestgrunnlagKontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     result
   }
 
-  fun getTestgrunnlagForKontroll(kontrollId: Int): List<TestgrunnlagKontroll> {
+  fun getTestgrunnlagForKontroll(kontrollId: Int): TestgrunnlagList {
     logger.info("Henter testgrunnlag for sak $kontrollId")
     val testgrunnlagIds =
         jdbcTemplate.queryForList(
             "select t.id from testgrunnlag t where t.kontroll_id = :kontrollId",
             mapOf("kontrollId" to kontrollId),
             Int::class.java)
-    return testgrunnlagIds.map { id -> getTestgrunnlag(id).getOrThrow() }
+    val testgrunnlag =
+        testgrunnlagIds.map { id -> getTestgrunnlag(id).getOrThrow() }.groupBy { it.type }
+    return TestgrunnlagList(
+        testgrunnlag[TestgrunnlagType.OPPRINNELEG_TEST]?.firstOrNull()!!,
+        testgrunnlag[TestgrunnlagType.RETEST]?.toList() ?: emptyList())
   }
 
   @Transactional

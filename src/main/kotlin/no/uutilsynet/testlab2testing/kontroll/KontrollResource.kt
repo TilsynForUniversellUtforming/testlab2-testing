@@ -65,7 +65,7 @@ class KontrollResource(
                 kontrollDB.saksbehandler,
                 Kontroll.Sakstype.valueOf(kontrollDB.sakstype),
                 kontrollDB.arkivreferanse,
-                Kontroll.Kontrolltype.valueOf(kontrollDB.kontrolltype),
+                kontrollDB.kontrolltype,
                 virksomheter)
           }
         }
@@ -114,7 +114,7 @@ class KontrollResource(
 
     Kontroll(
         kontrollDB.id,
-        Kontroll.Kontrolltype.valueOf(kontrollDB.kontrolltype),
+        kontrollDB.kontrolltype,
         kontrollDB.tittel,
         kontrollDB.saksbehandler,
         Kontroll.Sakstype.valueOf(kontrollDB.sakstype),

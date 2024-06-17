@@ -36,7 +36,8 @@ data class ResultatLoeysing(
     val talElementSamsvar: Int,
     val talElementBrot: Int,
     val testregelId: Int,
-    val krav: String?
+    val kravId: Int?,
+    val kravTittel: String?,
 )
 
 /** Uttrekk resultat per løysing */
@@ -44,9 +45,11 @@ data class ResultatOversiktLoeysing(
     val loeysingId: Int,
     val loeysingNamn: String,
     val typeKontroll: Kontroll.Kontrolltype,
+    val kontrollNamn: String,
     val testar: List<String>,
     val score: Double,
-    val krav: String,
+    val kravId: Int,
+    val kravTittel: String,
     val talElementBrot: Int,
     val talElementSamsvar: Int,
 )

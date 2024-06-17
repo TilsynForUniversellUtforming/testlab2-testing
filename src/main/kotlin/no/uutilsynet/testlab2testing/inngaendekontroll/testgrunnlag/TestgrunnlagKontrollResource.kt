@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagList
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -28,7 +29,7 @@ class TestgrunnlagKontrollResource(val testgrunnlagDAO: TestgrunnlagKontrollDAO)
       @RequestParam kontrollId: Int,
       @RequestParam loeysingId: Int?
   ): ResponseEntity<List<TestgrunnlagKontroll>> {
-    return ResponseEntity.ok(testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId))
+    return ResponseEntity.ok(testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).toList())
   }
 
   @PostMapping
@@ -52,7 +53,7 @@ class TestgrunnlagKontrollResource(val testgrunnlagDAO: TestgrunnlagKontrollDAO)
   fun listTestgrunnlagForKontroll(
       @PathVariable kontrollId: Int
   ): ResponseEntity<List<TestgrunnlagKontroll>> =
-      ResponseEntity.ok(testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId))
+      ResponseEntity.ok(testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).toList())
 
   @GetMapping("/{id}")
   fun getTestgrunnlag(@PathVariable id: Int): ResponseEntity<TestgrunnlagKontroll> {
@@ -89,4 +90,8 @@ class TestgrunnlagKontrollResource(val testgrunnlagDAO: TestgrunnlagKontrollDAO)
 
   private fun location(id: Int) =
       ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
+
+  fun TestgrunnlagList.toList(): List<TestgrunnlagKontroll> {
+    return listOf<TestgrunnlagKontroll>(this.opprinneligTest) + this.restestar
+  }
 }
