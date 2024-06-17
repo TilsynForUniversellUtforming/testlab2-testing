@@ -18,6 +18,22 @@ class ResultatResource(
 
   private val logger = LoggerFactory.getLogger(ResultatResource::class.java)
 
+  @GetMapping
+  fun getResultatList(
+      @RequestParam testgrunnlagId: Int?,
+      @RequestParam maalingId: Int?,
+      @RequestParam loeysingId: Int?,
+      @RequestParam testregelNoekkel: String?
+  ): List<TestresultatDetaljert> {
+    logger.debug("Henter resultat for testgrunnlagId: $testgrunnlagId, maalingId: $maalingId")
+
+    // Hentar kun for forenkla kontroll til utfasing av gamalt grensesnitt
+    if (maalingId != null) {
+      return resultatService.getResultatForAutomatiskMaaling(maalingId, loeysingId)
+    }
+    return emptyList()
+  }
+
   @PostMapping("/aggregert/{testgrunnlagId}")
   fun createAggregertResultat(@PathVariable testgrunnlagId: Int): ResponseEntity<Any> =
       aggregeringService
