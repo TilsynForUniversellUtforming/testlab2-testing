@@ -77,6 +77,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         talElementSamsvar,
         talElementBrot,
         testregelId,
+        null,
         null)
   }
 

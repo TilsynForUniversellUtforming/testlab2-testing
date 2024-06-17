@@ -16,3 +16,8 @@ data class TestgrunnlagKontroll(
     val aktivitet: List<Aktivitet>?,
     val datoOppretta: Instant
 )
+
+data class TestgrunnlagList(
+    val opprinneligTest: TestgrunnlagKontroll,
+    val restestar: List<TestgrunnlagKontroll>
+)

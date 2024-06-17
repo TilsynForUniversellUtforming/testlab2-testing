@@ -131,7 +131,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 resultSet.getString("saksbehandler"),
                 resultSet.getString("sakstype"),
                 resultSet.getString("arkivreferanse"),
-                resultSet.getString("kontrolltype"),
+                Kontroll.Kontrolltype.valueOf(resultSet.getString("kontrolltype")),
                 utval,
                 testreglar,
                 sideutvalList)
@@ -149,7 +149,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val saksbehandler: String,
       val sakstype: String,
       val arkivreferanse: String,
-      val kontrolltype: String,
+      val kontrolltype: Kontroll.Kontrolltype,
       val utval: Utval?,
       val testreglar: Testreglar?,
       val sideutval: List<Sideutval> = emptyList()
