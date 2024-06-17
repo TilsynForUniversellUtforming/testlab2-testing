@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import java.net.URI
+import java.time.LocalDate
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
@@ -80,12 +81,18 @@ class ResultatResource(
   }
 
   @GetMapping("/tema")
-  fun getResultatPrTema(): List<ResultatTema> {
-    return resultatService.getResultatPrTema(null)
+  fun getResultatPrTema(
+      @RequestParam kontrollId: Int?,
+      @RequestParam kontrollType: String?,
+      @RequestParam fraDato: LocalDate?,
+      @RequestParam tilDato: LocalDate?
+  ): List<ResultatTema> {
+    return resultatService.getResultatPrTema(
+        kontrollId, kontrollType?.let { Kontroll.Kontrolltype.valueOf(it) }, fraDato, tilDato)
   }
-
-  @GetMapping("/tema/kontroll/{kontrollId}")
-  fun getResultatPrTema(@PathVariable kontrollId: Int): List<ResultatTema> {
-    return resultatService.getResultatPrTema(kontrollId)
-  }
+  //
+  //  @GetMapping("/tema/kontroll/{kontrollId}")
+  //  fun getResultatPrTema(@PathVariable kontrollId: Int): List<ResultatTema> {
+  //    return resultatService.getResultatPrTema(kontrollId)
+  //  }
 }

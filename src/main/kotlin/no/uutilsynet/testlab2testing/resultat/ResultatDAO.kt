@@ -4,7 +4,6 @@ import java.sql.ResultSet
 import java.time.LocalDate
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 
@@ -113,29 +112,6 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return LocalDate.now()
   }
 
-  fun getNamn(kontrolltype: Kontroll.Kontrolltype, testgrunnlagId: Int, namn: String): String {
-    if (kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
-      return namn
-    }
-    val query =
-        """
-            select sak.namn
-            from testgrunnlag 
-            left join sak on sak.id =sak_id
-            where testgrunnlag.id = :testgrunnlagId
-        """
-            .trimIndent()
-
-    // Ekstra sjekk for periode med migrering mellom fleire datamodellar
-    return try {
-      jdbcTemplate.queryForObject(
-          query, mapOf("testgrunnlagId" to testgrunnlagId), String::class.java)
-          ?: ""
-    } catch (e: EmptyResultDataAccessException) {
-      namn
-    }
-  }
-
   fun getResultatKontrollLoeysing(kontrollId: Int, loeysingId: Int): List<ResultatLoeysing>? {
     val query = "$resultatQuery where k.id = :kontrollId  and loeysing_id = :loeysingId"
     return jdbcTemplate.query(
@@ -144,55 +120,86 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         }
   }
 
-  fun getResultatPrTema(): List<ResultatTema> {
-    val query =
-        """
-            select ta.tema, sum(tal_element_samsvar) as tal_element_samsvar,sum(tal_element_brot) as tal_element_brot,sum(tal_element_varsel) as tal_element_varsel,sum(tal_element_ikkje_forekomst) as tal_element_ikkje_forekomst, avg(testregel_gjennomsnittleg_side_samsvar_prosent ) as score
-            from testlab2_testing.aggregering_testregel at
-            left join testlab2_testing.testregel t on t.id=at.testregel_id
-            left join testlab2_testing.tema ta on t.tema=ta.id
-			group by ta.tema
-        """
-            .trimIndent()
+  fun getResultatPrTema(
+      kontrollId: Int?,
+      kontrolltype: Kontroll.Kontrolltype?,
+      startDato: LocalDate?,
+      sluttDato: LocalDate?
+  ): List<ResultatTema> {
+    val whereClause = setWhereClause(kontrollId, kontrolltype, startDato, sluttDato)
 
-    return jdbcTemplate.query(query) { rs, _ -> resultatTemaRowmapper(rs) }
-  }
-
-  fun getResultatPrTema(kontrollId: Int): List<ResultatTema> {
     val query =
         """
             select tema, sum(tal_element_samsvar) as tal_element_samsvar,sum(tal_element_brot) as tal_element_brot,sum(tal_element_varsel) as tal_element_varsel,sum(tal_element_ikkje_forekomst) as tal_element_ikkje_forekomst, avg(testregel_gjennomsnittleg_side_samsvar_prosent ) as score
         from kontroll k
         join (
         select tm.tema,loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot,tal_element_varsel,tal_element_ikkje_forekomst,
-		case 
+		case
 			when maaling_id is not null
 				then m.kontrollid
-				else t.kontroll_id 
-			end as kontroll_id
+				else t.kontroll_id
+			end as kontroll_id,
+		case 
+			when maaling_id is not null
+				then m.dato_start
+				else t.dato_oppretta 
+			end as dato
 		from aggregering_testregel agt
 		left join maalingv1 m on m.id=agt.maaling_id
 		left join testgrunnlag t on t.id=agt.testgrunnlag_id
 		left join testregel tr on tr.id=agt.testregel_id
 		left join tema tm on tm.id=tr.tema
-		where case 
+		where case
 			when maaling_id is not null
 				then m.kontrollid
-				else t.kontroll_id 
+				else t.kontroll_id
 			end is not null
-		) as ag 
+		) as ag
         on k.id=ag.kontroll_id
-		where k.id=58
+        $whereClause
 		group by tema
         """
 
     return jdbcTemplate.query(query) { rs, _ -> resultatTemaRowmapper(rs) }
   }
 
+  fun setWhereClause(
+      kontrollId: Int?,
+      kontrolltype: Kontroll.Kontrolltype?,
+      startDato: LocalDate?,
+      sluttDato: LocalDate?
+  ): String {
+    if (kontrollId == null && kontrolltype == null && startDato == null && sluttDato == null) {
+      return ""
+    }
+    var whereClause = "where"
+    val clauses = arrayListOf<String>()
+    if (kontrollId != null) {
+      clauses.add("k.id = $kontrollId")
+    }
+    if (kontrolltype != null) {
+      clauses.add("kontrolltype = '$kontrolltype'")
+    }
+    if (startDato != null) {
+      clauses.add("ag.dato >= '$startDato'")
+    }
+    if (sluttDato != null) {
+      clauses.add("ag.dato <= '$sluttDato'")
+    }
+
+    clauses.forEachIndexed { index, clause ->
+      whereClause += " $clause"
+      if (index < clauses.size - 1) {
+        whereClause += " and"
+      }
+    }
+    return whereClause
+  }
+
   private fun resultatTemaRowmapper(rs: ResultSet) =
       ResultatTema(
           rs.getString("tema") ?: "Null",
-          rs.getInt("score").toInt(),
+          rs.getInt("score"),
           rs.getInt("tal_element_samsvar") +
               rs.getInt("tal_element_brot") +
               rs.getInt("tal_element_varsel") +

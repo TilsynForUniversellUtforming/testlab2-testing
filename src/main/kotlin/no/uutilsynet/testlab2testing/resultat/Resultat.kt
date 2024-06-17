@@ -50,6 +50,7 @@ data class ResultatOversiktLoeysing(
     val score: Double,
     val kravId: Int,
     val kravTittel: String,
+    val talTestaElement: Int,
     val talElementBrot: Int,
     val talElementSamsvar: Int,
 )
