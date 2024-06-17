@@ -72,6 +72,38 @@ class ResultatService(
     return emptyList()
   }
 
+  fun getResultatForAutomatiskMaaling(
+      maalingId: Int,
+      loeysingId: Int?
+  ): List<TestresultatDetaljert> {
+
+    val testresultat: List<AutotesterTestresultat>? =
+        maalingResource.getTestresultat(maalingId, loeysingId)?.getOrThrow()
+
+    if (!testresultat.isNullOrEmpty() && testresultat.first() is TestResultat) {
+      return testresultat
+          .map { it as TestResultat }
+          .map {
+            TestresultatDetaljert(
+                null,
+                it.loeysingId,
+                getTestregelIdFromSchema(it.testregelId).let { id -> id ?: 0 },
+                it.testregelId,
+                maalingId,
+                it.side,
+                it.suksesskriterium,
+                it.testVartUtfoert,
+                it.elementUtfall,
+                it.elementResultat,
+                it.elementOmtale,
+                null,
+                null,
+                null)
+          }
+    }
+    return emptyList()
+  }
+
   fun getResulatForManuellKontroll(
       kontrollId: Int,
       loeysingId: Int,
