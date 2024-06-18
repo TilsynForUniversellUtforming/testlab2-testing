@@ -151,6 +151,22 @@ class TestgrunnlagKontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
   }
 
+  fun kontrollHasTestresultat(kontrollId: Int): Boolean {
+    val resultat =
+        jdbcTemplate.query(
+            """
+        select 1 from testresultat tr
+          join testgrunnlag tg on tr.testgrunnlag_id = tg.id
+        where tg.kontroll_id = :kontrollId
+      """
+                .trimIndent(),
+            mapOf("kontrollId" to kontrollId)) { rs, _ ->
+              rs.getInt(1)
+            }
+
+    return resultat.isNotEmpty()
+  }
+
   private fun saveTestgrunnlagUtval(testgrunnlagId: Int, sideutvalIdList: List<Int>) {
     val updateBatchValuesRegelsettTestregel =
         sideutvalIdList.map { mapOf("testgrunnlagId" to testgrunnlagId, "sideutvalId" to it) }
