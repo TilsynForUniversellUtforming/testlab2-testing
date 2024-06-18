@@ -25,6 +25,9 @@ class TestgrunnlagServiceKontroll(
     }
   }
 
+  fun kontrollHasTestresultat(kontrollId: Int): Boolean =
+      testgrunnlagDAO.kontrollHasTestresultat(kontrollId)
+
   private fun updateExisting(
       eksisterendeTestgrunnlag: TestgrunnlagKontroll,
       testgrunnlag: NyttTestgrunnlag
