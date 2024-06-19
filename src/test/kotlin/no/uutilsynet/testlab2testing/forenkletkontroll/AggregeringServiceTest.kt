@@ -212,7 +212,8 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
             svar = listOf(ResultatManuellKontroll.Svar("Steg 1", "Svar 1")),
             testVartUtfoert = Instant.now(),
             status = ResultatManuellKontroll.Status.Ferdig,
-            "Kommentar")
+            kommentar = "Kommentar",
+            sistLagra = Instant.now())
 
     val resultatKontrol2 =
         ResultatManuellKontroll(
@@ -228,7 +229,8 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
             svar = listOf(ResultatManuellKontroll.Svar("Steg 1", "Svar 1")),
             testVartUtfoert = Instant.now(),
             status = ResultatManuellKontroll.Status.Ferdig,
-            "Kommentar")
+            kommentar = "Kommentar",
+            sistLagra = Instant.now())
 
     val status =
         aggregeringService.saveAggregertResultatTestregel(
@@ -318,7 +320,8 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
                 svar = listOf(ResultatManuellKontroll.Svar("Steg 1", "Svar 1")),
                 testVartUtfoert = Instant.now(),
                 status = ResultatManuellKontroll.Status.Ferdig,
-                "Kommentar"))
+                kommentar = "Kommentar",
+                sistLagra = Instant.now()))
         id++
       }
     }

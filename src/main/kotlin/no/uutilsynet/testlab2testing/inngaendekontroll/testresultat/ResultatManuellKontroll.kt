@@ -18,6 +18,7 @@ data class ResultatManuellKontroll(
     val testVartUtfoert: Instant?,
     val status: Status = Status.IkkjePaabegynt,
     val kommentar: String?,
+    val sistLagra: Instant
 ) {
 
   data class Svar(val steg: String, val svar: String)

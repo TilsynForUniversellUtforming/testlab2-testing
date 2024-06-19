@@ -22,12 +22,14 @@ class TestResultatDAO(
       val brukarId: Int =
           brukarService.getUserId() ?: throw RuntimeException("No authenticated user")
 
+      val created = Timestamp.from(Instant.now())
+
       jdbcTemplate.queryForObject(
           """
         insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
-                                     element_utfall, test_vart_utfoert, status, kommentar)
+                                     element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
         values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
-                :testVartUtfoert,:status, :kommentar)
+                :testVartUtfoert,:status, :kommentar, :sist_lagra)
         returning id
       """
               .trimIndent(),
@@ -43,7 +45,8 @@ class TestResultatDAO(
               "kommentar" to createTestResultat.kommentar,
               "testVartUtfoert" to createTestResultat.testVartUtfoert,
               "status" to ResultatManuellKontroll.Status.IkkjePaabegynt.name,
-              "kommentar" to createTestResultat.kommentar),
+              "kommentar" to createTestResultat.kommentar,
+              "sist_lagra" to created),
           Int::class.java)!!
     }
   }
@@ -73,6 +76,7 @@ class TestResultatDAO(
                        ti.element_utfall,
                        ti.test_vart_utfoert,
                        ti.kommentar,
+                       ti.sist_lagra,
                        b.brukarnamn as brukar_brukarnamn,
                        b.namn as brukar_namn,
                        ti.status
@@ -100,7 +104,8 @@ class TestResultatDAO(
               svar = emptyList<ResultatManuellKontroll.Svar>(),
               testVartUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant(),
               status = enumValueOf<ResultatManuellKontroll.Status>(rs.getString("status")),
-              kommentar = rs.getString("kommentar"))
+              kommentar = rs.getString("kommentar"),
+              sistLagra = rs.getTimestamp("sist_lagra").toInstant())
         }
 
     val svarMap =
@@ -130,12 +135,15 @@ class TestResultatDAO(
 
   @Transactional
   fun update(testResultat: ResultatManuellKontroll): Result<Unit> = runCatching {
+    val now = Timestamp.from(Instant.now())
+
     val testVartUtfoert =
         if (testResultat.elementOmtale != null &&
             testResultat.elementResultat != null &&
             testResultat.elementUtfall != null)
-            Timestamp.from(Instant.now())
+            now
         else null
+
     jdbcTemplate.update(
         """
       update testresultat
@@ -144,7 +152,8 @@ class TestResultatDAO(
           element_utfall    = :elementUtfall,
           test_vart_utfoert = :testVartUtfoert,
           status = :status,
-          kommentar = :kommentar
+          kommentar = :kommentar,
+          sist_lagra = :sist_lagra
       where id = :id
     """
             .trimIndent(),
@@ -155,7 +164,8 @@ class TestResultatDAO(
             "testVartUtfoert" to testVartUtfoert,
             "status" to testResultat.status.name,
             "id" to testResultat.id,
-            "kommentar" to testResultat.kommentar))
+            "kommentar" to testResultat.kommentar,
+            "sist_lagra" to now))
 
     // slett gamle svar og lagre de nye
     jdbcTemplate.update(
