@@ -234,6 +234,8 @@ class ResultatService(
                   loeysingar.getVerksemdNamn(loeysingId),
                   resultLoeysing.map { it.score }.average(),
                   resultLoeysing.first().testType,
+                  resultLoeysing.map { it.talElementSamsvar }.sum() +
+                      resultLoeysing.map { it.talElementSamsvar }.sum(),
                   resultLoeysing.map { it.talElementSamsvar }.sum(),
                   resultLoeysing.map { it.talElementBrot }.sum(),
                   getTestar(resultLoeysing.first().id, resultLoeysing.first().typeKontroll),
@@ -335,7 +337,6 @@ class ResultatService(
           getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
       Kontroll.Kontrolltype.InngaaendeKontroll ->
           getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
-      else -> getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
     }
   }
 

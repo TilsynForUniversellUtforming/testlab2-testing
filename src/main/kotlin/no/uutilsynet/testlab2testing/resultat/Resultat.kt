@@ -18,6 +18,7 @@ data class LoeysingResultat(
     val verksemdNamn: String,
     val score: Double,
     val testType: TestgrunnlagType,
+    val talTestaElement: Int?,
     val talElementSamsvar: Int,
     val talElementBrot: Int,
     val testar: List<String>,
