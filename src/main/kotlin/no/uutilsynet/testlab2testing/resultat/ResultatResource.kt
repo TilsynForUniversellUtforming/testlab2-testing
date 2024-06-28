@@ -83,16 +83,12 @@ class ResultatResource(
   @GetMapping("/tema")
   fun getResultatPrTema(
       @RequestParam kontrollId: Int?,
-      @RequestParam kontrollType: String?,
+      @RequestParam kontrollType: Kontroll.Kontrolltype?,
       @RequestParam fraDato: LocalDate?,
       @RequestParam tilDato: LocalDate?
   ): List<ResultatTema> {
     return resultatService.getResultatPrTema(
-        kontrollId, kontrollType?.let { Kontroll.Kontrolltype.valueOf(it) }, fraDato, tilDato)
+        kontrollId, kontrollType, fraDato, tilDato)
   }
-  //
-  //  @GetMapping("/tema/kontroll/{kontrollId}")
-  //  fun getResultatPrTema(@PathVariable kontrollId: Int): List<ResultatTema> {
-  //    return resultatService.getResultatPrTema(kontrollId)
-  //  }
+
 }
