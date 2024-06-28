@@ -87,8 +87,6 @@ class ResultatResource(
       @RequestParam fraDato: LocalDate?,
       @RequestParam tilDato: LocalDate?
   ): List<ResultatTema> {
-    return resultatService.getResultatPrTema(
-        kontrollId, kontrollType, fraDato, tilDato)
+    return resultatService.getResultatPrTema(kontrollId, kontrollType, fraDato, tilDato)
   }
-
 }
