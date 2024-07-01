@@ -10,6 +10,8 @@ import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
 import org.springframework.http.MediaType
+import org.springframework.http.client.BufferingClientHttpRequestFactory
+import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.web.client.RestTemplate
@@ -28,7 +30,11 @@ class Testlab2TestingApplication {
     mappingJackson2HttpMessageConverter.objectMapper = objectMapper
     mappingJackson2HttpMessageConverter.supportedMediaTypes =
         listOf(MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM)
-    return restTemplateBuilder.messageConverters(mappingJackson2HttpMessageConverter).build()
+
+    return restTemplateBuilder
+        .messageConverters(mappingJackson2HttpMessageConverter)
+        .requestFactory(::reqestFactory)
+        .build()
   }
 
   @Bean
@@ -38,6 +44,11 @@ class Testlab2TestingApplication {
     filter.setIncludePayload(true)
     filter.setMaxPayloadLength(1000)
     return filter
+  }
+
+  @Bean
+  fun reqestFactory(): BufferingClientHttpRequestFactory {
+    return BufferingClientHttpRequestFactory(SimpleClientHttpRequestFactory())
   }
 }
 

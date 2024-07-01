@@ -16,9 +16,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.MediaType
-import org.springframework.http.client.BufferingClientHttpRequestFactory
-import org.springframework.http.client.ClientHttpRequestFactory
-import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestTemplate
@@ -41,8 +38,6 @@ class AutoTesterClient(
       nettsider: List<URL>
   ): Result<URL> {
 
-    val factory: ClientHttpRequestFactory =
-        BufferingClientHttpRequestFactory(SimpleClientHttpRequestFactory())
     return runCatching {
           val url = "${autoTesterProperties.url}?code=${autoTesterProperties.code}"
           val requestData =
@@ -54,7 +49,7 @@ class AutoTesterClient(
                   "actRegler" to actRegler.map { it.testregelSchema },
                   "loeysing" to crawlResultat.loeysing)
 
-          val restClient = RestClient.builder().requestFactory(factory).build()
+          val restClient = RestClient.builder(restTemplate).build()
 
           val statusUris =
               restClient
