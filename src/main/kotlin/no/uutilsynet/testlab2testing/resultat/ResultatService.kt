@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.resultat
 
 import java.net.URL
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
@@ -233,6 +234,8 @@ class ResultatService(
                   loeysingar.getVerksemdNamn(loeysingId),
                   resultLoeysing.map { it.score }.average(),
                   resultLoeysing.first().testType,
+                  resultLoeysing.map { it.talElementSamsvar }.sum() +
+                      resultLoeysing.map { it.talElementSamsvar }.sum(),
                   resultLoeysing.map { it.talElementSamsvar }.sum(),
                   resultLoeysing.map { it.talElementBrot }.sum(),
                   getTestar(resultLoeysing.first().id, resultLoeysing.first().typeKontroll),
@@ -305,6 +308,7 @@ class ResultatService(
               result.map { it.score }.average(),
               result.first().kravId ?: 0,
               result.first().kravTittel ?: "",
+              result.map { it.talElementBrot }.sum() + result.map { it.talElementSamsvar }.sum(),
               result.map { it.talElementBrot }.sum(),
               result.map { it.talElementSamsvar }.sum())
         }
@@ -333,9 +337,16 @@ class ResultatService(
           getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
       Kontroll.Kontrolltype.InngaaendeKontroll ->
           getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
-      else -> getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
     }
   }
+
+  fun getResultatPrTema(
+      kontrollId: Int?,
+      kontrolltype: Kontroll.Kontrolltype?,
+      startDato: LocalDate?,
+      sluttDato: LocalDate?
+  ): List<ResultatTema> =
+      resultatDAO.getResultatPrTema(kontrollId, kontrolltype, startDato, sluttDato)
 
   class LoysingList(val loeysingar: Map<Int, Loeysing.Expanded>) {
     fun getNamn(loeysingId: Int): String {

@@ -12,8 +12,12 @@ import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSideTestregel
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSuksesskriterium
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.testregel.Testregel
+import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.http.HttpStatusCode
+import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
+import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestTemplate
 
 @ConfigurationProperties(prefix = "autotester")
@@ -25,12 +29,15 @@ class AutoTesterClient(
     val autoTesterProperties: AutoTesterProperties
 ) {
 
+  val logger = LoggerFactory.getLogger(AutoTesterClient::class.java)
+
   fun startTesting(
       maalingId: Int,
       crawlResultat: CrawlResultat.Ferdig,
       actRegler: List<Testregel>,
       nettsider: List<URL>
   ): Result<URL> {
+
     return runCatching {
           val url = "${autoTesterProperties.url}?code=${autoTesterProperties.code}"
           val requestData =
@@ -41,7 +48,22 @@ class AutoTesterClient(
                   "resultatSomFil" to true,
                   "actRegler" to actRegler.map { it.testregelSchema },
                   "loeysing" to crawlResultat.loeysing)
-          val statusUris = restTemplate.postForObject(url, requestData, StatusUris::class.java)
+
+          val restClient = RestClient.builder(restTemplate).build()
+
+          val statusUris =
+              restClient
+                  .post()
+                  .uri(url)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .body(requestData)
+                  .retrieve()
+                  .onStatus(HttpStatusCode::isError) { _, response ->
+                    logger.error(response.body.readAllBytes().contentToString())
+                    throw RuntimeException("mangler statusQueryGetUri i responsen")
+                  }
+                  .body(StatusUris::class.java)
+
           statusUris?.statusQueryGetUri?.toURL()
               ?: throw RuntimeException("mangler statusQueryGetUri i responsen")
         }
