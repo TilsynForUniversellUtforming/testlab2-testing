@@ -1,15 +1,15 @@
 package no.uutilsynet.testlab2testing.styringsdata
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import java.time.Instant
+import java.time.LocalDate
 
 data class StyringsdataListElement(
     val id: Int,
     val kontrollId: Int,
     val loeysingId: Int,
     val ansvarleg: String,
-    val oppretta: Instant,
-    val frist: Instant,
+    val oppretta: LocalDate,
+    val frist: LocalDate,
     val reaksjon: Reaksjonstype,
     val paaleggId: Int?,
     val paaleggKlageId: Int?,
@@ -22,8 +22,8 @@ data class Styringsdata(
     val loeysingId: Int,
     val kontrollId: Int,
     val ansvarleg: String,
-    val oppretta: Instant,
-    val frist: Instant,
+    val oppretta: LocalDate,
+    val frist: LocalDate,
     val reaksjon: Reaksjonstype,
     val paalegg: Paalegg?,
     val paaleggKlage: Klage?,
@@ -33,17 +33,17 @@ data class Styringsdata(
 
 data class Paalegg(
     val id: Int?,
-    val vedtakDato: Instant,
-    val frist: Instant?,
+    val vedtakDato: LocalDate,
+    val frist: LocalDate?,
 )
 
 data class Klage(
     val id: Int?,
     val klageType: Klagetype,
-    val klageMottattDato: Instant,
-    val klageAvgjortDato: Instant?,
+    val klageMottattDato: LocalDate,
+    val klageAvgjortDato: LocalDate?,
     val resultatKlageTilsyn: ResultatKlage?,
-    val klageDatoDepartement: Instant?,
+    val klageDatoDepartement: LocalDate?,
     val resultatKlageDepartement: ResultatKlage?
 )
 
@@ -53,9 +53,9 @@ data class Bot(
     val oekingEtterDager: Int,
     val oekningType: BotOekningType,
     val oekingSats: Int,
-    val vedtakDato: Instant,
-    val startDato: Instant,
-    val sluttDato: Instant?,
+    val vedtakDato: LocalDate,
+    val startDato: LocalDate,
+    val sluttDato: LocalDate?,
     val kommentar: String?,
 )
 

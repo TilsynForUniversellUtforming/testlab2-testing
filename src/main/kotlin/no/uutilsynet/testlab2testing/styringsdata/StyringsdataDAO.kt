@@ -2,11 +2,14 @@ package no.uutilsynet.testlab2testing.styringsdata
 
 import java.sql.ResultSet
 import java.sql.Timestamp
+import java.time.ZoneId
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 
 @Component
 class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
+
+  val zoneId = ZoneId.of("Europe/Oslo") // Specify the appropriate timezone
 
   private val styringsdataListElementRowMapper = { rs: ResultSet, _: Int ->
     StyringsdataListElement(
@@ -14,8 +17,8 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         kontrollId = rs.getInt("kontroll_id"),
         loeysingId = rs.getInt("loeysing_id"),
         ansvarleg = rs.getString("ansvarleg"),
-        oppretta = rs.getTimestamp("oppretta").toInstant(),
-        frist = rs.getTimestamp("frist").toInstant(),
+        oppretta = rs.getTimestamp("oppretta").toInstant().atZone(zoneId).toLocalDate(),
+        frist = rs.getTimestamp("frist").toInstant().atZone(zoneId).toLocalDate(),
         reaksjon = Reaksjonstype.valueOf(rs.getString("reaksjon")),
         paaleggId = rs.getInt("paalegg_id").takeUnless { rs.wasNull() },
         paaleggKlageId = rs.getInt("paalegg_klage_id").takeUnless { rs.wasNull() },
@@ -92,9 +95,9 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             oekingEtterDager = rs.getInt("oeking_etter_dager"),
             oekningType = BotOekningType.valueOf(rs.getString("oekning_type")),
             oekingSats = rs.getInt("oeking_sats"),
-            vedtakDato = rs.getTimestamp("vedtak_dato").toInstant(),
-            startDato = rs.getTimestamp("start_dato").toInstant(),
-            sluttDato = rs.getTimestamp("slutt_dato")?.toInstant(),
+            vedtakDato = rs.getTimestamp("vedtak_dato").toInstant().atZone(zoneId).toLocalDate(),
+            startDato = rs.getTimestamp("start_dato").toInstant().atZone(zoneId).toLocalDate(),
+            sluttDato = rs.getTimestamp("slutt_dato")?.toInstant()?.atZone(zoneId)?.toLocalDate(),
             kommentar = rs.getString("kommentar"))
       }
 
@@ -112,11 +115,17 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         Klage(
             id = rs.getInt("id"),
             klageType = Klagetype.valueOf(rs.getString("klage_type")),
-            klageMottattDato = rs.getTimestamp("klage_mottatt_dato").toInstant(),
-            klageAvgjortDato = rs.getTimestamp("klage_avgjort_dato")?.toInstant(),
+            klageMottattDato =
+                rs.getTimestamp("klage_mottatt_dato").toInstant().atZone(zoneId).toLocalDate(),
+            klageAvgjortDato =
+                rs.getTimestamp("klage_avgjort_dato")?.toInstant()?.atZone(zoneId)?.toLocalDate(),
             resultatKlageTilsyn =
                 rs.getString("resultat_klage_tilsyn")?.let { ResultatKlage.valueOf(it) },
-            klageDatoDepartement = rs.getTimestamp("klage_dato_departement")?.toInstant(),
+            klageDatoDepartement =
+                rs.getTimestamp("klage_dato_departement")
+                    ?.toInstant()
+                    ?.atZone(zoneId)
+                    ?.toLocalDate(),
             resultatKlageDepartement =
                 rs.getString("resultat_klage_departement")?.let { ResultatKlage.valueOf(it) })
       }
@@ -138,8 +147,8 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             .trimIndent(),
         mapOf(
             "ansvarleg" to styringsdata.ansvarleg,
-            "oppretta" to Timestamp.from(styringsdata.oppretta),
-            "frist" to Timestamp.from(styringsdata.frist),
+            "oppretta" to Timestamp.valueOf(styringsdata.oppretta.atStartOfDay()),
+            "frist" to Timestamp.valueOf(styringsdata.frist.atStartOfDay()),
             "reaksjon" to styringsdata.reaksjon.name,
             "paalegg_id" to paaleggId,
             "paalegg_klage_id" to paaleggKlageId,
@@ -175,8 +184,8 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         mapOf(
             "id" to id,
             "ansvarleg" to styringsdata.ansvarleg,
-            "oppretta" to Timestamp.from(styringsdata.oppretta),
-            "frist" to Timestamp.from(styringsdata.frist),
+            "oppretta" to Timestamp.valueOf(styringsdata.oppretta.atStartOfDay()),
+            "frist" to Timestamp.valueOf(styringsdata.frist.atStartOfDay()),
             "reaksjon" to styringsdata.reaksjon.name,
             "paalegg_id" to paaleggId,
             "paalegg_klage_id" to paaleggKlageId,
@@ -189,8 +198,8 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         jdbcTemplate.queryForObject(
             "insert into styringsdata_paalegg (vedtak_dato, frist) values (:vedtak_dato, :frist) returning id",
             mapOf(
-                "vedtak_dato" to Timestamp.from(paalegg.vedtakDato),
-                "frist" to paalegg.frist?.let { Timestamp.from(it) }),
+                "vedtak_dato" to Timestamp.valueOf(paalegg.vedtakDato.atStartOfDay()),
+                "frist" to paalegg.frist?.let { Timestamp.valueOf(it.atStartOfDay()) }),
             Int::class.java)!!
 
     return id
@@ -201,8 +210,8 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         "update styringsdata_paalegg set vedtak_dato = :vedtak_dato, frist = :frist where id = :id",
         mapOf(
             "id" to paalegg.id,
-            "vedtak_dato" to Timestamp.from(paalegg.vedtakDato),
-            "frist" to paalegg.frist?.let { Timestamp.from(it) }))
+            "vedtak_dato" to Timestamp.valueOf(paalegg.vedtakDato.atStartOfDay()),
+            "frist" to paalegg.frist?.let { Timestamp.valueOf(it.atStartOfDay()) }))
   }
 
   private fun insertKlage(klage: Klage): Int {
@@ -218,10 +227,12 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
                 .trimIndent(),
             mapOf(
                 "klage_type" to klage.klageType.name,
-                "klage_mottatt_dato" to Timestamp.from(klage.klageMottattDato),
-                "klage_avgjort_dato" to klage.klageAvgjortDato?.let { Timestamp.from(it) },
+                "klage_mottatt_dato" to Timestamp.valueOf(klage.klageMottattDato.atStartOfDay()),
+                "klage_avgjort_dato" to
+                    klage.klageAvgjortDato?.let { Timestamp.valueOf(it.atStartOfDay()) },
                 "resultat_klage_tilsyn" to klage.resultatKlageTilsyn?.name,
-                "klage_dato_departement" to klage.klageDatoDepartement?.let { Timestamp.from(it) },
+                "klage_dato_departement" to
+                    klage.klageDatoDepartement?.let { Timestamp.valueOf(it.atStartOfDay()) },
                 "resultat_klage_departement" to klage.resultatKlageDepartement?.name),
             Int::class.java)!!
 
@@ -245,10 +256,12 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         mapOf(
             "id" to klage.id,
             "klage_type" to klage.klageType.name,
-            "klage_mottatt_dato" to Timestamp.from(klage.klageMottattDato),
-            "klage_avgjort_dato" to klage.klageAvgjortDato?.let { Timestamp.from(it) },
+            "klage_mottatt_dato" to Timestamp.valueOf(klage.klageMottattDato.atStartOfDay()),
+            "klage_avgjort_dato" to
+                klage.klageAvgjortDato?.let { Timestamp.valueOf(it.atStartOfDay()) },
             "resultat_klage_tilsyn" to klage.resultatKlageTilsyn?.name,
-            "klage_dato_departement" to klage.klageDatoDepartement?.let { Timestamp.from(it) },
+            "klage_dato_departement" to
+                klage.klageDatoDepartement?.let { Timestamp.valueOf(it.atStartOfDay()) },
             "resultat_klage_departement" to klage.resultatKlageDepartement?.name)
 
     jdbcTemplate.update(sql, params)
@@ -271,9 +284,9 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
                 "oeking_etter_dager" to bot.oekingEtterDager,
                 "oekning_type" to bot.oekningType.name,
                 "oeking_sats" to bot.oekingSats,
-                "vedtak_dato" to Timestamp.from(bot.vedtakDato),
-                "start_dato" to Timestamp.from(bot.startDato),
-                "slutt_dato" to bot.sluttDato?.let { Timestamp.from(it) },
+                "vedtak_dato" to Timestamp.valueOf(bot.vedtakDato.atStartOfDay()),
+                "start_dato" to Timestamp.valueOf(bot.startDato.atStartOfDay()),
+                "slutt_dato" to bot.sluttDato?.let { Timestamp.valueOf(it.atStartOfDay()) },
                 "kommentar" to bot.kommentar),
             Int::class.java)!!
 
@@ -301,9 +314,9 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             "oeking_etter_dager" to bot.oekingEtterDager,
             "oekning_type" to bot.oekningType.name,
             "oeking_sats" to bot.oekingSats,
-            "vedtak_dato" to Timestamp.from(bot.vedtakDato),
-            "start_dato" to Timestamp.from(bot.startDato),
-            "slutt_dato" to bot.sluttDato?.let { Timestamp.from(it) },
+            "vedtak_dato" to Timestamp.valueOf(bot.vedtakDato.atStartOfDay()),
+            "start_dato" to Timestamp.valueOf(bot.startDato.atStartOfDay()),
+            "slutt_dato" to bot.sluttDato?.let { Timestamp.valueOf(it.atStartOfDay()) },
             "kommentar" to bot.kommentar))
   }
 }
