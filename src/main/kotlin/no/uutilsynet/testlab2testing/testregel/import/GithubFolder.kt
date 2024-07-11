@@ -8,7 +8,4 @@ data class GithubFolder(
     val type: String,
     val content: String?,
     val encoding: String?
-
 )
-
-
