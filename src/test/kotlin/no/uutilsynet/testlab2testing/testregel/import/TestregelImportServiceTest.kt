@@ -89,4 +89,13 @@ class TestregelImportServiceTest(@Autowired val testregelImportService: Testrege
     assertThat(testregelarNett).isNotEmpty
     println(testregelarNett)
   }
+
+  @Test
+  fun testImport() {
+    val testregelList = testregelImportService.getTestregelList()
+    val testregelarNett = testregelImportService.getTestreglarNett(testregelList)
+    testregelarNett.forEach {
+      testregelImportService.getTestreglarForKrav(it,TestregelType.Nett)
+    }
+  }
 }
