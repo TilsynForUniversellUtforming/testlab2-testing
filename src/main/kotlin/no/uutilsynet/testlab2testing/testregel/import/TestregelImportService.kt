@@ -106,7 +106,7 @@ class TestregelImportService(
     return testregelar ?: emptyList()
   }
 
-  fun doRequest(url: String): List<GithubFolder>? {
+  fun doRequest(url: String): List<GithubFolder> {
 
     val folderResponse =
         restClient
@@ -116,30 +116,38 @@ class TestregelImportService(
             .retrieve()
             .body(Array<GithubFolder>::class.java)
 
-    return folderResponse?.asList()
+      if(folderResponse!=null) {
+          return folderResponse.asList()
+      }
+      println("Url $url")
+      throw IllegalStateException("No response from github")
   }
 
-  fun getTestreglarFolder(): List<GithubFolder>? {
-    return doRequest(repoApiAddress + TESTREGLAR)
+  fun getTestreglarFolder(): List<GithubFolder>? = doRequest(repoApiAddress + TESTREGLAR)
+
+  fun getTestregelTypeFolder(testregel: String): List<GithubFolder> =
+    doRequest("$repoApiAddress$TESTREGLAR/$testregel")
+
+  fun getTypeForTestregel(testregel: String, type: TestregelType): List<GithubFolder> {
+      return doRequest("$repoApiAddress$TESTREGLAR/$testregel/$type")
   }
 
-  fun getTestregelTypeFolder(testregel: String): List<GithubFolder>? {
-    return doRequest("$repoApiAddress$TESTREGLAR/$testregel")
-  }
-
-  fun getTypeForTestregel(testregel: String, type: TestregelType): List<GithubFolder>? {
-    return doRequest("$repoApiAddress$TESTREGLAR/$testregel/$type")
-  }
-
-  fun getTestregel(testregel: String, type: TestregelType, name: String): GithubFolder? {
+  fun getTestregel(testregel: String, type: TestregelType, name: String): GithubFolder {
     val url = "$repoApiAddress$TESTREGLAR/$testregel/$type/$name"
 
-    return restClient
+    val response = restClient
         .get()
         .uri(url)
         .accept(MediaType.APPLICATION_JSON)
         .retrieve()
         .body(GithubFolder::class.java)
+
+
+
+      if(response!=null) {
+          return response
+      }
+      throw IllegalStateException("No response from github")
   }
 
   fun getTestregelDataAsString(testregel: GithubFolder): String? {
@@ -195,21 +203,41 @@ class TestregelImportService(
     return testregelList
         .filter { !unntakApp.contains(it) }
         .map { getTypeForTestregel(it, TestregelType.App) }
-        .filterNotNull()
         .map { it.map { it.name } }
         .flatten()
   }
 
   fun getTestreglarNett(testregelList: List<String>): List<String> {
-    return testregelList
-        .filter { !unntakNett.contains(it) }
-        .map { getTypeForTestregel(it, TestregelType.Nett) }
-        .filterNotNull()
-        .map { it.map { it.name } }
-        .flatten()
+      return testregelList
+          .filter { !unntakNett.contains(it) }
+          .map { getTypeForTestregel(it, TestregelType.Nett) }
+          .map { it.map { it.name } }
+          .flatten()
   }
 
-  fun createOrUpdate(testregel: TestregelInit): Int {
+    fun getTestreglarForKrav(krav: String, testregelType: TestregelType) {
+        getTestregelFiler(krav, testregelType)
+            .map {getTestregel(krav, testregelType, it)}
+            .mapNotNull { getTestregelDataAsString(it) }
+            .map { githubContentToTestregel(it) }
+            .map { createOrUpdate(it) }
+    }
+
+    private fun mapFilnamnListToGithubContent(
+        filanamnListe: List<String>,
+        krav: String,
+        testregelType: TestregelType
+    ) = filanamnListe.map {
+        getTestregel(krav, testregelType, it)
+    }
+
+    private fun getTestregelFiler(
+        krav: String,
+        testregelType: TestregelType
+    ) = getTypeForTestregel(krav, testregelType).map { it.name }
+
+
+    fun createOrUpdate(testregel: TestregelInit): Int {
     val existing = testregelDAO.getTestregelByTestregelId(testregel.testregelId)
     return if (existing != null) {
       val updated =
