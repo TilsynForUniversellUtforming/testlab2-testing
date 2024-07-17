@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.styringsdata
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import java.time.Instant
 import java.time.LocalDate
 
 data class StyringsdataListElement(
@@ -11,10 +12,15 @@ data class StyringsdataListElement(
     val oppretta: LocalDate,
     val frist: LocalDate,
     val reaksjon: Reaksjonstype,
+    val paaleggReaksjon: Reaksjonstype,
+    val paaleggKlageReaksjon: Reaksjonstype,
+    val botReaksjon: Reaksjonstype,
+    val botKlageReaksjon: Reaksjonstype,
     val paaleggId: Int?,
     val paaleggKlageId: Int?,
     val botId: Int?,
-    val botKlageId: Int?
+    val botKlageId: Int?,
+    val sistLagra: Instant
 )
 
 data class Styringsdata(
@@ -25,10 +31,15 @@ data class Styringsdata(
     val oppretta: LocalDate,
     val frist: LocalDate,
     val reaksjon: Reaksjonstype,
+    val paaleggReaksjon: Reaksjonstype,
+    val paaleggKlageReaksjon: Reaksjonstype,
+    val botReaksjon: Reaksjonstype,
+    val botKlageReaksjon: Reaksjonstype,
     val paalegg: Paalegg?,
     val paaleggKlage: Klage?,
     val bot: Bot?,
     val botKlage: Klage?,
+    val sistLagra: Instant?
 )
 
 data class Paalegg(

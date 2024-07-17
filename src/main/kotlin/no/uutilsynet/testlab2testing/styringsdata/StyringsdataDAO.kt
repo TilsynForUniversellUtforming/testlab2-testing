@@ -2,9 +2,11 @@ package no.uutilsynet.testlab2testing.styringsdata
 
 import java.sql.ResultSet
 import java.sql.Timestamp
+import java.time.Instant
 import java.time.ZoneId
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
 @Component
 class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -20,10 +22,15 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         oppretta = rs.getTimestamp("oppretta").toInstant().atZone(zoneId).toLocalDate(),
         frist = rs.getTimestamp("frist").toInstant().atZone(zoneId).toLocalDate(),
         reaksjon = Reaksjonstype.valueOf(rs.getString("reaksjon")),
+        paaleggReaksjon = Reaksjonstype.valueOf(rs.getString("paalegg_reaksjon")),
+        paaleggKlageReaksjon = Reaksjonstype.valueOf(rs.getString("paalegg_klage_reaksjon")),
+        botReaksjon = Reaksjonstype.valueOf(rs.getString("bot_reaksjon")),
+        botKlageReaksjon = Reaksjonstype.valueOf(rs.getString("bot_klage_reaksjon")),
         paaleggId = rs.getInt("paalegg_id").takeUnless { rs.wasNull() },
         paaleggKlageId = rs.getInt("paalegg_klage_id").takeUnless { rs.wasNull() },
         botId = rs.getInt("bot_id").takeUnless { rs.wasNull() },
-        botKlageId = rs.getInt("bot_klage_id").takeUnless { rs.wasNull() })
+        botKlageId = rs.getInt("bot_klage_id").takeUnless { rs.wasNull() },
+        sistLagra = rs.getTimestamp("sist_lagra").toInstant())
   }
 
   fun getStyringsdata(id: Int): List<StyringsdataListElement> =
@@ -37,10 +44,15 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         oppretta,
         frist,
         reaksjon,
+        paalegg_reaksjon,
+        paalegg_klage_reaksjon,
+        bot_reaksjon,
+        bot_klage_reaksjon,
         paalegg_id,
         paalegg_klage_id,
         bot_id,
-        bot_klage_id
+        bot_klage_id,
+        sist_lagra
       from styringsdata
         where id = :id 
     """
@@ -61,10 +73,15 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         oppretta,
         frist,
         reaksjon,
+        paalegg_reaksjon,
+        paalegg_klage_reaksjon,
+        bot_reaksjon,
+        bot_klage_reaksjon,
         paalegg_id,
         paalegg_klage_id,
         bot_id,
-        bot_klage_id
+        bot_klage_id,
+        sist_lagra
       from styringsdata
         where kontroll_id = :kontrollId 
     """
@@ -130,19 +147,49 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
                 rs.getString("resultat_klage_departement")?.let { ResultatKlage.valueOf(it) })
       }
 
-  fun createStyringsdata(styringsdata: Styringsdata) {
+  @Transactional
+  fun createStyringsdata(styringsdata: Styringsdata): Result<Int> = runCatching {
     val paaleggId = styringsdata.paalegg?.let { insertPaalegg(it) }
     val paaleggKlageId = styringsdata.paaleggKlage?.let { insertKlage(it) }
     val botId = styringsdata.bot?.let { insertBot(it) }
     val botKlageId = styringsdata.botKlage?.let { insertKlage(it) }
+    val sistLagra = Timestamp.from(Instant.now())
 
-    jdbcTemplate.update(
+    jdbcTemplate.queryForObject(
         """
         insert into styringsdata (
-          ansvarleg, oppretta, frist, reaksjon, paalegg_id, paalegg_klage_id, bot_id, bot_klage_id, kontroll_id, loeysing_id
+          ansvarleg, 
+          oppretta, 
+          frist, 
+          reaksjon, 
+          paalegg_reaksjon,
+          paalegg_klage_reaksjon,
+          bot_reaksjon,
+          bot_klage_reaksjon,
+          paalegg_id,
+          paalegg_klage_id,
+          bot_id,
+          bot_klage_id,
+          kontroll_id,
+          loeysing_id,
+          sist_lagra
         ) values (
-          :ansvarleg, :oppretta, :frist, :reaksjon, :paalegg_id, :paalegg_klage_id, :bot_id, :bot_klage_id, :kontroll_id, :loeysing_id
-        )
+          :ansvarleg, 
+          :oppretta,
+          :frist,
+          :reaksjon,
+          :paalegg_reaksjon,
+          :paalegg_klage_reaksjon,
+          :bot_reaksjon,
+          :bot_klage_reaksjon,
+          :paalegg_id,
+          :paalegg_klage_id,
+          :bot_id,
+          :bot_klage_id,
+          :kontroll_id,
+          :loeysing_id,
+          :sist_lagra
+        ) returning id
       """
             .trimIndent(),
         mapOf(
@@ -150,14 +197,21 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             "oppretta" to Timestamp.valueOf(styringsdata.oppretta.atStartOfDay()),
             "frist" to Timestamp.valueOf(styringsdata.frist.atStartOfDay()),
             "reaksjon" to styringsdata.reaksjon.name,
+            "paalegg_reaksjon" to styringsdata.paaleggReaksjon.name,
+            "paalegg_klage_reaksjon" to styringsdata.paaleggKlageReaksjon.name,
+            "bot_reaksjon" to styringsdata.botReaksjon.name,
+            "bot_klage_reaksjon" to styringsdata.botKlageReaksjon.name,
             "paalegg_id" to paaleggId,
             "paalegg_klage_id" to paaleggKlageId,
             "bot_id" to botId,
             "bot_klage_id" to botKlageId,
             "kontroll_id" to styringsdata.kontrollId,
-            "loeysing_id" to styringsdata.loeysingId))
+            "loeysing_id" to styringsdata.loeysingId,
+            "sist_lagra" to sistLagra),
+        Int::class.java)!!
   }
 
+  @Transactional
   fun updateStyringsdata(id: Int, styringsdata: Styringsdata) {
     val paaleggId =
         styringsdata.paalegg?.let { if (it.id != null) updatePaalegg(it) else insertPaalegg(it) }
@@ -166,6 +220,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
     val botId = styringsdata.bot?.let { if (it.id != null) updateBot(it) else insertBot(it) }
     val botKlageId =
         styringsdata.botKlage?.let { if (it.id != null) updateKlage(it) else insertKlage(it) }
+    val sistLagra = Timestamp.from(Instant.now())
 
     jdbcTemplate.update(
         """
@@ -174,10 +229,15 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
                   oppretta = :oppretta,
                   frist = :frist,
                   reaksjon = :reaksjon,
+                  paalegg_reaksjon = :paalegg_reaksjon,
+                  paalegg_klage_reaksjon = :paalegg_klage_reaksjon,
+                  bot_reaksjon = :bot_reaksjon,
+                  bot_klage_reaksjon = :bot_klage_reaksjon,
                   paalegg_id = :paalegg_id,
                   paalegg_klage_id = :paalegg_klage_id,
                   bot_id = :bot_id,
-                  bot_klage_id = :bot_klage_id
+                  bot_klage_id = :bot_klage_id,
+                  sist_lagra = :sist_lagra
               where id = :id
           """
             .trimIndent(),
@@ -187,10 +247,15 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             "oppretta" to Timestamp.valueOf(styringsdata.oppretta.atStartOfDay()),
             "frist" to Timestamp.valueOf(styringsdata.frist.atStartOfDay()),
             "reaksjon" to styringsdata.reaksjon.name,
+            "paalegg_reaksjon" to styringsdata.paaleggReaksjon.name,
+            "paalegg_klage_reaksjon" to styringsdata.paaleggKlageReaksjon.name,
+            "bot_reaksjon" to styringsdata.botReaksjon.name,
+            "bot_klage_reaksjon" to styringsdata.botKlageReaksjon.name,
             "paalegg_id" to paaleggId,
             "paalegg_klage_id" to paaleggKlageId,
             "bot_id" to botId,
-            "bot_klage_id" to botKlageId))
+            "bot_klage_id" to botKlageId,
+            "sist_lagra" to sistLagra))
   }
 
   private fun insertPaalegg(paalegg: Paalegg): Int {
@@ -296,7 +361,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
   private fun updateBot(bot: Bot) {
     jdbcTemplate.update(
         """
-        update testlab2_testing.styringsdata_bot set
+        update styringsdata_bot set
           beloep_dag = :beloep_dag,
           oeking_etter_dager = :oeking_etter_dager,
           oekning_type = :oekning_type,

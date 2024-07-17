@@ -31,15 +31,20 @@ create table styringsdata_bot
 
 create table styringsdata
 (
-    id               serial primary key,
-    kontroll_id      int references kontroll (id),
-    loeysing_id      int,
-    ansvarleg        varchar   not null,
-    oppretta         timestamp not null,
-    frist            timestamp not null,
-    reaksjon         varchar   not null,
-    paalegg_id       int references styringsdata_paalegg (id),
-    paalegg_klage_id int references styringsdata_klage (id),
-    bot_id           int references styringsdata_bot (id),
-    bot_klage_id     int references styringsdata_klage (id)
+    id                     serial primary key,
+    kontroll_id            int references kontroll (id),
+    loeysing_id            int,
+    ansvarleg              varchar                  not null,
+    oppretta               timestamp                not null,
+    frist                  timestamp                not null,
+    reaksjon               varchar                  not null,
+    paalegg_reaksjon       varchar                  not null,
+    paalegg_klage_reaksjon varchar                  not null,
+    bot_reaksjon           varchar                  not null,
+    bot_klage_reaksjon     varchar                  not null,
+    paalegg_id             int references styringsdata_paalegg (id),
+    paalegg_klage_id       int references styringsdata_klage (id),
+    bot_id                 int references styringsdata_bot (id),
+    bot_klage_id           int references styringsdata_klage (id),
+    sist_lagra             timestamp with time zone not null
 );
