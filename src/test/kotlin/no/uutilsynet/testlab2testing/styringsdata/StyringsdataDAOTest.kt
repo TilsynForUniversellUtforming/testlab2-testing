@@ -222,7 +222,7 @@ class StyringsdataDAOTest(
         Styringsdata(
             id = null,
             loeysingId = 1,
-            kontrollId = 1,
+            kontrollId = kontrollId,
             ansvarleg = "SD",
             oppretta = LocalDate.now(),
             frist = LocalDate.now().plusDays(50),
