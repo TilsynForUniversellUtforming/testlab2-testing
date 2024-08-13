@@ -50,7 +50,6 @@ data class Paalegg(
 
 data class Klage(
     val id: Int?,
-    val klageType: Klagetype,
     val klageMottattDato: LocalDate,
     val klageAvgjortDato: LocalDate?,
     val resultatKlageTilsyn: ResultatKlage?,

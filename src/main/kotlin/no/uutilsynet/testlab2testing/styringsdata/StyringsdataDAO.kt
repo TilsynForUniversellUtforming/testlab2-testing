@@ -4,6 +4,7 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.ZoneId
+import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -93,7 +94,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
       jdbcTemplate.queryForObject(
           "select id, vedtak_dato, frist from styringsdata_paalegg where id = :id",
           mapOf("id" to id),
-          Paalegg::class.java)
+          DataClassRowMapper.newInstance(Paalegg::class.java))
 
   fun getBot(id: Int): Bot? =
       jdbcTemplate.queryForObject(
@@ -122,7 +123,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
       jdbcTemplate.queryForObject(
           """
             select
-                id, klage_type, klage_mottatt_dato, klage_avgjort_dato, resultat_klage_tilsyn, 
+                id, klage_mottatt_dato, klage_avgjort_dato, resultat_klage_tilsyn, 
                 klage_dato_departement, resultat_klage_departement
             from styringsdata_klage 
               where id = :id"""
@@ -131,7 +132,6 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
       ) { rs, _ ->
         Klage(
             id = rs.getInt("id"),
-            klageType = Klagetype.valueOf(rs.getString("klage_type")),
             klageMottattDato =
                 rs.getTimestamp("klage_mottatt_dato").toInstant().atZone(zoneId).toLocalDate(),
             klageAvgjortDato =
@@ -150,9 +150,9 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Transactional
   fun createStyringsdata(styringsdata: Styringsdata): Result<Int> = runCatching {
     val paaleggId = styringsdata.paalegg?.let { insertPaalegg(it) }
-    val paaleggKlageId = styringsdata.paaleggKlage?.let { insertKlage(it) }
+    val paaleggKlageId = styringsdata.paaleggKlage?.let { insertKlage(it, Klagetype.paalegg) }
     val botId = styringsdata.bot?.let { insertBot(it) }
-    val botKlageId = styringsdata.botKlage?.let { insertKlage(it) }
+    val botKlageId = styringsdata.botKlage?.let { insertKlage(it, Klagetype.bot) }
     val sistLagra = Timestamp.from(Instant.now())
 
     jdbcTemplate.queryForObject(
@@ -216,10 +216,14 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
     val paaleggId =
         styringsdata.paalegg?.let { if (it.id != null) updatePaalegg(it) else insertPaalegg(it) }
     val paaleggKlageId =
-        styringsdata.paaleggKlage?.let { if (it.id != null) updateKlage(it) else insertKlage(it) }
+        styringsdata.paaleggKlage?.let {
+          if (it.id != null) updateKlage(it) else insertKlage(it, Klagetype.paalegg)
+        }
     val botId = styringsdata.bot?.let { if (it.id != null) updateBot(it) else insertBot(it) }
     val botKlageId =
-        styringsdata.botKlage?.let { if (it.id != null) updateKlage(it) else insertKlage(it) }
+        styringsdata.botKlage?.let {
+          if (it.id != null) updateKlage(it) else insertKlage(it, Klagetype.bot)
+        }
     val sistLagra = Timestamp.from(Instant.now())
 
     jdbcTemplate.update(
@@ -279,7 +283,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             "frist" to paalegg.frist?.let { Timestamp.valueOf(it.atStartOfDay()) }))
   }
 
-  private fun insertKlage(klage: Klage): Int {
+  private fun insertKlage(klage: Klage, klagetype: Klagetype): Int {
     val id =
         jdbcTemplate.queryForObject(
             """
@@ -291,7 +295,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
       """
                 .trimIndent(),
             mapOf(
-                "klage_type" to klage.klageType.name,
+                "klage_type" to klagetype.name,
                 "klage_mottatt_dato" to Timestamp.valueOf(klage.klageMottattDato.atStartOfDay()),
                 "klage_avgjort_dato" to
                     klage.klageAvgjortDato?.let { Timestamp.valueOf(it.atStartOfDay()) },
@@ -308,7 +312,6 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
     val sql =
         """
             update styringsdata_klage set
-                klage_type = :klage_type,
                 klage_mottatt_dato = :klage_mottatt_dato,
                 klage_avgjort_dato = :klage_avgjort_dato,
                 resultat_klage_tilsyn = :resultat_klage_tilsyn,
@@ -320,7 +323,6 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
     val params =
         mapOf(
             "id" to klage.id,
-            "klage_type" to klage.klageType.name,
             "klage_mottatt_dato" to Timestamp.valueOf(klage.klageMottattDato.atStartOfDay()),
             "klage_avgjort_dato" to
                 klage.klageAvgjortDato?.let { Timestamp.valueOf(it.atStartOfDay()) },
