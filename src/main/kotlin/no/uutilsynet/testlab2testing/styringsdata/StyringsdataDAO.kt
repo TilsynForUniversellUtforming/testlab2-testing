@@ -274,13 +274,15 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
     return id
   }
 
-  private fun updatePaalegg(paalegg: Paalegg) {
+  private fun updatePaalegg(paalegg: Paalegg): Int {
     jdbcTemplate.update(
         "update styringsdata_paalegg set vedtak_dato = :vedtak_dato, frist = :frist where id = :id",
         mapOf(
             "id" to paalegg.id,
             "vedtak_dato" to Timestamp.valueOf(paalegg.vedtakDato.atStartOfDay()),
             "frist" to paalegg.frist?.let { Timestamp.valueOf(it.atStartOfDay()) }))
+
+    return paalegg.id!!
   }
 
   private fun insertKlage(klage: Klage, klagetype: Klagetype): Int {
@@ -308,7 +310,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
     return id
   }
 
-  private fun updateKlage(klage: Klage) {
+  private fun updateKlage(klage: Klage): Int {
     val sql =
         """
             update styringsdata_klage set
@@ -332,6 +334,8 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             "resultat_klage_departement" to klage.resultatKlageDepartement?.name)
 
     jdbcTemplate.update(sql, params)
+
+    return klage.id!!
   }
 
   private fun insertBot(bot: Bot): Int {
@@ -360,7 +364,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
     return id
   }
 
-  private fun updateBot(bot: Bot) {
+  private fun updateBot(bot: Bot): Int {
     jdbcTemplate.update(
         """
         update styringsdata_bot set
@@ -385,5 +389,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             "start_dato" to Timestamp.valueOf(bot.startDato.atStartOfDay()),
             "slutt_dato" to bot.sluttDato?.let { Timestamp.valueOf(it.atStartOfDay()) },
             "kommentar" to bot.kommentar))
+
+    return bot.id!!
   }
 }
