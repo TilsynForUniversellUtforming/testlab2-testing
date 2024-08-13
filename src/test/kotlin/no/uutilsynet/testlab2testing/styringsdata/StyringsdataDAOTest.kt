@@ -2,6 +2,10 @@ package no.uutilsynet.testlab2testing.styringsdata
 
 import java.time.Instant
 import java.time.LocalDate
+import kotlin.properties.Delegates
+import no.uutilsynet.testlab2testing.kontroll.Kontroll
+import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
+import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -12,13 +16,18 @@ import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
 @TestInstance(Lifecycle.PER_CLASS)
-class StyringsdataDAOTest(@Autowired private val styringsdataDAO: StyringsdataDAO) {
+class StyringsdataDAOTest(
+    @Autowired private val styringsdataDAO: StyringsdataDAO,
+    @Autowired val kontrollDAO: KontrollDAO,
+) {
 
-  private var styringsdataId: Int? = null
+  private var styringsdataId: Int by Delegates.notNull()
+  private var kontrollId: Int by Delegates.notNull()
 
   @BeforeAll
   fun setUp() {
-    styringsdataId = createTestStyringsdataWithoutPaaleggAndOthers()
+    kontrollId = createTestKontroll()
+    styringsdataId = createTestStyringsdata()
   }
 
   @Test
@@ -40,7 +49,7 @@ class StyringsdataDAOTest(@Autowired private val styringsdataDAO: StyringsdataDA
 
   @Test
   fun testCreateStyringsdataWithoutPaaleggAndOthers() {
-    val styringsdataId = createTestStyringsdataWithoutPaaleggAndOthers()
+    val styringsdataId = createTestStyringsdata()
     assertThat(styringsdataId).isNotNull
   }
 
@@ -208,7 +217,7 @@ class StyringsdataDAOTest(@Autowired private val styringsdataDAO: StyringsdataDA
     assertThat(updatedBotKlage!!.klageMottattDato).isEqualTo(botKlage.klageMottattDato)
   }
 
-  private fun createTestStyringsdataWithoutPaaleggAndOthers(): Int {
+  private fun createTestStyringsdata(): Int {
     val styringsdata =
         Styringsdata(
             id = null,
@@ -228,5 +237,17 @@ class StyringsdataDAOTest(@Autowired private val styringsdataDAO: StyringsdataDA
             botKlage = null,
             sistLagra = Instant.now())
     return styringsdataDAO.createStyringsdata(styringsdata).getOrThrow()
+  }
+
+  private fun createTestKontroll(): Int {
+    val opprettKontroll =
+        KontrollResource.OpprettKontroll(
+            "manuell-kontroll",
+            "Ola Nordmann",
+            Kontroll.Sakstype.Arkivsak,
+            "1234",
+            Kontroll.Kontrolltype.InngaaendeKontroll)
+
+    return kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
   }
 }

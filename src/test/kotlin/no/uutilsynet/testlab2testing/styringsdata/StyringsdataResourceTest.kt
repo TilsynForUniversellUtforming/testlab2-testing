@@ -4,6 +4,9 @@ import java.net.URI
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.properties.Delegates
+import no.uutilsynet.testlab2testing.kontroll.Kontroll
+import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
+import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
@@ -24,13 +27,16 @@ import org.springframework.test.context.ActiveProfiles
 @ActiveProfiles("test")
 class StyringsdataResourceTest(
     @Autowired val restTemplate: TestRestTemplate,
-    @Autowired val styringsdataDAO: StyringsdataDAO
+    @Autowired val styringsdataDAO: StyringsdataDAO,
+    @Autowired val kontrollDAO: KontrollDAO,
 ) {
   private var styringsdataId: Int by Delegates.notNull()
+  private var kontrollId: Int by Delegates.notNull()
   private lateinit var location: URI
 
   @BeforeAll
   fun setUp() {
+    kontrollId = createTestKontroll()
     styringsdataId = createStyringsdata()
   }
 
@@ -42,7 +48,7 @@ class StyringsdataResourceTest(
         Styringsdata(
             id = null,
             loeysingId = 1,
-            kontrollId = 1,
+            kontrollId = kontrollId,
             ansvarleg = "Test Ansvarleg",
             oppretta = LocalDate.now(),
             frist = LocalDate.now().plusDays(50),
@@ -186,7 +192,7 @@ class StyringsdataResourceTest(
         Styringsdata(
             id = null,
             loeysingId = 1,
-            kontrollId = 1,
+            kontrollId = kontrollId,
             ansvarleg = "Test Ansvarleg",
             oppretta = LocalDate.now(),
             frist = LocalDate.now().plusDays(50),
@@ -201,5 +207,17 @@ class StyringsdataResourceTest(
             botKlage = null,
             sistLagra = Instant.now())
     return styringsdataDAO.createStyringsdata(styringsdata).getOrThrow()
+  }
+
+  private fun createTestKontroll(): Int {
+    val opprettKontroll =
+        KontrollResource.OpprettKontroll(
+            "manuell-kontroll",
+            "Ola Nordmann",
+            Kontroll.Sakstype.Arkivsak,
+            "1234",
+            Kontroll.Kontrolltype.InngaaendeKontroll)
+
+    return kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
   }
 }
