@@ -32,7 +32,7 @@ class StyringsdataDAOTest(
 
   @Test
   fun testGetStyringsdata() {
-    val styringsdataList = styringsdataDAO.getStyringsdata(styringsdataId!!)
+    val styringsdataList = styringsdataDAO.getStyringsdata(styringsdataId)
     assertThat(styringsdataList).isNotEmpty
     val styringsdata = styringsdataList.first()
 
@@ -43,7 +43,7 @@ class StyringsdataDAOTest(
 
   @Test
   fun testListStyringsdataForKontroll() {
-    val styringsdataList = styringsdataDAO.listStyringsdataForKontroll(1)
+    val styringsdataList = styringsdataDAO.listStyringsdataForKontroll(kontrollId)
     assertThat(styringsdataList).isNotEmpty
   }
 
@@ -61,7 +61,7 @@ class StyringsdataDAOTest(
             vedtakDato = LocalDate.now().minusDays(10),
             frist = LocalDate.now().plusDays(20))
 
-    val originalStyringsdata = styringsdataDAO.getStyringsdata(styringsdataId!!).first()
+    val originalStyringsdata = styringsdataDAO.getStyringsdata(styringsdataId).first()
     val updatedStyringsdata =
         originalStyringsdata.let { styringsdata ->
           Styringsdata(
@@ -83,9 +83,9 @@ class StyringsdataDAOTest(
               sistLagra = styringsdata.sistLagra)
         }
 
-    styringsdataDAO.updateStyringsdata(styringsdataId!!, updatedStyringsdata)
+    styringsdataDAO.updateStyringsdata(styringsdataId, updatedStyringsdata)
 
-    val updatedData = styringsdataDAO.getStyringsdata(styringsdataId!!).first()
+    val updatedData = styringsdataDAO.getStyringsdata(styringsdataId).first()
     val updatedPaalegg = styringsdataDAO.getPaalegg(updatedData.paaleggId!!)
     assertThat(updatedPaalegg).isNotNull
     assertThat(updatedPaalegg!!.vedtakDato).isEqualTo(paalegg.vedtakDato)
@@ -102,7 +102,7 @@ class StyringsdataDAOTest(
             klageDatoDepartement = LocalDate.now().plusDays(20),
             resultatKlageDepartement = ResultatKlage.stadfesta)
 
-    val originalStyringsdata = styringsdataDAO.getStyringsdata(styringsdataId!!).first()
+    val originalStyringsdata = styringsdataDAO.getStyringsdata(styringsdataId).first()
     val updatedStyringsdata =
         originalStyringsdata.let { styringsdata ->
           Styringsdata(
@@ -124,9 +124,9 @@ class StyringsdataDAOTest(
               sistLagra = styringsdata.sistLagra)
         }
 
-    styringsdataDAO.updateStyringsdata(styringsdataId!!, updatedStyringsdata)
+    styringsdataDAO.updateStyringsdata(styringsdataId, updatedStyringsdata)
 
-    val updatedData = styringsdataDAO.getStyringsdata(styringsdataId!!).first()
+    val updatedData = styringsdataDAO.getStyringsdata(styringsdataId).first()
     val updatedPaaleggKlage = styringsdataDAO.getKlage(updatedData.paaleggKlageId!!)
     assertThat(updatedPaaleggKlage).isNotNull
     assertThat(updatedPaaleggKlage!!.klageMottattDato).isEqualTo(paaleggKlage.klageMottattDato)
@@ -146,7 +146,7 @@ class StyringsdataDAOTest(
             sluttDato = LocalDate.now().plusDays(60),
             kommentar = "Updated Test Bot")
 
-    val originalStyringsdata = styringsdataDAO.getStyringsdata(styringsdataId!!).first()
+    val originalStyringsdata = styringsdataDAO.getStyringsdata(styringsdataId).first()
     val updatedStyringsdata =
         originalStyringsdata.let { styringsdata ->
           Styringsdata(
@@ -168,9 +168,9 @@ class StyringsdataDAOTest(
               sistLagra = styringsdata.sistLagra)
         }
 
-    styringsdataDAO.updateStyringsdata(styringsdataId!!, updatedStyringsdata)
+    styringsdataDAO.updateStyringsdata(styringsdataId, updatedStyringsdata)
 
-    val updatedData = styringsdataDAO.getStyringsdata(styringsdataId!!).first()
+    val updatedData = styringsdataDAO.getStyringsdata(styringsdataId).first()
     val updatedBot = styringsdataDAO.getBot(updatedData.botId!!)
     assertThat(updatedBot).isNotNull
     assertThat(updatedBot!!.beloepDag).isEqualTo(bot.beloepDag)
@@ -187,7 +187,7 @@ class StyringsdataDAOTest(
             klageDatoDepartement = LocalDate.now().plusDays(20),
             resultatKlageDepartement = ResultatKlage.stadfesta)
 
-    val originalStyringsdata = styringsdataDAO.getStyringsdata(styringsdataId!!).first()
+    val originalStyringsdata = styringsdataDAO.getStyringsdata(styringsdataId).first()
     val updatedStyringsdata =
         originalStyringsdata.let { styringsdata ->
           Styringsdata(
@@ -209,9 +209,9 @@ class StyringsdataDAOTest(
               sistLagra = styringsdata.sistLagra)
         }
 
-    styringsdataDAO.updateStyringsdata(styringsdataId!!, updatedStyringsdata)
+    styringsdataDAO.updateStyringsdata(styringsdataId, updatedStyringsdata)
 
-    val updatedData = styringsdataDAO.getStyringsdata(styringsdataId!!).first()
+    val updatedData = styringsdataDAO.getStyringsdata(styringsdataId).first()
     val updatedBotKlage = styringsdataDAO.getKlage(updatedData.botKlageId!!)
     assertThat(updatedBotKlage).isNotNull
     assertThat(updatedBotKlage!!.klageMottattDato).isEqualTo(botKlage.klageMottattDato)
