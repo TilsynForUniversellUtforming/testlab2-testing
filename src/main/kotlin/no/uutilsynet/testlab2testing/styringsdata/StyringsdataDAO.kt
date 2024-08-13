@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
 
-  val zoneId = ZoneId.of("Europe/Oslo") // Specify the appropriate timezone
+  val zoneId: ZoneId = ZoneId.of("Europe/Oslo")
 
   private val styringsdataListElementRowMapper = { rs: ResultSet, _: Int ->
     StyringsdataListElement(
