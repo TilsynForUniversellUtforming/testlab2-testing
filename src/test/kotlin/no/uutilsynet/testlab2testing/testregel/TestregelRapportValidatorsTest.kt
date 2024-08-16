@@ -15,7 +15,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
-class TestregelValidatorsTest {
+class TestregelRapportValidatorsTest {
   @Test
   @DisplayName("Gyldig testregel for forenklet kontroll skal kunne valideres")
   fun validForenklet() {
@@ -66,7 +66,7 @@ class TestregelValidatorsTest {
 
   @Nested
   @DisplayName("For validering av testregel-objektet skal ")
-  inner class invalidTestregel {
+  inner class invalidTestregelRapport {
 
     @Test
     @DisplayName("ugyldig namn feile")

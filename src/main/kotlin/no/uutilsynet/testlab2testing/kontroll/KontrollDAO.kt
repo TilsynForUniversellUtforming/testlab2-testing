@@ -152,7 +152,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val kontrolltype: Kontroll.Kontrolltype,
       val utval: Utval?,
       val testreglar: Testreglar?,
-      val sideutval: List<Sideutval> = emptyList()
+      val sideutval: List<Sideutval> = emptyList(),
+      val opprettaDato: Instant = Instant.now(),
   ) {
     data class Utval(
         val id: Int,

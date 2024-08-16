@@ -128,7 +128,7 @@
         <dependency>
             <groupId>no.uutilsynet</groupId>
             <artifactId>testlab2-security-lib</artifactId>
-            <version>0.0.2-SNAPSHOT</version>
+            <version>0.0.4-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
