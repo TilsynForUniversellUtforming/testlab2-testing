@@ -65,7 +65,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                            k.utval_id       as utval_id,
                            k.utval_namn     as utval_namn,
                            k.utval_oppretta as utval_oppretta,
-                           k.regelsett_id   as regelsett_id
+                           k.regelsett_id   as regelsett_id,
+                           k.oppretta_dato as oppretta_dato
                     from kontroll k
                     where k.id in (:ids)
                     """,
@@ -134,7 +135,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 Kontroll.Kontrolltype.valueOf(resultSet.getString("kontrolltype")),
                 utval,
                 testreglar,
-                sideutvalList)
+                sideutvalList,
+                resultSet.getTimestamp("oppretta_dato").toInstant())
           }
       if (result.size == ids.size) result
       else

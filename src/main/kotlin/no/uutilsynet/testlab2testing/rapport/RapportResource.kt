@@ -26,11 +26,6 @@ class RapportResource(val rapportService: RapportService) {
 
     val wordRapport = rapportService.createWordRapport(rapport)
     response.outputStream.write(wordRapport)
-    //    wordRapport?.inputStream.use {
-    //      if (it != null) {
-    //        response.outputStream.write(it.readAllBytes())
-    //      }
-    //    }
     response.outputStream.flush()
   }
 }
