@@ -25,7 +25,7 @@ import org.springframework.test.context.ActiveProfiles
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
-class TestregelRapportIntegrationTests(
+class TestregelIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val testregelDAO: TestregelDAO,
 ) {
@@ -130,7 +130,7 @@ class TestregelRapportIntegrationTests(
 
   @Nested
   @DisplayName("Hvis det finnes en testregel i databasen")
-  inner class DatabaseHasAtLeastOneTestregelRapport(@Autowired val restTemplate: TestRestTemplate) {
+  inner class DatabaseHasAtLeastOneTestregel(@Autowired val restTemplate: TestRestTemplate) {
     private val location = createDefaultTestregel()
 
     @Test

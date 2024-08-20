@@ -12,7 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TestregelRapportDAOTest(@Autowired val testregelDAO: TestregelDAO) {
+class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
 
   val deleteThese: MutableList<Int> = mutableListOf()
 
