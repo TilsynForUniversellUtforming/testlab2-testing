@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.kontroll
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import java.time.LocalDate
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.testregel.TestregelBase
 
@@ -13,7 +14,8 @@ data class Kontroll(
     val arkivreferanse: String,
     val utval: Utval? = null,
     val testreglar: Testreglar? = null,
-    val sideutvalList: List<Sideutval> = emptyList()
+    val sideutvalList: List<Sideutval> = emptyList(),
+    val opprettaDato: LocalDate = LocalDate.now(),
 ) {
   enum class Sakstype {
     @JsonProperty("forvaltningssak") Forvaltningssak,
