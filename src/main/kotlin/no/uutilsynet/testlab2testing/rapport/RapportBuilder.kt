@@ -75,7 +75,7 @@ class RapportBuilder(
         resultatId = this.id,
         testregel = testregel.toTestregelRapport(),
         side = Side(side.first, side.second.begrunnelse, side.second.url),
-        elementOmtale = "",
+        elementOmtale = this.elementOmtale.toString(),
         elementResultat = this.elementResultat.toString(),
         elementUtfall = this.elementUtfall,
         tema =
