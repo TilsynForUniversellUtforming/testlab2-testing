@@ -6,6 +6,7 @@ import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
 import org.springframework.http.ResponseEntity
@@ -24,6 +25,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 @RequestMapping("/testresultat")
 class TestResultatResource(
     val testResultatDAO: TestResultatDAO,
+    val testgrunnlagDAO: TestgrunnlagKontrollDAO,
     val aggregeringService: AggregeringService,
     val brukarService: BrukarService,
     val bildeService: BildeService,
@@ -98,7 +100,7 @@ class TestResultatResource(
       runCatching {
             logger.info("Sletter testresultat med id $id")
             val resultat = testResultatDAO.getTestResultat(id).getOrThrow()
-            if (resultat.status == ResultatManuellKontroll.Status.Ferdig) {
+            if (resultat.status == ResultatManuellKontrollBase.Status.Ferdig) {
               throw IllegalArgumentException("Resultat er ferdig og kan ikke slettes")
             } else {
               testResultatDAO.delete(id).getOrThrow()

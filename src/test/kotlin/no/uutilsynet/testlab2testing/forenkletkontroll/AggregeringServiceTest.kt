@@ -11,6 +11,7 @@ import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
@@ -209,9 +210,9 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
             elementOmtale = "Hovedoverskrift",
             elementResultat = TestresultatUtfall.brot,
             elementUtfall = "Feil",
-            svar = listOf(ResultatManuellKontroll.Svar("Steg 1", "Svar 1")),
+            svar = listOf(ResultatManuellKontrollBase.Svar("Steg 1", "Svar 1")),
             testVartUtfoert = Instant.now(),
-            status = ResultatManuellKontroll.Status.Ferdig,
+            status = ResultatManuellKontrollBase.Status.Ferdig,
             kommentar = "Kommentar",
             sistLagra = Instant.now())
 
@@ -226,9 +227,9 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
             elementOmtale = "Bilde",
             elementResultat = TestresultatUtfall.samsvar,
             elementUtfall = "Heilt ok",
-            svar = listOf(ResultatManuellKontroll.Svar("Steg 1", "Svar 1")),
+            svar = listOf(ResultatManuellKontrollBase.Svar("Steg 1", "Svar 1")),
             testVartUtfoert = Instant.now(),
-            status = ResultatManuellKontroll.Status.Ferdig,
+            status = ResultatManuellKontrollBase.Status.Ferdig,
             kommentar = "Kommentar",
             sistLagra = Instant.now())
 
@@ -317,9 +318,9 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
                 elementOmtale = "Hovedoverskrift",
                 elementResultat = elementResultat,
                 elementUtfall = "elementUtfall",
-                svar = listOf(ResultatManuellKontroll.Svar("Steg 1", "Svar 1")),
+                svar = listOf(ResultatManuellKontrollBase.Svar("Steg 1", "Svar 1")),
                 testVartUtfoert = Instant.now(),
-                status = ResultatManuellKontroll.Status.Ferdig,
+                status = ResultatManuellKontrollBase.Status.Ferdig,
                 kommentar = "Kommentar",
                 sistLagra = Instant.now()))
         id++

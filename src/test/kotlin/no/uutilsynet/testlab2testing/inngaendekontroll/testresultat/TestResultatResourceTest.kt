@@ -9,7 +9,7 @@ import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll.Svar
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase.Svar
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
@@ -273,7 +273,7 @@ class TestResultatResourceTest(
   @DisplayName("vi skal ikke kunne slette et testresultat hvis status er 'Ferdig'")
   fun sletteFerdigTestresultat() {
     val resultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
-    val endret = resultat.copy(status = ResultatManuellKontroll.Status.Ferdig)
+    val endret = resultat.copy(status = ResultatManuellKontrollBase.Status.Ferdig)
     restTemplate.put(location, endret)
     val responseEntity = restTemplate.exchange(location, HttpMethod.DELETE, null, Unit::class.java)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
@@ -284,7 +284,7 @@ class TestResultatResourceTest(
   @DisplayName("vi skal kunne slette et testresultat hvis status er noe annet enn 'Ferdig'")
   fun sletteTestresultat() {
     val resultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
-    val endret = resultat.copy(status = ResultatManuellKontroll.Status.UnderArbeid)
+    val endret = resultat.copy(status = ResultatManuellKontrollBase.Status.UnderArbeid)
     restTemplate.put(location, endret)
 
     restTemplate.delete(location)

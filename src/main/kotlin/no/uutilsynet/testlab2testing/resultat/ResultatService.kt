@@ -6,10 +6,15 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.forenkletkontroll.*
+import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingResource
+import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.TestResultat
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
@@ -267,8 +272,10 @@ class ResultatService(
   }
 
   private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =
-      (result.map { it.status }.count { it == ResultatManuellKontroll.Status.Ferdig }.toDouble() /
-              result.size)
+      (result
+              .map { it.status }
+              .count { it == ResultatManuellKontrollBase.Status.Ferdig }
+              .toDouble() / result.size)
           .times(100)
           .toInt()
 

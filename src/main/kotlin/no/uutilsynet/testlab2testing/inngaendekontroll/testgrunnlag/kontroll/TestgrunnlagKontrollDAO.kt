@@ -104,7 +104,7 @@ class TestgrunnlagKontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun getTestgrunnlagForKontroll(kontrollId: Int): TestgrunnlagList {
-    logger.info("Henter testgrunnlag for sak $kontrollId")
+    logger.info("Henter testgrunnlag for kontroll $kontrollId")
     val testgrunnlagIds =
         jdbcTemplate.queryForList(
             "select t.id from testgrunnlag t where t.kontroll_id = :kontrollId",
