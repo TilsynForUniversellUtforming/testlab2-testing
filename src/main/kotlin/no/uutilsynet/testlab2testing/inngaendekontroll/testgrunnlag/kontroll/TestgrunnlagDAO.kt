@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-class TestgrunnlagKontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getTestgrunnlag(testgrunnlagId: Int): Result<TestgrunnlagKontroll> {
 

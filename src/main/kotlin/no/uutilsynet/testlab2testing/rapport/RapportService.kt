@@ -1,8 +1,7 @@
 package no.uutilsynet.testlab2testing.rapport
 
-import java.util.*
 import no.uutilsynet.testlab2testing.forenkletkontroll.logger
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
@@ -19,7 +18,7 @@ class RapportService(
     @Autowired val restTemplate: RestTemplate,
     @Autowired val rapportBuilder: RapportBuilder,
     @Autowired val testResultatDAO: TestResultatDAO,
-    @Autowired val testgrunnlagKontrollDAO: TestgrunnlagKontrollDAO,
+    @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
     @Autowired val properties: RapportVerktoeyKlient
@@ -29,7 +28,7 @@ class RapportService(
     val kontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
     val loeysing = loeysingsRegisterClient.getManyExpanded(listOf(loeysingId)).getOrThrow().first()
 
-    val testgrunnlag = testgrunnlagKontrollDAO.getOpprinneligTestgrunnlag(kontroll.id).getOrThrow()
+    val testgrunnlag = testgrunnlagDAO.getOpprinneligTestgrunnlag(kontroll.id).getOrThrow()
     val testresultat = testResultatDAO.getManyResults(testgrunnlag).getOrThrow()
 
     return rapportBuilder.kontroll(kontroll).loeysing(loeysing).testresultat(testresultat).build()

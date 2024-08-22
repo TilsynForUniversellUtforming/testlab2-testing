@@ -4,7 +4,7 @@ import java.net.URI
 import kotlin.properties.Delegates
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlag
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
@@ -23,7 +23,7 @@ import org.springframework.boot.test.context.SpringBootTest
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestgrunnlagDAOTest(
-    @Autowired val testgrunnlagDAO: TestgrunnlagKontrollDAO,
+    @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val utvalDAO: UtvalDAO,
     @Autowired val testregelDAO: TestregelDAO,

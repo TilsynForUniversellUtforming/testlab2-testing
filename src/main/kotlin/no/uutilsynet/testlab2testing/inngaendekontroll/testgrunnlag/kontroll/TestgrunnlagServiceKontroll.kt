@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class TestgrunnlagServiceKontroll(
-    val testgrunnlagDAO: TestgrunnlagKontrollDAO,
+    val testgrunnlagDAO: TestgrunnlagDAO,
     val kontrollDAO: KontrollDAO,
     val testregelDAO: TestregelDAO,
 ) {

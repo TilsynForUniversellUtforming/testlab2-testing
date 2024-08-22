@@ -8,7 +8,7 @@ import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlag
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase.Svar
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
@@ -43,7 +43,7 @@ class TestResultatResourceTest(
     @Autowired val testregelDAO: TestregelDAO,
     @Autowired val utvalDAO: UtvalDAO,
     @Autowired val restTemplate: TestRestTemplate,
-    @Autowired val testgrunnlagDAO: TestgrunnlagKontrollDAO
+    @Autowired val testgrunnlagDAO: TestgrunnlagDAO
 ) {
   private var kontrollId: Int by Delegates.notNull()
   private var utvalId: Int by Delegates.notNull()
