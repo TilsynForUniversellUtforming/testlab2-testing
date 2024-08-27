@@ -73,16 +73,17 @@ class LoeysingsRegisterClient(
     restTemplate.delete("${properties.host}/v1/loeysing/$id")
   }
 
-  @Cacheable("loeysing", unless = "#result?.id==null")
-  fun getLoeysingFromId(loeysingId: Int): Result<Loeysing> {
+  @Cacheable("loeysing", unless = "#result==null")
+  fun getLoeysingFromId(loeysingId: Int): Loeysing {
     return runCatching {
-      getMany(listOf(loeysingId)).let { loeysingList ->
-        loeysingList.getOrThrow().firstOrNull()?.let {
-          return Result.success(it)
+          getMany(listOf(loeysingId)).let { loeysingList ->
+            loeysingList.getOrThrow().firstOrNull()?.let {
+              return it
+            }
+          }
+          throw RuntimeException("Fant ikkje løsning med id $loeysingId")
         }
-      }
-      throw RuntimeException("Fant ikkje løsning med id $loeysingId")
-    }
+        .getOrThrow()
   }
 
   @Cacheable("loeysingarExpanded", unless = "#result.isEmpty()")

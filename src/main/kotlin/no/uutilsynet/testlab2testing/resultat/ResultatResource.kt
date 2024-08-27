@@ -89,4 +89,14 @@ class ResultatResource(
   ): List<ResultatTema> {
     return resultatService.getResultatPrTema(kontrollId, kontrollType, fraDato, tilDato)
   }
+
+  @GetMapping("/krav")
+  fun getResultatPrKrav(
+      @RequestParam kontrollId: Int?,
+      @RequestParam kontrollType: Kontroll.Kontrolltype?,
+      @RequestParam fraDato: LocalDate?,
+      @RequestParam tilDato: LocalDate?
+  ): List<ResultatKrav> {
+    return resultatService.getResultatPrKrav(kontrollId, kontrollType, fraDato, tilDato)
+  }
 }

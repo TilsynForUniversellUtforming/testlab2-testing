@@ -4,11 +4,15 @@ import java.sql.ResultSet
 import java.time.LocalDate
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
+import org.slf4j.LoggerFactory
+import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 
 @Component
 class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+
+  private val logger = LoggerFactory.getLogger(ResultatDAO::class.java)
 
   val resultatQuery =
       """select k.id as id, k.tittel as tittel, kontrolltype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot, kontroll_id,dato, testregel_id
@@ -128,8 +132,9 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   ): List<ResultatTema> {
     val whereClause = setWhereClause(kontrollId, kontrolltype, startDato, sluttDato)
 
-    val query =
-        """
+    runCatching {
+          val query =
+              """
             select tema, sum(tal_element_samsvar) as tal_element_samsvar,sum(tal_element_brot) as tal_element_brot,sum(tal_element_varsel) as tal_element_varsel,sum(tal_element_ikkje_forekomst) as tal_element_ikkje_forekomst, avg(testregel_gjennomsnittleg_side_samsvar_prosent ) as score
         from kontroll k
         join (
@@ -160,7 +165,12 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 		group by tema
         """
 
-    return jdbcTemplate.query(query) { rs, _ -> resultatTemaRowmapper(rs) }
+          return jdbcTemplate.query(query) { rs, _ -> resultatTemaRowmapper(rs) }
+        }
+        .getOrElse {
+          logger.error(it.message)
+          return emptyList()
+        }
   }
 
   fun setWhereClause(
@@ -208,4 +218,55 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           rs.getInt("tal_element_brot"),
           rs.getInt("tal_element_varsel"),
           rs.getInt("tal_element_ikkje_forekomst"))
+
+  fun getResultatPrKrav(
+      kontrollId: Int?,
+      kontrollType: Kontroll.Kontrolltype?,
+      fraDato: LocalDate?,
+      tilDato: LocalDate?
+  ): List<ResultatKravBase> {
+    kotlin
+        .runCatching {
+          val whereClause = setWhereClause(kontrollId, kontrollType, fraDato, tilDato)
+
+          val query =
+              """
+            select krav_id, sum(tal_element_samsvar) as tal_element_samsvar,sum(tal_element_brot) as tal_element_brot,sum(tal_element_varsel) as tal_element_varsel,sum(tal_element_ikkje_forekomst) as tal_element_ikkje_forekomst, avg(testregel_gjennomsnittleg_side_samsvar_prosent ) as score
+        from kontroll k
+        join (
+        select tr.krav_id as krav_id,loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot,tal_element_varsel,tal_element_ikkje_forekomst,
+		case
+			when maaling_id is not null
+				then m.kontrollid
+				else t.kontroll_id
+			end as kontroll_id,
+		case 
+			when maaling_id is not null
+				then m.dato_start
+				else t.dato_oppretta 
+			end as dato
+		from aggregering_testregel agt
+		left join maalingv1 m on m.id=agt.maaling_id
+		left join testgrunnlag t on t.id=agt.testgrunnlag_id
+		left join testregel tr on tr.id=agt.testregel_id
+		where case
+			when maaling_id is not null
+				then m.kontrollid
+				else t.kontroll_id
+			end is not null
+
+		) as ag
+        on k.id=ag.kontroll_id
+        $whereClause
+		group by krav_id
+        """
+
+          return jdbcTemplate.query(
+              query, DataClassRowMapper.newInstance(ResultatKravBase::class.java))
+        }
+        .getOrElse {
+          logger.error(it.message)
+          return emptyList()
+        }
+  }
 }

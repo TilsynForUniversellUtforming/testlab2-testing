@@ -126,9 +126,5 @@ class TestregelResource(
             ResponseEntity.internalServerError().body(it.message)
           }
 
-  fun validateKrav(kravId: Int) = runCatching {
-    kravregisterClient.getWcagKrav(kravId).getOrElse {
-      throw IllegalArgumentException("Krav med id $kravId finns ikkje")
-    }
-  }
+  fun validateKrav(kravId: Int) = runCatching { kravregisterClient.getWcagKrav(kravId) }
 }

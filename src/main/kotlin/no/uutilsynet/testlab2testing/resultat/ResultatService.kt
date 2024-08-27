@@ -32,7 +32,7 @@ class ResultatService(
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val kontrollDAO: KontrollDAO,
     val testgrunnlagDao: TestgrunnlagKontrollDAO,
-    val bildeService: BildeService
+    val bildeService: BildeService,
 ) {
 
   fun getResultatForAutomatiskKontroll(
@@ -79,7 +79,7 @@ class ResultatService(
   ): List<TestresultatDetaljert> {
 
     val testresultat: List<AutotesterTestresultat>? =
-        maalingResource.getTestresultat(maalingId, loeysingId)?.getOrThrow()
+        maalingResource.getTestresultat(maalingId, loeysingId).getOrThrow()
 
     if (!testresultat.isNullOrEmpty() && testresultat.first() is TestResultat) {
       return testresultat
@@ -173,8 +173,7 @@ class ResultatService(
   }
 
   fun getSuksesskriteriumFromTestregel(kravId: Int): List<String> {
-    return kravregisterClient.getWcagKrav(kravId).getOrNull()?.suksesskriterium?.let { listOf(it) }
-        ?: emptyList()
+    return listOf(kravregisterClient.getSuksesskriteriumFromKrav(kravId))
   }
 
   fun getResultatList(type: Kontroll.Kontrolltype?): List<Resultat> {
@@ -317,7 +316,7 @@ class ResultatService(
   fun mapKrav(result: ResultatLoeysing): ResultatLoeysing {
     val krav =
         testregelDAO.getTestregel(result.testregelId)?.kravId?.let {
-          kravregisterClient.getWcagKrav(it).getOrNull()
+          kravregisterClient.getWcagKrav(it)
         }
     return result.copy(
         kravId = krav?.id,
@@ -348,6 +347,17 @@ class ResultatService(
   ): List<ResultatTema> =
       resultatDAO.getResultatPrTema(kontrollId, kontrolltype, startDato, sluttDato)
 
+  fun getResultatPrKrav(
+      kontrollId: Int?,
+      kontrollType: Kontroll.Kontrolltype?,
+      fraDato: LocalDate?,
+      tilDato: LocalDate?
+  ): List<ResultatKrav> {
+    return resultatDAO.getResultatPrKrav(kontrollId, kontrollType, fraDato, tilDato).map {
+      it.toResultatKrav()
+    }
+  }
+
   class LoysingList(val loeysingar: Map<Int, Loeysing.Expanded>) {
     fun getNamn(loeysingId: Int): String {
       val loeysing = loeysingar[loeysingId]
@@ -359,5 +369,17 @@ class ResultatService(
       if (loeysing?.verksemd == null) return ""
       return loeysing.verksemd.namn
     }
+  }
+
+  fun ResultatKravBase.toResultatKrav(): ResultatKrav {
+    return ResultatKrav(
+        suksesskriterium = kravregisterClient.getSuksesskriteriumFromKrav(kravId),
+        score = score,
+        talTestaElement =
+            talElementBrot + talElementSamsvar + talElementVarsel + talElementIkkjeForekomst,
+        talElementBrot = talElementBrot,
+        talElementSamsvar = talElementSamsvar,
+        talElementVarsel = talElementVarsel,
+        talElementIkkjeForekomst = talElementIkkjeForekomst)
   }
 }
