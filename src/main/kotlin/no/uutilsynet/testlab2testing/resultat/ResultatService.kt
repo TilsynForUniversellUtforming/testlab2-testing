@@ -120,6 +120,7 @@ class ResultatService(
 
     return testresultat
         .filter { filterByTestregel(it.testregelId, testregelIds) }
+        .filter { it.elementResultat != null }
         .map {
           val testregel: Testregel = getTestregel(it.testregelId)
           val url = sideutvalIdUrlMap[it.sideutvalId]
