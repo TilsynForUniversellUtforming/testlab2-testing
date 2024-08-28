@@ -56,7 +56,7 @@ class ResultatService(
             TestresultatDetaljert(
                 null,
                 it.loeysingId,
-                getTestregelIdFromSchema(it.testregelId).let { id -> id ?: 0 },
+                getTestregelIdFromSchema(it.testregelId) ?: 0,
                 it.testregelId,
                 maalingId,
                 it.side,
@@ -88,7 +88,7 @@ class ResultatService(
             TestresultatDetaljert(
                 null,
                 it.loeysingId,
-                getTestregelIdFromSchema(it.testregelId).let { id -> id ?: 0 },
+                getTestregelIdFromSchema(it.testregelId) ?: 0,
                 it.testregelId,
                 maalingId,
                 it.side,
@@ -227,10 +227,10 @@ class ResultatService(
                   loeysingar.getVerksemdNamn(loeysingId),
                   resultLoeysing.map { it.score }.average(),
                   resultLoeysing.first().testType,
-                  resultLoeysing.map { it.talElementSamsvar }.sum() +
-                      resultLoeysing.map { it.talElementSamsvar }.sum(),
-                  resultLoeysing.map { it.talElementSamsvar }.sum(),
-                  resultLoeysing.map { it.talElementBrot }.sum(),
+                  resultLoeysing.sumOf { it.talElementSamsvar } +
+                      resultLoeysing.sumOf { it.talElementSamsvar },
+                  resultLoeysing.sumOf { it.talElementSamsvar },
+                  resultLoeysing.sumOf { it.talElementBrot },
                   getTestar(resultLoeysing.first().id, resultLoeysing.first().typeKontroll),
                   statusLoeysingar[loeysingId] ?: 0)
             }
@@ -301,9 +301,9 @@ class ResultatService(
               result.map { it.score }.average(),
               result.first().kravId ?: 0,
               result.first().kravTittel ?: "",
-              result.map { it.talElementBrot }.sum() + result.map { it.talElementSamsvar }.sum(),
-              result.map { it.talElementBrot }.sum(),
-              result.map { it.talElementSamsvar }.sum())
+              result.sumOf { it.talElementBrot } + result.sumOf { it.talElementSamsvar },
+              result.sumOf { it.talElementBrot },
+              result.sumOf { it.talElementSamsvar })
         }
   }
 
