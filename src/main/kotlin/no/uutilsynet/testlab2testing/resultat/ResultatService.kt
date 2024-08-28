@@ -78,10 +78,10 @@ class ResultatService(
       loeysingId: Int?
   ): List<TestresultatDetaljert> {
 
-    val testresultat: List<AutotesterTestresultat>? =
+    val testresultat: List<AutotesterTestresultat> =
         maalingResource.getTestresultat(maalingId, loeysingId).getOrThrow()
 
-    if (!testresultat.isNullOrEmpty() && testresultat.first() is TestResultat) {
+    if (testresultat.isNotEmpty() && testresultat.first() is TestResultat) {
       return testresultat
           .map { it as TestResultat }
           .map {
@@ -144,13 +144,6 @@ class ResultatService(
               it.kommentar,
               bildeService.getBildeListForTestresultat(it.id).getOrNull())
         }
-  }
-
-  private fun filterByLoeysing(loeysingId: Int, loeysingIdFilter: Int?): Boolean {
-    if (loeysingIdFilter != null) {
-      return loeysingId == loeysingIdFilter
-    }
-    return true
   }
 
   fun filterByTestregel(testregelId: Int, testregelIds: List<Int>): Boolean {

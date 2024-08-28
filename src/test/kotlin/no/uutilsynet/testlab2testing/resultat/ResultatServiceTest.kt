@@ -109,9 +109,7 @@ class ResultatServiceTest(
     return maalingId
   }
 
-  private fun createTestKontroll(
-      kontrollType: Kontroll.Kontrolltype = Kontroll.Kontrolltype.ForenklaKontroll
-  ): Int {
+  private fun createTestKontroll(): Int {
     val opprettKontroll =
         KontrollResource.OpprettKontroll(
             "manuell-kontroll",
