@@ -62,6 +62,25 @@ data class ResultatTema(
     val talTestaElement: Int,
     val talElementBrot: Int,
     val talElementSamsvar: Int,
-    val talIkkjeTestbar: Int,
-    val talIkkjeForekomst: Int,
+    val talVarsel: Int,
+    val talElementIkkjeForekomst: Int,
+)
+
+data class ResultatKrav(
+    val suksesskriterium: String,
+    val score: Int,
+    val talTestaElement: Int,
+    val talElementBrot: Int,
+    val talElementSamsvar: Int,
+    val talElementVarsel: Int,
+    val talElementIkkjeForekomst: Int,
+)
+
+data class ResultatKravBase(
+    val kravId: Int,
+    val score: Int,
+    val talElementBrot: Int,
+    val talElementSamsvar: Int,
+    val talElementVarsel: Int,
+    val talElementIkkjeForekomst: Int,
 )

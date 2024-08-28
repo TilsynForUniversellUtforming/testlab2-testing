@@ -69,7 +69,7 @@ class TestregelResource(
           {
             validateNamn(testregelInit.namn).getOrThrow()
             validateSchema(testregelInit.testregelSchema, testregelInit.modus).getOrThrow()
-            validateKrav(testregelInit.kravId).getOrThrow()
+            validateKrav(testregelInit.kravId)
 
             testregelDAO.createTestregel(testregelInit)
           },
@@ -78,7 +78,7 @@ class TestregelResource(
   @PutMapping
   fun updateTestregel(@RequestBody testregel: Testregel): ResponseEntity<out Any> =
       executeWithErrorHandling {
-        validateKrav(testregel.kravId).getOrThrow()
+        validateKrav(testregel.kravId)
         testregel.validateTestregel().getOrThrow()
         testregelDAO.updateTestregel(testregel)
       }
@@ -126,9 +126,7 @@ class TestregelResource(
             ResponseEntity.internalServerError().body(it.message)
           }
 
-  fun validateKrav(kravId: Int) = runCatching {
-    kravregisterClient.getWcagKrav(kravId).getOrElse {
-      throw IllegalArgumentException("Krav med id $kravId finns ikkje")
-    }
-  }
+  fun validateKrav(kravId: Int) =
+      runCatching { kravregisterClient.getWcagKrav(kravId) }
+          .getOrElse { throw IllegalArgumentException("Krav med id $kravId finns ikkje") }
 }
