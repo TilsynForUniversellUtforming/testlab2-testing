@@ -22,6 +22,7 @@ import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
+import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
@@ -57,6 +58,7 @@ class ResultatServiceTest(
   @MockBean lateinit var testgrunnlagDao: TestgrunnlagKontrollDAO
   @MockBean lateinit var testResultatDAO: TestResultatDAO
   @MockBean lateinit var sideutvalDAO: SideutvalDAO
+  @MockBean lateinit var kravregisterClient: KravregisterClient
   @SpyBean lateinit var testregelDAO: TestregelDAO
 
   @AfterAll
@@ -224,6 +226,9 @@ class ResultatServiceTest(
     Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1))).thenReturn(sideUtvalList)
 
     Mockito.`when`(testregelDAO.getTestregelForKrav(1)).thenReturn(listOf(testregel))
+    Mockito.`when`(testregelDAO.getTestregel(1)).thenReturn(testregel)
+    Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
+
     val resultat = resultatService.getResulatForManuellKontroll(1, 1, 1)
     assertNotNull(resultat)
 
