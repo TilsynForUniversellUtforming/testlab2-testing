@@ -124,11 +124,10 @@ class AggregeringService(
               ?: throw RuntimeException(
                   "Fant ikkje testregel med testregeId ${aggregertResultatTestregel.testregelId}")
         },
-        kravregisterClient
-            .getKravIdFromSuksesskritterium(aggregertResultatTestregel.suksesskriterium)
-            .getOrThrow(),
+        kravregisterClient.getKravIdFromSuksesskritterium(
+            aggregertResultatTestregel.suksesskriterium),
         aggregertResultatTestregel.fleireSuksesskriterium.map {
-          kravregisterClient.getKravIdFromSuksesskritterium(it).getOrThrow()
+          kravregisterClient.getKravIdFromSuksesskritterium(it)
         },
         aggregertResultatTestregel.talElementSamsvar,
         aggregertResultatTestregel.talElementBrot,
@@ -165,9 +164,8 @@ class AggregeringService(
     return AggregeringPerSuksesskriteriumDTO(
         aggregertResultatSuksesskriterium.maalingId,
         aggregertResultatSuksesskriterium.loeysing.id,
-        kravregisterClient
-            .getKravIdFromSuksesskritterium(aggregertResultatSuksesskriterium.suksesskriterium)
-            .getOrThrow(),
+        kravregisterClient.getKravIdFromSuksesskritterium(
+            aggregertResultatSuksesskriterium.suksesskriterium),
         aggregertResultatSuksesskriterium.talSiderSamsvar,
         aggregertResultatSuksesskriterium.talSiderBrot,
         aggregertResultatSuksesskriterium.talSiderIkkjeForekomst,
@@ -226,10 +224,10 @@ class AggregeringService(
   }
 
   private fun getSuksesskriterium(suksesskriteriumId: Int) =
-      kravregisterClient.getSuksesskriteriumFromKrav(suksesskriteriumId).getOrThrow()
+      kravregisterClient.getSuksesskriteriumFromKrav(suksesskriteriumId)
 
   private fun getLoeysing(loeysingId: Int): Loeysing =
-      loeysingsRegisterClient.getLoeysingFromId(loeysingId).getOrThrow()
+      loeysingsRegisterClient.getLoeysingFromId(loeysingId)
 
   fun getTestregelIdFromSchema(testregelKey: String): Int? {
     testregelDAO.getTestregelByTestregelId(testregelKey).let { testregel ->

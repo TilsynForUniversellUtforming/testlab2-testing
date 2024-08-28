@@ -90,13 +90,10 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
                 TEST_URL.toURI(), AutoTesterClient.ResultatUrls.urlAggreggeringTR))
         .thenReturn(listOf(aggregeringTestregel))
 
-    Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1))
-        .thenReturn(Result.success(testLoeysing))
+    Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1)).thenReturn(testLoeysing)
 
-    Mockito.`when`(kravregisterClient.getKravIdFromSuksesskritterium("1.1.1"))
-        .thenReturn(Result.success(1))
-    Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1))
-        .thenReturn(Result.success("1.1.1"))
+    Mockito.`when`(kravregisterClient.getKravIdFromSuksesskritterium("1.1.1")).thenReturn(1)
+    Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
 
     aggregeringService.saveAggregertResultatTestregelAutomatisk(testKoeyring)
 
@@ -188,11 +185,9 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
   fun updateEqualsDeleteAndInsert() {
     val testLoeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR)
 
-    Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1))
-        .thenReturn(Result.success(testLoeysing))
+    Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1)).thenReturn(testLoeysing)
 
-    Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1))
-        .thenReturn(Result.success("1.1.1"))
+    Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
 
     Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1)))
         .thenReturn(mapOf(1 to URL("https://www.example.com")))
