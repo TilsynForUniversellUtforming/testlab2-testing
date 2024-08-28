@@ -1,9 +1,8 @@
-package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll
+package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.forenkletkontroll.logger
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.springframework.dao.support.DataAccessUtils

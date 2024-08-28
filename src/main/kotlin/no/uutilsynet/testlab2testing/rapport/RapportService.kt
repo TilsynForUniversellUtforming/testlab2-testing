@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.rapport
 
 import no.uutilsynet.testlab2testing.forenkletkontroll.logger
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient

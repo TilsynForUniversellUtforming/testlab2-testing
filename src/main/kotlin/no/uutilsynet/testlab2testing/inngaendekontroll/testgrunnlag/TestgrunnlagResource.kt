@@ -1,9 +1,5 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlag
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagDAO
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagList
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -20,12 +16,12 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
 @RequestMapping("/testgrunnlag/kontroll")
-class TestgrunnlagKontrollResource(
+class TestgrunnlagResource(
     val testgrunnlagDAO: TestgrunnlagDAO,
     val testgrunnlagService: TestgrunnlagService
 ) {
 
-  val logger: Logger = LoggerFactory.getLogger(TestgrunnlagKontrollResource::class.java)
+  val logger: Logger = LoggerFactory.getLogger(TestgrunnlagResource::class.java)
 
   @GetMapping
   fun getTestgrunnlagList(

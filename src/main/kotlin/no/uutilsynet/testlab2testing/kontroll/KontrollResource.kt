@@ -1,9 +1,9 @@
 package no.uutilsynet.testlab2testing.kontroll
 
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlag
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagServiceKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestStatus
 import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
@@ -29,7 +29,7 @@ class KontrollResource(
     val testregelDAO: TestregelDAO,
     val maalingService: MaalingService,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
-    val testgrunnlagServiceKontroll: TestgrunnlagServiceKontroll
+    val testgrunnlagService: TestgrunnlagService
 ) {
   private val logger: Logger = LoggerFactory.getLogger(KontrollResource::class.java)
 
@@ -154,7 +154,7 @@ class KontrollResource(
   ): ResponseEntity<Unit> =
       runCatching {
             require(updateBody.kontroll.id == id) { "id i URL-en og id er ikkje den same" }
-            val hasTestresultat = testgrunnlagServiceKontroll.kontrollHasTestresultat(id)
+            val hasTestresultat = testgrunnlagService.kontrollHasTestresultat(id)
 
             if (hasTestresultat && updateBody !is KontrollUpdate.Edit) {
               logger.error("test er allereie starta for kontroll: ${id}")
@@ -213,7 +213,7 @@ class KontrollResource(
   fun getTestStatus(
       @PathVariable kontrollId: Int,
   ): ResponseEntity<TestStatus> {
-    val hasTestresultat = testgrunnlagServiceKontroll.kontrollHasTestresultat(kontrollId)
+    val hasTestresultat = testgrunnlagService.kontrollHasTestresultat(kontrollId)
     return ResponseEntity.ok(if (hasTestresultat) TestStatus.Started else TestStatus.Pending)
   }
 
@@ -249,6 +249,6 @@ class KontrollResource(
             OPPRINNELEG_TEST,
             sideutval,
             testregelIdList)
-    return testgrunnlagServiceKontroll.createOrUpdate(nyttTestgrunnlag)
+    return testgrunnlagService.createOrUpdate(nyttTestgrunnlag)
   }
 }

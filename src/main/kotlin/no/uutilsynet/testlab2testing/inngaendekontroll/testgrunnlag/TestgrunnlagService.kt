@@ -2,11 +2,11 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
 import java.time.Instant
 import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlag
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
+import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,11 +15,33 @@ import org.springframework.stereotype.Service
 @Service
 class TestgrunnlagService(
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
+    @Autowired val kontrollDAO: KontrollDAO,
+    @Autowired val testregelDAO: TestregelDAO,
     @Autowired val testResultatDAO: TestResultatDAO
 ) {
   val logger: Logger = LoggerFactory.getLogger(TestgrunnlagService::class.java)
 
+  fun createOrUpdate(testgrunnlag: NyttTestgrunnlag): Result<Int> {
+    val opprinneligTestgrunnlag =
+        testgrunnlagDAO.getOpprinneligTestgrunnlag(testgrunnlag.kontrollId)
+
+    return if (opprinneligTestgrunnlag.isSuccess) {
+      opprinneligTestgrunnlag
+          .mapCatching { testgrunnlagDAO.getTestgrunnlag(it) }
+          .mapCatching { updateExisting(it.getOrThrow(), testgrunnlag) }
+          .map { it.getOrThrow().id }
+    } else {
+      testgrunnlagDAO.createTestgrunnlag(testgrunnlag)
+    }
+  }
+
+  fun kontrollHasTestresultat(kontrollId: Int): Boolean =
+      testgrunnlagDAO.kontrollHasTestresultat(kontrollId)
+
   fun createRetest(retest: RetestRequest): Result<Int> = runCatching {
+    logger.debug(
+        "Retest for originalt testgrunnlag ${retest.originalTestgrunnlagId} og løysing ${retest.loeysingId}")
+
     val originalResultatBrotList = getOriginalBrotResultat(retest).getOrThrow()
     val retestTestgrunnlagId =
         createRetestTestgrunnlag(retest, originalResultatBrotList).getOrThrow()
@@ -114,4 +136,20 @@ class TestgrunnlagService(
 
     brotResultat
   }
+
+  private fun updateExisting(
+      eksisterendeTestgrunnlag: TestgrunnlagKontroll,
+      testgrunnlag: NyttTestgrunnlag
+  ) =
+      testgrunnlagDAO.updateTestgrunnlag(
+          eksisterendeTestgrunnlag.copy(
+              namn = testgrunnlag.namn,
+              testreglar =
+                  testregelDAO.getTestregelList().filter {
+                    testgrunnlag.testregelIdList.contains(it.id)
+                  },
+              sideutval =
+                  kontrollDAO.findSideutvalByKontrollAndLoeysing(
+                      testgrunnlag.kontrollId, testgrunnlag.sideutval.map { it.loeysingId }),
+          ))
 }
