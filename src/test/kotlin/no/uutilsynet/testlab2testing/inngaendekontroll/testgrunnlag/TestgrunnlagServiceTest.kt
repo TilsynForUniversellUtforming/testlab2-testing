@@ -16,9 +16,7 @@ import org.springframework.boot.test.mock.mockito.MockBean
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TestgrunnlagServiceTest {
-
-  @Autowired private lateinit var testgrunnlagService: TestgrunnlagService
+class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagService) {
 
   @MockBean private lateinit var testgrunnlagDAO: TestgrunnlagDAO
 
