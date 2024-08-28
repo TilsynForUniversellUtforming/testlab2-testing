@@ -169,7 +169,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         }
         .getOrElse {
           logger.error(it.message)
-          return emptyList()
+          throw it
         }
   }
 
@@ -266,7 +266,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         }
         .getOrElse {
           logger.error(it.message)
-          return emptyList()
+          throw it
         }
   }
 }
