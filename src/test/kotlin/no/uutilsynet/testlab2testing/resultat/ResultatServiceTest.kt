@@ -2,15 +2,27 @@ package no.uutilsynet.testlab2testing.resultat
 
 import java.net.URI
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import kotlin.properties.Delegates
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
+import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.common.TestlabLocale
+import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontroll
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagList
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
+import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
@@ -24,13 +36,13 @@ import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.SpyBean
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ResultatServiceTest(
     @Autowired val resultatService: ResultatService,
     @Autowired val aggregeringDAO: AggregeringDAO,
-    @Autowired val testregelDAO: TestregelDAO,
     @Autowired val maalingDao: MaalingDAO,
     @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val utvalDAO: UtvalDAO
@@ -43,6 +55,11 @@ class ResultatServiceTest(
   private var aggregertResultat: AggregeringPerTestregelDTO by Delegates.notNull()
 
   @MockBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+  @MockBean lateinit var testgrunnlagDao: TestgrunnlagKontrollDAO
+  @MockBean lateinit var testResultatDAO: TestResultatDAO
+  @MockBean lateinit var sideutvalDAO: SideutvalDAO
+  @MockBean lateinit var kravregisterClient: KravregisterClient
+  @SpyBean lateinit var testregelDAO: TestregelDAO
 
   @AfterAll
   fun cleanup() {
@@ -132,5 +149,91 @@ class ResultatServiceTest(
         ))
 
     return kontrollId
+  }
+
+  @Test
+  fun uferdigResultatFiltrert() {
+    val testgrunnlagKontroll =
+        TestgrunnlagKontroll(
+            1,
+            1,
+            "test",
+            emptyList(),
+            emptyList(),
+            TestgrunnlagType.OPPRINNELEG_TEST,
+            null,
+            Instant.now())
+    val testgrunnlagList = TestgrunnlagList(testgrunnlagKontroll, emptyList())
+    val testregel =
+        Testregel(
+            1,
+            "QW-ACT-R1",
+            1,
+            "QW-ACT-R1 HTML Page has a title",
+            1,
+            TestregelStatus.publisert,
+            Instant.now().truncatedTo(ChronoUnit.MINUTES),
+            TestregelInnholdstype.nett,
+            TestregelModus.automatisk,
+            TestlabLocale.nb,
+            1,
+            1,
+            "HTML Page has a title",
+            "QW-ACT-R1",
+            1)
+
+    val resultat1 =
+        ResultatManuellKontroll(
+            1,
+            1,
+            1,
+            1,
+            1,
+            Brukar("testar", "testar"),
+            "Ein knapp",
+            TestresultatUtfall.samsvar,
+            "Alt ok",
+            emptyList(),
+            Instant.now(),
+            ResultatManuellKontroll.Status.UnderArbeid,
+            null,
+            Instant.now())
+    val resultat2 =
+        ResultatManuellKontroll(
+            1,
+            1,
+            1,
+            1,
+            1,
+            Brukar("testar", "testar"),
+            "Eit bilde",
+            null,
+            null,
+            emptyList(),
+            Instant.now(),
+            ResultatManuellKontroll.Status.UnderArbeid,
+            null,
+            Instant.now())
+
+    val sideUtvalList = mapOf(1 to URI.create("https://www.example.com").toURL())
+
+    val resultatliste = listOf(resultat1, resultat2)
+
+    Mockito.`when`(testgrunnlagDao.getTestgrunnlagForKontroll(1)).thenReturn(testgrunnlagList)
+
+    Mockito.`when`(testResultatDAO.getManyResults(1)).thenReturn(Result.success(resultatliste))
+
+    Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1))).thenReturn(sideUtvalList)
+
+    Mockito.`when`(testregelDAO.getTestregelForKrav(1)).thenReturn(listOf(testregel))
+    Mockito.`when`(testregelDAO.getTestregel(1)).thenReturn(testregel)
+    Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
+
+    val resultat = resultatService.getResulatForManuellKontroll(1, 1, 1)
+    assertNotNull(resultat)
+
+    assertTrue(resultat.isNotEmpty())
+
+    assertTrue(resultat.size == 1)
   }
 }
