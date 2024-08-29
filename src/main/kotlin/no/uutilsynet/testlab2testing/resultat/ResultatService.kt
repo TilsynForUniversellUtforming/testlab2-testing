@@ -56,7 +56,7 @@ class ResultatService(
             TestresultatDetaljert(
                 null,
                 it.loeysingId,
-                getTestregelIdFromSchema(it.testregelId).let { id -> id ?: 0 },
+                getTestregelIdFromSchema(it.testregelId) ?: 0,
                 it.testregelId,
                 maalingId,
                 it.side,
@@ -78,17 +78,17 @@ class ResultatService(
       loeysingId: Int?
   ): List<TestresultatDetaljert> {
 
-    val testresultat: List<AutotesterTestresultat>? =
+    val testresultat: List<AutotesterTestresultat> =
         maalingResource.getTestresultat(maalingId, loeysingId).getOrThrow()
 
-    if (!testresultat.isNullOrEmpty() && testresultat.first() is TestResultat) {
+    if (testresultat.isNotEmpty() && testresultat.first() is TestResultat) {
       return testresultat
           .map { it as TestResultat }
           .map {
             TestresultatDetaljert(
                 null,
                 it.loeysingId,
-                getTestregelIdFromSchema(it.testregelId).let { id -> id ?: 0 },
+                getTestregelIdFromSchema(it.testregelId) ?: 0,
                 it.testregelId,
                 maalingId,
                 it.side,
@@ -120,6 +120,7 @@ class ResultatService(
 
     return testresultat
         .filter { filterByTestregel(it.testregelId, testregelIds) }
+        .filter { it.elementResultat != null }
         .map {
           val testregel: Testregel = getTestregel(it.testregelId)
           val url = sideutvalIdUrlMap[it.sideutvalId]
@@ -143,13 +144,6 @@ class ResultatService(
               it.kommentar,
               bildeService.getBildeListForTestresultat(it.id).getOrNull())
         }
-  }
-
-  private fun filterByLoeysing(loeysingId: Int, loeysingIdFilter: Int?): Boolean {
-    if (loeysingIdFilter != null) {
-      return loeysingId == loeysingIdFilter
-    }
-    return true
   }
 
   fun filterByTestregel(testregelId: Int, testregelIds: List<Int>): Boolean {
@@ -233,10 +227,10 @@ class ResultatService(
                   loeysingar.getVerksemdNamn(loeysingId),
                   resultLoeysing.map { it.score }.average(),
                   resultLoeysing.first().testType,
-                  resultLoeysing.map { it.talElementSamsvar }.sum() +
-                      resultLoeysing.map { it.talElementSamsvar }.sum(),
-                  resultLoeysing.map { it.talElementSamsvar }.sum(),
-                  resultLoeysing.map { it.talElementBrot }.sum(),
+                  resultLoeysing.sumOf { it.talElementSamsvar } +
+                      resultLoeysing.sumOf { it.talElementSamsvar },
+                  resultLoeysing.sumOf { it.talElementSamsvar },
+                  resultLoeysing.sumOf { it.talElementBrot },
                   getTestar(resultLoeysing.first().id, resultLoeysing.first().typeKontroll),
                   statusLoeysingar[loeysingId] ?: 0)
             }
@@ -307,9 +301,9 @@ class ResultatService(
               result.map { it.score }.average(),
               result.first().kravId ?: 0,
               result.first().kravTittel ?: "",
-              result.map { it.talElementBrot }.sum() + result.map { it.talElementSamsvar }.sum(),
-              result.map { it.talElementBrot }.sum(),
-              result.map { it.talElementSamsvar }.sum())
+              result.sumOf { it.talElementBrot } + result.sumOf { it.talElementSamsvar },
+              result.sumOf { it.talElementBrot },
+              result.sumOf { it.talElementSamsvar })
         }
   }
 
