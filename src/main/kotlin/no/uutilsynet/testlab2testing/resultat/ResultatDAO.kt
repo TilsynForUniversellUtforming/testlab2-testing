@@ -44,7 +44,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getTestresultatMaaling(): List<ResultatLoeysing> {
     val query =
         """
-        select k.id, k.tittel as tittel,kontrolltype,
+        select k.id, k.tittel as tittel,kontrolltype, maaling_id as testgrunnlag_id, 'OPPRINNELIG_TEST' as testtype,
         dato_start as dato,
         loeysing_id, testregel_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot
         from kontroll k
@@ -68,7 +68,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val talElementBrot = rs.getInt("tal_element_brot")
     val testregelId = rs.getInt("testregel_id")
     val testgrunnlagId = rs.getInt("testgrunnlag_id")
-    val testtype = rs.getString("testtype")
+    val testtype = setTestType(kontrolltype, rs)
 
     return ResultatLoeysing(
         maalingId,
@@ -87,10 +87,17 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         null)
   }
 
+  fun setTestType(kontrolltype: Kontroll.Kontrolltype, resultSet: ResultSet): String {
+    if (kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
+      return TestgrunnlagType.OPPRINNELEG_TEST.toString()
+    }
+    return resultSet.getString("testtype")
+  }
+
   fun getTestresultatTestgrunnlag(): List<ResultatLoeysing> {
     val query =
         """
-               select k.id as id, k.tittel as tittel, kontrolltype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot,
+               select k.id as id, k.tittel as tittel, kontrolltype, testgrunnlag_id, type as testtype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot,
             dato_oppretta as dato
             from kontroll k
             left join testgrunnlag t on t.kontroll_id=k.id
