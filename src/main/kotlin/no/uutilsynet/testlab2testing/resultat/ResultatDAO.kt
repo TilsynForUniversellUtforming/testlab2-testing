@@ -15,10 +15,10 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   private val logger = LoggerFactory.getLogger(ResultatDAO::class.java)
 
   val resultatQuery =
-      """select k.id as id, k.tittel as tittel, kontrolltype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot, kontroll_id,dato, testregel_id
+      """select k.id as id, k.tittel as tittel, testgrunnlag_id,testtype,kontrolltype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot, kontroll_id,dato, testregel_id
         from kontroll k
         join (
-        select loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot, testregel_id, maaling_id, testgrunnlag_id,
+        select loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot, testregel_id, maaling_id, testgrunnlag_id,type as testtype,
 		case 
 			when maaling_id is not null
 				then m.kontrollid
@@ -67,12 +67,15 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val talElementSamsvar = rs.getInt("tal_element_samsvar")
     val talElementBrot = rs.getInt("tal_element_brot")
     val testregelId = rs.getInt("testregel_id")
+    val testgrunnlagId = rs.getInt("testgrunnlag_id")
+    val testtype = rs.getString("testtype")
 
     return ResultatLoeysing(
         maalingId,
+        testgrunnlagId,
         navn,
         kontrolltype,
-        TestgrunnlagType.OPPRINNELEG_TEST,
+        TestgrunnlagType.valueOf(testtype),
         dato,
         listOf("testar"),
         loeysingId,
@@ -103,7 +106,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun getResultatKontroll(kontrollId: Int): List<ResultatLoeysing> {
-    val query = "$resultatQuery where k.id = :kontrollId"
+    val query = "$resultatQuery where k.id = :kontrollId order by testgrunnlag_id"
     return jdbcTemplate.query(query, mapOf("kontrollId" to kontrollId)) { rs, _ ->
       resultatLoeysingRowmapper(rs)
     }

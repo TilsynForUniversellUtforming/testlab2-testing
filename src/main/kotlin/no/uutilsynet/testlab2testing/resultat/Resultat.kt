@@ -8,6 +8,7 @@ data class Resultat(
     val id: Int,
     val namn: String,
     val type: Kontroll.Kontrolltype,
+    val testType: TestgrunnlagType,
     val dato: LocalDate,
     val loeysingar: List<LoeysingResultat>
 )
@@ -27,6 +28,7 @@ data class LoeysingResultat(
 
 data class ResultatLoeysing(
     val id: Int,
+    val testgrunnlagId: Int,
     val namn: String,
     val typeKontroll: Kontroll.Kontrolltype,
     val testType: TestgrunnlagType,

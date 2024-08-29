@@ -96,9 +96,7 @@ class TestgrunnlagKontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             ) { rs, _ ->
               rs.getInt("id")
             })
-    if (result == null) {
-      throw IllegalArgumentException("Testgrunnlag for kontroll finns ikkje")
-    }
+    requireNotNull(result) { "Testgrunnlag for kontroll finns ikkje" }
 
     result
   }
@@ -110,8 +108,10 @@ class TestgrunnlagKontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "select t.id from testgrunnlag t where t.kontroll_id = :kontrollId",
             mapOf("kontrollId" to kontrollId),
             Int::class.java)
+    println("KontrollId $kontrollId")
     val testgrunnlag =
         testgrunnlagIds.map { id -> getTestgrunnlag(id).getOrThrow() }.groupBy { it.type }
+    println("Testgrunnlagsliste $testgrunnlag")
     return TestgrunnlagList(
         testgrunnlag[TestgrunnlagType.OPPRINNELEG_TEST]?.firstOrNull()!!,
         testgrunnlag[TestgrunnlagType.RETEST]?.toList() ?: emptyList())
