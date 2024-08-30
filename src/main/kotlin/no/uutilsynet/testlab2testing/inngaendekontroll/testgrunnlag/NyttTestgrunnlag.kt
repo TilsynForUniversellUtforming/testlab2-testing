@@ -1,6 +1,5 @@
-package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll
+package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
 
 data class NyttTestgrunnlag(

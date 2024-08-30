@@ -44,7 +44,7 @@ class TestResultatDAO(
               "elementUtfall" to createTestResultat.elementUtfall,
               "kommentar" to createTestResultat.kommentar,
               "testVartUtfoert" to createTestResultat.testVartUtfoert,
-              "status" to ResultatManuellKontroll.Status.IkkjePaabegynt.name,
+              "status" to ResultatManuellKontrollBase.Status.IkkjePaabegynt.name,
               "kommentar" to createTestResultat.kommentar,
               "sist_lagra" to created),
           Int::class.java)!!
@@ -57,7 +57,7 @@ class TestResultatDAO(
   fun getManyResults(testgrunnlagId: Int): Result<List<ResultatManuellKontroll>> =
       getTestResultat(testgrunnlagId = testgrunnlagId)
 
-  data class SvarDB(val resultatManuellKontrollId: Int, val svar: ResultatManuellKontroll.Svar)
+  data class SvarDB(val resultatManuellKontrollId: Int, val svar: ResultatManuellKontrollBase.Svar)
 
   private fun getTestResultat(
       resultatId: Int? = null,
@@ -101,9 +101,9 @@ class TestResultatDAO(
                   runCatching { enumValueOf<TestresultatUtfall>(rs.getString("element_resultat")) }
                       .getOrNull(),
               elementUtfall = rs.getString("element_utfall"),
-              svar = emptyList<ResultatManuellKontroll.Svar>(),
+              svar = emptyList<ResultatManuellKontrollBase.Svar>(),
               testVartUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant(),
-              status = enumValueOf<ResultatManuellKontroll.Status>(rs.getString("status")),
+              status = enumValueOf<ResultatManuellKontrollBase.Status>(rs.getString("status")),
               kommentar = rs.getString("kommentar"),
               sistLagra = rs.getTimestamp("sist_lagra").toInstant())
         }
@@ -126,11 +126,45 @@ class TestResultatDAO(
                 mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId)) { rs, _ ->
                   SvarDB(
                       rs.getInt("id"),
-                      ResultatManuellKontroll.Svar(rs.getString("steg"), rs.getString("svar")))
+                      ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar")))
                 }
             .groupBy({ it.resultatManuellKontrollId }, { it.svar })
 
     testResultat.map { it.copy(svar = svarMap[it.id] ?: emptyList()) }
+  }
+
+  @Transactional
+  fun createRetest(retestResultat: ResultatManuellKontrollBase): Result<Unit> = runCatching {
+    val brukarId: Int = brukarService.getUserId() ?: throw RuntimeException("No authenticated user")
+
+    val sistlagra = Timestamp.from(Instant.now())
+
+    val id =
+        jdbcTemplate.queryForObject(
+            """
+        insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
+                                     element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
+        values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
+                :testVartUtfoert,:status, :kommentar, :sist_lagra)
+        returning id
+      """
+                .trimIndent(),
+            mapOf(
+                "testgrunnlagId" to retestResultat.testgrunnlagId,
+                "loeysingId" to retestResultat.loeysingId,
+                "testregelId" to retestResultat.testregelId,
+                "sideutvalId" to retestResultat.sideutvalId,
+                "brukarId" to brukarId,
+                "elementOmtale" to retestResultat.elementOmtale,
+                "elementResultat" to retestResultat.elementResultat?.name,
+                "elementUtfall" to retestResultat.elementUtfall,
+                "testVartUtfoert" to retestResultat.testVartUtfoert?.let { Timestamp.from(it) },
+                "status" to retestResultat.status.name,
+                "kommentar" to retestResultat.kommentar,
+                "sist_lagra" to sistlagra),
+            Int::class.java)!!
+
+    saveSvarBatch(id, retestResultat.svar)
   }
 
   @Transactional
@@ -189,7 +223,7 @@ class TestResultatDAO(
         mapOf("id" to id))
   }
 
-  fun saveSvar(testresultatId: Int, stegOgSvar: ResultatManuellKontroll.Svar): Result<Unit> =
+  fun saveSvar(testresultatId: Int, stegOgSvar: ResultatManuellKontrollBase.Svar): Result<Unit> =
       runCatching {
         val (steg, svar) = stegOgSvar
 
@@ -203,6 +237,26 @@ class TestResultatDAO(
                 .trimIndent(),
             mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar))
       }
+
+  fun saveSvarBatch(
+      testresultatId: Int,
+      stegOgSvarList: List<ResultatManuellKontrollBase.Svar>
+  ): Result<Unit> = runCatching {
+    val batchValues =
+        stegOgSvarList.map { (steg, svar) ->
+          mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar)
+        }
+
+    jdbcTemplate.batchUpdate(
+        """
+            insert into testresultat_svar (testresultat_id, steg, svar)
+            values (:testresultatId, :steg, :svar)
+            on conflict (testresultat_id, steg) do update
+            set svar = excluded.svar
+        """
+            .trimIndent(),
+        batchValues.toTypedArray())
+  }
 
   @Transactional
   fun saveBilde(testresultatId: Int, bildePath: String, thumbnailPath: String) = runCatching {

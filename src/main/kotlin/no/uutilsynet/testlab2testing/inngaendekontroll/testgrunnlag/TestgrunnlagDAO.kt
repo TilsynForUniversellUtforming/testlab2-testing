@@ -1,9 +1,8 @@
-package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll
+package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.forenkletkontroll.logger
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.springframework.dao.support.DataAccessUtils
@@ -13,7 +12,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-class TestgrunnlagKontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getTestgrunnlag(testgrunnlagId: Int): Result<TestgrunnlagKontroll> {
 
@@ -102,7 +101,7 @@ class TestgrunnlagKontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun getTestgrunnlagForKontroll(kontrollId: Int): TestgrunnlagList {
-    logger.info("Henter testgrunnlag for sak $kontrollId")
+    logger.info("Henter testgrunnlag for kontroll $kontrollId")
     val testgrunnlagIds =
         jdbcTemplate.queryForList(
             "select t.id from testgrunnlag t where t.kontroll_id = :kontrollId",

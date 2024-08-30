@@ -12,11 +12,12 @@ import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagKontroll
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagList
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagList
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
@@ -27,9 +28,15 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.loeysing.Verksemd
-import no.uutilsynet.testlab2testing.testregel.*
+import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
+import no.uutilsynet.testlab2testing.testregel.TestregelModus
+import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito
@@ -55,7 +62,7 @@ class ResultatServiceTest(
   private var aggregertResultat: AggregeringPerTestregelDTO by Delegates.notNull()
 
   @MockBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
-  @MockBean lateinit var testgrunnlagDao: TestgrunnlagKontrollDAO
+  @MockBean lateinit var testgrunnlagDao: TestgrunnlagDAO
   @MockBean lateinit var testResultatDAO: TestResultatDAO
   @MockBean lateinit var sideutvalDAO: SideutvalDAO
   @MockBean lateinit var kravregisterClient: KravregisterClient
@@ -195,7 +202,7 @@ class ResultatServiceTest(
             "Alt ok",
             emptyList(),
             Instant.now(),
-            ResultatManuellKontroll.Status.UnderArbeid,
+            ResultatManuellKontrollBase.Status.UnderArbeid,
             null,
             Instant.now())
     val resultat2 =
@@ -211,7 +218,7 @@ class ResultatServiceTest(
             null,
             emptyList(),
             Instant.now(),
-            ResultatManuellKontroll.Status.UnderArbeid,
+            ResultatManuellKontrollBase.Status.UnderArbeid,
             null,
             Instant.now())
 
