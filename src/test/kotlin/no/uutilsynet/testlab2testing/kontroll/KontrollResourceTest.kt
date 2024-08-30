@@ -413,8 +413,8 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
     val opprettetKontroll = get(location).`as`(Kontroll::class.java)
     val id = opprettetKontroll.id
 
-    val status =
-        get(location.replace(id.toString(), "test-status/$id")).`as`(TestStatus::class.java)
+    val statusUrl = location.replace(Regex("/$id$"), "/test-status/$id")
+    val status = get(statusUrl).`as`(TestStatus::class.java)
     assertThat(status).isEqualTo(TestStatus.Pending)
   }
 }
