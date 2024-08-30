@@ -1,9 +1,5 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.NyttTestgrunnlag
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagKontrollDAO
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.kontroll.TestgrunnlagList
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -20,9 +16,12 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
 @RequestMapping("/testgrunnlag/kontroll")
-class TestgrunnlagKontrollResource(val testgrunnlagDAO: TestgrunnlagKontrollDAO) {
+class TestgrunnlagResource(
+    val testgrunnlagDAO: TestgrunnlagDAO,
+    val testgrunnlagService: TestgrunnlagService
+) {
 
-  val logger: Logger = LoggerFactory.getLogger(TestgrunnlagKontrollResource::class.java)
+  val logger: Logger = LoggerFactory.getLogger(TestgrunnlagResource::class.java)
 
   @GetMapping
   fun getTestgrunnlagList(
@@ -48,6 +47,19 @@ class TestgrunnlagKontrollResource(val testgrunnlagDAO: TestgrunnlagKontrollDAO)
               ResponseEntity.internalServerError().build()
             })
   }
+
+  @PostMapping("retest")
+  fun createRetest(@RequestBody retest: RetestRequest): ResponseEntity<Unit> =
+      testgrunnlagService
+          .createRetest(retest)
+          .fold(
+              onSuccess = { testgrunnlagId ->
+                ResponseEntity.created(location(testgrunnlagId)).build()
+              },
+              onFailure = {
+                logger.error("Kunne ikkje lage retest av testresultat", it)
+                ResponseEntity.internalServerError().build()
+              })
 
   @GetMapping("list/{kontrollId}")
   fun listTestgrunnlagForKontroll(
@@ -89,7 +101,10 @@ class TestgrunnlagKontrollResource(val testgrunnlagDAO: TestgrunnlagKontrollDAO)
   }
 
   private fun location(id: Int) =
-      ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
+      ServletUriComponentsBuilder.fromCurrentServletMapping()
+          .path("testgrunnlag/kontroll/$id")
+          .buildAndExpand(id)
+          .toUri()
 
   fun TestgrunnlagList.toList(): List<TestgrunnlagKontroll> {
     return listOf<TestgrunnlagKontroll>(this.opprinneligTest) + this.restestar
