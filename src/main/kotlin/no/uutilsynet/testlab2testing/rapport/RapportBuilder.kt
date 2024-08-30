@@ -85,7 +85,7 @@ class RapportBuilder(
   }
 
   fun Testregel.toTestregelRapport(): TestregelRapport {
-    val krav = kravregisterClient.getWcagKrav(this.kravId).getOrThrow()
+    val krav = kravregisterClient.getWcagKrav(this.kravId)
     return TestregelRapport(
         testregelId = this.id,
         testregelNoekkel = this.testregelId,

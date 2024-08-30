@@ -36,20 +36,19 @@ class TestregelIntegrationTests(
   fun beforeAll() {
     Mockito.`when`(kravregisterClient.getWcagKrav(1))
         .thenReturn(
-            Result.success(
-                KravWcag2x(
-                    1,
-                    "1.1.1 Ikke-tekstlig innhold,Gjeldande",
-                    "I bruk",
-                    "Innhald",
-                    false,
-                    false,
-                    false,
-                    "https://www.uutilsynet.no/wcag-standarden/111-ikke-tekstlig-innhold-niva/87",
-                    "1. Mulig å oppfatte",
-                    "1.2 Tidsbasert media",
-                    "1.1.1",
-                    WcagSamsvarsnivaa.A)))
+            KravWcag2x(
+                1,
+                "1.1.1 Ikke-tekstlig innhold,Gjeldande",
+                "I bruk",
+                "Innhald",
+                false,
+                false,
+                false,
+                "https://www.uutilsynet.no/wcag-standarden/111-ikke-tekstlig-innhold-niva/87",
+                "1. Mulig å oppfatte",
+                "1.2 Tidsbasert media",
+                "1.1.1",
+                WcagSamsvarsnivaa.A))
   }
 
   val deleteThese: MutableList<Int> = mutableListOf()
@@ -89,7 +88,7 @@ class TestregelIntegrationTests(
   @Test
   @DisplayName("Skal ikke kunne opprette en testregel hvis krav ikke finnes")
   fun createTestregelKravError() {
-    Mockito.`when`(kravregisterClient.getWcagKrav(1)).thenReturn(Result.failure(RuntimeException()))
+    Mockito.`when`(kravregisterClient.getWcagKrav(1)).thenThrow(RuntimeException())
 
     val errorResponse =
         restTemplate.postForEntity("/v1/testreglar", testregelCreateRequestBody, String::class.java)

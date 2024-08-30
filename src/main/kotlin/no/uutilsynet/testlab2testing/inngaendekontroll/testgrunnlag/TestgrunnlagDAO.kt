@@ -95,9 +95,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             ) { rs, _ ->
               rs.getInt("id")
             })
-    if (result == null) {
-      throw IllegalArgumentException("Testgrunnlag for kontroll finns ikkje")
-    }
+    requireNotNull(result) { "Testgrunnlag for kontroll finns ikkje" }
 
     result
   }

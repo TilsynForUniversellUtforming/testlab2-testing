@@ -8,6 +8,7 @@ data class Resultat(
     val id: Int,
     val namn: String,
     val type: Kontroll.Kontrolltype,
+    val testType: TestgrunnlagType,
     val dato: LocalDate,
     val loeysingar: List<LoeysingResultat>
 )
@@ -27,6 +28,7 @@ data class LoeysingResultat(
 
 data class ResultatLoeysing(
     val id: Int,
+    val testgrunnlagId: Int,
     val namn: String,
     val typeKontroll: Kontroll.Kontrolltype,
     val testType: TestgrunnlagType,
@@ -62,6 +64,25 @@ data class ResultatTema(
     val talTestaElement: Int,
     val talElementBrot: Int,
     val talElementSamsvar: Int,
-    val talIkkjeTestbar: Int,
-    val talIkkjeForekomst: Int,
+    val talVarsel: Int,
+    val talElementIkkjeForekomst: Int,
+)
+
+data class ResultatKrav(
+    val suksesskriterium: String,
+    val score: Int,
+    val talTestaElement: Int,
+    val talElementBrot: Int,
+    val talElementSamsvar: Int,
+    val talElementVarsel: Int,
+    val talElementIkkjeForekomst: Int,
+)
+
+data class ResultatKravBase(
+    val kravId: Int,
+    val score: Int,
+    val talElementBrot: Int,
+    val talElementSamsvar: Int,
+    val talElementVarsel: Int,
+    val talElementIkkjeForekomst: Int,
 )

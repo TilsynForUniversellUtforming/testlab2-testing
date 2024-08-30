@@ -61,7 +61,7 @@ class ResultatService(
             TestresultatDetaljert(
                 null,
                 it.loeysingId,
-                getTestregelIdFromSchema(it.testregelId).let { id -> id ?: 0 },
+                getTestregelIdFromSchema(it.testregelId) ?: 0,
                 it.testregelId,
                 maalingId,
                 it.side,
@@ -83,17 +83,17 @@ class ResultatService(
       loeysingId: Int?
   ): List<TestresultatDetaljert> {
 
-    val testresultat: List<AutotesterTestresultat>? =
-        maalingResource.getTestresultat(maalingId, loeysingId)?.getOrThrow()
+    val testresultat: List<AutotesterTestresultat> =
+        maalingResource.getTestresultat(maalingId, loeysingId).getOrThrow()
 
-    if (!testresultat.isNullOrEmpty() && testresultat.first() is TestResultat) {
+    if (testresultat.isNotEmpty() && testresultat.first() is TestResultat) {
       return testresultat
           .map { it as TestResultat }
           .map {
             TestresultatDetaljert(
                 null,
                 it.loeysingId,
-                getTestregelIdFromSchema(it.testregelId).let { id -> id ?: 0 },
+                getTestregelIdFromSchema(it.testregelId) ?: 0,
                 it.testregelId,
                 maalingId,
                 it.side,
@@ -125,6 +125,7 @@ class ResultatService(
 
     return testresultat
         .filter { filterByTestregel(it.testregelId, testregelIds) }
+        .filter { it.elementResultat != null }
         .map {
           val testregel: Testregel = getTestregel(it.testregelId)
           val url = sideutvalIdUrlMap[it.sideutvalId]
@@ -150,13 +151,6 @@ class ResultatService(
         }
   }
 
-  private fun filterByLoeysing(loeysingId: Int, loeysingIdFilter: Int?): Boolean {
-    if (loeysingIdFilter != null) {
-      return loeysingId == loeysingIdFilter
-    }
-    return true
-  }
-
   fun filterByTestregel(testregelId: Int, testregelIds: List<Int>): Boolean {
     return testregelIds.contains(testregelId)
   }
@@ -178,8 +172,7 @@ class ResultatService(
   }
 
   fun getSuksesskriteriumFromTestregel(kravId: Int): List<String> {
-    return kravregisterClient.getWcagKrav(kravId).getOrNull()?.suksesskriterium?.let { listOf(it) }
-        ?: emptyList()
+    return listOf(kravregisterClient.getSuksesskriteriumFromKrav(kravId))
   }
 
   fun getResultatList(type: Kontroll.Kontrolltype?): List<Resultat> {
@@ -198,13 +191,16 @@ class ResultatService(
   }
 
   private fun getKontrollResultat(): List<Resultat> {
-    return resultatDAO.getResultat().groupBy { it.id }.map { (id, result) -> resultat(id, result) }
+    return resultatDAO
+        .getResultat()
+        .groupBy { it.testgrunnlagId }
+        .map { (id, result) -> resultat(id, result) }
   }
 
   fun getKontrollResultat(id: Int): List<Resultat> {
     return resultatDAO
         .getResultatKontroll(id)
-        .groupBy { it.id }
+        .groupBy { it.testgrunnlagId }
         .map { (id, result) -> resultat(id, result) }
   }
 
@@ -215,13 +211,19 @@ class ResultatService(
         .map { (id, result) -> resultat(id, result) }
   }
 
-  private fun resultat(id: Int, result: List<ResultatLoeysing>): Resultat {
+  private fun resultat(testgrunnlagId: Int, result: List<ResultatLoeysing>): Resultat {
     val loeysingar = getLoeysingMap(result).getOrThrow()
-    val statusLoeysingar = progresjonPrLoeysing(id, result.first().typeKontroll, loeysingar)
+    val statusLoeysingar =
+        progresjonPrLoeysing(testgrunnlagId, result.first().typeKontroll, loeysingar)
     val resultLoeysingar = resultatPrLoeysing(result, loeysingar, statusLoeysingar)
 
     return Resultat(
-        id, result.first().namn, result.first().typeKontroll, result.first().dato, resultLoeysingar)
+        result.first().id,
+        result.first().namn,
+        result.first().typeKontroll,
+        resultLoeysingar.first().testType,
+        result.first().dato,
+        resultLoeysingar)
   }
 
   private fun resultatPrLoeysing(
@@ -239,10 +241,10 @@ class ResultatService(
                   loeysingar.getVerksemdNamn(loeysingId),
                   resultLoeysing.map { it.score }.average(),
                   resultLoeysing.first().testType,
-                  resultLoeysing.map { it.talElementSamsvar }.sum() +
-                      resultLoeysing.map { it.talElementSamsvar }.sum(),
-                  resultLoeysing.map { it.talElementSamsvar }.sum(),
-                  resultLoeysing.map { it.talElementBrot }.sum(),
+                  resultLoeysing.sumOf { it.talElementSamsvar } +
+                      resultLoeysing.sumOf { it.talElementSamsvar },
+                  resultLoeysing.sumOf { it.talElementSamsvar },
+                  resultLoeysing.sumOf { it.talElementBrot },
                   getTestar(resultLoeysing.first().id, resultLoeysing.first().typeKontroll),
                   statusLoeysingar[loeysingId] ?: 0)
             }
@@ -250,7 +252,7 @@ class ResultatService(
   }
 
   fun progresjonPrLoeysing(
-      kontrollId: Int,
+      testgrunnlagId: Int,
       kontrolltype: Kontroll.Kontrolltype,
       loeysingar: LoysingList
   ): Map<Int, Int> {
@@ -258,11 +260,9 @@ class ResultatService(
       return loeysingar.loeysingar.keys.associateWith { 100 }
     }
 
-    val testgrunnlagId = testgrunnlagDao.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
-
-    val resultatPrSak = testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
+    val resultatPrTestgrunnlag = testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
     val progresjon =
-        resultatPrSak
+        resultatPrTestgrunnlag
             .groupBy { it.loeysingId }
             .entries
             .map { (loeysingId, result) -> Pair(loeysingId, percentageFerdig(result)) }
@@ -315,16 +315,16 @@ class ResultatService(
               result.map { it.score }.average(),
               result.first().kravId ?: 0,
               result.first().kravTittel ?: "",
-              result.map { it.talElementBrot }.sum() + result.map { it.talElementSamsvar }.sum(),
-              result.map { it.talElementBrot }.sum(),
-              result.map { it.talElementSamsvar }.sum())
+              result.sumOf { it.talElementBrot } + result.sumOf { it.talElementSamsvar },
+              result.sumOf { it.talElementBrot },
+              result.sumOf { it.talElementSamsvar })
         }
   }
 
   fun mapKrav(result: ResultatLoeysing): ResultatLoeysing {
     val krav =
         testregelDAO.getTestregel(result.testregelId)?.kravId?.let {
-          kravregisterClient.getWcagKrav(it).getOrNull()
+          kravregisterClient.getWcagKrav(it)
         }
     return result.copy(
         kravId = krav?.id,
@@ -355,6 +355,17 @@ class ResultatService(
   ): List<ResultatTema> =
       resultatDAO.getResultatPrTema(kontrollId, kontrolltype, startDato, sluttDato)
 
+  fun getResultatPrKrav(
+      kontrollId: Int?,
+      kontrollType: Kontroll.Kontrolltype?,
+      fraDato: LocalDate?,
+      tilDato: LocalDate?
+  ): List<ResultatKrav> {
+    return resultatDAO.getResultatPrKrav(kontrollId, kontrollType, fraDato, tilDato).map {
+      it.toResultatKrav()
+    }
+  }
+
   class LoysingList(val loeysingar: Map<Int, Loeysing.Expanded>) {
     fun getNamn(loeysingId: Int): String {
       val loeysing = loeysingar[loeysingId]
@@ -366,5 +377,17 @@ class ResultatService(
       if (loeysing?.verksemd == null) return ""
       return loeysing.verksemd.namn
     }
+  }
+
+  fun ResultatKravBase.toResultatKrav(): ResultatKrav {
+    return ResultatKrav(
+        suksesskriterium = kravregisterClient.getSuksesskriteriumFromKrav(kravId),
+        score = score,
+        talTestaElement =
+            talElementBrot + talElementSamsvar + talElementVarsel + talElementIkkjeForekomst,
+        talElementBrot = talElementBrot,
+        talElementSamsvar = talElementSamsvar,
+        talElementVarsel = talElementVarsel,
+        talElementIkkjeForekomst = talElementIkkjeForekomst)
   }
 }
