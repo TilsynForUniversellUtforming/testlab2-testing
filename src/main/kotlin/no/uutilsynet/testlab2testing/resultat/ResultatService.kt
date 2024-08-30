@@ -186,13 +186,16 @@ class ResultatService(
   }
 
   private fun getKontrollResultat(): List<Resultat> {
-    return resultatDAO.getResultat().groupBy { it.id }.map { (id, result) -> resultat(id, result) }
+    return resultatDAO
+        .getResultat()
+        .groupBy { it.testgrunnlagId }
+        .map { (id, result) -> resultat(id, result) }
   }
 
   fun getKontrollResultat(id: Int): List<Resultat> {
     return resultatDAO
         .getResultatKontroll(id)
-        .groupBy { it.id }
+        .groupBy { it.testgrunnlagId }
         .map { (id, result) -> resultat(id, result) }
   }
 
@@ -203,13 +206,19 @@ class ResultatService(
         .map { (id, result) -> resultat(id, result) }
   }
 
-  private fun resultat(id: Int, result: List<ResultatLoeysing>): Resultat {
+  private fun resultat(testgrunnlagId: Int, result: List<ResultatLoeysing>): Resultat {
     val loeysingar = getLoeysingMap(result).getOrThrow()
-    val statusLoeysingar = progresjonPrLoeysing(id, result.first().typeKontroll, loeysingar)
+    val statusLoeysingar =
+        progresjonPrLoeysing(testgrunnlagId, result.first().typeKontroll, loeysingar)
     val resultLoeysingar = resultatPrLoeysing(result, loeysingar, statusLoeysingar)
 
     return Resultat(
-        id, result.first().namn, result.first().typeKontroll, result.first().dato, resultLoeysingar)
+        result.first().id,
+        result.first().namn,
+        result.first().typeKontroll,
+        resultLoeysingar.first().testType,
+        result.first().dato,
+        resultLoeysingar)
   }
 
   private fun resultatPrLoeysing(
@@ -238,7 +247,7 @@ class ResultatService(
   }
 
   fun progresjonPrLoeysing(
-      kontrollId: Int,
+      testgrunnlagId: Int,
       kontrolltype: Kontroll.Kontrolltype,
       loeysingar: LoysingList
   ): Map<Int, Int> {
@@ -246,11 +255,9 @@ class ResultatService(
       return loeysingar.loeysingar.keys.associateWith { 100 }
     }
 
-    val testgrunnlagId = testgrunnlagDao.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
-
-    val resultatPrSak = testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
+    val resultatPrTestgrunnlag = testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
     val progresjon =
-        resultatPrSak
+        resultatPrTestgrunnlag
             .groupBy { it.loeysingId }
             .entries
             .map { (loeysingId, result) -> Pair(loeysingId, percentageFerdig(result)) }
