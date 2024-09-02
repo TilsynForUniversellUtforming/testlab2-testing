@@ -19,15 +19,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableWebSecurity
 class SecurityConfig {
 
-  @Autowired lateinit var authenticationFilter: AuthenticationFilter
-
   @Bean
   @Profile("security")
-  open fun filterChain(http: HttpSecurity): SecurityFilterChain {
+  open fun filterChain(
+      http: HttpSecurity,
+      @Autowired authenticationFilter: AuthenticationFilter
+  ): SecurityFilterChain {
 
     http {
       authorizeHttpRequests { authorize(anyRequest, hasAuthority("brukar subscriber")) }
-      headers {}
       oauth2ResourceServer {
         jwt { jwtAuthenticationConverter = Testlab2AuthenticationConverter() }
       }
