@@ -13,7 +13,6 @@ class TokenAuthenticationService(val properties: ApiKeyAuthenticationProperties)
 
   fun getAuthentication(request: HttpServletRequest): Authentication {
     val apiKey = request.getHeader(AUTH_TOKEN_HEADER_NAME)
-    println("Api key: $apiKey")
     if (apiKey == null || apiKey != properties.token) {
       throw BadCredentialsException("Invalid API Key")
     }

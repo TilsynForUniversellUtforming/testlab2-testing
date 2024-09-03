@@ -7,9 +7,6 @@ class ApiKeyAuthentication(
     private val apiKey: String,
     authorities: Collection<GrantedAuthority?>?
 ) : AbstractAuthenticationToken(authorities) {
-  init {
-    isAuthenticated = true
-  }
 
   override fun getCredentials(): Any? {
     return null
