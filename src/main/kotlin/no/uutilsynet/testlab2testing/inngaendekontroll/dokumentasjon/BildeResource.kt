@@ -4,7 +4,6 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.CacheEvict
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -46,7 +45,6 @@ class BildeResource(val bildeService: BildeService) {
                 ResponseEntity.internalServerError().build<Unit>()
               })
 
-  @Cacheable("bildeCache", key = "#testresultatId")
   @GetMapping("/{testresultatId}")
   fun getBildeListForTestresultat(@PathVariable testresultatId: Int): ResponseEntity<List<Bilde>> =
       bildeService
