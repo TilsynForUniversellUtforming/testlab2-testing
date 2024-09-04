@@ -147,7 +147,7 @@ class ResultatService(
                   htmlCode = null, pointer = null, description = it.elementOmtale),
               it.brukar,
               it.kommentar,
-              bildeService.getBildeListForTestresultat(it.id).getOrNull())
+              bildeService.listBildeForTestresultat(it.id).getOrNull())
         }
   }
 

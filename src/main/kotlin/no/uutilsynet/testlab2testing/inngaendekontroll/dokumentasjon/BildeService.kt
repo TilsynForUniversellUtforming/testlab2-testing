@@ -79,7 +79,7 @@ class BildeService(
   }
 
   @Cacheable("bildeCache", key = "#testresultatId")
-  fun getBildeListForTestresultat(testresultatId: Int): Result<List<Bilde>> = runCatching {
+  fun listBildeForTestresultat(testresultatId: Int): Result<List<Bilde>> = runCatching {
     val paths = testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
     return blobClient.getBildeStiList(paths)
   }
