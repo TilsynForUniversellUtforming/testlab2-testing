@@ -50,7 +50,7 @@ class BildeResource(val bildeService: BildeService) {
   @GetMapping("/{testresultatId}")
   fun getBildeListForTestresultat(@PathVariable testresultatId: Int): ResponseEntity<List<Bilde>> =
       bildeService
-          .getBildeListForTestresultat(testresultatId)
+          .listBildeForTestresultat(testresultatId)
           .fold(
               { ResponseEntity.ok(it) },
               {
