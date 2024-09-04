@@ -80,9 +80,9 @@ data class ResultatKrav(
 
 data class ResultatKravBase(
     val kravId: Int,
-    val score: Int,
-    val talElementBrot: Int,
-    val talElementSamsvar: Int,
-    val talElementVarsel: Int,
-    val talElementIkkjeForekomst: Int,
+    val score: Int = 0,
+    val talElementBrot: Int = 0,
+    val talElementSamsvar: Int = 0,
+    val talElementVarsel: Int = 0,
+    val talElementIkkjeForekomst: Int = 0,
 )
