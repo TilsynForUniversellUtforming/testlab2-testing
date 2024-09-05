@@ -284,7 +284,7 @@ class StyringsdataResourceTest(
     val styringsdataLoeysingId = locationLoeysing.path.split("/").lastOrNull()
 
     assertThat(result.styringsdataKontrollId).isEqualTo(Integer.valueOf(styringsdataKontrollId))
-    assertThat(result.styrinsdataLoeysing?.lastOrNull()?.id)
+    assertThat(result.styringsdataLoeysing.lastOrNull()?.id)
         .isEqualTo(Integer.valueOf(styringsdataLoeysingId))
   }
 

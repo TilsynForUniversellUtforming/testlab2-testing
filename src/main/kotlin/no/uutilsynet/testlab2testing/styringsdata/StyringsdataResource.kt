@@ -107,5 +107,5 @@ class StyringsdataResource(val styringsdataDAO: StyringsdataDAO) {
 
 data class StyringsdataResult(
     val styringsdataKontrollId: Int?,
-    val styrinsdataLoeysing: List<StyringsdataListElement>?
+    val styringsdataLoeysing: List<StyringsdataListElement> = emptyList()
 )
