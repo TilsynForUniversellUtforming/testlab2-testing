@@ -66,8 +66,10 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                            k.utval_namn     as utval_namn,
                            k.utval_oppretta as utval_oppretta,
                            k.regelsett_id   as regelsett_id,
-                           k.oppretta_dato as oppretta_dato
+                           k.oppretta_dato as oppretta_dato,
+                           sd.id as styringsdata_id
                     from kontroll k
+                        left join styringsdata_kontroll sd on k.id = sd.kontroll_id
                     where k.id in (:ids)
                     """,
               mapOf("ids" to ids),
@@ -136,7 +138,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 utval,
                 testreglar,
                 sideutvalList,
-                resultSet.getTimestamp("oppretta_dato").toInstant())
+                resultSet.getTimestamp("oppretta_dato").toInstant(),
+                resultSet.getInt("styringsdata_id").takeUnless { resultSet.wasNull() })
           }
       if (result.size == ids.size) result
       else
@@ -156,6 +159,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val testreglar: Testreglar?,
       val sideutval: List<Sideutval> = emptyList(),
       val opprettaDato: Instant = Instant.now(),
+      val styringsdataId: Int?
   ) {
     data class Utval(
         val id: Int,
