@@ -3,7 +3,14 @@ package no.uutilsynet.testlab2testing.styringsdata
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
+import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Kontroll.StyringsdataKontrollStatus
+import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Bot
+import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.BotOekningType
+import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Klage
+import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Paalegg
+import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.ResultatKlage
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -14,14 +21,20 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   val zoneId: ZoneId = ZoneId.of("Europe/Oslo")
 
+  fun Timestamp.toLocalDate(): LocalDate = this.toInstant().atZone(zoneId).toLocalDate()
+
+  fun Timestamp?.toLocalDateOrNull() = this?.toInstant()?.atZone(zoneId)?.toLocalDate()
+
+  fun LocalDate?.toTimestampNullable() = this?.atStartOfDay()?.let { Timestamp.valueOf(it) }
+
   private val styringsdataListElementRowMapper = { rs: ResultSet, _: Int ->
     StyringsdataListElement(
         id = rs.getInt("id"),
         kontrollId = rs.getInt("kontroll_id"),
         loeysingId = rs.getInt("loeysing_id"),
         ansvarleg = rs.getString("ansvarleg"),
-        oppretta = rs.getTimestamp("oppretta").toInstant().atZone(zoneId).toLocalDate(),
-        frist = rs.getTimestamp("frist").toInstant().atZone(zoneId).toLocalDate(),
+        oppretta = rs.getTimestamp("oppretta").toLocalDate(),
+        frist = rs.getTimestamp("frist").toLocalDate(),
         reaksjon = Reaksjonstype.valueOf(rs.getString("reaksjon")),
         paaleggReaksjon = Reaksjonstype.valueOf(rs.getString("paalegg_reaksjon")),
         paaleggKlageReaksjon = Reaksjonstype.valueOf(rs.getString("paalegg_klage_reaksjon")),
@@ -34,7 +47,30 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         sistLagra = rs.getTimestamp("sist_lagra").toInstant())
   }
 
-  fun getStyringsdata(id: Int): List<StyringsdataListElement> =
+  private val styringsdataKontrollRowMapper = { rs: ResultSet, _: Int ->
+    Styringsdata.Kontroll(
+        id = rs.getInt("id"),
+        kontrollId = rs.getInt("kontroll_id"),
+        ansvarleg = rs.getString("ansvarleg"),
+        oppretta = rs.getTimestamp("oppretta").toLocalDateOrNull(),
+        frist = rs.getTimestamp("frist").toLocalDateOrNull(),
+        varselSendtDato = rs.getTimestamp("varsel_sendt_dato").toLocalDateOrNull(),
+        status =
+            rs.getString("status")
+                .takeUnless { rs.wasNull() }
+                ?.let { StyringsdataKontrollStatus.valueOf(it) },
+        foerebelsRapportSendtDato =
+            rs.getTimestamp("foerebels_rapport_sendt_dato").toLocalDateOrNull(),
+        svarFoerebelsRapportDato =
+            rs.getTimestamp("svar_foerebels_rapport_dato").toLocalDateOrNull(),
+        endeligRapportDato = rs.getTimestamp("endelig_rapport_dato").toLocalDateOrNull(),
+        kontrollAvsluttaDato = rs.getTimestamp("kontroll_avslutta_dato").toLocalDateOrNull(),
+        rapportPublisertDato = rs.getTimestamp("rapport_publisert_dato").toLocalDateOrNull(),
+        sistLagra = rs.getTimestamp("sist_lagra")?.toInstant(),
+    )
+  }
+
+  fun getStyringsdataLoeysing(id: Int): List<StyringsdataListElement> =
       jdbcTemplate.query(
           """
       select
@@ -54,14 +90,68 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         bot_id,
         bot_klage_id,
         sist_lagra
-      from styringsdata
+      from styringsdata_loeysing
         where id = :id 
     """
               .trimIndent(),
           mapOf("id" to id),
           styringsdataListElementRowMapper)
 
-  fun listStyringsdataForKontroll(
+  fun getStyringsdataKontroll(
+      styringsdataId: Int,
+  ): List<Styringsdata.Kontroll> =
+      jdbcTemplate.query(
+          """
+      select
+        id,
+        kontroll_id,
+        ansvarleg,
+        oppretta,
+        frist,
+        varsel_sendt_dato,
+        status,
+        foerebels_rapport_sendt_dato,
+        svar_foerebels_rapport_dato,
+        endelig_rapport_dato,
+        kontroll_avslutta_dato,
+        rapport_publisert_dato,
+        sist_lagra
+      from styringsdata_kontroll
+        where id = :id 
+    """
+              .trimIndent(),
+          mapOf("id" to styringsdataId),
+          styringsdataKontrollRowMapper)
+
+  fun findStyringsdataKontroll(
+      kontrollId: Int,
+  ): Styringsdata.Kontroll? =
+      jdbcTemplate
+          .query(
+              """
+      select
+        id,
+        kontroll_id,
+        ansvarleg,
+        oppretta,
+        frist,
+        varsel_sendt_dato,
+        status,
+        foerebels_rapport_sendt_dato,
+        svar_foerebels_rapport_dato,
+        endelig_rapport_dato,
+        kontroll_avslutta_dato,
+        rapport_publisert_dato,
+        sist_lagra
+      from styringsdata_kontroll
+        where kontroll_id = :kontroll_id 
+    """
+                  .trimIndent(),
+              mapOf("kontroll_id" to kontrollId),
+              styringsdataKontrollRowMapper)
+          .firstOrNull()
+
+  fun findStyringsdataLoeysing(
       kontrollId: Int,
   ): List<StyringsdataListElement> =
       jdbcTemplate.query(
@@ -83,7 +173,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         bot_id,
         bot_klage_id,
         sist_lagra
-      from styringsdata
+      from styringsdata_loeysing
         where kontroll_id = :kontrollId 
     """
               .trimIndent(),
@@ -92,7 +182,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getPaalegg(id: Int): Paalegg? =
       jdbcTemplate.queryForObject(
-          "select id, vedtak_dato, frist from styringsdata_paalegg where id = :id",
+          "select id, vedtak_dato, frist from styringsdata_loeysing_paalegg where id = :id",
           mapOf("id" to id),
           DataClassRowMapper.newInstance(Paalegg::class.java))
 
@@ -102,7 +192,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             select
                 id, beloep_dag, oeking_etter_dager, oekning_type, oeking_sats, 
                 vedtak_dato, start_dato, slutt_dato, kommentar
-            from styringsdata_bot 
+            from styringsdata_loeysing_bot 
               where id = :id"""
               .trimIndent(),
           mapOf("id" to id),
@@ -113,9 +203,9 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             oekingEtterDager = rs.getInt("oeking_etter_dager"),
             oekningType = BotOekningType.valueOf(rs.getString("oekning_type")),
             oekingSats = rs.getInt("oeking_sats"),
-            vedtakDato = rs.getTimestamp("vedtak_dato").toInstant().atZone(zoneId).toLocalDate(),
-            startDato = rs.getTimestamp("start_dato").toInstant().atZone(zoneId).toLocalDate(),
-            sluttDato = rs.getTimestamp("slutt_dato")?.toInstant()?.atZone(zoneId)?.toLocalDate(),
+            vedtakDato = rs.getTimestamp("vedtak_dato").toLocalDate(),
+            startDato = rs.getTimestamp("start_dato").toLocalDate(),
+            sluttDato = rs.getTimestamp("slutt_dato").toLocalDateOrNull(),
             kommentar = rs.getString("kommentar"))
       }
 
@@ -125,17 +215,15 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             select
                 id, klage_mottatt_dato, klage_avgjort_dato, resultat_klage_tilsyn, 
                 klage_dato_departement, resultat_klage_departement
-            from styringsdata_klage 
+            from styringsdata_loeysing_klage 
               where id = :id"""
               .trimIndent(),
           mapOf("id" to id),
       ) { rs, _ ->
         Klage(
             id = rs.getInt("id"),
-            klageMottattDato =
-                rs.getTimestamp("klage_mottatt_dato").toInstant().atZone(zoneId).toLocalDate(),
-            klageAvgjortDato =
-                rs.getTimestamp("klage_avgjort_dato")?.toInstant()?.atZone(zoneId)?.toLocalDate(),
+            klageMottattDato = rs.getTimestamp("klage_mottatt_dato").toLocalDate(),
+            klageAvgjortDato = rs.getTimestamp("klage_avgjort_dato").toLocalDateOrNull(),
             resultatKlageTilsyn =
                 rs.getString("resultat_klage_tilsyn")?.let { ResultatKlage.valueOf(it) },
             klageDatoDepartement =
@@ -148,7 +236,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
       }
 
   @Transactional
-  fun createStyringsdata(styringsdata: Styringsdata): Result<Int> = runCatching {
+  fun createStyringsdataLoeysing(styringsdata: Styringsdata.Loeysing): Result<Int> = runCatching {
     val paaleggId = styringsdata.paalegg?.let { insertPaalegg(it) }
     val paaleggKlageId = styringsdata.paaleggKlage?.let { insertKlage(it, Klagetype.paalegg) }
     val botId = styringsdata.bot?.let { insertBot(it) }
@@ -157,7 +245,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     jdbcTemplate.queryForObject(
         """
-        insert into styringsdata (
+        insert into styringsdata_loeysing (
           ansvarleg, 
           oppretta, 
           frist, 
@@ -212,7 +300,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   @Transactional
-  fun updateStyringsdata(id: Int, styringsdata: Styringsdata) {
+  fun updateStyringsdataLoeysing(id: Int, styringsdata: Styringsdata.Loeysing) {
     val paaleggId =
         styringsdata.paalegg?.let { if (it.id != null) updatePaalegg(it) else insertPaalegg(it) }
     val paaleggKlageId =
@@ -228,7 +316,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     jdbcTemplate.update(
         """
-              update styringsdata set
+              update styringsdata_loeysing set
                   ansvarleg = :ansvarleg,
                   oppretta = :oppretta,
                   frist = :frist,
@@ -262,13 +350,105 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             "sist_lagra" to sistLagra))
   }
 
+  @Transactional
+  fun createStyringsdataKontroll(styringsdata: Styringsdata.Kontroll): Result<Int> = runCatching {
+    val sistLagra = Timestamp.from(Instant.now())
+
+    jdbcTemplate.queryForObject(
+        """
+        insert into styringsdata_kontroll (
+          kontroll_id,
+          ansvarleg,
+          oppretta,
+          frist,
+          varsel_sendt_dato,
+          status,
+          foerebels_rapport_sendt_dato,
+          svar_foerebels_rapport_dato,
+          endelig_rapport_dato,
+          kontroll_avslutta_dato,
+          rapport_publisert_dato,
+          sist_lagra
+        ) values (
+          :kontroll_id,
+          :ansvarleg,
+          :oppretta,
+          :frist,
+          :varsel_sendt_dato,
+          :status,
+          :foerebels_rapport_sendt_dato,
+          :svar_foerebels_rapport_dato,
+          :endelig_rapport_dato,
+          :kontroll_avslutta_dato,
+          :rapport_publisert_dato,
+          :sist_lagra
+        ) returning id
+      """
+            .trimIndent(),
+        mapOf(
+            "kontroll_id" to styringsdata.kontrollId,
+            "ansvarleg" to styringsdata.ansvarleg,
+            "oppretta" to styringsdata.oppretta.toTimestampNullable(),
+            "frist" to styringsdata.frist.toTimestampNullable(),
+            "varsel_sendt_dato" to styringsdata.varselSendtDato.toTimestampNullable(),
+            "status" to styringsdata.status?.name,
+            "foerebels_rapport_sendt_dato" to
+                styringsdata.foerebelsRapportSendtDato.toTimestampNullable(),
+            "svar_foerebels_rapport_dato" to
+                styringsdata.svarFoerebelsRapportDato.toTimestampNullable(),
+            "endelig_rapport_dato" to styringsdata.endeligRapportDato.toTimestampNullable(),
+            "kontroll_avslutta_dato" to styringsdata.kontrollAvsluttaDato.toTimestampNullable(),
+            "rapport_publisert_dato" to styringsdata.rapportPublisertDato.toTimestampNullable(),
+            "sist_lagra" to sistLagra,
+        ),
+        Int::class.java)!!
+  }
+
+  @Transactional
+  fun updateStyringsdataKontroll(id: Int, styringsdata: Styringsdata.Kontroll) {
+    val sistLagra = Timestamp.from(Instant.now())
+
+    jdbcTemplate.update(
+        """
+              update styringsdata_kontroll set
+ansvarleg = :ansvarleg,
+oppretta = :oppretta,
+frist = :frist,
+varsel_sendt_dato = :varsel_sendt_dato,
+status = :status,
+foerebels_rapport_sendt_dato = :foerebels_rapport_sendt_dato,
+svar_foerebels_rapport_dato = :svar_foerebels_rapport_dato,
+endelig_rapport_dato = :endelig_rapport_dato,
+kontroll_avslutta_dato = :kontroll_avslutta_dato,
+rapport_publisert_dato = :rapport_publisert_dato,
+sist_lagra = :sist_lagra
+              where id = :id
+          """
+            .trimIndent(),
+        mapOf(
+            "id" to id,
+            "ansvarleg" to styringsdata.ansvarleg,
+            "oppretta" to styringsdata.oppretta.toTimestampNullable(),
+            "frist" to styringsdata.frist.toTimestampNullable(),
+            "varsel_sendt_dato" to styringsdata.varselSendtDato.toTimestampNullable(),
+            "status" to styringsdata.status?.name,
+            "foerebels_rapport_sendt_dato" to
+                styringsdata.foerebelsRapportSendtDato.toTimestampNullable(),
+            "svar_foerebels_rapport_dato" to
+                styringsdata.svarFoerebelsRapportDato.toTimestampNullable(),
+            "endelig_rapport_dato" to styringsdata.endeligRapportDato.toTimestampNullable(),
+            "kontroll_avslutta_dato" to styringsdata.kontrollAvsluttaDato.toTimestampNullable(),
+            "rapport_publisert_dato" to styringsdata.rapportPublisertDato.toTimestampNullable(),
+            "sist_lagra" to sistLagra))
+  }
+
   private fun insertPaalegg(paalegg: Paalegg): Int {
     val id =
         jdbcTemplate.queryForObject(
-            "insert into styringsdata_paalegg (vedtak_dato, frist) values (:vedtak_dato, :frist) returning id",
+            "insert into styringsdata_loeysing_paalegg (vedtak_dato, frist) values (:vedtak_dato, :frist) returning id",
             mapOf(
                 "vedtak_dato" to Timestamp.valueOf(paalegg.vedtakDato.atStartOfDay()),
-                "frist" to paalegg.frist?.let { Timestamp.valueOf(it.atStartOfDay()) }),
+                "frist" to paalegg.frist.toTimestampNullable()),
             Int::class.java)!!
 
     return id
@@ -276,11 +456,11 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   private fun updatePaalegg(paalegg: Paalegg): Int {
     jdbcTemplate.update(
-        "update styringsdata_paalegg set vedtak_dato = :vedtak_dato, frist = :frist where id = :id",
+        "update styringsdata_loeysing_paalegg set vedtak_dato = :vedtak_dato, frist = :frist where id = :id",
         mapOf(
             "id" to paalegg.id,
             "vedtak_dato" to Timestamp.valueOf(paalegg.vedtakDato.atStartOfDay()),
-            "frist" to paalegg.frist?.let { Timestamp.valueOf(it.atStartOfDay()) }))
+            "frist" to paalegg.frist.toTimestampNullable()))
 
     return paalegg.id!!
   }
@@ -289,7 +469,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
     val id =
         jdbcTemplate.queryForObject(
             """
-        insert into styringsdata_klage (
+        insert into styringsdata_loeysing_klage (
           klage_type, klage_mottatt_dato, klage_avgjort_dato, resultat_klage_tilsyn, klage_dato_departement, resultat_klage_departement
         ) values (
           :klage_type, :klage_mottatt_dato, :klage_avgjort_dato, :resultat_klage_tilsyn, :klage_dato_departement, :resultat_klage_departement
@@ -299,11 +479,9 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             mapOf(
                 "klage_type" to klagetype.name,
                 "klage_mottatt_dato" to Timestamp.valueOf(klage.klageMottattDato.atStartOfDay()),
-                "klage_avgjort_dato" to
-                    klage.klageAvgjortDato?.let { Timestamp.valueOf(it.atStartOfDay()) },
+                "klage_avgjort_dato" to klage.klageAvgjortDato.toTimestampNullable(),
                 "resultat_klage_tilsyn" to klage.resultatKlageTilsyn?.name,
-                "klage_dato_departement" to
-                    klage.klageDatoDepartement?.let { Timestamp.valueOf(it.atStartOfDay()) },
+                "klage_dato_departement" to klage.klageDatoDepartement.toTimestampNullable(),
                 "resultat_klage_departement" to klage.resultatKlageDepartement?.name),
             Int::class.java)!!
 
@@ -313,7 +491,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
   private fun updateKlage(klage: Klage): Int {
     val sql =
         """
-            update styringsdata_klage set
+            update styringsdata_loeysing_klage set
                 klage_mottatt_dato = :klage_mottatt_dato,
                 klage_avgjort_dato = :klage_avgjort_dato,
                 resultat_klage_tilsyn = :resultat_klage_tilsyn,
@@ -326,11 +504,9 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         mapOf(
             "id" to klage.id,
             "klage_mottatt_dato" to Timestamp.valueOf(klage.klageMottattDato.atStartOfDay()),
-            "klage_avgjort_dato" to
-                klage.klageAvgjortDato?.let { Timestamp.valueOf(it.atStartOfDay()) },
+            "klage_avgjort_dato" to klage.klageAvgjortDato.toTimestampNullable(),
             "resultat_klage_tilsyn" to klage.resultatKlageTilsyn?.name,
-            "klage_dato_departement" to
-                klage.klageDatoDepartement?.let { Timestamp.valueOf(it.atStartOfDay()) },
+            "klage_dato_departement" to klage.klageDatoDepartement.toTimestampNullable(),
             "resultat_klage_departement" to klage.resultatKlageDepartement?.name)
 
     jdbcTemplate.update(sql, params)
@@ -342,7 +518,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
     val id =
         jdbcTemplate.queryForObject(
             """ 
-              insert into styringsdata_bot (
+              insert into styringsdata_loeysing_bot (
                 beloep_dag, oeking_etter_dager, oekning_type, oeking_sats, vedtak_dato, start_dato, slutt_dato, kommentar
               ) values (
                 :beloep_dag, :oeking_etter_dager, :oekning_type, :oeking_sats, :vedtak_dato, :start_dato, :slutt_dato, :kommentar
@@ -357,7 +533,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
                 "oeking_sats" to bot.oekingSats,
                 "vedtak_dato" to Timestamp.valueOf(bot.vedtakDato.atStartOfDay()),
                 "start_dato" to Timestamp.valueOf(bot.startDato.atStartOfDay()),
-                "slutt_dato" to bot.sluttDato?.let { Timestamp.valueOf(it.atStartOfDay()) },
+                "slutt_dato" to bot.sluttDato.toTimestampNullable(),
                 "kommentar" to bot.kommentar),
             Int::class.java)!!
 
@@ -367,7 +543,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
   private fun updateBot(bot: Bot): Int {
     jdbcTemplate.update(
         """
-        update styringsdata_bot set
+        update styringsdata_loeysing_bot set
           beloep_dag = :beloep_dag,
           oeking_etter_dager = :oeking_etter_dager,
           oekning_type = :oekning_type,
@@ -387,7 +563,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             "oeking_sats" to bot.oekingSats,
             "vedtak_dato" to Timestamp.valueOf(bot.vedtakDato.atStartOfDay()),
             "start_dato" to Timestamp.valueOf(bot.startDato.atStartOfDay()),
-            "slutt_dato" to bot.sluttDato?.let { Timestamp.valueOf(it.atStartOfDay()) },
+            "slutt_dato" to bot.sluttDato.toTimestampNullable(),
             "kommentar" to bot.kommentar))
 
     return bot.id!!

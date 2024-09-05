@@ -8,6 +8,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestStatus
 import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
+import no.uutilsynet.testlab2testing.styringsdata.StyringsdataDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -27,6 +28,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 class KontrollResource(
     val kontrollDAO: KontrollDAO,
     val testregelDAO: TestregelDAO,
+    val styringsdataDAO: StyringsdataDAO,
     val maalingService: MaalingService,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val testgrunnlagService: TestgrunnlagService
@@ -40,7 +42,8 @@ class KontrollResource(
       val sakstype: Kontroll.Sakstype,
       val arkivreferanse: String,
       val kontrolltype: Kontroll.Kontrolltype,
-      val virksomheter: List<String> // liste med orgnummer
+      val virksomheter: List<String>, // liste med orgnummer
+      val styringsdataId: Int?
   )
 
   @GetMapping
@@ -67,7 +70,8 @@ class KontrollResource(
                 Kontroll.Sakstype.valueOf(kontrollDB.sakstype),
                 kontrollDB.arkivreferanse,
                 kontrollDB.kontrolltype,
-                virksomheter)
+                virksomheter,
+                kontrollDB.styringsdataId)
           }
         }
         .getOrElse {
