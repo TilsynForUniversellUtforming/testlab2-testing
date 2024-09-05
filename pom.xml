@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.5</version>
+        <version>3.3.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>no.uutilsynet</groupId>
@@ -73,10 +73,14 @@
         </dependency>
 
         <!-- Database -->
+<!--        <dependency>-->
+<!--            <groupId>org.flywaydb</groupId>-->
+<!--            <artifactId>flyway-core</artifactId>-->
+<!--            &lt;!&ndash; versjon er gitt av spring boot &ndash;&gt;-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-            <!-- versjon er gitt av spring boot -->
+            <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -87,7 +91,7 @@
         <dependency>
             <groupId>org.simpleflatmapper</groupId>
             <artifactId>sfm-springjdbc</artifactId>
-            <version>8.2.3</version>
+            <version>9.0.2</version>
         </dependency>
 
         <dependency>
