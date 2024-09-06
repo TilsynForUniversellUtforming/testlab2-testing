@@ -306,19 +306,27 @@ class ResultatService(
         ?.groupBy { it.kravId }
         ?.map { (_, result) ->
           val loeysingar = getLoeysingMap(result).getOrThrow()
-          ResultatOversiktLoeysing(
-              result.first().loeysingId,
-              loeysingar.getNamn(result.first().loeysingId),
-              result.first().typeKontroll,
-              result.first().namn,
-              result.map { it.testar }.flatten().distinct(),
-              result.map { it.score }.average(),
-              result.first().kravId ?: 0,
-              result.first().kravTittel ?: "",
-              result.sumOf { it.talElementBrot } + result.sumOf { it.talElementSamsvar },
-              result.sumOf { it.talElementBrot },
-              result.sumOf { it.talElementSamsvar })
+          handleIkkjeForekomst(
+              ResultatOversiktLoeysing(
+                  result.first().loeysingId,
+                  loeysingar.getNamn(result.first().loeysingId),
+                  result.first().typeKontroll,
+                  result.first().namn,
+                  result.map { it.testar }.flatten().distinct(),
+                  result.map { it.score }.average(),
+                  result.first().kravId ?: 0,
+                  result.first().kravTittel ?: "",
+                  result.sumOf { it.talElementBrot } + result.sumOf { it.talElementSamsvar },
+                  result.sumOf { it.talElementBrot },
+                  result.sumOf { it.talElementSamsvar }))
         }
+  }
+
+  fun handleIkkjeForekomst(resultat: ResultatOversiktLoeysing): ResultatOversiktLoeysing {
+    if (resultat.talElementBrot == 0 && resultat.talElementSamsvar == 0) {
+      return resultat.copy(score = null)
+    }
+    return resultat
   }
 
   fun mapKrav(result: ResultatLoeysing): ResultatLoeysing {

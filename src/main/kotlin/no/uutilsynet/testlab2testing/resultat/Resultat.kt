@@ -50,7 +50,7 @@ data class ResultatOversiktLoeysing(
     val typeKontroll: Kontroll.Kontrolltype,
     val kontrollNamn: String,
     val testar: List<String>,
-    val score: Double,
+    val score: Double?,
     val kravId: Int,
     val kravTittel: String,
     val talTestaElement: Int,
