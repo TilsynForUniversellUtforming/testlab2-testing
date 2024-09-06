@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
-import java.net.URL
 import java.time.Instant
 import kotlin.properties.Delegates
 import kotlin.random.Random
@@ -281,7 +280,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     testresultat
         .groupBy { it.sideutvalId }
         .forEach { _ ->
-            val result = aggregeringService.processPrSideutval(testresultat)
+          val result = aggregeringService.processPrSideutval(testresultat)
           assertThat(result.brotprosentTrSide + result.samsvarsprosentTrSide)
               .isCloseTo(1.0, Offset.offset(0.00001))
           if (result.ikkjeForekomst) {

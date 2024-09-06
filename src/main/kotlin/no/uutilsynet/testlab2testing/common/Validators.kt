@@ -45,10 +45,14 @@ fun validateIdList(
     validIds: List<Int>,
     parameterName: String
 ): Result<List<Int>> = runCatching {
-  require(!list.isNullOrEmpty()) { "Eg forventa eit parameter `${parameterName}` som skulle inneholde ei liste med id-ar, men han var tom." }
+  require(!list.isNullOrEmpty()) {
+    "Eg forventa eit parameter `${parameterName}` som skulle inneholde ei liste med id-ar, men han var tom."
+  }
 
   val invalidIds = list.filter { !validIds.contains(it) }
-  require(!invalidIds.isNotEmpty()) { "Id-ane ${invalidIds.joinToString(", ")} er ikkje gyldige. Gyldige id-ar er ${validIds.joinToString(", ")}." }
+  require(invalidIds.isEmpty()) {
+    "Id-ane ${invalidIds.joinToString(", ")} er ikkje gyldige. Gyldige id-ar er ${validIds.joinToString(", ")}."
+  }
 
   list
 }
