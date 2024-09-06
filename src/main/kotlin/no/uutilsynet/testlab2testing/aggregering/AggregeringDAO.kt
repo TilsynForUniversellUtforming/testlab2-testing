@@ -206,7 +206,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun sqlArrayToList(sqlArray: java.sql.Array): List<Int> {
     val array = sqlArray.array as Array<Int>
-    return Arrays.asList(*array)
+    return listOf(*array)
   }
 
   fun harMaalingLagraAggregering(maalingId: Int, aggregeringstype: String): Boolean {

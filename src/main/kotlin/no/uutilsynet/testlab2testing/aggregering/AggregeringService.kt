@@ -43,9 +43,10 @@ class AggregeringService(
     runCatching {
           aggregeringUrl?.let {
             val aggregertResultatTestregel: List<AggregertResultatTestregel> =
-                autoTesterClient.fetchResultatAggregering(
-                    aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggreggeringTR)
-                    as List<AggregertResultatTestregel>
+                autoTesterClient
+                    .fetchResultatAggregering(
+                        aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggreggeringTR)
+                    .filterIsInstance<AggregertResultatTestregel>()
 
             aggregertResultatTestregel
                 .map { aggregertResultatTestregelToDTO(it) }
@@ -68,9 +69,10 @@ class AggregeringService(
     runCatching {
           aggregeringUrl?.let {
             val aggregeringSide: List<AggregertResultatSide> =
-                autoTesterClient.fetchResultatAggregering(
-                    aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggregeringSide)
-                    as List<AggregertResultatSide>
+                autoTesterClient
+                    .fetchResultatAggregering(
+                        aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggregeringSide)
+                    .filterIsInstance<AggregertResultatSide>()
 
             aggregeringSide
                 .map { aggregertResultatSide -> aggregerteResultatSideTODTO(aggregertResultatSide) }
@@ -94,9 +96,10 @@ class AggregeringService(
     runCatching {
           aggregeringUrl?.let {
             val aggregertResultatSuksesskriterium: List<AggregertResultatSuksesskriterium> =
-                autoTesterClient.fetchResultatAggregering(
-                    aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggregeringSK)
-                    as List<AggregertResultatSuksesskriterium>
+                autoTesterClient
+                    .fetchResultatAggregering(
+                        aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggregeringSK)
+                    .filterIsInstance<AggregertResultatSuksesskriterium>()
 
             aggregertResultatSuksesskriterium
                 .map { aggregertResultatSuksesskritieriumToDTO(it) }
@@ -534,26 +537,32 @@ class AggregeringService(
         sideutvalDAO.getSideutvalUrlMapKontroll(testresultatMap.keys.toList())
 
     // Alle sideutvalIder skal referere til en gyldig url
-    if (!testresultatMap.keys.containsAll(sideutvalIdUrlMap.keys)) {
-      throw IllegalArgumentException("Ugyldige nettsider i testresultat")
+    require(testresultatMap.keys.containsAll(sideutvalIdUrlMap.keys)) {
+      "Ugyldige nettsider i testresultat"
     }
 
-    return testresultatMap.entries.map { entry ->
-      val sideUrl = sideutvalIdUrlMap[entry.key]!!
-      val testresultat = entry.value
+    testresultatMap.mapKeys { sideutvalIdUrlMap[it.key] }
 
-      AggregeringPerSideDTO(
-          null,
-          testresultat.first().loeysingId,
-          sideUrl,
-          sideUrl.path.split("/").size,
-          0.0,
-          testresultat.count { it.elementResultat == TestresultatUtfall.samsvar },
-          testresultat.count { it.elementResultat == TestresultatUtfall.brot },
-          0,
-          testresultat.count { it.elementResultat == TestresultatUtfall.ikkjeForekomst },
-          testresultat.first().testgrunnlagId)
-    }
+    return testresultatMap
+        .mapKeys { sideutvalIdUrlMap[it.key] }
+        .filterKeys { it != null }
+        .entries
+        .map { entry ->
+          requireNotNull(entry.key)
+          val testresultat = entry.value
+
+          AggregeringPerSideDTO(
+              null,
+              testresultat.first().loeysingId,
+              entry.key!!,
+              entry.key!!.path.split("/").size,
+              0.0,
+              testresultat.count { it.elementResultat == TestresultatUtfall.samsvar },
+              testresultat.count { it.elementResultat == TestresultatUtfall.brot },
+              0,
+              testresultat.count { it.elementResultat == TestresultatUtfall.ikkjeForekomst },
+              testresultat.first().testgrunnlagId)
+        }
   }
 
   private fun countSideUtfall(testresultat: List<ResultatManuellKontroll>): TalUtfall {
