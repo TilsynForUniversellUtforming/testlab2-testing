@@ -31,7 +31,15 @@ class StyringsdataResource(val styringsdataDAO: StyringsdataDAO) {
       @PathVariable("stryingsdataId") stryingsdataId: Int,
   ): Styringsdata? {
     return if (stryingsdataType == StyringsdataType.loeysing) {
-      styringsdataDAO.getStyringsdataLoeysing(stryingsdataId).firstOrNull()?.let { styringsdata ->
+      logger.info("Henter styringsdata for styringsdataId $stryingsdataId")
+      val styringsdata = styringsdataDAO.getStyringsdataLoeysing(stryingsdataId).firstOrNull()
+      if (styringsdata != null) {
+        logger.info(
+            "Har hentet styringsdata med id ${styringsdata.id} og kontrollId ${styringsdata.kontrollId}")
+      } else {
+        logger.info("Styringsdata var null")
+      }
+      styringsdata?.let { styringsdata ->
         Styringsdata.Loeysing(
             id = styringsdata.id,
             loeysingId = styringsdata.kontrollId,
