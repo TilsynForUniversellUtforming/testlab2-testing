@@ -178,9 +178,9 @@ class ResultatService(
   fun getResultatList(type: Kontroll.Kontrolltype?): List<Resultat> {
     return when (type) {
       Kontroll.Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat()
-      Kontroll.Kontrolltype.InngaaendeKontroll -> getManuellKontrollResultat()
-      Kontroll.Kontrolltype.Tilsyn -> getManuellKontrollResultat()
-      Kontroll.Kontrolltype.Uttalesak -> getManuellKontrollResultat()
+      Kontroll.Kontrolltype.InngaaendeKontroll,
+      Kontroll.Kontrolltype.Tilsyn,
+      Kontroll.Kontrolltype.Uttalesak,
       Kontroll.Kontrolltype.Statusmaaling -> getManuellKontrollResultat()
       else -> getKontrollResultat()
     }
@@ -351,12 +351,10 @@ class ResultatService(
     return when (typeKontroll) {
       Kontroll.Kontrolltype.ForenklaKontroll ->
           getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
-      Kontroll.Kontrolltype.InngaaendeKontroll ->
-          getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
-      Kontroll.Kontrolltype.Tilsyn -> getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
+      Kontroll.Kontrolltype.InngaaendeKontroll,
+      Kontroll.Kontrolltype.Tilsyn,
+      Kontroll.Kontrolltype.Uttalesak,
       Kontroll.Kontrolltype.Statusmaaling ->
-          getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
-      Kontroll.Kontrolltype.Uttalesak ->
           getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
     }
   }
