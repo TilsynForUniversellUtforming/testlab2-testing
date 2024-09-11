@@ -177,8 +177,11 @@ class ResultatService(
 
   fun getResultatList(type: Kontroll.Kontrolltype?): List<Resultat> {
     return when (type) {
-      Kontroll.Kontrolltype.InngaaendeKontroll -> getManuellKontrollResultat()
       Kontroll.Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat()
+      Kontroll.Kontrolltype.InngaaendeKontroll,
+      Kontroll.Kontrolltype.Tilsyn,
+      Kontroll.Kontrolltype.Uttalesak,
+      Kontroll.Kontrolltype.Statusmaaling -> getManuellKontrollResultat()
       else -> getKontrollResultat()
     }
   }
@@ -287,12 +290,10 @@ class ResultatService(
   }
 
   private fun getTestar(id: Int, kontrolltype: Kontroll.Kontrolltype): List<String> {
-    if (kontrolltype == Kontroll.Kontrolltype.InngaaendeKontroll) {
-      return testResultatDAO.getBrukarForTestgrunnlag(id)
-    } else if (kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
-      return maalingDAO.getBrukarForMaaling(id)
+    return when (kontrolltype) {
+      Kontroll.Kontrolltype.ForenklaKontroll -> maalingDAO.getBrukarForMaaling(id)
+      else -> testResultatDAO.getBrukarForTestgrunnlag(id)
     }
-    return listOf("testar")
   }
 
   fun getKontrollLoeysingResultat(
@@ -350,7 +351,10 @@ class ResultatService(
     return when (typeKontroll) {
       Kontroll.Kontrolltype.ForenklaKontroll ->
           getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
-      Kontroll.Kontrolltype.InngaaendeKontroll ->
+      Kontroll.Kontrolltype.InngaaendeKontroll,
+      Kontroll.Kontrolltype.Tilsyn,
+      Kontroll.Kontrolltype.Uttalesak,
+      Kontroll.Kontrolltype.Statusmaaling ->
           getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
     }
   }
