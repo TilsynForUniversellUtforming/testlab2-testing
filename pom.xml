@@ -184,12 +184,14 @@
                 <artifactId>jib-maven-plugin</artifactId>
                 <version>3.4.2</version>
                 <configuration>
-                    <from>eclipse-temurin:21</from>
                     <to>
                         <!--suppress UnresolvedMavenProperty -->
                         <image>${docker.image.prefix}/testlab2-testing:${git.commit.id}</image>
                         <tags>latest</tags>
                     </to>
+                    <from>
+                        <image>eclipse-temurin:21</image>
+                    </from>
                     <container>
                         <ports>
                             <port>8080</port>
