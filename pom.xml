@@ -73,11 +73,6 @@
         </dependency>
 
         <!-- Database -->
-<!--        <dependency>-->
-<!--            <groupId>org.flywaydb</groupId>-->
-<!--            <artifactId>flyway-core</artifactId>-->
-<!--            &lt;!&ndash; versjon er gitt av spring boot &ndash;&gt;-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
@@ -187,8 +182,9 @@
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>3.4.2</version>
                 <configuration>
+                    <from>eclipse-temurin:21</from>
                     <to>
                         <!--suppress UnresolvedMavenProperty -->
                         <image>${docker.image.prefix}/testlab2-testing:${git.commit.id}</image>
