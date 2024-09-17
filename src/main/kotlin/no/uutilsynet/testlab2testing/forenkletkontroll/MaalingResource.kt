@@ -108,14 +108,13 @@ class MaalingResource(
       @RequestParam loeysingId: Int?
   ): ResponseEntity<Any> =
       getTestresultat(maalingId, loeysingId)
-          ?.fold(
+          .fold(
               { testResultatList -> ResponseEntity.ok(testResultatList) },
               { error ->
                 logger.error(
                     "Feila da vi skulle hente fullt resultat for målinga $maalingId", error)
                 ResponseEntity.internalServerError().body(error.firstMessage())
               })
-          ?: ResponseEntity.notFound().build()
 
   fun getTestresultat(maalingId: Int, loeysingId: Int?): Result<List<AutotesterTestresultat>> {
     return runBlocking(Dispatchers.IO) {
