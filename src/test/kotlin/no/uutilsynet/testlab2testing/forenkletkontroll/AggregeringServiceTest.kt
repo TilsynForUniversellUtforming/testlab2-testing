@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
-import java.net.URL
 import java.time.Instant
 import kotlin.properties.Delegates
 import kotlin.random.Random
@@ -191,7 +190,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
 
     Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1)))
-        .thenReturn(mapOf(1 to URL("https://www.example.com")))
+        .thenReturn(mapOf(1 to URI("https://www.example.com").toURL()))
 
     val sakId = createTestKontroll()
     val resultatKontroll1 =
@@ -240,15 +239,15 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
 
     val result = aggregeringService.getAggregertResultatTestregel(testgrunnlagId = sakId)
     assertThat(result).hasSize(1)
-    assertThat(result.get(0).talElementBrot).isEqualTo(1)
-    assertThat(result.get(0).talElementSamsvar).isEqualTo(1)
+    assertThat(result[0].talElementBrot).isEqualTo(1)
+    assertThat(result[0].talElementSamsvar).isEqualTo(1)
 
     aggregeringService.saveAggregertResultatSide(listOf(resultatKontroll1, resultatKontrol2))
     aggregeringService.saveAggregertResultatSide(listOf(resultatKontroll1, resultatKontrol2))
     val result2 = aggregeringService.getAggregertResultatSide(testgrunnlagId = sakId)
     assertThat(result2).hasSize(1)
-    assertThat(result2.get(0).talElementBrot).isEqualTo(1)
-    assertThat(result2.get(0).talElementSamsvar).isEqualTo(1)
+    assertThat(result2[0].talElementBrot).isEqualTo(1)
+    assertThat(result2[0].talElementSamsvar).isEqualTo(1)
 
     aggregeringService.saveAggregertResultatSuksesskriterium(
         listOf(resultatKontroll1, resultatKontrol2))
@@ -280,7 +279,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
 
     testresultat
         .groupBy { it.sideutvalId }
-        .forEach {
+        .forEach { _ ->
           val result = aggregeringService.processPrSideutval(testresultat)
           assertThat(result.brotprosentTrSide + result.samsvarsprosentTrSide)
               .isCloseTo(1.0, Offset.offset(0.00001))
@@ -301,7 +300,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     var id = 1
     for (side in 1..10) {
       for (testregel in 1..10) {
-        val elementResultat = utfall.get(Random.nextInt(1, 3))
+        val elementResultat = utfall[Random.nextInt(1, 3)]
         testresultat.add(
             ResultatManuellKontroll(
                 id,
