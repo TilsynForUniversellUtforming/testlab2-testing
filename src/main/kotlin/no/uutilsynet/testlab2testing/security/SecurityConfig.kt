@@ -22,17 +22,20 @@ class SecurityConfig {
   @Bean
   @Profile("security")
   open fun filterChain(
-      http: HttpSecurity,
-      @Autowired authenticationFilter: AuthenticationFilter
+    http: HttpSecurity,
+    @Autowired authenticationFilter: AuthenticationFilter
   ): SecurityFilterChain {
 
     http {
-      authorizeHttpRequests { authorize(anyRequest, hasAuthority("brukar subscriber")) }
+      authorizeHttpRequests {
+        authorize("/ekstern/**", permitAll)
+        authorize(anyRequest, hasAuthority("brukar subscriber"))
+      }
       oauth2ResourceServer {
         jwt { jwtAuthenticationConverter = Testlab2AuthenticationConverter() }
       }
       sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
-      csrf { disable() } //
+      csrf { disable() }
       addFilterBefore<OAuth2LoginAuthenticationFilter>(authenticationFilter)
     }
 
@@ -54,10 +57,11 @@ class SecurityConfig {
   fun corsConfigurationSource(): CorsConfigurationSource {
     val configuration = CorsConfiguration()
     configuration.allowedOrigins =
-        listOf(
-            "https://user.difi.no",
-            "https://test-testlab.uutilsynet.no",
-            "https://beta-testlab.uutilsynet.no")
+      listOf(
+        "https://user.difi.no",
+        "https://test-testlab.uutilsynet.no",
+        "https://beta-testlab.uutilsynet.no"
+      )
     val source = UrlBasedCorsConfigurationSource()
     source.registerCorsConfiguration("/**", configuration)
     return source
