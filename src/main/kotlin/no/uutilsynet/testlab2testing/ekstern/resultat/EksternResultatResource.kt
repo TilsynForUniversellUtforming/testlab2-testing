@@ -12,15 +12,13 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/ekstern/tester")
 class EksternResultatResource(
-  @Autowired val eksternResultatDAO: EksternResultatDAO,
-  @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
-  @Autowired val resultatDAO: ResultatDAO
+    @Autowired val eksternResultatDAO: EksternResultatDAO,
+    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
+    @Autowired val resultatDAO: ResultatDAO
 ) {
 
   @GetMapping
-  fun findTestForOrgNr(
-    @RequestParam("orgnr") orgnr: String
-  ): TestListElementEkstern? {
+  fun findTestForOrgNr(@RequestParam("orgnr") orgnr: String): TestListElementEkstern? {
     logger.debug("Henter tester for orgnr $orgnr")
 
     val loeysingList = loeysingsRegisterClient.search(orgnr).getOrThrow()
@@ -37,29 +35,30 @@ class EksternResultatResource(
       return null
     }
 
-    val verksemd = loeysingsRegisterClient.searchVerksemd(orgnr)
-      .getOrThrow()
-      .firstOrNull()
+    val verksemd = loeysingsRegisterClient.searchVerksemd(orgnr).getOrThrow().firstOrNull()
 
+    val testEksternList =
+        testList
+            .flatMap { test ->
+              val relatedResults =
+                  resultatDAO.getResultatKontroll(test.kontrollId).filter { resultat ->
+                    loeysingIdList.contains(resultat.loeysingId)
+                  }
 
-    val testEksternList = testList.flatMap { test ->
-      val relatedResults = resultatDAO.getResultatKontroll(test.kontrollId)
-        .filter { resultat -> loeysingIdList.contains(resultat.loeysingId) }
-
-      relatedResults.map { result ->
-        test.toListElement(
-          loeysingList.find { it.id == result.loeysingId }?.namn ?: "Ukjent",
-          result.score.toInt()
-        )
-      }
-    }.sortedBy { it.publisert }
+              relatedResults.map { result ->
+                test.toListElement(
+                    loeysingList.find { it.id == result.loeysingId }?.namn ?: "Ukjent",
+                    result.score.toInt())
+              }
+            }
+            .sortedBy { it.publisert }
 
     return TestListElementEkstern(
-      verksemd = VerksemdEkstern(
-        namn = verksemd?.namn ?: orgnr,
-        organisasjonsnummer = verksemd?.organisasjonsnummer ?: orgnr,
-      ),
-      testList = testEksternList
-    )
+        verksemd =
+            VerksemdEkstern(
+                namn = verksemd?.namn ?: orgnr,
+                organisasjonsnummer = verksemd?.organisasjonsnummer ?: orgnr,
+            ),
+        testList = testEksternList)
   }
 }

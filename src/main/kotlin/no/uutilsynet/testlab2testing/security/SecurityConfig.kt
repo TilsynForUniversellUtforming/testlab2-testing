@@ -22,8 +22,8 @@ class SecurityConfig {
   @Bean
   @Profile("security")
   open fun filterChain(
-    http: HttpSecurity,
-    @Autowired authenticationFilter: AuthenticationFilter
+      http: HttpSecurity,
+      @Autowired authenticationFilter: AuthenticationFilter
   ): SecurityFilterChain {
 
     http {
@@ -57,11 +57,10 @@ class SecurityConfig {
   fun corsConfigurationSource(): CorsConfigurationSource {
     val configuration = CorsConfiguration()
     configuration.allowedOrigins =
-      listOf(
-        "https://user.difi.no",
-        "https://test-testlab.uutilsynet.no",
-        "https://beta-testlab.uutilsynet.no"
-      )
+        listOf(
+            "https://user.difi.no",
+            "https://test-testlab.uutilsynet.no",
+            "https://beta-testlab.uutilsynet.no")
     val source = UrlBasedCorsConfigurationSource()
     source.registerCorsConfiguration("/**", configuration)
     return source
