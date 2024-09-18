@@ -23,6 +23,7 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 
 @Component
@@ -200,6 +201,7 @@ class ResultatService(
         .map { (id, result) -> resultat(id, result) }
   }
 
+  @Cacheable("resultatKontroll")
   fun getKontrollResultat(kontrollId: Int): List<Resultat> {
     return resultatDAO
         .getResultatKontroll(kontrollId)

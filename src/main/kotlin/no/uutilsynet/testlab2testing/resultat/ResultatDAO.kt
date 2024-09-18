@@ -5,7 +5,6 @@ import java.time.LocalDate
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import org.slf4j.LoggerFactory
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -113,7 +112,6 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return jdbcTemplate.query(resultatQuery) { rs, _ -> resultatLoeysingRowmapper(rs) }
   }
 
-  @Cacheable("resultatKontroll")
   fun getResultatKontroll(kontrollId: Int): List<ResultatLoeysing> {
     val query = "$resultatQuery where k.id = :kontrollId order by testgrunnlag_id"
     return jdbcTemplate.query(query, mapOf("kontrollId" to kontrollId)) { rs, _ ->

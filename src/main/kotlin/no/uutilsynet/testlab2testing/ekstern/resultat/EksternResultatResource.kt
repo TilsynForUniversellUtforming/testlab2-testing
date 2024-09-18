@@ -1,8 +1,9 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import no.uutilsynet.testlab2testing.forenkletkontroll.logger
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.resultat.ResultatDAO
+import no.uutilsynet.testlab2testing.resultat.ResultatService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 class EksternResultatResource(
     @Autowired val eksternResultatDAO: EksternResultatDAO,
     @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
-    @Autowired val resultatDAO: ResultatDAO
+    @Autowired val resultatService: ResultatService
 ) {
 
   @GetMapping
@@ -40,15 +41,13 @@ class EksternResultatResource(
     val testEksternList =
         testList
             .flatMap { test ->
-              val relatedResults =
-                  resultatDAO.getResultatKontroll(test.kontrollId).filter { resultat ->
-                    loeysingIdList.contains(resultat.loeysingId)
+              val kontrollResult =
+                  resultatService.getKontrollResultat(test.kontrollId).first { result ->
+                    result.testType == OPPRINNELEG_TEST
                   }
 
-              relatedResults.map { result ->
-                test.toListElement(
-                    loeysingList.find { it.id == result.loeysingId }?.namn ?: "Ukjent",
-                    result.score.toInt())
+              kontrollResult.loeysingar.map { loeysingResult ->
+                test.toListElement(loeysingResult.loeysingNamn, loeysingResult.score)
               }
             }
             .sortedBy { it.publisert }

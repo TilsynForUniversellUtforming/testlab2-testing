@@ -1,18 +1,19 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import java.time.Instant
+import no.uutilsynet.testlab2testing.kontroll.Kontroll.Kontrolltype
 
 data class TestListElementDB(
     val eksternTestgrunnlagId: String,
     val kontrollId: Int,
     val loeysingId: Int,
-    val kontrollType: KontrollType,
+    val kontrollType: Kontrolltype,
     val publisert: Instant
 )
 
 fun TestListElementDB.toListElement(
     loeysingNamn: String,
-    score: Int,
+    score: Double,
 ): TestEkstern =
     TestEkstern(
         rapportId = this.eksternTestgrunnlagId,
