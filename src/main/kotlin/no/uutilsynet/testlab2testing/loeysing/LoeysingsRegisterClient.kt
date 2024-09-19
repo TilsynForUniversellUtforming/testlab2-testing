@@ -101,4 +101,18 @@ class LoeysingsRegisterClient(
               "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}")
     }
   }
+
+  fun searchVerksemd(search: String): Result<List<Verksemd>> {
+    return runCatching {
+      val uri =
+          UriComponentsBuilder.fromUriString(properties.host)
+              .pathSegment("v1", "verksemd", "list")
+              .queryParam("search", search)
+              .queryParam("atTime", ISO_INSTANT.format(Instant.now()))
+              .build()
+              .toUri()
+      restTemplate.getForObject(uri, Array<Verksemd>::class.java)?.toList()
+          ?: throw RuntimeException("loeysingsregisteret returnerte null for verksemdsøk $search")
+    }
+  }
 }
