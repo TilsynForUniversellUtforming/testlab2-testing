@@ -27,12 +27,15 @@ class SecurityConfig {
   ): SecurityFilterChain {
 
     http {
-      authorizeHttpRequests { authorize(anyRequest, hasAuthority("brukar subscriber")) }
+      authorizeHttpRequests {
+        authorize("/ekstern/**", permitAll)
+        authorize(anyRequest, hasAuthority("brukar subscriber"))
+      }
       oauth2ResourceServer {
         jwt { jwtAuthenticationConverter = Testlab2AuthenticationConverter() }
       }
       sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
-      csrf { disable() } //
+      csrf { disable() }
       addFilterBefore<OAuth2LoginAuthenticationFilter>(authenticationFilter)
     }
 
