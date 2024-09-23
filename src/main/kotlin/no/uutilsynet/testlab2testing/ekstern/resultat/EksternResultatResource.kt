@@ -5,6 +5,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.resultat.ResultatService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -19,13 +20,15 @@ class EksternResultatResource(
 ) {
 
   @GetMapping
-  fun findTestForOrgNr(@RequestParam("orgnr") orgnr: String): TestListElementEkstern? {
+  fun findTestForOrgNr(
+      @RequestParam("orgnr") orgnr: String
+  ): ResponseEntity<TestListElementEkstern?> {
     logger.debug("Henter tester for orgnr $orgnr")
 
     val loeysingList = loeysingsRegisterClient.search(orgnr).getOrThrow()
     if (loeysingList.isEmpty()) {
-      logger.info("Fann ingen løsyingar med orgnr $orgnr")
-      return null
+      logger.info("Fann ingen løysingar for verkemd med orgnr $orgnr")
+      return ResponseEntity.notFound().build<TestListElementEkstern>()
     }
 
     val loeysingIdList = loeysingList.map { it.id }
@@ -33,7 +36,7 @@ class EksternResultatResource(
     val testList = eksternResultatDAO.getTestsForLoeysingIds(loeysingIdList)
     if (testList.isEmpty()) {
       logger.info("Fann ingen gyldige testar for orgnr $orgnr")
-      return null
+      return ResponseEntity.notFound().build<TestListElementEkstern>()
     }
 
     val verksemd = loeysingsRegisterClient.searchVerksemd(orgnr).getOrThrow().firstOrNull()
@@ -52,12 +55,13 @@ class EksternResultatResource(
             }
             .sortedBy { it.publisert }
 
-    return TestListElementEkstern(
-        verksemd =
-            VerksemdEkstern(
-                namn = verksemd?.namn ?: orgnr,
-                organisasjonsnummer = verksemd?.organisasjonsnummer ?: orgnr,
-            ),
-        testList = testEksternList)
+    return ResponseEntity.ok(
+        TestListElementEkstern(
+            verksemd =
+                VerksemdEkstern(
+                    namn = verksemd?.namn ?: orgnr,
+                    organisasjonsnummer = verksemd?.organisasjonsnummer ?: orgnr,
+                ),
+            testList = testEksternList))
   }
 }
