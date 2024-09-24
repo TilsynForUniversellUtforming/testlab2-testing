@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.regelsett
 
+import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2testing.testregel.TestregelBase
-import no.uutilsynet.testlab2testing.testregel.TestregelModus
 
 data class RegelsettResponse(
     override val id: Int,

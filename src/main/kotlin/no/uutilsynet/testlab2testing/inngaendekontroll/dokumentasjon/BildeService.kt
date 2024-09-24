@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service
 import org.springframework.util.MimeTypeUtils
 import org.springframework.web.multipart.MultipartFile
 
+private const val GJENNOPPRETT_BILDE_FEIL = "Kunne ikkje gjenopprette bilde"
+
 @Service
 class BildeService(
     @Autowired val testResultatDAO: TestResultatDAO,
@@ -59,7 +61,7 @@ class BildeService(
 
     blobClient.deleteBilde(bildeSti.thumbnail).onFailure {
       blobClient.restoreBilde(bildeSti.bilde).onFailure { ex ->
-        logger.error("Kunne ikkje gjenopprette bilde", ex)
+        logger.error(GJENNOPPRETT_BILDE_FEIL, ex)
       }
       logger.error("Kunne ikkje slette thumbnail frå blob storage")
       throw it
@@ -68,10 +70,10 @@ class BildeService(
     testResultatDAO.deleteBilde(bildeSti.id).onFailure {
       logger.error("Kunne ikkje slette bilde frå database", it)
       blobClient.restoreBilde(bildeSti.bilde).onFailure { ex ->
-        logger.error("Kunne ikkje gjenopprette bilde", ex)
+        logger.error(GJENNOPPRETT_BILDE_FEIL, ex)
       }
       blobClient.restoreBilde(bildeSti.thumbnail).onFailure { ex ->
-        logger.error("Kunne ikkje gjenopprette bilde", ex)
+        logger.error(GJENNOPPRETT_BILDE_FEIL, ex)
       }
 
       throw it
@@ -107,9 +109,8 @@ class BildeService(
         val originalFileName =
             bilde.originalFilename ?: throw IllegalArgumentException("Filnamn er tomt")
 
-        if (!allowedMIMETypes.contains(bilde.contentType)) {
-          throw IllegalArgumentException(
-              "$originalFileName har annen filtype enn ${allowedMIMETypes.joinToString(",")}")
+        require(allowedMIMETypes.contains(bilde.contentType)) {
+          "$originalFileName har annen filtype enn ${allowedMIMETypes.joinToString(",")}"
         }
 
         val fileExtension = originalFileName.substringAfterLast('.').lowercase()

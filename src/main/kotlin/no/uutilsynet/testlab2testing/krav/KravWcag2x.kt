@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.krav
 
+import no.uutilsynet.testlab2.constants.WcagSamsvarsnivaa
+
 data class KravWcag2x(
     val id: Int,
     val tittel: String,
@@ -14,9 +16,3 @@ data class KravWcag2x(
     val suksesskriterium: String,
     val samsvarsnivaa: WcagSamsvarsnivaa
 )
-
-enum class WcagSamsvarsnivaa() {
-  A,
-  AA,
-  AAA
-}

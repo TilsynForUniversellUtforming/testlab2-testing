@@ -1,8 +1,8 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import Kontrolltype
 import java.sql.ResultSet
 import java.time.LocalDate
+import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.DataClassRowMapper

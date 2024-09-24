@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import java.time.Instant
+import no.uutilsynet.testlab2.constants.TestregelInnholdstype
+import no.uutilsynet.testlab2.constants.TestregelModus
+import no.uutilsynet.testlab2.constants.TestregelStatus
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.common.TestlabLocale
@@ -15,9 +18,6 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
-import no.uutilsynet.testlab2testing.testregel.TestregelModus
-import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 import org.assertj.core.api.Assertions
 import org.hamcrest.CoreMatchers
 import org.junit.jupiter.api.BeforeEach

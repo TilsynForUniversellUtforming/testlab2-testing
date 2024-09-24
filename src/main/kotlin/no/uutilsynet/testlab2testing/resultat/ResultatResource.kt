@@ -1,8 +1,8 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import Kontrolltype
 import java.net.URI
 import java.time.LocalDate
+import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert

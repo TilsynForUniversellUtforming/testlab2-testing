@@ -1,11 +1,11 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import Kontrolltype
 import java.net.URL
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO

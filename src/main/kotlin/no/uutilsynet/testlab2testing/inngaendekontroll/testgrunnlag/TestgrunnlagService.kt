@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
 import java.time.Instant
-import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
+import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO

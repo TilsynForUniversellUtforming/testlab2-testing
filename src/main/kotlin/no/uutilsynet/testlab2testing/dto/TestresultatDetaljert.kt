@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.dto
 
 import java.net.URL
 import java.time.LocalDateTime
+import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 

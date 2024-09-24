@@ -2,7 +2,7 @@ package no.uutilsynet.testlab2testing.aggregering
 
 import java.net.URI
 import java.net.URL
-import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
+import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.forenkletkontroll.AutoTesterClient
 import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestKoeyring

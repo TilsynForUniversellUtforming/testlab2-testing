@@ -1,8 +1,8 @@
 package no.uutilsynet.testlab2testing.kontroll
 
-import Kontrolltype
 import java.net.URI
 import java.time.Instant
+import no.uutilsynet.testlab2.constants.Kontrolltype
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component

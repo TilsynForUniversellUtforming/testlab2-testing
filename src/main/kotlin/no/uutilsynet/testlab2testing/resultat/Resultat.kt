@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import Kontrolltype
 import java.time.LocalDate
+import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 
 data class Resultat(

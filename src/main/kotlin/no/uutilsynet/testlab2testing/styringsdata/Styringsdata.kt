@@ -1,13 +1,13 @@
 package no.uutilsynet.testlab2testing.styringsdata
 
-import BotOekningType
-import Reaksjonstype
-import ResultatKlage
-import StyringsdataKontrollStatus
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.time.Instant
 import java.time.LocalDate
+import no.uutilsynet.testlab2.constants.BotOekningType
+import no.uutilsynet.testlab2.constants.Reaksjonstype
+import no.uutilsynet.testlab2.constants.ResultatKlage
+import no.uutilsynet.testlab2.constants.StyringsdataKontrollStatus
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
@@ -65,19 +65,6 @@ sealed class Styringsdata {
         val sluttDato: LocalDate?,
         val kommentar: String?,
     )
-
-    //    enum class BotOekningType {
-    //      @JsonProperty("kroner") kroner,
-    //      @JsonProperty("prosent") prosent,
-    //      @JsonProperty("ikkje-relevant") ikkjeRelevant
-    //    }
-
-    //    enum class ResultatKlage {
-    //      @JsonProperty("stadfesta") stadfesta,
-    //      @JsonProperty("delvis-omgjort") delvisOmgjort,
-    //      @JsonProperty("omgjort") omgjort,
-    //      @JsonProperty("oppheva") oppheva,
-    //    }
   }
 
   data class Kontroll(
@@ -94,31 +81,13 @@ sealed class Styringsdata {
       val endeligRapportDato: LocalDate?,
       val kontrollAvsluttaDato: LocalDate?,
       val rapportPublisertDato: LocalDate?,
-  ) : Styringsdata() {
-    //    enum class StyringsdataKontrollStatus {
-    //      @JsonProperty("planlagt") planlagt,
-    //      @JsonProperty("paagar") paagar,
-    //      @JsonProperty("avslutta") avslutta,
-    //      @JsonProperty("ikkje-aktuell") ikkjeAktuell,
-    //      @JsonProperty("forsinka") forsinka,
-    //    }
-  }
+  ) : Styringsdata() {}
 }
 
 enum class StyringsdataType {
   kontroll,
   loeysing,
 }
-
-// enum class Klagetype {
-//  paalegg,
-//  bot
-// }
-
-// enum class Reaksjonstype {
-//  @JsonProperty("reaksjon") reaksjon,
-//  @JsonProperty("ingen-reaksjon") ingenReaksjon
-// }
 
 data class StyringsdataListElement(
     override val id: Int,

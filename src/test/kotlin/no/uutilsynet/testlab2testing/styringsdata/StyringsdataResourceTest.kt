@@ -4,6 +4,7 @@ import java.net.URI
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.properties.Delegates
+import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource

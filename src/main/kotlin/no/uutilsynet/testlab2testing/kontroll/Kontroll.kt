@@ -1,8 +1,8 @@
 package no.uutilsynet.testlab2testing.kontroll
 
-import Kontrolltype
-import Sakstype
 import java.time.LocalDate
+import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2.constants.Sakstype
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.testregel.TestregelBase
 
@@ -18,18 +18,6 @@ data class Kontroll(
     val sideutvalList: List<Sideutval> = emptyList(),
     val opprettaDato: LocalDate = LocalDate.now(),
 ) {
-  //  enum class Sakstype {
-  //    @JsonProperty("forvaltningssak") Forvaltningssak,
-  //    @JsonProperty("arkivsak") Arkivsak
-  //  }
-  //
-  //  enum class Kontrolltype {
-  //    @JsonProperty("inngaaende-kontroll") InngaaendeKontroll,
-  //    @JsonProperty("forenkla-kontroll") ForenklaKontroll,
-  //    @JsonProperty("tilsyn") Tilsyn,
-  //    @JsonProperty("statusmaaling") Statusmaaling,
-  //    @JsonProperty("uttalesak") Uttalesak,
-  //  }
 
   data class Testreglar(val regelsettId: Int? = null, val testregelList: List<TestregelBase>)
 }

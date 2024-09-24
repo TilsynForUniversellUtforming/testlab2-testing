@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import java.time.LocalDate
+import no.uutilsynet.testlab2.constants.Kontrolltype
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
