@@ -65,9 +65,9 @@ class TestResultatResourceTest(
         KontrollResource.OpprettKontroll(
             "manuell-kontroll",
             "Ola Nordmann",
-            Kontroll.Sakstype.Arkivsak,
+            Sakstype.Arkivsak,
             "1234",
-            Kontroll.Kontrolltype.InngaaendeKontroll)
+            Kontrolltype.InngaaendeKontroll)
 
     kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
@@ -78,7 +78,7 @@ class TestResultatResourceTest(
     val kontroll =
         Kontroll(
             kontrollId,
-            Kontroll.Kontrolltype.InngaaendeKontroll,
+            Kontrolltype.InngaaendeKontroll,
             opprettKontroll.tittel,
             opprettKontroll.saksbehandler,
             opprettKontroll.sakstype,

@@ -88,7 +88,7 @@ class ResultatServiceTest(
     Mockito.`when`(loeysingsRegisterClient.getManyExpanded(Mockito.anyList()))
         .thenReturn(Result.success(listOf(testloeysing)))
     val resultat =
-        resultatService.getResultatList(Kontroll.Kontrolltype.ForenklaKontroll).filter {
+        resultatService.getResultatList(Kontrolltype.ForenklaKontroll).filter {
           it.id == kontrollId
         }
 
@@ -123,16 +123,16 @@ class ResultatServiceTest(
         KontrollResource.OpprettKontroll(
             "manuell-kontroll",
             "Ola Nordmann",
-            Kontroll.Sakstype.Arkivsak,
+            Sakstype.Arkivsak,
             "1234",
-            Kontroll.Kontrolltype.ForenklaKontroll)
+            Kontrolltype.ForenklaKontroll)
 
     kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
     val kontroll =
         Kontroll(
             kontrollId,
-            Kontroll.Kontrolltype.ForenklaKontroll,
+            Kontrolltype.ForenklaKontroll,
             opprettKontroll.tittel,
             opprettKontroll.saksbehandler,
             opprettKontroll.sakstype,

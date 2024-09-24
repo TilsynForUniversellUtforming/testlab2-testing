@@ -114,16 +114,16 @@ class TestgrunnlagDAOTest(
         KontrollResource.OpprettKontroll(
             "manuell-kontroll",
             "Ola Nordmann",
-            Kontroll.Sakstype.Arkivsak,
+            Sakstype.Arkivsak,
             "1234",
-            Kontroll.Kontrolltype.InngaaendeKontroll)
+            Kontrolltype.InngaaendeKontroll)
 
     kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
     val kontroll =
         Kontroll(
             kontrollId,
-            Kontroll.Kontrolltype.InngaaendeKontroll,
+            Kontrolltype.InngaaendeKontroll,
             opprettKontroll.tittel,
             opprettKontroll.saksbehandler,
             opprettKontroll.sakstype,

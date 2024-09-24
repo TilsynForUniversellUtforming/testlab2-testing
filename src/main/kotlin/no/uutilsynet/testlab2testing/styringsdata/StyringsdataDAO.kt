@@ -1,16 +1,16 @@
 package no.uutilsynet.testlab2testing.styringsdata
 
+import Klagetype
+import Reaksjonstype
+import ResultatKlage
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Kontroll.StyringsdataKontrollStatus
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Bot
-import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.BotOekningType
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Klage
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Paalegg
-import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.ResultatKlage
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component

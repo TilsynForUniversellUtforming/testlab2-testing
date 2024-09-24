@@ -145,6 +145,11 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>0.12.5</version>
         </dependency>
+        <dependency>
+            <groupId>no.uutilsynet.testlab2</groupId>
+            <artifactId>testlab2-constants</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>

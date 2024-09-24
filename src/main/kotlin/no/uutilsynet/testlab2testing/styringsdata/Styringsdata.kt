@@ -1,6 +1,9 @@
 package no.uutilsynet.testlab2testing.styringsdata
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import BotOekningType
+import Reaksjonstype
+import ResultatKlage
+import StyringsdataKontrollStatus
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.time.Instant
@@ -63,18 +66,18 @@ sealed class Styringsdata {
         val kommentar: String?,
     )
 
-    enum class BotOekningType {
-      @JsonProperty("kroner") kroner,
-      @JsonProperty("prosent") prosent,
-      @JsonProperty("ikkje-relevant") ikkjeRelevant
-    }
+    //    enum class BotOekningType {
+    //      @JsonProperty("kroner") kroner,
+    //      @JsonProperty("prosent") prosent,
+    //      @JsonProperty("ikkje-relevant") ikkjeRelevant
+    //    }
 
-    enum class ResultatKlage {
-      @JsonProperty("stadfesta") stadfesta,
-      @JsonProperty("delvis-omgjort") delvisOmgjort,
-      @JsonProperty("omgjort") omgjort,
-      @JsonProperty("oppheva") oppheva,
-    }
+    //    enum class ResultatKlage {
+    //      @JsonProperty("stadfesta") stadfesta,
+    //      @JsonProperty("delvis-omgjort") delvisOmgjort,
+    //      @JsonProperty("omgjort") omgjort,
+    //      @JsonProperty("oppheva") oppheva,
+    //    }
   }
 
   data class Kontroll(
@@ -92,13 +95,13 @@ sealed class Styringsdata {
       val kontrollAvsluttaDato: LocalDate?,
       val rapportPublisertDato: LocalDate?,
   ) : Styringsdata() {
-    enum class StyringsdataKontrollStatus {
-      @JsonProperty("planlagt") planlagt,
-      @JsonProperty("paagar") paagar,
-      @JsonProperty("avslutta") avslutta,
-      @JsonProperty("ikkje-aktuell") ikkjeAktuell,
-      @JsonProperty("forsinka") forsinka,
-    }
+    //    enum class StyringsdataKontrollStatus {
+    //      @JsonProperty("planlagt") planlagt,
+    //      @JsonProperty("paagar") paagar,
+    //      @JsonProperty("avslutta") avslutta,
+    //      @JsonProperty("ikkje-aktuell") ikkjeAktuell,
+    //      @JsonProperty("forsinka") forsinka,
+    //    }
   }
 }
 
@@ -107,15 +110,15 @@ enum class StyringsdataType {
   loeysing,
 }
 
-enum class Klagetype {
-  paalegg,
-  bot
-}
+// enum class Klagetype {
+//  paalegg,
+//  bot
+// }
 
-enum class Reaksjonstype {
-  @JsonProperty("reaksjon") reaksjon,
-  @JsonProperty("ingen-reaksjon") ingenReaksjon
-}
+// enum class Reaksjonstype {
+//  @JsonProperty("reaksjon") reaksjon,
+//  @JsonProperty("ingen-reaksjon") ingenReaksjon
+// }
 
 data class StyringsdataListElement(
     override val id: Int,

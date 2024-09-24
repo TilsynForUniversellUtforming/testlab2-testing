@@ -7,12 +7,9 @@ import kotlin.properties.Delegates
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
-import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Kontroll.StyringsdataKontrollStatus
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Bot
-import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.BotOekningType
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Klage
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Paalegg
-import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.ResultatKlage
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
@@ -315,9 +312,9 @@ class StyringsdataResourceTest(
         KontrollResource.OpprettKontroll(
             "manuell-kontroll",
             "Ola Nordmann",
-            Kontroll.Sakstype.Arkivsak,
+            Sakstype.Arkivsak,
             "1234",
-            Kontroll.Kontrolltype.InngaaendeKontroll)
+            Kontrolltype.InngaaendeKontroll)
 
     return kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
   }

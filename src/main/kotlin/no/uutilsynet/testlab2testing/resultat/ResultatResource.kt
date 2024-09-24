@@ -1,11 +1,11 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import Kontrolltype
 import java.net.URI
 import java.time.LocalDate
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -54,7 +54,7 @@ class ResultatResource(
       aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
 
   @GetMapping("list")
-  fun getListTest(type: Kontroll.Kontrolltype?): ResponseEntity<List<Resultat>> {
+  fun getListTest(type: Kontrolltype?): ResponseEntity<List<Resultat>> {
     return ResponseEntity.ok(resultatService.getResultatList(type))
   }
 
@@ -83,7 +83,7 @@ class ResultatResource(
   @GetMapping("/tema")
   fun getResultatPrTema(
       @RequestParam kontrollId: Int?,
-      @RequestParam kontrollType: Kontroll.Kontrolltype?,
+      @RequestParam kontrollType: Kontrolltype?,
       @RequestParam fraDato: LocalDate?,
       @RequestParam tilDato: LocalDate?
   ): List<ResultatTema> {
@@ -93,7 +93,7 @@ class ResultatResource(
   @GetMapping("/krav")
   fun getResultatPrKrav(
       @RequestParam kontrollId: Int?,
-      @RequestParam kontrollType: Kontroll.Kontrolltype?,
+      @RequestParam kontrollType: Kontrolltype?,
       @RequestParam fraDato: LocalDate?,
       @RequestParam tilDato: LocalDate?
   ): List<ResultatKrav> {

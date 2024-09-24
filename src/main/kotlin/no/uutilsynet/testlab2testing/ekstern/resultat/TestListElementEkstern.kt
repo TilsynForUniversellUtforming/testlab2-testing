@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
+import Kontrolltype
 import java.time.Instant
-import no.uutilsynet.testlab2testing.kontroll.Kontroll.Kontrolltype
 
 data class VerksemdEkstern(val namn: String, val organisasjonsnummer: String)
 

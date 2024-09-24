@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import java.time.LocalDate
-import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -15,7 +14,7 @@ class ResultatDAOTest(@Autowired val resultatDAO: ResultatDAO) {
   @Test
   fun setWhereClause() {
     val kontrollId = 1
-    val kontrolltype = Kontroll.Kontrolltype.ForenklaKontroll
+    val kontrolltype = Kontrolltype.ForenklaKontroll
     val startDato = LocalDate.of(2024, 1, 1)
     val sluttDato = LocalDate.of(2024, 12, 31)
 
@@ -33,7 +32,7 @@ class ResultatDAOTest(@Autowired val resultatDAO: ResultatDAO) {
 
   @Test
   fun emptyKontrollIdSetWhereClause() {
-    val kontrolltype = Kontroll.Kontrolltype.ForenklaKontroll
+    val kontrolltype = Kontrolltype.ForenklaKontroll
     val startDato = LocalDate.of(2024, 1, 1)
     val sluttDato = LocalDate.of(2024, 12, 31)
 
@@ -45,7 +44,7 @@ class ResultatDAOTest(@Autowired val resultatDAO: ResultatDAO) {
 
   @Test
   fun setWhereClauseKontrollType() {
-    val kontrolltype = Kontroll.Kontrolltype.ForenklaKontroll
+    val kontrolltype = Kontrolltype.ForenklaKontroll
 
     val whenClause = resultatDAO.setWhereClause(null, kontrolltype, null, null)
     assertEquals("where kontrolltype = 'ForenklaKontroll'", whenClause)

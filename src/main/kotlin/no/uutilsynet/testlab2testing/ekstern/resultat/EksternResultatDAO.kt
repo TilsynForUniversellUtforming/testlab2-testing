@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
-import no.uutilsynet.testlab2testing.kontroll.Kontroll.Kontrolltype
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 

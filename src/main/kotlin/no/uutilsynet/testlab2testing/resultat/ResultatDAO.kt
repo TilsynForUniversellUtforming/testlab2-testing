@@ -1,9 +1,9 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import Kontrolltype
 import java.sql.ResultSet
 import java.time.LocalDate
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
-import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -60,7 +60,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val maalingId = rs.getInt("id")
     val navn = rs.getString("tittel")
     val dato = handleDate(rs.getDate("dato"))
-    val kontrolltype = Kontroll.Kontrolltype.valueOf(rs.getString("kontrolltype"))
+    val kontrolltype = Kontrolltype.valueOf(rs.getString("kontrolltype"))
     val loeysingId = rs.getInt("loeysing_id")
     val testregelGjennomsnittlegSideSamsvarProsent =
         rs.getDouble("testregel_gjennomsnittleg_side_samsvar_prosent")
@@ -87,8 +87,8 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         null)
   }
 
-  fun setTestType(kontrolltype: Kontroll.Kontrolltype, resultSet: ResultSet): String {
-    if (kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
+  fun setTestType(kontrolltype: Kontrolltype, resultSet: ResultSet): String {
+    if (kontrolltype == Kontrolltype.ForenklaKontroll) {
       return TestgrunnlagType.OPPRINNELEG_TEST.toString()
     }
     return resultSet.getString("testtype")
@@ -136,7 +136,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getResultatPrTema(
       kontrollId: Int?,
-      kontrolltype: Kontroll.Kontrolltype?,
+      kontrolltype: Kontrolltype?,
       startDato: LocalDate?,
       sluttDato: LocalDate?
   ): List<ResultatTema> {
@@ -185,7 +185,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun setWhereClause(
       kontrollId: Int?,
-      kontrolltype: Kontroll.Kontrolltype?,
+      kontrolltype: Kontrolltype?,
       startDato: LocalDate?,
       sluttDato: LocalDate?
   ): String {
@@ -231,7 +231,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getResultatPrKrav(
       kontrollId: Int?,
-      kontrollType: Kontroll.Kontrolltype?,
+      kontrollType: Kontrolltype?,
       fraDato: LocalDate?,
       tilDato: LocalDate?
   ): List<ResultatKravBase> {
