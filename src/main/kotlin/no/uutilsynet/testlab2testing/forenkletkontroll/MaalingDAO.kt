@@ -35,6 +35,9 @@ import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBa
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
 import org.slf4j.LoggerFactory
+import org.springframework.cache.CacheManager
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -48,6 +51,7 @@ class MaalingDAO(
     val aggregeringService: AggregeringService,
     val sideutvalDAO: SideutvalDAO,
     val brukarService: BrukarService,
+    val cacheManager: CacheManager
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
@@ -168,6 +172,7 @@ class MaalingDAO(
     return idMaaling
   }
 
+  @Cacheable("maalingCache", key = "#id")
   fun getMaaling(id: Int): Maaling? {
     val maaling =
         DataAccessUtils.singleResult(
@@ -177,6 +182,7 @@ class MaalingDAO(
   }
 
   @Transactional
+  @CacheEvict("maalingCache", key = "#id")
   fun deleteMaaling(id: Int): Int = jdbcTemplate.update(deleteMaalingSql, mapOf("id" to id))
 
   fun getMaalingList(): List<MaalingListElement> =
@@ -329,6 +335,14 @@ class MaalingDAO(
 
   @Transactional
   fun updateMaaling(maaling: Maaling) {
+    val cache = cacheManager.getCache("maalingCache")
+
+    if (cache != null) {
+      cache.evict(maaling.id)
+    } else {
+      logger.warn("Finner ikkje maalingCache")
+    }
+
     if (maaling is Planlegging) {
       jdbcTemplate.update(
           "update MaalingV1 set navn = :navn, status = :status, max_lenker = :max_lenker, tal_lenker = :tal_lenker where id = :id",
