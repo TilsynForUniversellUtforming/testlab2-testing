@@ -377,6 +377,26 @@ class ResultatService(
     }
   }
 
+  fun getResultatListTestgrunnlag(
+      testgrunnlagId: Int,
+      loeysingId: Int,
+      kravid: Int
+  ): List<TestresultatDetaljert> {
+    val kontrollId = testgrunnlagDao.getTestgrunnlag(testgrunnlagId).getOrThrow().kontrollId
+
+    val typeKontroll =
+        kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().kontrolltype
+    return when (typeKontroll) {
+      Kontroll.Kontrolltype.ForenklaKontroll ->
+          getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
+      Kontroll.Kontrolltype.InngaaendeKontroll,
+      Kontroll.Kontrolltype.Tilsyn,
+      Kontroll.Kontrolltype.Uttalesak,
+      Kontroll.Kontrolltype.Statusmaaling ->
+          getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
+    }
+  }
+
   fun getResultatPrTema(
       kontrollId: Int?,
       kontrolltype: Kontrolltype?,
@@ -420,4 +440,24 @@ class ResultatService(
         talElementVarsel = talElementVarsel,
         talElementIkkjeForekomst = talElementIkkjeForekomst)
   }
+
+  private fun List<ResultatLoeysing>.toResultatOversiktLoeysing() =
+      this.map { krav -> mapKrav(krav) }
+          .groupBy { it.kravId }
+          .map { (_, result) ->
+            val loeysingar = getLoeysingMap(result).getOrThrow()
+            handleIkkjeForekomst(
+                ResultatOversiktLoeysing(
+                    result.first().loeysingId,
+                    loeysingar.getNamn(result.first().loeysingId),
+                    result.first().typeKontroll,
+                    result.first().namn,
+                    result.map { it.testar }.flatten().distinct(),
+                    result.map { it.score }.average(),
+                    result.first().kravId ?: 0,
+                    result.first().kravTittel ?: "",
+                    result.sumOf { it.talElementBrot } + result.sumOf { it.talElementSamsvar },
+                    result.sumOf { it.talElementBrot },
+                    result.sumOf { it.talElementSamsvar }))
+          }
 }

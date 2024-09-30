@@ -11,8 +11,8 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return jdbcTemplate.query(
         """
       select r.id_ekstern, tg.kontroll_id, r.loeysing_id, k.kontrolltype, r.publisert
-      from testgrunnlag tg
-          join kontroll k on tg.kontroll_id = k.id
+      from kontroll k 
+          join testgrunnlag tg on tg.kontroll_id = k.id
           join rapport r on tg.id = r.testgrunnlag_id
       where r.publisert is not null
           and tg.type = 'OPPRINNELEG_TEST'
@@ -28,4 +28,18 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               rs.getTimestamp("publisert").toInstant())
         }
   }
+
+  data class TestgrunnlagIdLoeysingId(
+      val testgrunnlagId: Int,
+      val loeysingId: Int,
+  )
+
+  fun findTestgrunnlagLoeysingFromRapportId(rapportId: String): TestgrunnlagIdLoeysingId? =
+      jdbcTemplate.queryForObject(
+          """
+            select r.testgrunnlag_id, r.loeysing_id from rapport r where r.id_ekstern = :rapportId
+      """
+              .trimIndent(),
+          mapOf("rapportId" to rapportId),
+          DataClassRowMapper.newInstance(TestgrunnlagIdLoeysingId::class.java))
 }
