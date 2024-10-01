@@ -92,11 +92,15 @@ class LoeysingsRegisterClient(
       val uri =
           UriComponentsBuilder.fromUriString(properties.host)
               .pathSegment("v1", "loeysing", "expanded")
-              .queryParam("ids", idList.joinToString(","))
-              .queryParam("atTime", ISO_INSTANT.format(Instant.now()))
               .build()
               .toUri()
-      restTemplate.getForObject(uri, Array<Loeysing.Expanded>::class.java)?.toList()
+      restTemplate
+          .postForObject(
+              uri,
+              mapOf(
+                  "ids" to idList.joinToString(","), "atTime" to ISO_INSTANT.format(Instant.now())),
+              Array<Loeysing.Expanded>::class.java)
+          ?.toList()
           ?: throw RuntimeException(
               "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}")
     }
