@@ -1,9 +1,9 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import java.net.URI
+import no.uutilsynet.testlab2.constants.WcagSamsvarsnivaa
 import no.uutilsynet.testlab2testing.krav.KravWcag2x
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.krav.WcagSamsvarsnivaa
 import no.uutilsynet.testlab2testing.testregel.TestConstants.modus
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelCreateRequestBody

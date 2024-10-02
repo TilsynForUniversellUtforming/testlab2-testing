@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.kontroll
 
+import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2.constants.Sakstype
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
@@ -39,9 +41,9 @@ class KontrollResource(
       val id: Int,
       val tittel: String,
       val saksbehandler: String,
-      val sakstype: Kontroll.Sakstype,
+      val sakstype: Sakstype,
       val arkivreferanse: String,
-      val kontrolltype: Kontroll.Kontrolltype,
+      val kontrolltype: Kontrolltype,
       val virksomheter: List<String>, // liste med orgnummer
       val styringsdataId: Int?
   )
@@ -67,7 +69,7 @@ class KontrollResource(
                 kontrollDB.id,
                 kontrollDB.tittel,
                 kontrollDB.saksbehandler,
-                Kontroll.Sakstype.valueOf(kontrollDB.sakstype),
+                Sakstype.valueOf(kontrollDB.sakstype),
                 kontrollDB.arkivreferanse,
                 kontrollDB.kontrolltype,
                 virksomheter,
@@ -84,7 +86,7 @@ class KontrollResource(
   fun createKontroll(@RequestBody opprettKontroll: OpprettKontroll): ResponseEntity<Unit> {
     return runCatching {
           val id = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
-          if (opprettKontroll.kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
+          if (opprettKontroll.kontrolltype == Kontrolltype.ForenklaKontroll) {
             maalingService.nyMaaling(id, opprettKontroll).getOrThrow()
           }
 
@@ -122,7 +124,7 @@ class KontrollResource(
         kontrollDB.kontrolltype,
         kontrollDB.tittel,
         kontrollDB.saksbehandler,
-        Kontroll.Sakstype.valueOf(kontrollDB.sakstype),
+        Sakstype.valueOf(kontrollDB.sakstype),
         kontrollDB.arkivreferanse,
         kontrollDB.utval?.let { utval ->
           val idList = utval.loeysingar.map { it.id }
@@ -187,7 +189,7 @@ class KontrollResource(
                 kontrollDAO.updateKontroll(kontroll, sideutvalList).getOrThrow()
               }
             }
-            if (updateBody.kontroll.kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
+            if (updateBody.kontroll.kontrolltype == Kontrolltype.ForenklaKontroll) {
               maalingService.updateMaaling(getKontrollResult(id).getOrThrow())
             } else {
               createOrUpdateTestgrunnlag(id)
@@ -227,9 +229,9 @@ class KontrollResource(
   data class OpprettKontroll(
       val tittel: String,
       val saksbehandler: String,
-      val sakstype: Kontroll.Sakstype,
+      val sakstype: Sakstype,
       val arkivreferanse: String,
-      val kontrolltype: Kontroll.Kontrolltype,
+      val kontrolltype: Kontrolltype,
   )
 
   fun createOrUpdateTestgrunnlag(kontrollId: Int): Result<Int> {

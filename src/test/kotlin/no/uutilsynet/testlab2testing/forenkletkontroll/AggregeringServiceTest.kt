@@ -4,11 +4,16 @@ import java.net.URI
 import java.time.Instant
 import kotlin.properties.Delegates
 import kotlin.random.Random
+import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2.constants.Sakstype
+import no.uutilsynet.testlab2.constants.TestregelInnholdstype
+import no.uutilsynet.testlab2.constants.TestregelModus
+import no.uutilsynet.testlab2.constants.TestregelStatus
+import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestlabLocale
-import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
@@ -22,9 +27,6 @@ import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelInit
-import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
-import no.uutilsynet.testlab2testing.testregel.TestregelModus
-import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Offset
@@ -328,16 +330,16 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
         KontrollResource.OpprettKontroll(
             "manuell-kontroll",
             "Ola Nordmann",
-            Kontroll.Sakstype.Arkivsak,
+            Sakstype.Arkivsak,
             "1234",
-            Kontroll.Kontrolltype.InngaaendeKontroll)
+            Kontrolltype.InngaaendeKontroll)
 
     kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
     val kontroll =
         Kontroll(
             kontrollId,
-            Kontroll.Kontrolltype.InngaaendeKontroll,
+            Kontrolltype.InngaaendeKontroll,
             opprettKontroll.tittel,
             opprettKontroll.saksbehandler,
             opprettKontroll.sakstype,

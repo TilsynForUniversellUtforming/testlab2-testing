@@ -2,14 +2,14 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
 import java.time.Instant
+import no.uutilsynet.testlab2.constants.TestregelInnholdstype
+import no.uutilsynet.testlab2.constants.TestregelModus
+import no.uutilsynet.testlab2.constants.TestregelStatus
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
-import no.uutilsynet.testlab2testing.testregel.TestregelModus
-import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 
 object TestConstants {
   val uutilsynetLoeysing =

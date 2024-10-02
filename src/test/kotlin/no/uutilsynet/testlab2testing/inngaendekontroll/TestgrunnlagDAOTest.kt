@@ -2,6 +2,8 @@ package no.uutilsynet.testlab2testing.inngaendekontroll
 
 import java.net.URI
 import kotlin.properties.Delegates
+import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2.constants.Sakstype
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
@@ -114,16 +116,16 @@ class TestgrunnlagDAOTest(
         KontrollResource.OpprettKontroll(
             "manuell-kontroll",
             "Ola Nordmann",
-            Kontroll.Sakstype.Arkivsak,
+            Sakstype.Arkivsak,
             "1234",
-            Kontroll.Kontrolltype.InngaaendeKontroll)
+            Kontrolltype.InngaaendeKontroll)
 
     kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
     val kontroll =
         Kontroll(
             kontrollId,
-            Kontroll.Kontrolltype.InngaaendeKontroll,
+            Kontrolltype.InngaaendeKontroll,
             opprettKontroll.tittel,
             opprettKontroll.saksbehandler,
             opprettKontroll.sakstype,

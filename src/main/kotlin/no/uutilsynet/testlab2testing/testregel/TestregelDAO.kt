@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.testregel
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.deleteTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelByTestregelId
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelListSql

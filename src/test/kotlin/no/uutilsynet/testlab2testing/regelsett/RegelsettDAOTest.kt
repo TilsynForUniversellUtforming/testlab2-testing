@@ -1,11 +1,11 @@
 package no.uutilsynet.testlab2testing.regelsett
 
+import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettModus
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettName
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettStandard
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestregelIdList
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestregelList
-import no.uutilsynet.testlab2testing.testregel.TestregelModus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DisplayName

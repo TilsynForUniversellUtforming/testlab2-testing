@@ -1,10 +1,10 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.time.Instant
+import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
-import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import org.slf4j.Logger
@@ -100,12 +100,11 @@ class TestResultatResource(
       runCatching {
             logger.info("Sletter testresultat med id $id")
             val resultat = testResultatDAO.getTestResultat(id).getOrThrow()
-            if (resultat.status == ResultatManuellKontrollBase.Status.Ferdig) {
-              throw IllegalArgumentException("Resultat er ferdig og kan ikke slettes")
-            } else {
-              testResultatDAO.delete(id).getOrThrow()
-              bildeService.deleteBilder(id).getOrThrow()
+            require(resultat.status != ResultatManuellKontrollBase.Status.Ferdig) {
+              "Resultat er ferdig og kan ikke slettes"
             }
+            testResultatDAO.delete(id).getOrThrow()
+            bildeService.deleteBilder(id).getOrThrow()
           }
           .fold(
               { ResponseEntity.ok().build() },
