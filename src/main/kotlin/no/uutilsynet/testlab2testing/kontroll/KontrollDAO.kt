@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.kontroll
 
 import java.net.URI
 import java.time.Instant
+import no.uutilsynet.testlab2.constants.Kontrolltype
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -134,7 +135,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 resultSet.getString("saksbehandler"),
                 resultSet.getString("sakstype"),
                 resultSet.getString("arkivreferanse"),
-                Kontroll.Kontrolltype.valueOf(resultSet.getString("kontrolltype")),
+                Kontrolltype.valueOf(resultSet.getString("kontrolltype")),
                 utval,
                 testreglar,
                 sideutvalList,
@@ -154,7 +155,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val saksbehandler: String,
       val sakstype: String,
       val arkivreferanse: String,
-      val kontrolltype: Kontroll.Kontrolltype,
+      val kontrolltype: Kontrolltype,
       val utval: Utval?,
       val testreglar: Testreglar?,
       val sideutval: List<Sideutval> = emptyList(),

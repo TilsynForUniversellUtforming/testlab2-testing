@@ -1,8 +1,8 @@
 package no.uutilsynet.testlab2testing.regelsett
 
+import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelModus
 
 fun validateRegelsettTestreglar(
     testregelIdList: List<Int>,

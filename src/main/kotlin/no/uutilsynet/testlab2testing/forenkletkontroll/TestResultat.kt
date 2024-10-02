@@ -5,8 +5,8 @@ import java.net.URL
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 
 data class TestResultat(
     val suksesskriterium: List<String>,

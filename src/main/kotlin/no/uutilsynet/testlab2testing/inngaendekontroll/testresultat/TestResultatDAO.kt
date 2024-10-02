@@ -2,9 +2,9 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.sql.Timestamp
 import java.time.Instant
+import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
-import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate

@@ -5,6 +5,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
@@ -16,7 +17,6 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
-import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
@@ -176,13 +176,13 @@ class ResultatService(
     return listOf(kravregisterClient.getSuksesskriteriumFromKrav(kravId))
   }
 
-  fun getResultatList(type: Kontroll.Kontrolltype?): List<Resultat> {
+  fun getResultatList(type: Kontrolltype?): List<Resultat> {
     return when (type) {
-      Kontroll.Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat()
-      Kontroll.Kontrolltype.InngaaendeKontroll,
-      Kontroll.Kontrolltype.Tilsyn,
-      Kontroll.Kontrolltype.Uttalesak,
-      Kontroll.Kontrolltype.Statusmaaling -> getManuellKontrollResultat()
+      Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat()
+      Kontrolltype.InngaaendeKontroll,
+      Kontrolltype.Tilsyn,
+      Kontrolltype.Uttalesak,
+      Kontrolltype.Statusmaaling -> getManuellKontrollResultat()
       else -> getKontrollResultat()
     }
   }
@@ -258,10 +258,10 @@ class ResultatService(
 
   fun progresjonPrLoeysing(
       testgrunnlagId: Int,
-      kontrolltype: Kontroll.Kontrolltype,
+      kontrolltype: Kontrolltype,
       loeysingar: LoysingList
   ): Map<Int, Int> {
-    if (kontrolltype == Kontroll.Kontrolltype.ForenklaKontroll) {
+    if (kontrolltype == Kontrolltype.ForenklaKontroll) {
       return loeysingar.loeysingar.keys.associateWith { 100 }
     }
 
@@ -291,9 +291,9 @@ class ResultatService(
     }
   }
 
-  private fun getTestar(id: Int, kontrolltype: Kontroll.Kontrolltype): List<String> {
+  private fun getTestar(id: Int, kontrolltype: Kontrolltype): List<String> {
     return when (kontrolltype) {
-      Kontroll.Kontrolltype.ForenklaKontroll -> maalingDAO.getBrukarForMaaling(id)
+      Kontrolltype.ForenklaKontroll -> maalingDAO.getBrukarForMaaling(id)
       else -> testResultatDAO.getBrukarForTestgrunnlag(id)
     }
   }
@@ -351,19 +351,18 @@ class ResultatService(
     val typeKontroll =
         kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().kontrolltype
     return when (typeKontroll) {
-      Kontroll.Kontrolltype.ForenklaKontroll ->
+      Kontrolltype.ForenklaKontroll ->
           getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
-      Kontroll.Kontrolltype.InngaaendeKontroll,
-      Kontroll.Kontrolltype.Tilsyn,
-      Kontroll.Kontrolltype.Uttalesak,
-      Kontroll.Kontrolltype.Statusmaaling ->
-          getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
+      Kontrolltype.InngaaendeKontroll,
+      Kontrolltype.Tilsyn,
+      Kontrolltype.Uttalesak,
+      Kontrolltype.Statusmaaling -> getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
     }
   }
 
   fun getResultatPrTema(
       kontrollId: Int?,
-      kontrolltype: Kontroll.Kontrolltype?,
+      kontrolltype: Kontrolltype?,
       startDato: LocalDate?,
       sluttDato: LocalDate?
   ): List<ResultatTema> =
@@ -371,7 +370,7 @@ class ResultatService(
 
   fun getResultatPrKrav(
       kontrollId: Int?,
-      kontrollType: Kontroll.Kontrolltype?,
+      kontrollType: Kontrolltype?,
       fraDato: LocalDate?,
       tilDato: LocalDate?
   ): List<ResultatKrav> {

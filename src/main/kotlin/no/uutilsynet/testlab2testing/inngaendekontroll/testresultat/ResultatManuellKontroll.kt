@@ -1,8 +1,8 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.time.Instant
+import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
-import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 
 open class ResultatManuellKontrollBase(
     open val testgrunnlagId: Int,

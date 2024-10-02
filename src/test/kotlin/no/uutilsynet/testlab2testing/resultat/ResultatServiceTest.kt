@@ -4,11 +4,11 @@ import java.net.URI
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.properties.Delegates
+import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestlabLocale
-import no.uutilsynet.testlab2testing.dto.TestresultatUtfall
 import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
@@ -30,9 +30,6 @@ import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.loeysing.Verksemd
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelInnholdstype
-import no.uutilsynet.testlab2testing.testregel.TestregelModus
-import no.uutilsynet.testlab2testing.testregel.TestregelStatus
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -88,7 +85,7 @@ class ResultatServiceTest(
     Mockito.`when`(loeysingsRegisterClient.getManyExpanded(Mockito.anyList()))
         .thenReturn(Result.success(listOf(testloeysing)))
     val resultat =
-        resultatService.getResultatList(Kontroll.Kontrolltype.ForenklaKontroll).filter {
+        resultatService.getResultatList(Kontrolltype.ForenklaKontroll).filter {
           it.id == kontrollId
         }
 
@@ -123,16 +120,16 @@ class ResultatServiceTest(
         KontrollResource.OpprettKontroll(
             "manuell-kontroll",
             "Ola Nordmann",
-            Kontroll.Sakstype.Arkivsak,
+            Sakstype.Arkivsak,
             "1234",
-            Kontroll.Kontrolltype.ForenklaKontroll)
+            Kontrolltype.ForenklaKontroll)
 
     kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
     val kontroll =
         Kontroll(
             kontrollId,
-            Kontroll.Kontrolltype.ForenklaKontroll,
+            Kontrolltype.ForenklaKontroll,
             opprettKontroll.tittel,
             opprettKontroll.saksbehandler,
             opprettKontroll.sakstype,

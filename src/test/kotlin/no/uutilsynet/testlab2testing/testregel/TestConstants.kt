@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.testregel
 
+import no.uutilsynet.testlab2.constants.TestregelInnholdstype
+import no.uutilsynet.testlab2.constants.TestregelModus
+import no.uutilsynet.testlab2.constants.TestregelStatus
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 
 object TestConstants {
