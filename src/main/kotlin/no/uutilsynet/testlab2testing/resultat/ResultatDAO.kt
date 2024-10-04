@@ -216,10 +216,10 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             ) as ag
             on k.id = ag.kontroll_id
             where 
-              (:kontrollId is null or k.id = :kontrollId) and
-              (:kontrollType is null or k.kontrolltype = :kontrollType) and
-              (:startDato is null or ag.dato >= :startDato) and
-              (:sluttDato is null or ag.dato <= :sluttDato)
+              (:kontrollId::int is null or k.id = :kontrollId::int) and
+              (:kontrollType::varchar is null or k.kontrolltype = :kontrollType::varchar) and
+              (:startDato::timestamptz is null or ag.dato >= :startDato::timestamptz) and
+              (:sluttDato::timestamptz is null or ag.dato <= :sluttDato::timestamptz)
           group by tema
         """
 
@@ -227,9 +227,9 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               query,
               mapOf(
                   "kontrollId" to kontrollId,
-                  "kontrolltype" to kontrolltype?.name,
-                  "startDato" to startDato.toString(),
-                  "sluttDato" to sluttDato.toString())) { rs, _ ->
+                  "kontrollType" to kontrolltype?.name,
+                  "startDato" to startDato,
+                  "sluttDato" to sluttDato)) { rs, _ ->
                 resultatTemaRowmapper(rs)
               }
         }
@@ -260,6 +260,9 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   ): List<ResultatKravBase> {
     kotlin
         .runCatching {
+          println(
+              "kontrollId: $kontrollId kontrollType: $kontrollType fraDato: $fraDato tilDato: $tilDato")
+
           val query =
               """
           select krav_id,
@@ -301,24 +304,34 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             ) as ag
             on k.id = ag.kontroll_id
           where 
-            (:kontrollId is null or k.id = :kontrollId)
-            and (:kontrollType is null or k.kontrolltype = :kontrollType)
-            and (:startDato is null or ag.dato >= :startDato)
-            and (:sluttDato is null or ag.dato <= :sluttDato)
+              (:kontrollId::int is null or k.id = :kontrollId::int) and
+              (:kontrollType::varchar is null or k.kontrolltype = :kontrollType::varchar) and
+              (:startDato::timestamptz is null or ag.dato >= :startDato::timestamptz) and
+              (:sluttDato::timestamptz is null or ag.dato <= :sluttDato::timestamptz)
           group by krav_id
         """
+
+          val rowMapper = DataClassRowMapper.newInstance(ResultatKravBase::class.java)
+          rowMapper.isPrimitivesDefaultedForNullValue = true
 
           return jdbcTemplate.query(
               query,
               mapOf(
                   "kontrollId" to kontrollId,
-                  "kontrolltype" to kontrollType?.name,
-                  "startDato" to fraDato.toString(),
-                  "sluttDato" to tilDato.toString()),
-              DataClassRowMapper.newInstance(ResultatKravBase::class.java))
+                  "kontrollType" to kontrollType?.name,
+                  "startDato" to fraDato,
+                  "sluttDato" to tilDato)) { rs, _ ->
+                ResultatKravBase(
+                    rs.getInt("krav_id"),
+                    rs.getInt("score"),
+                    rs.getInt("tal_element_samsvar") +
+                        rs.getInt("tal_element_brot") +
+                        rs.getInt("tal_element_varsel") +
+                        rs.getInt("tal_element_ikkje_forekomst"))
+              }
         }
         .getOrElse {
-          logger.error(it.message)
+          logger.error(it.stackTraceToString())
           throw it
         }
   }

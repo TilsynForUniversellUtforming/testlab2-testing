@@ -17,16 +17,16 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/ekstern/tester")
 class EksternResultatResource(
-  @Autowired val eksternResultatDAO: EksternResultatDAO,
-  @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
-  @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
-  @Autowired val resultatService: ResultatService,
-  @Autowired val kravregisterClient: KravregisterClient,
+    @Autowired val eksternResultatDAO: EksternResultatDAO,
+    @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
+    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
+    @Autowired val resultatService: ResultatService,
+    @Autowired val kravregisterClient: KravregisterClient,
 ) {
 
   @GetMapping
   fun findTestForOrgNr(
-    @RequestParam("orgnr") orgnr: String
+      @RequestParam("orgnr") orgnr: String
   ): ResponseEntity<TestListElementEkstern?> {
     logger.debug("Henter tester for orgnr $orgnr")
 
@@ -47,43 +47,40 @@ class EksternResultatResource(
     val verksemd = loeysingsRegisterClient.searchVerksemd(orgnr).getOrThrow().firstOrNull()
 
     val testEksternList =
-      testList
-        .flatMap { test ->
-          val kontrollResult =
-            resultatService.getKontrollResultat(test.kontrollId).first { result ->
-              result.testType == OPPRINNELEG_TEST
-            }
+        testList
+            .flatMap { test ->
+              val kontrollResult =
+                  resultatService.getKontrollResultat(test.kontrollId).first { result ->
+                    result.testType == OPPRINNELEG_TEST
+                  }
 
-          kontrollResult.loeysingar.map { loeysingResult ->
-            test.toListElement(loeysingResult.loeysingNamn, loeysingResult.score)
-          }
-        }
-        .sortedBy { it.publisert }
+              kontrollResult.loeysingar.map { loeysingResult ->
+                test.toListElement(loeysingResult.loeysingNamn, loeysingResult.score)
+              }
+            }
+            .sortedBy { it.publisert }
 
     return ResponseEntity.ok(
-      TestListElementEkstern(
-        verksemd =
-        VerksemdEkstern(
-          namn = verksemd?.namn ?: orgnr,
-          organisasjonsnummer = verksemd?.organisasjonsnummer ?: orgnr,
-        ),
-        testList = testEksternList
-      )
-    )
+        TestListElementEkstern(
+            verksemd =
+                VerksemdEkstern(
+                    namn = verksemd?.namn ?: orgnr,
+                    organisasjonsnummer = verksemd?.organisasjonsnummer ?: orgnr,
+                ),
+            testList = testEksternList))
   }
 
   @GetMapping("{rapportId}")
   fun getResultatRapport(
-    @PathVariable rapportId: String
+      @PathVariable rapportId: String
   ): ResponseEntity<List<ResultatOversiktLoeysingEkstern>> {
     val testgrunnlagLoeysing =
-      eksternResultatDAO.findTestgrunnlagLoeysingFromRapportId((rapportId))
-        ?: return ResponseEntity.badRequest().build()
+        eksternResultatDAO.findTestgrunnlagLoeysingFromRapportId((rapportId))
+            ?: return ResponseEntity.badRequest().build()
 
     val results =
-      resultatService.getTestgrunnlagLoeysingResultat(
-        testgrunnlagLoeysing.testgrunnlagId, testgrunnlagLoeysing.loeysingId
-      )
+        resultatService.getTestgrunnlagLoeysingResultat(
+            testgrunnlagLoeysing.testgrunnlagId, testgrunnlagLoeysing.loeysingId)
     if (results.isNullOrEmpty()) {
       return ResponseEntity.badRequest().build()
     }
@@ -93,16 +90,16 @@ class EksternResultatResource(
 
   @GetMapping("{rapportId}/tema")
   fun getResultatPrTema(
-    @PathVariable rapportId: String
+      @PathVariable rapportId: String
   ): ResponseEntity<List<ResultatTemaEkstern>> {
     val testgrunnlagLoeysing =
-      eksternResultatDAO.findTestgrunnlagLoeysingFromRapportId((rapportId))
-        ?: return ResponseEntity.badRequest().build()
+        eksternResultatDAO.findTestgrunnlagLoeysingFromRapportId((rapportId))
+            ?: return ResponseEntity.badRequest().build()
 
     val testgrunnlag =
-      testgrunnlagDAO.getTestgrunnlag(testgrunnlagLoeysing.testgrunnlagId).getOrElse {
-        return ResponseEntity.badRequest().build()
-      }
+        testgrunnlagDAO.getTestgrunnlag(testgrunnlagLoeysing.testgrunnlagId).getOrElse {
+          return ResponseEntity.badRequest().build()
+        }
 
     val resultatTema = resultatService.getResultatPrTema(testgrunnlag.kontrollId, null, null, null)
     if (resultatTema.isEmpty()) {
@@ -115,16 +112,16 @@ class EksternResultatResource(
 
   @GetMapping("{rapportId}/krav")
   fun getResultatPrKrav(
-    @PathVariable rapportId: String
+      @PathVariable rapportId: String
   ): ResponseEntity<List<ResultatKravEkstern>> {
     val testgrunnlagLoeysing =
-      eksternResultatDAO.findTestgrunnlagLoeysingFromRapportId((rapportId))
-        ?: return ResponseEntity.badRequest().build()
+        eksternResultatDAO.findTestgrunnlagLoeysingFromRapportId((rapportId))
+            ?: return ResponseEntity.badRequest().build()
 
     val testgrunnlag =
-      testgrunnlagDAO.getTestgrunnlag(testgrunnlagLoeysing.testgrunnlagId).getOrElse {
-        return ResponseEntity.badRequest().build()
-      }
+        testgrunnlagDAO.getTestgrunnlag(testgrunnlagLoeysing.testgrunnlagId).getOrElse {
+          return ResponseEntity.badRequest().build()
+        }
 
     val resultatKrav = resultatService.getResultatPrKrav(testgrunnlag.kontrollId, null, null, null)
     if (resultatKrav.isEmpty()) {
@@ -137,29 +134,28 @@ class EksternResultatResource(
 
   @GetMapping("{rapportId}/{suksesskriterium}")
   fun getResultatListKontroll(
-    @PathVariable rapportId: String,
-    @PathVariable suksesskriterium: String
+      @PathVariable rapportId: String,
+      @PathVariable suksesskriterium: String
   ): ResponseEntity<List<TestresultatDetaljertEkstern>> {
     val testgrunnlagLoeysing =
-      eksternResultatDAO.findTestgrunnlagLoeysingFromRapportId((rapportId))
-        ?: return ResponseEntity.badRequest().build()
+        eksternResultatDAO.findTestgrunnlagLoeysingFromRapportId((rapportId))
+            ?: return ResponseEntity.badRequest().build()
 
     if (!Regex("""^\d+\.\d+\.\d+$""").matches(suksesskriterium)) {
       return ResponseEntity.badRequest().build()
     }
 
     val krav =
-      runCatching { kravregisterClient.getKrav(suksesskriterium) }
-        .getOrElse {
-          return ResponseEntity.badRequest().build()
-        }
+        runCatching { kravregisterClient.getKrav(suksesskriterium) }
+            .getOrElse {
+              return ResponseEntity.badRequest().build()
+            }
 
     val results =
-      resultatService
-        .getResultatListTestgrunnlag(
-          testgrunnlagLoeysing.testgrunnlagId, testgrunnlagLoeysing.loeysingId, krav.id
-        )
-        .map { it.toTestresultatDetaljertEkstern() }
+        resultatService
+            .getResultatListTestgrunnlag(
+                testgrunnlagLoeysing.testgrunnlagId, testgrunnlagLoeysing.loeysingId, krav.id)
+            .map { it.toTestresultatDetaljertEkstern() }
 
     return ResponseEntity.ok(results)
   }
