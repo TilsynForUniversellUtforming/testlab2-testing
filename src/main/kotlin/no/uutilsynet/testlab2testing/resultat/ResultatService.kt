@@ -244,7 +244,7 @@ class ResultatService(
                   loeysingId,
                   loeysingar.getNamn(loeysingId),
                   loeysingar.getVerksemdNamn(loeysingId),
-                  resultLoeysing.map { it.score }.average(),
+                  resultLoeysing.filter { !erIkkjeForekomst(it.talElementBrot, it.talElementSamsvar) }.map { it.score }.average(),
                   resultLoeysing.first().testType,
                   resultLoeysing.sumOf { it.talElementSamsvar } +
                       resultLoeysing.sumOf { it.talElementSamsvar },
@@ -316,7 +316,7 @@ class ResultatService(
                   result.first().typeKontroll,
                   result.first().namn,
                   result.map { it.testar }.flatten().distinct(),
-                  result.map { it.score }.average(),
+                  result.filter { !erIkkjeForekomst(it.talElementBrot, it.talElementSamsvar) }.map { it.score }.average(),
                   result.first().kravId ?: 0,
                   result.first().kravTittel ?: "",
                   result.sumOf { it.talElementBrot } + result.sumOf { it.talElementSamsvar },
@@ -325,8 +325,12 @@ class ResultatService(
         }
   }
 
+    fun erIkkjeForekomst(talElementBrot:Int,talElementSamsvar:Int): Boolean {
+        return talElementBrot == 0 && talElementSamsvar == 0
+    }
+
   fun handleIkkjeForekomst(resultat: ResultatOversiktLoeysing): ResultatOversiktLoeysing {
-    if (resultat.talElementBrot == 0 && resultat.talElementSamsvar == 0) {
+    if (erIkkjeForekomst(resultat.talElementBrot, resultat.talElementSamsvar)) {
       return resultat.copy(score = null)
     }
     return resultat
