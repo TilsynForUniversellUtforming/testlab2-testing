@@ -57,7 +57,7 @@ class ResultatService(
     if (testresultat.isNotEmpty() && testresultat.first() is TestResultat) {
       return testresultat
           .map { it as TestResultat }
-          .filter { filterByTestregel(it.loeysingId, testregelIds) }
+          .filter { filterTestregelNoekkel(it.testregelId, testregelIds) }
           .map {
             TestresultatDetaljert(
                 null,
@@ -73,7 +73,7 @@ class ResultatService(
                 it.elementOmtale,
                 null,
                 null,
-                null)
+                emptyList())
           }
     }
     return emptyList()
@@ -105,7 +105,7 @@ class ResultatService(
                 it.elementOmtale,
                 null,
                 null,
-                null)
+                emptyList())
           }
     }
     return emptyList()
@@ -154,6 +154,10 @@ class ResultatService(
 
   fun filterByTestregel(testregelId: Int, testregelIds: List<Int>): Boolean {
     return testregelIds.contains(testregelId)
+  }
+
+  fun filterTestregelNoekkel(testregelNoekkel: String, testregelId: List<Int>): Boolean {
+    return testregelId.contains(getTestregelIdFromSchema(testregelNoekkel) ?: 0)
   }
 
   fun getTestregel(idTestregel: Int): Testregel {
