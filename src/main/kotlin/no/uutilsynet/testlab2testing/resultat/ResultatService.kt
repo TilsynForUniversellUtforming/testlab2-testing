@@ -209,7 +209,6 @@ class ResultatService(
   fun getKontrollResultat(kontrollId: Int): List<Resultat> {
     return resultatDAO
         .getResultatKontroll(kontrollId)
-        .subList(0, 5)
         .groupBy { it.testgrunnlagId }
         .map { (id, result) -> resultat(id, result) }
   }
@@ -261,7 +260,7 @@ class ResultatService(
                   getTestar(resultLoeysing.first().id, resultLoeysing.first().typeKontroll),
                   statusLoeysingar[loeysingId] ?: 0)
             }
-    return resultLoeysingar
+    return resultLoeysingar.subList(0,5)
   }
 
   fun progresjonPrLoeysing(
