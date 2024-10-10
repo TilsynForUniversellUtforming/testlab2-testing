@@ -209,6 +209,7 @@ class ResultatService(
   fun getKontrollResultat(kontrollId: Int): List<Resultat> {
     return resultatDAO
         .getResultatKontroll(kontrollId)
+        .subList(0, 5)
         .groupBy { it.testgrunnlagId }
         .map { (id, result) -> resultat(id, result) }
   }
