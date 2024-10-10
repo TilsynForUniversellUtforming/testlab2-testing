@@ -260,7 +260,10 @@ class ResultatService(
                   getTestar(resultLoeysing.first().id, resultLoeysing.first().typeKontroll),
                   statusLoeysingar[loeysingId] ?: 0)
             }
-    return resultLoeysingar.subList(0,5)
+
+    return if (resultLoeysingar.size > 5) {
+      resultLoeysingar.subList(0, 5)
+    } else resultLoeysingar
   }
 
   fun progresjonPrLoeysing(
