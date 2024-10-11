@@ -19,7 +19,6 @@ data class TestResultat(
     val elementResultat: TestresultatUtfall,
     val elementOmtale: TestresultatDetaljert.ElementOmtale?
 ) : AutotesterTestresultat {
-  data class ACTElement(val htmlCode: String, val pointer: String)
 
   companion object {
     @JsonCreator

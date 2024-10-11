@@ -11,6 +11,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultat
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
+import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -119,16 +120,13 @@ class AggregeringService(
       aggregertResultatTestregel: AggregertResultatTestregel
   ): AggregeringPerTestregelDTO {
 
+    val testregel = getTestregelFromSchema(aggregertResultatTestregel.testregelId)
+
     return AggregeringPerTestregelDTO(
         aggregertResultatTestregel.maalingId,
         aggregertResultatTestregel.loeysing.id,
-        getTestregelIdFromSchema(aggregertResultatTestregel.testregelId).let { testregelId ->
-          testregelId
-              ?: throw RuntimeException(
-                  "Fant ikkje testregel med testregeId ${aggregertResultatTestregel.testregelId}")
-        },
-        kravregisterClient.getKravIdFromSuksesskritterium(
-            aggregertResultatTestregel.suksesskriterium),
+        testregel.id,
+        testregel.kravId,
         aggregertResultatTestregel.fleireSuksesskriterium.map {
           kravregisterClient.getKravIdFromSuksesskritterium(it)
         },
@@ -177,16 +175,17 @@ class AggregeringService(
 
   fun dtoToAggregertResultatTestregel(
       aggregeringPerTestregelDTO: AggregeringPerTestregelDTO
-  ): AggregertResultatTestregel {
+  ): AggregertResultatTestregelAPI {
 
     val id = aggregeringPerTestregelDTO.maalingId ?: aggregeringPerTestregelDTO.testgrunnlagId
 
-    return AggregertResultatTestregel(
+    val testregel = getTestregel(aggregeringPerTestregelDTO.testregelId)
+
+    return AggregertResultatTestregelAPI(
         id,
         getLoeysing(aggregeringPerTestregelDTO.loeysingId),
-        getTestregelId(aggregeringPerTestregelDTO.testregelId),
+        testregel.testregelId,
         getSuksesskriterium(aggregeringPerTestregelDTO.suksesskriterium),
-        aggregeringPerTestregelDTO.fleireSuksesskriterium.map { getSuksesskriterium(it.toInt()) },
         aggregeringPerTestregelDTO.talElementSamsvar,
         aggregeringPerTestregelDTO.talElementBrot,
         aggregeringPerTestregelDTO.talElementVarsel,
@@ -232,23 +231,22 @@ class AggregeringService(
   private fun getLoeysing(loeysingId: Int): Loeysing =
       loeysingsRegisterClient.getLoeysingFromId(loeysingId)
 
-  fun getTestregelIdFromSchema(testregelKey: String): Int? {
+  fun getTestregelFromSchema(testregelKey: String): Testregel {
     testregelDAO.getTestregelByTestregelId(testregelKey).let { testregel ->
-      return testregel?.id
+      return testregel
+          ?: throw RuntimeException("Fant ikke testregel med testregelId $testregelKey")
     }
   }
 
-  fun getTestregelId(idTestregel: Int): String {
-    testregelDAO.getTestregel(idTestregel).let { testregel ->
-      return testregel?.testregelId
-          ?: throw RuntimeException("Fant ikkje testregel med id $idTestregel")
-    }
+  fun getTestregel(testregelId: Int): Testregel {
+    return testregelDAO.getTestregel(testregelId)
+        ?: throw RuntimeException("Fant ikke testregel med id $testregelId")
   }
 
   fun getAggregertResultatTestregel(
       maalingId: Int? = null,
       testgrunnlagId: Int? = null
-  ): List<AggregertResultatTestregel> {
+  ): List<AggregertResultatTestregelAPI> {
     logger.info("Henter aggregert resultat for testregel med id ${maalingId?:testgrunnlagId}")
     if (maalingId != null) {
       return aggregeringDAO.getAggregertResultatTestregelForMaaling(maalingId).map {
@@ -301,7 +299,7 @@ class AggregeringService(
 
   fun getAggregertResultatTestregelForTestgrunnlag(
       testgrunnlagId: Int
-  ): List<AggregertResultatTestregel> {
+  ): List<AggregertResultatTestregelAPI> {
     logger.info("Henter aggregert resultat for testgrunnlag med id $testgrunnlagId")
     return aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId).map {
       dtoToAggregertResultatTestregel(it)
@@ -485,7 +483,7 @@ class AggregeringService(
   private fun gjennomsnittTestresultat(
       resultatPerTestregelPerSide: List<ResultatPerTestregelPerSide>
   ): GjennomsnittTestresultat {
-    var talSiderMedForekomst: Int = 0
+    var talSiderMedForekomst = 0
     var summertBrotprosent = 0.0
     var summertSamsvarprosent = 0.0
 
