@@ -4,7 +4,7 @@ import java.net.URI
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
-import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
+import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregelAPI
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -50,7 +50,7 @@ class ResultatResource(
               })
 
   @GetMapping("/aggregert/{testgrunnlagId}")
-  fun getAggregertResultat(@PathVariable testgrunnlagId: Int): List<AggregertResultatTestregel> =
+  fun getAggregertResultat(@PathVariable testgrunnlagId: Int): List<AggregertResultatTestregelAPI> =
       aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
 
   @GetMapping("list")
