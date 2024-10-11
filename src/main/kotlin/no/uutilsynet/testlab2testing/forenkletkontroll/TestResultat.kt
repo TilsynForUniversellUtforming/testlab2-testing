@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import java.net.URL
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 
@@ -46,7 +47,7 @@ data class TestResultat(
     }
 
     fun parseLocalDateTime(s: String): LocalDateTime {
-      val formatter = DateTimeFormatter.ofPattern("d.M.yyyy, H:mm:ss")
+      val formatter = DateTimeFormatter.ofPattern("M/d/yyyy, h:mm:ss a", Locale.ENGLISH)
       return LocalDateTime.parse(s, formatter)
     }
   }
