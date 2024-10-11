@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import java.net.URL
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 
@@ -19,7 +18,6 @@ data class TestResultat(
     val elementResultat: TestresultatUtfall,
     val elementOmtale: TestresultatDetaljert.ElementOmtale?
 ) : AutotesterTestresultat {
-  data class ACTElement(val htmlCode: String, val pointer: String)
 
   companion object {
     @JsonCreator
@@ -48,7 +46,7 @@ data class TestResultat(
     }
 
     fun parseLocalDateTime(s: String): LocalDateTime {
-      val formatter = DateTimeFormatter.ofPattern("M/d/yyyy, h:mm:ss a", Locale.ENGLISH)
+      val formatter = DateTimeFormatter.ofPattern("d.M.yyyy, H:mm:ss")
       return LocalDateTime.parse(s, formatter)
     }
   }
