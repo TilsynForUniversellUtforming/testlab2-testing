@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import no.uutilsynet.testlab2.constants.Kontrolltype
+import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 
@@ -42,4 +43,6 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               .trimIndent(),
           mapOf("rapportId" to rapportId),
           DataClassRowMapper.newInstance(TestgrunnlagIdLoeysingId::class.java))
+
+
 }

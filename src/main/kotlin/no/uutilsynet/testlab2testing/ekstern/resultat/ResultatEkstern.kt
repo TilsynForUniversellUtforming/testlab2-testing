@@ -1,13 +1,13 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
-import no.uutilsynet.testlab2testing.kontroll.Kontroll
+import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.resultat.ResultatKrav
 import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing
 import no.uutilsynet.testlab2testing.resultat.ResultatTema
 
 data class ResultatOversiktLoeysingEkstern(
     val loeysingNamn: String,
-    val typeKontroll: Kontroll.Kontrolltype,
+    val typeKontroll: Kontrolltype,
     val score: Double?,
     val kravTittel: String,
     val talTestaElement: Int,

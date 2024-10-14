@@ -315,27 +315,17 @@ class ResultatService(
 
     return resultatDAO
         .getResultatKontrollLoeysing(kontrollId, loeysingId)
-        ?.map { krav -> mapKrav(krav) }
-        ?.groupBy { it.kravId }
-        ?.map { (_, result) ->
-          val loeysingar = getLoeysingMap(result).getOrThrow()
-          handleIkkjeForekomst(
-              ResultatOversiktLoeysing(
-                  result.first().loeysingId,
-                  loeysingar.getNamn(result.first().loeysingId),
-                  result.first().typeKontroll,
-                  result.first().namn,
-                  result.map { it.testar }.flatten().distinct(),
-                  result
-                      .filter { !erIkkjeForekomst(it.talElementBrot, it.talElementSamsvar) }
-                      .map { it.score }
-                      .average(),
-                  result.first().kravId ?: 0,
-                  result.first().kravTittel ?: "",
-                  result.sumOf { it.talElementBrot } + result.sumOf { it.talElementSamsvar },
-                  result.sumOf { it.talElementBrot },
-                  result.sumOf { it.talElementSamsvar }))
-        }
+        ?.toResultatOversiktLoeysing()
+  }
+
+  fun getTestgrunnlagLoeysingResultat(
+      testgrunnlagId: Int,
+      loeysingId: Int
+  ): List<ResultatOversiktLoeysing>? {
+
+    return resultatDAO
+        .getResultatTestgrunnlagLoeysing(testgrunnlagId, loeysingId)
+        .toResultatOversiktLoeysing()
   }
 
   fun erIkkjeForekomst(talElementBrot: Int, talElementSamsvar: Int): Boolean {
@@ -387,13 +377,12 @@ class ResultatService(
     val typeKontroll =
         kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().kontrolltype
     return when (typeKontroll) {
-      Kontroll.Kontrolltype.ForenklaKontroll ->
+      Kontrolltype.ForenklaKontroll ->
           getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
-      Kontroll.Kontrolltype.InngaaendeKontroll,
-      Kontroll.Kontrolltype.Tilsyn,
-      Kontroll.Kontrolltype.Uttalesak,
-      Kontroll.Kontrolltype.Statusmaaling ->
-          getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
+      Kontrolltype.InngaaendeKontroll,
+      Kontrolltype.Tilsyn,
+      Kontrolltype.Uttalesak,
+      Kontrolltype.Statusmaaling -> getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
     }
   }
 
