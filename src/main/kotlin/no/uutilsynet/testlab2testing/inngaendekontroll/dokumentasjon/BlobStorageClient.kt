@@ -8,8 +8,8 @@ import java.io.ByteArrayOutputStream
 import java.net.URI
 import java.time.Instant
 import java.time.OffsetDateTime
-import java.time.ZoneId
 import javax.imageio.ImageIO
+import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
@@ -56,8 +56,7 @@ class BlobStorageClient(
       runCatching {
             val expiryTime =
                 OffsetDateTime.ofInstant(
-                    Instant.now().plusMillis(blobStorageProperties.sasttl.toLong()),
-                    ZoneId.of("Europe/Oslo"))
+                    Instant.now().plusMillis(blobStorageProperties.sasttl.toLong()), ZONEID_OSLO)
             val permission = BlobSasPermission().setReadPermission(true).setWritePermission(false)
             val sasValues = BlobServiceSasSignatureValues(expiryTime, permission)
             val sasToken = blobContainerClient.generateSas(sasValues)
