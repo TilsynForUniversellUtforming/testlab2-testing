@@ -1,12 +1,16 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import no.uutilsynet.testlab2.constants.Kontrolltype
+import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
 @Component
 class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+
+  val logger = LoggerFactory.getLogger(EksternResultatDAO::class.java)
 
   fun getTestsForLoeysingIds(loeysingIdList: List<Int>): List<TestListElementDB> {
     return jdbcTemplate.query(
@@ -44,5 +48,24 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           mapOf("rapportId" to rapportId),
           DataClassRowMapper.newInstance(TestgrunnlagIdLoeysingId::class.java))
 
-
+  @Transactional
+  fun publiserResultat(testgrunnlagId: Int, loeysingId: Int): Result<Boolean> {
+    runCatching {
+          jdbcTemplate.update(
+              """
+          insert into rapport(testgrunnlag_id,loeysing_id,publisert) values(:testgrunnlagId, :loeysingId , now())
+        """
+                  .trimIndent(),
+              mapOf("testgrunnlagId" to testgrunnlagId, "loeysingId" to loeysingId))
+        }
+        .fold(
+            onSuccess = {
+              logger.info(
+                  "Publiserte resultat for testgrunnlag $testgrunnlagId og løysing $loeysingId")
+              return Result.success(true)
+            },
+            onFailure = {
+              return Result.failure(it)
+            })
+  }
 }

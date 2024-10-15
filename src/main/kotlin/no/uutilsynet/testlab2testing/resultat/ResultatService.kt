@@ -7,6 +7,7 @@ import java.time.LocalDateTime
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
+import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingResource
@@ -38,7 +39,8 @@ class ResultatService(
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val kontrollDAO: KontrollDAO,
     val testgrunnlagDao: TestgrunnlagDAO,
-    val bildeService: BildeService
+    val bildeService: BildeService,
+    val eksternResultatDAO: EksternResultatDAO
 ) {
 
   fun getResultatForAutomatiskKontroll(

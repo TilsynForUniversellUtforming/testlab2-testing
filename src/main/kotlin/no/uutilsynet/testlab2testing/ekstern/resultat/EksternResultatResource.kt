@@ -2,17 +2,12 @@ package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import no.uutilsynet.testlab2testing.forenkletkontroll.logger
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.resultat.ResultatService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/ekstern/tester")
@@ -22,6 +17,7 @@ class EksternResultatResource(
     @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
     @Autowired val resultatService: ResultatService,
     @Autowired val kravregisterClient: KravregisterClient,
+    @Autowired val eksternResultatService: EksternResultatService
 ) {
 
   @GetMapping
@@ -30,44 +26,14 @@ class EksternResultatResource(
   ): ResponseEntity<TestListElementEkstern?> {
     logger.debug("Henter tester for orgnr $orgnr")
 
-    val loeysingList = loeysingsRegisterClient.search(orgnr).getOrThrow()
-    if (loeysingList.isEmpty()) {
-      logger.info("Fann ingen løysingar for verkemd med orgnr $orgnr")
-      return ResponseEntity.notFound().build<TestListElementEkstern>()
+    return try {
+      val result = eksternResultatService.findTestForOrgNr(orgnr).getOrThrow()
+      ResponseEntity.ok(result)
+    } catch (e: NoSuchElementException) {
+      ResponseEntity.notFound().build<TestListElementEkstern>()
+    } catch (e: Exception) {
+      ResponseEntity.badRequest().build<TestListElementEkstern>()
     }
-
-    val loeysingIdList = loeysingList.map { it.id }
-
-    val testList = eksternResultatDAO.getTestsForLoeysingIds(loeysingIdList)
-    if (testList.isEmpty()) {
-      logger.info("Fann ingen gyldige testar for orgnr $orgnr")
-      return ResponseEntity.notFound().build<TestListElementEkstern>()
-    }
-
-    val verksemd = loeysingsRegisterClient.searchVerksemd(orgnr).getOrThrow().firstOrNull()
-
-    val testEksternList =
-        testList
-            .flatMap { test ->
-              val kontrollResult =
-                  resultatService.getKontrollResultat(test.kontrollId).first { result ->
-                    result.testType == OPPRINNELEG_TEST
-                  }
-
-              kontrollResult.loeysingar.map { loeysingResult ->
-                test.toListElement(loeysingResult.loeysingNamn, loeysingResult.score)
-              }
-            }
-            .sortedBy { it.publisert }
-
-    return ResponseEntity.ok(
-        TestListElementEkstern(
-            verksemd =
-                VerksemdEkstern(
-                    namn = verksemd?.namn ?: orgnr,
-                    organisasjonsnummer = verksemd?.organisasjonsnummer ?: orgnr,
-                ),
-            testList = testEksternList))
   }
 
   @GetMapping("{rapportId}")
@@ -158,5 +124,19 @@ class EksternResultatResource(
             .map { it.toTestresultatDetaljertEkstern() }
 
     return ResponseEntity.ok(results)
+  }
+
+  @PutMapping("publiserResultat/{kontrollId}")
+  fun publiserRapport(kontrollId: Int): ResponseEntity<Boolean> {
+    logger.debug("Publiserer rapport for kontroll id $kontrollId")
+
+    return try {
+      eksternResultatService.publiserResultat(kontrollId)
+      ResponseEntity.ok(true)
+    } catch (e: NoSuchElementException) {
+      ResponseEntity.notFound().build<Boolean>()
+    } catch (e: Exception) {
+      ResponseEntity.badRequest().build<Boolean>()
+    }
   }
 }
