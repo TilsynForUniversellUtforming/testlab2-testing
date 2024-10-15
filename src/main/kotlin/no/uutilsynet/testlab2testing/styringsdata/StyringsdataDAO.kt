@@ -4,8 +4,12 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
+import no.uutilsynet.testlab2.constants.Klagetype
+import no.uutilsynet.testlab2.constants.Reaksjonstype
+import no.uutilsynet.testlab2.constants.ResultatKlage
+import no.uutilsynet.testlab2.constants.StyringsdataKontrollStatus
 import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
-import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Kontroll.StyringsdataKontrollStatus
+import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Kontroll.*
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Bot
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Klage
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Paalegg
