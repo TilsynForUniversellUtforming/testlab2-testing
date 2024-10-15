@@ -69,7 +69,7 @@ class TestregelValidatorsTest {
 
   @Nested
   @DisplayName("For validering av testregel-objektet skal ")
-  inner class invalidTestregelRapport {
+  inner class invalidTestregelWordRapport {
 
     @Test
     @DisplayName("ugyldig namn feile")

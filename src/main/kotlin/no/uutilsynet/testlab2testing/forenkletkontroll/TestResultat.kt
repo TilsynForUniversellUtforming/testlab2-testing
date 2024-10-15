@@ -47,7 +47,7 @@ data class TestResultat(
     }
 
     fun parseLocalDateTime(s: String): LocalDateTime {
-      val formatter = DateTimeFormatter.ofPattern("M/d/yyyy, h:mm:ss a", Locale.ENGLISH)
+      val formatter = DateTimeFormatter.ofPattern("d.M.yyyy, H:mm:ss")
       return LocalDateTime.parse(s, formatter)
     }
   }
