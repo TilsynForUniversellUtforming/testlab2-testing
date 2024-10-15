@@ -4,11 +4,9 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import no.uutilsynet.testlab2.constants.*
-import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Bot
-import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Klage
-import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Paalegg
+import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
+import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.*
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -17,11 +15,9 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
 
-  val zoneId: ZoneId = ZoneId.of("Europe/Oslo")
+  fun Timestamp.toLocalDate(): LocalDate = this.toInstant().atZone(ZONEID_OSLO).toLocalDate()
 
-  fun Timestamp.toLocalDate(): LocalDate = this.toInstant().atZone(zoneId).toLocalDate()
-
-  fun Timestamp?.toLocalDateOrNull() = this?.toInstant()?.atZone(zoneId)?.toLocalDate()
+  fun Timestamp?.toLocalDateOrNull() = this?.toInstant()?.atZone(ZONEID_OSLO)?.toLocalDate()
 
   fun LocalDate?.toTimestampNullable() = this?.atStartOfDay()?.let { Timestamp.valueOf(it) }
 
@@ -227,7 +223,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
             klageDatoDepartement =
                 rs.getTimestamp("klage_dato_departement")
                     ?.toInstant()
-                    ?.atZone(zoneId)
+                    ?.atZone(ZONEID_OSLO)
                     ?.toLocalDate(),
             resultatKlageDepartement =
                 rs.getString("resultat_klage_departement")?.let { ResultatKlage.valueOf(it) })
