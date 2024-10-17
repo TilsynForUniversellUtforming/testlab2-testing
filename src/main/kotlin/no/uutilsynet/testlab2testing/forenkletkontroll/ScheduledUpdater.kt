@@ -108,7 +108,7 @@ class ScheduledUpdater(
           getNewStatus(crawlResultat).map { newStatus -> updateStatus(crawlResultat, newStatus) }
       return if (updated.isFailure) {
         val previousAttempts = failedCrawlStatusAttempts.getOrDefault(crawlResultat, 0)
-        if (previousAttempts < 20) {
+        if (previousAttempts < 12) {
           failedCrawlStatusAttempts[crawlResultat] = previousAttempts + 1
           crawlResultat
         } else {
