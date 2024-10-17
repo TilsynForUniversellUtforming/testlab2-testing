@@ -69,7 +69,7 @@ class ScheduledUpdaterTest {
             Brukar("test", "testar"))
 
     var updatedTestKoeyring: TestKoeyring? = null
-    for (i in 1..13) {
+    for (i in 1..21) {
       updatedTestKoeyring =
           updateTestingStatus(testKoeyring) {
             Result.failure(RuntimeException("500 Internal Server Error"))
