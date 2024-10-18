@@ -40,14 +40,14 @@ class EksternResultatResource(
   fun getResultatRapport(
       @PathVariable rapportId: String
   ): ResponseEntity<List<ResultatOversiktLoeysingEkstern>> {
-    val testgrunnlagLoeysing =
-        eksternResultatDAO.findTestgrunnlagLoeysingFromRapportId((rapportId))
+    val kontrollLoeysing =
+        eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId))
             ?: return ResponseEntity.badRequest().build()
 
     val results =
-        resultatService.getTestgrunnlagLoeysingResultat(
-            testgrunnlagLoeysing.kontrollId, testgrunnlagLoeysing.loeysingId)
-    if (results.isNullOrEmpty()) {
+        resultatService.getKontrollLoeysingResultatIkkjeRetest(
+            kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId)
+    if (results.isEmpty()) {
       return ResponseEntity.badRequest().build()
     }
 
@@ -58,16 +58,14 @@ class EksternResultatResource(
   fun getResultatPrTema(
       @PathVariable rapportId: String
   ): ResponseEntity<List<ResultatTemaEkstern>> {
-    val testgrunnlagLoeysing =
-        eksternResultatDAO.findTestgrunnlagLoeysingFromRapportId((rapportId))
+
+    val kontrollLoeysing =
+        eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId))
             ?: return ResponseEntity.badRequest().build()
 
-    val testgrunnlag =
-        testgrunnlagDAO.getTestgrunnlag(testgrunnlagLoeysing.kontrollId).getOrElse {
-          return ResponseEntity.badRequest().build()
-        }
+    val resultatTema =
+        resultatService.getResultatPrTema(kontrollLoeysing.kontrollId, null, null, null)
 
-    val resultatTema = resultatService.getResultatPrTema(testgrunnlag.kontrollId, null, null, null)
     if (resultatTema.isEmpty()) {
       return ResponseEntity.badRequest().build()
     }
@@ -80,16 +78,12 @@ class EksternResultatResource(
   fun getResultatPrKrav(
       @PathVariable rapportId: String
   ): ResponseEntity<List<ResultatKravEkstern>> {
-    val testgrunnlagLoeysing =
-        eksternResultatDAO.findTestgrunnlagLoeysingFromRapportId((rapportId))
+    val kontrollLoeysing =
+        eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId))
             ?: return ResponseEntity.badRequest().build()
 
-    val testgrunnlag =
-        testgrunnlagDAO.getTestgrunnlag(testgrunnlagLoeysing.kontrollId).getOrElse {
-          return ResponseEntity.badRequest().build()
-        }
-
-    val resultatKrav = resultatService.getResultatPrKrav(testgrunnlag.kontrollId, null, null, null)
+    val resultatKrav =
+        resultatService.getResultatPrKrav(kontrollLoeysing.kontrollId, null, null, null)
     if (resultatKrav.isEmpty()) {
       return ResponseEntity.badRequest().build()
     }
@@ -104,7 +98,7 @@ class EksternResultatResource(
       @PathVariable suksesskriterium: String
   ): ResponseEntity<List<TestresultatDetaljertEkstern>> {
     val testgrunnlagLoeysing =
-        eksternResultatDAO.findTestgrunnlagLoeysingFromRapportId((rapportId))
+        eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId))
             ?: return ResponseEntity.badRequest().build()
 
     if (!Regex("""^\d+\.\d+\.\d+$""").matches(suksesskriterium)) {

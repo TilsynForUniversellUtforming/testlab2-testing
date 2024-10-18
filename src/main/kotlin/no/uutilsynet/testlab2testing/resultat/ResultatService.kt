@@ -15,6 +15,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestResultat
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
@@ -313,11 +314,21 @@ class ResultatService(
   fun getKontrollLoeysingResultat(
       kontrollId: Int,
       loeysingId: Int
-  ): List<ResultatOversiktLoeysing>? {
+  ): List<ResultatOversiktLoeysing> {
 
     return resultatDAO
         .getResultatKontrollLoeysing(kontrollId, loeysingId)
-        ?.toResultatOversiktLoeysing()
+        .toResultatOversiktLoeysing()
+  }
+
+  fun getKontrollLoeysingResultatIkkjeRetest(
+      kontrollId: Int,
+      loeysingId: Int
+  ): List<ResultatOversiktLoeysing> {
+    return resultatDAO
+        .getResultatKontrollLoeysing(kontrollId, loeysingId)
+        .filter { it.testType == TestgrunnlagType.OPPRINNELEG_TEST }
+        .toResultatOversiktLoeysing()
   }
 
   fun getTestgrunnlagLoeysingResultat(

@@ -147,12 +147,15 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return LocalDate.now()
   }
 
-  fun getResultatKontrollLoeysing(kontrollId: Int, loeysingId: Int): List<ResultatLoeysing>? {
-    val query = "$resultatQuery where k.id = :kontrollId  and loeysing_id = :loeysingId"
-    return jdbcTemplate.query(
-        query, mapOf("kontrollId" to kontrollId, "loeysingId" to loeysingId)) { rs, _ ->
-          resultatLoeysingRowmapper(rs)
+  fun getResultatKontrollLoeysing(kontrollId: Int, loeysingId: Int): List<ResultatLoeysing> {
+    return runCatching {
+          val query = "$resultatQuery where k.id = :kontrollId  and loeysing_id = :loeysingId"
+          jdbcTemplate.query(
+              query, mapOf("kontrollId" to kontrollId, "loeysingId" to loeysingId)) { rs, _ ->
+                resultatLoeysingRowmapper(rs)
+              }
         }
+        .getOrThrow()
   }
 
   fun getResultatTestgrunnlagLoeysing(

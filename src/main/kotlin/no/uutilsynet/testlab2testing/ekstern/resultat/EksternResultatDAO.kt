@@ -39,7 +39,7 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val loeysingId: Int,
   )
 
-  fun findTestgrunnlagLoeysingFromRapportId(rapportId: String): KontrollIdLoeysingId? =
+  fun findKontrollLoeysingFromRapportId(rapportId: String): KontrollIdLoeysingId? =
       jdbcTemplate.queryForObject(
           """
             select r.kontroll_id, r.loeysing_id from rapport r where r.id_ekstern = :rapportId
