@@ -18,7 +18,7 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       select r.id_ekstern, tg.kontroll_id, r.loeysing_id, k.kontrolltype, r.publisert
       from kontroll k 
           join testgrunnlag tg on tg.kontroll_id = k.id
-          join rapport r on tg.id = r.testgrunnlag_id
+          join rapport r on k.id = r.kontroll_id
       where r.publisert is not null
           and tg.type = 'OPPRINNELEG_TEST'
           and r.loeysing_id in (:loeysingIdList)
@@ -34,34 +34,33 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         }
   }
 
-  data class TestgrunnlagIdLoeysingId(
-      val testgrunnlagId: Int,
+  data class KontrollIdLoeysingId(
+      val kontrollId: Int,
       val loeysingId: Int,
   )
 
-  fun findTestgrunnlagLoeysingFromRapportId(rapportId: String): TestgrunnlagIdLoeysingId? =
+  fun findTestgrunnlagLoeysingFromRapportId(rapportId: String): KontrollIdLoeysingId? =
       jdbcTemplate.queryForObject(
           """
-            select r.testgrunnlag_id, r.loeysing_id from rapport r where r.id_ekstern = :rapportId
+            select r.kontroll_id, r.loeysing_id from rapport r where r.id_ekstern = :rapportId
       """
               .trimIndent(),
           mapOf("rapportId" to rapportId),
-          DataClassRowMapper.newInstance(TestgrunnlagIdLoeysingId::class.java))
+          DataClassRowMapper.newInstance(KontrollIdLoeysingId::class.java))
 
   @Transactional
-  fun publiserResultat(testgrunnlagId: Int, loeysingId: Int): Result<Boolean> {
+  fun publiserResultat(kontrollId: Int, loeysingId: Int): Result<Boolean> {
     runCatching {
           jdbcTemplate.update(
               """
-          insert into rapport(testgrunnlag_id,loeysing_id,publisert) values(:testgrunnlagId, :loeysingId , now())
+          insert into rapport(kontroll_id,loeysing_id,publisert) values(:kontrollId, :loeysingId , now())
         """
                   .trimIndent(),
-              mapOf("testgrunnlagId" to testgrunnlagId, "loeysingId" to loeysingId))
+              mapOf("kontrollId" to kontrollId, "loeysingId" to loeysingId))
         }
         .fold(
             onSuccess = {
-              logger.info(
-                  "Publiserte resultat for testgrunnlag $testgrunnlagId og løysing $loeysingId")
+              logger.info("Publiserte resultat for testgrunnlag $kontrollId og løysing $loeysingId")
               return Result.success(true)
             },
             onFailure = {

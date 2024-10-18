@@ -46,7 +46,7 @@ class EksternResultatResource(
 
     val results =
         resultatService.getTestgrunnlagLoeysingResultat(
-            testgrunnlagLoeysing.testgrunnlagId, testgrunnlagLoeysing.loeysingId)
+            testgrunnlagLoeysing.kontrollId, testgrunnlagLoeysing.loeysingId)
     if (results.isNullOrEmpty()) {
       return ResponseEntity.badRequest().build()
     }
@@ -63,7 +63,7 @@ class EksternResultatResource(
             ?: return ResponseEntity.badRequest().build()
 
     val testgrunnlag =
-        testgrunnlagDAO.getTestgrunnlag(testgrunnlagLoeysing.testgrunnlagId).getOrElse {
+        testgrunnlagDAO.getTestgrunnlag(testgrunnlagLoeysing.kontrollId).getOrElse {
           return ResponseEntity.badRequest().build()
         }
 
@@ -85,7 +85,7 @@ class EksternResultatResource(
             ?: return ResponseEntity.badRequest().build()
 
     val testgrunnlag =
-        testgrunnlagDAO.getTestgrunnlag(testgrunnlagLoeysing.testgrunnlagId).getOrElse {
+        testgrunnlagDAO.getTestgrunnlag(testgrunnlagLoeysing.kontrollId).getOrElse {
           return ResponseEntity.badRequest().build()
         }
 
@@ -120,14 +120,14 @@ class EksternResultatResource(
     val results =
         resultatService
             .getResultatListTestgrunnlag(
-                testgrunnlagLoeysing.testgrunnlagId, testgrunnlagLoeysing.loeysingId, krav.id)
+                testgrunnlagLoeysing.kontrollId, testgrunnlagLoeysing.loeysingId, krav.id)
             .map { it.toTestresultatDetaljertEkstern() }
 
     return ResponseEntity.ok(results)
   }
 
-  @PutMapping("publiserResultat/{kontrollId}")
-  fun publiserRapport(kontrollId: Int): ResponseEntity<Boolean> {
+  @PutMapping("publiser/kontroll/{kontrollId}")
+  fun publiserResultat(@PathVariable kontrollId: Int): ResponseEntity<Boolean> {
     logger.debug("Publiserer rapport for kontroll id $kontrollId")
 
     return try {
