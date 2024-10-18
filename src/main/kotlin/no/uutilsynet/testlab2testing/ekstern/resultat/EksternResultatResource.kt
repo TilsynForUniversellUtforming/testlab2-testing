@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import no.uutilsynet.testlab2testing.forenkletkontroll.logger
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.resultat.ResultatService
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/ekstern/tester")
 class EksternResultatResource(
     @Autowired val eksternResultatDAO: EksternResultatDAO,
-    @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
     @Autowired val resultatService: ResultatService,
     @Autowired val kravregisterClient: KravregisterClient,
