@@ -8,6 +8,7 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.resultat.Resultat
 import no.uutilsynet.testlab2testing.resultat.ResultatService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cache.annotation.CacheEvict
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -30,6 +31,21 @@ class EksternResultatService(
         }
         .onFailure {
           logger.error("Feil ved publisering av resultat", it)
+          throw it
+        }
+  }
+
+  @Transactional
+  fun avpubliserResultat(kontrollId: Int) {
+    runCatching {
+          val kontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
+          logger.info("Avpubliserer resultat for kontroll med id $kontrollId")
+          getLoeysingarForKontroll(kontroll).forEach {
+            eksternResultatDAO.avpubliserResultat(kontrollId, it.id).getOrThrow()
+          }
+        }
+        .onFailure {
+          logger.error("Feil ved avpublisering av resultat", it)
           throw it
         }
   }
@@ -99,5 +115,10 @@ class EksternResultatService(
       throw NoSuchElementException("Fann ingen løysingar for verkemd med orgnr $orgnr")
     }
     return loeysingList
+  }
+
+  @CacheEvict("resultatKontroll")
+  fun erKontrollPublisert(kontrollId: Int): Boolean {
+    return eksternResultatDAO.erKontrollPublisert(kontrollId)
   }
 }

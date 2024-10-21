@@ -158,17 +158,6 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         .getOrThrow()
   }
 
-  fun getResultatTestgrunnlagLoeysing(
-      testgrunnlagId: Int,
-      loeysingId: Int
-  ): List<ResultatLoeysing> {
-    val query =
-        "$resultatQuery where k.testgrunnlag_id = :testgrunnlagId and loeysing_id = :loeysingId"
-    return jdbcTemplate.query(query, mapOf("testgrunnlagId" to testgrunnlagId)) { rs, _ ->
-      resultatLoeysingRowmapper(rs)
-    }
-  }
-
   fun getResultatPrTema(
       kontrollId: Int?,
       kontrolltype: Kontrolltype?,

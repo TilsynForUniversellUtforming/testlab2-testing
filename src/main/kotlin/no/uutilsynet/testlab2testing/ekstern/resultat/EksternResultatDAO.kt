@@ -15,19 +15,17 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getTestsForLoeysingIds(loeysingIdList: List<Int>): List<TestListElementDB> {
     return jdbcTemplate.query(
         """
-      select r.id_ekstern, tg.kontroll_id, r.loeysing_id, k.kontrolltype, r.publisert
+      select r.id_ekstern, k.kontroll_id, r.loeysing_id, k.kontrolltype, r.publisert
       from kontroll k 
-          join testgrunnlag tg on tg.kontroll_id = k.id
           join rapport r on k.id = r.kontroll_id
       where r.publisert is not null
-          and tg.type = 'OPPRINNELEG_TEST'
           and r.loeysing_id in (:loeysingIdList)
     """
             .trimIndent(),
         mapOf("loeysingIdList" to loeysingIdList)) { rs, _ ->
           TestListElementDB(
               rs.getString("id_ekstern"),
-              rs.getInt("kontroll_id"),
+              rs.getInt("id"),
               rs.getInt("loeysing_id"),
               Kontrolltype.valueOf(rs.getString("kontrolltype")),
               rs.getTimestamp("publisert").toInstant())
@@ -48,12 +46,15 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           mapOf("rapportId" to rapportId),
           DataClassRowMapper.newInstance(KontrollIdLoeysingId::class.java))
 
-  @Transactional
   fun publiserResultat(kontrollId: Int, loeysingId: Int): Result<Boolean> {
+    return publiserNyttResultat(kontrollId, loeysingId)
+  }
+
+  private fun publiserNyttResultat(kontrollId: Int, loeysingId: Int): Result<Boolean> {
     runCatching {
           jdbcTemplate.update(
               """
-          insert into rapport(kontroll_id,loeysing_id,publisert) values(:kontrollId, :loeysingId , now())
+          insert into rapport(kontroll_id,loeysing_id,publisert) values(:kontrollId, :loeysingId,now()) on conflict(kontroll_id,loeysing_id) do update set publisert = now()
         """
                   .trimIndent(),
               mapOf("kontrollId" to kontrollId, "loeysingId" to loeysingId))
@@ -65,6 +66,47 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             },
             onFailure = {
               return Result.failure(it)
+            })
+  }
+
+  @Transactional
+  fun avpubliserResultat(kontrollId: Int, loeysingId: Int): Result<Boolean> {
+    runCatching {
+          jdbcTemplate.update(
+              """
+                update rapport set publisert = null where kontroll_id = :kontrollId and loeysing_id = :loeysingId
+                """
+                  .trimIndent(),
+              mapOf("kontrollId" to kontrollId, "loeysingId" to loeysingId))
+        }
+        .fold(
+            onSuccess = {
+              logger.info(
+                  "Avpubliserte resultat for testgrunnlag $kontrollId og løysing $loeysingId")
+              return Result.success(true)
+            },
+            onFailure = {
+              return Result.failure(it)
+            })
+  }
+
+  fun erKontrollPublisert(kontrollId: Int): Boolean {
+    runCatching {
+          jdbcTemplate.queryForObject(
+              """
+                select count(*) from rapport where kontroll_id = :kontrollId and publisert is not null
+                """
+                  .trimIndent(),
+              mapOf("kontrollId" to kontrollId),
+              Int::class.java) == 1
+        }
+        .fold(
+            onSuccess = {
+              return it
+            },
+            onFailure = {
+              logger.error("Feil ved henting av publisert status for kontroll $kontrollId", it)
+              return false
             })
   }
 }

@@ -7,6 +7,7 @@ import java.time.LocalDateTime
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
+import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingResource
@@ -38,8 +39,9 @@ class ResultatService(
     val maalingDAO: MaalingDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val kontrollDAO: KontrollDAO,
-    val testgrunnlagDao: TestgrunnlagDAO,
-    val bildeService: BildeService
+    val testgrunnlagDAO: TestgrunnlagDAO,
+    val bildeService: BildeService,
+    val eksternResultatDAO: EksternResultatDAO
 ) {
 
   fun getResultatForAutomatiskKontroll(
@@ -117,7 +119,7 @@ class ResultatService(
       loeysingId: Int,
       kravId: Int
   ): List<TestresultatDetaljert> {
-    val testgrunnlag = testgrunnlagDao.getTestgrunnlagForKontroll(kontrollId).opprinneligTest
+    val testgrunnlag = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest
     val testresultat = testResultatDAO.getManyResults(testgrunnlag.id).getOrThrow()
 
     val testregelIds: List<Int> = testregelDAO.getTestregelForKrav(kravId).map { it.id }
@@ -226,6 +228,7 @@ class ResultatService(
     val statusLoeysingar =
         progresjonPrLoeysing(testgrunnlagId, result.first().typeKontroll, loeysingar)
     val resultLoeysingar = resultatPrLoeysing(result, loeysingar, statusLoeysingar)
+    val publisert = eksternResultatDAO.erKontrollPublisert(result.first().id)
 
     return Resultat(
         result.first().id,
@@ -233,6 +236,7 @@ class ResultatService(
         result.first().typeKontroll,
         resultLoeysingar.first().testType,
         result.first().dato,
+        publisert,
         resultLoeysingar)
   }
 
@@ -373,7 +377,7 @@ class ResultatService(
       loeysingId: Int,
       kravid: Int
   ): List<TestresultatDetaljert> {
-    val kontrollId = testgrunnlagDao.getTestgrunnlag(testgrunnlagId).getOrThrow().kontrollId
+    val kontrollId = testgrunnlagDAO.getTestgrunnlag(testgrunnlagId).getOrThrow().kontrollId
 
     val typeKontroll =
         kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().kontrolltype

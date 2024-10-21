@@ -122,8 +122,14 @@ class EksternResultatResource(
   fun publiserResultat(@PathVariable kontrollId: Int): ResponseEntity<Boolean> {
     logger.debug("Publiserer rapport for kontroll id $kontrollId")
 
+    val erPublisert = eksternResultatService.erKontrollPublisert(kontrollId)
+
     return try {
-      eksternResultatService.publiserResultat(kontrollId)
+      if (erPublisert) {
+        eksternResultatService.avpubliserResultat(kontrollId)
+      } else {
+        eksternResultatService.publiserResultat(kontrollId)
+      }
       ResponseEntity.ok(true)
     } catch (e: NoSuchElementException) {
       ResponseEntity.notFound().build<Boolean>()
