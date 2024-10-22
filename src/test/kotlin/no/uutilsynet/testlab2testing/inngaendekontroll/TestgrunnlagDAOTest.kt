@@ -10,7 +10,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
-import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
+import no.uutilsynet.testlab2testing.kontroll.SideutvalElementBase
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.assertj.core.api.Assertions.assertThat
@@ -145,7 +145,7 @@ class TestgrunnlagDAOTest(
     kontrollDAO.updateKontroll(
         kontroll,
         listOf(
-            SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
+            SideutvalElementBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
         ))
 
     return kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()

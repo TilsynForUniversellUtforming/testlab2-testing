@@ -15,7 +15,7 @@ data class Kontroll(
     val arkivreferanse: String,
     val utval: Utval? = null,
     val testreglar: Testreglar? = null,
-    val sideutvalList: List<Sideutval> = emptyList(),
+    val sideutvalList: List<SideutvalElement> = emptyList(),
     val opprettaDato: LocalDate = LocalDate.now(),
 ) {
 

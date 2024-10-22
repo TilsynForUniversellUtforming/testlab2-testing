@@ -22,7 +22,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultat
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
-import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
+import no.uutilsynet.testlab2testing.kontroll.SideutvalElementBase
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
@@ -149,7 +149,7 @@ class ResultatServiceTest(
     kontrollDAO.updateKontroll(
         kontroll,
         listOf(
-            SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
+            SideutvalElementBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
         ))
 
     return kontrollId

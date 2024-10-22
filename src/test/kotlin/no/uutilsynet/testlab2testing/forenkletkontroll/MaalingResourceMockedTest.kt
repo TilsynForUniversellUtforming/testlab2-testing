@@ -164,7 +164,7 @@ class MaalingResourceMockedTest {
 
     `when`(maalingDAO.getMaaling(id)).thenReturn(maaling)
     `when`(maalingDAO.save(maalingTesting)).thenReturn(Result.success(maalingTesting))
-    `when`(sideutvalDAO.getCrawlResultatNettsider(id, uutilsynetLoeysing.id)).thenReturn(nettsider)
+    `when`(sideutvalDAO.getSideutvalFraaCrawlResultat(id, uutilsynetLoeysing.id)).thenReturn(nettsider)
     `when`(testregelDAO.getTestreglarForMaaling(id)).thenReturn(Result.success(testregelList))
     `when`(loeysingsRegisterClient.getMany(listOf(uutilsynetLoeysing.id)))
         .thenReturn(Result.success(listOf(uutilsynetLoeysing)))

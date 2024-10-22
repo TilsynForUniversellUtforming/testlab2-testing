@@ -62,6 +62,7 @@ class ScheduledUpdaterTest {
             sistOppdatert = Instant.now())
     val testKoeyring =
         TestKoeyring.Starta(
+            loeysing = crawlResultat.loeysing,
             crawlResultat = crawlResultat,
             sistOppdatert = Instant.now(),
             statusURL = URI("https://www.uutilsynet.no/status/1").toURL(),
@@ -175,6 +176,7 @@ class ScheduledUpdaterTest {
 
     val testKoeyring =
         TestKoeyring.IkkjeStarta(
+            loeysing = crawlResultat.loeysing,
             crawlResultat = crawlResultat,
             sistOppdatert = Instant.now(),
             statusURL = URI("https://www.uutilsynet.no/status/1").toURL(),

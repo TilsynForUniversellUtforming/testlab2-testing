@@ -146,6 +146,7 @@ class ScheduledUpdater(
               "feila da eg forsøkte å oppdatere status for løysing ${testKoeyring.loeysing.id}",
               updated.exceptionOrNull())
           TestKoeyring.Feila(
+              testKoeyring.crawlResultat.loeysing,
               testKoeyring.crawlResultat,
               Instant.now(),
               "Testing av ${testKoeyring.loeysing.url} feila. Eg klarte ikkje å hente status frå autotestaren.",

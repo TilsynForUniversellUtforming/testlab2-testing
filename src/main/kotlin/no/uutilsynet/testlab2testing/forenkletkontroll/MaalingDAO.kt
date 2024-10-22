@@ -259,7 +259,7 @@ class MaalingDAO(
       maalingId: Int,
       loeysingList: List<Loeysing>
   ): List<TestKoeyring> {
-    val crawlResultat = sideutvalDAO.getCrawlResultatForMaaling(maalingId, loeysingList)
+
     return jdbcTemplate.query<TestKoeyring>(
         """
               select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, t.lenker_testa, url_fullt_resultat, url_brot,url_agg_tr,url_agg_sk,url_agg_side,url_agg_side_tr,url_agg_loeysing, brukar_id
@@ -271,15 +271,9 @@ class MaalingDAO(
         fun(rs: ResultSet, _: Int): TestKoeyring {
           val status = rs.getString("status")
           val loeysingId = rs.getInt("loeysing_id")
-          val crawlResultatForLoeysing =
-              crawlResultat.find { it.loeysing.id == loeysingId }
-                  ?: throw RuntimeException(
-                      "finner ikkje crawlresultat for loeysing med id = $loeysingId")
-          val brukar = brukarService.getBrukarById(rs.getInt("brukar_id"))
-          if (crawlResultatForLoeysing !is CrawlResultat.Ferdig) {
-            throw RuntimeException(
-                "crawlresultat for loeysing med id = $loeysingId er ikkje ferdig")
-          }
+            val crawlResultatForLoeysing =
+                crawlResultatForLoeysing(maalingId,loeysingList,loeysingId)
+            val brukar = brukarService.getBrukarById(rs.getInt("brukar_id"))
 
           val sistOppdatert = rs.getTimestamp("sist_oppdatert").toInstant()
           return when (status) {
@@ -302,26 +296,9 @@ class MaalingDAO(
                 TestKoeyring.Feila(
                     crawlResultatForLoeysing, sistOppdatert, rs.getString("feilmelding"), brukar)
             "ferdig" -> {
-              val urlFulltResultat = rs.getString("url_fullt_resultat")
-              val urlBrot = rs.getString("url_brot")
-              val urlAggTR = rs.getString("url_agg_tr")
-              val urlAggSK = rs.getString("url_agg_sk")
-              val urlAggSide = rs.getString("url_agg_side")
-              val urlAggSideTR = rs.getString("url_agg_side_tr")
-              val urlAggLoeysing = rs.getString("url_agg_loeysing")
-
-              val lenker =
-                  if (urlFulltResultat != null)
-                      AutoTesterClient.AutoTesterLenker(
-                          URI(urlFulltResultat).toURL(),
-                          URI(urlBrot).toURL(),
-                          URI(urlAggTR).toURL(),
-                          URI(urlAggSK).toURL(),
-                          URI(urlAggSide).toURL(),
-                          URI(urlAggSideTR).toURL(),
-                          URI(urlAggLoeysing).toURL())
-                  else null
-              TestKoeyring.Ferdig(
+                val lenker =
+                    getAutoTesterLenker(rs)
+                TestKoeyring.Ferdig(
                   crawlResultatForLoeysing,
                   sistOppdatert,
                   URI(rs.getString("status_url")).toURL(),
@@ -333,7 +310,48 @@ class MaalingDAO(
         })
   }
 
-  @Transactional
+    private fun getAutoTesterLenker(rs: ResultSet): AutoTesterClient.AutoTesterLenker? {
+        val urlFulltResultat = rs.getString("url_fullt_resultat")
+        val urlBrot = rs.getString("url_brot")
+        val urlAggTR = rs.getString("url_agg_tr")
+        val urlAggSK = rs.getString("url_agg_sk")
+        val urlAggSide = rs.getString("url_agg_side")
+        val urlAggSideTR = rs.getString("url_agg_side_tr")
+        val urlAggLoeysing = rs.getString("url_agg_loeysing")
+
+        val lenker =
+            if (urlFulltResultat != null)
+                AutoTesterClient.AutoTesterLenker(
+                    URI(urlFulltResultat).toURL(),
+                    URI(urlBrot).toURL(),
+                    URI(urlAggTR).toURL(),
+                    URI(urlAggSK).toURL(),
+                    URI(urlAggSide).toURL(),
+                    URI(urlAggSideTR).toURL(),
+                    URI(urlAggLoeysing).toURL()
+                )
+            else null
+        return lenker
+    }
+
+    private fun crawlResultatForLoeysing(
+        maalingId: Int, loeysingList: List<Loeysing>,
+        loeysingId: Int
+    ): CrawlResultat.Ferdig {
+        val crawlResultat = sideutvalDAO.getCrawlResultatForMaaling(maalingId, loeysingList)
+        val crawlResultatForLoeysing =
+            crawlResultat.find { it.loeysing.id == loeysingId }
+                ?: throw RuntimeException(
+                    "finner ikkje crawlresultat for loeysing med id = $loeysingId"
+                )
+        if (crawlResultatForLoeysing !is CrawlResultat.Ferdig) {
+            throw RuntimeException(
+                "crawlresultat for loeysing med id = $loeysingId er ikkje ferdig")
+        }
+        return crawlResultatForLoeysing
+    }
+
+    @Transactional
   fun updateMaaling(maaling: Maaling) {
     val cache = cacheManager.getCache("maalingCache")
 
@@ -408,7 +426,7 @@ class MaalingDAO(
   fun saveTestKoeyring(testKoeyring: TestKoeyring, maalingId: Int) {
     jdbcTemplate.update(
         """delete from testkoeyring where maaling_id = :maaling_id and loeysing_id = :loeysing_id""",
-        mapOf("maaling_id" to maalingId, "loeysing_id" to testKoeyring.crawlResultat.loeysing.id))
+        mapOf("maaling_id" to maalingId, "loeysing_id" to testKoeyring.loeysing.id))
     when (testKoeyring) {
       is TestKoeyring.Starta -> {
         saveTestKoeyringStarta(maalingId, testKoeyring)
@@ -425,7 +443,7 @@ class MaalingDAO(
                 .trimMargin(),
             mapOf(
                 "maaling_id" to maalingId,
-                "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
+                "loeysing_id" to testKoeyring.loeysing.id,
                 "status" to status(testKoeyring),
                 "status_url" to statusURL(testKoeyring),
                 "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
@@ -453,7 +471,7 @@ class MaalingDAO(
             .trimIndent(),
         mapOf(
             "maaling_id" to maalingId,
-            "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
+            "loeysing_id" to testKoeyring.loeysing.id,
             "status" to status(testKoeyring),
             "status_url" to statusURL(testKoeyring),
             "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
@@ -477,7 +495,7 @@ class MaalingDAO(
             .trimMargin(),
         mapOf(
             "maaling_id" to maalingId,
-            "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
+            "loeysing_id" to testKoeyring.loeysing.id,
             "status" to status(testKoeyring),
             "status_url" to statusURL(testKoeyring),
             "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),

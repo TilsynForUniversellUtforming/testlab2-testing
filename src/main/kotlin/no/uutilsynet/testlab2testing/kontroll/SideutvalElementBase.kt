@@ -2,7 +2,7 @@ package no.uutilsynet.testlab2testing.kontroll
 
 import java.net.URI
 
-open class SideutvalBase(
+open class SideutvalElementBase(
     open val loeysingId: Int,
     open val typeId: Int,
     open val begrunnelse: String,
@@ -10,7 +10,7 @@ open class SideutvalBase(
     open val egendefinertType: String?
 )
 
-data class Sideutval(
+data class SideutvalElement(
     override val loeysingId: Int,
     override val typeId: Int,
     override val begrunnelse: String,
@@ -18,7 +18,7 @@ data class Sideutval(
     override val egendefinertType: String?,
     val id: Int,
 ) :
-    SideutvalBase(
+    SideutvalElementBase(
         loeysingId,
         typeId,
         begrunnelse,

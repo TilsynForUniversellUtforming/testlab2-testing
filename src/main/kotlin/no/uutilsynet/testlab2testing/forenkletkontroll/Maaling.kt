@@ -117,7 +117,7 @@ sealed class Maaling {
           }
 
       return testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>().filter {
-        loeysingId == null || it.crawlResultat.loeysing.id == loeysingId
+        loeysingId == null || it.loeysing.id == loeysingId
       }
     }
   }

@@ -5,7 +5,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
-import no.uutilsynet.testlab2testing.kontroll.Sideutval
+import no.uutilsynet.testlab2testing.kontroll.SideutvalElement
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.Testregel
@@ -27,7 +27,7 @@ class RapportBuilder(
   var loeysing: Loeysing.Expanded? = null
   var avvik: List<Avvik>? = null
   var kontrollId: Int? = null
-  var sider: List<Sideutval> = emptyList()
+  var sider: List<SideutvalElement> = emptyList()
 
   fun kontroll(kontroll: KontrollDAO.KontrollDB) = apply {
     rapportNummer = kontroll.arkivreferanse
@@ -41,7 +41,7 @@ class RapportBuilder(
     this.sider = siderForKontoll(loeysing.id)
   }
 
-  fun siderForKontoll(loysingId: Int): List<Sideutval> =
+  fun siderForKontoll(loysingId: Int): List<SideutvalElement> =
       kontrollId?.let { kontrollDAO.findSideutvalByKontrollAndLoeysing(it, listOf(loysingId)) }
           ?: throw IllegalStateException("KontrollId is not set")
 
@@ -94,7 +94,7 @@ class RapportBuilder(
         kravUrl = krav.urlRettleiing?.let { URI.create(it) })
   }
 
-  fun finnSide(sideutvalId: Int): Pair<Int, Sideutval> {
+  fun finnSide(sideutvalId: Int): Pair<Int, SideutvalElement> {
     return sider.filter { it.id == sideutvalId }.map { Pair(sider.indexOf(it), it) }.first()
   }
 }

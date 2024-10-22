@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
+import no.uutilsynet.testlab2testing.testing.ElementOmtale
 
 data class TestresultatDetaljert(
     val resultatId: Int?, // databaseId
@@ -23,5 +24,5 @@ data class TestresultatDetaljert(
     val bilder: List<Bilde>?
 ) {
 
-  data class ElementOmtale(val htmlCode: String?, val pointer: String?, val description: String?)
+
 }

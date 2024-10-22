@@ -280,7 +280,7 @@ class MaalingKtTest {
     fun testKoeyringarForLoeysing() {
       val testKoeyringar = Maaling.findFerdigeTestKoeyringar(maaling, uutilsynetLoeysing.id)
       assertThat(testKoeyringar, hasSize(1))
-      assertThat(testKoeyringar[0].crawlResultat.loeysing, equalTo(uutilsynetLoeysing))
+      assertThat(testKoeyringar[0].loeysing, equalTo(uutilsynetLoeysing))
     }
   }
 }

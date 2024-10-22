@@ -11,6 +11,7 @@ import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSide
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSideTestregel
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSuksesskriterium
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -33,7 +34,7 @@ class AutoTesterClient(
 
   fun startTesting(
       maalingId: Int,
-      crawlResultat: CrawlResultat.Ferdig,
+      loeysing:Loeysing,
       actRegler: List<Testregel>,
       nettsider: List<URL>
   ): Result<URL> {
@@ -44,10 +45,10 @@ class AutoTesterClient(
               mapOf(
                   "urls" to nettsider,
                   "idMaaling" to maalingId,
-                  "idLoeysing" to crawlResultat.loeysing.id,
+                  "idLoeysing" to loeysing.id,
                   "resultatSomFil" to true,
                   "actRegler" to actRegler.map { it.testregelSchema },
-                  "loeysing" to crawlResultat.loeysing)
+                  "loeysing" to loeysing)
 
           val restClient = RestClient.builder(restTemplate).build()
 
@@ -69,7 +70,7 @@ class AutoTesterClient(
         }
         .onFailure {
           logger.error(
-              "Kunne ikkje starte test for måling id $maalingId løysing id ${crawlResultat.loeysing.id}",
+              "Kunne ikkje starte test for måling id $maalingId løysing id ${loeysing.id}",
               it)
         }
   }

@@ -21,6 +21,7 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
+import no.uutilsynet.testlab2testing.testing.ElementOmtale
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.springframework.cache.annotation.Cacheable
@@ -144,7 +145,7 @@ class ResultatService(
               testVartUtfoertToLocalTime(it.testVartUtfoert),
               it.elementUtfall,
               it.elementResultat,
-              TestresultatDetaljert.ElementOmtale(
+              ElementOmtale(
                   htmlCode = null, pointer = null, description = it.elementOmtale),
               it.brukar,
               it.kommentar,

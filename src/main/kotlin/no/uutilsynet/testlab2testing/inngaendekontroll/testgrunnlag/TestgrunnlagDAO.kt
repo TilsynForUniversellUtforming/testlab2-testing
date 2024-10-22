@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.forenkletkontroll.logger
-import no.uutilsynet.testlab2testing.kontroll.Sideutval
+import no.uutilsynet.testlab2testing.kontroll.SideutvalElement
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
@@ -81,7 +81,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             """
                 .trimIndent(),
             mapOf("testgrunnlagId" to testgrunnlagId),
-            DataClassRowMapper.newInstance(Sideutval::class.java))
+            DataClassRowMapper.newInstance(SideutvalElement::class.java))
 
     return Result.success(testgrunnlag.copy(testreglar = testreglar, sideutval = sideutval))
   }

@@ -5,6 +5,8 @@ import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.sideutval.SideutvalElementAutomatisk
+import no.uutilsynet.testlab2testing.sideutval.SideutvalStiUrl
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
@@ -149,7 +151,7 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         is CrawlResultat.Ferdig -> "ferdig"
       }
 
-  fun getCrawlResultatNettsider(maalingId: Int, loeysingId: Int): List<URL> =
+  fun getSideutvalFraaCrawlResultat(maalingId: Int, loeysingId: Int): List<SideutvalElementAutomatisk> =
       jdbcTemplate
           .queryForList(
               """
@@ -162,9 +164,12 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   .trimIndent(),
               mapOf("maalingId" to maalingId, "loeysingId" to loeysingId),
               String::class.java)
-          .map { url -> URI(url).toURL() }
+          .map { url -> sideutvalElementAutomatiskFraURL(url) }
 
-  fun getCrawlResultatForMaaling(
+    private fun sideutvalElementAutomatiskFraURL(url: String) =
+        SideutvalElementAutomatisk(SideutvalStiUrl(URI(url).toURL()))
+
+    fun getCrawlResultatForMaaling(
       maalingId: Int,
       loeysingList: List<Loeysing>
   ): List<CrawlResultat> {

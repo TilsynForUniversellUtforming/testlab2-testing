@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
+import no.uutilsynet.testlab2testing.testing.ElementOmtale
 
 data class TestResultat(
     val suksesskriterium: List<String>,
@@ -17,7 +18,7 @@ data class TestResultat(
     val testVartUtfoert: LocalDateTime,
     val elementUtfall: String,
     val elementResultat: TestresultatUtfall,
-    val elementOmtale: TestresultatDetaljert.ElementOmtale?
+    val elementOmtale: ElementOmtale?
 ) : AutotesterTestresultat {
 
   companion object {
@@ -32,7 +33,7 @@ data class TestResultat(
         testVartUtfoert: String,
         elementUtfall: String,
         elementResultat: TestresultatUtfall,
-        elementOmtale: List<TestresultatDetaljert.ElementOmtale>? = null
+        elementOmtale: List<ElementOmtale>? = null
     ): TestResultat {
       return TestResultat(
           suksesskriterium,
@@ -47,7 +48,7 @@ data class TestResultat(
     }
 
     fun parseLocalDateTime(s: String): LocalDateTime {
-      val formatter = DateTimeFormatter.ofPattern("M/d/yyyy, h:mm:ss a", Locale.ENGLISH)
+      val formatter = DateTimeFormatter.ofPattern("d.M.yyyy, H:mm:ss")
       return LocalDateTime.parse(s, formatter)
     }
   }

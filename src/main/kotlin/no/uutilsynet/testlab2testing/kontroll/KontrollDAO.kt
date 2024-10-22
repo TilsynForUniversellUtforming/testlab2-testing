@@ -120,7 +120,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           """
                         .trimIndent(),
                     mapOf("kontroll_id" to kontrollId)) { mapper, _ ->
-                      Sideutval(
+                      SideutvalElement(
                           id = mapper.getInt("id"),
                           loeysingId = mapper.getInt("loeysing_id"),
                           typeId = mapper.getInt("sideutval_type_id"),
@@ -158,7 +158,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val kontrolltype: Kontrolltype,
       val utval: Utval?,
       val testreglar: Testreglar?,
-      val sideutval: List<Sideutval> = emptyList(),
+      val sideutval: List<SideutvalElement> = emptyList(),
       val opprettaDato: Instant = Instant.now(),
       val styringsdataId: Int?
   ) {
@@ -282,10 +282,10 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Transactional
   fun updateKontroll(
       kontroll: Kontroll,
-      sideutvalBase: List<SideutvalBase>,
+      sideutvalElementBase: List<SideutvalElementBase>,
   ): Result<Unit> = runCatching {
     val updateBatchValuesSideutval =
-        sideutvalBase.map { side ->
+        sideutvalElementBase.map { side ->
           mapOf(
               "kontroll_id" to kontroll.id,
               "sideutval_type_id" to side.typeId,
@@ -324,7 +324,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun findSideutvalByKontrollAndLoeysing(
       kontrollId: Int,
       loeysingIdList: List<Int>
-  ): List<Sideutval> =
+  ): List<SideutvalElement> =
       jdbcTemplate.query(
           """
             select
@@ -341,7 +341,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               .trimIndent(),
           mapOf("kontrollId" to kontrollId, "loeysingIdList" to loeysingIdList),
       ) { mapper, _ ->
-        Sideutval(
+        SideutvalElement(
             id = mapper.getInt("id"),
             loeysingId = mapper.getInt("loeysing_id"),
             typeId = mapper.getInt("sideutval_type_id"),
