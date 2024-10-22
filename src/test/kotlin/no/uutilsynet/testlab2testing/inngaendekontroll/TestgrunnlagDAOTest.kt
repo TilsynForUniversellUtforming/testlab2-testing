@@ -145,7 +145,8 @@ class TestgrunnlagDAOTest(
     kontrollDAO.updateKontroll(
         kontroll,
         listOf(
-            SideutvalElementBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
+            SideutvalElementBase(
+                loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
         ))
 
     return kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()

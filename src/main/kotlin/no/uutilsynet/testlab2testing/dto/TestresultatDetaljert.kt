@@ -22,7 +22,4 @@ data class TestresultatDetaljert(
     val brukarId: Brukar?,
     val kommentar: String? = "",
     val bilder: List<Bilde>?
-) {
-
-
-}
+) {}

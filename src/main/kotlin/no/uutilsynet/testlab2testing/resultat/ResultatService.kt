@@ -145,8 +145,7 @@ class ResultatService(
               testVartUtfoertToLocalTime(it.testVartUtfoert),
               it.elementUtfall,
               it.elementResultat,
-              ElementOmtale(
-                  htmlCode = null, pointer = null, description = it.elementOmtale),
+              ElementOmtale(htmlCode = null, pointer = null, description = it.elementOmtale),
               it.brukar,
               it.kommentar,
               bildeService.listBildeForTestresultat(it.id).getOrNull())

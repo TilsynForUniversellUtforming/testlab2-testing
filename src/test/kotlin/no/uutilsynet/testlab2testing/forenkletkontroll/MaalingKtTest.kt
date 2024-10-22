@@ -183,11 +183,12 @@ class MaalingKtTest {
               maalingDateStart,
               listOf(
                   TestKoeyring.Starta(
-                      crawlResultatForUUTilsynet,
+                      crawlResultatForUUTilsynet.loeysing,
                       Instant.now(),
                       URI("https://www.status.url").toURL(),
                       Framgang(0, 0),
-                      Brukar("test", "testar"))))
+                      Brukar("test", "testar"),
+                      crawlResultatForUUTilsynet.antallNettsider)))
       val result = Maaling.toTestingFerdig(maaling)
       assertThat(result).isNull()
     }
@@ -203,7 +204,7 @@ class MaalingKtTest {
               maalingDateStart,
               listOf(
                   TestKoeyring.Ferdig(
-                      crawlResultatForUUTilsynet,
+                      crawlResultatForUUTilsynet.loeysing,
                       Instant.now(),
                       URI("https://status.url").toURL(),
                       lenker,
@@ -223,12 +224,12 @@ class MaalingKtTest {
               maalingDateStart,
               listOf(
                   TestKoeyring.Feila(
-                      crawlResultatForDigdir,
+                      crawlResultatForDigdir.loeysing,
                       Instant.now(),
                       "autotester krasja",
                       Brukar("test", "testar")),
                   TestKoeyring.Ferdig(
-                      crawlResultatForUUTilsynet,
+                      crawlResultatForUUTilsynet.loeysing,
                       Instant.now(),
                       URI("https://status.url").toURL(),
                       lenker,
@@ -249,18 +250,13 @@ class MaalingKtTest {
             maalingDateStart,
             listOf(
                 TestKoeyring.Ferdig(
-                    CrawlResultat.Ferdig(
-                        1,
-                        URI("https://www.status.url").toURL(),
-                        uutilsynetLoeysing,
-                        Instant.now()),
+                    uutilsynetLoeysing,
                     Instant.now(),
                     URI("https://www.status.url").toURL(),
                     lenker,
                     Brukar("test", "testar")),
                 TestKoeyring.Ferdig(
-                    CrawlResultat.Ferdig(
-                        1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now()),
+                    digdirLoeysing,
                     Instant.now(),
                     URI("https://www.status.url").toURL(),
                     lenker,

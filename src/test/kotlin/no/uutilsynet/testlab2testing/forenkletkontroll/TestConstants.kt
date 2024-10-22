@@ -57,7 +57,7 @@ object TestConstants {
 
   val testKoeyring =
       TestKoeyring.Ferdig(
-          crawlResultat,
+          crawlResultat.loeysing,
           Instant.now(),
           URI("https://status.url").toURL(),
           AutoTesterClient.AutoTesterLenker(
@@ -73,7 +73,7 @@ object TestConstants {
 
   val testKoeyring2 =
       TestKoeyring.Ferdig(
-          crawlResultat2,
+          crawlResultat2.loeysing,
           Instant.now(),
           URI("https://status.url").toURL(),
           AutoTesterClient.AutoTesterLenker(

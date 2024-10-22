@@ -316,7 +316,7 @@ class MaalingDAOTest(
     val testKoeyringar =
         crawlResultat.map {
           TestKoeyring.Ferdig(
-              it,
+              it.loeysing,
               Instant.now(),
               URI("https://teststatus.url").toURL(),
               AutoTesterClient.AutoTesterLenker(
@@ -390,7 +390,11 @@ class MaalingDAOTest(
     val testKoeyringar =
         crawlResultat.map {
           TestKoeyring.IkkjeStarta(
-              it, Instant.now(), URI("https://teststatus.url").toURL(), Brukar("test", "testar"))
+              it.loeysing,
+              Instant.now(),
+              URI("https://teststatus.url").toURL(),
+              Brukar("test", "testar"),
+              it.antallNettsider)
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     maalingDAO.save(testing).getOrThrow()
@@ -409,11 +413,12 @@ class MaalingDAOTest(
     val testKoeyringar =
         crawlResultat.map {
           TestKoeyring.Starta(
-              it,
+              it.loeysing,
               Instant.now(),
               URI("https://teststatus.url").toURL(),
               Framgang(0, it.nettsider.size),
-              Brukar("test", "testar"))
+              Brukar("test", "testar"),
+              it.antallNettsider)
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     maalingDAO.save(testing).getOrThrow()

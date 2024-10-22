@@ -63,11 +63,11 @@ class ScheduledUpdaterTest {
     val testKoeyring =
         TestKoeyring.Starta(
             loeysing = crawlResultat.loeysing,
-            crawlResultat = crawlResultat,
             sistOppdatert = Instant.now(),
             statusURL = URI("https://www.uutilsynet.no/status/1").toURL(),
             framgang = Framgang(0, 0),
-            Brukar("test", "testar"))
+            Brukar("test", "testar"),
+            maxLenker = crawlResultat.antallNettsider)
 
     var updatedTestKoeyring: TestKoeyring? = null
     for (i in 1..21) {
@@ -177,10 +177,10 @@ class ScheduledUpdaterTest {
     val testKoeyring =
         TestKoeyring.IkkjeStarta(
             loeysing = crawlResultat.loeysing,
-            crawlResultat = crawlResultat,
             sistOppdatert = Instant.now(),
             statusURL = URI("https://www.uutilsynet.no/status/1").toURL(),
-            Brukar("test", "testar"))
+            Brukar("test", "testar"),
+            crawlResultat.antallNettsider)
     val maaling =
         Maaling.Testing(
             id = 1,

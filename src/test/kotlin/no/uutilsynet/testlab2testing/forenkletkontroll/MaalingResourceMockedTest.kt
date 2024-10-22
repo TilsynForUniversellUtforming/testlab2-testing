@@ -16,6 +16,8 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testKoeyrin
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
+import no.uutilsynet.testlab2testing.sideutval.SideutvalElementAutomatisk
+import no.uutilsynet.testlab2testing.sideutval.SideutvalStiUrl
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.assertj.core.api.Assertions
@@ -146,9 +148,10 @@ class MaalingResourceMockedTest {
 
     val nettsider =
         listOf(
-            URI("https://www.uutilsynet.no/").toURL(),
-            URI("https://www.uutilsynet.no/underside/1").toURL(),
-            URI("https://www.uutilsynet.no/underside/2").toURL())
+                URI("https://www.uutilsynet.no/").toURL(),
+                URI("https://www.uutilsynet.no/underside/1").toURL(),
+                URI("https://www.uutilsynet.no/underside/2").toURL())
+            .map { SideutvalElementAutomatisk(SideutvalStiUrl(it)) }
 
     val expectedRequestData =
         mapOf(
@@ -164,7 +167,8 @@ class MaalingResourceMockedTest {
 
     `when`(maalingDAO.getMaaling(id)).thenReturn(maaling)
     `when`(maalingDAO.save(maalingTesting)).thenReturn(Result.success(maalingTesting))
-    `when`(sideutvalDAO.getSideutvalFraaCrawlResultat(id, uutilsynetLoeysing.id)).thenReturn(nettsider)
+    `when`(sideutvalDAO.getSideutvalFraaCrawlResultat(id, uutilsynetLoeysing.id))
+        .thenReturn(nettsider)
     `when`(testregelDAO.getTestreglarForMaaling(id)).thenReturn(Result.success(testregelList))
     `when`(loeysingsRegisterClient.getMany(listOf(uutilsynetLoeysing.id)))
         .thenReturn(Result.success(listOf(uutilsynetLoeysing)))

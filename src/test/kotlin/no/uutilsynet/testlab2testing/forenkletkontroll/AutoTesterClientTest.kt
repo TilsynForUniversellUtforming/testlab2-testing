@@ -131,7 +131,8 @@ class AutoTesterClientTest {
                 .json(objectMapper.writeValueAsString(expectedRequestData)))
         .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON))
 
-    val result = autoTesterClient.startTesting(maalingId, crawlResultat, testRegelList, nettsider)
+    val result =
+        autoTesterClient.startTesting(maalingId, crawlResultat.loeysing, testRegelList, nettsider)
 
     assertThat(result.isSuccess).isTrue
     assertThat(result.getOrNull()).isEqualTo(statusUris.statusQueryGetUri.toURL())
@@ -149,7 +150,10 @@ class AutoTesterClientTest {
 
     val testKoeyringIkkjeStarta =
         TestKoeyring.from(
-            TestConstants.crawlResultat, URI(statusURL).toURL(), Brukar("test", "testar"))
+            TestConstants.crawlResultat.loeysing,
+            URI(statusURL).toURL(),
+            Brukar("test", "testar"),
+            TestConstants.crawlResultat.antallNettsider)
     val response = autoTesterClient.updateStatus(testKoeyringIkkjeStarta)
 
     assertThat(response.isFailure).isTrue
@@ -210,7 +214,7 @@ class AutoTesterClientTest {
         )
     val testKoeyring =
         TestKoeyring.Ferdig(
-            TestConstants.crawlResultat,
+            TestConstants.crawlResultat.loeysing,
             Instant.now(),
             URI(statusURL).toURL(),
             lenker = lenker,

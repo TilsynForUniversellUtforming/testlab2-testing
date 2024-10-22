@@ -151,7 +151,10 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         is CrawlResultat.Ferdig -> "ferdig"
       }
 
-  fun getSideutvalFraaCrawlResultat(maalingId: Int, loeysingId: Int): List<SideutvalElementAutomatisk> =
+  fun getSideutvalFraaCrawlResultat(
+      maalingId: Int,
+      loeysingId: Int
+  ): List<SideutvalElementAutomatisk> =
       jdbcTemplate
           .queryForList(
               """
@@ -166,10 +169,10 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               String::class.java)
           .map { url -> sideutvalElementAutomatiskFraURL(url) }
 
-    private fun sideutvalElementAutomatiskFraURL(url: String) =
-        SideutvalElementAutomatisk(SideutvalStiUrl(URI(url).toURL()))
+  private fun sideutvalElementAutomatiskFraURL(url: String) =
+      SideutvalElementAutomatisk(SideutvalStiUrl(URI(url).toURL()))
 
-    fun getCrawlResultatForMaaling(
+  fun getCrawlResultatForMaaling(
       maalingId: Int,
       loeysingList: List<Loeysing>
   ): List<CrawlResultat> {

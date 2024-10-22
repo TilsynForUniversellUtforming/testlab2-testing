@@ -111,13 +111,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
   private fun setupTestKoeyring(testLoeysing: Loeysing): TestKoeyring.Ferdig {
     val testKoeyring: TestKoeyring.Ferdig =
         TestKoeyring.Ferdig(
-            crawlResultat =
-                CrawlResultat.Ferdig(
-                    antallNettsider = 1,
-                    statusUrl = TEST_URL,
-                    loeysing = testLoeysing,
-                    sistOppdatert = Instant.now(),
-                    nettsider = emptyList()),
+            loeysing = testLoeysing,
             sistOppdatert = Instant.now(),
             statusURL = TEST_URL,
             lenker =
@@ -359,7 +353,8 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     kontrollDAO.updateKontroll(
         kontroll,
         listOf(
-            SideutvalElementBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
+            SideutvalElementBase(
+                loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
         ))
 
     return kontrollId

@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
+import java.net.URI
 import java.net.URL
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +26,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters.Companion
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
+import no.uutilsynet.testlab2testing.sideutval.SideUtvalAutomatisk
 import no.uutilsynet.testlab2testing.sideutval.SideutvalElementAutomatisk
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
@@ -42,7 +44,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.net.URI
 
 @RestController
 @RequestMapping("v1/maalinger")
@@ -214,7 +215,10 @@ class MaalingResource(
       @PathVariable maalingId: Int,
       @RequestParam loeysingId: Int
   ): ResponseEntity<List<URL>> =
-      sideutvalDAO.getSideutvalFraaCrawlResultat(maalingId, loeysingId).map { sideutvalUrl(it) }.let { ResponseEntity.ok(it) }
+      sideutvalDAO
+          .getSideutvalFraaCrawlResultat(maalingId, loeysingId)
+          .map { sideutvalUrl(it) }
+          .let { ResponseEntity.ok(it) }
 
   @PutMapping("{id}/status")
   fun putNewStatus(@PathVariable id: Int, @RequestBody statusDTO: StatusDTO): ResponseEntity<Any> {
@@ -302,9 +306,8 @@ class MaalingResource(
       statusDTO: StatusDTO,
       maaling: Maaling.Kvalitetssikring
   ): ResponseEntity<Any> {
-      val loeysingIdList =
-          validateLoeysingIds(statusDTO)
-      val crawlParameters = maalingDAO.getCrawlParameters(maaling.id)
+    val loeysingIdList = validateLoeysingIds(statusDTO)
+    val crawlParameters = maalingDAO.getCrawlParameters(maaling.id)
     val updated = crawlerClient.restart(maaling, loeysingIdList, crawlParameters)
     maalingDAO.save(updated).getOrThrow()
     return ResponseEntity.ok().build()
@@ -323,15 +326,14 @@ class MaalingResource(
   ): ResponseEntity<Any> {
     return coroutineScope {
       logger.info("Restarter testing for måling ${maaling.id}")
-        val loeysingIdList =
-            validateLoeysingIds(statusDTO)
+      val loeysingIdList = validateLoeysingIds(statusDTO)
 
-        val (retestList, rest) =
+      val (retestList, rest) =
           maaling.testKoeyringar.partition { loeysingIdList.contains(it.loeysing.id) }
 
-        val loeysingar = retestList.map { it.loeysing }
+      val loeysingar = retestList.map { it.loeysing }
 
-      val testKoeyringar = startTesting(maaling.id,loeysingar, brukar)
+      val testKoeyringar = startTesting(maaling.id, loeysingar, brukar)
 
       val updated =
           Maaling.Testing(
@@ -344,27 +346,26 @@ class MaalingResource(
     }
   }
 
-    private fun validateLoeysingIds(statusDTO: StatusDTO): List<Int> {
-        val validIds =
-            if (statusDTO.loeysingIdList?.isNotEmpty() == true) {
-                loeysingsRegisterClient.getMany(statusDTO.loeysingIdList).getOrThrow().map { it.id }
-            } else {
-                emptyList()
-            }
-        val loeysingIdList =
-            validateIdList(statusDTO.loeysingIdList, validIds, "loeysingIdList").getOrThrow()
-        return loeysingIdList
-    }
+  private fun validateLoeysingIds(statusDTO: StatusDTO): List<Int> {
+    val validIds =
+        if (statusDTO.loeysingIdList?.isNotEmpty() == true) {
+          loeysingsRegisterClient.getMany(statusDTO.loeysingIdList).getOrThrow().map { it.id }
+        } else {
+          emptyList()
+        }
+    val loeysingIdList =
+        validateIdList(statusDTO.loeysingIdList, validIds, "loeysingIdList").getOrThrow()
+    return loeysingIdList
+  }
 
-    private suspend fun startTesting(
+  private suspend fun startTesting(
       maaling: Maaling.Kvalitetssikring,
       brukar: Brukar
   ): ResponseEntity<Any> {
     return coroutineScope {
-        val loeysingar = maaling.crawlResultat.filterIsInstance<CrawlResultat.Ferdig>().map { it.loeysing }
-      val testKoeyringar =
-          startTesting(
-              maaling.id, loeysingar, brukar)
+      val loeysingar =
+          maaling.crawlResultat.filterIsInstance<CrawlResultat.Ferdig>().map { it.loeysing }
+      val testKoeyringar = startTesting(maaling.id, loeysingar, brukar)
 
       val updated = Maaling.toTesting(maaling, testKoeyringar)
       withContext(Dispatchers.IO) { maalingDAO.save(updated) }.getOrThrow()
@@ -379,60 +380,59 @@ class MaalingResource(
       loeysingar: List<Loeysing>,
       brukar: Brukar
   ): List<TestKoeyring> = coroutineScope {
-    val testreglar =
-        getTestreglarForMaaling(maalingId)
+    val testreglar = getTestreglarForMaaling(maalingId)
 
-
-      loeysingar
+    loeysingar
         .map {
           async {
-            val nettsider =
-                getNettsider(maalingId, it.id)
-              Pair(it, autoTesterClient.startTesting(maalingId, it, testreglar, nettsider))
+            val sideUtval = getSideutval(maalingId, it)
+            Pair(
+                sideUtval,
+                autoTesterClient.startTesting(maalingId, it, testreglar, sideUtval.getNettsider()))
           }
         }
         .awaitAll()
-        .map { (loeysing, result) ->
+        .map { (sideUtval, result) ->
           result.fold(
-              { statusURL -> TestKoeyring.from(loeysing,crawlResultat, statusURL, brukar) },
+              { statusURL ->
+                TestKoeyring.from(
+                    sideUtval.loeysing, statusURL, brukar, sideUtval.getNettsider().size)
+              },
               { exception ->
                 val feilmelding =
                     exception.message
                         ?: "eg klarte ikkje å starte testing for ei løysing, og feilmeldinga manglar"
-                TestKoeyring.Feila(loeysing,crawlResultat, Instant.now(), feilmelding, brukar)
+                TestKoeyring.Feila(sideUtval.loeysing, Instant.now(), feilmelding, brukar)
               })
         }
   }
 
-    private suspend fun getTestreglarForMaaling(maalingId: Int): List<Testregel> {
-        val testreglar =
-            withContext(Dispatchers.IO) { testregelDAO.getTestreglarForMaaling(maalingId) }
-                .getOrElse {
-                    logger.error("Feila ved henting av actregler for måling $maalingId", it)
-                    throw it
-                }
-                .onEach { it.validateTestregel().getOrThrow() }
-        return testreglar
-    }
+  private suspend fun getTestreglarForMaaling(maalingId: Int): List<Testregel> {
+    val testreglar =
+        withContext(Dispatchers.IO) { testregelDAO.getTestreglarForMaaling(maalingId) }
+            .getOrElse {
+              logger.error("Feila ved henting av actregler for måling $maalingId", it)
+              throw it
+            }
+            .onEach { it.validateTestregel().getOrThrow() }
+    return testreglar
+  }
 
-    private suspend fun getNettsider(
-        maalingId: Int,
-        loeysingId: Int,
-    ): List<URL> {
-        val nettsider =
-            withContext(Dispatchers.IO) {
-                sideutvalDAO.getSideutvalFraaCrawlResultat(maalingId, loeysingId)
-            }.map { sideutvalUrl(it) }
-
-        if (nettsider.isEmpty()) {
-            throw RuntimeException(
-                "Tomt resultat frå crawling, kan ikkje starte test. maalingId: $maalingId loeysingId: ${loeysingId}"
-            )
+  private suspend fun getSideutval(
+      maalingId: Int,
+      loeysing: Loeysing,
+  ): SideUtvalAutomatisk {
+    val nettsider =
+        withContext(Dispatchers.IO) {
+          sideutvalDAO.getSideutvalFraaCrawlResultat(maalingId, loeysing.id)
         }
-        return nettsider
 
+    if (nettsider.isEmpty()) {
+      throw RuntimeException(
+          "Tomt resultat frå crawling, kan ikkje starte test. maalingId: $maalingId loeysingId: ${loeysing.id}")
     }
+    return SideUtvalAutomatisk(loeysing, nettsider)
+  }
 
-    private fun sideutvalUrl(it: SideutvalElementAutomatisk): URL =
-        URI(it.sti.sti()).toURL()
+  private fun sideutvalUrl(it: SideutvalElementAutomatisk): URL = URI(it.sti.sti()).toURL()
 }

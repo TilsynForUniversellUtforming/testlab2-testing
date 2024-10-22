@@ -34,7 +34,7 @@ class AutoTesterClient(
 
   fun startTesting(
       maalingId: Int,
-      loeysing:Loeysing,
+      loeysing: Loeysing,
       actRegler: List<Testregel>,
       nettsider: List<URL>
   ): Result<URL> {
@@ -70,8 +70,7 @@ class AutoTesterClient(
         }
         .onFailure {
           logger.error(
-              "Kunne ikkje starte test for måling id $maalingId løysing id ${loeysing.id}",
-              it)
+              "Kunne ikkje starte test for måling id $maalingId løysing id ${loeysing.id}", it)
         }
   }
 
