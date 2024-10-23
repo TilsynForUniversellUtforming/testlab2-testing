@@ -1,12 +1,10 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 
 @Component
 class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -49,7 +47,7 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           mapOf("rapportId" to rapportId),
           DataClassRowMapper.newInstance(KontrollIdLoeysingId::class.java))
 
-    fun publisertTestgrunnlagResultat(testgrunnlagId: Int, loeysingId: Int): Result<Boolean> {
+  fun publisertTestgrunnlagResultat(testgrunnlagId: Int, loeysingId: Int): Result<Boolean> {
     runCatching {
           jdbcTemplate.update(
               """
@@ -88,7 +86,7 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             })
   }
 
-    fun avpubliserResultatTestgrunnlag(testgrunnlagId: Int, loeysingId: Int): Result<Boolean> {
+  fun avpubliserResultatTestgrunnlag(testgrunnlagId: Int, loeysingId: Int): Result<Boolean> {
     runCatching {
           jdbcTemplate.update(
               """
@@ -132,9 +130,7 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     runCatching {
           jdbcTemplate.queryForObject(
-              query.trimIndent(),
-              mapOf("kontrollId" to id),
-              Int::class.java) == 1
+              query.trimIndent(), mapOf("kontrollId" to id), Int::class.java) == 1
         }
         .fold(
             onSuccess = {
@@ -159,5 +155,4 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val testgrunnlagId: Int,
       val loeysingId: Int,
   )
-
 }

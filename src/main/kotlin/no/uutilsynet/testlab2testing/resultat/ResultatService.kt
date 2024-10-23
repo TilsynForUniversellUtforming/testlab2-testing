@@ -198,7 +198,7 @@ class ResultatService(
         .map { (id, result) -> resultat(id, result) }
   }
 
-    @Cacheable("resultatKontroll")
+  @Cacheable("resultatKontroll")
   fun getKontrollResultatMedType(kontrollId: Int, kontrolltype: Kontrolltype): List<Resultat> {
     val id = getIdTestgrunnlagOrMaaling(kontrolltype, kontrollId)
     val resultat = resultatForKontrollType(kontrolltype, id)
