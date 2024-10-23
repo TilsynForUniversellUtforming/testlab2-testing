@@ -268,7 +268,6 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   ): List<ResultatKravBase> {
     kotlin
         .runCatching {
-
           val query =
               """
           select krav_id,
