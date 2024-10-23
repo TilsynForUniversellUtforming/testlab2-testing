@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.rapport
+package no.uutilsynet.testlab2testing.wordrapport
 
 import java.net.URI
 import java.time.LocalDate
@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class RapportBuilder(
+class WordRapportBuilder(
     @Autowired val testregelDAO: TestregelDAO,
     @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val kravregisterClient: KravregisterClient
@@ -53,8 +53,8 @@ class RapportBuilder(
     return testresultat.mapIndexed { index, resultat -> resultat.toAvvik(index) }.subList(0, 1)
   }
 
-  fun build(): Rapport {
-    return Rapport(
+  fun build(): WordRapport {
+    return WordRapport(
         rapportNummer = rapportNummer ?: "",
         datoTil = datoFra.toString(),
         datoFra = datoTil.toString(),

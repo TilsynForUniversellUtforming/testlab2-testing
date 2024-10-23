@@ -1,8 +1,8 @@
-package no.uutilsynet.testlab2testing.rapport
+package no.uutilsynet.testlab2testing.wordrapport
 
 import java.net.URI
 
-data class Rapport(
+data class WordRapport(
     val rapportNummer: String,
     val datoFra: String?,
     val datoTil: String?,
