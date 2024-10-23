@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.rapport
+package no.uutilsynet.testlab2testing.wordrapport
 
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.web.bind.annotation.GetMapping
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/rapport")
-class RapportResource(val rapportService: RapportService) {
+class WordRapportResource(val rapportService: WordRapportService) {
 
   @GetMapping(
       "/kontroll/{kontrollId}/loeysing/{loeysingId}",

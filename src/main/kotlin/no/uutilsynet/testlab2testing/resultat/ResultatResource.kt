@@ -30,7 +30,7 @@ class ResultatResource(
 
     // Hentar kun for forenkla kontroll til utfasing av gamalt grensesnitt
     if (maalingId != null) {
-      return resultatService.getResultatForAutomatiskMaaling(maalingId, loeysingId)
+      return resultatService.getResultatForMaaling(maalingId, loeysingId)
     }
     return emptyList()
   }
