@@ -61,31 +61,12 @@ class ResultatService(
       return testresultat
           .map { it as TestResultat }
           .filter { filterTestregelNoekkel(it.testregelId, testregelIds) }
-          .map {
-            TestresultatDetaljert(
-                null,
-                it.loeysingId,
-                getTestregelIdFromSchema(it.testregelId) ?: 0,
-                it.testregelId,
-                maalingId,
-                it.side,
-                it.suksesskriterium,
-                it.testVartUtfoert,
-                it.elementUtfall,
-                it.elementResultat,
-                it.elementOmtale,
-                null,
-                null,
-                emptyList())
-          }
+          .map { testresultatDetaljertMaaling(it, maalingId) }
     }
     return emptyList()
   }
 
-  fun getResultatForAutomatiskMaaling(
-      maalingId: Int,
-      loeysingId: Int?
-  ): List<TestresultatDetaljert> {
+  fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
 
     val testresultat: List<AutotesterTestresultat> =
         maalingResource.getTestresultat(maalingId, loeysingId).getOrThrow()
@@ -93,26 +74,27 @@ class ResultatService(
     if (testresultat.isNotEmpty() && testresultat.first() is TestResultat) {
       return testresultat
           .map { it as TestResultat }
-          .map {
-            TestresultatDetaljert(
-                null,
-                it.loeysingId,
-                getTestregelIdFromSchema(it.testregelId) ?: 0,
-                it.testregelId,
-                maalingId,
-                it.side,
-                it.suksesskriterium,
-                it.testVartUtfoert,
-                it.elementUtfall,
-                it.elementResultat,
-                it.elementOmtale,
-                null,
-                null,
-                emptyList())
-          }
+          .map { testresultatDetaljertMaaling(it, maalingId) }
     }
     return emptyList()
   }
+
+  private fun testresultatDetaljertMaaling(it: TestResultat, maalingId: Int) =
+      TestresultatDetaljert(
+          null,
+          it.loeysingId,
+          getTestregelIdFromSchema(it.testregelId) ?: 0,
+          it.testregelId,
+          maalingId,
+          it.side,
+          it.suksesskriterium,
+          it.testVartUtfoert,
+          it.elementUtfall,
+          it.elementResultat,
+          it.elementOmtale,
+          null,
+          null,
+          emptyList())
 
   fun getResulatForManuellKontroll(
       kontrollId: Int,
@@ -185,20 +167,20 @@ class ResultatService(
 
   fun getResultatList(type: Kontrolltype?): List<Resultat> {
     return when (type) {
-      Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat()
+      Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat(null)
       Kontrolltype.InngaaendeKontroll,
       Kontrolltype.Tilsyn,
       Kontrolltype.Uttalesak,
-      Kontrolltype.Statusmaaling -> getManuellKontrollResultat()
+      Kontrolltype.Statusmaaling -> getManuellKontrollResultat(null)
       else -> getKontrollResultat()
     }
   }
 
-  private fun getAutomatiskKontrollResultat(): List<Resultat> {
-    return resultatDAO
-        .getTestresultatMaaling()
-        .groupBy { it.id }
-        .map { (id, result) -> resultat(id, result) }
+  fun getAutomatiskKontrollResultat(maalingId: Int?): List<Resultat> {
+    val resultatMaaling =
+        maalingId?.let { resultatDAO.getTestresultatMaaling(it) }
+            ?: resultatDAO.getTestresultatMaaling()
+    return resultatMaaling.groupBy { it.id }.map { (id, result) -> resultat(id, result) }
   }
 
   private fun getKontrollResultat(): List<Resultat> {
@@ -216,11 +198,45 @@ class ResultatService(
         .map { (id, result) -> resultat(id, result) }
   }
 
-  private fun getManuellKontrollResultat(): List<Resultat> {
-    return resultatDAO
-        .getTestresultatTestgrunnlag()
-        .groupBy { it.id }
-        .map { (id, result) -> resultat(id, result) }
+    @Cacheable("resultatKontroll")
+  fun getKontrollResultatMedType(kontrollId: Int, kontrolltype: Kontrolltype): List<Resultat> {
+    val id = getIdTestgrunnlagOrMaaling(kontrolltype, kontrollId)
+    val resultat = resultatForKontrollType(kontrolltype, id)
+    return resultat
+  }
+
+  private fun resultatForKontrollType(kontrolltype: Kontrolltype, id: Int): List<Resultat> {
+    val resultat =
+        when (kontrolltype) {
+          Kontrolltype.Statusmaaling,
+          Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat(id)
+          Kontrolltype.InngaaendeKontroll,
+          Kontrolltype.Tilsyn,
+          Kontrolltype.Uttalesak, -> getManuellKontrollResultat(id)
+        }
+    return resultat
+  }
+
+  private fun getIdTestgrunnlagOrMaaling(kontrolltype: Kontrolltype, kontrollId: Int): Int {
+    val id: Int? =
+        when (kontrolltype) {
+          Kontrolltype.ForenklaKontroll -> maalingDAO.getMaalingIdFromKontrollId(kontrollId)
+          Kontrolltype.InngaaendeKontroll,
+          Kontrolltype.Tilsyn,
+          Kontrolltype.Uttalesak,
+          Kontrolltype.Statusmaaling ->
+              testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
+        }
+    return id
+        ?: throw RuntimeException(
+            "Fant ikkje testgrunnlagId eller maaling for kontrollId $kontrollId")
+  }
+
+  private fun getManuellKontrollResultat(testgrunnlagId: Int?): List<Resultat> {
+    val resultatTestgrunnlag =
+        testgrunnlagId?.let { resultatDAO.getTestresultatTestgrunnlag(it) }
+            ?: resultatDAO.getTestresultatTestgrunnlag()
+    return resultatTestgrunnlag.groupBy { it.id }.map { (id, result) -> resultat(id, result) }
   }
 
   private fun resultat(testgrunnlagId: Int, result: List<ResultatLoeysing>): Resultat {
@@ -228,7 +244,9 @@ class ResultatService(
     val statusLoeysingar =
         progresjonPrLoeysing(testgrunnlagId, result.first().typeKontroll, loeysingar)
     val resultLoeysingar = resultatPrLoeysing(result, loeysingar, statusLoeysingar)
-    val publisert = eksternResultatDAO.erKontrollPublisert(result.first().id)
+    val publisert =
+        eksternResultatDAO.erKontrollPublisert(
+            result.first().testgrunnlagId, result.first().typeKontroll)
 
     return Resultat(
         result.first().id,
