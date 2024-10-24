@@ -4,6 +4,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.logger
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.resultat.ResultatService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -18,6 +19,8 @@ class EksternResultatResource(
     @Autowired val eksternResultatService: EksternResultatService
 ) {
 
+  private val logger = LoggerFactory.getLogger(EksternResultatResource::class.java)
+
   @GetMapping
   fun findTestForOrgNr(
       @RequestParam("orgnr") orgnr: String
@@ -30,6 +33,7 @@ class EksternResultatResource(
     } catch (e: NoSuchElementException) {
       ResponseEntity.notFound().build<TestListElementEkstern>()
     } catch (e: Exception) {
+      logger.error(e.message)
       ResponseEntity.badRequest().build<TestListElementEkstern>()
     }
   }

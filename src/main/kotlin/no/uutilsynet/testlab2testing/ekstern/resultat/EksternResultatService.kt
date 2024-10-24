@@ -9,6 +9,7 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.resultat.Resultat
 import no.uutilsynet.testlab2testing.resultat.ResultatService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -22,6 +23,8 @@ class EksternResultatService(
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val maalingDAO: MaalingDAO,
 ) {
+
+  private val logger = LoggerFactory.getLogger(EksternResultatResource::class.java)
 
   @Transactional
   fun publiser(kontrollId: Int) {
@@ -161,8 +164,7 @@ class EksternResultatService(
   }
 
   private fun List<Loeysing>.toListElementForLoeysingar(): List<TestListElementDB> {
-    val testList =
-        this.map { it.id }.map { eksternResultatDAO.getTestsForLoeysingIds(listOf(it)) }.flatten()
+    val testList = this.map { it.id }.let { eksternResultatDAO.getTestsForLoeysingIds(it) }
 
     if (testList.isEmpty()) {
       logger.info("Fann ingen gyldige testar for orgnr ${this.first().orgnummer}")

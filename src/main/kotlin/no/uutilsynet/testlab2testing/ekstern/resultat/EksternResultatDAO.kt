@@ -13,20 +13,18 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getTestsForLoeysingIds(loeysingIdList: List<Int>): List<TestListElementDB> {
     return jdbcTemplate.query(
-        """
-     select r.id_ekstern, tg.kontroll_id, r.loeysing_id, k.kontrolltype, r.publisert
+        """select r.id_ekstern, tg.kontroll_id, r.loeysing_id, k.kontrolltype, r.publisert
       from kontroll k 
           join testgrunnlag tg on tg.kontroll_id = k.id
           join rapport r on tg.id = r.testgrunnlag_id
       where r.publisert is not null
           and tg.type = 'OPPRINNELEG_TEST'
-          and r.loeysing_id in (:loeysingIdList)
-    """
+          and r.loeysing_id in (:loeysingIdList)"""
             .trimIndent(),
         mapOf("loeysingIdList" to loeysingIdList)) { rs, _ ->
           TestListElementDB(
               rs.getString("id_ekstern"),
-              rs.getInt("id"),
+              rs.getInt("kontroll_id"),
               rs.getInt("loeysing_id"),
               Kontrolltype.valueOf(rs.getString("kontrolltype")),
               rs.getTimestamp("publisert").toInstant())

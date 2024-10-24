@@ -5,6 +5,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.http.*
@@ -23,6 +24,9 @@ class WordRapportService(
     @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
     @Autowired val properties: RapportVerktoeyKlient
 ) {
+
+  private val logger = LoggerFactory.getLogger(WordRapportService::class.java)
+
   fun opprettRapport(kontrollId: Int, loeysingId: Int): WordRapport {
 
     val kontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
