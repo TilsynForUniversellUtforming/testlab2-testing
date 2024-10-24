@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.krav
 
 import no.uutilsynet.testlab2testing.forenkletkontroll.logger
+import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
@@ -8,6 +9,8 @@ import org.springframework.web.client.RestTemplate
 
 @Service
 class KravregisterClient(val restTemplate: RestTemplate, val properties: KravRegisterProperties) {
+
+  private val logger = LoggerFactory.getLogger(KravregisterClient::class.java)
 
   @Cacheable("kravFromSuksesskriterium", unless = "#result==null")
   fun getKrav(suksesskriterium: String): KravWcag2x {

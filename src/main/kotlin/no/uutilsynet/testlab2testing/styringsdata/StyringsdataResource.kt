@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.styringsdata
 
 import java.net.URI
 import no.uutilsynet.testlab2testing.forenkletkontroll.logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -16,6 +17,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 @RestController
 @RequestMapping("/styringsdata")
 class StyringsdataResource(val styringsdataDAO: StyringsdataDAO) {
+
+  private val logger = LoggerFactory.getLogger(StyringsdataResource::class.java)
 
   @GetMapping
   fun findStyringsdataForKontroll(@RequestParam("kontrollId") kontrollId: Int): StyringsdataResult {

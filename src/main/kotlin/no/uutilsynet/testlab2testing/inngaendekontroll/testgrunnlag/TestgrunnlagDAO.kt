@@ -2,9 +2,9 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
 import java.sql.Timestamp
 import java.time.Instant
-import no.uutilsynet.testlab2testing.forenkletkontroll.logger
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
 import no.uutilsynet.testlab2testing.testregel.Testregel
+import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional
 
 @Component
 class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+
+  private val logger = LoggerFactory.getLogger(TestgrunnlagDAO::class.java)
 
   fun getTestgrunnlag(testgrunnlagId: Int): Result<TestgrunnlagKontroll> {
 

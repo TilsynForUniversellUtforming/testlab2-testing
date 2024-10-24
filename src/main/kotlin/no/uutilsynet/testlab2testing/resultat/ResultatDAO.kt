@@ -61,20 +61,20 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             ) as ag
         on k.id = ag.kontroll_id
       """
+          .trimIndent()
 
-  val query_testresultat_maaling =
-      """
-        select k.id, k.tittel as tittel,kontrolltype, maaling_id as testgrunnlag_id, 'OPPRINNELIG_TEST' as testtype,
+  private val query_testresultat_maaling =
+      """select k.id, k.tittel as tittel,kontrolltype, maaling_id as testgrunnlag_id, 'OPPRINNELIG_TEST' as testtype,
         dato_start as dato,
         loeysing_id, testregel_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot
         from kontroll k
         left join maalingv1 m on m.kontrollid=k.id
         join aggregering_testregel agt on agt.maaling_id=m.id
         """
+          .trimIndent()
 
   private val query_testresultat_testgrunnlag =
-      """
-               select k.id as id, k.tittel as tittel, kontrolltype, testgrunnlag_id, type as testtype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot,
+      """select k.id as id, k.tittel as tittel, kontrolltype, testgrunnlag_id, testregel_id, type as testtype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot,
             dato_oppretta as dato
             from kontroll k
             left join testgrunnlag t on t.kontroll_id=k.id
@@ -140,9 +140,15 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getTestresultatTestgrunnlag(testgrunnlagId: Int): List<ResultatLoeysing> {
     val query = "$query_testresultat_testgrunnlag where testgrunnlag_id = :testgrunnlagId"
-    return jdbcTemplate.query(query, mapOf("testgrunnlagId" to testgrunnlagId)) { rs, _ ->
-      resultatLoeysingRowmapper(rs)
-    }
+    return runCatching {
+          jdbcTemplate.query(query, mapOf("testgrunnlagId" to testgrunnlagId)) { rs, _ ->
+            resultatLoeysingRowmapper(rs)
+          }
+        }
+        .getOrElse {
+          logger.error(it.stackTraceToString())
+          throw it
+        }
   }
 
   fun getResultat(): List<ResultatLoeysing> {
