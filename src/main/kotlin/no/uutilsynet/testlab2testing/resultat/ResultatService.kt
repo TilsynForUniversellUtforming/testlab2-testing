@@ -25,6 +25,7 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 
@@ -43,6 +44,8 @@ class ResultatService(
     val bildeService: BildeService,
     val eksternResultatDAO: EksternResultatDAO
 ) {
+
+  private val logger = LoggerFactory.getLogger(ResultatService::class.java)
 
   fun getResultatForAutomatiskKontroll(
       kontrollId: Int,

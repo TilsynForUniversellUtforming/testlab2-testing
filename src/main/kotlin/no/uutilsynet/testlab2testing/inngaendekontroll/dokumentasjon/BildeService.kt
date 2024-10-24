@@ -8,6 +8,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
@@ -22,6 +23,8 @@ class BildeService(
     @Autowired val testResultatDAO: TestResultatDAO,
     val blobClient: BlobStorageClient,
 ) {
+
+  private val logger = LoggerFactory.getLogger(BildeService::class.java)
 
   @CacheEvict(value = ["bildeCache"], key = "#testresultatId")
   fun createBilde(testresultatId: Int, bilder: List<MultipartFile>) = runCatching {
