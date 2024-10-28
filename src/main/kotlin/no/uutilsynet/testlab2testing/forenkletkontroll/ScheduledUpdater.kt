@@ -15,7 +15,7 @@ class ScheduledUpdater(
 
   private val logger = LoggerFactory.getLogger(ScheduledUpdater::class.java)
 
-  @Scheduled(fixedDelay = 30, timeUnit = TimeUnit.SECONDS)
+  @Scheduled(fixedDelay = 180, timeUnit = TimeUnit.SECONDS)
   fun scheduledUpdate() {
     updateStatuses()
   }
