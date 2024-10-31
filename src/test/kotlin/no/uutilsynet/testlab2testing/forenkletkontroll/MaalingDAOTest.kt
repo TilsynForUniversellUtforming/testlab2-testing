@@ -193,7 +193,11 @@ class MaalingDAOTest(
     val maaling = createTestMaaling()
     val deletedRows = maalingDAO.deleteMaaling(maaling.id)
     assertThat(deletedRows).isEqualTo(1)
-    val nonExistingMaaling = maalingDAO.getMaaling(maaling.id)
+    val nonExistingMaaling =
+        runCatching { maalingDAO.getMaaling(maaling.id) }
+            .onFailure { assertThat(it).isInstanceOf(NoSuchElementException::class.java) }
+            .getOrNull()
+
     assertThat(nonExistingMaaling).isNull()
   }
 
