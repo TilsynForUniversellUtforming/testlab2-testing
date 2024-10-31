@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
+import java.time.Instant
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateNamn
@@ -15,7 +16,6 @@ import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.springframework.stereotype.Service
-import java.time.Instant
 
 @Service
 class MaalingService(

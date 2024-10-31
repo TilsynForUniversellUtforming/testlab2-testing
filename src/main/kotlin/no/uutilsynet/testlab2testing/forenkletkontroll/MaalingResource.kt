@@ -5,8 +5,6 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
-import java.net.URL
-import java.time.Instant
 import kotlinx.coroutines.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
@@ -26,6 +24,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.net.URL
+import java.time.Instant
 
 @RestController
 @RequestMapping("v1/maalinger")
@@ -165,10 +165,7 @@ class MaalingResource(
 
   private fun hentEllerGenererAggregeringPrSide(maalingId: Int): ResponseEntity<Any> {
     if (!aggregeringService.harMaalingLagraAggregering(maalingId, "side")) {
-      val testKoeyringar =
-          maalingDAO.getMaaling(maalingId).let { maaling ->
-            Maaling.findFerdigeTestKoeyringar(maaling)
-          }
+      val testKoeyringar = getTestKoeyringar(maalingId)
       testKoeyringar.forEach { aggregeringService.saveAggregeringSideAutomatisk(it) }
     }
     return aggregeringService.getAggregertResultatSide(maalingId).let { ResponseEntity.ok(it) }
@@ -176,10 +173,7 @@ class MaalingResource(
 
   private fun hentEllerGenererAggregeringPrSuksesskriterium(maalingId: Int): ResponseEntity<Any> {
     if (!aggregeringService.harMaalingLagraAggregering(maalingId, "suksesskriterium")) {
-      val testKoeyringar =
-          maalingDAO.getMaaling(maalingId).let { maaling ->
-            Maaling.findFerdigeTestKoeyringar(maaling)
-          }
+      val testKoeyringar = getTestKoeyringar(maalingId)
       testKoeyringar.forEach {
         aggregeringService.saveAggregertResultatSuksesskriteriumAutomatisk(it)
       }
@@ -192,13 +186,22 @@ class MaalingResource(
   private fun hentEllerGenererAggregeringPrTestregel(maalingId: Int): ResponseEntity<Any> {
     if (!aggregeringService.harMaalingLagraAggregering(maalingId, "testresultat")) {
       logger.info("Aggregering er ikkje generert for måling $maalingId, genererer no")
-      val testKoeyringar =
-          maalingDAO.getMaaling(maalingId).let { maaling ->
-            Maaling.findFerdigeTestKoeyringar(maaling)
-          }
+      val testKoeyringar = getTestKoeyringar(maalingId)
       testKoeyringar.forEach { aggregeringService.saveAggregertResultatTestregelAutomatisk(it) }
     }
     return aggregeringService.getAggregertResultatTestregel(maalingId).let { ResponseEntity.ok(it) }
+  }
+
+  private fun getTestKoeyringar(maalingId: Int): List<TestKoeyring.Ferdig> {
+    return runCatching {
+          maalingDAO.getMaaling(maalingId).let { maaling ->
+            Maaling.findFerdigeTestKoeyringar(maaling)
+          }
+        }
+        .getOrElse {
+          logger.error("Feila ved henting av testkøyringar for måling $maalingId", it)
+          throw it
+        }
   }
 
   @GetMapping("{maalingId}/crawlresultat/nettsider")
