@@ -16,6 +16,8 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.createMaalingParams
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.createMaalingSql
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.deleteMaalingSql
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.insertMaalingLoeysingQuery
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.insertMaalingTestregelQuery
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.maalingRowmapper
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByDateSql
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByIdSql
@@ -102,6 +104,12 @@ class MaalingDAO(
 
     val updateMaalingSql = "update MaalingV1 set navn = :navn, status = :status where id = :id"
 
+    val insertMaalingTestregelQuery =
+        "insert into Maaling_Testregel (maaling_id, testregel_id) values (:maaling_id, :testregel_id)"
+
+    val insertMaalingLoeysingQuery =
+        "insert into MaalingLoeysing (idMaaling, idLoeysing) values (:idMaaling, :idLoeysing)"
+
     fun updateMaalingParams(maaling: Maaling): Map<String, Any> {
       val status =
           when (maaling) {
@@ -133,12 +141,11 @@ class MaalingDAO(
     val loeysingIdList = utval.loeysingar.map { it.id }
     for (idLoeysing: Int in loeysingIdList) {
       jdbcTemplate.update(
-          "insert into MaalingLoeysing (idMaaling, idLoeysing) values (:idMaaling, :idLoeysing)",
-          mapOf("idMaaling" to idMaaling, "idLoeysing" to idLoeysing))
+          insertMaalingLoeysingQuery, mapOf("idMaaling" to idMaaling, "idLoeysing" to idLoeysing))
     }
     for (idTestregel: Int in testregelIdList) {
       jdbcTemplate.update(
-          "insert into Maaling_Testregel (maaling_id, testregel_id) values (:maaling_id, :testregel_id)",
+          insertMaalingTestregelQuery,
           mapOf("maaling_id" to idMaaling, "testregel_id" to idTestregel))
     }
 
@@ -160,12 +167,11 @@ class MaalingDAO(
             Int::class.java)!!
     for (idLoeysing: Int in loyesingIds) {
       jdbcTemplate.update(
-          "insert into MaalingLoeysing (idMaaling, idLoeysing) values (:idMaaling, :idLoeysing)",
-          mapOf("idMaaling" to idMaaling, "idLoeysing" to idLoeysing))
+          insertMaalingLoeysingQuery, mapOf("idMaaling" to idMaaling, "idLoeysing" to idLoeysing))
     }
     for (idTestregel: Int in testregelIdList) {
       jdbcTemplate.update(
-          "insert into Maaling_Testregel (maaling_id, testregel_id) values (:maaling_id, :testregel_id)",
+          insertMaalingTestregelQuery,
           mapOf("maaling_id" to idMaaling, "testregel_id" to idTestregel))
     }
 
@@ -367,8 +373,7 @@ class MaalingDAO(
       val updateBatchValuesTestregel =
           maaling.testregelList.map { mapOf("maaling_id" to maaling.id, "testregel_id" to it.id) }
       jdbcTemplate.batchUpdate(
-          "insert into Maaling_Testregel (maaling_id, testregel_id) values (:maaling_id, :testregel_id)",
-          updateBatchValuesTestregel.toTypedArray())
+          insertMaalingTestregelQuery, updateBatchValuesTestregel.toTypedArray())
     } else {
       jdbcTemplate.update(updateMaalingSql, updateMaalingParams(maaling))
     }
@@ -391,7 +396,7 @@ class MaalingDAO(
       is TestingFerdig -> {
         maaling.testKoeyringar.forEach {
           saveTestKoeyring(it, maaling.id)
-          aggregeringService.saveAggregering(it as TestKoeyring.Ferdig, maaling.id)
+          aggregeringService.saveAggregering(it as TestKoeyring.Ferdig)
         }
       }
     }

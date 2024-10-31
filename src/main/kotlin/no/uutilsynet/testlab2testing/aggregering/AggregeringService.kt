@@ -31,12 +31,10 @@ class AggregeringService(
   private val logger = LoggerFactory.getLogger(AggregeringService::class.java)
 
   @Transactional
-  fun saveAggregering(testKoeyring: TestKoeyring.Ferdig, id: Int) {
-    if (!harMaalingLagraAggregering(id, "suksesskriterium")) {
-      saveAggregertResultatTestregelAutomatisk(testKoeyring)
-      saveAggregeringSideAutomatisk(testKoeyring)
-      saveAggregertResultatSuksesskriteriumAutomatisk(testKoeyring)
-    }
+  fun saveAggregering(testKoeyring: TestKoeyring.Ferdig) {
+    saveAggregertResultatTestregelAutomatisk(testKoeyring)
+    saveAggregeringSideAutomatisk(testKoeyring)
+    saveAggregertResultatSuksesskriteriumAutomatisk(testKoeyring)
   }
 
   fun saveAggregertResultatTestregelAutomatisk(testKoeyring: TestKoeyring.Ferdig) {

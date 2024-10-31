@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit
+import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -10,7 +11,8 @@ import org.springframework.stereotype.Component
 class ScheduledUpdater(
     val maalingDAO: MaalingDAO,
     val crawlerClient: CrawlerClient,
-    val autoTesterClient: AutoTesterClient
+    val autoTesterClient: AutoTesterClient,
+    val aggregeringService: AggregeringService,
 ) {
 
   private val logger = LoggerFactory.getLogger(ScheduledUpdater::class.java)
@@ -41,6 +43,7 @@ class ScheduledUpdater(
           val statusTesting = alleMaalinger.filterIsInstance<Maaling.Testing>()
           val oppdaterteMaalinger = statusTesting.map { updateTestingStatuses(it) }
           maalingDAO.saveMany(oppdaterteMaalinger).getOrThrow()
+          saveAggregeringar(oppdaterteMaalinger)
           if (statusTesting.isNotEmpty()) {
             logger.info("oppdaterte status for ${statusTesting.size} målinger med status `testing`")
           }
@@ -156,5 +159,14 @@ class ScheduledUpdater(
         updated.getOrThrow()
       }
     }
+  }
+
+  fun saveAggregeringar(maalingar: List<Maaling>) {
+    logger.info("Oppdaterer aggregeringar for ${maalingar.size} målinger")
+    maalingar
+        .filterIsInstance<Maaling.TestingFerdig>()
+        .map { Maaling.findFerdigeTestKoeyringar(it) }
+        .flatten()
+        .forEach { testKoeyring -> aggregeringService.saveAggregering(testKoeyring) }
   }
 }

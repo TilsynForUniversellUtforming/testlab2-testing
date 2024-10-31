@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.time.Instant
+import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
@@ -22,6 +23,7 @@ class MaalingService(
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val testregelDAO: TestregelDAO,
     val utvalDAO: UtvalDAO,
+    val aggregeringService: AggregeringService,
 ) {
 
   fun nyMaaling(kontrollId: Int, opprettKontroll: KontrollResource.OpprettKontroll) = runCatching {
@@ -158,5 +160,23 @@ class MaalingService(
       is Maaling.TestingFerdig -> maaling.copy(navn = this.navn)
       is Maaling.Kvalitetssikring -> maaling.copy(navn = this.navn)
     }
+  }
+
+  fun reimportAggregeringar(maalingId: Int, loeysingId: Int?) {
+    val maaling =
+        maalingDAO.getMaaling(maalingId) ?: throw IllegalArgumentException("Måling finnes ikkje")
+    require(maaling is Maaling.TestingFerdig) { "Måling er ikkje ferdig testa" }
+
+    maaling.testKoeyringar
+        .filterIsInstance<TestKoeyring.Ferdig>()
+        .filter { filterTestkoeyring(it, loeysingId) }
+        .forEach { aggregeringService.saveAggregering(it) }
+  }
+
+  fun filterTestkoeyring(testKoeyring: TestKoeyring, loeysingId: Int?): Boolean {
+    if (loeysingId != null) {
+      return testKoeyring.loeysing.id == loeysingId
+    }
+    return true
   }
 }
