@@ -8,6 +8,7 @@ object ErrorHandlingUtil {
       when (exception) {
         is NullPointerException -> ResponseEntity.badRequest().body(exception.message)
         is IllegalArgumentException -> ResponseEntity.badRequest().body(exception.message)
+        is NoSuchElementException -> ResponseEntity.notFound().build()
         else -> ResponseEntity.internalServerError().body(exception.message)
       }
 

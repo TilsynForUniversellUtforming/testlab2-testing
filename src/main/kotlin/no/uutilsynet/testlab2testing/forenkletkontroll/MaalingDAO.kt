@@ -179,12 +179,12 @@ class MaalingDAO(
   }
 
   @Cacheable("maalingCache", key = "#id")
-  fun getMaaling(id: Int): Maaling? {
+  fun getMaaling(id: Int): Maaling {
     val maaling =
         DataAccessUtils.singleResult(
             jdbcTemplate.query(selectMaalingByIdSql, mapOf("id" to id), maalingRowmapper))
 
-    return maaling?.toMaaling()
+    return maaling?.toMaaling() ?: throw NoSuchElementException("Fant ikke måling med id $id")
   }
 
   @Transactional
