@@ -250,7 +250,7 @@ class MaalingResource(
         ?: ResponseEntity.badRequest().build()
   }
 
-  @GetMapping("maaling/aggregering/reimport")
+  @GetMapping("aggregering/reimport")
   fun reimportAggregering(@RequestParam maalingId: Int, @RequestParam loeysingId: Int?) {
     maalingService.reimportAggregeringar(maalingId, loeysingId)
   }

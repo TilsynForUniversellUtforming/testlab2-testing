@@ -162,7 +162,6 @@ class ScheduledUpdater(
   }
 
   fun saveAggregeringar(maalingar: List<Maaling>) {
-    logger.info("Oppdaterer aggregeringar for ${maalingar.size} målinger")
     maalingar
         .filterIsInstance<Maaling.TestingFerdig>()
         .map { Maaling.findFerdigeTestKoeyringar(it) }
