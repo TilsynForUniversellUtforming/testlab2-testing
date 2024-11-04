@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.time.Instant
+import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
@@ -22,6 +23,7 @@ class MaalingService(
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val testregelDAO: TestregelDAO,
     val utvalDAO: UtvalDAO,
+    val aggregeringService: AggregeringService,
 ) {
 
   fun nyMaaling(kontrollId: Int, opprettKontroll: KontrollResource.OpprettKontroll) = runCatching {
@@ -127,25 +129,12 @@ class MaalingService(
     val navn = validateNamn(this.navn).getOrThrow()
     this.crawlParameters?.validateParameters()
 
-    val maaling =
-        maalingDAO.getMaaling(this.id) ?: throw IllegalArgumentException("Måling finnes ikkje")
+    val maaling = maalingDAO.getMaaling(this.id)
     return when (maaling) {
       is Maaling.Planlegging -> {
-        val loeysingList =
-            this.loeysingIdList
-                ?.let { idList -> loeysingsRegisterClient.getMany(idList) }
-                ?.getOrThrow()
-                ?: emptyList<Loeysing>().also {
-                  logger.warn("Måling ${maaling.id} har ikkje løysingar")
-                }
+        val loeysingList = getLoeysingForMaaling(maaling)
 
-        val testregelList =
-            this.testregelIdList?.let { idList ->
-              testregelDAO.getTestregelList().filter { idList.contains(it.id) }
-            }
-                ?: emptyList<Testregel>().also {
-                  logger.warn("Måling ${maaling.id} har ikkje testreglar")
-                }
+        val testregelList = getTestreglarForMaaling(maaling)
 
         maaling.copy(
             navn = navn,
@@ -158,5 +147,47 @@ class MaalingService(
       is Maaling.TestingFerdig -> maaling.copy(navn = this.navn)
       is Maaling.Kvalitetssikring -> maaling.copy(navn = this.navn)
     }
+  }
+
+  private fun EditMaalingDTO.getTestreglarForMaaling(maaling: Maaling) =
+      (this.testregelIdList?.let { idList ->
+        testregelDAO.getTestregelList().filter { idList.contains(it.id) }
+      }
+          ?: emptyList<Testregel>().also {
+            logger.warn("Måling ${maaling.id} har ikkje testreglar")
+          })
+
+  private fun EditMaalingDTO.getLoeysingForMaaling(maaling: Maaling): List<Loeysing> {
+    val loeysingList =
+        this.loeysingIdList?.let { idList -> loeysingsRegisterClient.getMany(idList) }?.getOrThrow()
+            ?: emptyList<Loeysing>().also {
+              logger.warn("Måling ${maaling.id} har ikkje løysingar")
+            }
+    return loeysingList
+  }
+
+  fun reimportAggregeringar(maalingId: Int, loeysingId: Int?) {
+    runCatching {
+      val maaling = maalingDAO.getMaaling(maalingId)
+      require(maaling is Maaling.TestingFerdig) { "Måling er ikkje ferdig testa" }
+
+      maaling.testKoeyringar
+          .filterIsInstance<TestKoeyring.Ferdig>()
+          .filter { filterTestkoeyring(it, loeysingId) }
+          .forEach { aggregeringService.saveAggregering(it) }
+    }
+  }
+
+  fun filterTestkoeyring(testKoeyring: TestKoeyring, loeysingId: Int?): Boolean {
+    if (loeysingId != null) {
+      return testKoeyring.loeysing.id == loeysingId
+    }
+    return true
+  }
+
+  fun getFerdigeTestkoeyringar(maalingId: Int): Result<List<TestKoeyring.Ferdig>> = runCatching {
+    val maaling = maalingDAO.getMaaling(maalingId)
+    require(maaling is Maaling.TestingFerdig) { "Måling er ikkje ferdig testa" }
+    maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>()
   }
 }
