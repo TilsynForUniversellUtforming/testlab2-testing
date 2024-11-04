@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
 import java.time.Instant
+import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.forenkletkontroll.ScheduledUpdater.Companion.updateCrawlingStatus
 import no.uutilsynet.testlab2testing.forenkletkontroll.ScheduledUpdater.Companion.updateTestingStatus
@@ -17,6 +18,7 @@ class ScheduledUpdaterTest {
   private val maalingDAO = Mockito.mock(MaalingDAO::class.java)
   private val crawlerClient = Mockito.mock(CrawlerClient::class.java)
   private val autoTesterClient = Mockito.mock(AutoTesterClient::class.java)
+  private val aggregeringService = Mockito.mock(AggregeringService::class.java)
 
   @Test
   @DisplayName(
@@ -83,7 +85,7 @@ class ScheduledUpdaterTest {
   @DisplayName(
       "når vi oppdaterer ei måling med status Crawling til Kvalitetssikring, så skal riktig data lagres og returneres")
   fun updateIkkeFerdigToKvalitetssikring() {
-    val updater = ScheduledUpdater(maalingDAO, crawlerClient, autoTesterClient)
+    val updater = ScheduledUpdater(maalingDAO, crawlerClient, autoTesterClient, aggregeringService)
     val crawlerOutput =
         listOf(CrawlerOutput(uutilsynetLoeysing.url.toString(), uutilsynetLoeysing.namn))
 
@@ -131,7 +133,7 @@ class ScheduledUpdaterTest {
   @DisplayName(
       "når vi oppdaterer ei måling med crawlresultat som er ferdig, så skal vi få samme data tilbake")
   fun updateKvalitetssikring() {
-    val updater = ScheduledUpdater(maalingDAO, crawlerClient, autoTesterClient)
+    val updater = ScheduledUpdater(maalingDAO, crawlerClient, autoTesterClient, aggregeringService)
 
     val crawlResultat =
         listOf(
@@ -159,7 +161,7 @@ class ScheduledUpdaterTest {
   @DisplayName(
       "når vi oppdaterer en måling med testkjøringer som ikke har starta, så skal vi få samme data tilbake")
   fun updateTesting() {
-    val updater = ScheduledUpdater(maalingDAO, crawlerClient, autoTesterClient)
+    val updater = ScheduledUpdater(maalingDAO, crawlerClient, autoTesterClient, aggregeringService)
 
     val crawlResultat =
         CrawlResultat.Ferdig(

@@ -7,17 +7,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import java.net.URL
 import java.time.Instant
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
-import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateStatus
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
@@ -31,15 +25,7 @@ import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("v1/maalinger")
@@ -99,8 +85,12 @@ class MaalingResource(
   }
 
   @GetMapping("{id}")
-  fun getMaaling(@PathVariable id: Int): ResponseEntity<Maaling> =
-      maalingDAO.getMaaling(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity.notFound().build()
+  fun getMaaling(@PathVariable id: Int): ResponseEntity<out Any> {
+    return runCatching { maalingDAO.getMaaling(id) }
+        .fold(
+            onSuccess = { it.let { ResponseEntity.ok(it) } },
+            onFailure = { ErrorHandlingUtil.handleErrors(it) })
+  }
 
   @GetMapping("{maalingId}/testresultat")
   fun getTestResultatList(
@@ -118,18 +108,23 @@ class MaalingResource(
 
   fun getTestresultat(maalingId: Int, loeysingId: Int?): Result<List<AutotesterTestresultat>> {
     return runBlocking(Dispatchers.IO) {
-      maalingDAO
-          .getMaaling(maalingId)
-          ?.let { maaling -> Maaling.findFerdigeTestKoeyringar(maaling, loeysingId) }
-          ?.let { ferdigeTestKoeyringar ->
-            autoTesterClient.fetchResultat(
-                ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlBrot)
+      runCatching {
+            maalingService
+                .getFerdigeTestkoeyringar(maalingId)
+                .getOrThrow()
+                .let { ferdigeTestKoeyringar ->
+                  mapTestkoeyringToTestresultatBrot(ferdigeTestKoeyringar)
+                }
+                .toSingleResult()
+                .map { it.values.flatten() }
           }
-          ?.toSingleResult()
-          ?.map { it.values.flatten() }
-          ?: Result.failure(NullPointerException("Testresultat vart ikkje funne"))
+          .fold(onSuccess = { it }, onFailure = { Result.failure(it) })
     }
   }
+
+  private suspend fun mapTestkoeyringToTestresultatBrot(
+      ferdigeTestKoeyringar: List<TestKoeyring.Ferdig>
+  ) = autoTesterClient.fetchResultat(ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlBrot)
 
   @Operation(
       summary = "Hentar aggregert resultat for ei måling",
@@ -170,22 +165,16 @@ class MaalingResource(
 
   private fun hentEllerGenererAggregeringPrSide(maalingId: Int): ResponseEntity<Any> {
     if (!aggregeringService.harMaalingLagraAggregering(maalingId, "side")) {
-      val testKoeyringar =
-          maalingDAO.getMaaling(maalingId)?.let { maaling ->
-            Maaling.findFerdigeTestKoeyringar(maaling)
-          }
-      testKoeyringar?.forEach { aggregeringService.saveAggregeringSideAutomatisk(it) }
+      val testKoeyringar = getTestKoeyringar(maalingId)
+      testKoeyringar.forEach { aggregeringService.saveAggregeringSideAutomatisk(it) }
     }
     return aggregeringService.getAggregertResultatSide(maalingId).let { ResponseEntity.ok(it) }
   }
 
   private fun hentEllerGenererAggregeringPrSuksesskriterium(maalingId: Int): ResponseEntity<Any> {
     if (!aggregeringService.harMaalingLagraAggregering(maalingId, "suksesskriterium")) {
-      val testKoeyringar =
-          maalingDAO.getMaaling(maalingId)?.let { maaling ->
-            Maaling.findFerdigeTestKoeyringar(maaling)
-          }
-      testKoeyringar?.forEach {
+      val testKoeyringar = getTestKoeyringar(maalingId)
+      testKoeyringar.forEach {
         aggregeringService.saveAggregertResultatSuksesskriteriumAutomatisk(it)
       }
     }
@@ -197,13 +186,22 @@ class MaalingResource(
   private fun hentEllerGenererAggregeringPrTestregel(maalingId: Int): ResponseEntity<Any> {
     if (!aggregeringService.harMaalingLagraAggregering(maalingId, "testresultat")) {
       logger.info("Aggregering er ikkje generert for måling $maalingId, genererer no")
-      val testKoeyringar =
-          maalingDAO.getMaaling(maalingId)?.let { maaling ->
-            Maaling.findFerdigeTestKoeyringar(maaling)
-          }
-      testKoeyringar?.forEach { aggregeringService.saveAggregertResultatTestregelAutomatisk(it) }
+      val testKoeyringar = getTestKoeyringar(maalingId)
+      testKoeyringar.forEach { aggregeringService.saveAggregertResultatTestregelAutomatisk(it) }
     }
     return aggregeringService.getAggregertResultatTestregel(maalingId).let { ResponseEntity.ok(it) }
+  }
+
+  private fun getTestKoeyringar(maalingId: Int): List<TestKoeyring.Ferdig> {
+    return runCatching {
+          maalingDAO.getMaaling(maalingId).let { maaling ->
+            Maaling.findFerdigeTestKoeyringar(maaling)
+          }
+        }
+        .getOrElse {
+          logger.error("Feila ved henting av testkøyringar for måling $maalingId", it)
+          throw it
+        }
   }
 
   @GetMapping("{maalingId}/crawlresultat/nettsider")
@@ -216,7 +214,7 @@ class MaalingResource(
   @PutMapping("{id}/status")
   fun putNewStatus(@PathVariable id: Int, @RequestBody statusDTO: StatusDTO): ResponseEntity<Any> {
     return runCatching<ResponseEntity<Any>> {
-          val maaling = maalingDAO.getMaaling(id)!!
+          val maaling = maalingDAO.getMaaling(id)
           val newStatus = validateStatus(statusDTO.status).getOrThrow()
           val badRequest = ResponseEntity.badRequest().build<Any>()
 
@@ -250,6 +248,11 @@ class MaalingResource(
   fun getMaalingIdFromKontrollId(@PathVariable kontrollId: Int): ResponseEntity<Int> {
     return maalingDAO.getMaalingIdFromKontrollId(kontrollId)?.let { ResponseEntity.ok(it) }
         ?: ResponseEntity.badRequest().build()
+  }
+
+  @GetMapping("aggregering/reimport")
+  fun reimportAggregering(@RequestParam maalingId: Int, @RequestParam loeysingId: Int?) {
+    maalingService.reimportAggregeringar(maalingId, loeysingId)
   }
 
   private fun putNewStatusMaalingTestingFerdig(

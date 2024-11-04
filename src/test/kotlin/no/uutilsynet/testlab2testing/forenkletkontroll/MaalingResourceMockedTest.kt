@@ -75,7 +75,8 @@ class MaalingResourceMockedTest {
             autoTesterClient,
             aggregeringService,
             sideutvalDAO,
-            MaalingService(maalingDAO, loeysingsRegisterClient, testregelDAO, utvalDAO),
+            MaalingService(
+                maalingDAO, loeysingsRegisterClient, testregelDAO, utvalDAO, aggregeringService),
             brukarService)
   }
 
