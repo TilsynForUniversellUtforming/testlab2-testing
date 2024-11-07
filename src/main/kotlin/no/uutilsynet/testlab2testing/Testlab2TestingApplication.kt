@@ -17,7 +17,9 @@ import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.filter.CommonsRequestLoggingFilter
 
-@SpringBootApplication(exclude = [SecurityAutoConfiguration::class])
+@SpringBootApplication(
+    exclude = [SecurityAutoConfiguration::class],
+    scanBasePackages = ["no.uutilsynet.testlab2testing", "no.uutilsynet.testlab2securitylib"])
 @ConfigurationPropertiesScan
 @EnableScheduling
 @EnableCaching
