@@ -43,7 +43,6 @@ class ScheduledUpdater(
           val statusTesting = alleMaalinger.filterIsInstance<Maaling.Testing>()
           val oppdaterteMaalinger = statusTesting.map { updateTestingStatuses(it) }
           maalingDAO.saveMany(oppdaterteMaalinger).getOrThrow()
-          saveAggregeringar(oppdaterteMaalinger)
           if (statusTesting.isNotEmpty()) {
             logger.info("oppdaterte status for ${statusTesting.size} målinger med status `testing`")
           }
@@ -80,9 +79,14 @@ class ScheduledUpdater(
         maaling.testKoeyringar.map {
           when (it) {
             is TestKoeyring.Starta -> {
-              updateTestingStatus(it) { testKoeyring ->
-                autoTesterClient.updateStatus(testKoeyring as TestKoeyring.Starta)
+              val status =
+                  updateTestingStatus(it) { testKoeyring ->
+                    autoTesterClient.updateStatus(testKoeyring as TestKoeyring.Starta)
+                  }
+              if (status is TestKoeyring.Ferdig) {
+                aggregeringService.saveAggregering(status)
               }
+              status
             }
             is TestKoeyring.IkkjeStarta -> {
               updateTestingStatus(it) { testKoeyring ->
@@ -163,7 +167,7 @@ class ScheduledUpdater(
 
   fun saveAggregeringar(maalingar: List<Maaling>) {
     maalingar
-        .filterIsInstance<Maaling.TestingFerdig>()
+        .filterIsInstance<Maaling.Testing>()
         .map { Maaling.findFerdigeTestKoeyringar(it) }
         .flatten()
         .forEach { testKoeyring -> aggregeringService.saveAggregering(testKoeyring) }
