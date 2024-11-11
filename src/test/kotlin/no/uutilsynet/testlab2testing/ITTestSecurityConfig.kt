@@ -30,7 +30,7 @@ class ITTestSecurityConfig {
     return http.build()
   }
 
-  @Bean
+  @Bean("testRestTemplate")
   fun restTemplate(
       restTemplateBuilder: RestTemplateBuilder,
   ): RestTemplate {
