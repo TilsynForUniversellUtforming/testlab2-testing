@@ -164,12 +164,4 @@ class ScheduledUpdater(
       }
     }
   }
-
-  fun saveAggregeringar(maalingar: List<Maaling>) {
-    maalingar
-        .filterIsInstance<Maaling.Testing>()
-        .map { Maaling.findFerdigeTestKoeyringar(it) }
-        .flatten()
-        .forEach { testKoeyring -> aggregeringService.saveAggregering(testKoeyring) }
-  }
 }

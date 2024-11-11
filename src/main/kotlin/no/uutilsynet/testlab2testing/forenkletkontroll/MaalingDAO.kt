@@ -394,10 +394,7 @@ class MaalingDAO(
         maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling.id) }
       }
       is TestingFerdig -> {
-        maaling.testKoeyringar.forEach {
-          saveTestKoeyring(it, maaling.id)
-          aggregeringService.saveAggregering(it as TestKoeyring.Ferdig)
-        }
+        maaling.testKoeyringar.forEach { saveTestKoeyring(it, maaling.id) }
       }
     }
     maaling
