@@ -10,6 +10,7 @@ import org.springframework.boot.runApplication
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Profile
 import org.springframework.http.MediaType
 import org.springframework.http.client.BufferingClientHttpRequestFactory
 import org.springframework.http.client.ClientHttpRequestInterceptor
@@ -26,7 +27,9 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter
 @EnableScheduling
 @EnableCaching
 class Testlab2TestingApplication {
+
   @Bean
+  @Profile("!test")
   fun restTemplate(
       restTemplateBuilder: RestTemplateBuilder,
       apiTokenInterceptor: ApiTokenInterceptor
