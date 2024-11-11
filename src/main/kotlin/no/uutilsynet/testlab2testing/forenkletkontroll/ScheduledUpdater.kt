@@ -1,11 +1,11 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import java.time.Instant
-import java.util.concurrent.TimeUnit
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.time.Instant
+import java.util.concurrent.TimeUnit
 
 @Component
 class ScheduledUpdater(
@@ -163,13 +163,5 @@ class ScheduledUpdater(
         updated.getOrThrow()
       }
     }
-  }
-
-  fun saveAggregeringar(maalingar: List<Maaling>) {
-    maalingar
-        .filterIsInstance<Maaling.Testing>()
-        .map { Maaling.findFerdigeTestKoeyringar(it) }
-        .flatten()
-        .forEach { testKoeyring -> aggregeringService.saveAggregering(testKoeyring) }
   }
 }
