@@ -1,18 +1,10 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URL
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingResource
-import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.TestResultat
+import no.uutilsynet.testlab2testing.forenkletkontroll.*
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
@@ -28,6 +20,10 @@ import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
+import java.net.URL
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Component
 class ResultatService(
@@ -287,9 +283,7 @@ class ResultatService(
                   statusLoeysingar[loeysingId] ?: 0)
             }
 
-    return if (resultLoeysingar.size > 5) {
-      resultLoeysingar.subList(0, 5)
-    } else resultLoeysingar
+    return resultLoeysingar
   }
 
   fun progresjonPrLoeysing(
