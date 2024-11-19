@@ -1,5 +1,9 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.net.URL
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
@@ -20,10 +24,6 @@ import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
-import java.net.URL
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Component
 class ResultatService(
