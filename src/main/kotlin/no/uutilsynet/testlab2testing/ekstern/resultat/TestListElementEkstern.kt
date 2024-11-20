@@ -7,10 +7,11 @@ data class VerksemdEkstern(val namn: String, val organisasjonsnummer: String)
 
 data class TestEkstern(
     val rapportId: String,
+    val loeysingId: Int,
     val loeysingNamn: String,
     val score: Double,
     val kontrollType: Kontrolltype,
-    val publisert: Instant
+    val publisert: Instant?
 )
 
 data class TestListElementEkstern(val verksemd: VerksemdEkstern, val testList: List<TestEkstern>)

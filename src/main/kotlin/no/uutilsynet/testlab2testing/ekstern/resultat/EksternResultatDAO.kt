@@ -31,19 +31,16 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         }
   }
 
-  data class KontrollIdLoeysingId(
-      val kontrollId: Int,
-      val loeysingId: Int,
-  )
-
-  fun findKontrollLoeysingFromRapportId(rapportId: String): KontrollIdLoeysingId? =
-      jdbcTemplate.queryForObject(
-          """
+  fun findKontrollLoeysingFromRapportId(rapportId: String): Result<List<KontrollIdLoeysingId>> =
+      runCatching {
+        jdbcTemplate.query(
+            """
             select r.kontroll_id, r.loeysing_id from rapport r where r.id_ekstern = :rapportId
       """
-              .trimIndent(),
-          mapOf("rapportId" to rapportId),
-          DataClassRowMapper.newInstance(KontrollIdLoeysingId::class.java))
+                .trimIndent(),
+            mapOf("rapportId" to rapportId),
+            DataClassRowMapper.newInstance(KontrollIdLoeysingId::class.java))
+      }
 
   fun publisertTestgrunnlagResultat(testgrunnlagId: Int, loeysingId: Int): Result<Boolean> {
     runCatching {
