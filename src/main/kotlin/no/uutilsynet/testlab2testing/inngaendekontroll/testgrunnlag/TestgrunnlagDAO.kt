@@ -219,4 +219,17 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     saveTestgrunnlagTestregel(testgrunnlagId, testreglar)
   }
+
+  fun getTestgrunnlagIdForKontroll(kontrollId: Int): Result<Int> {
+    return runCatching {
+      DataAccessUtils.singleResult(
+          jdbcTemplate.query(
+              "select id from testgrunnlag where kontroll_id = :kontrollId",
+              mapOf("kontrollId" to kontrollId),
+          ) { rs, _ ->
+            rs.getInt("id")
+          })
+          ?: throw NoSuchElementException("Testgrunnlag for kontroll finns ikkje")
+    }
+  }
 }

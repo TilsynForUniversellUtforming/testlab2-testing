@@ -541,4 +541,19 @@ class MaalingDAO(
         mapOf("maaling_id" to maalingId),
         String::class.java)
   }
+
+  fun getMaalingForKontroll(kontrollId: Int): Result<Int> {
+    return runCatching {
+      jdbcTemplate.queryForObject(
+          """
+                select id
+                from maalingv1
+                where kontrollid = :kontrollId
+            """
+              .trimIndent(),
+          mapOf("kontrollId" to kontrollId),
+          Int::class.java)
+          ?: throw NoSuchElementException("Fant ikke måling for kontroll $kontrollId")
+    }
+  }
 }

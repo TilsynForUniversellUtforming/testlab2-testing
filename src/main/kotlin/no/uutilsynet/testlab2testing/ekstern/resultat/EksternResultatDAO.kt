@@ -35,7 +35,11 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       runCatching {
         jdbcTemplate.query(
             """
-            select r.kontroll_id, r.loeysing_id from rapport r where r.id_ekstern = :rapportId
+            select case when r.maaling_id is not null then m.kontrollid else t.kontroll_id end as kontroll_id, r.loeysing_id
+            from rapport r 
+            left join maalingv1 m on m.id=r.maaling_id
+            left join testgrunnlag t on t.id=r.testgrunnlag_id
+            where r.id_ekstern=:rapportId
       """
                 .trimIndent(),
             mapOf("rapportId" to rapportId),

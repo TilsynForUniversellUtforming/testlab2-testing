@@ -8,7 +8,10 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/ekstern/tester")
-class EksternResultatResource(@Autowired val eksternResultatService: EksternResultatService) {
+class EksternResultatResource(
+    @Autowired val eksternResultatService: EksternResultatService,
+    @Autowired val publiseringService: EksternResultatPubliseringService
+) {
 
   private val logger = LoggerFactory.getLogger(EksternResultatResource::class.java)
 
@@ -43,7 +46,10 @@ class EksternResultatResource(@Autowired val eksternResultatService: EksternResu
   //  }
 
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}")
-  fun getResultRapportLoeysing(@PathVariable rapportId: String, @PathVariable loeysingId: Int) {
+  fun getResultRapportLoeysing(
+      @PathVariable rapportId: String,
+      @PathVariable loeysingId: Int
+  ): ResponseEntity<out Any> {
     return kotlin
         .runCatching { eksternResultatService.getRapportForLoeysing(rapportId, loeysingId) }
         .fold(
@@ -93,7 +99,7 @@ class EksternResultatResource(@Autowired val eksternResultatService: EksternResu
     logger.debug("Publiserer rapport for kontroll id $kontrollId")
 
     return try {
-      eksternResultatService.publiser(kontrollId)
+      publiseringService.publiser(kontrollId)
       ResponseEntity.ok(true)
     } catch (e: NoSuchElementException) {
       ResponseEntity.notFound().build<Boolean>()
