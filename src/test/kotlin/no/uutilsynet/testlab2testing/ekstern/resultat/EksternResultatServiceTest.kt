@@ -38,8 +38,10 @@ object RapportTestdata {
   val kontrollLoeysingIds = listOf(KontrollIdLoeysingId(1, 1), KontrollIdLoeysingId(2, 2))
   val rapportForLoeysing =
       listOf(
-          ResultatOversiktLoeysingEkstern("loysing1", Kontrolltype.ForenklaKontroll, 0.5, 3, 1, 2),
-          ResultatOversiktLoeysingEkstern("loysing1", Kontrolltype.ForenklaKontroll, 0.4, 3, 1, 2),
+          ResultatOversiktLoeysingEkstern(
+              "loysing1", Kontrolltype.ForenklaKontroll, "1.1.1", 1, 0.5, 3, 1, 2),
+          ResultatOversiktLoeysingEkstern(
+              "loysing1", Kontrolltype.ForenklaKontroll, "1.1.1", 1, 0.4, 3, 1, 2),
       )
   val restresultat =
       listOf(

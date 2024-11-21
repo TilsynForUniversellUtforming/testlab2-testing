@@ -8,6 +8,8 @@ import no.uutilsynet.testlab2testing.resultat.ResultatTema
 data class ResultatOversiktLoeysingEkstern(
     val loeysingNamn: String,
     val typeKontroll: Kontrolltype,
+    val kravTittel: String,
+    val kravId: Int,
     val score: Double?,
     val talTestaElement: Int,
     val talElementBrot: Int,
@@ -18,6 +20,8 @@ fun ResultatOversiktLoeysing.toResultatOversiktLoeysingEkstern() =
     ResultatOversiktLoeysingEkstern(
         loeysingNamn = this.loeysingNamn,
         typeKontroll = this.typeKontroll,
+        kravTittel = this.kravTittel,
+        kravId = this.kravId,
         score = this.score,
         talTestaElement = this.talTestaElement,
         talElementBrot = this.talElementBrot,

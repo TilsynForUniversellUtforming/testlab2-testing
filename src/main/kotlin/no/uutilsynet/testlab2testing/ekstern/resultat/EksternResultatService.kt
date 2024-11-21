@@ -82,12 +82,18 @@ class EksternResultatService(
       rapportId: String,
       loeysingId: Int
   ): List<ResultatOversiktLoeysingEkstern> {
-    println("rapportId: $rapportId, loeysingId: $loeysingId")
-    return eksternResultatDAO
-        .findKontrollLoeysingFromRapportId((rapportId))
-        .map { filterkontrollIdLoeysingIdOnLoeysingId(it, loeysingId) }
+    return getKontrollLoeysing(rapportId, loeysingId)
         .mapCatching { getResultatEksternFromRapportLoeysing(it) }
         .getOrThrow()
+  }
+
+  private fun getKontrollLoeysing(
+      rapportId: String,
+      loeysingId: Int
+  ): Result<KontrollIdLoeysingId> {
+    return eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId)).map {
+      filterkontrollIdLoeysingIdOnLoeysingId(it, loeysingId)
+    }
   }
 
   private fun filterkontrollIdLoeysingIdOnLoeysingId(
@@ -136,7 +142,7 @@ class EksternResultatService(
   private fun testresultatToDetaljertEkstern(
       kontrollLoeysing: KontrollIdLoeysingId,
       krav: KravWcag2x
-  ) = getResultatPrKrav(kontrollLoeysing, krav).map { it.toTestresultatDetaljertEkstern() }
+  ) = getResultatPrKrav(kontrollLoeysing, krav.id).map { it.toTestresultatDetaljertEkstern(krav) }
 
   private fun getKravWcag2x(suksesskriterium: String): KravWcag2x {
     require(!suksessKriteriumParamMatchPattern(suksesskriterium)) {
@@ -146,9 +152,13 @@ class EksternResultatService(
     return krav
   }
 
-  private fun getResultatPrKrav(kontrollLoeysing: KontrollIdLoeysingId, krav: KravWcag2x) =
+  private fun getKravFromKravId(kravId: Int): KravWcag2x {
+    return kravregisterClient.getWcagKrav(kravId)
+  }
+
+  private fun getResultatPrKrav(kontrollLoeysing: KontrollIdLoeysingId, kravId: Int) =
       resultatService.getResultatListKontroll(
-          kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, krav.id)
+          kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, kravId)
 
   private fun suksessKriteriumParamMatchPattern(suksesskriterium: String) =
       !Regex("""^\d+\.\d+\.\d+$""").matches(suksesskriterium)
@@ -158,12 +168,15 @@ class EksternResultatService(
   }
 
   fun getResultatListKontrollAsEksterntResultat(
-      suksesskriterium: String,
-      rapportId: String
-  ): List<List<TestresultatDetaljertEkstern>> {
-    val krav = getKravWcag2x(suksesskriterium)
-    return getKontrollIdLoeysingIdsForRapportId(rapportId).map { kontrollLoeysing ->
-      testresultatToDetaljertEkstern(kontrollLoeysing, krav)
-    }
+      rapportId: String,
+      loeysingId: Int,
+      kravId: Int
+  ): List<TestresultatDetaljertEkstern> {
+    return getKontrollLoeysing(rapportId, loeysingId)
+        .mapCatching {
+          val krav = getKravFromKravId(kravId)
+          testresultatToDetaljertEkstern(it, krav)
+        }
+        .getOrThrow()
   }
 }

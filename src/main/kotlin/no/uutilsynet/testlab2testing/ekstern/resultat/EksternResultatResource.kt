@@ -32,18 +32,6 @@ class EksternResultatResource(
     }
   }
 
-  //  @GetMapping("rapport/{rapportId}")
-  //  fun getResultatRapport(@PathVariable rapportId: String): ResponseEntity<out Any> {
-  //    return kotlin
-  //        .runCatching {
-  //          val kontrollLoeysingList: List<KontrollIdLoeysingId> =
-  //              eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId)).getOrThrow()
-  //          kontrollLoeysingList.map { getResultatEksternFromRapportLoeysing(it) }
-  //        }
-  //        .fold(
-  //            onSuccess = { ResponseEntity.ok(it) },
-  //            onFailure = { ErrorHandlingUtil.handleErrors(it) })
-  //  }
 
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}")
   fun getResultRapportLoeysing(
@@ -56,9 +44,6 @@ class EksternResultatResource(
             onSuccess = { ResponseEntity.ok(it) },
             onFailure = { ErrorHandlingUtil.handleErrors(it) })
   }
-
-  //  private fun getResultatEksternFromRapportLoeysing(kontrollLoeysing: KontrollIdLoeysingId) =
-  //      resultatOversiktLoeysing(kontrollLoeysing).map { it.toResultatOversiktLoeysingEkstern() }
 
   @GetMapping("rapport/{rapportId}/tema")
   fun getResultatPrTema(@PathVariable rapportId: String): ResponseEntity<out Any> {
@@ -78,19 +63,20 @@ class EksternResultatResource(
             onFailure = { ErrorHandlingUtil.handleErrors(it) })
   }
 
-  @GetMapping("rapport/{rapportId}/{suksesskriterium}")
-  fun getResultatListKontroll(
+  @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/krav/{kravId}")
+  fun getDetaljertResultat(
       @PathVariable rapportId: String,
-      @PathVariable suksesskriterium: String
+      @PathVariable loeysingId: Int,
+      @PathVariable kravId: Int
   ): ResponseEntity<out Any> {
 
     return kotlin
         .runCatching {
           eksternResultatService.getResultatListKontrollAsEksterntResultat(
-              suksesskriterium, rapportId)
+              rapportId, loeysingId, kravId)
         }
         .fold(
-            onSuccess = { results -> ResponseEntity.ok(results.flatten()) },
+            onSuccess = { results -> ResponseEntity.ok(results) },
             onFailure = { ErrorHandlingUtil.handleErrors(it) })
   }
 
