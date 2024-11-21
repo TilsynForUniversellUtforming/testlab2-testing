@@ -45,19 +45,19 @@ class EksternResultatResource(
             onFailure = { ErrorHandlingUtil.handleErrors(it) })
   }
 
-  @GetMapping("rapport/{rapportId}/tema")
-  fun getResultatPrTema(@PathVariable rapportId: String): ResponseEntity<out Any> {
+  @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/tema")
+  fun getResultatPrTema(@PathVariable rapportId: String, @PathVariable loeysingId: Int): ResponseEntity<out Any> {
     return eksternResultatService
-        .getRapportPrTema(rapportId)
+        .getRapportPrTema(rapportId,loeysingId)
         .fold(
             onSuccess = { resultatTema -> ResponseEntity.ok(resultatTema) },
             onFailure = { ErrorHandlingUtil.handleErrors(it) })
   }
 
-  @GetMapping("rapport/{rapportId}/krav")
-  fun getResultatPrKrav(@PathVariable rapportId: String): ResponseEntity<out Any> {
+  @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/krav")
+  fun getResultatPrKrav(@PathVariable rapportId: String, @PathVariable loeysingId: Int): ResponseEntity<out Any> {
     return eksternResultatService
-        .getRapportPrKrav(rapportId)
+        .getRapportPrKrav(rapportId,loeysingId)
         .fold(
             onSuccess = { resultatKrav -> ResponseEntity.ok(resultatKrav) },
             onFailure = { ErrorHandlingUtil.handleErrors(it) })

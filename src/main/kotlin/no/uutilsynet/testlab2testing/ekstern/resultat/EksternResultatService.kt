@@ -113,18 +113,20 @@ class EksternResultatService(
   fun getResultatEksternFromRapportLoeysing(kontrollLoeysing: KontrollIdLoeysingId) =
       resultatOversiktLoeysing(kontrollLoeysing).map { it.toResultatOversiktLoeysingEkstern() }
 
-  fun getRapportPrTema(rapportId: String): Result<List<ResultatTemaEkstern>> {
+  fun getRapportPrTema(rapportId: String, loeysingId: Int): Result<List<ResultatTemaEkstern>> {
     return runCatching {
       getKontrollIdLoeysingIdsForRapportId(rapportId)
+          .filter { it.loeysingId == loeysingId }
           .map { getResultatTemaList(it) }
           .flatten()
           .map { it.toResultatTemaEkstern() }
     }
   }
 
-  fun getRapportPrKrav(rapportId: String): Result<List<ResultatKravEkstern>> {
+  fun getRapportPrKrav(rapportId: String, loeysingId: Int): Result<List<ResultatKravEkstern>> {
     return runCatching {
       getKontrollIdLoeysingIdsForRapportId(rapportId)
+          .filter { it.loeysingId == loeysingId }
           .map { getResultatKravList(it) }
           .flatten()
           .map { it.toResultatKravEkstern() }
