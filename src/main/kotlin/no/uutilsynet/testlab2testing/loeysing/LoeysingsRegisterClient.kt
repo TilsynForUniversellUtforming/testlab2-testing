@@ -86,7 +86,7 @@ class LoeysingsRegisterClient(
         .getOrThrow()
   }
 
-  @Cacheable("loeysingarExpanded", unless = "#result.isEmpty()")
+  @Cacheable("loeysingarExpanded")
   fun getManyExpanded(idList: List<Int>): Result<List<Loeysing.Expanded>> {
     return runCatching {
       val uri =

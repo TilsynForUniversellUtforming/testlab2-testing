@@ -183,6 +183,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getResultatPrTema(
       kontrollId: Int?,
       kontrolltype: Kontrolltype?,
+      loeysingId: Int?,
       startDato: LocalDate?,
       sluttDato: LocalDate?
   ): List<ResultatTema> {
@@ -232,6 +233,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             where 
               (:kontrollId::int is null or k.id = :kontrollId::int) and
               (:kontrollType::varchar is null or k.kontrolltype = :kontrollType::varchar) and
+              (:loeysingId::int is null or ag.loeysing_id = :loeysingId::int) and
               (:startDato::timestamptz is null or ag.dato >= :startDato::timestamptz) and
               (:sluttDato::timestamptz is null or ag.dato <= :sluttDato::timestamptz)
           group by tema
@@ -242,6 +244,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               mapOf(
                   "kontrollId" to kontrollId,
                   "kontrollType" to kontrolltype?.name,
+                  "loeysingId" to loeysingId,
                   "startDato" to startDato,
                   "sluttDato" to sluttDato)) { rs, _ ->
                 resultatTemaRowmapper(rs)
@@ -269,6 +272,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getResultatPrKrav(
       kontrollId: Int?,
       kontrollType: Kontrolltype?,
+      loeysingId: Int?,
       fraDato: LocalDate?,
       tilDato: LocalDate?
   ): List<ResultatKravBase> {
@@ -317,6 +321,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           where 
               (:kontrollId::int is null or k.id = :kontrollId::int) and
               (:kontrollType::varchar is null or k.kontrolltype = :kontrollType::varchar) and
+              (:loeysingId::int is null or ag.loeysing_id = :loeysingId::int) and
               (:startDato::timestamptz is null or ag.dato >= :startDato::timestamptz) and
               (:sluttDato::timestamptz is null or ag.dato <= :sluttDato::timestamptz)
           group by krav_id
@@ -330,6 +335,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               mapOf(
                   "kontrollId" to kontrollId,
                   "kontrollType" to kontrollType?.name,
+                  "loeysingId" to loeysingId,
                   "startDato" to fraDato,
                   "sluttDato" to tilDato)) { rs, _ ->
                 ResultatKravBase(
