@@ -1,9 +1,6 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
-import no.uutilsynet.testlab2testing.forenkletkontroll.logger
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.resultat.ResultatService
+import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
@@ -12,11 +9,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/ekstern/tester")
 class EksternResultatResource(
-    @Autowired val eksternResultatDAO: EksternResultatDAO,
-    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
-    @Autowired val resultatService: ResultatService,
-    @Autowired val kravregisterClient: KravregisterClient,
-    @Autowired val eksternResultatService: EksternResultatService
+    @Autowired val eksternResultatService: EksternResultatService,
+    @Autowired val publiseringService: EksternResultatPubliseringService
 ) {
 
   private val logger = LoggerFactory.getLogger(EksternResultatResource::class.java)
@@ -38,88 +32,57 @@ class EksternResultatResource(
     }
   }
 
-  @GetMapping("{rapportId}")
-  fun getResultatRapport(
-      @PathVariable rapportId: String
-  ): ResponseEntity<List<ResultatOversiktLoeysingEkstern>> {
-    val kontrollLoeysing =
-        eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId))
-            ?: return ResponseEntity.badRequest().build()
-
-    val results =
-        resultatService.getKontrollLoeysingResultatIkkjeRetest(
-            kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId)
-    if (results.isEmpty()) {
-      return ResponseEntity.badRequest().build()
-    }
-
-    return ResponseEntity.ok(results.map { it.toResultatOversiktLoeysingEkstern() })
-  }
-
-  @GetMapping("{rapportId}/tema")
-  fun getResultatPrTema(
-      @PathVariable rapportId: String
-  ): ResponseEntity<List<ResultatTemaEkstern>> {
-
-    val kontrollLoeysing =
-        eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId))
-            ?: return ResponseEntity.badRequest().build()
-
-    val resultatTema =
-        resultatService.getResultatPrTema(kontrollLoeysing.kontrollId, null, null, null)
-
-    if (resultatTema.isEmpty()) {
-      return ResponseEntity.badRequest().build()
-    }
-    val resultatTemaEkstern = resultatTema.map { it.toResultatTemaEkstern() }
-
-    return ResponseEntity.ok(resultatTemaEkstern)
-  }
-
-  @GetMapping("{rapportId}/krav")
-  fun getResultatPrKrav(
-      @PathVariable rapportId: String
-  ): ResponseEntity<List<ResultatKravEkstern>> {
-    val kontrollLoeysing =
-        eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId))
-            ?: return ResponseEntity.badRequest().build()
-
-    val resultatKrav =
-        resultatService.getResultatPrKrav(kontrollLoeysing.kontrollId, null, null, null)
-    if (resultatKrav.isEmpty()) {
-      return ResponseEntity.badRequest().build()
-    }
-    val resultatTemaEkstern = resultatKrav.map { it.toResultatKravEkstern() }
-
-    return ResponseEntity.ok(resultatTemaEkstern)
-  }
-
-  @GetMapping("{rapportId}/{suksesskriterium}")
-  fun getResultatListKontroll(
+  @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}")
+  fun getResultRapportLoeysing(
       @PathVariable rapportId: String,
-      @PathVariable suksesskriterium: String
-  ): ResponseEntity<List<TestresultatDetaljertEkstern>> {
-    val testgrunnlagLoeysing =
-        eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId))
-            ?: return ResponseEntity.badRequest().build()
+      @PathVariable loeysingId: Int
+  ): ResponseEntity<out Any> {
+    return kotlin
+        .runCatching { eksternResultatService.getRapportForLoeysing(rapportId, loeysingId) }
+        .fold(
+            onSuccess = { ResponseEntity.ok(it) },
+            onFailure = { ErrorHandlingUtil.handleErrors(it) })
+  }
 
-    if (!Regex("""^\d+\.\d+\.\d+$""").matches(suksesskriterium)) {
-      return ResponseEntity.badRequest().build()
-    }
+  @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/tema")
+  fun getResultatPrTema(
+      @PathVariable rapportId: String,
+      @PathVariable loeysingId: Int
+  ): ResponseEntity<out Any> {
+    return eksternResultatService
+        .getRapportPrTema(rapportId, loeysingId)
+        .fold(
+            onSuccess = { resultatTema -> ResponseEntity.ok(resultatTema) },
+            onFailure = { ErrorHandlingUtil.handleErrors(it) })
+  }
 
-    val krav =
-        runCatching { kravregisterClient.getKrav(suksesskriterium) }
-            .getOrElse {
-              return ResponseEntity.badRequest().build()
-            }
+  @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/krav")
+  fun getResultatPrKrav(
+      @PathVariable rapportId: String,
+      @PathVariable loeysingId: Int
+  ): ResponseEntity<out Any> {
+    return eksternResultatService
+        .getRapportPrKrav(rapportId, loeysingId)
+        .fold(
+            onSuccess = { resultatKrav -> ResponseEntity.ok(resultatKrav) },
+            onFailure = { ErrorHandlingUtil.handleErrors(it) })
+  }
 
-    val results =
-        resultatService
-            .getResultatListTestgrunnlag(
-                testgrunnlagLoeysing.kontrollId, testgrunnlagLoeysing.loeysingId, krav.id)
-            .map { it.toTestresultatDetaljertEkstern() }
+  @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/krav/{kravId}")
+  fun getDetaljertResultat(
+      @PathVariable rapportId: String,
+      @PathVariable loeysingId: Int,
+      @PathVariable kravId: Int
+  ): ResponseEntity<out Any> {
 
-    return ResponseEntity.ok(results)
+    return kotlin
+        .runCatching {
+          eksternResultatService.getResultatListKontrollAsEksterntResultat(
+              rapportId, loeysingId, kravId)
+        }
+        .fold(
+            onSuccess = { results -> ResponseEntity.ok(results) },
+            onFailure = { ErrorHandlingUtil.handleErrors(it) })
   }
 
   @PutMapping("publiser/kontroll/{kontrollId}")
@@ -127,7 +90,7 @@ class EksternResultatResource(
     logger.debug("Publiserer rapport for kontroll id $kontrollId")
 
     return try {
-      eksternResultatService.publiser(kontrollId)
+      publiseringService.publiser(kontrollId)
       ResponseEntity.ok(true)
     } catch (e: NoSuchElementException) {
       ResponseEntity.notFound().build<Boolean>()

@@ -409,20 +409,22 @@ class ResultatService(
   fun getResultatPrTema(
       kontrollId: Int?,
       kontrolltype: Kontrolltype?,
+      loeysingId: Int?,
       startDato: LocalDate?,
       sluttDato: LocalDate?
   ): List<ResultatTema> =
-      resultatDAO.getResultatPrTema(kontrollId, kontrolltype, startDato, sluttDato)
+      resultatDAO.getResultatPrTema(kontrollId, kontrolltype, loeysingId, startDato, sluttDato)
 
   fun getResultatPrKrav(
       kontrollId: Int?,
       kontrollType: Kontrolltype?,
+      loeysingId: Int?,
       fraDato: LocalDate?,
       tilDato: LocalDate?
   ): List<ResultatKrav> {
-    return resultatDAO.getResultatPrKrav(kontrollId, kontrollType, fraDato, tilDato).map {
-      it.toResultatKrav()
-    }
+    return resultatDAO
+        .getResultatPrKrav(kontrollId, kontrollType, loeysingId, fraDato, tilDato)
+        .map { it.toResultatKrav() }
   }
 
   class LoysingList(val loeysingar: Map<Int, Loeysing.Expanded>) {

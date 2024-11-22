@@ -84,19 +84,21 @@ class ResultatResource(
   fun getResultatPrTema(
       @RequestParam kontrollId: Int?,
       @RequestParam kontrollType: Kontrolltype?,
+      @RequestParam loeysingId: Int?,
       @RequestParam fraDato: LocalDate?,
       @RequestParam tilDato: LocalDate?
   ): List<ResultatTema> {
-    return resultatService.getResultatPrTema(kontrollId, kontrollType, fraDato, tilDato)
+    return resultatService.getResultatPrTema(kontrollId, kontrollType, loeysingId, fraDato, tilDato)
   }
 
   @GetMapping("/krav")
   fun getResultatPrKrav(
       @RequestParam kontrollId: Int?,
       @RequestParam kontrollType: Kontrolltype?,
+      @RequestParam loeysingId: Int?,
       @RequestParam fraDato: LocalDate?,
       @RequestParam tilDato: LocalDate?
   ): List<ResultatKrav> {
-    return resultatService.getResultatPrKrav(kontrollId, kontrollType, fraDato, tilDato)
+    return resultatService.getResultatPrKrav(kontrollId, kontrollType, loeysingId, fraDato, tilDato)
   }
 }

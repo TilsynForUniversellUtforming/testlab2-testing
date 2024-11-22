@@ -17,6 +17,7 @@ fun TestListElementDB.toListElement(
 ): TestEkstern =
     TestEkstern(
         rapportId = this.eksternTestgrunnlagId,
+        loeysingId = this.loeysingId,
         loeysingNamn = loeysingNamn,
         score = score,
         kontrollType = this.kontrollType,

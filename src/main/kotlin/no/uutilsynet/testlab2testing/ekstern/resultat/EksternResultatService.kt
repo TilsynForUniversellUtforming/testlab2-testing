@@ -1,18 +1,18 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
-import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.logger
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
+import no.uutilsynet.testlab2testing.krav.KravWcag2x
+import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.resultat.Resultat
+import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing
 import no.uutilsynet.testlab2testing.resultat.ResultatService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 
 @Service
 class EksternResultatService(
@@ -22,115 +22,10 @@ class EksternResultatService(
     @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val maalingDAO: MaalingDAO,
+    @Autowired val kravregisterClient: KravregisterClient
 ) {
 
   private val logger = LoggerFactory.getLogger(EksternResultatResource::class.java)
-
-  @Transactional
-  fun publiser(kontrollId: Int) {
-    runCatching {
-          val kontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
-          val erPublisert =
-              eksternResultatDAO.erKontrollPublisert(kontrollId, kontroll.kontrolltype)
-
-          return if (erPublisert) {
-            avpubliserResultat(kontroll.id)
-          } else {
-            publiserResultat(kontroll.id)
-          }
-        }
-        .onFailure {
-          logger.error("Feil ved publisering av resultat", it)
-          throw it
-        }
-  }
-
-  fun publiserResultat(kontrollId: Int) {
-    runCatching {
-          val kontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
-          logger.info("Publiserer resultat for kontroll med id $kontrollId")
-          getLoeysingarForKontroll(kontroll).forEach {
-            publiserResultatForLoeysingForKontroll(kontroll, it.id)
-          }
-        }
-        .onFailure {
-          logger.error("Feil ved publisering av resultat", it)
-          throw it
-        }
-  }
-
-  fun avpubliserResultat(kontrollId: Int) {
-    runCatching {
-          val kontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
-          logger.info("Avpubliserer resultat for kontroll med id $kontrollId")
-          getLoeysingarForKontroll(kontroll).forEach {
-            avpubliserResultatForLoeysingForKontroll(kontroll, it.id).getOrThrow()
-          }
-        }
-        .onFailure {
-          logger.error("Feil ved avpublisering av resultat", it)
-          throw it
-        }
-  }
-
-  fun getLoeysingarForKontroll(
-      kontroll: KontrollDAO.KontrollDB
-  ): List<KontrollDAO.KontrollDB.Loeysing> {
-    require(!(kontroll.utval == null || kontroll.utval.loeysingar.isEmpty())) {
-      "Kontrollen har ingen loeysingar"
-    }
-    return kontroll.utval.loeysingar
-  }
-
-  private fun publiserResultatForLoeysingForKontroll(
-      kontroll: KontrollDAO.KontrollDB,
-      loeysingId: Int
-  ): Result<Boolean> {
-    return when (kontroll.kontrolltype) {
-      Kontrolltype.Statusmaaling,
-      Kontrolltype.ForenklaKontroll -> publiserResultatForMaaling(kontroll.id, loeysingId)
-      Kontrolltype.Tilsyn,
-      Kontrolltype.Uttalesak,
-      Kontrolltype.InngaaendeKontroll -> publiserResultatForTestgrunnlag(kontroll.id, loeysingId)
-    }
-  }
-
-  private fun publiserResultatForTestgrunnlag(kontrollId: Int, loeysingId: Int): Result<Boolean> {
-    val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
-    return eksternResultatDAO.publisertTestgrunnlagResultat(testgrunnlagId, loeysingId)
-  }
-
-  private fun publiserResultatForMaaling(kontrollId: Int, loeysingId: Int): Result<Boolean> {
-    val maalingId =
-        maalingDAO.getMaalingIdFromKontrollId(kontrollId)
-            ?: throw IllegalStateException("Fann ingen maaling for kontroll med id ${kontrollId}")
-    return eksternResultatDAO.publiserMaalingResultat(maalingId, loeysingId)
-  }
-
-  private fun avpubliserResultatForLoeysingForKontroll(
-      kontroll: KontrollDAO.KontrollDB,
-      loeysingId: Int
-  ): Result<Boolean> {
-    return when (kontroll.kontrolltype) {
-      Kontrolltype.Statusmaaling,
-      Kontrolltype.ForenklaKontroll -> avpubliserResultatForMaaling(kontroll.id, loeysingId)
-      Kontrolltype.Tilsyn,
-      Kontrolltype.Uttalesak,
-      Kontrolltype.InngaaendeKontroll -> avpubliserResultatForTestgrunnlag(kontroll.id, loeysingId)
-    }
-  }
-
-  private fun avpubliserResultatForTestgrunnlag(kontrollId: Int, loeysingId: Int): Result<Boolean> {
-    val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
-    return eksternResultatDAO.avpubliserResultatTestgrunnlag(testgrunnlagId, loeysingId)
-  }
-
-  private fun avpubliserResultatForMaaling(kontrollId: Int, loeysingId: Int): Result<Boolean> {
-    val maalingId =
-        maalingDAO.getMaalingIdFromKontrollId(kontrollId)
-            ?: throw IllegalStateException("Fann ingen maaling for kontroll med id ${kontrollId}")
-    return eksternResultatDAO.avpubliserResultatMaaling(maalingId, loeysingId)
-  }
 
   fun findTestForOrgNr(orgnr: String): Result<TestListElementEkstern> {
     val verksemd: VerksemdEkstern = getVerksemd(orgnr)
@@ -181,5 +76,109 @@ class EksternResultatService(
       throw NoSuchElementException("Fann ingen løysingar for verkemd med orgnr $orgnr")
     }
     return loeysingList
+  }
+
+  fun getRapportForLoeysing(
+      rapportId: String,
+      loeysingId: Int
+  ): List<ResultatOversiktLoeysingEkstern> {
+    return getKontrollLoeysing(rapportId, loeysingId)
+        .mapCatching { getResultatEksternFromRapportLoeysing(it) }
+        .getOrThrow()
+  }
+
+  private fun getKontrollLoeysing(
+      rapportId: String,
+      loeysingId: Int
+  ): Result<KontrollIdLoeysingId> {
+    return eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId)).map {
+      filterkontrollIdLoeysingIdOnLoeysingId(it, loeysingId)
+    }
+  }
+
+  private fun filterkontrollIdLoeysingIdOnLoeysingId(
+      kontrollIdLoeysingIds: List<KontrollIdLoeysingId>,
+      loeysingId: Int
+  ): KontrollIdLoeysingId {
+    return kontrollIdLoeysingIds.first { it.loeysingId == loeysingId }
+  }
+
+  private fun resultatOversiktLoeysing(
+      kontrollLoeysing: KontrollIdLoeysingId
+  ): List<ResultatOversiktLoeysing> {
+    return resultatService.getKontrollLoeysingResultatIkkjeRetest(
+        kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId)
+  }
+
+  fun getResultatEksternFromRapportLoeysing(kontrollLoeysing: KontrollIdLoeysingId) =
+      resultatOversiktLoeysing(kontrollLoeysing).map { it.toResultatOversiktLoeysingEkstern() }
+
+  fun getRapportPrTema(rapportId: String, loeysingId: Int): Result<List<ResultatTemaEkstern>> {
+    return runCatching {
+      getKontrollIdLoeysingIdsForRapportId(rapportId)
+          .filter { it.loeysingId == loeysingId }
+          .map { getResultatTemaList(it) }
+          .flatten()
+          .map { it.toResultatTemaEkstern() }
+    }
+  }
+
+  fun getRapportPrKrav(rapportId: String, loeysingId: Int): Result<List<ResultatKravEkstern>> {
+    return runCatching {
+      getKontrollIdLoeysingIdsForRapportId(rapportId)
+          .filter { it.loeysingId == loeysingId }
+          .map { getResultatKravList(it) }
+          .flatten()
+          .map { it.toResultatKravEkstern() }
+    }
+  }
+
+  private fun getResultatTemaList(kontrollLoeysing: KontrollIdLoeysingId) =
+      resultatService.getResultatPrTema(
+          kontrollLoeysing.kontrollId, null, kontrollLoeysing.loeysingId, null, null)
+
+  private fun getResultatKravList(kontrollLoeysing: KontrollIdLoeysingId) =
+      resultatService.getResultatPrKrav(
+          kontrollLoeysing.kontrollId, null, kontrollLoeysing.loeysingId, null, null)
+
+  private fun testresultatToDetaljertEkstern(
+      kontrollLoeysing: KontrollIdLoeysingId,
+      krav: KravWcag2x
+  ) = getResultatPrKrav(kontrollLoeysing, krav.id).map { it.toTestresultatDetaljertEkstern(krav) }
+
+  private fun getKravWcag2x(suksesskriterium: String): KravWcag2x {
+    require(!suksessKriteriumParamMatchPattern(suksesskriterium)) {
+      "Ugyldig suksesskriterium format"
+    }
+    val krav = kravregisterClient.getKrav(suksesskriterium)
+    return krav
+  }
+
+  private fun getKravFromKravId(kravId: Int): KravWcag2x {
+    return kravregisterClient.getWcagKrav(kravId)
+  }
+
+  private fun getResultatPrKrav(kontrollLoeysing: KontrollIdLoeysingId, kravId: Int) =
+      resultatService.getResultatListKontroll(
+          kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, kravId)
+
+  private fun suksessKriteriumParamMatchPattern(suksesskriterium: String) =
+      !Regex("""^\d+\.\d+\.\d+$""").matches(suksesskriterium)
+
+  private fun getKontrollIdLoeysingIdsForRapportId(rapportId: String): List<KontrollIdLoeysingId> {
+    return eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId)).getOrThrow()
+  }
+
+  fun getResultatListKontrollAsEksterntResultat(
+      rapportId: String,
+      loeysingId: Int,
+      kravId: Int
+  ): List<TestresultatDetaljertEkstern> {
+    return getKontrollLoeysing(rapportId, loeysingId)
+        .mapCatching {
+          val krav = getKravFromKravId(kravId)
+          testresultatToDetaljertEkstern(it, krav)
+        }
+        .getOrThrow()
   }
 }
