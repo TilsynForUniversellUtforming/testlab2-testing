@@ -9,6 +9,7 @@ import org.springframework.boot.runApplication
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Profile
 import org.springframework.http.MediaType
 import org.springframework.http.client.BufferingClientHttpRequestFactory
 import org.springframework.http.client.SimpleClientHttpRequestFactory
@@ -22,20 +23,24 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter
 @EnableScheduling
 @EnableCaching
 class Testlab2TestingApplication {
-  @Bean
-  fun restTemplate(restTemplateBuilder: RestTemplateBuilder): RestTemplate {
-    val objectMapper =
-        jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    val mappingJackson2HttpMessageConverter = MappingJackson2HttpMessageConverter()
-    mappingJackson2HttpMessageConverter.objectMapper = objectMapper
-    mappingJackson2HttpMessageConverter.supportedMediaTypes =
-        listOf(MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM)
 
-    return restTemplateBuilder
-        .messageConverters(mappingJackson2HttpMessageConverter)
-        .requestFactory(::reqestFactory)
-        .build()
-  }
+    @Profile("!test")
+    @Bean
+    fun restTemplate(restTemplateBuilder: RestTemplateBuilder): RestTemplate {
+      val objectMapper =
+          jacksonObjectMapper().configure(
+            DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+   false)
+      val mappingJackson2HttpMessageConverter = MappingJackson2HttpMessageConverter()
+      mappingJackson2HttpMessageConverter.objectMapper = objectMapper
+      mappingJackson2HttpMessageConverter.supportedMediaTypes =
+          listOf(MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM)
+
+      return restTemplateBuilder
+          .messageConverters(mappingJackson2HttpMessageConverter)
+          .requestFactory(::reqestFactory)
+          .build()
+    }
 
   @Bean
   fun commonsRequestLoggingFilter(): CommonsRequestLoggingFilter {

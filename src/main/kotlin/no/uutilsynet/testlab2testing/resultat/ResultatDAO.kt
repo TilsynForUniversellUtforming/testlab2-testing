@@ -125,7 +125,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         null)
   }
 
-  fun setTestType(kontrolltype: Kontrolltype, resultSet: ResultSet): String {
+  private fun setTestType(kontrolltype: Kontrolltype, resultSet: ResultSet): String {
     if (kontrolltype == Kontrolltype.ForenklaKontroll) {
       return TestgrunnlagType.OPPRINNELEG_TEST.toString()
     }
