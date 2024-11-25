@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.testregel
 
-import java.sql.Timestamp
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.deleteTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelByTestregelId
@@ -18,6 +15,9 @@ import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.sql.Timestamp
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 @Component
 class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -25,27 +25,27 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   object TestregelParams {
 
     val getTestregelListSql =
-        "select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type , modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing  from testregel order by id"
+        """select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type , modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing  from "testlab2_testing"."testregel" order by id"""
 
     val getTestregelSql =
-        "select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type, modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing from testregel where id = :id order by id"
+        """select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type, modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing from "testlab2_testing"."testregel" where id = :id order by id"""
 
     val getTestregelByTestregelId =
-        "select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type, modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing from testregel where testregel_id = :testregelId and versjon=(select max(versjon) from testlab2_testing.testregel where testregel_id= :testregelId) order by id limit 1"
+        """select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type, modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing from "testlab2_testing"."testregel" where testregel_id = :testregelId and versjon=(select max(versjon) from testlab2_testing.testregel where testregel_id= :testregelId) order by id limit 1"""
 
     val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
 
-    val deleteTestregelSql = "delete from testregel where id = :id"
+    val deleteTestregelSql = """delete from "testlab2_testing"."testregel" where id = :id"""
 
     val maalingTestregelListByIdSql =
-        "select maaling_id from maaling_testregel where testregel_id = :testregel_id"
+        """select maaling_id from "testlab2_testing"."maaling_testregel" where testregel_id = :testregel_id"""
 
     val maalingTestregelSql =
         """
       select tr.id,tr.testregel_id,tr.versjon,tr.namn, tr.krav_id, tr.status, tr.dato_sist_endra,tr.type , tr.modus ,tr.spraak,tr.tema,tr.testobjekt,tr.krav_til_samsvar,tr.testregel_schema, tr.innhaldstype_testing
-      from MaalingV1 m
-        join Maaling_Testregel mt on m.id = mt.maaling_id
-        join Testregel tr on mt.testregel_id = tr.id
+      from testlab2_testing."maalingv1" m
+        join testlab2_testing."maaling_testregel" mt on m.id = mt.maaling_id
+        join "testlab2_testing"."testregel" tr on mt.testregel_id = tr.id
       where m.id = :id
     """
             .trimIndent()
@@ -68,7 +68,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getMany(testregelIdList: List<Int>): List<TestregelBase> =
       jdbcTemplate.query(
-          "select tr.id, tr.namn, tr.krav_id, tr.modus, tr.type from testregel tr where tr.id in (:ids)",
+          """select tr.id, tr.namn, tr.krav_id, tr.modus, tr.type from "testlab2_testing"."testregel" tr where tr.id in (:ids)""",
           mapOf("ids" to testregelIdList),
           DataClassRowMapper.newInstance(TestregelBase::class.java))
 
@@ -84,10 +84,10 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "regelsettlistbase"],
       allEntries = true)
   fun createTestregel(testregelInit: TestregelInit): Int =
-      jdbcTemplate.queryForObject(
+      jdbcTemplate.update(
           """
           insert into 
-            testregel (
+            "testlab2_testing"."testregel"(
               krav_id,
               testregel_schema,
               namn,
@@ -118,7 +118,6 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               :krav_til_samsvar,
               :innhaldstype_testing
             ) 
-            returning id
         """
               .trimIndent(),
           mapOf(
@@ -136,8 +135,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "type" to testregelInit.type.value,
               "testobjekt" to testregelInit.testobjekt,
               "krav_til_samsvar" to testregelInit.kravTilSamsvar,
-              "innhaldstype_testing" to testregelInit.innhaldstypeTesting),
-          Int::class.java)!!
+              "innhaldstype_testing" to testregelInit.innhaldstypeTesting))
 
   @Transactional
   @CacheEvict(
@@ -152,8 +150,8 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       allEntries = true)
   fun updateTestregel(testregel: Testregel) =
       jdbcTemplate.update(
-          " update testregel set namn = :namn, testregel_id = :testregel_id,krav_id = :krav_id, versjon = :versjon,status = :status, dato_sist_endra = :dato_sist_endra, type = :type, modus = :modus, " +
-              "spraak = :spaak, tema = :tema, testobjekt = :testobjekt, krav_til_samsvar = :krav_til_samsvar , testregel_schema = :testregel_schema, innhaldstype_testing = :innhaldstype_testing where id = :id",
+          """ update "testlab2_testing"."testregel" set namn = :namn, testregel_id = :testregel_id,krav_id = :krav_id, versjon = :versjon,status = :status, dato_sist_endra = :dato_sist_endra, type = :type, modus = :modus,
+              spraak = :spaak, tema = :tema, testobjekt = :testobjekt, krav_til_samsvar = :krav_til_samsvar , testregel_schema = :testregel_schema, innhaldstype_testing = :innhaldstype_testing where id = :id""",
           mapOf(
               "id" to testregel.id,
               "testregel_id" to testregel.testregelId,
@@ -193,19 +191,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     jdbcTemplate.query(maalingTestregelSql, mapOf("id" to maalingId), testregelRowMapper)
   }
 
-  fun getTestreglarBySak(sakId: Int): List<Testregel> =
-      jdbcTemplate.query(
-          """
-          select t.id,t.testregel_id,t.versjon,t.namn, t.krav_id, t.status, t.dato_sist_endra,t.type , t.modus ,t.spraak,t.tema,t.testobjekt,t.krav_til_samsvar,t.testregel_schema,t.innhaldstype_testing
-          from testregel t
-          join sak_testregel st on t.id = st.testregel_id
-          where st.sak_id = :sak_id
-      """
-              .trimIndent(),
-          mapOf("sak_id" to sakId),
-          DataClassRowMapper.newInstance(Testregel::class.java))
-
-  fun setTestregelId(testregelInit: TestregelInit): String {
+    fun setTestregelId(testregelInit: TestregelInit): String {
     return if (testregelInit.modus == TestregelModus.automatisk) {
       testregelInit.testregelSchema
     } else testregelInit.namn
@@ -214,20 +200,26 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Cacheable("innhaldstypeForTesting")
   fun getInnhaldstypeForTesting(): List<InnhaldstypeTesting> =
       jdbcTemplate.query(
-          "select * from innhaldstype_testing",
+          """select * from "testlab2_testing"."innhaldstype_testing"""",
           DataClassRowMapper.newInstance(InnhaldstypeTesting::class.java))
 
   fun getTemaForTestregel(): List<Tema> =
-      jdbcTemplate.query("select * from tema", DataClassRowMapper.newInstance(Tema::class.java))
+      jdbcTemplate.query("""select * from "testlab2_testing"."tema"""", DataClassRowMapper.newInstance(Tema::class.java))
 
   @Cacheable("testobjekt")
   fun getTestobjekt(): List<Testobjekt> =
       jdbcTemplate.query(
-          "select * from testobjekt", DataClassRowMapper.newInstance(Testobjekt::class.java))
+          """select * from "testlab2_testing"."testobjekt"""", DataClassRowMapper.newInstance(Testobjekt::class.java))
 
   fun getTestregelForKrav(kravId: Int): List<Testregel> =
       jdbcTemplate.query(
-          "select * from testregel where krav_id = :kravId",
+          """select * from "testlab2_testing"."testregel" where krav_id = :kravId""",
           mapOf("kravId" to kravId),
           testregelRowMapper)
+
+    fun createInnholdstypeTesting(innholdstypeTesting:String): Int {
+    return jdbcTemplate.update(
+        """insert into "testlab2_testing"."innhaldstype_testing" (innhaldstype) values (:innhaldstype_testing)""",
+        mapOf("innhaldstype_testing" to innholdstypeTesting))
+    }
 }
