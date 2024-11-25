@@ -1,9 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2.constants.TestregelInnholdstype
-import no.uutilsynet.testlab2.constants.TestregelModus
-import no.uutilsynet.testlab2.constants.TestregelStatus
+import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
 import no.uutilsynet.testlab2testing.brukar.BrukarService
@@ -12,12 +9,17 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
+import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
+import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelInit
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -33,6 +35,7 @@ import java.time.LocalDate
 
 @JdbcTest
 @ActiveProfiles("test")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ResultatDAOTest() {
 
   @Autowired
@@ -54,12 +57,16 @@ class ResultatDAOTest() {
 
   private var maalingId: Int = 0
 
+  private var kontrollId:Int = 0
 
 
-  //@MockBean val restTemplateBuilder: RestTemplateBuilder = RestTemplateBuilder()
+    @BeforeAll
+    fun beforeAll() {
+      resultatDAO = ResultatDAO(jdbcTemplate!!)
+    }
+
   @BeforeEach
   fun setUp() {
-    resultatDAO = ResultatDAO(jdbcTemplate!!)
       createTestresultat()
   }
 
@@ -69,7 +76,9 @@ class ResultatDAOTest() {
     val expected1: ResultatLoeysing = ResultatLoeysing(1, testgrunnlagId = 1,"Forenkla kontroll 2024",Kontrolltype.ForenklaKontroll,TestgrunnlagType.OPPRINNELEG_TEST,
       LocalDate.now(),
       listOf(("Ola Nordmann"),("Kari Nordmann")),1,0.5,6,3,1,1,"1.1.1 Ikke-tekstlig innhold")
-    //val resultat: List<ResultatLoeysing> = resultatDAO.getTestresultatMaaling()
+    val resultat: List<ResultatLoeysing> = resultatDAO!!.getTestresultatMaaling()
+
+    assertThat(resultat).isEqualTo(listOf(expected1))
 
 
   }
@@ -97,7 +106,9 @@ class ResultatDAOTest() {
   fun createTestresultat() {
 
     testregelId = createTestregel()
-    maalingId = createTestMaaling(listOf(testregelId))
+    createKontroll()
+    maalingId = createTestMaaling(listOf(testregelId),kontrollId)
+
     val aggregeringDAO = AggregeringDAO(jdbcTemplate!!)
     val aggregering_testregel = AggregeringPerTestregelDTO(maalingId,1,testregelId,1, listOf(1,2),6,2,1,1,1,1,0,0.5,0.5,null)
     aggregeringDAO.createAggregertResultatTestregel(aggregering_testregel)
@@ -128,10 +139,30 @@ class ResultatDAOTest() {
     return testregelDAO.createTestregel(testregelInit)
   }
 
-  fun createTestMaaling(testregelIds: List<Int>): Int {
+  fun createTestMaaling(testregelIds: List<Int>, kontrollId:Int): Int {
     val maalingDAO = MaalingDAO(jdbcTemplate!!, loeysingsRegisterClient,sideutvalDAO,brukarService,cacheManager)
-    return maalingDAO.createMaaling("Forenkla kontroll 20204", Instant.now(), listOf(1), testregelIds,CrawlParameters() )
+    val maalingId =  maalingDAO.createMaaling("Forenkla kontroll 20204", Instant.now(), listOf(1), testregelIds,CrawlParameters() )
+    maalingDAO.updateKontrollId(maalingId, kontrollId)
+
+    return maalingId
   }
+
+  fun createKontroll() {
+
+    val opprettKontroll =
+      KontrollResource.OpprettKontroll(
+        "Forenkla kontroll 20204",
+        "Ola Nordmann",
+        Sakstype.Arkivsak,
+        "1234",
+        Kontrolltype.ForenklaKontroll)
+
+
+    val kontrollDAO = KontrollDAO(jdbcTemplate!!)
+    kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
+  }
+
+
 }
 
 @Bean
