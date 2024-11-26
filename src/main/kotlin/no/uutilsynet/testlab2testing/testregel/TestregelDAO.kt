@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.testregel
 
+import java.sql.Timestamp
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.deleteTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelByTestregelId
@@ -15,9 +18,6 @@ import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import java.sql.Timestamp
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 
 @Component
 class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -43,8 +43,8 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val maalingTestregelSql =
         """
       select tr.id,tr.testregel_id,tr.versjon,tr.namn, tr.krav_id, tr.status, tr.dato_sist_endra,tr.type , tr.modus ,tr.spraak,tr.tema,tr.testobjekt,tr.krav_til_samsvar,tr.testregel_schema, tr.innhaldstype_testing
-      from testlab2_testing."maalingv1" m
-        join testlab2_testing."maaling_testregel" mt on m.id = mt.maaling_id
+      from "testlab2_testing"."maalingv1" m
+        join "testlab2_testing"."maaling_testregel" mt on m.id = mt.maaling_id
         join "testlab2_testing"."testregel" tr on mt.testregel_id = tr.id
       where m.id = :id
     """
@@ -191,7 +191,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     jdbcTemplate.query(maalingTestregelSql, mapOf("id" to maalingId), testregelRowMapper)
   }
 
-    fun setTestregelId(testregelInit: TestregelInit): String {
+  fun setTestregelId(testregelInit: TestregelInit): String {
     return if (testregelInit.modus == TestregelModus.automatisk) {
       testregelInit.testregelSchema
     } else testregelInit.namn
@@ -204,12 +204,15 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           DataClassRowMapper.newInstance(InnhaldstypeTesting::class.java))
 
   fun getTemaForTestregel(): List<Tema> =
-      jdbcTemplate.query("""select * from "testlab2_testing"."tema"""", DataClassRowMapper.newInstance(Tema::class.java))
+      jdbcTemplate.query(
+          """select * from "testlab2_testing"."tema"""",
+          DataClassRowMapper.newInstance(Tema::class.java))
 
   @Cacheable("testobjekt")
   fun getTestobjekt(): List<Testobjekt> =
       jdbcTemplate.query(
-          """select * from "testlab2_testing"."testobjekt"""", DataClassRowMapper.newInstance(Testobjekt::class.java))
+          """select * from "testlab2_testing"."testobjekt"""",
+          DataClassRowMapper.newInstance(Testobjekt::class.java))
 
   fun getTestregelForKrav(kravId: Int): List<Testregel> =
       jdbcTemplate.query(
@@ -217,9 +220,9 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           mapOf("kravId" to kravId),
           testregelRowMapper)
 
-    fun createInnholdstypeTesting(innholdstypeTesting:String): Int {
+  fun createInnholdstypeTesting(innholdstypeTesting: String): Int {
     return jdbcTemplate.update(
         """insert into "testlab2_testing"."innhaldstype_testing" (innhaldstype) values (:innhaldstype_testing)""",
         mapOf("innhaldstype_testing" to innholdstypeTesting))
-    }
+  }
 }

@@ -32,58 +32,91 @@ import org.springframework.test.context.ActiveProfiles
 import java.time.Instant
 import java.time.LocalDate
 
-
 @JdbcTest
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ResultatDAOTest() {
 
-  @Autowired
-  private var jdbcTemplate: NamedParameterJdbcTemplate? = null
+  @Autowired private var jdbcTemplate: NamedParameterJdbcTemplate? = null
 
   @MockBean lateinit var sideutvalDAO: SideutvalDAO
 
   @MockBean lateinit var brukarService: BrukarService
 
-  @MockBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient;
+  @MockBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
   @MockBean lateinit var cacheManager: CacheManager
 
-
-
-  private  var resultatDAO: ResultatDAO? = null
+  private var resultatDAO: ResultatDAO? = null
 
   private var testregelId: Int = 0
 
   private var maalingId: Int = 0
 
-  private var kontrollId:Int = 0
+  private var kontrollId: Int = 0
 
-
-    @BeforeAll
-    fun beforeAll() {
-      resultatDAO = ResultatDAO(jdbcTemplate!!)
-    }
+  @BeforeAll
+  fun beforeAll() {
+    resultatDAO = ResultatDAO(jdbcTemplate!!)
+  }
 
   @BeforeEach
   fun setUp() {
-      createTestresultat()
+      testregelId = createTestregel()
   }
 
+  @Test
+  fun getTestresultatMaaling() {
 
-  @Test fun getTestresultatMaaling() {
+      createTestMaalingar(listOf("Forenkla kontroll 20204"))
 
-    val expected1: ResultatLoeysing = ResultatLoeysing(1, testgrunnlagId = 1,"Forenkla kontroll 2024",Kontrolltype.ForenklaKontroll,TestgrunnlagType.OPPRINNELEG_TEST,
-      LocalDate.now(),
-      listOf(("Ola Nordmann"),("Kari Nordmann")),1,0.5,6,3,1,1,"1.1.1 Ikke-tekstlig innhold")
-    val resultat: List<ResultatLoeysing> = resultatDAO!!.getTestresultatMaaling()
+
+      val expected1 =
+        ResultatLoeysingDTO(
+            1,
+            testgrunnlagId = 1,
+            "Forenkla kontroll 20204",
+            Kontrolltype.ForenklaKontroll,
+            TestgrunnlagType.OPPRINNELEG_TEST,
+            LocalDate.now(),
+            listOf(("testar")),
+            1,
+            0.5,
+            6,
+            3,
+            1)
+    val resultat: List<ResultatLoeysingDTO> = resultatDAO!!.getTestresultatMaaling()
 
     assertThat(resultat).isEqualTo(listOf(expected1))
-
-
   }
 
-  @Test fun testGetTestresultatMaaling() {}
+  @Test
+  fun testGetTestresultatMaalingWithParams() {
+      val maalingIds = createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"))
+
+
+    val expected1 =
+        ResultatLoeysingDTO(
+            1,
+            testgrunnlagId = maalingIds[0],
+            "Forenkla kontroll 20204",
+            Kontrolltype.ForenklaKontroll,
+            TestgrunnlagType.OPPRINNELEG_TEST,
+            LocalDate.now(),
+            listOf(("testar")),
+            1,
+            0.5,
+            6,
+            3,
+            1)
+
+
+
+    val resultat = resultatDAO!!.getTestresultatMaaling(maalingIds[0])
+
+    assertThat(resultat.map { it.testgrunnlagId }).isEqualTo(listOf(expected1.testgrunnlagId))
+    assertThat(resultat.map { it.testgrunnlagId }).isNotEqualTo(listOf(maalingIds[1]))
+  }
 
   @Test fun setTestType() {}
 
@@ -103,66 +136,78 @@ class ResultatDAOTest() {
 
   @Test fun getResultatPrKrav() {}
 
-  fun createTestresultat() {
 
-    testregelId = createTestregel()
-    createKontroll()
-    maalingId = createTestMaaling(listOf(testregelId),kontrollId)
-
+  private fun createAggregertTestresultat(maalingId: Int, testregelId: Int) {
     val aggregeringDAO = AggregeringDAO(jdbcTemplate!!)
-    val aggregering_testregel = AggregeringPerTestregelDTO(maalingId,1,testregelId,1, listOf(1,2),6,2,1,1,1,1,0,0.5,0.5,null)
+    val aggregering_testregel =
+        AggregeringPerTestregelDTO(
+            maalingId, 1, testregelId, 1, listOf(1, 2), 6, 3, 1, 1, 1, 1, 0, 0.5, 0.5, null)
     aggregeringDAO.createAggregertResultatTestregel(aggregering_testregel)
   }
 
-  fun createTestregel() : Int {
-
+  fun createTestregel(): Int {
 
     val testregelDAO = TestregelDAO(jdbcTemplate!!)
 
     val innholdstypeTesting = testregelDAO.createInnholdstypeTesting("Tekst")
 
-
     val testregelInit =
-    TestregelInit(
-      testregelId = "QW-ACT-R1",
-      namn = TestConstants.name,
-      kravId = TestConstants.testregelTestKravId,
-      status = TestregelStatus.publisert,
-      type = TestregelInnholdstype.nett,
-      modus = TestregelModus.automatisk,
-      spraak = TestlabLocale.nb,
-      testregelSchema = TestConstants.testregelSchemaAutomatisk,
-      innhaldstypeTesting = innholdstypeTesting,
-      tema = 1,
-      testobjekt = 1,
-      kravTilSamsvar = "")
+        TestregelInit(
+            testregelId = "QW-ACT-R1",
+            namn = TestConstants.name,
+            kravId = TestConstants.testregelTestKravId,
+            status = TestregelStatus.publisert,
+            type = TestregelInnholdstype.nett,
+            modus = TestregelModus.automatisk,
+            spraak = TestlabLocale.nb,
+            testregelSchema = TestConstants.testregelSchemaAutomatisk,
+            innhaldstypeTesting = innholdstypeTesting,
+            tema = 1,
+            testobjekt = 1,
+            kravTilSamsvar = "")
     return testregelDAO.createTestregel(testregelInit)
   }
 
-  fun createTestMaaling(testregelIds: List<Int>, kontrollId:Int): Int {
-    val maalingDAO = MaalingDAO(jdbcTemplate!!, loeysingsRegisterClient,sideutvalDAO,brukarService,cacheManager)
-    val maalingId =  maalingDAO.createMaaling("Forenkla kontroll 20204", Instant.now(), listOf(1), testregelIds,CrawlParameters() )
+  fun createTestMaaling(
+      testregelIds: List<Int>,
+      kontrollId: Int,
+      maalingNamn: String
+  ): Int {
+    val maalingDAO =
+        MaalingDAO(
+            jdbcTemplate!!, loeysingsRegisterClient, sideutvalDAO, brukarService, cacheManager)
+    val maalingId =
+        maalingDAO.createMaaling(
+            maalingNamn, Instant.now(), listOf(1), testregelIds, CrawlParameters())
     maalingDAO.updateKontrollId(maalingId, kontrollId)
+
+    createAggregertTestresultat(maalingId, testregelIds[0])
 
     return maalingId
   }
 
-  fun createKontroll() {
-
-    val opprettKontroll =
-      KontrollResource.OpprettKontroll(
-        "Forenkla kontroll 20204",
-        "Ola Nordmann",
-        Sakstype.Arkivsak,
-        "1234",
-        Kontrolltype.ForenklaKontroll)
-
-
-    val kontrollDAO = KontrollDAO(jdbcTemplate!!)
-    kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
+  fun createTestMaalingar(maalingNamn: List<String>): List<Int> {
+      val maalingIds = mutableListOf<Int>()
+      maalingNamn.forEach {
+          val kontrollId = createKontroll()
+            maalingIds.add(createTestMaaling(listOf(testregelId), kontrollId, it))
+      }
+      return maalingIds
   }
 
+  fun createKontroll(): Int {
 
+    val opprettKontroll =
+        KontrollResource.OpprettKontroll(
+            "Forenkla kontroll 20204",
+            "Ola Nordmann",
+            Sakstype.Arkivsak,
+            "1234",
+            Kontrolltype.ForenklaKontroll)
+
+    val kontrollDAO = KontrollDAO(jdbcTemplate!!)
+    return kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
+  }
 }
 
 @Bean

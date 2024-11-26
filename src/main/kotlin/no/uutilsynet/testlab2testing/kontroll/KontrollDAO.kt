@@ -1,30 +1,39 @@
 package no.uutilsynet.testlab2testing.kontroll
 
-import no.uutilsynet.testlab2.constants.Kontrolltype
-import org.springframework.jdbc.core.DataClassRowMapper
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 import java.net.URI
 import java.time.Instant
+import no.uutilsynet.testlab2.constants.Kontrolltype
+import org.springframework.jdbc.core.DataClassRowMapper
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.support.GeneratedKeyHolder
+import org.springframework.jdbc.support.KeyHolder
+import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
 @Component
 class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun createKontroll(kontroll: KontrollResource.OpprettKontroll): Result<Int> {
+
     return kotlin.runCatching {
-        jdbcTemplate.update(
-            """
+      val params = MapSqlParameterSource()
+      params.addValue("tittel", kontroll.tittel)
+      params.addValue("saksbehandler", kontroll.saksbehandler)
+      params.addValue("sakstype", kontroll.sakstype.name)
+      params.addValue("arkivreferanse", kontroll.arkivreferanse)
+      params.addValue("kontrolltype", kontroll.kontrolltype.name)
+
+      val keyHolder: KeyHolder = GeneratedKeyHolder()
+
+      jdbcTemplate.update(
+          """
               insert into "testlab2_testing"."kontroll" (tittel, saksbehandler, sakstype, arkivreferanse, kontrolltype)
               values (:tittel, :saksbehandler, :sakstype, :arkivreferanse, :kontrolltype)
               """
-                .trimIndent(),
-            mapOf(
-                "tittel" to kontroll.tittel,
-                "saksbehandler" to kontroll.saksbehandler,
-                "sakstype" to kontroll.sakstype.name,
-                "arkivreferanse" to kontroll.arkivreferanse,
-                "kontrolltype" to kontroll.kontrolltype.name),
-            )
+              .trimIndent(),
+          params,
+          keyHolder)
+      keyHolder.keys?.get("id") as Int
     }
   }
 
@@ -43,7 +52,9 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getKontroller(): Result<List<KontrollDB>> {
     val ids =
         jdbcTemplate.queryForList(
-            """select id from "testlab2_testing"."kontroll"""", emptyMap<String, String>(), Int::class.java)
+            """select id from "testlab2_testing"."kontroll"""",
+            emptyMap<String, String>(),
+            Int::class.java)
     return getKontroller(ids)
   }
 

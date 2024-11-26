@@ -81,19 +81,19 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         """
           .trimIndent()
 
-  fun getTestresultatMaaling(): List<ResultatLoeysing> {
+  fun getTestresultatMaaling(): List<ResultatLoeysingDTO> {
     val query = queryTestresultatMaaling.trimIndent()
     return jdbcTemplate.query(query) { rs, _ -> resultatLoeysingRowmapper(rs) }
   }
 
-  fun getTestresultatMaaling(maalingId: Int): List<ResultatLoeysing> {
+  fun getTestresultatMaaling(maalingId: Int): List<ResultatLoeysingDTO> {
     val query = "$queryTestresultatMaaling where maaling_id = :maalingId"
     return jdbcTemplate.query(query, mapOf("maalingId" to maalingId)) { rs, _ ->
       resultatLoeysingRowmapper(rs)
     }
   }
 
-  private fun resultatLoeysingRowmapper(rs: ResultSet): ResultatLoeysing {
+  private fun resultatLoeysingRowmapper(rs: ResultSet): ResultatLoeysingDTO {
     val maalingId = rs.getInt("id")
     val navn = rs.getString("tittel")
     val dato = handleDate(rs.getDate("dato"))
@@ -107,7 +107,8 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val testgrunnlagId = rs.getInt("testgrunnlag_id")
     val testtype = setTestType(kontrolltype, rs)
 
-    return ResultatLoeysing(
+
+    return ResultatLoeysingDTO(
         maalingId,
         testgrunnlagId,
         navn,
@@ -119,9 +120,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         testregelGjennomsnittlegSideSamsvarProsent,
         talElementSamsvar,
         talElementBrot,
-        testregelId,
-        null,
-        null)
+        testregelId)
   }
 
   private fun setTestType(kontrolltype: Kontrolltype, resultSet: ResultSet): String {
@@ -131,13 +130,13 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return resultSet.getString("testtype")
   }
 
-  fun getTestresultatTestgrunnlag(): List<ResultatLoeysing> {
+  fun getTestresultatTestgrunnlag(): List<ResultatLoeysingDTO> {
     return jdbcTemplate.query(queryTestresultatTestgrunnlag) { rs, _ ->
       resultatLoeysingRowmapper(rs)
     }
   }
 
-  fun getTestresultatTestgrunnlag(testgrunnlagId: Int): List<ResultatLoeysing> {
+  fun getTestresultatTestgrunnlag(testgrunnlagId: Int): List<ResultatLoeysingDTO> {
     val query = "$queryTestresultatTestgrunnlag where testgrunnlag_id = :testgrunnlagId"
     return runCatching {
           jdbcTemplate.query(query, mapOf("testgrunnlagId" to testgrunnlagId)) { rs, _ ->
@@ -150,11 +149,11 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         }
   }
 
-  fun getResultat(): List<ResultatLoeysing> {
+  fun getResultat(): List<ResultatLoeysingDTO> {
     return jdbcTemplate.query(resultatQuery) { rs, _ -> resultatLoeysingRowmapper(rs) }
   }
 
-  fun getResultatKontroll(kontrollId: Int): List<ResultatLoeysing> {
+  fun getResultatKontroll(kontrollId: Int): List<ResultatLoeysingDTO> {
     val query = "$resultatQuery where k.id = :kontrollId order by testgrunnlag_id"
     return jdbcTemplate.query(query, mapOf("kontrollId" to kontrollId)) { rs, _ ->
       resultatLoeysingRowmapper(rs)
@@ -168,7 +167,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return LocalDate.now()
   }
 
-  fun getResultatKontrollLoeysing(kontrollId: Int, loeysingId: Int): List<ResultatLoeysing> {
+  fun getResultatKontrollLoeysing(kontrollId: Int, loeysingId: Int): List<ResultatLoeysingDTO> {
     return runCatching {
           val query = "$resultatQuery where k.id = :kontrollId  and loeysing_id = :loeysingId"
           jdbcTemplate.query(
