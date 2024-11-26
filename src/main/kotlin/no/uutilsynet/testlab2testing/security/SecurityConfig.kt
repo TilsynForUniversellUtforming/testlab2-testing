@@ -1,7 +1,10 @@
 package no.uutilsynet.testlab2testing.security
 
+import no.uutilsynet.testlab2securitylib.ApiKeyAuthenticationProperties
 import no.uutilsynet.testlab2securitylib.Testlab2AuthenticationConverter
-import org.springframework.beans.factory.annotation.Autowired
+import no.uutilsynet.testlab2securitylib.apitoken.AuthenticationFilter
+import no.uutilsynet.testlab2securitylib.apitoken.TokenAuthenticationService
+import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -11,26 +14,20 @@ import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.web.cors.CorsConfiguration
-import org.springframework.web.cors.CorsConfigurationSource
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
-@Configuration
+@Configuration("testingSecurityConfig")
 @EnableWebSecurity
 class SecurityConfig {
 
-  @Bean
+  @Bean("testingSecurityFilterChain")
   @Profile("security")
-  open fun filterChain(
+  fun filterChain(
       http: HttpSecurity,
-      @Autowired authenticationFilter: AuthenticationFilter
+      authenticationFilter: AuthenticationFilter
   ): SecurityFilterChain {
 
     http {
-      authorizeHttpRequests {
-        authorize("/ekstern/**", permitAll)
-        authorize(anyRequest, hasAuthority("brukar subscriber"))
-      }
+      authorizeHttpRequests { authorize(anyRequest, hasAuthority("brukar subscriber")) }
       oauth2ResourceServer {
         jwt { jwtAuthenticationConverter = Testlab2AuthenticationConverter() }
       }
@@ -43,26 +40,16 @@ class SecurityConfig {
   }
 
   @Bean
-  @Profile("!security")
-  fun openFilterChain(http: HttpSecurity): SecurityFilterChain {
-    http {
-      authorizeHttpRequests { authorize(anyRequest, permitAll) }
-      cors {}
-      csrf { disable() }
-    }
-    return http.build()
-  }
-
-  @Bean
-  fun corsConfigurationSource(): CorsConfigurationSource {
-    val configuration = CorsConfiguration()
-    configuration.allowedOrigins =
-        listOf(
-            "https://user.difi.no",
-            "https://test-testlab.uutilsynet.no",
-            "https://beta-testlab.uutilsynet.no")
-    val source = UrlBasedCorsConfigurationSource()
-    source.registerCorsConfiguration("/**", configuration)
-    return source
+  fun authenticationFilter(
+      apiKeyAuthenticationProperties: ApiKeyAuthenticationProperties
+  ): AuthenticationFilter {
+    val tokenAuthenticationService = TokenAuthenticationService(apiKeyAuthenticationProperties)
+    return AuthenticationFilter(tokenAuthenticationService)
   }
 }
+
+@ConfigurationProperties(prefix = "api")
+class ApiKeyAuthenticationPropertiesImpl(
+    override val token: String,
+    override val headerName: String = "X-API-KEY"
+) : ApiKeyAuthenticationProperties
