@@ -1,5 +1,9 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
+import java.net.URI
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.*
@@ -36,10 +40,6 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import java.net.URI
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.time.Instant
 
 @Component
 class MaalingDAO(
@@ -186,8 +186,6 @@ class MaalingDAO(
 
     return maaling?.toMaaling() ?: throw NoSuchElementException("Fant ikke måling med id $id")
   }
-
-
 
   @Transactional
   @CacheEvict("maalingCache", key = "#id")

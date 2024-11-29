@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.net.URI
+import java.time.Instant
+import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
@@ -8,10 +11,15 @@ import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
+import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
+import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
+import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelInit
@@ -29,8 +37,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
-import java.time.Instant
-import java.time.LocalDate
 
 @JdbcTest
 @ActiveProfiles("test")
@@ -50,10 +56,7 @@ class ResultatDAOTest() {
   private var resultatDAO: ResultatDAO? = null
 
   private var testregelId: Int = 0
-
-  private var maalingId: Int = 0
-
-  private var kontrollId: Int = 0
+  private var utvalId: Int = 0
 
   @BeforeAll
   fun beforeAll() {
@@ -62,16 +65,15 @@ class ResultatDAOTest() {
 
   @BeforeEach
   fun setUp() {
-      testregelId = createTestregel()
+    testregelId = createTestregel()
   }
 
   @Test
   fun getTestresultatMaaling() {
 
-      createTestMaalingar(listOf("Forenkla kontroll 20204"))
+    createTestMaalingar(listOf("Forenkla kontroll 20204"))
 
-
-      val expected1 =
+    val expected1 =
         ResultatLoeysingDTO(
             1,
             testgrunnlagId = 1,
@@ -92,8 +94,8 @@ class ResultatDAOTest() {
 
   @Test
   fun testGetTestresultatMaalingWithParams() {
-      val maalingIds = createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"))
-
+    val maalingIds =
+        createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"))
 
     val expected1 =
         ResultatLoeysingDTO(
@@ -110,19 +112,71 @@ class ResultatDAOTest() {
             3,
             1)
 
-
-
     val resultat = resultatDAO!!.getTestresultatMaaling(maalingIds[0])
 
     assertThat(resultat.map { it.testgrunnlagId }).isEqualTo(listOf(expected1.testgrunnlagId))
     assertThat(resultat.map { it.testgrunnlagId }).isNotEqualTo(listOf(maalingIds[1]))
   }
 
-  @Test fun setTestType() {}
+  @Test
+  fun getTestresultatTestgrunnlag() {
+    val testgrunnlagList =
+        listOf(
+            OpprettTestgrunnlag("Tilsyn 20204", TestgrunnlagType.OPPRINNELEG_TEST),
+            OpprettTestgrunnlag("Tilsyn 20204 Retest", TestgrunnlagType.RETEST))
+    val testgrunnlagIds = createTestgrunnlagList(testgrunnlagList)
 
-  @Test fun getTestresultatTestgrunnlag() {}
+    val expected =
+        ResultatLoeysingDTO(
+            1,
+            testgrunnlagId = testgrunnlagIds[0],
+            "Inngåande kontroll",
+            Kontrolltype.InngaaendeKontroll,
+            TestgrunnlagType.OPPRINNELEG_TEST,
+            LocalDate.now(),
+            listOf(("testar")),
+            1,
+            0.5,
+            6,
+            3,
+            1)
 
-  @Test fun testGetTestresultatTestgrunnlag() {}
+    val resultat = resultatDAO!!.getTestresultatTestgrunnlag()
+
+    assertThat(resultat.size).isEqualTo(2)
+
+    assertThat(resultat[0]).isEqualTo(expected)
+  }
+
+  @Test
+  fun testGetTestresultatTestgrunnlag() {
+    val testgrunnlagList =
+        listOf(
+            OpprettTestgrunnlag("Tilsyn 20204", TestgrunnlagType.OPPRINNELEG_TEST),
+            OpprettTestgrunnlag("Tilsyn 20204 Retest", TestgrunnlagType.RETEST))
+    val testgrunnlagIds = createTestgrunnlagList(testgrunnlagList)
+
+    val expected =
+        ResultatLoeysingDTO(
+            1,
+            testgrunnlagId = testgrunnlagIds[0],
+            "Inngåande kontroll",
+            Kontrolltype.InngaaendeKontroll,
+            TestgrunnlagType.OPPRINNELEG_TEST,
+            LocalDate.now(),
+            listOf(("testar")),
+            1,
+            0.5,
+            6,
+            3,
+            1)
+
+    val resultat = resultatDAO!!.getTestresultatTestgrunnlag(testgrunnlagId = testgrunnlagIds[0])
+
+    assertThat(resultat.size).isEqualTo(1)
+
+    assertThat(resultat[0]).isEqualTo(expected)
+  }
 
   @Test fun getResultat() {}
 
@@ -136,12 +190,25 @@ class ResultatDAOTest() {
 
   @Test fun getResultatPrKrav() {}
 
-
-  private fun createAggregertTestresultat(maalingId: Int, testregelId: Int) {
+  private fun createAggregertTestresultat(maalingId: Int?, testregelId: Int, testgrunnlagId: Int?) {
     val aggregeringDAO = AggregeringDAO(jdbcTemplate!!)
     val aggregering_testregel =
         AggregeringPerTestregelDTO(
-            maalingId, 1, testregelId, 1, listOf(1, 2), 6, 3, 1, 1, 1, 1, 0, 0.5, 0.5, null)
+            maalingId,
+            1,
+            testregelId,
+            1,
+            listOf(1, 2),
+            6,
+            3,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0.5,
+            0.5,
+            testgrunnlagId)
     aggregeringDAO.createAggregertResultatTestregel(aggregering_testregel)
   }
 
@@ -168,11 +235,7 @@ class ResultatDAOTest() {
     return testregelDAO.createTestregel(testregelInit)
   }
 
-  fun createTestMaaling(
-      testregelIds: List<Int>,
-      kontrollId: Int,
-      maalingNamn: String
-  ): Int {
+  fun createTestMaaling(testregelIds: List<Int>, kontrollId: Int, maalingNamn: String): Int {
     val maalingDAO =
         MaalingDAO(
             jdbcTemplate!!, loeysingsRegisterClient, sideutvalDAO, brukarService, cacheManager)
@@ -181,34 +244,95 @@ class ResultatDAOTest() {
             maalingNamn, Instant.now(), listOf(1), testregelIds, CrawlParameters())
     maalingDAO.updateKontrollId(maalingId, kontrollId)
 
-    createAggregertTestresultat(maalingId, testregelIds[0])
+    createAggregertTestresultat(maalingId, testregelIds[0], null)
 
     return maalingId
   }
 
   fun createTestMaalingar(maalingNamn: List<String>): List<Int> {
-      val maalingIds = mutableListOf<Int>()
-      maalingNamn.forEach {
-          val kontrollId = createKontroll()
-            maalingIds.add(createTestMaaling(listOf(testregelId), kontrollId, it))
-      }
-      return maalingIds
+    return maalingNamn.map {
+      val kontrollId = createKontroll("Forenkla kontroll 20204", Kontrolltype.ForenklaKontroll).id
+      createTestMaaling(listOf(testregelId), kontrollId, it)
+    }
   }
 
-  fun createKontroll(): Int {
+  fun createKontroll(kontrollNamn: String, kontrolltype: Kontrolltype): KontrollDAO.KontrollDB {
 
+    val (kontrollDAO, kontrollId, kontroll) = opprettKontroll(kontrollNamn, kontrolltype)
+
+    opprettUtvalg(kontrollDAO, kontroll)
+
+    return kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
+  }
+
+  private fun opprettUtvalg(kontrollDAO: KontrollDAO, kontroll: Kontroll) {
+    val utvalDAO = UtvalDAO(jdbcTemplate!!)
+
+    val loeysingId = 1
+    utvalId = utvalDAO.createUtval("test-skal-slettes", listOf(loeysingId)).getOrThrow()
+
+    kontrollDAO.updateKontroll(kontroll, null, listOf(testregelId))
+
+    /* Add sideutval */
+    kontrollDAO.updateKontroll(
+        kontroll,
+        listOf(
+            SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
+        ))
+  }
+
+  private fun opprettKontroll(
+      kontrollNamn: String,
+      kontrolltype: Kontrolltype
+  ): Triple<KontrollDAO, Int, Kontroll> {
     val opprettKontroll =
         KontrollResource.OpprettKontroll(
-            "Forenkla kontroll 20204",
-            "Ola Nordmann",
-            Sakstype.Arkivsak,
-            "1234",
-            Kontrolltype.ForenklaKontroll)
+            kontrollNamn, "Ola Nordmann", Sakstype.Arkivsak, "1234", kontrolltype)
 
     val kontrollDAO = KontrollDAO(jdbcTemplate!!)
-    return kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
+
+    val kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
+
+    val kontroll =
+        Kontroll(
+            kontrollId,
+            Kontrolltype.InngaaendeKontroll,
+            opprettKontroll.tittel,
+            opprettKontroll.saksbehandler,
+            opprettKontroll.sakstype,
+            opprettKontroll.arkivreferanse,
+        )
+    return Triple(kontrollDAO, kontrollId, kontroll)
+  }
+
+  private fun createTestgrunnlagList(testgrunnlagList: List<OpprettTestgrunnlag>): List<Int> {
+    val kontroll = createKontroll("Inngåande kontroll", Kontrolltype.InngaaendeKontroll)
+    return testgrunnlagList.map { createTestgrunnlag(it, kontroll) }
+  }
+
+  private fun createTestgrunnlag(
+      opprettTestgrunnlag: OpprettTestgrunnlag,
+      kontroll: KontrollDAO.KontrollDB
+  ): Int {
+    val testgrunnlagDAO = TestgrunnlagDAO(jdbcTemplate!!)
+
+    val nyttTestgrunnlag =
+        NyttTestgrunnlag(
+            kontrollId = kontroll.id,
+            namn = opprettTestgrunnlag.testgrunnlagNamn,
+            type = opprettTestgrunnlag.testgrunnlagType,
+            sideutval = kontroll.sideutval,
+            testregelIdList = listOf(testregelId))
+    val testgrunnlagId = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag).getOrThrow()
+    createAggregertTestresultat(null, testregelId, testgrunnlagId)
+    return testgrunnlagId
   }
 }
+
+data class OpprettTestgrunnlag(
+    val testgrunnlagNamn: String,
+    val testgrunnlagType: TestgrunnlagType
+)
 
 @Bean
 fun namedParameterJdbcTemplate(jdbcTemplate: JdbcTemplate): NamedParameterJdbcTemplate {
