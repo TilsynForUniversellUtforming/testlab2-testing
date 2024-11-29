@@ -1,10 +1,10 @@
 package no.uutilsynet.testlab2testing.aggregering
 
+import java.net.URI
+import java.sql.ResultSet
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
-import java.net.URI
-import java.sql.ResultSet
 
 @Component
 class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -205,8 +205,8 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun sqlArrayToList(sqlArray: String): List<Int> {
-      val kravIds = sqlArray.replace("[", "").replace("]", "").split(",").map { it.trim().toInt() }
-      return kravIds
+    val kravIds = sqlArray.replace("[", "").replace("]", "").split(",").map { it.trim().toInt() }
+    return kravIds
   }
 
   fun harMaalingLagraAggregering(maalingId: Int, aggregeringstype: String): Boolean {
