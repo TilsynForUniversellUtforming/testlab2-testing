@@ -1,13 +1,13 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.sql.ResultSet
-import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
+import java.sql.ResultSet
+import java.time.LocalDate
 
 @Component
 class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -148,7 +148,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         }
   }
 
-  fun getResultat(): List<ResultatLoeysingDTO> {
+  fun getAllResultat(): List<ResultatLoeysingDTO> {
     return jdbcTemplate.query(resultatQuery) { rs, _ -> resultatLoeysingRowmapper(rs) }
   }
 
@@ -159,7 +159,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
   }
 
-  fun handleDate(date: java.sql.Date?): LocalDate {
+  private fun handleDate(date: java.sql.Date?): LocalDate {
     if (date != null) {
       return date.toLocalDate()
     }
