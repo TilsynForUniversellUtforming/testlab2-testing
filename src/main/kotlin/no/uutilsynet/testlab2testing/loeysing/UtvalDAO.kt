@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.loeysing
 
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.time.Instant
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -12,6 +9,9 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.time.Instant
 
 @Component
 class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -45,8 +45,9 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
         mapSqlParameterSource,
         keyHolder)
 
-    val utvalId = keyHolder.key as Int
-    return utvalId
+    val utvalId = keyHolder.keys?.get("id") as Int
+
+      return utvalId
   }
 
   data class UtvalFromDatabase(
