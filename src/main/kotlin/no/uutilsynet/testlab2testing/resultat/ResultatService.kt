@@ -1,5 +1,9 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.net.URL
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
@@ -20,10 +24,6 @@ import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
-import java.net.URL
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Component
 class ResultatService(
@@ -386,25 +386,6 @@ class ResultatService(
       loeysingId: Int,
       kravid: Int
   ): List<TestresultatDetaljert> {
-    val typeKontroll =
-        kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().kontrolltype
-    return when (typeKontroll) {
-      Kontrolltype.ForenklaKontroll ->
-          getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
-      Kontrolltype.InngaaendeKontroll,
-      Kontrolltype.Tilsyn,
-      Kontrolltype.Uttalesak,
-      Kontrolltype.Statusmaaling -> getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
-    }
-  }
-
-  fun getResultatListTestgrunnlag(
-      testgrunnlagId: Int,
-      loeysingId: Int,
-      kravid: Int
-  ): List<TestresultatDetaljert> {
-    val kontrollId = testgrunnlagDAO.getTestgrunnlag(testgrunnlagId).getOrThrow().kontrollId
-
     val typeKontroll =
         kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().kontrolltype
     return when (typeKontroll) {

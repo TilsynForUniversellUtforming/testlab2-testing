@@ -25,7 +25,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.cache.CacheManager
@@ -37,7 +37,8 @@ import java.net.URI
 import java.time.Instant
 import java.time.LocalDate
 
-@JdbcTest
+@SpringBootTest(
+    properties = arrayOf("spring.datasource.url: jdbc:tc:postgresql:16-alpine:///test-db"))
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ResultatDAOTest() {
@@ -63,22 +64,20 @@ class ResultatDAOTest() {
   @BeforeAll
   fun setup() {
     resultatDAO = ResultatDAO(jdbcTemplate!!)
-      testregelId = createTestregel()
-      maalingIds =
-          createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"))
+    testregelId = createTestregel()
+    maalingIds = createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"))
 
-
-
-      val testgrunnlagList =
-          listOf(
-              OpprettTestgrunnlag("Tilsyn 20204", TestgrunnlagType.OPPRINNELEG_TEST),
-              OpprettTestgrunnlag("Tilsyn 20204 Retest", TestgrunnlagType.RETEST))
-      testgrunnlagIds = createTestgrunnlagList(testgrunnlagList, listOf(1,2))
+    val testgrunnlagList =
+        listOf(
+            OpprettTestgrunnlag("Tilsyn 20204", TestgrunnlagType.OPPRINNELEG_TEST),
+            OpprettTestgrunnlag("Tilsyn 20204 Retest", TestgrunnlagType.RETEST))
+    testgrunnlagIds = createTestgrunnlagList(testgrunnlagList, listOf(1, 2))
   }
+
   @Test
   fun getTestresultatMaaling() {
 
-    //createTestMaalingar(listOf("Forenkla kontroll 20204"))
+    // createTestMaalingar(listOf("Forenkla kontroll 20204"))
 
     val expected1 =
         ResultatLoeysingDTO(
@@ -95,23 +94,23 @@ class ResultatDAOTest() {
             3,
             1)
 
-      val expected2 =
-          ResultatLoeysingDTO(
-              2,
-              testgrunnlagId = 2,
-              "Forenkla kontroll 20204",
-              Kontrolltype.ForenklaKontroll,
-              TestgrunnlagType.OPPRINNELEG_TEST,
-              LocalDate.now(),
-              listOf(("testar")),
-              1,
-              0.5,
-              6,
-              3,
-              1)
+    val expected2 =
+        ResultatLoeysingDTO(
+            2,
+            testgrunnlagId = 2,
+            "Forenkla kontroll 20204",
+            Kontrolltype.ForenklaKontroll,
+            TestgrunnlagType.OPPRINNELEG_TEST,
+            LocalDate.now(),
+            listOf(("testar")),
+            1,
+            0.5,
+            6,
+            3,
+            1)
     val resultat: List<ResultatLoeysingDTO> = resultatDAO!!.getTestresultatMaaling()
 
-    assertThat(resultat).isEqualTo(listOf(expected1,expected2))
+    assertThat(resultat).isEqualTo(listOf(expected1, expected2))
   }
 
   @Test
@@ -141,7 +140,6 @@ class ResultatDAOTest() {
   @Test
   fun getTestresultatTestgrunnlag() {
 
-
     val expected1 =
         ResultatLoeysingDTO(
             3,
@@ -157,16 +155,31 @@ class ResultatDAOTest() {
             3,
             1)
 
-      val expected2 =
+    val expected2 =
+        ResultatLoeysingDTO(
+            3,
+            testgrunnlagId = testgrunnlagIds[1],
+            "Inngåande kontroll",
+            Kontrolltype.InngaaendeKontroll,
+            TestgrunnlagType.RETEST,
+            LocalDate.now(),
+            listOf(("testar")),
+            1,
+            0.5,
+            6,
+            3,
+            1)
+
+      val expected3 =
           ResultatLoeysingDTO(
               3,
-              testgrunnlagId = testgrunnlagIds[1],
+              testgrunnlagId = testgrunnlagIds[0],
               "Inngåande kontroll",
               Kontrolltype.InngaaendeKontroll,
-              TestgrunnlagType.RETEST,
+              TestgrunnlagType.OPPRINNELEG_TEST,
               LocalDate.now(),
               listOf(("testar")),
-              1,
+              2,
               0.5,
               6,
               3,
@@ -174,9 +187,9 @@ class ResultatDAOTest() {
 
     val resultat = resultatDAO!!.getTestresultatTestgrunnlag()
 
-    assertThat(resultat.size).isEqualTo(2)
+    assertThat(resultat.size).isEqualTo(3)
 
-    assertThat(resultat).isEqualTo(listOf(expected1,expected2))
+    assertThat(resultat).isEqualTo(listOf(expected1, expected2,expected3))
   }
 
   @Test
@@ -197,47 +210,7 @@ class ResultatDAOTest() {
             3,
             1)
 
-    val resultat = resultatDAO!!.getTestresultatTestgrunnlag(testgrunnlagId = testgrunnlagIds[0])
-
-    assertThat(resultat.size).isEqualTo(1)
-
-    assertThat(resultat[0]).isEqualTo(expected)
-  }
-
-  @Test fun getResultat() {
-
-      val expected1 =
-          ResultatLoeysingDTO(
-              1,
-              testgrunnlagId = 0,
-              "Forenkla kontroll 20204",
-              Kontrolltype.ForenklaKontroll,
-              TestgrunnlagType.OPPRINNELEG_TEST,
-              LocalDate.now(),
-              listOf(("testar")),
-              1,
-              0.5,
-              6,
-              3,
-              1)
-
       val expected2 =
-          ResultatLoeysingDTO(
-              2,
-              testgrunnlagId = 0,
-              "Forenkla kontroll 20204",
-              Kontrolltype.ForenklaKontroll,
-              TestgrunnlagType.OPPRINNELEG_TEST,
-              LocalDate.now(),
-              listOf(("testar")),
-              1,
-              0.5,
-              6,
-              3,
-              1)
-
-
-      val expected3 =
           ResultatLoeysingDTO(
               3,
               testgrunnlagId = testgrunnlagIds[0],
@@ -246,117 +219,193 @@ class ResultatDAOTest() {
               TestgrunnlagType.OPPRINNELEG_TEST,
               LocalDate.now(),
               listOf(("testar")),
-              1,
+              2,
               0.5,
               6,
               3,
               1)
 
-      val expected4 =
+    val resultat = resultatDAO!!.getTestresultatTestgrunnlag(testgrunnlagId = testgrunnlagIds[0])
+
+    assertThat(resultat.size).isEqualTo(2)
+
+    assertThat(resultat).isEqualTo(listOf(expected,expected2))
+  }
+
+  @Test
+  fun getResultat() {
+
+    val expected1 =
+        ResultatLoeysingDTO(
+            1,
+            testgrunnlagId = 0,
+            "Forenkla kontroll 20204",
+            Kontrolltype.ForenklaKontroll,
+            TestgrunnlagType.OPPRINNELEG_TEST,
+            LocalDate.now(),
+            listOf(("testar")),
+            1,
+            0.5,
+            6,
+            3,
+            1)
+
+    val expected2 =
+        ResultatLoeysingDTO(
+            2,
+            testgrunnlagId = 0,
+            "Forenkla kontroll 20204",
+            Kontrolltype.ForenklaKontroll,
+            TestgrunnlagType.OPPRINNELEG_TEST,
+            LocalDate.now(),
+            listOf(("testar")),
+            1,
+            0.5,
+            6,
+            3,
+            1)
+
+    val expected3 =
+        ResultatLoeysingDTO(
+            3,
+            testgrunnlagId = testgrunnlagIds[0],
+            "Inngåande kontroll",
+            Kontrolltype.InngaaendeKontroll,
+            TestgrunnlagType.OPPRINNELEG_TEST,
+            LocalDate.now(),
+            listOf(("testar")),
+            1,
+            0.5,
+            6,
+            3,
+            1)
+
+    val expected4 =
+        ResultatLoeysingDTO(
+            3,
+            testgrunnlagId = testgrunnlagIds[1],
+            "Inngåande kontroll",
+            Kontrolltype.InngaaendeKontroll,
+            TestgrunnlagType.RETEST,
+            LocalDate.now(),
+            listOf(("testar")),
+            1,
+            0.5,
+            6,
+            3,
+            1)
+
+      val expected5=
           ResultatLoeysingDTO(
               3,
-              testgrunnlagId = testgrunnlagIds[1],
+              testgrunnlagId = testgrunnlagIds[0],
               "Inngåande kontroll",
               Kontrolltype.InngaaendeKontroll,
-              TestgrunnlagType.RETEST,
+              TestgrunnlagType.OPPRINNELEG_TEST,
               LocalDate.now(),
               listOf(("testar")),
-              1,
+              2,
               0.5,
               6,
               3,
               1)
 
-      val resultat = resultatDAO!!.getAllResultat()
+    val resultat = resultatDAO!!.getAllResultat()
 
-
-      assertThat(resultat.size).isEqualTo(4)
-      assertThat(resultat).isEqualTo(listOf(expected1, expected2, expected3,expected4))
-
-
+    assertThat(resultat.size).isEqualTo(5)
+    assertThat(resultat).isEqualTo(listOf(expected1, expected2, expected3, expected4,expected5))
   }
 
-  @Test fun getResultatKontrollWithTestgrunnlagAndMaaling() {
+  @Test
+  fun getResultatKontrollWithTestgrunnlagAndMaaling() {
 
-      val resultat = resultatDAO!!.getAllResultat()
+    val resultat = resultatDAO!!.getAllResultat()
 
-      assertThat(resultat.size).isNotEqualTo(0)
-      resultat.map { it.typeKontroll }.contains(Kontrolltype.ForenklaKontroll)
-      resultat.map { it.typeKontroll }.contains(Kontrolltype.InngaaendeKontroll)
+    assertThat(resultat.size).isNotEqualTo(0)
+    resultat.map { it.typeKontroll }.contains(Kontrolltype.ForenklaKontroll)
+    resultat.map { it.typeKontroll }.contains(Kontrolltype.InngaaendeKontroll)
 
-      resultat.map { it.testType }.contains(TestgrunnlagType.OPPRINNELEG_TEST)
-      resultat.map { it.testType }.contains(TestgrunnlagType.RETEST)
+    resultat.map { it.testType }.contains(TestgrunnlagType.OPPRINNELEG_TEST)
+    resultat.map { it.testType }.contains(TestgrunnlagType.RETEST)
   }
 
-  @Test fun getResultatKontrollLoeysing() {
+  @Test
+  fun getResultatKontrollLoeysing() {
 
-      val testgrunnlagDAO = TestgrunnlagDAO(jdbcTemplate!!)
-      val existing = testgrunnlagDAO.getTestgrunnlag(testgrunnlagIds[0]).getOrThrow()
+    val testgrunnlagDAO = TestgrunnlagDAO(jdbcTemplate!!)
+    val existing = testgrunnlagDAO.getTestgrunnlag(testgrunnlagIds[0]).getOrThrow()
 
+    createAggregertTestresultat(null, testregelId, testgrunnlagIds[0], listOf(2))
 
-      createAggregertTestresultat(null, testregelId, testgrunnlagIds[0], listOf(2))
+    val resultat = resultatDAO!!.getResultatKontrollLoeysing(existing.kontrollId, 2)
 
-
-        val resultat = resultatDAO!!.getResultatKontrollLoeysing(existing.kontrollId,2)
-
-      assertThat(resultat.size).isEqualTo(1)
-      assertThat(resultat[0].testgrunnlagId).isEqualTo(testgrunnlagIds[0])
-      assertThat(resultat[0].loeysingId).isEqualTo(2)
-
+    assertThat(resultat.size).isEqualTo(1)
+    assertThat(resultat[0].testgrunnlagId).isEqualTo(testgrunnlagIds[0])
+    assertThat(resultat[0].loeysingId).isEqualTo(2)
   }
 
-    @Test fun getResultatKontroll() {
-        val testgrunnlagDAO = TestgrunnlagDAO(jdbcTemplate!!)
-        val existing = testgrunnlagDAO.getTestgrunnlag(testgrunnlagIds[0]).getOrThrow()
+  @Test
+  fun getResultatKontroll() {
+    val testgrunnlagDAO = TestgrunnlagDAO(jdbcTemplate!!)
+    val existing = testgrunnlagDAO.getTestgrunnlag(testgrunnlagIds[0]).getOrThrow()
 
+    createAggregertTestresultat(null, testregelId, testgrunnlagIds[0], listOf(2))
 
-        createAggregertTestresultat(null, testregelId, testgrunnlagIds[0], listOf(2))
+    val resultat = resultatDAO!!.getResultatKontroll(existing.kontrollId)
 
+    assertThat(resultat.size).isEqualTo(3)
+  }
 
-        val resultat = resultatDAO!!.getResultatKontroll(existing.kontrollId)
+  @Test
+  fun getResultatPrTema() {
 
-        assertThat(resultat.size).isEqualTo(3)
-    }
+    val expected =
+        ResultatTema(
+            "Bilder",
+            33,
+            3,
+            1,
+            2,
+            0,
+            0,
+        )
 
-  @Test fun getResultatPrTema() {
-
-    val expected = ResultatTema("Bilder",33,3,1,2,0,0,)
-
-    val resultat = resultatDAO!!.getResultatPrTema(null,null,null,null,null)
+    val resultat = resultatDAO!!.getResultatPrTema(null, null, null, null, null)
 
     assertThat(resultat.size).isEqualTo(1)
 
-      //assertThat(resultat[0]).isEqualTo(listOf(expected))
+    // assertThat(resultat[0]).isEqualTo(listOf(expected))
   }
-
-
-
-
 
   @Test fun getResultatPrKrav() {}
 
-  private fun createAggregertTestresultat(maalingId: Int?, testregelId: Int, testgrunnlagId: Int?, loeysungIds: List<Int> = listOf(1)) {
+  private fun createAggregertTestresultat(
+      maalingId: Int?,
+      testregelId: Int,
+      testgrunnlagId: Int?,
+      loeysungIds: List<Int> = listOf(1)
+  ) {
     val aggregeringDAO = AggregeringDAO(jdbcTemplate!!)
-      loeysungIds.forEach {
-          val aggregering_testregel =
-              AggregeringPerTestregelDTO(
-                  maalingId,
-                  it,
-                  testregelId,
-                  1,
-                  listOf(1, 2),
-                  6,
-                  3,
-                  1,
-                  1,
-                  1,
-                  1,
-                  0,
-                  0.5,
-                  0.5,
-                  testgrunnlagId)
-          aggregeringDAO.createAggregertResultatTestregel(aggregering_testregel)
-      }
+    loeysungIds.forEach {
+      val aggregering_testregel =
+          AggregeringPerTestregelDTO(
+              maalingId,
+              it,
+              testregelId,
+              1,
+              listOf(1, 2),
+              6,
+              3,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0.5,
+              0.5,
+              testgrunnlagId)
+      aggregeringDAO.createAggregertResultatTestregel(aggregering_testregel)
+    }
   }
 
   fun createTestregel(): Int {
@@ -398,12 +447,17 @@ class ResultatDAOTest() {
 
   fun createTestMaalingar(maalingNamn: List<String>): List<Int> {
     return maalingNamn.map {
-      val kontrollId = createKontroll("Forenkla kontroll 20204", Kontrolltype.ForenklaKontroll, listOf(1)).id
+      val kontrollId =
+          createKontroll("Forenkla kontroll 20204", Kontrolltype.ForenklaKontroll, listOf(1)).id
       createTestMaaling(listOf(testregelId), kontrollId, it)
     }
   }
 
-  fun createKontroll(kontrollNamn: String, kontrolltype: Kontrolltype, loeysingId: List<Int>): KontrollDAO.KontrollDB {
+  fun createKontroll(
+      kontrollNamn: String,
+      kontrolltype: Kontrolltype,
+      loeysingId: List<Int>
+  ): KontrollDAO.KontrollDB {
 
     val (kontrollDAO, kontrollId, kontroll) = opprettKontroll(kontrollNamn, kontrolltype)
 
@@ -412,19 +466,24 @@ class ResultatDAOTest() {
     return kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
   }
 
-  private fun opprettUtvalg(kontrollDAO: KontrollDAO, kontroll: Kontroll, loeysingId: List<Int> = listOf(1)) {
+  private fun opprettUtvalg(
+      kontrollDAO: KontrollDAO,
+      kontroll: Kontroll,
+      loeysingId: List<Int> = listOf(1)
+  ) {
     val utvalDAO = UtvalDAO(jdbcTemplate!!)
 
     utvalId = utvalDAO.createUtval("test-skal-slettes", loeysingId).getOrThrow()
 
-      val sideUtval = loeysingId.map { SideutvalBase(it, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null) }
+    val sideUtval =
+        loeysingId.map {
+          SideutvalBase(it, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null)
+        }
 
     kontrollDAO.updateKontroll(kontroll, null, listOf(testregelId))
 
     /* Add sideutval */
-    kontrollDAO.updateKontroll(
-        kontroll,
-        sideUtval)
+    kontrollDAO.updateKontroll(kontroll, sideUtval)
   }
 
   private fun opprettKontroll(
@@ -451,8 +510,12 @@ class ResultatDAOTest() {
     return Triple(kontrollDAO, kontrollId, kontroll)
   }
 
-  private fun createTestgrunnlagList(testgrunnlagList: List<OpprettTestgrunnlag>, loeysingList: List<Int>): List<Int> {
-    val kontroll = createKontroll("Inngåande kontroll", Kontrolltype.InngaaendeKontroll, loeysingList)
+  private fun createTestgrunnlagList(
+      testgrunnlagList: List<OpprettTestgrunnlag>,
+      loeysingList: List<Int>
+  ): List<Int> {
+    val kontroll =
+        createKontroll("Inngåande kontroll", Kontrolltype.InngaaendeKontroll, loeysingList)
     return testgrunnlagList.map { createTestgrunnlag(it, kontroll) }
   }
 

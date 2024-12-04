@@ -9,7 +9,6 @@ import org.springframework.boot.runApplication
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Profile
 import org.springframework.http.MediaType
 import org.springframework.http.client.BufferingClientHttpRequestFactory
 import org.springframework.http.client.SimpleClientHttpRequestFactory
@@ -24,7 +23,6 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter
 @EnableCaching
 class Testlab2TestingApplication {
 
-  @Profile("!test")
   @Bean
   fun restTemplate(restTemplateBuilder: RestTemplateBuilder): RestTemplate {
     val objectMapper =
