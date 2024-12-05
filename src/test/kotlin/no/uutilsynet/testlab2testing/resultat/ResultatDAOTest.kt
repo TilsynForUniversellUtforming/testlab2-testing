@@ -363,11 +363,11 @@ class ResultatDAOTest() {
         ResultatTema(
             "Bilder",
             0,
-            33,
-            9,
-            18,
-            3,
-            3,
+            44,
+            12,
+            24,
+            4,
+            4,
         )
 
     val resultat = resultatDAO!!.getResultatPrTema(null, null, null, null, null)
@@ -379,7 +379,7 @@ class ResultatDAOTest() {
 
   @Test
   fun getResultatPrKrav() {
-    val expected = ResultatKravBase(1, 0, 9, 18, 3, 3)
+    val expected = ResultatKravBase(1, 0, 12, 24, 4, 4)
 
     val resultat = resultatDAO!!.getResultatPrKrav(null, null, null, null, null)
 

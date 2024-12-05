@@ -28,12 +28,12 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.loeysing.Verksemd
+import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelInit
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito
@@ -42,7 +42,8 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 
-@SpringBootTest
+@SpringBootTest(
+    properties = arrayOf("spring.datasource.url: jdbc:tc:postgresql:16-alpine:///test-db"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ResultatServiceTest(
     @Autowired val resultatService: ResultatService,
@@ -142,7 +143,8 @@ class ResultatServiceTest(
     kontrollDAO.updateKontroll(kontroll, utvalId)
 
     /* Add testreglar */
-    testregelId = testregelDAO.getTestregelList().first().id
+    createTestregel()
+    testregelId = createTestregel()
     kontrollDAO.updateKontroll(kontroll, null, listOf(testregelId))
 
     /* Add sideutval */
@@ -153,6 +155,29 @@ class ResultatServiceTest(
         ))
 
     return kontrollId
+  }
+
+  fun createTestregel(): Int {
+
+    testregelDAO.createTema("Bilder")
+
+    val innholdstypeTesting = testregelDAO.createInnholdstypeTesting("Tekst")
+
+    val testregelInit =
+        TestregelInit(
+            testregelId = "QW-ACT-R1",
+            namn = TestConstants.name,
+            kravId = TestConstants.testregelTestKravId,
+            status = TestregelStatus.publisert,
+            type = TestregelInnholdstype.nett,
+            modus = TestregelModus.automatisk,
+            spraak = TestlabLocale.nb,
+            testregelSchema = TestConstants.testregelSchemaAutomatisk,
+            innhaldstypeTesting = innholdstypeTesting,
+            tema = 1,
+            testobjekt = 1,
+            kravTilSamsvar = "")
+    return testregelDAO.createTestregel(testregelInit)
   }
 
   @Test
