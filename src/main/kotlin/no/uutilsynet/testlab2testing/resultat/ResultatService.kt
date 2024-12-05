@@ -322,7 +322,7 @@ class ResultatService(
                   loeysingar.getVerksemdNamn(loeysingId),
                   calculateScore(resultLoeysing),
                   resultLoeysing.first().testType,
-                  talTestaElement(resultLoeysing),
+                  talTestaElementDTO(resultLoeysing),
                   calculateTalElementSamsvar(resultLoeysing),
                   calculateTalElementBrot(resultLoeysing),
                   getTestar(resultLoeysing.first().id, getKontrolltype(resultLoeysing)),
@@ -335,7 +335,7 @@ class ResultatService(
   private fun calculateTalElementBrot(resultLoeysing: List<ResultatLoeysingDTO>) =
       resultLoeysing.sumOf { it.talElementBrot }
 
-  private fun talTestaElement(resultLoeysing: List<ResultatLoeysingDTO>) =
+  private fun talTestaElementDTO(resultLoeysing: List<ResultatLoeysingDTO>) =
       calculateTalElementSamsvar(resultLoeysing) + calculateTalElementSamsvar(resultLoeysing)
 
   private fun calculateTalElementSamsvar(resultLoeysing: List<ResultatLoeysingDTO>) =
@@ -349,7 +349,7 @@ class ResultatService(
 
   private fun getKontrolltype(result: List<ResultatLoeysingDTO>) = result.first().typeKontroll
 
-  fun progresjonPrLoeysing(
+  private fun progresjonPrLoeysing(
       testgrunnlagId: Int,
       kontrolltype: Kontrolltype,
       loeysingar: LoysingList
@@ -515,25 +515,29 @@ class ResultatService(
         talElementIkkjeForekomst = talElementIkkjeForekomst)
   }
 
-  private fun List<ResultatLoeysingDTO>.toResultatOversiktLoeysing() =
-      this.map { krav -> mapKrav(krav) }
-          .groupBy { it.kravId }
-          .map { (kravId, result) ->
-            val loeysingar = getLoeysingMap(result.map { it.loeysingId }).getOrThrow()
-            handleIkkjeForekomst(
-                ResultatOversiktLoeysing(
-                    result.first().loeysingId,
-                    loeysingar.getNamn(result.first().loeysingId),
-                    result.first().typeKontroll,
-                    result.first().namn,
-                    result.map { it.testar }.flatten().distinct(),
-                    result.map { it.score }.average(),
-                    kravId ?: 0,
-                    result.first().kravTittel ?: "",
-                    talTestaElement(result),
-                    result.sumOf { it.talElementBrot },
-                    result.sumOf { it.talElementSamsvar }))
-          }
+  private fun List<ResultatLoeysingDTO>.toResultatOversiktLoeysing():
+      List<ResultatOversiktLoeysing> {
+
+    val loeysingar = this.map { it.loeysingId }.let { getLoeysingMap(it).getOrThrow() }
+
+    return this.map { krav -> mapKrav(krav) }
+        .groupBy { it.kravId }
+        .map { (kravId, result) ->
+          ResultatOversiktLoeysing(
+                  result.first().loeysingId,
+                  loeysingar.getNamn(result.first().loeysingId),
+                  result.first().typeKontroll,
+                  result.first().namn,
+                  result.map { it.testar }.flatten().distinct(),
+                  result.map { it.score }.average(),
+                  kravId ?: 0,
+                  result.first().kravTittel ?: "",
+                  talTestaElement(result),
+                  result.sumOf { it.talElementBrot },
+                  result.sumOf { it.talElementSamsvar })
+              .let { handleIkkjeForekomst(it) }
+        }
+  }
 
   private fun talTestaElement(result: List<ResultatLoeysing>) =
       result.sumOf { it.talElementBrot } + result.sumOf { it.talElementSamsvar }

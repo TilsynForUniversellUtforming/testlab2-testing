@@ -204,9 +204,9 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
   }
 
-  fun sqlArrayToList(sqlArray: String): List<Int> {
-    val kravIds = sqlArray.replace("[", "").replace("]", "").split(",").map { it.trim().toInt() }
-    return kravIds
+  fun sqlArrayToList(sqlArray: java.sql.Array): List<Int> {
+    val array = sqlArray.array as Array<Int>
+    return listOf(*array)
   }
 
   fun harMaalingLagraAggregering(maalingId: Int, aggregeringstype: String): Boolean {
@@ -280,7 +280,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         testregelId = rs.getInt("testregel_id"),
         loeysingId = rs.getInt("loeysing_id"),
         suksesskriterium = rs.getInt("suksesskriterium"),
-        fleireSuksesskriterium = sqlArrayToList(rs.getString("fleire_suksesskriterium")),
+        fleireSuksesskriterium = sqlArrayToList(rs.getArray("fleire_suksesskriterium")),
         talElementSamsvar = rs.getInt("tal_element_samsvar"),
         talElementBrot = rs.getInt("tal_element_brot"),
         talElementVarsel = rs.getInt("tal_element_varsel"),
