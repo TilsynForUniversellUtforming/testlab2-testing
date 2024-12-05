@@ -60,7 +60,10 @@ class MaalingResource(
                 val location = locationForId(id)
                 ResponseEntity.created(location).build()
               },
-              { exception -> ErrorHandlingUtil.handleErrors(exception) })
+              { exception ->
+                logger.error(exception.message)
+                ErrorHandlingUtil.handleErrors(exception)
+              })
 
   @PutMapping
   fun updateMaaling(@RequestBody dto: EditMaalingDTO): ResponseEntity<out Any> =
