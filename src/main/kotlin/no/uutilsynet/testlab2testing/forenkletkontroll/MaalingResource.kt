@@ -112,6 +112,7 @@ class MaalingResource(
             maalingService
                 .getFerdigeTestkoeyringar(maalingId)
                 .getOrThrow()
+                .filter { loeysingId == null || it.loeysing.id == loeysingId }
                 .let { ferdigeTestKoeyringar ->
                   mapTestkoeyringToTestresultatBrot(ferdigeTestKoeyringar)
                 }
