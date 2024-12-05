@@ -240,7 +240,14 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun createTema(tema: String): Int {
-    return jdbcTemplate.update(
-        """insert into "testlab2_testing"."tema" (tema) values (:tema)""", mapOf("tema" to tema))
+    val keyHolder = GeneratedKeyHolder()
+
+    val params = MapSqlParameterSource()
+    params.addValue("tema", tema)
+
+    jdbcTemplate.update(
+        """insert into "testlab2_testing"."tema" (tema) values (:tema)""", params, keyHolder)
+
+    return keyHolder.keys?.get("id") as Int
   }
 }

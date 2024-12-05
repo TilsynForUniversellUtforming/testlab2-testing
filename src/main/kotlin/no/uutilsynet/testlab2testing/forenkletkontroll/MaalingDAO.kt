@@ -136,7 +136,7 @@ class MaalingDAO(
         createMaalingParams(navn, datoStart, crawlParameters, utval.id),
         keyHolder)
 
-    val idMaaling = keyHolder.key as Int
+    val idMaaling = keyHolder.keys?.get("id") as Int
     val loeysingIdList = utval.loeysingar.map { it.id }
     updateLoeysingarForMaaling(loeysingIdList, idMaaling)
     updateTestreglarForMaaling(testregelIdList, idMaaling)

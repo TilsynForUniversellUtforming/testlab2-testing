@@ -40,9 +40,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
 
-@SpringBootTest(
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = arrayOf("spring.datasource.url: jdbc:tc:postgresql:16-alpine:///test-db"))
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
 class MaalingIntegrationTests(
@@ -81,6 +79,7 @@ class MaalingIntegrationTests(
   fun postNewMaalingWithUtvalg() {
     val loeysingIdList = listOf(1)
     val utvalId = utvalDAO.createUtval(utvalTestName, loeysingIdList).getOrThrow()
+
     val requestBody =
         mapOf(
             "navn" to maalingTestName,

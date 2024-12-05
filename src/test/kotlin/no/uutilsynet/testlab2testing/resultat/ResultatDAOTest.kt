@@ -92,7 +92,7 @@ class ResultatDAOTest() {
             0.5,
             6,
             3,
-            1)
+            testregelId)
 
     val expected2 =
         ResultatLoeysingDTO(
@@ -107,7 +107,7 @@ class ResultatDAOTest() {
             0.5,
             6,
             3,
-            1)
+            testregelId)
     val resultat: List<ResultatLoeysingDTO> = resultatDAO!!.getTestresultatMaaling()
 
     assertThat(resultat).isEqualTo(listOf(expected1, expected2))
@@ -129,7 +129,7 @@ class ResultatDAOTest() {
             0.5,
             6,
             3,
-            1)
+            testregelId)
 
     val resultat = resultatDAO!!.getTestresultatMaaling(maalingIds[0])
 
@@ -153,7 +153,7 @@ class ResultatDAOTest() {
             0.5,
             6,
             3,
-            1)
+            testregelId)
 
     val expected2 =
         ResultatLoeysingDTO(
@@ -168,7 +168,7 @@ class ResultatDAOTest() {
             0.5,
             6,
             3,
-            1)
+            testregelId)
 
     val expected3 =
         ResultatLoeysingDTO(
@@ -183,7 +183,7 @@ class ResultatDAOTest() {
             0.5,
             6,
             3,
-            1)
+            testregelId)
 
     val resultat = resultatDAO!!.getTestresultatTestgrunnlag()
 
@@ -208,7 +208,7 @@ class ResultatDAOTest() {
             0.5,
             6,
             3,
-            1)
+            testregelId)
 
     val expected2 =
         ResultatLoeysingDTO(
@@ -223,7 +223,7 @@ class ResultatDAOTest() {
             0.5,
             6,
             3,
-            1)
+            testregelId)
 
     val resultat = resultatDAO!!.getTestresultatTestgrunnlag(testgrunnlagId = testgrunnlagIds[0])
 
@@ -248,7 +248,7 @@ class ResultatDAOTest() {
             0.5,
             6,
             3,
-            1)
+            testregelId)
 
     val expected2 =
         ResultatLoeysingDTO(
@@ -263,7 +263,7 @@ class ResultatDAOTest() {
             0.5,
             6,
             3,
-            1)
+            testregelId)
 
     val expected3 =
         ResultatLoeysingDTO(
@@ -278,7 +278,7 @@ class ResultatDAOTest() {
             0.5,
             6,
             3,
-            1)
+            testregelId)
 
     val expected4 =
         ResultatLoeysingDTO(
@@ -293,7 +293,7 @@ class ResultatDAOTest() {
             0.5,
             6,
             3,
-            1)
+            testregelId)
 
     val expected5 =
         ResultatLoeysingDTO(
@@ -308,7 +308,7 @@ class ResultatDAOTest() {
             0.5,
             6,
             3,
-            1)
+            testregelId)
 
     val resultat = resultatDAO!!.getAllResultat()
 
@@ -363,11 +363,11 @@ class ResultatDAOTest() {
         ResultatTema(
             "Bilder",
             0,
-            44,
-            12,
-            24,
-            4,
-            4,
+            33,
+            9,
+            18,
+            3,
+            3,
         )
 
     val resultat = resultatDAO!!.getResultatPrTema(null, null, null, null, null)
@@ -420,7 +420,7 @@ class ResultatDAOTest() {
   fun createTestregel(): Int {
     val testregelDAO = TestregelDAO(jdbcTemplate!!)
 
-    testregelDAO.createTema("Bilder")
+    val temaId = testregelDAO.createTema("Bilder")
 
     val innholdstypeTesting = testregelDAO.createInnholdstypeTesting("Tekst")
 
@@ -435,7 +435,7 @@ class ResultatDAOTest() {
             spraak = TestlabLocale.nb,
             testregelSchema = TestConstants.testregelSchemaAutomatisk,
             innhaldstypeTesting = innholdstypeTesting,
-            tema = 1,
+            tema = temaId,
             testobjekt = 1,
             kravTilSamsvar = "")
     return testregelDAO.createTestregel(testregelInit)
