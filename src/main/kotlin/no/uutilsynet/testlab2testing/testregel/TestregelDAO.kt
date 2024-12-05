@@ -15,7 +15,10 @@ import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.support.GeneratedKeyHolder
+import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
@@ -83,9 +86,30 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "regelsettlist",
               "regelsettlistbase"],
       allEntries = true)
-  fun createTestregel(testregelInit: TestregelInit): Int =
-      jdbcTemplate.update(
-          """
+  fun createTestregel(testregelInit: TestregelInit): Int {
+
+    val keyHolder: KeyHolder = GeneratedKeyHolder()
+
+    val params = MapSqlParameterSource()
+    params.addValue("krav_id", testregelInit.kravId)
+    params.addValue("testregel_schema", testregelInit.testregelSchema)
+    params.addValue("namn", testregelInit.namn)
+    params.addValue("modus", testregelInit.modus.value)
+    params.addValue("testregel_id", setTestregelId(testregelInit))
+    params.addValue("versjon", 1)
+    params.addValue("status", testregelInit.status.value)
+    params.addValue(
+        "dato_sist_endra",
+        Timestamp.from(testregelInit.datoSistEndra.truncatedTo(ChronoUnit.MINUTES)))
+    params.addValue("spraak", testregelInit.spraak.value)
+    params.addValue("tema", testregelInit.tema)
+    params.addValue("type", testregelInit.type.value)
+    params.addValue("testobjekt", testregelInit.testobjekt)
+    params.addValue("krav_til_samsvar", testregelInit.kravTilSamsvar)
+    params.addValue("innhaldstype_testing", testregelInit.innhaldstypeTesting)
+
+    jdbcTemplate.update(
+        """
           insert into 
             "testlab2_testing"."testregel"(
               krav_id,
@@ -119,23 +143,12 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               :innhaldstype_testing
             ) 
         """
-              .trimIndent(),
-          mapOf(
-              "krav_id" to testregelInit.kravId,
-              "testregel_schema" to testregelInit.testregelSchema,
-              "namn" to testregelInit.namn,
-              "modus" to testregelInit.modus.value,
-              "testregel_id" to setTestregelId(testregelInit),
-              "versjon" to 1,
-              "status" to testregelInit.status.value,
-              "dato_sist_endra" to
-                  Timestamp.from(testregelInit.datoSistEndra.truncatedTo(ChronoUnit.MINUTES)),
-              "spraak" to testregelInit.spraak.value,
-              "tema" to testregelInit.tema,
-              "type" to testregelInit.type.value,
-              "testobjekt" to testregelInit.testobjekt,
-              "krav_til_samsvar" to testregelInit.kravTilSamsvar,
-              "innhaldstype_testing" to testregelInit.innhaldstypeTesting))
+            .trimIndent(),
+        params,
+        keyHolder)
+
+    return keyHolder.keys?.get("id") as Int
+  }
 
   @Transactional
   @CacheEvict(
