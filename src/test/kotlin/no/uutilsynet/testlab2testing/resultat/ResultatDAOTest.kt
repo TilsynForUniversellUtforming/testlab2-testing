@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.net.URI
+import java.time.Instant
+import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
@@ -33,9 +36,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
-import java.net.URI
-import java.time.Instant
-import java.time.LocalDate
 
 @SpringBootTest(
     properties = arrayOf("spring.datasource.url: jdbc:tc:postgresql:16-alpine:///test-db"))
@@ -170,26 +170,26 @@ class ResultatDAOTest() {
             3,
             1)
 
-      val expected3 =
-          ResultatLoeysingDTO(
-              3,
-              testgrunnlagId = testgrunnlagIds[0],
-              "Inngåande kontroll",
-              Kontrolltype.InngaaendeKontroll,
-              TestgrunnlagType.OPPRINNELEG_TEST,
-              LocalDate.now(),
-              listOf(("testar")),
-              2,
-              0.5,
-              6,
-              3,
-              1)
+    val expected3 =
+        ResultatLoeysingDTO(
+            3,
+            testgrunnlagId = testgrunnlagIds[0],
+            "Inngåande kontroll",
+            Kontrolltype.InngaaendeKontroll,
+            TestgrunnlagType.OPPRINNELEG_TEST,
+            LocalDate.now(),
+            listOf(("testar")),
+            2,
+            0.5,
+            6,
+            3,
+            1)
 
     val resultat = resultatDAO!!.getTestresultatTestgrunnlag()
 
     assertThat(resultat.size).isEqualTo(3)
 
-    assertThat(resultat).isEqualTo(listOf(expected1, expected2,expected3))
+    assertThat(resultat).isEqualTo(listOf(expected1, expected2, expected3))
   }
 
   @Test
@@ -210,26 +210,26 @@ class ResultatDAOTest() {
             3,
             1)
 
-      val expected2 =
-          ResultatLoeysingDTO(
-              3,
-              testgrunnlagId = testgrunnlagIds[0],
-              "Inngåande kontroll",
-              Kontrolltype.InngaaendeKontroll,
-              TestgrunnlagType.OPPRINNELEG_TEST,
-              LocalDate.now(),
-              listOf(("testar")),
-              2,
-              0.5,
-              6,
-              3,
-              1)
+    val expected2 =
+        ResultatLoeysingDTO(
+            3,
+            testgrunnlagId = testgrunnlagIds[0],
+            "Inngåande kontroll",
+            Kontrolltype.InngaaendeKontroll,
+            TestgrunnlagType.OPPRINNELEG_TEST,
+            LocalDate.now(),
+            listOf(("testar")),
+            2,
+            0.5,
+            6,
+            3,
+            1)
 
     val resultat = resultatDAO!!.getTestresultatTestgrunnlag(testgrunnlagId = testgrunnlagIds[0])
 
     assertThat(resultat.size).isEqualTo(2)
 
-    assertThat(resultat).isEqualTo(listOf(expected,expected2))
+    assertThat(resultat).isEqualTo(listOf(expected, expected2))
   }
 
   @Test
@@ -295,25 +295,25 @@ class ResultatDAOTest() {
             3,
             1)
 
-      val expected5=
-          ResultatLoeysingDTO(
-              3,
-              testgrunnlagId = testgrunnlagIds[0],
-              "Inngåande kontroll",
-              Kontrolltype.InngaaendeKontroll,
-              TestgrunnlagType.OPPRINNELEG_TEST,
-              LocalDate.now(),
-              listOf(("testar")),
-              2,
-              0.5,
-              6,
-              3,
-              1)
+    val expected5 =
+        ResultatLoeysingDTO(
+            3,
+            testgrunnlagId = testgrunnlagIds[0],
+            "Inngåande kontroll",
+            Kontrolltype.InngaaendeKontroll,
+            TestgrunnlagType.OPPRINNELEG_TEST,
+            LocalDate.now(),
+            listOf(("testar")),
+            2,
+            0.5,
+            6,
+            3,
+            1)
 
     val resultat = resultatDAO!!.getAllResultat()
 
     assertThat(resultat.size).isEqualTo(5)
-    assertThat(resultat).isEqualTo(listOf(expected1, expected2, expected3, expected4,expected5))
+    assertThat(resultat).isEqualTo(listOf(expected1, expected2, expected3, expected4, expected5))
   }
 
   @Test
@@ -362,22 +362,31 @@ class ResultatDAOTest() {
     val expected =
         ResultatTema(
             "Bilder",
+            0,
             33,
+            9,
+            18,
             3,
-            1,
-            2,
-            0,
-            0,
+            3,
         )
 
     val resultat = resultatDAO!!.getResultatPrTema(null, null, null, null, null)
 
     assertThat(resultat.size).isEqualTo(1)
 
-    // assertThat(resultat[0]).isEqualTo(listOf(expected))
+    assertThat(resultat[0]).isEqualTo(expected)
   }
 
-  @Test fun getResultatPrKrav() {}
+  @Test
+  fun getResultatPrKrav() {
+    val expected = ResultatKravBase(1, 0, 9, 18, 3, 3)
+
+    val resultat = resultatDAO!!.getResultatPrKrav(null, null, null, null, null)
+
+    assertThat(resultat.size).isEqualTo(1)
+
+    assertThat(resultat[0]).isEqualTo(expected)
+  }
 
   private fun createAggregertTestresultat(
       maalingId: Int?,
@@ -387,7 +396,7 @@ class ResultatDAOTest() {
   ) {
     val aggregeringDAO = AggregeringDAO(jdbcTemplate!!)
     loeysungIds.forEach {
-      val aggregering_testregel =
+      val aggregeringTestregel =
           AggregeringPerTestregelDTO(
               maalingId,
               it,
@@ -404,13 +413,14 @@ class ResultatDAOTest() {
               0.5,
               0.5,
               testgrunnlagId)
-      aggregeringDAO.createAggregertResultatTestregel(aggregering_testregel)
+      aggregeringDAO.createAggregertResultatTestregel(aggregeringTestregel)
     }
   }
 
   fun createTestregel(): Int {
-
     val testregelDAO = TestregelDAO(jdbcTemplate!!)
+
+    testregelDAO.createTema("Bilder")
 
     val innholdstypeTesting = testregelDAO.createInnholdstypeTesting("Tekst")
 

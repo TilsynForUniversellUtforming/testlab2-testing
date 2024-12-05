@@ -1,13 +1,13 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.sql.ResultSet
+import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
-import java.sql.ResultSet
-import java.time.LocalDate
 
 @Component
 class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -261,8 +261,8 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               rs.getInt("tal_element_brot") +
               rs.getInt("tal_element_varsel") +
               rs.getInt("tal_element_ikkje_forekomst"),
-          rs.getInt("tal_element_samsvar"),
           rs.getInt("tal_element_brot"),
+          rs.getInt("tal_element_samsvar"),
           rs.getInt("tal_element_varsel"),
           rs.getInt("tal_element_ikkje_forekomst"))
 
@@ -338,10 +338,10 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 ResultatKravBase(
                     rs.getInt("krav_id"),
                     rs.getInt("score"),
-                    rs.getInt("tal_element_samsvar") +
-                        rs.getInt("tal_element_brot") +
-                        rs.getInt("tal_element_varsel") +
-                        rs.getInt("tal_element_ikkje_forekomst"))
+                    rs.getInt("tal_element_brot"),
+                    rs.getInt("tal_element_samsvar"),
+                    rs.getInt("tal_element_varsel"),
+                    rs.getInt("tal_element_ikkje_forekomst"))
               }
         }
         .getOrElse {

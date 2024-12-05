@@ -225,4 +225,9 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         """insert into "testlab2_testing"."innhaldstype_testing" (innhaldstype) values (:innhaldstype_testing)""",
         mapOf("innhaldstype_testing" to innholdstypeTesting))
   }
+
+  fun createTema(tema: String): Int {
+    return jdbcTemplate.update(
+        """insert into "testlab2_testing"."tema" (tema) values (:tema)""", mapOf("tema" to tema))
+  }
 }
