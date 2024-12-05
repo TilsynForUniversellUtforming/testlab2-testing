@@ -4,6 +4,8 @@ import java.net.URI
 import java.sql.ResultSet
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.support.GeneratedKeyHolder
+import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 
 @Component
@@ -14,6 +16,8 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   ): Int {
 
     deleteAggregertResultatTestregel(aggregertResultatTestregel)
+
+    val keyHolder: KeyHolder = GeneratedKeyHolder()
 
     val sql =
         """insert into "testlab2_testing"."aggregering_testregel"(maaling_id,loeysing_id,suksesskriterium,fleire_suksesskriterium,testregel_id,tal_element_samsvar,tal_element_brot,tal_element_varsel,tal_element_ikkje_forekomst,tal_sider_samsvar,tal_sider_brot,tal_sider_ikkje_forekomst,testregel_gjennomsnittleg_side_brot_prosent,testregel_gjennomsnittleg_side_samsvar_prosent,testgrunnlag_id)
@@ -72,7 +76,8 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 aggregertResultatTestregel.testgrunnlagId,
                 java.sql.Types.INTEGER)
 
-    return jdbcTemplate.update(sql, parameterSource)
+    jdbcTemplate.update(sql, parameterSource, keyHolder)
+    return keyHolder.keys?.get("id") as Int
   }
 
   fun floatNullVedIkkjeForekomst(
