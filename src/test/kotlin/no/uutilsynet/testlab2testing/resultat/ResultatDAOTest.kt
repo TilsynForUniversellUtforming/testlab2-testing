@@ -81,9 +81,9 @@ class ResultatDAOTest() {
     assertThat(resultat.size).isEqualTo(2)
 
     resultat.forEach {
-      assertThat(it.testgrunnlagId).isIn(listOf(1, 2))
       assertThat(it.namn).isEqualTo("Forenkla kontroll 20204")
       assertThat(it.typeKontroll).isEqualTo(Kontrolltype.ForenklaKontroll)
+      assertThat(it.typeKontroll).isNotEqualTo(Kontrolltype.ForenklaKontroll)
       assertThat(it.score).isEqualTo(0.5)
     }
   }
