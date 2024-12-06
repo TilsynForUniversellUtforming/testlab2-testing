@@ -1,9 +1,5 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import java.net.URI
-import java.time.Instant
-import kotlin.properties.Delegates
-import kotlin.random.Random
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
@@ -31,6 +27,10 @@ import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import java.net.URI
+import java.time.Instant
+import kotlin.properties.Delegates
+import kotlin.random.Random
 
 private val TEST_URL = URI("http://localhost:8080/").toURL()
 
