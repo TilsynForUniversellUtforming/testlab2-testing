@@ -79,6 +79,7 @@ class MaalingIntegrationTests(
   fun postNewMaalingWithUtvalg() {
     val loeysingIdList = listOf(1)
     val utvalId = utvalDAO.createUtval(utvalTestName, loeysingIdList).getOrThrow()
+
     val requestBody =
         mapOf(
             "navn" to maalingTestName,

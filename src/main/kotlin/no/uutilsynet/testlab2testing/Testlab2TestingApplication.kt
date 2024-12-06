@@ -22,6 +22,7 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter
 @EnableScheduling
 @EnableCaching
 class Testlab2TestingApplication {
+
   @Bean
   fun restTemplate(restTemplateBuilder: RestTemplateBuilder): RestTemplate {
     val objectMapper =

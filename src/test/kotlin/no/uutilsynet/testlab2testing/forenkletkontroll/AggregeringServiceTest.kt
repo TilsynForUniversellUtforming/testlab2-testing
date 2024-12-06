@@ -4,12 +4,7 @@ import java.net.URI
 import java.time.Instant
 import kotlin.properties.Delegates
 import kotlin.random.Random
-import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2.constants.Sakstype
-import no.uutilsynet.testlab2.constants.TestregelInnholdstype
-import no.uutilsynet.testlab2.constants.TestregelModus
-import no.uutilsynet.testlab2.constants.TestregelStatus
-import no.uutilsynet.testlab2.constants.TestresultatUtfall
+import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.brukar.Brukar
@@ -30,7 +25,6 @@ import no.uutilsynet.testlab2testing.testregel.TestregelInit
 import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Offset
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito
@@ -42,7 +36,7 @@ private val TEST_URL = URI("http://localhost:8080/").toURL()
 
 private const val TEST_ORGNR = "123456789"
 
-@SpringBootTest
+@SpringBootTest(properties = ["spring.datasource.url: jdbc:tc:postgresql:16-alpine:///test-db"])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringService) {
 
@@ -66,16 +60,6 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
   private var utvalId: Int by Delegates.notNull()
 
   val testreglerSomSkalSlettes: MutableList<Int> = mutableListOf()
-
-  @AfterAll
-  fun cleanup() {
-    maalingDao.jdbcTemplate.update(
-        "delete from maalingv1 where navn = :namn", mapOf("namn" to "Testmaaling_aggregering"))
-    testreglerSomSkalSlettes.forEach { testregelDAO.deleteTestregel(it) }
-
-    utvalDAO.deleteUtval(utvalId)
-    kontrollDAO.deleteKontroll(kontrollId)
-  }
 
   @Test
   fun saveAggregeringTestregel() {
@@ -293,7 +277,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
   }
 
   private fun resultatManuellKontrollTestdata(): ArrayList<ResultatManuellKontroll> {
-    val testresultat: ArrayList<ResultatManuellKontroll> = ArrayList<ResultatManuellKontroll>()
+    val testresultat: ArrayList<ResultatManuellKontroll> = ArrayList()
     val utfall: Map<Int, TestresultatUtfall> =
         mapOf(
             1 to TestresultatUtfall.brot,

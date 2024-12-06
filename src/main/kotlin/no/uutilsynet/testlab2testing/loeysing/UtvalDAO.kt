@@ -6,7 +6,10 @@ import java.time.Instant
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.support.GeneratedKeyHolder
+import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
@@ -16,17 +19,35 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   @Transactional
   fun createUtval(namn: String, loeysingar: List<Int>): Result<UtvalId> = runCatching {
-    val utvalId =
-        jdbcTemplate.queryForObject(
-            "insert into utval (namn, oppretta) values (:namn, :oppretta) returning id",
-            mapOf("namn" to namn, "oppretta" to Timestamp.from(Instant.now())),
-            Int::class.java)!!
+    val utvalId = insertUtval(namn)
+    insertUtvalLoeysingar(loeysingar, utvalId)
+    utvalId
+  }
+
+  private fun insertUtvalLoeysingar(loeysingar: List<Int>, utvalId: Int) {
     loeysingar.forEach { loeysingId ->
       jdbcTemplate.update(
-          "insert into utval_loeysing (utval_id, loeysing_id) values (:utvalId, :loeysingId)",
+          """insert into "testlab2_testing"."utval_loeysing" (utval_id, loeysing_id) values (:utvalId, :loeysingId)""",
           mapOf("utvalId" to utvalId, "loeysingId" to loeysingId))
     }
-    utvalId
+  }
+
+  private fun insertUtval(namn: String): Int {
+    val keyHolder: KeyHolder = GeneratedKeyHolder()
+
+    val mapSqlParameterSource =
+        MapSqlParameterSource()
+            .addValue("namn", namn)
+            .addValue("oppretta", Timestamp.from(Instant.now()))
+
+    jdbcTemplate.update(
+        """insert into "testlab2_testing"."utval" (namn, oppretta) values (:namn, :oppretta)""",
+        mapSqlParameterSource,
+        keyHolder)
+
+    val utvalId = keyHolder.keys?.get("id") as Int
+
+    return utvalId
   }
 
   data class UtvalFromDatabase(
@@ -43,8 +64,8 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
                      utval.namn         as utval_namn,
                      utval.oppretta     as oppretta,
                      ul.loeysing_id as loeysing_id
-              from utval
-                       join utval_loeysing ul on utval.id = ul.utval_id
+              from "testlab2_testing"."utval"
+                       join "testlab2_testing"."utval_loeysing" ul on utval.id = ul.utval_id
               where utval.id = :id
             """
             .trimIndent(),
@@ -54,14 +75,15 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun getUtvalList(): Result<List<UtvalListItem>> = runCatching {
-    jdbcTemplate.query("select id, namn, oppretta from utval") { rs, _ ->
+    jdbcTemplate.query("""select id, namn, oppretta from "testlab2_testing"."utval"""") { rs, _ ->
       UtvalListItem(rs.getInt("id"), rs.getString("namn"), rs.getTimestamp("oppretta").toInstant())
     }
   }
 
   fun deleteUtval(id: Int): Result<Unit> = runCatching {
     logger.atInfo().log("slettar utval med id $id")
-    jdbcTemplate.update("delete from utval where id = :id", mapOf("id" to id))
+    jdbcTemplate.update(
+        """delete from "testlab2_testing"."utval" where id = :id""", mapOf("id" to id))
   }
 
   private fun toUtval(rs: ResultSet): UtvalFromDatabase {

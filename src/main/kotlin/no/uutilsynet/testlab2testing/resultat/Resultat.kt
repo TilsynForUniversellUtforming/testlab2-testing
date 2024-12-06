@@ -44,6 +44,21 @@ data class ResultatLoeysing(
     val kravTittel: String?,
 )
 
+data class ResultatLoeysingDTO(
+    val id: Int,
+    val testgrunnlagId: Int,
+    val namn: String,
+    val typeKontroll: Kontrolltype,
+    val testType: TestgrunnlagType,
+    val dato: LocalDate,
+    val testar: List<String>,
+    val loeysingId: Int,
+    val score: Double,
+    val talElementSamsvar: Int,
+    val talElementBrot: Int,
+    val testregelId: Int,
+)
+
 /** Uttrekk resultat per løysing */
 data class ResultatOversiktLoeysing(
     val loeysingId: Int,

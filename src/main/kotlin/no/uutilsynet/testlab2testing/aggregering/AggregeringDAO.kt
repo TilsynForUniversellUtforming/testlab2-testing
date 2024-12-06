@@ -2,9 +2,10 @@ package no.uutilsynet.testlab2testing.aggregering
 
 import java.net.URI
 import java.sql.ResultSet
-import java.util.*
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.support.GeneratedKeyHolder
+import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 
 @Component
@@ -16,9 +17,11 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     deleteAggregertResultatTestregel(aggregertResultatTestregel)
 
+    val keyHolder: KeyHolder = GeneratedKeyHolder()
+
     val sql =
-        "insert into aggregering_testregel(maaling_id,loeysing_id,suksesskriterium,fleire_suksesskriterium,testregel_id,tal_element_samsvar,tal_element_brot,tal_element_varsel,tal_element_ikkje_forekomst,tal_sider_samsvar,tal_sider_brot,tal_sider_ikkje_forekomst,testregel_gjennomsnittleg_side_brot_prosent,testregel_gjennomsnittleg_side_samsvar_prosent,testgrunnlag_id) " +
-            "values(:maaling_id,:loeysing_id,:suksesskriterium,:fleire_suksesskriterium,:testregel_id,:tal_element_samsvar,:tal_element_brot,:tal_element_varsel,:tal_element_ikkje_forekomst,:tal_sider_samsvar,:tal_sider_brot,:tal_sider_ikkje_forekomst,:testregel_gjennomsnittleg_side_brot_prosent,:testregel_gjennomsnittleg_side_samsvar_prosent,:testgrunnlag_id)"
+        """insert into "testlab2_testing"."aggregering_testregel"(maaling_id,loeysing_id,suksesskriterium,fleire_suksesskriterium,testregel_id,tal_element_samsvar,tal_element_brot,tal_element_varsel,tal_element_ikkje_forekomst,tal_sider_samsvar,tal_sider_brot,tal_sider_ikkje_forekomst,testregel_gjennomsnittleg_side_brot_prosent,testregel_gjennomsnittleg_side_samsvar_prosent,testgrunnlag_id)
+            values(:maaling_id,:loeysing_id,:suksesskriterium,:fleire_suksesskriterium,:testregel_id,:tal_element_samsvar,:tal_element_brot,:tal_element_varsel,:tal_element_ikkje_forekomst,:tal_sider_samsvar,:tal_sider_brot,:tal_sider_ikkje_forekomst,:testregel_gjennomsnittleg_side_brot_prosent,:testregel_gjennomsnittleg_side_samsvar_prosent,:testgrunnlag_id)"""
 
     val parameterSource =
         MapSqlParameterSource()
@@ -73,7 +76,8 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 aggregertResultatTestregel.testgrunnlagId,
                 java.sql.Types.INTEGER)
 
-    return jdbcTemplate.update(sql, parameterSource)
+    jdbcTemplate.update(sql, parameterSource, keyHolder)
+    return keyHolder.keys?.get("id") as Int
   }
 
   fun floatNullVedIkkjeForekomst(
@@ -94,7 +98,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     deleteAggregertResultatSuksesskriterium(aggregertResultatSuksesskriterium)
 
     val sql =
-        """insert into aggregering_suksesskriterium
+        """insert into "testlab2_testing"."aggregering_suksesskriterium"
             (maaling_id, loeysing_id, suksesskriterium_id, tal_sider_samsvar, tal_sider_brot, tal_sider_ikkje_forekomst, testgrunnlag_id)
             values(:maaling_id,:loeysing_id,:suksesskriterium,:tal_sider_samsvar,:tal_sider_brot,:tal_sider_ikkje_forekomst, :testgrunnlag_id)"""
 
@@ -115,7 +119,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     deleteAggregertResultatSide(aggregertResultatSide)
     val sql =
-        """insert into aggregering_side
+        """insert into "testlab2_testing"."aggregering_side"
               (maaling_id, loeysing_id, side,
    tal_element_samsvar,tal_element_brot,tal_element_ikkje_forekomst,testgrunnlag_id )
               values(:maaling_id,:loeysing_id,
@@ -144,7 +148,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun deleteAggregertResultatTestregel(aggregering: AggregeringPerTestregelDTO): Int {
     val sql =
-        "delete from aggregering_testregel where testregel_id = :testregelId and  loeysing_id=:loeysingId and (maaling_id=:maalingId or testgrunnlag_id=:testgrunnlagId)"
+        """delete from "testlab2_testing"."aggregering_testregel" where testregel_id = :testregelId and  loeysing_id=:loeysingId and (maaling_id=:maalingId or testgrunnlag_id=:testgrunnlagId)"""
     return jdbcTemplate.update(
         sql,
         mapOf(
@@ -156,7 +160,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun deleteAggregertResultatSuksesskriterium(aggregering: AggregeringPerSuksesskriteriumDTO): Int {
     val sql =
-        "delete from aggregering_suksesskriterium where suksesskriterium_id=:suksesskriteriumId and loeysing_id=:loeysingId and (maaling_id=:maalingId or testgrunnlag_id=:testgrunnlagId)"
+        """delete from "testlab2_testing"."aggregering_suksesskriterium" where suksesskriterium_id=:suksesskriteriumId and loeysing_id=:loeysingId and (maaling_id=:maalingId or testgrunnlag_id=:testgrunnlagId)"""
     return jdbcTemplate.update(
         sql,
         mapOf(
@@ -168,7 +172,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun deleteAggregertResultatSide(aggregering: AggregeringPerSideDTO): Int {
     val sql =
-        "delete from aggregering_side where side=:side and loeysing_id=:loeysingId and (maaling_id=:maalingId or testgrunnlag_id=:testgrunnlagId)"
+        """delete from "testlab2_testing"."aggregering_side" where side=:side and loeysing_id=:loeysingId and (maaling_id=:maalingId or testgrunnlag_id=:testgrunnlagId)"""
     return jdbcTemplate.update(
         sql,
         mapOf(
@@ -180,13 +184,14 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getAggregertResultatTestregelForMaaling(maalingId: Int): List<AggregeringPerTestregelDTO> {
     val query =
-        "select * from aggregering_testregel where maaling_id = :maalingId order by loeysing_id"
+        """select * from "testlab2_testing"."aggregering_testregel" where maaling_id = :maalingId order by loeysing_id"""
     val params = mapOf("maalingId" to maalingId)
     return jdbcTemplate.query(query, params) { rs, _ -> aggregeringPerTestregelRowmapper(rs) }
   }
 
   fun getAggregertResultatSideForMaaling(maalingId: Int): List<AggregeringPerSideDTO> {
-    val query = "select * from aggregering_side where maaling_id = :maalingId order by loeysing_id"
+    val query =
+        """select * from "testlab2_testing"."aggregering_side" where maaling_id = :maalingId order by loeysing_id"""
     val params = mapOf("maalingId" to maalingId)
 
     return jdbcTemplate.query(query, params) { rs, _ -> aggregeringPerSideRowmapper(rs) }
@@ -196,7 +201,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       maalingId: Int
   ): List<AggregeringPerSuksesskriteriumDTO> {
     val query =
-        "select * from aggregering_suksesskriterium where maaling_id = :maalingId order by loeysing_id"
+        """select * from "testlab2_testing"."aggregering_suksesskriterium" where maaling_id = :maalingId order by loeysing_id"""
     val params = mapOf("maalingId" to maalingId)
 
     return jdbcTemplate.query(query, params) { rs, _ ->
@@ -219,7 +224,8 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           else -> throw RuntimeException("Ugyldig aggregeringstype")
         }
 
-    val queryString = "select count(*) from $aggregeringsTabell where maaling_id = :maalingId"
+    val queryString =
+        """select count(*) from "testlab2_testing.$aggregeringsTabell" where maaling_id = :maalingId"""
 
     val count =
         jdbcTemplate.queryForObject(
@@ -238,7 +244,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   ): List<AggregeringPerTestregelDTO> {
     val query =
         """
-            select * from aggregering_testregel where testgrunnlag_id = :testgrunnlagId order by testregel_id
+            select * from "testlab2_testing"."aggregering_testregel" where testgrunnlag_id = :testgrunnlagId order by testregel_id
         """
 
     return jdbcTemplate.query(query, mapOf("testgrunnlagId" to testgrunnlagId)) { rs, _ ->
@@ -249,7 +255,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getAggregertResultatSideForTestgrunnlag(testgrunnlagId: Int): List<AggregeringPerSideDTO> {
     val query =
         """
-            select * from aggregering_side where testgrunnlag_id = :testgrunnlagId
+            select * from "testlab2_testing"."aggregering_side" where testgrunnlag_id = :testgrunnlagId
         """
 
     return jdbcTemplate.query(query, mapOf("testgrunnlagId" to testgrunnlagId)) { rs, _ ->
@@ -262,7 +268,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   ): List<AggregeringPerSuksesskriteriumDTO> {
     val query =
         """
-            select * from aggregering_suksesskriterium where testgrunnlag_id = :testgrunnlagId
+            select * from "testlab2_testing"."aggregering_suksesskriterium" where testgrunnlag_id = :testgrunnlagId
         """
 
     return jdbcTemplate.query(query, mapOf("testgrunnlagId" to testgrunnlagId)) { rs, _ ->
@@ -297,7 +303,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 rs.getDouble("testregel_gjennomsnittleg_side_samsvar_prosent"),
                 talElementSamsvar,
                 talElemenBrot),
-        testgrunnlagId = rs.getInt("testgrunnlag_id"))
+        testgrunnlagId = rs.getInt("testgrunnlag_id").takeIf { it > 0 })
   }
 
   private fun aggregeringPerSideRowmapper(rs: ResultSet): AggregeringPerSideDTO {
