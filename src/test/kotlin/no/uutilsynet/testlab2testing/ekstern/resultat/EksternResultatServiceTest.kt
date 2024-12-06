@@ -11,7 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 
-@SpringBootTest
+@SpringBootTest(
+    properties = arrayOf("spring.datasource.url: jdbc:tc:postgresql:16-alpine:///test-db"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternResultatService) {
 
@@ -26,11 +27,9 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
     Mockito.`when`(resultatService.getKontrollLoeysingResultatIkkjeRetest(1, 1))
         .thenReturn(RapportTestdata.restresultat)
     val resultat = eksternResultatService.getRapportForLoeysing("rapportId", 1)
-    print(resultat)
     assert(resultat.isNotEmpty())
     assert(resultat.size == 2)
     assertThat(resultat).isEqualTo(RapportTestdata.rapportForLoeysing)
-    print(resultat)
   }
 }
 

@@ -29,7 +29,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           kontroll_id,
           dato,
           testregel_id
-        from kontroll k
+        from "testlab2_testing"."kontroll" k
           join (
             select 
               loeysing_id,
@@ -50,9 +50,9 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 then m.dato_start
                 else t.dato_oppretta
               end as dato
-            from aggregering_testregel agt
-              left join maalingv1 m on m.id = agt.maaling_id
-              left join testgrunnlag t on t.id = agt.testgrunnlag_id
+            from "testlab2_testing"."aggregering_testregel" agt
+              left join "testlab2_testing"."maalingv1" m on m.id = agt.maaling_id
+              left join "testlab2_testing"."testgrunnlag" t on t.id = agt.testgrunnlag_id
             where case
               when maaling_id is not null
                 then m.kontrollid
@@ -63,38 +63,37 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       """
           .trimIndent()
 
-  private val query_testresultat_maaling =
+  private val queryTestresultatMaaling =
       """select k.id, k.tittel as tittel,kontrolltype, maaling_id as testgrunnlag_id, 'OPPRINNELIG_TEST' as testtype,
         dato_start as dato,
         loeysing_id, testregel_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot
-        from kontroll k
-        left join maalingv1 m on m.kontrollid=k.id
-        join aggregering_testregel agt on agt.maaling_id=m.id
-        """
+        from "testlab2_testing"."kontroll" k
+        left join "testlab2_testing"."maalingv1" m on m.kontrollid=k.id
+        join "testlab2_testing"."aggregering_testregel" agt on agt.maaling_id=m.id"""
           .trimIndent()
 
-  private val query_testresultat_testgrunnlag =
+  private val queryTestresultatTestgrunnlag =
       """select k.id as id, k.tittel as tittel, kontrolltype, testgrunnlag_id, testregel_id, type as testtype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot,
             dato_oppretta as dato
-            from kontroll k
-            left join testgrunnlag t on t.kontroll_id=k.id
-            join aggregering_testregel agt on agt.testgrunnlag_id=t.id
+            from "testlab2_testing"."kontroll" k
+            left join "testlab2_testing"."testgrunnlag" t on t.kontroll_id=k.id
+            join "testlab2_testing"."aggregering_testregel" agt on agt.testgrunnlag_id=t.id
         """
           .trimIndent()
 
-  fun getTestresultatMaaling(): List<ResultatLoeysing> {
-    val query = query_testresultat_maaling.trimIndent()
+  fun getTestresultatMaaling(): List<ResultatLoeysingDTO> {
+    val query = queryTestresultatMaaling.trimIndent()
     return jdbcTemplate.query(query) { rs, _ -> resultatLoeysingRowmapper(rs) }
   }
 
-  fun getTestresultatMaaling(maalingId: Int): List<ResultatLoeysing> {
-    val query = "$query_testresultat_maaling where maaling_id = :maalingId"
+  fun getTestresultatMaaling(maalingId: Int): List<ResultatLoeysingDTO> {
+    val query = "$queryTestresultatMaaling where maaling_id = :maalingId"
     return jdbcTemplate.query(query, mapOf("maalingId" to maalingId)) { rs, _ ->
       resultatLoeysingRowmapper(rs)
     }
   }
 
-  private fun resultatLoeysingRowmapper(rs: ResultSet): ResultatLoeysing {
+  private fun resultatLoeysingRowmapper(rs: ResultSet): ResultatLoeysingDTO {
     val maalingId = rs.getInt("id")
     val navn = rs.getString("tittel")
     val dato = handleDate(rs.getDate("dato"))
@@ -108,7 +107,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val testgrunnlagId = rs.getInt("testgrunnlag_id")
     val testtype = setTestType(kontrolltype, rs)
 
-    return ResultatLoeysing(
+    return ResultatLoeysingDTO(
         maalingId,
         testgrunnlagId,
         navn,
@@ -120,26 +119,24 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         testregelGjennomsnittlegSideSamsvarProsent,
         talElementSamsvar,
         talElementBrot,
-        testregelId,
-        null,
-        null)
+        testregelId)
   }
 
-  fun setTestType(kontrolltype: Kontrolltype, resultSet: ResultSet): String {
+  private fun setTestType(kontrolltype: Kontrolltype, resultSet: ResultSet): String {
     if (kontrolltype == Kontrolltype.ForenklaKontroll) {
       return TestgrunnlagType.OPPRINNELEG_TEST.toString()
     }
     return resultSet.getString("testtype")
   }
 
-  fun getTestresultatTestgrunnlag(): List<ResultatLoeysing> {
-    return jdbcTemplate.query(query_testresultat_testgrunnlag) { rs, _ ->
+  fun getTestresultatTestgrunnlag(): List<ResultatLoeysingDTO> {
+    return jdbcTemplate.query(queryTestresultatTestgrunnlag) { rs, _ ->
       resultatLoeysingRowmapper(rs)
     }
   }
 
-  fun getTestresultatTestgrunnlag(testgrunnlagId: Int): List<ResultatLoeysing> {
-    val query = "$query_testresultat_testgrunnlag where testgrunnlag_id = :testgrunnlagId"
+  fun getTestresultatTestgrunnlag(testgrunnlagId: Int): List<ResultatLoeysingDTO> {
+    val query = "$queryTestresultatTestgrunnlag where testgrunnlag_id = :testgrunnlagId"
     return runCatching {
           jdbcTemplate.query(query, mapOf("testgrunnlagId" to testgrunnlagId)) { rs, _ ->
             resultatLoeysingRowmapper(rs)
@@ -151,25 +148,25 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         }
   }
 
-  fun getResultat(): List<ResultatLoeysing> {
+  fun getAllResultat(): List<ResultatLoeysingDTO> {
     return jdbcTemplate.query(resultatQuery) { rs, _ -> resultatLoeysingRowmapper(rs) }
   }
 
-  fun getResultatKontroll(kontrollId: Int): List<ResultatLoeysing> {
+  fun getResultatKontroll(kontrollId: Int): List<ResultatLoeysingDTO> {
     val query = "$resultatQuery where k.id = :kontrollId order by testgrunnlag_id"
     return jdbcTemplate.query(query, mapOf("kontrollId" to kontrollId)) { rs, _ ->
       resultatLoeysingRowmapper(rs)
     }
   }
 
-  fun handleDate(date: java.sql.Date?): LocalDate {
+  private fun handleDate(date: java.sql.Date?): LocalDate {
     if (date != null) {
       return date.toLocalDate()
     }
     return LocalDate.now()
   }
 
-  fun getResultatKontrollLoeysing(kontrollId: Int, loeysingId: Int): List<ResultatLoeysing> {
+  fun getResultatKontrollLoeysing(kontrollId: Int, loeysingId: Int): List<ResultatLoeysingDTO> {
     return runCatching {
           val query = "$resultatQuery where k.id = :kontrollId  and loeysing_id = :loeysingId"
           jdbcTemplate.query(
@@ -197,7 +194,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             sum(tal_element_varsel)                              as tal_element_varsel,
             sum(tal_element_ikkje_forekomst)                     as tal_element_ikkje_forekomst,
             avg(testregel_gjennomsnittleg_side_samsvar_prosent ) as score
-          from kontroll k
+          from "testlab2_testing"."kontroll" k
             join (
               select 
                 tm.tema,
@@ -217,12 +214,12 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   then m.dato_start
                   else t.dato_oppretta
                 end as dato
-              from aggregering_testregel agt
-                left join maalingv1 m on m.id = agt.maaling_id
-                left join testgrunnlag t on t.id = agt.testgrunnlag_id 
+              from "testlab2_testing"."aggregering_testregel" agt
+                left join "testlab2_testing"."maalingv1" m on m.id = agt.maaling_id
+                left join "testlab2_testing"."testgrunnlag" t on t.id = agt.testgrunnlag_id 
                   and t.type = 'OPPRINNELEG_TEST'
-                left join testregel tr on tr.id = agt.testregel_id
-                left join tema tm on tm.id = tr.tema
+                left join "testlab2_testing"."testregel" tr on tr.id = agt.testregel_id
+                left join "testlab2_testing"."tema" tm on tm.id = tr.tema
               where case
                 when maaling_id is not null
                 then m.kontrollid
@@ -264,8 +261,8 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               rs.getInt("tal_element_brot") +
               rs.getInt("tal_element_varsel") +
               rs.getInt("tal_element_ikkje_forekomst"),
-          rs.getInt("tal_element_samsvar"),
           rs.getInt("tal_element_brot"),
+          rs.getInt("tal_element_samsvar"),
           rs.getInt("tal_element_varsel"),
           rs.getInt("tal_element_ikkje_forekomst"))
 
@@ -286,7 +283,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             sum(tal_element_varsel)                             as tal_element_varsel,
             sum(tal_element_ikkje_forekomst)                    as tal_element_ikkje_forekomst,
             avg(testregel_gjennomsnittleg_side_samsvar_prosent) as score
-          from kontroll k
+          from "testlab2_testing"."kontroll" k
             join (
             select tr.krav_id as krav_id,
               loeysing_id,
@@ -305,11 +302,11 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 then m.dato_start
                 else t.dato_oppretta
               end as dato
-            from aggregering_testregel agt
-              left join maalingv1 m on m.id = agt.maaling_id
-              left join testgrunnlag t on t.id = agt.testgrunnlag_id 
+            from "testlab2_testing"."aggregering_testregel" agt
+              left join "testlab2_testing"."maalingv1" m on m.id = agt.maaling_id
+              left join "testlab2_testing"."testgrunnlag" t on t.id = agt.testgrunnlag_id 
                 and t.type = 'OPPRINNELEG_TEST'
-              left join testregel tr on tr.id = agt.testregel_id
+              left join "testlab2_testing"."testregel" tr on tr.id = agt.testregel_id
             where 
               case
                 when maaling_id is not null
@@ -341,10 +338,10 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 ResultatKravBase(
                     rs.getInt("krav_id"),
                     rs.getInt("score"),
-                    rs.getInt("tal_element_samsvar") +
-                        rs.getInt("tal_element_brot") +
-                        rs.getInt("tal_element_varsel") +
-                        rs.getInt("tal_element_ikkje_forekomst"))
+                    rs.getInt("tal_element_brot"),
+                    rs.getInt("tal_element_samsvar"),
+                    rs.getInt("tal_element_varsel"),
+                    rs.getInt("tal_element_ikkje_forekomst"))
               }
         }
         .getOrElse {
