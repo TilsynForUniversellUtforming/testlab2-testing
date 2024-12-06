@@ -36,8 +36,7 @@ private val TEST_URL = URI("http://localhost:8080/").toURL()
 
 private const val TEST_ORGNR = "123456789"
 
-@SpringBootTest(
-    properties = arrayOf("spring.datasource.url: jdbc:tc:postgresql:16-alpine:///test-db"))
+@SpringBootTest(properties = ["spring.datasource.url: jdbc:tc:postgresql:16-alpine:///test-db"])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringService) {
 
@@ -278,7 +277,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
   }
 
   private fun resultatManuellKontrollTestdata(): ArrayList<ResultatManuellKontroll> {
-    val testresultat: ArrayList<ResultatManuellKontroll> = ArrayList<ResultatManuellKontroll>()
+    val testresultat: ArrayList<ResultatManuellKontroll> = ArrayList()
     val utfall: Map<Int, TestresultatUtfall> =
         mapOf(
             1 to TestresultatUtfall.brot,
