@@ -27,10 +27,9 @@ class EksternResultatService(
 
   private val logger = LoggerFactory.getLogger(EksternResultatResource::class.java)
 
-  fun findTestForOrgNr(orgnr: String): Result<TestListElementEkstern> {
-    val verksemd: VerksemdEkstern = getVerksemd(orgnr)
-    val testEksternList =
-        getLoysingarForOrgnr(orgnr).toListElementForLoeysingar().toTestEksternList()
+  fun findTestForOrgNr(org: String): Result<TestListElementEkstern> {
+    val verksemd: VerksemdEkstern = getVerksemd(org)
+    val testEksternList = getLoysingarForOrgnr(org).toListElementForLoeysingar().toTestEksternList()
 
     return Result.success(TestListElementEkstern(verksemd = verksemd, testList = testEksternList))
   }
@@ -70,7 +69,7 @@ class EksternResultatService(
   }
 
   private fun getLoysingarForOrgnr(orgnr: String): List<Loeysing> {
-    val loeysingList = loeysingsRegisterClient.search(orgnr).getOrThrow()
+    val loeysingList = loeysingsRegisterClient.searchLoeysingByVerksemd(orgnr).getOrThrow()
     if (loeysingList.isEmpty()) {
       logger.info("Fann ingen løysingar for verkemd med orgnr $orgnr")
       throw NoSuchElementException("Fann ingen løysingar for verkemd med orgnr $orgnr")
