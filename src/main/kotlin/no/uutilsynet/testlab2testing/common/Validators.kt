@@ -2,9 +2,9 @@ package no.uutilsynet.testlab2testing.common
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import no.uutilsynet.testlab2testing.forenkletkontroll.Status
 import java.net.URI
 import java.net.URL
-import no.uutilsynet.testlab2testing.forenkletkontroll.Status
 
 fun validateOrgNummer(s: String?): Result<String> = runCatching {
   requireNotNull(s) { "Organisasjonsnummer kan ikkje vere null" }
@@ -19,7 +19,7 @@ fun validateOrgNummer(s: String?): Result<String> = runCatching {
   if (kontrollsiffer == orgnummer[8]) {
     s
   } else {
-    throw IllegalArgumentException("$s er ikkje eit gyldig organisasjonsnummer")
+    throw IllegalArgumentException("$s er ikkje eit gyldig organisasjonsnummer. Eksempel på gyldig orgnummer: 991825827")
   }
 }
 
