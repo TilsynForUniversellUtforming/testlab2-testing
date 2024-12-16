@@ -2,9 +2,9 @@ package no.uutilsynet.testlab2testing.common
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import no.uutilsynet.testlab2testing.forenkletkontroll.Status
 import java.net.URI
 import java.net.URL
-import no.uutilsynet.testlab2testing.forenkletkontroll.Status
 
 fun validateOrgNummer(s: String?): Result<String> = runCatching {
   requireNotNull(s) { "Organisasjonsnummer kan ikkje vere null" }
