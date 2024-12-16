@@ -19,7 +19,8 @@ fun validateOrgNummer(s: String?): Result<String> = runCatching {
   if (kontrollsiffer == orgnummer[8]) {
     s
   } else {
-    throw IllegalArgumentException("$s er ikkje eit gyldig organisasjonsnummer")
+    throw IllegalArgumentException(
+        "$s er ikkje eit gyldig organisasjonsnummer. Eksempel på gyldig orgnummer: 991825827")
   }
 }
 
