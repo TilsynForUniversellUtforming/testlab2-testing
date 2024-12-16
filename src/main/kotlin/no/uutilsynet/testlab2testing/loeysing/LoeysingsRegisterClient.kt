@@ -119,4 +119,18 @@ class LoeysingsRegisterClient(
           ?: throw RuntimeException("loeysingsregisteret returnerte null for verksemdsøk $search")
     }
   }
+
+  fun searchLoeysingByVerksemd(search: String): Result<List<Loeysing>> {
+    return kotlin.runCatching {
+      val uri =
+          UriComponentsBuilder.fromUriString(properties.host)
+              .pathSegment("v1", "loeysing", "verksemd")
+              .queryParam("search", search)
+              .queryParam("atTime", ISO_INSTANT.format(Instant.now()))
+              .build()
+              .toUri()
+      restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
+          ?: throw RuntimeException("loeysingsregisteret returnerte null for verksemdsøk $search")
+    }
+  }
 }

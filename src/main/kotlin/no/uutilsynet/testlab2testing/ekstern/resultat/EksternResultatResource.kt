@@ -17,18 +17,29 @@ class EksternResultatResource(
 
   @GetMapping
   fun findTestForOrgNr(
-      @RequestParam("orgnr") orgnr: String
+      @RequestParam("orgnr") orgnr: String?,
+      @RequestParam("searchparam") searchparam: String?
   ): ResponseEntity<TestListElementEkstern?> {
     logger.debug("Henter tester for orgnr $orgnr")
 
     return try {
-      val result = eksternResultatService.findTestForOrgNr(orgnr).getOrThrow()
+      val result = findTests(searchparam, orgnr)
       ResponseEntity.ok(result)
     } catch (e: NoSuchElementException) {
       ResponseEntity.notFound().build<TestListElementEkstern>()
     } catch (e: Exception) {
       logger.error(e.message)
       ResponseEntity.badRequest().build<TestListElementEkstern>()
+    }
+  }
+
+  private fun findTests(searchparam: String?, orgnr: String?): TestListElementEkstern {
+    return if (searchparam != null) {
+      eksternResultatService.findTestForOrgNr(searchparam).getOrThrow()
+    } else if (orgnr != null) {
+      eksternResultatService.findTestForOrgNr(orgnr).getOrThrow()
+    } else {
+      throw IllegalArgumentException("Mangler søkeparameter")
     }
   }
 
