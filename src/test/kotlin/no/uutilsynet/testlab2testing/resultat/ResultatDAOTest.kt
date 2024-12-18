@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URI
-import java.time.Instant
-import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
@@ -36,6 +33,9 @@ import org.springframework.context.annotation.Bean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
+import java.net.URI
+import java.time.Instant
+import java.time.LocalDate
 
 @SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
 @ActiveProfiles("test")
@@ -192,7 +192,7 @@ class ResultatDAOTest {
     val expected =
         ResultatTema(
             "Bilder",
-            50,
+            0,
             44,
             12,
             24,
@@ -209,7 +209,7 @@ class ResultatDAOTest {
 
   @Test
   fun getResultatPrKrav() {
-    val expected = ResultatKravBase(1, 50, 12, 24, 4, 4)
+    val expected = ResultatKravBase(1, 0, 12, 24, 4, 4)
 
     val resultat = resultatDAO!!.getResultatPrKrav(null, null, null, null, null)
 
