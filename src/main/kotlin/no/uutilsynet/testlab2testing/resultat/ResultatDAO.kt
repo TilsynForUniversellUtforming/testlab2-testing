@@ -256,7 +256,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   private fun resultatTemaRowmapper(rs: ResultSet) =
       ResultatTema(
           rs.getString("tema") ?: "Null",
-          (rs.getDouble("score") * 100).toInt(),
+          (rs.getDouble("score")).toInt(),
           rs.getInt("tal_element_samsvar") +
               rs.getInt("tal_element_brot") +
               rs.getInt("tal_element_varsel") +
@@ -337,7 +337,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   "sluttDato" to tilDato)) { rs, _ ->
                 ResultatKravBase(
                     rs.getInt("krav_id"),
-                    (rs.getDouble("score") * 100).toInt(),
+                    (rs.getDouble("score")).toInt(),
                     rs.getInt("tal_element_brot"),
                     rs.getInt("tal_element_samsvar"),
                     rs.getInt("tal_element_varsel"),
