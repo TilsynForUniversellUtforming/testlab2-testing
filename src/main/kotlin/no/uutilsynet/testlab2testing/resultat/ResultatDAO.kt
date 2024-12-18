@@ -1,13 +1,13 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.sql.ResultSet
+import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
-import java.sql.ResultSet
-import java.time.LocalDate
 
 @Component
 class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
