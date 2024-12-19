@@ -216,14 +216,16 @@ class ResultatService(
     val resultatMaaling =
         maalingId?.let { resultatDAO.getTestresultatMaaling(it) }
             ?: resultatDAO.getTestresultatMaaling()
-    return resultatMaaling.groupBy { it.id }.map { (id, result) -> resultat(id, result) }
+    return resultatMaaling
+        .groupBy { it.id }
+        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
   }
 
   private fun getKontrollResultat(): List<Resultat> {
     return resultatDAO
         .getAllResultat()
-        .groupBy { it.testgrunnlagId }
-        .map { (id, result) -> resultat(id, result) }
+        .groupBy { it.id }
+        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
   }
 
   @Cacheable("resultatKontroll")
@@ -231,7 +233,7 @@ class ResultatService(
     return resultatDAO
         .getResultatKontroll(kontrollId)
         .groupBy { it.testgrunnlagId }
-        .map { (id, result) -> resultat(id, result) }
+        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
   }
 
   @Cacheable("resultatKontroll")
@@ -272,16 +274,22 @@ class ResultatService(
     val resultatTestgrunnlag =
         testgrunnlagId?.let { resultatDAO.getTestresultatTestgrunnlag(it) }
             ?: resultatDAO.getTestresultatTestgrunnlag()
-    return resultatTestgrunnlag.groupBy { it.id }.map { (id, result) -> resultat(id, result) }
+    return resultatTestgrunnlag
+        .groupBy { it.id }
+        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
   }
 
-  private fun resultat(testgrunnlagId: Int, result: List<ResultatLoeysingDTO>): Resultat {
+  private fun resultatgruppertPrKontroll(
+      kontrollId: Int,
+      result: List<ResultatLoeysingDTO>
+  ): Resultat {
 
-    val resultatLoeysingar = resultatForLoeysingar(result, testgrunnlagId, getKontrolltype(result))
+    val resultatLoeysingar = loeysingResultats(result)
+
     val publisert = erKontrollPublisert(result)
 
     return Resultat(
-        result.first().id,
+        kontrollId,
         result.first().namn,
         getKontrolltype(result),
         resultatLoeysingar.first().testType,
@@ -290,7 +298,18 @@ class ResultatService(
         resultatLoeysingar)
   }
 
-  private fun resultatForLoeysingar(
+  private fun loeysingResultats(result: List<ResultatLoeysingDTO>): List<LoeysingResultat> {
+    val resultatLoeysingar =
+        result
+            .groupBy { it.testgrunnlagId }
+            .map { (id, result) ->
+              resultatForLoeysingarPrTestgrunnlag(result, id, getKontrolltype(result))
+            }
+            .flatten()
+    return resultatLoeysingar
+  }
+
+  private fun resultatForLoeysingarPrTestgrunnlag(
       result: List<ResultatLoeysingDTO>,
       testgrunnlagId: Int,
       kontrolltype: Kontrolltype
@@ -329,7 +348,9 @@ class ResultatService(
                   statusLoeysingar[loeysingId] ?: 0)
             }
 
-    return resultLoeysingar
+    return if (resultLoeysingar.size > 5) {
+      resultLoeysingar.subList(0, 5)
+    } else resultLoeysingar
   }
 
   private fun calculateTalElementBrot(resultLoeysing: List<ResultatLoeysingDTO>) =
