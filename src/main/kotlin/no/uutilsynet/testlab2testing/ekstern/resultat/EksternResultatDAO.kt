@@ -13,12 +13,13 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getTestsForLoeysingIds(loeysingIdList: List<Int>): List<TestListElementDB> {
     return jdbcTemplate.query(
-        """select r.id_ekstern, tg.kontroll_id, r.loeysing_id, k.kontrolltype, r.publisert
-      from kontroll k 
-          join testgrunnlag tg on tg.kontroll_id = k.id
-          join rapport r on tg.id = r.testgrunnlag_id
-      where r.publisert is not null
-          and tg.type = 'OPPRINNELEG_TEST'
+        """select r.id_ekstern, case when tg.kontroll_id is not null then tg.kontroll_id else m.kontrollid end as kontroll_id , r.loeysing_id, case when k1.kontrolltype is not null then k1.kontrolltype else k2.kontrolltype end as kontrolltype, r.publisert
+            from testlab2_testing.rapport r
+            left join testlab2_testing.testgrunnlag tg on r.testgrunnlag_id=tg.id
+            left join testlab2_testing.maalingv1 m on r.maaling_id=m.id
+            left join testlab2_testing.kontroll k1 on tg.kontroll_id=k1.id
+            left join testlab2_testing.kontroll k2 on m.kontrollid=k2.id
+            where publisert is not null
           and r.loeysing_id in (:loeysingIdList)"""
             .trimIndent(),
         mapOf("loeysingIdList" to loeysingIdList)) { rs, _ ->
@@ -149,9 +150,4 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       "select count(*) from rapport r join testgrunnlag tg on tg.id=r.testgrunnlag_id where tg.kontroll_id=:kontrollId and publisert is not null"
     }
   }
-
-  data class TestgrunnlagIdLoeysingId(
-      val testgrunnlagId: Int,
-      val loeysingId: Int,
-  )
 }
