@@ -226,6 +226,7 @@ class ResultatService(
         .getAllResultat()
         .groupBy { it.id }
         .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
+        .map { it.copy(loeysingar = limitResultatList(it.loeysingar)) }
   }
 
   @Cacheable("resultatKontroll")
@@ -234,7 +235,6 @@ class ResultatService(
         .getResultatKontroll(kontrollId)
         .groupBy { it.testgrunnlagId }
         .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
-        .map { it.copy(loeysingar = limitResultatList(it.loeysingar)) }
   }
 
   @Cacheable("resultatKontroll")
