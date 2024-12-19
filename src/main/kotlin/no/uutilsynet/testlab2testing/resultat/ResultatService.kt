@@ -234,6 +234,7 @@ class ResultatService(
         .getResultatKontroll(kontrollId)
         .groupBy { it.testgrunnlagId }
         .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
+        .map { it.copy(loeysingar = limitResultatList(it.loeysingar)) }
   }
 
   @Cacheable("resultatKontroll")
@@ -284,7 +285,7 @@ class ResultatService(
       result: List<ResultatLoeysingDTO>
   ): Resultat {
 
-    val resultatLoeysingar = loeysingResultats(result)
+    val resultatLoeysingar = loeysingResultatList(result)
 
     val publisert = erKontrollPublisert(result)
 
@@ -298,7 +299,7 @@ class ResultatService(
         resultatLoeysingar)
   }
 
-  private fun loeysingResultats(result: List<ResultatLoeysingDTO>): List<LoeysingResultat> {
+  private fun loeysingResultatList(result: List<ResultatLoeysingDTO>): List<LoeysingResultat> {
     val resultatLoeysingar =
         result
             .groupBy { it.testgrunnlagId }
@@ -348,6 +349,10 @@ class ResultatService(
                   statusLoeysingar[loeysingId] ?: 0)
             }
 
+    return resultLoeysingar
+  }
+
+  private fun limitResultatList(resultLoeysingar: List<LoeysingResultat>): List<LoeysingResultat> {
     return if (resultLoeysingar.size > 5) {
       resultLoeysingar.subList(0, 5)
     } else resultLoeysingar
