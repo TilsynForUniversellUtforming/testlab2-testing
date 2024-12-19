@@ -45,7 +45,9 @@ class EksternResultatService(
   }
 
   private fun getKontrollResult(test: TestListElementDB): Resultat =
-      resultatService.getKontrollResultatMedType(test.kontrollId, test.kontrollType).first()
+      resultatService.getKontrollResultatMedType(test.kontrollId, test.kontrollType).first {
+        it.loeysingar.map { loeysing -> loeysing.loeysingId }.contains(test.loeysingId)
+      }
 
   private fun getVerksemd(orgnr: String): VerksemdEkstern {
     return runCatching {
@@ -145,14 +147,6 @@ class EksternResultatService(
       krav: KravWcag2x
   ) = getResultatPrKrav(kontrollLoeysing, krav.id).map { it.toTestresultatDetaljertEkstern(krav) }
 
-  private fun getKravWcag2x(suksesskriterium: String): KravWcag2x {
-    require(!suksessKriteriumParamMatchPattern(suksesskriterium)) {
-      "Ugyldig suksesskriterium format"
-    }
-    val krav = kravregisterClient.getKrav(suksesskriterium)
-    return krav
-  }
-
   private fun getKravFromKravId(kravId: Int): KravWcag2x {
     return kravregisterClient.getWcagKrav(kravId)
   }
@@ -160,9 +154,6 @@ class EksternResultatService(
   private fun getResultatPrKrav(kontrollLoeysing: KontrollIdLoeysingId, kravId: Int) =
       resultatService.getResultatListKontroll(
           kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, kravId)
-
-  private fun suksessKriteriumParamMatchPattern(suksesskriterium: String) =
-      !Regex("""^\d+\.\d+\.\d+$""").matches(suksesskriterium)
 
   private fun getKontrollIdLoeysingIdsForRapportId(rapportId: String): List<KontrollIdLoeysingId> {
     return eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId)).getOrThrow()
