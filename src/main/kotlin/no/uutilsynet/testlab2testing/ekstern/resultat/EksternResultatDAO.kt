@@ -150,4 +150,5 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       "select count(*) from rapport r join testgrunnlag tg on tg.id=r.testgrunnlag_id where tg.kontroll_id=:kontrollId and publisert is not null"
     }
   }
+
 }
