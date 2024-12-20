@@ -1,6 +1,9 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
+import no.uutilsynet.testlab2testing.resultat.LoeysingResultat
+import no.uutilsynet.testlab2testing.resultat.Resultat
 import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing
 import no.uutilsynet.testlab2testing.resultat.ResultatService
 import org.assertj.core.api.Assertions.assertThat
@@ -10,6 +13,8 @@ import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import java.time.Instant
+import java.time.LocalDate
 
 @SpringBootTest(properties = ["spring.datasource.url: jdbc:tc:postgresql:16-alpine:///test-db"])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -29,6 +34,62 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
     assert(resultat.isNotEmpty())
     assert(resultat.size == 2)
     assertThat(resultat).isEqualTo(RapportTestdata.rapportForLoeysing)
+  }
+
+  @Test
+  fun toTestListEkstern() {
+
+    val expectedLoeysingar: List<LoeysingResultat> =
+        listOf(
+            LoeysingResultat(
+                1,
+                "Loeysingsnamn",
+                "testverksemd",
+                0.5,
+                TestgrunnlagType.OPPRINNELEG_TEST,
+                4,
+                2,
+                2,
+                listOf("testar"),
+                1),
+            LoeysingResultat(
+                2,
+                "Loeysingsnamn2",
+                "testverksemd",
+                0.5,
+                TestgrunnlagType.OPPRINNELEG_TEST,
+                4,
+                2,
+                2,
+                listOf("testar"),
+                2))
+
+    val expectedResultat =
+        Resultat(
+            1,
+            "Forenkla kontroll 20204",
+            Kontrolltype.ForenklaKontroll,
+            TestgrunnlagType.OPPRINNELEG_TEST,
+            LocalDate.now(),
+            true,
+            expectedLoeysingar)
+
+    Mockito.`when`(resultatService.getKontrollResultatMedType(1, Kontrolltype.ForenklaKontroll))
+        .thenReturn(listOf(expectedResultat))
+
+    val testListElementDB =
+        TestListElementDB("1", 1, 1, Kontrolltype.ForenklaKontroll, Instant.now())
+
+    val expected =
+        TestEkstern("1", 1, "Loeysingsnamn", 0.5, Kontrolltype.ForenklaKontroll, Instant.now())
+
+    val result = eksternResultatService.toTestListEkstern(testListElementDB)
+
+    assertThat(result.size).isNotEqualTo(0)
+    assertThat(result[0].loeysingId).isEqualTo(expected.loeysingId)
+    assertThat(result[0].loeysingNamn).isEqualTo(expected.loeysingNamn)
+    assertThat(result[0].score).isEqualTo(expected.score)
+    assertThat(result[0].kontrollType).isEqualTo(expected.kontrollType)
   }
 }
 
