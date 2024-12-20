@@ -7,6 +7,7 @@ import no.uutilsynet.testlab2testing.krav.KravWcag2x
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
+import no.uutilsynet.testlab2testing.resultat.LoeysingResultat
 import no.uutilsynet.testlab2testing.resultat.Resultat
 import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing
 import no.uutilsynet.testlab2testing.resultat.ResultatService
@@ -44,10 +45,19 @@ class EksternResultatService(
     return this.map(::toTestListEkstern).flatten().sortedBy { it.publisert }
   }
 
-  private fun getKontrollResult(test: TestListElementDB): Resultat =
-      resultatService.getKontrollResultatMedType(test.kontrollId, test.kontrollType).first {
-        it.loeysingar.map { loeysing -> loeysing.loeysingId }.contains(test.loeysingId)
-      }
+  private fun getKontrollResult(test: TestListElementDB): Resultat {
+    return resultatService
+        .getKontrollResultatMedType(test.kontrollId, test.kontrollType)
+        .filterResultatOnLoeysing(test)
+  }
+
+  private fun List<Resultat>.filterResultatOnLoeysing(test: TestListElementDB): Resultat {
+    return this.first()
+        .copy(loeysingar = filterLoeysingarOnId(this.first().loeysingar, test.loeysingId))
+  }
+
+  private fun filterLoeysingarOnId(loeysingar: List<LoeysingResultat>, loeysingId: Int) =
+      loeysingar.filter { loeysing -> loeysing.loeysingId == loeysingId }
 
   private fun getVerksemd(orgnr: String): VerksemdEkstern {
     return runCatching {
