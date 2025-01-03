@@ -1,24 +1,14 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
-import java.time.Instant
-import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
-import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
+import no.uutilsynet.testlab2testing.inngaendekontroll.preprosesser.ImportBody
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
@@ -29,6 +19,7 @@ class TestResultatResource(
     val aggregeringService: AggregeringService,
     val brukarService: BrukarService,
     val bildeService: BildeService,
+    val testresultatService: TestresultatService
 ) {
   val logger: Logger = getLogger(TestResultatResource::class.java)
 
@@ -122,19 +113,25 @@ class TestResultatResource(
   fun getAggregertResultat(@PathVariable testgrunnlagId: Int) =
       aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
 
+  @PostMapping("/import")
+  fun importTestResultat(@RequestBody createTestResultat: ImportBody): ResponseEntity<Int> =
+      runCatching {
+            val brukar = brukarService.getCurrentUser()
+
+            val testresultat =
+                testresultatService
+                    .importTestelement(
+                        createTestResultat.testresultatBase, createTestResultat.xpathExpression)
+                    .map { testResultatDAO.save(it.copy(brukar = brukar)).getOrThrow() }
+            testresultat.size
+          }
+          .fold(
+              { ResponseEntity.ok(it) },
+              {
+                logger.error("Feil ved oppretting av testresultat", it)
+                ResponseEntity.internalServerError().build()
+              })
+
   private fun location(id: Int) =
       ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
-
-  data class CreateTestResultat(
-      val testgrunnlagId: Int,
-      val loeysingId: Int,
-      val testregelId: Int,
-      val sideutvalId: Int,
-      val brukar: Brukar?,
-      val elementOmtale: String? = null,
-      val elementResultat: TestresultatUtfall? = null,
-      val elementUtfall: String? = null,
-      val testVartUtfoert: Instant? = null,
-      val kommentar: String? = null,
-  )
 }

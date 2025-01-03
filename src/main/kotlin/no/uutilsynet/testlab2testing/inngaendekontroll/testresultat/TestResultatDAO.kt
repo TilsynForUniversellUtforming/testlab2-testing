@@ -17,7 +17,7 @@ class TestResultatDAO(
     val brukarService: BrukarService
 ) {
   @Transactional
-  fun save(createTestResultat: TestResultatResource.CreateTestResultat): Result<Int> {
+  fun save(createTestResultat: CreateTestResultat): Result<Int> {
     return runCatching {
       val brukarId: Int =
           brukarService.getUserId() ?: throw RuntimeException("No authenticated user")
@@ -26,9 +26,9 @@ class TestResultatDAO(
 
       jdbcTemplate.queryForObject(
           """
-        insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
+        insert into "testlab2_testing"."testresultat" (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale,element_html,element_pointer, element_resultat,
                                      element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
-        values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
+        values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementHtml,:elementPointer :elementResultat, :elementUtfall,
                 :testVartUtfoert,:status, :kommentar, :sist_lagra)
         returning id
       """
@@ -40,6 +40,8 @@ class TestResultatDAO(
               "sideutvalId" to createTestResultat.sideutvalId,
               "brukarId" to brukarId,
               "elementOmtale" to createTestResultat.elementOmtale,
+              "elementHtml" to createTestResultat.elementHtml,
+              "elementPointer" to createTestResultat.elementPointer,
               "elementResultat" to createTestResultat.elementResultat,
               "elementUtfall" to createTestResultat.elementUtfall,
               "kommentar" to createTestResultat.kommentar,
