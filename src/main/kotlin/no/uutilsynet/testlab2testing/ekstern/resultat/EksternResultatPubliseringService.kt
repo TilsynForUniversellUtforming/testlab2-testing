@@ -27,7 +27,7 @@ class EksternResultatPubliseringService(
           val erPublisert =
               eksternResultatDAO.erKontrollPublisert(kontrollId, kontroll.kontrolltype)
 
-        updateCache("resultatKontroll", kontrollId)
+          updateCache("resultatKontroll", kontrollId)
 
           return if (erPublisert) {
             avpubliserResultat(kontroll.id)
@@ -128,7 +128,7 @@ class EksternResultatPubliseringService(
     return eksternResultatDAO.avpubliserResultatMaaling(maalingId, loeysingId)
   }
 
-    private fun updateCache(cache: String, id: Int) {
-        cacheManager.getCache(cache)?.evict(id)
-    }
+  private fun updateCache(cache: String, id: Int) {
+    cacheManager.getCache(cache)?.evict(id)
+  }
 }
