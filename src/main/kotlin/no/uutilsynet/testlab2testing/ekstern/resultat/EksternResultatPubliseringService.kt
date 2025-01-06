@@ -6,6 +6,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cache.CacheManager
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -15,6 +16,7 @@ class EksternResultatPubliseringService(
     @Autowired val eksternResultatDAO: EksternResultatDAO,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val maalingDAO: MaalingDAO,
+    @Autowired val cacheManager: CacheManager
 ) {
   private val logger = LoggerFactory.getLogger(EksternResultatPubliseringService::class.java)
 
@@ -24,6 +26,8 @@ class EksternResultatPubliseringService(
           val kontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
           val erPublisert =
               eksternResultatDAO.erKontrollPublisert(kontrollId, kontroll.kontrolltype)
+
+        updateCache("resultatKontroll", kontrollId)
 
           return if (erPublisert) {
             avpubliserResultat(kontroll.id)
@@ -123,4 +127,8 @@ class EksternResultatPubliseringService(
             ?: throw IllegalStateException("Fann ingen maaling for kontroll med id $kontrollId")
     return eksternResultatDAO.avpubliserResultatMaaling(maalingId, loeysingId)
   }
+
+    private fun updateCache(cache: String, id: Int) {
+        cacheManager.getCache(cache)?.evict(id)
+    }
 }
