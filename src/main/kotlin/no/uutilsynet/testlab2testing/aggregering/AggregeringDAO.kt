@@ -225,7 +225,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         }
 
     val queryString =
-        """select count(*) from "testlab2_testing.$aggregeringsTabell" where maaling_id = :maalingId"""
+        """select count(*) from "testlab2_testing"."$aggregeringsTabell" where maaling_id = :maalingId"""
 
     val count =
         jdbcTemplate.queryForObject(
