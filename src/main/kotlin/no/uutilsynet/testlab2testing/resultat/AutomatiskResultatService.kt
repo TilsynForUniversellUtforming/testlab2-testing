@@ -4,13 +4,14 @@ import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestResultat
+import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.springframework.stereotype.Service
 
 @Service
-class AutomatiskResultatService(val maalingDAO: MaalingDAO, val maalingService: MaalingService,
-                                testregelDAO: TestregelDAO
-) : KontrollResultatService(testregelDAO) {
+class AutomatiskResultatService(val maalingDAO: MaalingDAO, val maalingService: MaalingService, resultatDAO: ResultatDAO,
+                                testregelDAO: TestregelDAO, kravregisterClient: KravregisterClient
+) : KontrollResultatService(resultatDAO,testregelDAO,kravregisterClient) {
 
     fun getResultatForAutomatiskKontroll(
         kontrollId: Int,
@@ -20,14 +21,8 @@ class AutomatiskResultatService(val maalingDAO: MaalingDAO, val maalingService: 
         val maalingId = getMaalingForKontroll(kontrollId)
         val testregelIds: List<Int> = getTestreglarForKrav(kravId)
 
-        val testresultat: List<TestResultat> = getAutotesterTestresultat(maalingId, loeysingId)
-
-        if (testresultat.isNotEmpty()) {
-            return testresultat
-                .filter { filterTestregelNoekkel(it.testregelId, testregelIds) }
-                .map { testresultatDetaljertMaaling(it, maalingId) }
-        }
-        return emptyList()
+        return getResultatForMaaling(maalingId, loeysingId)
+            .filter { filterByTestregel(it.testregelId, testregelIds) }
     }
 
     private fun getAutotesterTestresultat(maalingId: Int, loeysingId: Int?): List<TestResultat> {
@@ -51,12 +46,13 @@ class AutomatiskResultatService(val maalingDAO: MaalingDAO, val maalingService: 
         }
     }
 
-    private fun testresultatDetaljertMaaling(it: TestResultat, maalingId: Int) =
-        TestresultatDetaljert(
+    private fun testresultatDetaljertMaaling(it: TestResultat, maalingId: Int): TestresultatDetaljert {
+        val testregel = getTestregelIdFromSchema(it.testregelId)
+        return TestresultatDetaljert(
             null,
             it.loeysingId,
-            getTestregelIdFromSchema(it.testregelId) ?: 0,
-            it.testregelId,
+            testregel.id,
+            testregel.testregelId,
             maalingId,
             it.side,
             it.suksesskriterium,
@@ -67,5 +63,14 @@ class AutomatiskResultatService(val maalingDAO: MaalingDAO, val maalingService: 
             null,
             null,
             emptyList())
+
+    }
+
+    fun getKontrollResultat(maalingId:Int?): List<ResultatLoeysingDTO> {
+        val resultatMaaling =
+            maalingId?.let { resultatDAO.getTestresultatMaaling(it) }
+                ?: resultatDAO.getTestresultatMaaling()
+        return resultatMaaling
+    }
 
 }
