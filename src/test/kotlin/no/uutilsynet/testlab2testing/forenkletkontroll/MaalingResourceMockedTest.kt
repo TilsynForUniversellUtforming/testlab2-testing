@@ -2,8 +2,6 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.net.URI
-import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestregelInnholdstype
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestregelStatus
@@ -27,14 +25,16 @@ import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.client.ExpectedCount
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers
 import org.springframework.test.web.client.response.MockRestResponseCreators
+import java.net.URI
+import java.time.Instant
 
 @RestClientTest(AutoTesterClient::class, AutoTesterProperties::class)
 class MaalingResourceMockedTest {
@@ -42,21 +42,22 @@ class MaalingResourceMockedTest {
   @Autowired private lateinit var server: MockRestServiceServer
   @Autowired private lateinit var autoTesterClient: AutoTesterClient
 
-  @MockBean private lateinit var maalingDAO: MaalingDAO
+  @MockitoBean private lateinit var maalingDAO: MaalingDAO
 
-  @MockBean private lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+  @MockitoBean private lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
-  @MockBean private lateinit var testregelDAO: TestregelDAO
+  @MockitoBean
+  private lateinit var testregelDAO: TestregelDAO
 
-  @MockBean private lateinit var utvalDAO: UtvalDAO
+  @MockitoBean private lateinit var utvalDAO: UtvalDAO
 
-  @MockBean private lateinit var crawlerClient: CrawlerClient
+  @MockitoBean private lateinit var crawlerClient: CrawlerClient
 
-  @MockBean private lateinit var aggregeringService: AggregeringService
+  @MockitoBean private lateinit var aggregeringService: AggregeringService
 
-  @MockBean private lateinit var sideutvalDAO: SideutvalDAO
+  @MockitoBean private lateinit var sideutvalDAO: SideutvalDAO
 
-  @MockBean private lateinit var brukarService: BrukarService
+  @MockitoBean private lateinit var brukarService: BrukarService
 
   private lateinit var maalingResource: MaalingResource
 
@@ -76,11 +77,11 @@ class MaalingResourceMockedTest {
             aggregeringService,
             sideutvalDAO,
             MaalingService(
-                maalingDAO, loeysingsRegisterClient, testregelDAO, utvalDAO, aggregeringService),
+                maalingDAO, loeysingsRegisterClient, testregelDAO, utvalDAO, aggregeringService, autoTesterClient),
             brukarService)
   }
 
-  @Test
+    @Test
   @DisplayName("Skal returnere feil når man bruker ulovlig testregelSchema")
   fun illegaltestregelSchema() {
     val id = 1
