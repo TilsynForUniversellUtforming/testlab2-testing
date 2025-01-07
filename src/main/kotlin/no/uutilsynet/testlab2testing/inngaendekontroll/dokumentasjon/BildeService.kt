@@ -1,9 +1,5 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
-import java.awt.Image
-import java.awt.image.BufferedImage
-import javax.imageio.ImageIO
-import no.uutilsynet.testlab2testing.forenkletkontroll.logger
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
@@ -12,16 +8,20 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import org.springframework.util.MimeTypeUtils
 import org.springframework.web.multipart.MultipartFile
+import java.awt.Image
+import java.awt.image.BufferedImage
+import javax.imageio.ImageIO
 
 private const val GJENNOPPRETT_BILDE_FEIL = "Kunne ikkje gjenopprette bilde"
 
 @Service
 class BildeService(
     @Autowired val testResultatDAO: TestResultatDAO,
-    val blobClient: BlobStorageClient,
+    @Lazy val blobClient: BlobStorageClient,
 ) {
 
   private val logger = LoggerFactory.getLogger(BildeService::class.java)

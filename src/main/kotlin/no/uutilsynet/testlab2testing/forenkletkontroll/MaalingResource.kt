@@ -5,8 +5,6 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
-import java.net.URL
-import java.time.Instant
 import kotlinx.coroutines.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
@@ -21,11 +19,12 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
-import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.net.URL
+import java.time.Instant
 
 @RestController
 @RequestMapping("v1/maalinger")
@@ -110,26 +109,12 @@ class MaalingResource(
               })
 
   fun getTestresultat(maalingId: Int, loeysingId: Int?): Result<List<AutotesterTestresultat>> {
-    return runBlocking(Dispatchers.IO) {
-      runCatching {
-            maalingService
-                .getFerdigeTestkoeyringar(maalingId)
-                .getOrThrow()
-                .filter { loeysingId == null || it.loeysing.id == loeysingId }
-                .let { ferdigeTestKoeyringar ->
-                  mapTestkoeyringToTestresultatBrot(ferdigeTestKoeyringar)
-                }
-                .toSingleResult()
-                .map { it.values.flatten() }
+
+      return runCatching {
+          maalingService.getTestresultatMaalingLoeysing(maalingId, loeysingId)
           }
           .fold(onSuccess = { it }, onFailure = { Result.failure(it) })
-    }
   }
-
-  private suspend fun mapTestkoeyringToTestresultatBrot(
-      ferdigeTestKoeyringar: List<TestKoeyring.Ferdig>
-  ) = autoTesterClient.fetchResultat(ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlBrot)
-
   @Operation(
       summary = "Hentar aggregert resultat for ei måling",
       description =

@@ -1,17 +1,11 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URL
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingResource
 import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.TestResultat
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
@@ -28,10 +22,13 @@ import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
+import java.net.URL
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Component
 class ResultatService(
-    val maalingResource: MaalingResource,
     val testregelDAO: TestregelDAO,
     val testResultatDAO: TestResultatDAO,
     val sideutvalDAO: SideutvalDAO,
@@ -42,68 +39,17 @@ class ResultatService(
     val kontrollDAO: KontrollDAO,
     val testgrunnlagDAO: TestgrunnlagDAO,
     val bildeService: BildeService,
-    val eksternResultatDAO: EksternResultatDAO
+    val eksternResultatDAO: EksternResultatDAO,
+    val automatiskResultatService: AutomatiskResultatService
 ) {
 
   private val logger = LoggerFactory.getLogger(ResultatService::class.java)
 
-  fun getResultatForAutomatiskKontroll(
-      kontrollId: Int,
-      loeysingId: Int,
-      kravId: Int
-  ): List<TestresultatDetaljert> {
-    val maalingId = getMaalingForKontroll(kontrollId)
-    val testregelIds: List<Int> = getTestreglarForKrav(kravId)
-
-    val testresultat: List<TestResultat> = getAutotesterTestresultat(maalingId, loeysingId)
-
-    if (testresultat.isNotEmpty()) {
-      return testresultat
-          .filter { filterTestregelNoekkel(it.testregelId, testregelIds) }
-          .map { testresultatDetaljertMaaling(it, maalingId) }
-    }
-    return emptyList()
+    fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
+        return automatiskResultatService.getResultatForMaaling(maalingId, loeysingId)
   }
 
-  private fun getAutotesterTestresultat(maalingId: Int, loeysingId: Int?): List<TestResultat> {
-    val testresultat: List<TestResultat> =
-        maalingResource.getTestresultat(maalingId, loeysingId).getOrThrow().map {
-          it as TestResultat
-        }
-    return testresultat
-  }
-
-  private fun getMaalingForKontroll(kontrollId: Int): Int {
-    val maalingId =
-        maalingDAO.getMaalingIdFromKontrollId(kontrollId)
-            ?: throw RuntimeException("Fant ikkje maalingId for kontrollId $kontrollId")
-    return maalingId
-  }
-
-  fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
-    return getAutotesterTestresultat(maalingId, loeysingId).map {
-      testresultatDetaljertMaaling(it, maalingId)
-    }
-  }
-
-  private fun testresultatDetaljertMaaling(it: TestResultat, maalingId: Int) =
-      TestresultatDetaljert(
-          null,
-          it.loeysingId,
-          getTestregelIdFromSchema(it.testregelId) ?: 0,
-          it.testregelId,
-          maalingId,
-          it.side,
-          it.suksesskriterium,
-          it.testVartUtfoert,
-          it.elementUtfall,
-          it.elementResultat,
-          it.elementOmtale,
-          null,
-          null,
-          emptyList())
-
-  fun getResulatForManuellKontroll(
+    fun getResulatForManuellKontroll(
       kontrollId: Int,
       loeysingId: Int,
       kravId: Int
@@ -487,7 +433,7 @@ class ResultatService(
         kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().kontrolltype
     return when (typeKontroll) {
       Kontrolltype.ForenklaKontroll ->
-          getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
+          automatiskResultatService.getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
       Kontrolltype.InngaaendeKontroll,
       Kontrolltype.Tilsyn,
       Kontrolltype.Uttalesak,
