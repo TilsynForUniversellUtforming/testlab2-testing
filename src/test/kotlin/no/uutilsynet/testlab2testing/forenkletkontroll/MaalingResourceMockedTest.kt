@@ -27,10 +27,10 @@ import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.client.ExpectedCount
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers
@@ -42,21 +42,21 @@ class MaalingResourceMockedTest {
   @Autowired private lateinit var server: MockRestServiceServer
   @Autowired private lateinit var autoTesterClient: AutoTesterClient
 
-  @MockitoBean private lateinit var maalingDAO: MaalingDAO
+  @MockBean private lateinit var maalingDAO: MaalingDAO
 
-  @MockitoBean private lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+  @MockBean private lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
-  @MockitoBean private lateinit var testregelDAO: TestregelDAO
+  @MockBean private lateinit var testregelDAO: TestregelDAO
 
-  @MockitoBean private lateinit var utvalDAO: UtvalDAO
+  @MockBean private lateinit var utvalDAO: UtvalDAO
 
-  @MockitoBean private lateinit var crawlerClient: CrawlerClient
+  @MockBean private lateinit var crawlerClient: CrawlerClient
 
-  @MockitoBean private lateinit var aggregeringService: AggregeringService
+  @MockBean private lateinit var aggregeringService: AggregeringService
 
-  @MockitoBean private lateinit var sideutvalDAO: SideutvalDAO
+  @MockBean private lateinit var sideutvalDAO: SideutvalDAO
 
-  @MockitoBean private lateinit var brukarService: BrukarService
+  @MockBean private lateinit var brukarService: BrukarService
 
   private lateinit var maalingResource: MaalingResource
 
