@@ -2,8 +2,6 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import java.net.URI
-import java.net.URL
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -11,6 +9,7 @@ import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSide
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSideTestregel
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSuksesskriterium
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -19,6 +18,8 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestTemplate
+import java.net.URI
+import java.net.URL
 
 @ConfigurationProperties(prefix = "autotester")
 data class AutoTesterProperties(val url: String, val code: String)
@@ -33,9 +34,9 @@ class AutoTesterClient(
 
   fun startTesting(
       maalingId: Int,
-      crawlResultat: CrawlResultat.Ferdig,
       actRegler: List<Testregel>,
-      nettsider: List<URL>
+      nettsider: List<URL>,
+      loeysing: Loeysing,
   ): Result<URL> {
 
     return runCatching {
@@ -44,10 +45,10 @@ class AutoTesterClient(
               mapOf(
                   "urls" to nettsider,
                   "idMaaling" to maalingId,
-                  "idLoeysing" to crawlResultat.loeysing.id,
+                  "idLoeysing" to loeysing.id,
                   "resultatSomFil" to true,
                   "actRegler" to actRegler.map { it.testregelSchema },
-                  "loeysing" to crawlResultat.loeysing)
+                  "loeysing" to loeysing)
 
           val restClient = RestClient.builder(restTemplate).build()
 
@@ -69,7 +70,7 @@ class AutoTesterClient(
         }
         .onFailure {
           logger.error(
-              "Kunne ikkje starte test for måling id $maalingId løysing id ${crawlResultat.loeysing.id}",
+              "Kunne ikkje starte test for måling id $maalingId løysing id ${loeysing.id}",
               it)
         }
   }
