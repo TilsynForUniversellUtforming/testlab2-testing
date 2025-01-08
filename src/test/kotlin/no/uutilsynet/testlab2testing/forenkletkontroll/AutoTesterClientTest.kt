@@ -131,7 +131,7 @@ class AutoTesterClientTest {
                 .json(objectMapper.writeValueAsString(expectedRequestData)))
         .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON))
 
-    val result = autoTesterClient.startTesting(maalingId, crawlResultat, testRegelList, nettsider)
+    val result = autoTesterClient.startTesting(maalingId, testRegelList, nettsider, crawlResultat.loeysing)
 
     assertThat(result.isSuccess).isTrue
     assertThat(result.getOrNull()).isEqualTo(statusUris.statusQueryGetUri.toURL())

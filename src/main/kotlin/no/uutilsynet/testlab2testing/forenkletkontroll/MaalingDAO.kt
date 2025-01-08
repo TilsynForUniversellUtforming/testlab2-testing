@@ -1,9 +1,5 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import java.net.URI
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.*
@@ -40,6 +36,10 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.net.URI
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.time.Instant
 
 @Component
 class MaalingDAO(
@@ -505,7 +505,7 @@ class MaalingDAO(
 
   @Transactional
   fun saveTestKoeyring(testKoeyring: TestKoeyring, maalingId: Int) {
-    deleteExistingTestkoeyring(maalingId, testKoeyring)
+    deleteExistingTestkoeyring(maalingId, testKoeyring.loeysing.id)
     when (testKoeyring) {
       is TestKoeyring.Starta -> {
         saveTestKoeyringStarta(maalingId, testKoeyring)
@@ -528,7 +528,7 @@ class MaalingDAO(
             .trimMargin(),
         mapOf(
             "maaling_id" to maalingId,
-            "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
+            "loeysing_id" to testKoeyring.loeysing.id,
             "status" to status(testKoeyring),
             "status_url" to statusURL(testKoeyring),
             "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
@@ -537,10 +537,10 @@ class MaalingDAO(
         Int::class.java)
   }
 
-  private fun deleteExistingTestkoeyring(maalingId: Int, testKoeyring: TestKoeyring) {
+  private fun deleteExistingTestkoeyring(maalingId: Int, loeysingId: Int) {
     jdbcTemplate.update(
         """delete from "testlab2_testing"."testkoeyring" where maaling_id = :maaling_id and loeysing_id = :loeysing_id""",
-        mapOf("maaling_id" to maalingId, "loeysing_id" to testKoeyring.crawlResultat.loeysing.id))
+        mapOf("maaling_id" to maalingId, "loeysing_id" to loeysingId))
   }
 
   private fun getBrukar(brukar: Brukar?): Int? {
@@ -559,7 +559,7 @@ class MaalingDAO(
             .trimIndent(),
         mapOf(
             "maaling_id" to maalingId,
-            "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
+            "loeysing_id" to testKoeyring.loeysing.id,
             "status" to status(testKoeyring),
             "status_url" to statusURL(testKoeyring),
             "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
@@ -581,7 +581,7 @@ class MaalingDAO(
             .trimMargin(),
         mapOf(
             "maaling_id" to maalingId,
-            "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
+            "loeysing_id" to testKoeyring.loeysing.id,
             "status" to status(testKoeyring),
             "status_url" to statusURL(testKoeyring),
             "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),

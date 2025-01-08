@@ -2,13 +2,13 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import java.net.URI
-import java.time.Instant
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.TestregelBase
+import java.net.URI
+import java.time.Instant
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "status")
 @JsonSubTypes(
@@ -117,7 +117,7 @@ sealed class Maaling {
           }
 
       return testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>().filter {
-        loeysingId == null || it.crawlResultat.loeysing.id == loeysingId
+        loeysingId == null || it.loeysing.id == loeysingId
       }
     }
   }

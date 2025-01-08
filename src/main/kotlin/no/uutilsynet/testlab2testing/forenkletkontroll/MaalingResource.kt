@@ -341,7 +341,7 @@ class MaalingResource(
             Pair(
                 it,
                 autoTesterClient.startTesting(
-                    maalingId, it, testreglar, getNettsider(maalingId, it)))
+                    maalingId, testreglar, getNettsider(maalingId, it),it.loeysing))
           }
         }
         .awaitAll()
