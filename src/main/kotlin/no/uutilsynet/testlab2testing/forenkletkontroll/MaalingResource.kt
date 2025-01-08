@@ -5,8 +5,6 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
-import java.net.URL
-import java.time.Instant
 import kotlinx.coroutines.*
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
@@ -18,12 +16,15 @@ import no.uutilsynet.testlab2testing.firstMessage
 import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters.Companion.validateParameters
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
+import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.net.URL
+import java.time.Instant
 
 @RestController
 @RequestMapping("v1/maalinger")
@@ -247,14 +248,7 @@ class MaalingResource(
       statusDTO: StatusDTO,
       maaling: Maaling.Kvalitetssikring
   ): ResponseEntity<Any> {
-    val validIds =
-        if (statusDTO.loeysingIdList?.isNotEmpty() == true) {
-          loeysingsRegisterClient.getMany(statusDTO.loeysingIdList).getOrThrow().map { it.id }
-        } else {
-          emptyList()
-        }
-    val loeysingIdList =
-        validateIdList(statusDTO.loeysingIdList, validIds, "loeysingIdList").getOrThrow()
+    val loeysingIdList = getValidatedLoeysingList(statusDTO)
     val crawlParameters = maalingDAO.getCrawlParameters(maaling.id)
     val updated = crawlerClient.restart(maaling, loeysingIdList, crawlParameters)
     maalingDAO.save(updated).getOrThrow()
@@ -274,29 +268,47 @@ class MaalingResource(
   ): ResponseEntity<Any> {
     return coroutineScope {
       logger.info("Restarter testing for måling ${maaling.id}")
-      val validIds =
-          if (statusDTO.loeysingIdList?.isNotEmpty() == true) {
-            loeysingsRegisterClient.getMany(statusDTO.loeysingIdList).getOrThrow().map { it.id }
-          } else {
-            emptyList()
-          }
-      val loeysingIdList =
-          validateIdList(statusDTO.loeysingIdList, validIds, "loeysingIdList").getOrThrow()
+      val loeysingIdList = getValidatedLoeysingList(statusDTO)
 
       val (retestList, rest) =
           maaling.testKoeyringar.partition { loeysingIdList.contains(it.loeysing.id) }
 
       val testKoeyringar = startTesting(maaling.id, retestList.map { it.crawlResultat }, brukar)
 
-      val updated =
-          Maaling.Testing(
-              id = maaling.id,
-              navn = maaling.navn,
-              datoStart = maaling.datoStart,
-              testKoeyringar = rest.plus(testKoeyringar))
-      withContext(Dispatchers.IO) { maalingDAO.save(updated) }.getOrThrow()
+      saveUpdated(maaling, rest, testKoeyringar).getOrThrow()
       ResponseEntity.ok().build()
     }
+  }
+
+  private suspend fun saveUpdated(
+      maaling: Maaling.TestingFerdig,
+      rest: List<TestKoeyring>,
+      testKoeyringar: List<TestKoeyring>
+  ): Result<Maaling> {
+    val updated =
+        Maaling.Testing(
+            id = maaling.id,
+            navn = maaling.navn,
+            datoStart = maaling.datoStart,
+            testKoeyringar = rest.plus(testKoeyringar))
+    return withContext(Dispatchers.IO) { maalingDAO.save(updated) }
+  }
+
+  private fun getValidatedLoeysingList(statusDTO: StatusDTO): List<Int> {
+    val validIds = getValidIds(statusDTO)
+    val loeysingIdList =
+        validateIdList(statusDTO.loeysingIdList, validIds, "loeysingIdList").getOrThrow()
+    return loeysingIdList
+  }
+
+  private fun getValidIds(statusDTO: StatusDTO): List<Int> {
+    val validIds =
+        if (statusDTO.loeysingIdList?.isNotEmpty() == true) {
+          loeysingsRegisterClient.getMany(statusDTO.loeysingIdList).getOrThrow().map { it.id }
+        } else {
+          emptyList()
+        }
+    return validIds
   }
 
   private suspend fun startTesting(
@@ -321,26 +333,15 @@ class MaalingResource(
       crawlResultat: List<CrawlResultat.Ferdig>,
       brukar: Brukar
   ): List<TestKoeyring> = coroutineScope {
-    val testreglar =
-        withContext(Dispatchers.IO) { testregelDAO.getTestreglarForMaaling(maalingId) }
-            .getOrElse {
-              logger.error("Feila ved henting av actregler for måling $maalingId", it)
-              throw it
-            }
-            .onEach { it.validateTestregel().getOrThrow() }
+    val testreglar = testreglarForMaaling(maalingId)
 
     crawlResultat
         .map {
           async {
-            val nettsider =
-                withContext(Dispatchers.IO) {
-                  sideutvalDAO.getCrawlResultatNettsider(maalingId, it.loeysing.id)
-                }
-            if (nettsider.isEmpty()) {
-              throw RuntimeException(
-                  "Tomt resultat frå crawling, kan ikkje starte test. maalingId: $maalingId loeysingId: ${it.loeysing.id}")
-            }
-            Pair(it, autoTesterClient.startTesting(maalingId, it, testreglar, nettsider))
+            Pair(
+                it,
+                autoTesterClient.startTesting(
+                    maalingId, it, testreglar, getNettsider(maalingId, it)))
           }
         }
         .awaitAll()
@@ -354,5 +355,28 @@ class MaalingResource(
                 TestKoeyring.Feila(crawlResultat, Instant.now(), feilmelding, brukar)
               })
         }
+  }
+
+  private suspend fun testreglarForMaaling(maalingId: Int): List<Testregel> {
+    val testreglar =
+        withContext(Dispatchers.IO) { testregelDAO.getTestreglarForMaaling(maalingId) }
+            .getOrElse {
+              logger.error("Feila ved henting av actregler for måling $maalingId", it)
+              throw it
+            }
+            .onEach { it.validateTestregel().getOrThrow() }
+    return testreglar
+  }
+
+  private suspend fun getNettsider(maalingId: Int, it: CrawlResultat.Ferdig): List<URL> {
+    val nettsider =
+        withContext(Dispatchers.IO) {
+          sideutvalDAO.getCrawlResultatNettsider(maalingId, it.loeysing.id)
+        }
+    if (nettsider.isEmpty()) {
+      throw RuntimeException(
+          "Tomt resultat frå crawling, kan ikkje starte test. maalingId: $maalingId loeysingId: ${it.loeysing.id}")
+    }
+    return nettsider
   }
 }

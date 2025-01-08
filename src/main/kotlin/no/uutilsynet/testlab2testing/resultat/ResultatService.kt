@@ -4,37 +4,27 @@ import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.krav.KravWcag2x
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 
 @Component
 class ResultatService(
-    val testregelDAO: TestregelDAO,
-    val testResultatDAO: TestResultatDAO,
-    val sideutvalDAO: SideutvalDAO,
-    val kravregisterClient: KravregisterClient,
     val resultatDAO: ResultatDAO,
-    val maalingDAO: MaalingDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val kontrollDAO: KontrollDAO,
-    val testgrunnlagDAO: TestgrunnlagDAO,
     val eksternResultatDAO: EksternResultatDAO,
     val automatiskResultatService: AutomatiskResultatService,
-    val manueltResultatService: ManueltResultatService
+    val manueltResultatService: ManueltResultatService,
+    val testregelService: TestregelService
 ) {
 
   private val logger = LoggerFactory.getLogger(ResultatService::class.java)
@@ -189,7 +179,7 @@ class ResultatService(
                   talTestaElementDTO(resultLoeysing),
                   calculateTalElementSamsvar(resultLoeysing),
                   calculateTalElementBrot(resultLoeysing),
-                  getTestar(resultLoeysing.first().id, getKontrolltype(resultLoeysing)),
+                  resultLoeysing.first().testar,
                   statusLoeysingar[loeysingId] ?: 0)
             }
 
@@ -228,7 +218,7 @@ class ResultatService(
       return loeysingar.loeysingar.keys.associateWith { 100 }
     }
 
-    val resultatPrTestgrunnlag = getResultatPrTestgrunnlag(testgrunnlagId)
+    val resultatPrTestgrunnlag = manueltResultatService.getResultatPrTestgrunnlag(testgrunnlagId)
     val progresjon =
         resultatPrTestgrunnlag
             .groupBy { it.loeysingId }
@@ -238,9 +228,6 @@ class ResultatService(
 
     return progresjon
   }
-
-  private fun getResultatPrTestgrunnlag(testgrunnlagId: Int) =
-      testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
 
   private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =
       (result
@@ -253,13 +240,6 @@ class ResultatService(
   private fun getLoeysingMap(listLoysingId: List<Int>): Result<LoysingList> {
     return loeysingsRegisterClient.getManyExpanded(listLoysingId).mapCatching { loeysingList ->
       LoysingList(loeysingList.associateBy { it.id })
-    }
-  }
-
-  private fun getTestar(brukarId: Int, kontrolltype: Kontrolltype): List<String> {
-    return when (kontrolltype) {
-      Kontrolltype.ForenklaKontroll -> maalingDAO.getBrukarForMaaling(brukarId)
-      else -> testResultatDAO.getBrukarForTestgrunnlag(brukarId)
     }
   }
 
@@ -304,7 +284,7 @@ class ResultatService(
         typeKontroll = result.typeKontroll,
         testType = result.testType,
         dato = result.dato,
-        testar = getTestar(result.id, result.typeKontroll),
+        testar = result.testar,
         loeysingId = result.loeysingId,
         score = result.score,
         talElementSamsvar = result.talElementSamsvar,
@@ -315,12 +295,8 @@ class ResultatService(
   }
 
   private fun getKravWcag2x(result: ResultatLoeysingDTO): KravWcag2x? {
-    val krav = getTestregel(result)?.kravId?.let { kravregisterClient.getWcagKrav(it) }
-    return krav
+    return testregelService.getKravWcag2x(result.id)
   }
-
-  private fun getTestregel(result: ResultatLoeysingDTO) =
-      testregelDAO.getTestregel(result.testregelId)
 
   fun getResultatListKontroll(
       kontrollId: Int,
@@ -375,7 +351,7 @@ class ResultatService(
 
   fun ResultatKravBase.toResultatKrav(): ResultatKrav {
     return ResultatKrav(
-        suksesskriterium = kravregisterClient.getSuksesskriteriumFromKrav(kravId),
+        suksesskriterium = testregelService.getSuksesskriteriumFromKrav(kravId),
         score = score,
         talTestaElement =
             talElementBrot + talElementSamsvar + talElementVarsel + talElementIkkjeForekomst,
