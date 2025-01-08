@@ -52,7 +52,7 @@ class ManueltResultatService(
     return testresultat
   }
 
-  private fun getResultatPrTestgrunnlag(testgrunnlagId: Int) =
+  fun getResultatPrTestgrunnlag(testgrunnlagId: Int) =
       testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
 
   private fun resultatManuellKontrollTotestresultatDetaljert(
