@@ -1,222 +1,78 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URL
-import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
 import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingResource
-import no.uutilsynet.testlab2testing.forenkletkontroll.SideutvalDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.TestResultat
-import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.krav.KravWcag2x
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
-import org.slf4j.LoggerFactory
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 
 @Component
 class ResultatService(
-    val maalingResource: MaalingResource,
-    val testregelDAO: TestregelDAO,
-    val testResultatDAO: TestResultatDAO,
-    val sideutvalDAO: SideutvalDAO,
-    val kravregisterClient: KravregisterClient,
     val resultatDAO: ResultatDAO,
-    val maalingDAO: MaalingDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val kontrollDAO: KontrollDAO,
-    val testgrunnlagDAO: TestgrunnlagDAO,
-    val bildeService: BildeService,
-    val eksternResultatDAO: EksternResultatDAO
+    val eksternResultatDAO: EksternResultatDAO,
+    val automatiskResultatService: AutomatiskResultatService,
+    val manueltResultatService: ManueltResultatService,
+    val testregelService: TestregelService
 ) {
 
-  private val logger = LoggerFactory.getLogger(ResultatService::class.java)
-
-  fun getResultatForAutomatiskKontroll(
-      kontrollId: Int,
-      loeysingId: Int,
-      kravId: Int
-  ): List<TestresultatDetaljert> {
-    val maalingId = getMaalingForKontroll(kontrollId)
-    val testregelIds: List<Int> = getTestreglarForKrav(kravId)
-
-    val testresultat: List<TestResultat> = getAutotesterTestresultat(maalingId, loeysingId)
-
-    if (testresultat.isNotEmpty()) {
-      return testresultat
-          .filter { filterTestregelNoekkel(it.testregelId, testregelIds) }
-          .map { testresultatDetaljertMaaling(it, maalingId) }
-    }
-    return emptyList()
-  }
-
-  private fun getAutotesterTestresultat(maalingId: Int, loeysingId: Int?): List<TestResultat> {
-    val testresultat: List<TestResultat> =
-        maalingResource.getTestresultat(maalingId, loeysingId).getOrThrow().map {
-          it as TestResultat
-        }
-    return testresultat
-  }
-
-  private fun getMaalingForKontroll(kontrollId: Int): Int {
-    val maalingId =
-        maalingDAO.getMaalingIdFromKontrollId(kontrollId)
-            ?: throw RuntimeException("Fant ikkje maalingId for kontrollId $kontrollId")
-    return maalingId
-  }
-
   fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
-    return getAutotesterTestresultat(maalingId, loeysingId).map {
-      testresultatDetaljertMaaling(it, maalingId)
-    }
+    return automatiskResultatService.getResultatForMaaling(maalingId, loeysingId)
   }
-
-  private fun testresultatDetaljertMaaling(it: TestResultat, maalingId: Int) =
-      TestresultatDetaljert(
-          null,
-          it.loeysingId,
-          getTestregelIdFromSchema(it.testregelId) ?: 0,
-          it.testregelId,
-          maalingId,
-          it.side,
-          it.suksesskriterium,
-          it.testVartUtfoert,
-          it.elementUtfall,
-          it.elementResultat,
-          it.elementOmtale,
-          null,
-          null,
-          emptyList())
 
   fun getResulatForManuellKontroll(
       kontrollId: Int,
       loeysingId: Int,
       kravId: Int
   ): List<TestresultatDetaljert> {
-    val testresultat = getTestresultatForKontroll(kontrollId, loeysingId)
-    val testregelIdsForKrav: List<Int> = getTestreglarForKrav(kravId)
-
-    val sideutvalIdUrlMap: Map<Int, URL> = getSideutvalMap(testresultat)
-
-    return testresultat
-        .filter { filterByTestregel(it.testregelId, testregelIdsForKrav) }
-        .filter { it.elementResultat != null }
-        .map { resultatManuellKontrollTotestresultatDetaljert(it, sideutvalIdUrlMap) }
-  }
-
-  private fun getTestresultatForKontroll(
-      kontrollId: Int,
-      loeysingId: Int
-  ): List<ResultatManuellKontroll> {
-    val testgrunnlag = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest
-    val testresultat =
-        getResultatPrTestgrunnlag(testgrunnlag.id).filter { it.loeysingId == loeysingId }
-    return testresultat
-  }
-
-  private fun resultatManuellKontrollTotestresultatDetaljert(
-      it: ResultatManuellKontroll,
-      sideutvalIdUrlMap: Map<Int, URL>
-  ): TestresultatDetaljert {
-    val testregel: Testregel = getTestregel(it.testregelId)
-    // it.testregel er databaseId ikkje feltet testregelId i db
-    return TestresultatDetaljert(
-        it.id,
-        it.loeysingId,
-        it.testregelId,
-        testregel.testregelId,
-        it.testgrunnlagId,
-        getUrl(sideutvalIdUrlMap, it),
-        getSuksesskriteriumFromTestregel(testregel.kravId),
-        testVartUtfoertToLocalTime(it.testVartUtfoert),
-        it.elementUtfall,
-        it.elementResultat,
-        TestresultatDetaljert.ElementOmtale(
-            htmlCode = null, pointer = null, description = it.elementOmtale),
-        it.brukar,
-        it.kommentar,
-        bildeService.listBildeForTestresultat(it.id).getOrNull())
-  }
-
-  private fun getUrl(sideutvalIdUrlMap: Map<Int, URL>, it: ResultatManuellKontroll): URL {
-    val url = sideutvalIdUrlMap[it.sideutvalId]
-    requireNotNull(url) { "Ugyldig testresultat url manglar" }
-    return url
-  }
-
-  private fun getSideutvalMap(testresultat: List<ResultatManuellKontroll>): Map<Int, URL> {
-    val sideutvalIds = getSideutvalIds(testresultat)
-    val sideutvalIdUrlMap: Map<Int, URL> = sideutvalDAO.getSideutvalUrlMapKontroll(sideutvalIds)
-    return sideutvalIdUrlMap
-  }
-
-  private fun getSideutvalIds(testresultat: List<ResultatManuellKontroll>) =
-      testresultat.map { it.sideutvalId }.distinct()
-
-  private fun getTestreglarForKrav(kravId: Int): List<Int> {
-    val testregelIds: List<Int> = testregelDAO.getTestregelForKrav(kravId).map { it.id }
-    return testregelIds
-  }
-
-  private fun filterByTestregel(testregelId: Int, testregelIds: List<Int>): Boolean {
-    return testregelIds.contains(testregelId)
-  }
-
-  private fun filterTestregelNoekkel(testregelNoekkel: String, testregelId: List<Int>): Boolean {
-    return testregelId.contains(getTestregelIdFromSchema(testregelNoekkel) ?: 0)
-  }
-
-  private fun getTestregel(idTestregel: Int): Testregel {
-    testregelDAO.getTestregel(idTestregel).let { testregel ->
-      return testregel ?: throw RuntimeException("Fant ikkje testregel med id $idTestregel")
-    }
-  }
-
-  private fun getTestregelIdFromSchema(testregelKey: String): Int? {
-    testregelDAO.getTestregelByTestregelId(testregelKey).let { testregel ->
-      return testregel?.id
-    }
-  }
-
-  private fun testVartUtfoertToLocalTime(testVartUtfoert: Instant?): LocalDateTime? {
-    return testVartUtfoert?.atZone(ZONEID_OSLO)?.toLocalDateTime()
-  }
-
-  private fun getSuksesskriteriumFromTestregel(kravId: Int): List<String> {
-    return listOf(kravregisterClient.getSuksesskriteriumFromKrav(kravId))
+    return manueltResultatService.getResulatForManuellKontroll(kontrollId, loeysingId, kravId)
   }
 
   fun getResultatList(type: Kontrolltype?): List<Resultat> {
     return when (type) {
-      Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat(null)
+      Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat()
       Kontrolltype.InngaaendeKontroll,
       Kontrolltype.Tilsyn,
       Kontrolltype.Uttalesak,
-      Kontrolltype.Statusmaaling -> getManuellKontrollResultat(null)
+      Kontrolltype.Statusmaaling -> getManuellKontrollResultat()
       else -> getKontrollResultat()
     }
   }
 
-  fun getAutomatiskKontrollResultat(maalingId: Int?): List<Resultat> {
-    val resultatMaaling =
-        maalingId?.let { resultatDAO.getTestresultatMaaling(it) }
-            ?: resultatDAO.getTestresultatMaaling()
-    return resultatMaaling
+  private fun getAutomatiskKontrollResultat(): List<Resultat> {
+    return automatiskResultatService
+        .getKontrollResultatAlleMaalingar()
+        .groupBy { it.id }
+        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
+  }
+
+  private fun getAutomatiskKontrollResultat(kontrollId: Int): List<Resultat> {
+    return automatiskResultatService
+        .getKontrollResultat(kontrollId)
+        .groupBy { it.id }
+        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
+  }
+
+  private fun getManuellKontrollResultat(kontrollId: Int): List<Resultat> {
+    return manueltResultatService
+        .getKontrollResultat(kontrollId)
+        .groupBy { it.id }
+        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
+  }
+
+  private fun getManuellKontrollResultat(): List<Resultat> {
+    return manueltResultatService
+        .getKontrollResultatAlleTestgrunnlag()
         .groupBy { it.id }
         .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
   }
@@ -239,45 +95,20 @@ class ResultatService(
 
   @Cacheable("resultatKontroll")
   fun getKontrollResultatMedType(kontrollId: Int, kontrolltype: Kontrolltype): List<Resultat> {
-    val id = getIdTestgrunnlagOrMaaling(kontrolltype, kontrollId)
-    val resultat = resultatForKontrollType(kontrolltype, id)
+    val resultat = resultatForKontrollType(kontrolltype, kontrollId)
     return resultat
   }
 
-  private fun resultatForKontrollType(kontrolltype: Kontrolltype, id: Int): List<Resultat> {
+  private fun resultatForKontrollType(kontrolltype: Kontrolltype, kontrollId: Int): List<Resultat> {
     val resultat =
         when (kontrolltype) {
           Kontrolltype.Statusmaaling,
-          Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat(id)
+          Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat(kontrollId)
           Kontrolltype.InngaaendeKontroll,
           Kontrolltype.Tilsyn,
-          Kontrolltype.Uttalesak, -> getManuellKontrollResultat(id)
+          Kontrolltype.Uttalesak, -> getManuellKontrollResultat(kontrollId)
         }
     return resultat
-  }
-
-  private fun getIdTestgrunnlagOrMaaling(kontrolltype: Kontrolltype, kontrollId: Int): Int {
-    val id: Int? =
-        when (kontrolltype) {
-          Kontrolltype.ForenklaKontroll -> maalingDAO.getMaalingIdFromKontrollId(kontrollId)
-          Kontrolltype.InngaaendeKontroll,
-          Kontrolltype.Tilsyn,
-          Kontrolltype.Uttalesak,
-          Kontrolltype.Statusmaaling ->
-              testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
-        }
-    return id
-        ?: throw RuntimeException(
-            "Fant ikkje testgrunnlagId eller maaling for kontrollId $kontrollId")
-  }
-
-  private fun getManuellKontrollResultat(testgrunnlagId: Int?): List<Resultat> {
-    val resultatTestgrunnlag =
-        testgrunnlagId?.let { resultatDAO.getTestresultatTestgrunnlag(it) }
-            ?: resultatDAO.getTestresultatTestgrunnlag()
-    return resultatTestgrunnlag
-        .groupBy { it.id }
-        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
   }
 
   private fun resultatgruppertPrKontroll(
@@ -345,7 +176,7 @@ class ResultatService(
                   talTestaElementDTO(resultLoeysing),
                   calculateTalElementSamsvar(resultLoeysing),
                   calculateTalElementBrot(resultLoeysing),
-                  getTestar(resultLoeysing.first().id, getKontrolltype(resultLoeysing)),
+                  resultLoeysing.first().testar,
                   statusLoeysingar[loeysingId] ?: 0)
             }
 
@@ -384,7 +215,7 @@ class ResultatService(
       return loeysingar.loeysingar.keys.associateWith { 100 }
     }
 
-    val resultatPrTestgrunnlag = getResultatPrTestgrunnlag(testgrunnlagId)
+    val resultatPrTestgrunnlag = manueltResultatService.getResultatPrTestgrunnlag(testgrunnlagId)
     val progresjon =
         resultatPrTestgrunnlag
             .groupBy { it.loeysingId }
@@ -394,9 +225,6 @@ class ResultatService(
 
     return progresjon
   }
-
-  private fun getResultatPrTestgrunnlag(testgrunnlagId: Int) =
-      testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
 
   private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =
       (result
@@ -409,13 +237,6 @@ class ResultatService(
   private fun getLoeysingMap(listLoysingId: List<Int>): Result<LoysingList> {
     return loeysingsRegisterClient.getManyExpanded(listLoysingId).mapCatching { loeysingList ->
       LoysingList(loeysingList.associateBy { it.id })
-    }
-  }
-
-  private fun getTestar(brukarId: Int, kontrolltype: Kontrolltype): List<String> {
-    return when (kontrolltype) {
-      Kontrolltype.ForenklaKontroll -> maalingDAO.getBrukarForMaaling(brukarId)
-      else -> testResultatDAO.getBrukarForTestgrunnlag(brukarId)
     }
   }
 
@@ -460,7 +281,7 @@ class ResultatService(
         typeKontroll = result.typeKontroll,
         testType = result.testType,
         dato = result.dato,
-        testar = getTestar(result.id, result.typeKontroll),
+        testar = result.testar,
         loeysingId = result.loeysingId,
         score = result.score,
         talElementSamsvar = result.talElementSamsvar,
@@ -471,12 +292,8 @@ class ResultatService(
   }
 
   private fun getKravWcag2x(result: ResultatLoeysingDTO): KravWcag2x? {
-    val krav = getTestregel(result)?.kravId?.let { kravregisterClient.getWcagKrav(it) }
-    return krav
+    return testregelService.getKravWcag2x(result.id)
   }
-
-  private fun getTestregel(result: ResultatLoeysingDTO) =
-      testregelDAO.getTestregel(result.testregelId)
 
   fun getResultatListKontroll(
       kontrollId: Int,
@@ -487,7 +304,7 @@ class ResultatService(
         kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().kontrolltype
     return when (typeKontroll) {
       Kontrolltype.ForenklaKontroll ->
-          getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
+          automatiskResultatService.getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
       Kontrolltype.InngaaendeKontroll,
       Kontrolltype.Tilsyn,
       Kontrolltype.Uttalesak,
@@ -531,7 +348,7 @@ class ResultatService(
 
   fun ResultatKravBase.toResultatKrav(): ResultatKrav {
     return ResultatKrav(
-        suksesskriterium = kravregisterClient.getSuksesskriteriumFromKrav(kravId),
+        suksesskriterium = testregelService.getSuksesskriteriumFromKrav(kravId),
         score = score,
         talTestaElement =
             talElementBrot + talElementSamsvar + talElementVarsel + talElementIkkjeForekomst,
