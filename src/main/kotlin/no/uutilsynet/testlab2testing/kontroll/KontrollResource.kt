@@ -8,21 +8,14 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestStatus
 import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
-import no.uutilsynet.testlab2testing.styringsdata.StyringsdataDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
@@ -30,7 +23,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 class KontrollResource(
     val kontrollDAO: KontrollDAO,
     val testregelDAO: TestregelDAO,
-    val styringsdataDAO: StyringsdataDAO,
     val maalingService: MaalingService,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val testgrunnlagService: TestgrunnlagService
@@ -55,15 +47,7 @@ class KontrollResource(
         .mapCatching { kontrollRows ->
           kontrollRows.map { kontrollDB ->
             val virksomheter =
-                kontrollDB.utval
-                    ?.loeysingar
-                    ?.map { it.id }
-                    ?.let { loeysingIdList ->
-                      loeysingsRegisterClient.getMany(loeysingIdList).getOrThrow()
-                    }
-                    ?.map { it.orgnummer }
-                    ?.distinct()
-                    ?: emptyList()
+                getLoeysingarlistFromUtval(kontrollDB.utval).map { it.orgnummer }.distinct()
 
             KontrollListItem(
                 kontrollDB.id,
@@ -126,17 +110,33 @@ class KontrollResource(
         kontrollDB.saksbehandler,
         Sakstype.valueOf(kontrollDB.sakstype),
         kontrollDB.arkivreferanse,
-        kontrollDB.utval?.let { utval ->
-          val idList = utval.loeysingar.map { it.id }
-          val loeysingar = loeysingsRegisterClient.getMany(idList).getOrThrow()
-
-          Utval(utval.id, utval.namn, loeysingar, utval.oppretta)
-        },
-        kontrollDB.testreglar?.let { testreglar ->
-          val testregelList = testregelDAO.getMany(testreglar.testregelIdList)
-          Testreglar(testreglar.regelsettId, testregelList)
-        },
+        kontrollDbUtvalToUtval(kontrollDB.utval),
+        kontollTestreglarToTestreglar(kontrollDB.testreglar),
         kontrollDB.sideutval)
+  }
+
+  private fun kontrollDbUtvalToUtval(utval: KontrollDAO.KontrollDB.Utval?): Utval? {
+    if (utval != null) {
+      val loeysingar = getLoeysingarlistFromUtval(utval)
+      return Utval(utval.id, utval.namn, loeysingar, utval.oppretta)
+    }
+    return null
+  }
+
+  private fun kontollTestreglarToTestreglar(
+      testreglar: KontrollDAO.KontrollDB.Testreglar?
+  ): Testreglar? {
+    if (testreglar != null) {
+      val testregelList = testregelDAO.getMany(testreglar.testregelIdList)
+      return Testreglar(testreglar.regelsettId, testregelList)
+    }
+    return null
+  }
+
+  private fun getLoeysingarlistFromUtval(utval: KontrollDAO.KontrollDB.Utval?): List<Loeysing> {
+    utval ?: return emptyList()
+    val idList = utval.loeysingar.map { it.id }
+    return loeysingsRegisterClient.getMany(idList).getOrThrow()
   }
 
   @DeleteMapping("/{id}")
@@ -237,6 +237,19 @@ class KontrollResource(
   fun createOrUpdateTestgrunnlag(kontrollId: Int): Result<Int> {
     val kontroll = getKontrollResult(kontrollId).getOrThrow()
     val testregelIdList = kontroll.testreglar?.testregelList?.map { it.id } ?: emptyList()
+    val sideutval = getSideutvalByKontrollAndLoeysing(kontroll)
+
+    val nyttTestgrunnlag =
+        NyttTestgrunnlag(
+            kontroll.id,
+            "Testgrunnlag for kontroll ${kontroll.tittel}",
+            OPPRINNELEG_TEST,
+            sideutval,
+            testregelIdList)
+    return testgrunnlagService.createOrUpdate(nyttTestgrunnlag)
+  }
+
+  private fun getSideutvalByKontrollAndLoeysing(kontroll: Kontroll): List<Sideutval> {
     val sideutval =
         kontroll.sideutvalList
             .map { it.loeysingId }
@@ -247,14 +260,6 @@ class KontrollResource(
                 emptyList()
               }
             }
-
-    val nyttTestgrunnlag =
-        NyttTestgrunnlag(
-            kontroll.id,
-            "Testgrunnlag for kontroll ${kontroll.tittel}",
-            OPPRINNELEG_TEST,
-            sideutval,
-            testregelIdList)
-    return testgrunnlagService.createOrUpdate(nyttTestgrunnlag)
+    return sideutval
   }
 }
