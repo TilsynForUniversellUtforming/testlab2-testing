@@ -5,8 +5,9 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
+import java.net.URL
+import java.time.Instant
 import kotlinx.coroutines.*
-import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
@@ -23,8 +24,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.net.URL
-import java.time.Instant
 
 @RestController
 @RequestMapping("v1/maalinger")
@@ -34,7 +33,6 @@ class MaalingResource(
     val testregelDAO: TestregelDAO,
     val crawlerClient: CrawlerClient,
     val autoTesterClient: AutoTesterClient,
-    val aggregeringService: AggregeringService,
     val sideutvalDAO: SideutvalDAO,
     val maalingService: MaalingService,
     val brukarService: BrukarService
@@ -110,11 +108,10 @@ class MaalingResource(
 
   fun getTestresultat(maalingId: Int, loeysingId: Int?): Result<List<AutotesterTestresultat>> {
 
-      return runCatching {
-          maalingService.getTestresultatMaalingLoeysing(maalingId, loeysingId)
-          }
-          .fold(onSuccess = { it }, onFailure = { Result.failure(it) })
+    return runCatching { maalingService.getTestresultatMaalingLoeysing(maalingId, loeysingId) }
+        .fold(onSuccess = { it }, onFailure = { Result.failure(it) })
   }
+
   @Operation(
       summary = "Hentar aggregert resultat for ei måling",
       description =
@@ -145,52 +142,11 @@ class MaalingResource(
   ): ResponseEntity<Any> {
 
     return when (aggregeringstype) {
-      "testresultat" -> hentEllerGenererAggregeringPrTestregel(maalingId)
-      "suksesskriterium" -> hentEllerGenererAggregeringPrSuksesskriterium(maalingId)
-      "side" -> hentEllerGenererAggregeringPrSide(maalingId)
+      "testresultat" -> maalingService.hentEllerGenererAggregeringPrTestregel(maalingId)
+      "suksesskriterium" -> maalingService.hentEllerGenererAggregeringPrSuksesskriterium(maalingId)
+      "side" -> maalingService.hentEllerGenererAggregeringPrSide(maalingId)
       else -> throw IllegalArgumentException("Ugyldig aggregeringstype: $aggregeringstype")
     }
-  }
-
-  private fun hentEllerGenererAggregeringPrSide(maalingId: Int): ResponseEntity<Any> {
-    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "side")) {
-      val testKoeyringar = getTestKoeyringar(maalingId)
-      testKoeyringar.forEach { aggregeringService.saveAggregeringSideAutomatisk(it) }
-    }
-    return aggregeringService.getAggregertResultatSide(maalingId).let { ResponseEntity.ok(it) }
-  }
-
-  private fun hentEllerGenererAggregeringPrSuksesskriterium(maalingId: Int): ResponseEntity<Any> {
-    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "suksesskriterium")) {
-      val testKoeyringar = getTestKoeyringar(maalingId)
-      testKoeyringar.forEach {
-        aggregeringService.saveAggregertResultatSuksesskriteriumAutomatisk(it)
-      }
-    }
-    return aggregeringService.getAggregertResultatSuksesskriterium(maalingId).let {
-      ResponseEntity.ok(it)
-    }
-  }
-
-  private fun hentEllerGenererAggregeringPrTestregel(maalingId: Int): ResponseEntity<Any> {
-    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "testresultat")) {
-      logger.info("Aggregering er ikkje generert for måling $maalingId, genererer no")
-      val testKoeyringar = getTestKoeyringar(maalingId)
-      testKoeyringar.forEach { aggregeringService.saveAggregertResultatTestregelAutomatisk(it) }
-    }
-    return aggregeringService.getAggregertResultatTestregel(maalingId).let { ResponseEntity.ok(it) }
-  }
-
-  private fun getTestKoeyringar(maalingId: Int): List<TestKoeyring.Ferdig> {
-    return runCatching {
-          maalingDAO.getMaaling(maalingId).let { maaling ->
-            Maaling.findFerdigeTestKoeyringar(maaling)
-          }
-        }
-        .getOrElse {
-          logger.error("Feila ved henting av testkøyringar for måling $maalingId", it)
-          throw it
-        }
   }
 
   @GetMapping("{maalingId}/crawlresultat/nettsider")
