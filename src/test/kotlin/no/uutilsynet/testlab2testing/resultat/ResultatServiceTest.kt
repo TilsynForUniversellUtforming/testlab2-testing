@@ -39,8 +39,8 @@ import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.bean.override.mockito.MockitoBean
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.SpyBean
 
 @SpringBootTest(
     properties = arrayOf("spring.datasource.url: jdbc:tc:postgresql:16-alpine:///test-db"))
@@ -59,12 +59,12 @@ class ResultatServiceTest(
   private var testregelId: Int by Delegates.notNull()
   private var aggregertResultat: AggregeringPerTestregelDTO by Delegates.notNull()
 
-  @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
-  @MockitoBean lateinit var testgrunnlagDao: TestgrunnlagDAO
-  @MockitoBean lateinit var testResultatDAO: TestResultatDAO
-  @MockitoBean lateinit var sideutvalDAO: SideutvalDAO
-  @MockitoBean lateinit var kravregisterClient: KravregisterClient
-  @MockitoSpyBean lateinit var testregelDAO: TestregelDAO
+  @MockBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+  @MockBean lateinit var testgrunnlagDao: TestgrunnlagDAO
+  @MockBean lateinit var testResultatDAO: TestResultatDAO
+  @MockBean lateinit var sideutvalDAO: SideutvalDAO
+  @MockBean lateinit var kravregisterClient: KravregisterClient
+  @SpyBean lateinit var testregelDAO: TestregelDAO
 
   @AfterAll
   fun cleanup() {
