@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.time.Instant
+import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateNamn
@@ -15,6 +16,8 @@ import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.toSingleResult
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 
 @Service
@@ -24,6 +27,7 @@ class MaalingService(
     val testregelDAO: TestregelDAO,
     val utvalDAO: UtvalDAO,
     val aggregeringService: AggregeringService,
+    val autoTesterClient: AutoTesterClient
 ) {
 
   fun nyMaaling(kontrollId: Int, opprettKontroll: KontrollResource.OpprettKontroll) = runCatching {
@@ -185,9 +189,71 @@ class MaalingService(
     return true
   }
 
-  fun getFerdigeTestkoeyringar(maalingId: Int): Result<List<TestKoeyring.Ferdig>> = runCatching {
-    val maaling = maalingDAO.getMaaling(maalingId)
-    require(maaling is Maaling.TestingFerdig) { "Måling er ikkje ferdig testa" }
-    maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>()
+  fun getFerdigeTestkoeyringar(maalingId: Int): List<TestKoeyring.Ferdig> =
+      runCatching {
+            val maaling = maalingDAO.getMaaling(maalingId)
+            require(maaling is Maaling.TestingFerdig) { "Måling er ikkje ferdig testa" }
+            maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>()
+          }
+          .getOrThrow()
+
+  suspend fun mapTestkoeyringToTestresultatBrot(ferdigeTestKoeyringar: List<TestKoeyring.Ferdig>) =
+      autoTesterClient.fetchResultat(ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlBrot)
+
+  fun getTestresultatMaalingLoeysing(
+      maalingId: Int,
+      loeysingId: Int?
+  ): Result<List<AutotesterTestresultat>> {
+    return runBlocking {
+      mapTestkoeyringToTestresultatBrot(getFilteredAndFerdigTestkoeyringar(maalingId, loeysingId))
+          .toSingleResult()
+          .map { it.values.flatten() }
+    }
+  }
+
+  fun getFilteredAndFerdigTestkoeyringar(maalingId: Int, loeysingId: Int?) =
+      getFerdigeTestkoeyringar(maalingId).filter {
+        loeysingId == null || it.loeysing.id == loeysingId
+      }
+
+  fun hentEllerGenererAggregeringPrSide(maalingId: Int): ResponseEntity<Any> {
+    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "side")) {
+      val testKoeyringar = getTestKoeyringar(maalingId)
+      testKoeyringar.forEach { aggregeringService.saveAggregeringSideAutomatisk(it) }
+    }
+    return aggregeringService.getAggregertResultatSide(maalingId).let { ResponseEntity.ok(it) }
+  }
+
+  fun hentEllerGenererAggregeringPrSuksesskriterium(maalingId: Int): ResponseEntity<Any> {
+    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "suksesskriterium")) {
+      val testKoeyringar = getTestKoeyringar(maalingId)
+      testKoeyringar.forEach {
+        aggregeringService.saveAggregertResultatSuksesskriteriumAutomatisk(it)
+      }
+    }
+    return aggregeringService.getAggregertResultatSuksesskriterium(maalingId).let {
+      ResponseEntity.ok(it)
+    }
+  }
+
+  fun hentEllerGenererAggregeringPrTestregel(maalingId: Int): ResponseEntity<Any> {
+    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "testresultat")) {
+      logger.info("Aggregering er ikkje generert for måling $maalingId, genererer no")
+      val testKoeyringar = getTestKoeyringar(maalingId)
+      testKoeyringar.forEach { aggregeringService.saveAggregertResultatTestregelAutomatisk(it) }
+    }
+    return aggregeringService.getAggregertResultatTestregel(maalingId).let { ResponseEntity.ok(it) }
+  }
+
+  private fun getTestKoeyringar(maalingId: Int): List<TestKoeyring.Ferdig> {
+    return runCatching {
+          maalingDAO.getMaaling(maalingId).let { maaling ->
+            Maaling.findFerdigeTestKoeyringar(maaling)
+          }
+        }
+        .getOrElse {
+          logger.error("Feila ved henting av testkøyringar for måling $maalingId", it)
+          throw it
+        }
   }
 }
