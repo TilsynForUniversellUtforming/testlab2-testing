@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
@@ -19,7 +20,6 @@ import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
-import java.time.LocalDate
 
 @Component
 class ResultatService(
@@ -39,32 +39,53 @@ class ResultatService(
 
   private val logger = LoggerFactory.getLogger(ResultatService::class.java)
 
-    fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
-        return automatiskResultatService.getResultatForMaaling(maalingId, loeysingId)
+  fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
+    return automatiskResultatService.getResultatForMaaling(maalingId, loeysingId)
   }
 
-    fun getResulatForManuellKontroll(
+  fun getResulatForManuellKontroll(
       kontrollId: Int,
       loeysingId: Int,
       kravId: Int
   ): List<TestresultatDetaljert> {
-   return manueltResultatService.getResulatForManuellKontroll(kontrollId, loeysingId, kravId)
+    return manueltResultatService.getResulatForManuellKontroll(kontrollId, loeysingId, kravId)
   }
 
-
-    fun getResultatList(type: Kontrolltype?): List<Resultat> {
+  fun getResultatList(type: Kontrolltype?): List<Resultat> {
     return when (type) {
-      Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat(null)
+      Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat()
       Kontrolltype.InngaaendeKontroll,
       Kontrolltype.Tilsyn,
       Kontrolltype.Uttalesak,
-      Kontrolltype.Statusmaaling -> getManuellKontrollResultat(null)
+      Kontrolltype.Statusmaaling -> getManuellKontrollResultat()
       else -> getKontrollResultat()
     }
   }
 
-  fun getAutomatiskKontrollResultat(maalingId: Int?): List<Resultat> {
-    return automatiskResultatService.getKontrollResultat(maalingId)
+  private fun getAutomatiskKontrollResultat(): List<Resultat> {
+    return automatiskResultatService
+        .getKontrollResultatAlleMaalingar()
+        .groupBy { it.id }
+        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
+  }
+
+  private fun getAutomatiskKontrollResultat(kontrollId: Int): List<Resultat> {
+    return automatiskResultatService
+        .getKontrollResultat(kontrollId)
+        .groupBy { it.id }
+        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
+  }
+
+  private fun getManuellKontrollResultat(kontrollId: Int): List<Resultat> {
+    return manueltResultatService
+        .getKontrollResultat(kontrollId)
+        .groupBy { it.id }
+        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
+  }
+
+  private fun getManuellKontrollResultat(): List<Resultat> {
+    return manueltResultatService
+        .getKontrollResultatAlleTestgrunnlag()
         .groupBy { it.id }
         .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
   }
@@ -87,45 +108,20 @@ class ResultatService(
 
   @Cacheable("resultatKontroll")
   fun getKontrollResultatMedType(kontrollId: Int, kontrolltype: Kontrolltype): List<Resultat> {
-    val id = getIdTestgrunnlagOrMaaling(kontrolltype, kontrollId)
-    val resultat = resultatForKontrollType(kontrolltype, id)
+    val resultat = resultatForKontrollType(kontrolltype, kontrollId)
     return resultat
   }
 
-  private fun resultatForKontrollType(kontrolltype: Kontrolltype, id: Int): List<Resultat> {
+  private fun resultatForKontrollType(kontrolltype: Kontrolltype, kontrollId: Int): List<Resultat> {
     val resultat =
         when (kontrolltype) {
           Kontrolltype.Statusmaaling,
-          Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat(id)
+          Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat(kontrollId)
           Kontrolltype.InngaaendeKontroll,
           Kontrolltype.Tilsyn,
-          Kontrolltype.Uttalesak, -> getManuellKontrollResultat(id)
+          Kontrolltype.Uttalesak, -> getManuellKontrollResultat(kontrollId)
         }
     return resultat
-  }
-
-  private fun getIdTestgrunnlagOrMaaling(kontrolltype: Kontrolltype, kontrollId: Int): Int {
-    val id: Int? =
-        when (kontrolltype) {
-          Kontrolltype.ForenklaKontroll -> maalingDAO.getMaalingIdFromKontrollId(kontrollId)
-          Kontrolltype.InngaaendeKontroll,
-          Kontrolltype.Tilsyn,
-          Kontrolltype.Uttalesak,
-          Kontrolltype.Statusmaaling ->
-              testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
-        }
-    return id
-        ?: throw RuntimeException(
-            "Fant ikkje testgrunnlagId eller maaling for kontrollId $kontrollId")
-  }
-
-  private fun getManuellKontrollResultat(testgrunnlagId: Int?): List<Resultat> {
-    val resultatTestgrunnlag =
-        testgrunnlagId?.let { resultatDAO.getTestresultatTestgrunnlag(it) }
-            ?: resultatDAO.getTestresultatTestgrunnlag()
-    return resultatTestgrunnlag
-        .groupBy { it.id }
-        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
   }
 
   private fun resultatgruppertPrKontroll(
