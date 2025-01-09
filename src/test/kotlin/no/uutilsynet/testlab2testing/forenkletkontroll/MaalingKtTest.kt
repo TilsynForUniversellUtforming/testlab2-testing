@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
+import java.net.URI
+import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateStatus
@@ -13,8 +15,6 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasSize
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertTrue
-import java.net.URI
-import java.time.Instant
 
 class MaalingKtTest {
   @Nested

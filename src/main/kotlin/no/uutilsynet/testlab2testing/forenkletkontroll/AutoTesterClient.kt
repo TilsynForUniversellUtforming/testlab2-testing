@@ -2,6 +2,8 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import java.net.URI
+import java.net.URL
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -18,8 +20,6 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestTemplate
-import java.net.URI
-import java.net.URL
 
 @ConfigurationProperties(prefix = "autotester")
 data class AutoTesterProperties(val url: String, val code: String)
@@ -37,7 +37,7 @@ class AutoTesterClient(
       actRegler: List<Testregel>,
       nettsider: List<URL>,
       loeysing: Loeysing,
-  ): Result<URL> {
+  ): Result<AutotestingStatus> {
 
     return runCatching {
           val url = "${autoTesterProperties.url}?code=${autoTesterProperties.code}"
@@ -65,13 +65,14 @@ class AutoTesterClient(
                   }
                   .body(StatusUris::class.java)
 
-          statusUris?.statusQueryGetUri?.toURL()
+          statusUris?.let {
+            AutotestingStatus(loeysing, it.statusQueryGetUri.toURL(), nettsider.size)
+          }
               ?: throw RuntimeException("mangler statusQueryGetUri i responsen")
         }
         .onFailure {
           logger.error(
-              "Kunne ikkje starte test for måling id $maalingId løysing id ${loeysing.id}",
-              it)
+              "Kunne ikkje starte test for måling id $maalingId løysing id ${loeysing.id}", it)
         }
   }
 
@@ -197,4 +198,10 @@ class AutoTesterClient(
     urlAggregeringSideTR,
     urlAggregeringLoeysing
   }
+
+  data class AutotestingStatus(
+      val loeysing: Loeysing,
+      val statusUrl: URL,
+      val antallNettsider: Int
+  )
 }
