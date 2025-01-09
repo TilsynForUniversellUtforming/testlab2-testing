@@ -211,11 +211,12 @@ class AutoTesterClientTest {
         )
     val testKoeyring =
         TestKoeyring.Ferdig(
-            TestConstants.crawlResultat,
+            TestConstants.digdirLoeysing,
             Instant.now(),
             URI(statusURL).toURL(),
             lenker = lenker,
-            Brukar("test", "testar"))
+            Brukar("test", "testar"),
+            10)
 
     server
         .expect(
