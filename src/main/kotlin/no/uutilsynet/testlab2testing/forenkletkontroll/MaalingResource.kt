@@ -16,6 +16,7 @@ import no.uutilsynet.testlab2testing.common.validateStatus
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.firstMessage
 import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters.Companion.validateParameters
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
 import no.uutilsynet.testlab2testing.testregel.Testregel
@@ -273,7 +274,7 @@ class MaalingResource(
       val (retestList, rest) =
           maaling.testKoeyringar.partition { loeysingIdList.contains(it.loeysing.id) }
 
-      val testKoeyringar = startTesting(maaling.id, retestList.map { it.crawlResultat }, brukar)
+      val testKoeyringar = startTesting(maaling.id, brukar, retestList.map { it.loeysing })
 
       saveUpdated(maaling, rest, testKoeyringar).getOrThrow()
       ResponseEntity.ok().build()
@@ -316,9 +317,9 @@ class MaalingResource(
       brukar: Brukar
   ): ResponseEntity<Any> {
     return coroutineScope {
-      val testKoeyringar =
-          startTesting(
-              maaling.id, maaling.crawlResultat.filterIsInstance<CrawlResultat.Ferdig>(), brukar)
+      val loeysingIdList =
+          maaling.crawlResultat.filterIsInstance<CrawlResultat.Ferdig>().map { it.loeysing }
+      val testKoeyringar = startTesting(maaling.id, brukar, loeysingIdList)
 
       val updated = Maaling.toTesting(maaling, testKoeyringar)
       withContext(Dispatchers.IO) { maalingDAO.save(updated) }.getOrThrow()
@@ -330,31 +331,41 @@ class MaalingResource(
 
   private suspend fun startTesting(
       maalingId: Int,
-      crawlResultat: List<CrawlResultat.Ferdig>,
-      brukar: Brukar
+      brukar: Brukar,
+      loeysingar: List<Loeysing>,
   ): List<TestKoeyring> = coroutineScope {
     val testreglar = testreglarForMaaling(maalingId)
 
-    crawlResultat
-        .map {
-          async {
-            Pair(
-                it,
-                autoTesterClient.startTesting(
-                    maalingId, testreglar, getNettsider(maalingId, it),it.loeysing))
+    val startTestarStatus = startTestar(loeysingar, maalingId, testreglar)
+
+    startTestarStatus.map { result ->
+      result.fold(
+          { status ->
+            TestKoeyring.from(status.loeysing, status.statusUrl, brukar, status.antallNettsider)
+          },
+          { exception ->
+            val feilmelding =
+                exception.message
+                    ?: "eg klarte ikkje å starte testing for ei løysing, og feilmeldinga manglar"
+            TestKoeyring.Feila(result.getOrThrow().loeysing, Instant.now(), feilmelding, brukar)
+          })
+    }
+  }
+
+  private suspend fun startTestar(
+      loeysingar: List<Loeysing>,
+      maalingId: Int,
+      testreglar: List<Testregel>,
+  ): List<Result<AutoTesterClient.AutotestingStatus>> {
+    return coroutineScope {
+      loeysingar
+          .map {
+            async {
+              autoTesterClient.startTesting(maalingId, testreglar, getNettsider(maalingId, it), it)
+            }
           }
-        }
-        .awaitAll()
-        .map { (crawlResultat, result) ->
-          result.fold(
-              { statusURL -> TestKoeyring.from(crawlResultat, statusURL, brukar) },
-              { exception ->
-                val feilmelding =
-                    exception.message
-                        ?: "eg klarte ikkje å starte testing for ei løysing, og feilmeldinga manglar"
-                TestKoeyring.Feila(crawlResultat, Instant.now(), feilmelding, brukar)
-              })
-        }
+          .awaitAll()
+    }
   }
 
   private suspend fun testreglarForMaaling(maalingId: Int): List<Testregel> {
@@ -368,14 +379,14 @@ class MaalingResource(
     return testreglar
   }
 
-  private suspend fun getNettsider(maalingId: Int, it: CrawlResultat.Ferdig): List<URL> {
+  private suspend fun getNettsider(maalingId: Int, loeysing: Loeysing): List<URL> {
     val nettsider =
         withContext(Dispatchers.IO) {
-          sideutvalDAO.getCrawlResultatNettsider(maalingId, it.loeysing.id)
+          sideutvalDAO.getCrawlResultatNettsider(maalingId, loeysing.id)
         }
     if (nettsider.isEmpty()) {
       throw RuntimeException(
-          "Tomt resultat frå crawling, kan ikkje starte test. maalingId: $maalingId loeysingId: ${it.loeysing.id}")
+          "Tomt resultat frå crawling, kan ikkje starte test. maalingId: $maalingId loeysingId: ${loeysing.id}")
     }
     return nettsider
   }
