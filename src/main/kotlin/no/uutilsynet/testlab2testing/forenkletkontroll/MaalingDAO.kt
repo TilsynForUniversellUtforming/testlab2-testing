@@ -1,9 +1,5 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import java.net.URI
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.*
@@ -40,6 +36,10 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.net.URI
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.time.Instant
 
 @Component
 class MaalingDAO(
@@ -332,11 +332,12 @@ class MaalingDAO(
         autoTesterLenker(
             urlFulltResultat, urlBrot, urlAggTR, urlAggSK, urlAggSide, urlAggSideTR, urlAggLoeysing)
     return TestKoeyring.Ferdig(
-        crawlResultatForLoeysing,
+        crawlResultatForLoeysing.loeysing,
         sistOppdatert,
         URI(rs.getString("status_url")).toURL(),
         lenker,
-        brukar)
+        brukar,
+        10)
   }
 
   private fun autoTesterLenker(
@@ -369,7 +370,7 @@ class MaalingDAO(
       brukar: Brukar?
   ) =
       TestKoeyring.Feila(
-          crawlResultatForLoeysing, sistOppdatert, rs.getString("feilmelding"), brukar)
+          crawlResultatForLoeysing.loeysing, sistOppdatert, rs.getString("feilmelding"), brukar)
 
   private fun starta(
       crawlResultatForLoeysing: CrawlResultat.Ferdig,
@@ -378,11 +379,12 @@ class MaalingDAO(
       brukar: Brukar?
   ) =
       TestKoeyring.Starta(
-          crawlResultatForLoeysing,
+          crawlResultatForLoeysing.loeysing,
           sistOppdatert,
           URI(rs.getString("status_url")).toURL(),
           Framgang(rs.getInt("lenker_testa"), crawlResultatForLoeysing.antallNettsider),
-          brukar)
+          brukar,
+          crawlResultatForLoeysing.antallNettsider)
 
   private fun ikkjeStarta(
       crawlResultatForLoeysing: CrawlResultat.Ferdig,
@@ -391,7 +393,11 @@ class MaalingDAO(
       brukar: Brukar?
   ) =
       TestKoeyring.IkkjeStarta(
-          crawlResultatForLoeysing, sistOppdatert, URI(rs.getString("status_url")).toURL(), brukar)
+          crawlResultatForLoeysing.loeysing,
+          sistOppdatert,
+          URI(rs.getString("status_url")).toURL(),
+          brukar,
+          crawlResultatForLoeysing.antallNettsider)
 
   private fun getBrukarFromResultSet(rs: ResultSet) =
       brukarService.getBrukarById(rs.getInt("brukar_id"))
@@ -626,19 +632,6 @@ class MaalingDAO(
         is TestKoeyring.Ferdig -> testKoeyring.statusURL.toString()
         else -> null
       }
-
-  fun getBrukarForMaaling(maalingId: Int): List<String> {
-    return jdbcTemplate.queryForList(
-        """
-                select distinct b.namn as namn
-                from "testlab2_testing"."testkoeyring" ti
-                join "testlab2_testing"."brukar" b on ti.brukar_id = b.id
-                where ti.maaling_id = :maaling_id
-            """
-            .trimIndent(),
-        mapOf("maaling_id" to maalingId),
-        String::class.java)
-  }
 
   fun getMaalingForKontroll(kontrollId: Int): Result<Int> {
     return runCatching {
