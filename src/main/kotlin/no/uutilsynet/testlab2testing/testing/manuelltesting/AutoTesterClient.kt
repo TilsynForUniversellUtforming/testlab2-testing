@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll
+package no.uutilsynet.testlab2testing.testing.manuelltesting
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
@@ -11,6 +11,7 @@ import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSide
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSideTestregel
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSuksesskriterium
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -33,10 +34,10 @@ class AutoTesterClient(
 
   fun startTesting(
       maalingId: Int,
-      crawlResultat: CrawlResultat.Ferdig,
       actRegler: List<Testregel>,
-      nettsider: List<URL>
-  ): Result<URL> {
+      nettsider: List<URL>,
+      loeysing: Loeysing,
+  ): Result<AutotestingStatus> {
 
     return runCatching {
           val url = "${autoTesterProperties.url}?code=${autoTesterProperties.code}"
@@ -44,10 +45,10 @@ class AutoTesterClient(
               mapOf(
                   "urls" to nettsider,
                   "idMaaling" to maalingId,
-                  "idLoeysing" to crawlResultat.loeysing.id,
+                  "idLoeysing" to loeysing.id,
                   "resultatSomFil" to true,
                   "actRegler" to actRegler.map { it.testregelSchema },
-                  "loeysing" to crawlResultat.loeysing)
+                  "loeysing" to loeysing)
 
           val restClient = RestClient.builder(restTemplate).build()
 
@@ -64,13 +65,14 @@ class AutoTesterClient(
                   }
                   .body(StatusUris::class.java)
 
-          statusUris?.statusQueryGetUri?.toURL()
+          statusUris?.let {
+            AutotestingStatus(loeysing, it.statusQueryGetUri.toURL(), nettsider.size)
+          }
               ?: throw RuntimeException("mangler statusQueryGetUri i responsen")
         }
         .onFailure {
           logger.error(
-              "Kunne ikkje starte test for måling id $maalingId løysing id ${crawlResultat.loeysing.id}",
-              it)
+              "Kunne ikkje starte test for måling id $maalingId løysing id ${loeysing.id}", it)
         }
   }
 
@@ -196,4 +198,10 @@ class AutoTesterClient(
     urlAggregeringSideTR,
     urlAggregeringLoeysing
   }
+
+  data class AutotestingStatus(
+      val loeysing: Loeysing,
+      val statusUrl: URL,
+      val antallNettsider: Int
+  )
 }

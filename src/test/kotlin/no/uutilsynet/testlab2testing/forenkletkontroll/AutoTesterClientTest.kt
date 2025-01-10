@@ -9,6 +9,9 @@ import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.statusURL
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testRegelList
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterProperties
+import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers
 import org.junit.jupiter.api.DisplayName
@@ -131,10 +134,16 @@ class AutoTesterClientTest {
                 .json(objectMapper.writeValueAsString(expectedRequestData)))
         .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON))
 
-    val result = autoTesterClient.startTesting(maalingId, crawlResultat, testRegelList, nettsider)
+    val result =
+        autoTesterClient.startTesting(maalingId, testRegelList, nettsider, crawlResultat.loeysing)
+
+    val expectedStatus =
+        AutoTesterClient.AutotestingStatus(
+            crawlResultat.loeysing, statusUris.statusQueryGetUri.toURL(), nettsider.size)
 
     assertThat(result.isSuccess).isTrue
-    assertThat(result.getOrNull()).isEqualTo(statusUris.statusQueryGetUri.toURL())
+
+    assertThat(result.getOrNull()).isEqualTo(expectedStatus)
   }
 
   @DisplayName("Hvis det er feil i respons fra autotester skal man returnere Result.Failure")
@@ -210,11 +219,12 @@ class AutoTesterClientTest {
         )
     val testKoeyring =
         TestKoeyring.Ferdig(
-            TestConstants.crawlResultat,
+            TestConstants.digdirLoeysing,
             Instant.now(),
             URI(statusURL).toURL(),
             lenker = lenker,
-            Brukar("test", "testar"))
+            Brukar("test", "testar"),
+            10)
 
     server
         .expect(

@@ -1,14 +1,11 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll
+package no.uutilsynet.testlab2testing.sideutval.crawling
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
 import java.time.Instant
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
@@ -22,30 +19,7 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
 
   private val logger = LoggerFactory.getLogger(CrawlerClient::class.java)
 
-  suspend fun start(maaling: Maaling.Planlegging): Maaling.Crawling = coroutineScope {
-    val deferreds: List<Deferred<CrawlResultat>> =
-        maaling.loeysingList.map { loeysing -> async { start(loeysing, maaling.crawlParameters) } }
-    val crawlResultatList = deferreds.awaitAll()
-    Maaling.toCrawling(maaling, crawlResultatList)
-  }
-
-  fun restart(
-      maaling: Maaling.Kvalitetssikring,
-      loeysingIdList: List<Int>,
-      crawlParameters: CrawlParameters
-  ): Maaling.Crawling {
-    val crawlResultat =
-        maaling.crawlResultat.map {
-          if (it.loeysing.id in loeysingIdList) start(it.loeysing, crawlParameters) else it
-        }
-    return Maaling.Crawling(
-        id = maaling.id,
-        navn = maaling.navn,
-        datoStart = maaling.datoStart,
-        crawlResultat = crawlResultat)
-  }
-
-  private fun start(loeysing: Loeysing, crawlParameters: CrawlParameters): CrawlResultat =
+  fun start(loeysing: Loeysing, crawlParameters: CrawlParameters): CrawlResultat =
       runCatching {
             val statusUris =
                 restTemplate.postForObject(

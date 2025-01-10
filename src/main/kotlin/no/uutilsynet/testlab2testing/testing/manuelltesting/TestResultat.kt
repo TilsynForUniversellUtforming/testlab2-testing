@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll
+package no.uutilsynet.testlab2testing.testing.manuelltesting
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import java.net.URL

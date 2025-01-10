@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll
+package no.uutilsynet.testlab2testing.sideutval.crawling
 
 data class CrawlParameters(val maxLenker: Int = 100, val talLenker: Int = 30) {
   companion object {
