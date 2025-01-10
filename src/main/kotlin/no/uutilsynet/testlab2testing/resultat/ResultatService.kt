@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
@@ -14,6 +13,7 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
+import java.time.LocalDate
 
 @Component
 class ResultatService(
@@ -292,7 +292,7 @@ class ResultatService(
   }
 
   private fun getKravWcag2x(result: ResultatLoeysingDTO): KravWcag2x {
-    return testregelService.getKravWcag2x(result.id)
+    return testregelService.getKravWcag2x(result.testregelId)
   }
 
   fun getResultatListKontroll(
