@@ -8,6 +8,9 @@ import no.uutilsynet.testlab2.constants.TestregelStatus
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.Testregel
 
@@ -57,7 +60,7 @@ object TestConstants {
 
   val testKoeyring =
       TestKoeyring.Ferdig(
-          crawlResultat,
+          crawlResultat.loeysing,
           Instant.now(),
           URI("https://status.url").toURL(),
           AutoTesterClient.AutoTesterLenker(
@@ -69,11 +72,12 @@ object TestConstants {
               URI("https://aggregeringSideTR.resultat").toURL(),
               URI("https://aggregeringLoeysing.resultat").toURL(),
           ),
-          Brukar("test", "testar"))
+          Brukar("test", "testar"),
+          crawlResultat.antallNettsider)
 
   val testKoeyring2 =
       TestKoeyring.Ferdig(
-          crawlResultat2,
+          crawlResultat2.loeysing,
           Instant.now(),
           URI("https://status.url").toURL(),
           AutoTesterClient.AutoTesterLenker(
@@ -85,7 +89,8 @@ object TestConstants {
               URI("https://aggregeringSideTR.resultat").toURL(),
               URI("https://aggregeringLoeysing.resultat").toURL(),
           ),
-          Brukar("test", "testar"))
+          Brukar("test", "testar"),
+          crawlResultat2.antallNettsider)
 
   val testKoeyringList = listOf(testKoeyring, testKoeyring2)
 }

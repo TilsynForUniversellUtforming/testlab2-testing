@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 import java.net.URI
 import java.time.Instant
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
+import no.uutilsynet.testlab2testing.sideutval.crawling.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
