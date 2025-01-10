@@ -374,7 +374,7 @@ class ResultatService(
                   result.map { it.testar }.flatten().distinct(),
                   result.map { it.score }.average(),
                   kravId,
-              result.first().kravTittel,
+                  result.first().kravTittel,
                   talTestaElement(result),
                   result.sumOf { it.talElementBrot },
                   result.sumOf { it.talElementSamsvar })
