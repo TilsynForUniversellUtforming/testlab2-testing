@@ -40,8 +40,8 @@ data class ResultatLoeysing(
     val talElementSamsvar: Int,
     val talElementBrot: Int,
     val testregelId: Int,
-    val kravId: Int?,
-    val kravTittel: String?,
+    val kravId: Int,
+    val kravTittel: String,
 )
 
 data class ResultatLoeysingDTO(
