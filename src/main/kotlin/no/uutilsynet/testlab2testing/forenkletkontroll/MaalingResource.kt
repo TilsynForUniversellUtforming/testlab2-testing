@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
 import no.uutilsynet.testlab2testing.common.validateStatus
@@ -31,7 +32,7 @@ class MaalingResource(
     val maalingService: MaalingService,
     val brukarService: BrukarService,
     val maalingTestingService: MaalingTestingService,
-    val maalingCrawlingService: MaalingCrawlingService
+    val maalingCrawlingService: MaalingCrawlingService,
 ) {
 
   data class NyMaalingDTO(
@@ -157,19 +158,22 @@ class MaalingResource(
     return runCatching<ResponseEntity<Any>> {
           val maaling = maalingDAO.getMaaling(id)
           val newStatus = validateStatus(statusDTO.status).getOrThrow()
-          val badRequest = ResponseEntity.badRequest().build<Any>()
+          ResponseEntity.badRequest().build<Any>()
+
+          var brukar = brukarService.getCurrentUser()
 
           when (maaling) {
             is Maaling.Planlegging -> {
-              putNewStatusMaalingPlanlegging(maaling, newStatus, badRequest)
+              putNewStatusMaalingPlanlegging(maaling, newStatus)
             }
             is Maaling.Kvalitetssikring -> {
-              putNewStatusMaalingKvalitetssikring(newStatus, statusDTO, maaling)
+              putNewStatusMaalingKvalitetssikring(newStatus, statusDTO, maaling, brukar)
             }
             is Maaling.TestingFerdig -> {
-              putNewStatusMaalingTestingFerdig(newStatus, statusDTO, maaling, badRequest)
+              putNewStatusMaalingTestingFerdig(newStatus, statusDTO, maaling, brukar)
             }
-            else -> badRequest
+            else ->
+                throw IllegalArgumentException("Ugyldig målingstype: ${maaling::class.simpleName}")
           }
         }
         .getOrElse { exception ->
@@ -200,13 +204,12 @@ class MaalingResource(
       newStatus: Status,
       statusDTO: StatusDTO,
       maaling: Maaling.TestingFerdig,
-      badRequest: ResponseEntity<Any>
+      brukar: Brukar
   ): ResponseEntity<Any> {
-    brukarService.getCurrentUser()
     return runBlocking(Dispatchers.IO) {
       when (newStatus) {
-        Status.Testing -> maalingTestingService.restartTesting(statusDTO, maaling)
-        else -> badRequest
+        Status.Testing -> maalingTestingService.restartTesting(statusDTO, maaling, brukar)
+        else -> throw IllegalArgumentException("Ugyldig status: $newStatus")
       }
     }
   }
@@ -214,26 +217,26 @@ class MaalingResource(
   private fun putNewStatusMaalingKvalitetssikring(
       newStatus: Status,
       statusDTO: StatusDTO,
-      maaling: Maaling.Kvalitetssikring
+      maaling: Maaling.Kvalitetssikring,
+      brukar: Brukar
   ): ResponseEntity<Any> {
     return runBlocking(Dispatchers.IO) {
       when (newStatus) {
         Status.Crawling -> maalingCrawlingService.restartCrawling(statusDTO, maaling)
-        Status.Testing -> maalingTestingService.startTesting(maaling)
+        Status.Testing -> maalingTestingService.startTesting(maaling, brukar)
       }
     }
   }
 
   private fun putNewStatusMaalingPlanlegging(
       maaling: Maaling.Planlegging,
-      newStatus: Status,
-      badRequest: ResponseEntity<Any>
+      newStatus: Status
   ): ResponseEntity<Any> {
     return runBlocking(Dispatchers.IO) {
       maaling.crawlParameters.validateParameters()
       when (newStatus) {
         Status.Crawling -> maalingCrawlingService.startCrawling(maaling)
-        else -> badRequest
+        else -> throw IllegalArgumentException("Ugyldig status: $newStatus")
       }
     }
   }

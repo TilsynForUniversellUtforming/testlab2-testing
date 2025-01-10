@@ -3,15 +3,16 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
-import no.uutilsynet.testlab2testing.sideutval.crawling.logger
 import no.uutilsynet.testlab2testing.testing.manuelltesting.AutotestingService
 import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 
@@ -25,15 +26,17 @@ class MaalingTestingService(
     val maalingService: MaalingService
 ) {
 
+  private val logger = LoggerFactory.getLogger(MaalingTestingService::class.java)
+
   suspend fun restartTesting(
       statusDTO: MaalingResource.StatusDTO,
-      maaling: Maaling.TestingFerdig
+      maaling: Maaling.TestingFerdig,
+      brukar: Brukar
   ): ResponseEntity<Any> {
     return coroutineScope {
       logger.info("Restarter testing for måling ${maaling.id}")
       val loeysingIdList = maalingService.getValidatedLoeysingList(statusDTO)
       val testreglar = testreglarForMaaling(maaling.id)
-      val brukar = brukarService.getCurrentUser()
 
       val (retestList, rest) =
           maaling.testKoeyringar.partition { loeysingIdList.contains(it.loeysing.id) }
@@ -60,14 +63,11 @@ class MaalingTestingService(
     return withContext(Dispatchers.IO) { maalingDAO.save(updated) }
   }
 
-  suspend fun startTesting(
-      maaling: Maaling.Kvalitetssikring,
-  ): ResponseEntity<Any> {
+  suspend fun startTesting(maaling: Maaling.Kvalitetssikring, brukar: Brukar): ResponseEntity<Any> {
     return coroutineScope {
       val loeysingIdList =
           maaling.crawlResultat.filterIsInstance<CrawlResultat.Ferdig>().map { it.loeysing }
       val testreglar = testreglarForMaaling(maaling.id)
-      val brukar = brukarService.getCurrentUser()
 
       val testKoeyringar =
           autotestingService.startTesting(maaling.id, brukar, loeysingIdList, testreglar)

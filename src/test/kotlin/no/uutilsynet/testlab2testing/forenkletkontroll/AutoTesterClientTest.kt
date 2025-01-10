@@ -137,8 +137,13 @@ class AutoTesterClientTest {
     val result =
         autoTesterClient.startTesting(maalingId, testRegelList, nettsider, crawlResultat.loeysing)
 
+    val expectedStatus =
+        AutoTesterClient.AutotestingStatus(
+            crawlResultat.loeysing, statusUris.statusQueryGetUri.toURL(), nettsider.size)
+
     assertThat(result.isSuccess).isTrue
-    assertThat(result.getOrNull()).isEqualTo(statusUris.statusQueryGetUri.toURL())
+
+    assertThat(result.getOrNull()).isEqualTo(expectedStatus)
   }
 
   @DisplayName("Hvis det er feil i respons fra autotester skal man returnere Result.Failure")
