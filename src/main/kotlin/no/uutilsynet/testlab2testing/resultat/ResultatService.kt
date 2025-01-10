@@ -292,7 +292,7 @@ class ResultatService(
   }
 
   private fun getKravWcag2x(result: ResultatLoeysingDTO): KravWcag2x {
-    return testregelService.getKravWcag2x(result.id)
+    return testregelService.getKravWcag2x(result.testregelId)
   }
 
   fun getResultatListKontroll(
