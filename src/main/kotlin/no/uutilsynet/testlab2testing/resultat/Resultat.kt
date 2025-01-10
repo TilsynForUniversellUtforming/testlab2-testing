@@ -1,8 +1,8 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
+import java.time.LocalDate
 
 data class Resultat(
     val id: Int,
@@ -40,8 +40,8 @@ data class ResultatLoeysing(
     val talElementSamsvar: Int,
     val talElementBrot: Int,
     val testregelId: Int,
-    val kravId: Int?,
-    val kravTittel: String?,
+    val kravId: Int,
+    val kravTittel: String,
 )
 
 data class ResultatLoeysingDTO(
