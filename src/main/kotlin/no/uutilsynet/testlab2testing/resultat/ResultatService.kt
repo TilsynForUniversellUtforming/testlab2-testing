@@ -287,11 +287,11 @@ class ResultatService(
         talElementSamsvar = result.talElementSamsvar,
         talElementBrot = result.talElementBrot,
         testregelId = result.testregelId,
-        kravId = krav.id,
-        kravTittel = krav.tittel)
+        kravId = krav?.id,
+        kravTittel = krav?.tittel)
   }
 
-  private fun getKravWcag2x(result: ResultatLoeysingDTO): KravWcag2x {
+  private fun getKravWcag2x(result: ResultatLoeysingDTO): KravWcag2x? {
     return testregelService.getKravWcag2x(result.id)
   }
 
@@ -373,8 +373,8 @@ class ResultatService(
                   result.first().namn,
                   result.map { it.testar }.flatten().distinct(),
                   result.map { it.score }.average(),
-                  kravId,
-                  result.first().kravTittel,
+                  kravId ?: 0,
+                  result.first().kravTittel ?: "",
                   talTestaElement(result),
                   result.sumOf { it.talElementBrot },
                   result.sumOf { it.talElementSamsvar })
