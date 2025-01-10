@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

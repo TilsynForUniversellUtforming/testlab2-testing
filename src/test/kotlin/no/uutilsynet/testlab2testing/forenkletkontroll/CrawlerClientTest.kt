@@ -3,13 +3,17 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import java.time.Instant
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import no.uutilsynet.testlab2.constants.TestregelInnholdstype
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestregelStatus
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlerClient
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlerProperties
 import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
@@ -70,12 +74,21 @@ class CrawlerClientTest {
             testregelList.map { it.toTestregelBase() },
             CrawlParameters())
     runBlocking {
-      val oppdatertMaaling = crawlerClient.start(maaling)
+      val oppdatertMaaling = start(maaling)
 
       assertThat(oppdatertMaaling.crawlResultat).hasSize(2)
       assertThat(oppdatertMaaling.crawlResultat)
           .hasOnlyElementsOfType(CrawlResultat.IkkjeStarta::class.java)
     }
+  }
+
+  suspend fun start(maaling: Maaling.Planlegging): Maaling.Crawling = coroutineScope {
+    val deferreds: List<Deferred<CrawlResultat>> =
+        maaling.loeysingList.map { loeysing ->
+          async { crawlerClient.start(loeysing, maaling.crawlParameters) }
+        }
+    val crawlResultatList = deferreds.awaitAll()
+    Maaling.toCrawling(maaling, crawlResultatList)
   }
 
   private fun successBody(): String =

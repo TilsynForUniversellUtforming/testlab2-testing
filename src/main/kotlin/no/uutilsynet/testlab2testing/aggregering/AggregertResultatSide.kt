@@ -1,8 +1,8 @@
 package no.uutilsynet.testlab2testing.aggregering
 
 import java.net.URL
-import no.uutilsynet.testlab2testing.forenkletkontroll.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutotesterTestresultat
 
 data class AggregertResultatSide(
     val maalingId: Int?,

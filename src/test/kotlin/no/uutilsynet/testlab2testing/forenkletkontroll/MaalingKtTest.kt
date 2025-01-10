@@ -5,10 +5,14 @@ import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateStatus
-import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters.Companion.validateParameters
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters.Companion.validateParameters
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -183,11 +187,12 @@ class MaalingKtTest {
               maalingDateStart,
               listOf(
                   TestKoeyring.Starta(
-                      crawlResultatForUUTilsynet,
+                      TestConstants.digdirLoeysing,
                       Instant.now(),
                       URI("https://www.status.url").toURL(),
                       Framgang(0, 0),
-                      Brukar("test", "testar"))))
+                      Brukar("test", "testar"),
+                      10)))
       val result = Maaling.toTestingFerdig(maaling)
       assertThat(result).isNull()
     }
@@ -203,11 +208,12 @@ class MaalingKtTest {
               maalingDateStart,
               listOf(
                   TestKoeyring.Ferdig(
-                      crawlResultatForUUTilsynet,
+                      TestConstants.uutilsynetLoeysing,
                       Instant.now(),
                       URI("https://status.url").toURL(),
                       lenker,
-                      Brukar("test", "testar"))))
+                      Brukar("test", "testar"),
+                      10)))
       val result = Maaling.toTestingFerdig(maaling)
       assertThat(result).isNotNull
     }
@@ -223,16 +229,17 @@ class MaalingKtTest {
               maalingDateStart,
               listOf(
                   TestKoeyring.Feila(
-                      crawlResultatForDigdir,
+                      TestConstants.digdirLoeysing,
                       Instant.now(),
                       "autotester krasja",
                       Brukar("test", "testar")),
                   TestKoeyring.Ferdig(
-                      crawlResultatForUUTilsynet,
+                      TestConstants.uutilsynetLoeysing,
                       Instant.now(),
                       URI("https://status.url").toURL(),
                       lenker,
-                      Brukar("test", "testar")),
+                      Brukar("test", "testar"),
+                      10),
               ))
       val result = Maaling.toTestingFerdig(maaling)
       assertThat(result).isNotNull
@@ -249,22 +256,19 @@ class MaalingKtTest {
             maalingDateStart,
             listOf(
                 TestKoeyring.Ferdig(
-                    CrawlResultat.Ferdig(
-                        1,
-                        URI("https://www.status.url").toURL(),
-                        uutilsynetLoeysing,
-                        Instant.now()),
+                    TestConstants.digdirLoeysing,
                     Instant.now(),
                     URI("https://www.status.url").toURL(),
                     lenker,
-                    Brukar("test", "testar")),
+                    Brukar("test", "testar"),
+                    10),
                 TestKoeyring.Ferdig(
-                    CrawlResultat.Ferdig(
-                        1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now()),
+                    TestConstants.uutilsynetLoeysing,
                     Instant.now(),
                     URI("https://www.status.url").toURL(),
                     lenker,
-                    Brukar("test", "testar"))))
+                    Brukar("test", "testar"),
+                    10)))
 
     @DisplayName(
         "når vi henter testkøyringar for ei måling, uten å spesifisere løysing, så skal vi få alle testkøyringane")
@@ -280,7 +284,7 @@ class MaalingKtTest {
     fun testKoeyringarForLoeysing() {
       val testKoeyringar = Maaling.findFerdigeTestKoeyringar(maaling, uutilsynetLoeysing.id)
       assertThat(testKoeyringar, hasSize(1))
-      assertThat(testKoeyringar[0].crawlResultat.loeysing, equalTo(uutilsynetLoeysing))
+      assertThat(testKoeyringar[0].loeysing, equalTo(uutilsynetLoeysing))
     }
   }
 }

@@ -19,6 +19,10 @@ import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
+import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelInit
@@ -95,13 +99,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
   private fun setupTestKoeyring(testLoeysing: Loeysing): TestKoeyring.Ferdig {
     val testKoeyring: TestKoeyring.Ferdig =
         TestKoeyring.Ferdig(
-            crawlResultat =
-                CrawlResultat.Ferdig(
-                    antallNettsider = 1,
-                    statusUrl = TEST_URL,
-                    loeysing = testLoeysing,
-                    sistOppdatert = Instant.now(),
-                    nettsider = emptyList()),
+            loeysing = testLoeysing,
             sistOppdatert = Instant.now(),
             statusURL = TEST_URL,
             lenker =
@@ -113,7 +111,8 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
                     urlAggregeringSide = TEST_URL,
                     urlAggregeringLoeysing = TEST_URL,
                     urlAggregeringSK = TEST_URL),
-            Brukar("testar", "test"))
+            Brukar("testar", "test"),
+            10)
     return testKoeyring
   }
 

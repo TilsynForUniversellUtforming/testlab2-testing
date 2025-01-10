@@ -15,10 +15,6 @@ sealed class KontrollResultatService(
     return testregelIds
   }
 
-  protected fun filterTestregelNoekkel(testregelNoekkel: String, testregelId: List<Int>): Boolean {
-    return testregelId.contains(getTestregelIdFromSchema(testregelNoekkel) ?: 0)
-  }
-
   protected fun filterByTestregel(testregelId: Int, testregelIdsForKrav: List<Int>): Boolean {
     return testregelIdsForKrav.contains(testregelId)
   }

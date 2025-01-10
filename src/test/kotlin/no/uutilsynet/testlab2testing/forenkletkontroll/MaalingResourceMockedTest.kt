@@ -16,6 +16,10 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testKoeyrin
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
+import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterProperties
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutotestingService
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.assertj.core.api.Assertions
@@ -28,6 +32,7 @@ import org.mockito.MockitoAnnotations
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -36,7 +41,11 @@ import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers
 import org.springframework.test.web.client.response.MockRestResponseCreators
 
-@RestClientTest(AutoTesterClient::class, AutoTesterProperties::class)
+@RestClientTest(
+    AutoTesterClient::class,
+    AutoTesterProperties::class,
+    AutotestingService::class,
+    MaalingService::class)
 class MaalingResourceMockedTest {
 
   @Autowired private lateinit var server: MockRestServiceServer
@@ -50,13 +59,15 @@ class MaalingResourceMockedTest {
 
   @MockBean private lateinit var utvalDAO: UtvalDAO
 
-  @MockBean private lateinit var crawlerClient: CrawlerClient
-
   @MockBean private lateinit var aggregeringService: AggregeringService
 
   @MockBean private lateinit var sideutvalDAO: SideutvalDAO
 
   @MockBean private lateinit var brukarService: BrukarService
+
+  @SpyBean private lateinit var maalingTestingService: MaalingTestingService
+
+  @MockBean private lateinit var maalingCrawlingService: MaalingCrawlingService
 
   private lateinit var maalingResource: MaalingResource
 
@@ -69,10 +80,6 @@ class MaalingResourceMockedTest {
     maalingResource =
         MaalingResource(
             maalingDAO,
-            loeysingsRegisterClient,
-            testregelDAO,
-            crawlerClient,
-            autoTesterClient,
             sideutvalDAO,
             MaalingService(
                 maalingDAO,
@@ -81,7 +88,9 @@ class MaalingResourceMockedTest {
                 utvalDAO,
                 aggregeringService,
                 autoTesterClient),
-            brukarService)
+            brukarService,
+            maalingTestingService,
+            maalingCrawlingService)
   }
 
   @Test
@@ -91,6 +100,8 @@ class MaalingResourceMockedTest {
     val status = MaalingResource.StatusDTO("testing", null)
     val maaling =
         Maaling.Kvalitetssikring(id, "Testmaaling", maalingDateStart, listOf(crawlResultat))
+
+    brukarService.getCurrentUser()
 
     `when`(maalingDAO.getMaaling(id)).thenReturn(maaling)
     `when`(testregelDAO.getTestreglarForMaaling(id))

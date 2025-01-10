@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll
+package no.uutilsynet.testlab2testing.testing.manuelltesting
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonSubTypes
@@ -7,7 +7,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URL
 import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.forenkletkontroll.Framgang
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "tilstand")
 @JsonSubTypes(
@@ -17,55 +19,53 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
     Type(TestKoeyring.Feila::class, name = "feila"))
 sealed class TestKoeyring {
   abstract val loeysing: Loeysing
-  abstract val crawlResultat: CrawlResultat.Ferdig
   abstract val sistOppdatert: Instant
   abstract val brukar: Brukar?
 
   data class IkkjeStarta(
-      override val crawlResultat: CrawlResultat.Ferdig,
+      override val loeysing: Loeysing,
       override val sistOppdatert: Instant,
       val statusURL: URL,
-      override val brukar: Brukar?
-  ) : TestKoeyring() {
-    override val loeysing: Loeysing
-      get() = crawlResultat.loeysing
-  }
+      override val brukar: Brukar?,
+      val antallNettsider: Int,
+  ) : TestKoeyring()
 
   data class Starta(
-      override val crawlResultat: CrawlResultat.Ferdig,
+      override val loeysing: Loeysing,
       override val sistOppdatert: Instant,
       val statusURL: URL,
       val framgang: Framgang,
-      override val brukar: Brukar?
-  ) : TestKoeyring() {
-    override val loeysing: Loeysing
-      get() = crawlResultat.loeysing
-  }
+      override val brukar: Brukar?,
+      val antallNettsider: Int,
+  ) : TestKoeyring()
 
   data class Ferdig(
-      override val crawlResultat: CrawlResultat.Ferdig,
+      override val loeysing: Loeysing,
       override val sistOppdatert: Instant,
       val statusURL: URL,
       @JsonIgnore val lenker: AutoTesterClient.AutoTesterLenker? = null,
-      override val brukar: Brukar?
-  ) : TestKoeyring() {
-    override val loeysing: Loeysing
-      get() = crawlResultat.loeysing
-  }
+      override val brukar: Brukar?,
+      val antallNettsider: Int,
+  ) : TestKoeyring()
 
   data class Feila(
-      override val crawlResultat: CrawlResultat.Ferdig,
+      override val loeysing: Loeysing,
       override val sistOppdatert: Instant,
       val feilmelding: String,
       override val brukar: Brukar?
-  ) : TestKoeyring() {
-    override val loeysing: Loeysing
-      get() = crawlResultat.loeysing
-  }
+  ) : TestKoeyring()
 
   companion object {
     fun from(crawlResultat: CrawlResultat.Ferdig, statusURL: URL, brukar: Brukar?): IkkjeStarta =
-        IkkjeStarta(crawlResultat, Instant.now(), statusURL, brukar)
+        IkkjeStarta(
+            crawlResultat.loeysing, Instant.now(), statusURL, brukar, crawlResultat.antallNettsider)
+
+    fun from(
+        loeysing: Loeysing,
+        statusURL: URL,
+        brukar: Brukar?,
+        antallNettsider: Int
+    ): IkkjeStarta = IkkjeStarta(loeysing, Instant.now(), statusURL, brukar, antallNettsider)
 
     fun updateStatus(
         testKoeyring: TestKoeyring,
@@ -73,7 +73,7 @@ sealed class TestKoeyring {
     ): TestKoeyring =
         if (response is AutoTesterClient.AutoTesterStatus.Terminated) {
           Feila(
-              testKoeyring.crawlResultat,
+              testKoeyring.loeysing,
               Instant.now(),
               "Testen har blitt stoppa manuelt.",
               testKoeyring.brukar)
@@ -94,26 +94,29 @@ sealed class TestKoeyring {
         when (response) {
           is AutoTesterClient.AutoTesterStatus.Pending ->
               IkkjeStarta(
-                  testKoeyring.crawlResultat,
+                  testKoeyring.loeysing,
                   Instant.now(),
                   testKoeyring.statusURL,
-                  testKoeyring.brukar)
+                  testKoeyring.brukar,
+                  testKoeyring.antallNettsider)
           is AutoTesterClient.AutoTesterStatus.Completed ->
               Ferdig(
-                  testKoeyring.crawlResultat,
+                  testKoeyring.loeysing,
                   Instant.now(),
                   testKoeyring.statusURL,
                   response.output,
-                  testKoeyring.brukar)
+                  testKoeyring.brukar,
+                  testKoeyring.antallNettsider)
           is AutoTesterClient.AutoTesterStatus.Failed ->
-              Feila(testKoeyring.crawlResultat, Instant.now(), response.output, testKoeyring.brukar)
+              Feila(testKoeyring.loeysing, Instant.now(), response.output, testKoeyring.brukar)
           is AutoTesterClient.AutoTesterStatus.Running ->
               Starta(
-                  testKoeyring.crawlResultat,
+                  testKoeyring.loeysing,
                   Instant.now(),
                   testKoeyring.statusURL,
-                  Framgang.from(response.customStatus, testKoeyring.crawlResultat.antallNettsider),
-                  testKoeyring.brukar)
+                  Framgang.from(response.customStatus, testKoeyring.antallNettsider),
+                  testKoeyring.brukar,
+                  testKoeyring.antallNettsider)
           else -> testKoeyring
         }
 
@@ -124,20 +127,22 @@ sealed class TestKoeyring {
         when (response) {
           is AutoTesterClient.AutoTesterStatus.Running ->
               Starta(
-                  testKoeyring.crawlResultat,
+                  testKoeyring.loeysing,
                   Instant.now(),
                   testKoeyring.statusURL,
-                  Framgang.from(response.customStatus, testKoeyring.crawlResultat.antallNettsider),
-                  testKoeyring.brukar)
+                  Framgang.from(response.customStatus, testKoeyring.antallNettsider),
+                  testKoeyring.brukar,
+                  testKoeyring.antallNettsider)
           is AutoTesterClient.AutoTesterStatus.Completed ->
               Ferdig(
-                  testKoeyring.crawlResultat,
+                  testKoeyring.loeysing,
                   Instant.now(),
                   testKoeyring.statusURL,
                   response.output,
-                  testKoeyring.brukar)
+                  testKoeyring.brukar,
+                  testKoeyring.antallNettsider)
           is AutoTesterClient.AutoTesterStatus.Failed ->
-              Feila(testKoeyring.crawlResultat, Instant.now(), response.output, testKoeyring.brukar)
+              Feila(testKoeyring.loeysing, Instant.now(), response.output, testKoeyring.brukar)
           else -> testKoeyring
         }
   }

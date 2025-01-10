@@ -24,6 +24,11 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
+import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
@@ -332,11 +337,12 @@ class MaalingDAO(
         autoTesterLenker(
             urlFulltResultat, urlBrot, urlAggTR, urlAggSK, urlAggSide, urlAggSideTR, urlAggLoeysing)
     return TestKoeyring.Ferdig(
-        crawlResultatForLoeysing,
+        crawlResultatForLoeysing.loeysing,
         sistOppdatert,
         URI(rs.getString("status_url")).toURL(),
         lenker,
-        brukar)
+        brukar,
+        10)
   }
 
   private fun autoTesterLenker(
@@ -369,7 +375,7 @@ class MaalingDAO(
       brukar: Brukar?
   ) =
       TestKoeyring.Feila(
-          crawlResultatForLoeysing, sistOppdatert, rs.getString("feilmelding"), brukar)
+          crawlResultatForLoeysing.loeysing, sistOppdatert, rs.getString("feilmelding"), brukar)
 
   private fun starta(
       crawlResultatForLoeysing: CrawlResultat.Ferdig,
@@ -378,11 +384,12 @@ class MaalingDAO(
       brukar: Brukar?
   ) =
       TestKoeyring.Starta(
-          crawlResultatForLoeysing,
+          crawlResultatForLoeysing.loeysing,
           sistOppdatert,
           URI(rs.getString("status_url")).toURL(),
           Framgang(rs.getInt("lenker_testa"), crawlResultatForLoeysing.antallNettsider),
-          brukar)
+          brukar,
+          crawlResultatForLoeysing.antallNettsider)
 
   private fun ikkjeStarta(
       crawlResultatForLoeysing: CrawlResultat.Ferdig,
@@ -391,7 +398,11 @@ class MaalingDAO(
       brukar: Brukar?
   ) =
       TestKoeyring.IkkjeStarta(
-          crawlResultatForLoeysing, sistOppdatert, URI(rs.getString("status_url")).toURL(), brukar)
+          crawlResultatForLoeysing.loeysing,
+          sistOppdatert,
+          URI(rs.getString("status_url")).toURL(),
+          brukar,
+          crawlResultatForLoeysing.antallNettsider)
 
   private fun getBrukarFromResultSet(rs: ResultSet) =
       brukarService.getBrukarById(rs.getInt("brukar_id"))
@@ -505,7 +516,7 @@ class MaalingDAO(
 
   @Transactional
   fun saveTestKoeyring(testKoeyring: TestKoeyring, maalingId: Int) {
-    deleteExistingTestkoeyring(maalingId, testKoeyring)
+    deleteExistingTestkoeyring(maalingId, testKoeyring.loeysing.id)
     when (testKoeyring) {
       is TestKoeyring.Starta -> {
         saveTestKoeyringStarta(maalingId, testKoeyring)
@@ -528,7 +539,7 @@ class MaalingDAO(
             .trimMargin(),
         mapOf(
             "maaling_id" to maalingId,
-            "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
+            "loeysing_id" to testKoeyring.loeysing.id,
             "status" to status(testKoeyring),
             "status_url" to statusURL(testKoeyring),
             "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
@@ -537,10 +548,10 @@ class MaalingDAO(
         Int::class.java)
   }
 
-  private fun deleteExistingTestkoeyring(maalingId: Int, testKoeyring: TestKoeyring) {
+  private fun deleteExistingTestkoeyring(maalingId: Int, loeysingId: Int) {
     jdbcTemplate.update(
         """delete from "testlab2_testing"."testkoeyring" where maaling_id = :maaling_id and loeysing_id = :loeysing_id""",
-        mapOf("maaling_id" to maalingId, "loeysing_id" to testKoeyring.crawlResultat.loeysing.id))
+        mapOf("maaling_id" to maalingId, "loeysing_id" to loeysingId))
   }
 
   private fun getBrukar(brukar: Brukar?): Int? {
@@ -559,7 +570,7 @@ class MaalingDAO(
             .trimIndent(),
         mapOf(
             "maaling_id" to maalingId,
-            "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
+            "loeysing_id" to testKoeyring.loeysing.id,
             "status" to status(testKoeyring),
             "status_url" to statusURL(testKoeyring),
             "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
@@ -581,7 +592,7 @@ class MaalingDAO(
             .trimMargin(),
         mapOf(
             "maaling_id" to maalingId,
-            "loeysing_id" to testKoeyring.crawlResultat.loeysing.id,
+            "loeysing_id" to testKoeyring.loeysing.id,
             "status" to status(testKoeyring),
             "status_url" to statusURL(testKoeyring),
             "sist_oppdatert" to Timestamp.from(testKoeyring.sistOppdatert),
@@ -626,19 +637,6 @@ class MaalingDAO(
         is TestKoeyring.Ferdig -> testKoeyring.statusURL.toString()
         else -> null
       }
-
-  fun getBrukarForMaaling(maalingId: Int): List<String> {
-    return jdbcTemplate.queryForList(
-        """
-                select distinct b.namn as namn
-                from "testlab2_testing"."testkoeyring" ti
-                join "testlab2_testing"."brukar" b on ti.brukar_id = b.id
-                where ti.maaling_id = :maaling_id
-            """
-            .trimIndent(),
-        mapOf("maaling_id" to maalingId),
-        String::class.java)
-  }
 
   fun getMaalingForKontroll(kontrollId: Int): Result<Int> {
     return runCatching {

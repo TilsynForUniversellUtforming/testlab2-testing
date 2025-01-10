@@ -8,6 +8,12 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.ScheduledUpdater.Companio
 import no.uutilsynet.testlab2testing.forenkletkontroll.ScheduledUpdater.Companion.updateTestingStatus
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlStatus
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlerClient
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlerOutput
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -64,11 +70,12 @@ class ScheduledUpdaterTest {
             sistOppdatert = Instant.now())
     val testKoeyring =
         TestKoeyring.Starta(
-            crawlResultat = crawlResultat,
+            loeysing = crawlResultat.loeysing,
             sistOppdatert = Instant.now(),
             statusURL = URI("https://www.uutilsynet.no/status/1").toURL(),
             framgang = Framgang(0, 0),
-            Brukar("test", "testar"))
+            Brukar("test", "testar"),
+            crawlResultat.nettsider.size)
 
     var updatedTestKoeyring: TestKoeyring? = null
     for (i in 1..21) {
@@ -177,10 +184,11 @@ class ScheduledUpdaterTest {
 
     val testKoeyring =
         TestKoeyring.IkkjeStarta(
-            crawlResultat = crawlResultat,
+            loeysing = crawlResultat.loeysing,
             sistOppdatert = Instant.now(),
             statusURL = URI("https://www.uutilsynet.no/status/1").toURL(),
-            Brukar("test", "testar"))
+            Brukar("test", "testar"),
+            crawlResultat.nettsider.size)
     val maaling =
         Maaling.Testing(
             id = 1,
