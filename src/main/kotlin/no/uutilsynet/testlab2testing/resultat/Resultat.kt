@@ -1,8 +1,8 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
+import java.time.LocalDate
 
 data class Resultat(
     val id: Int,
