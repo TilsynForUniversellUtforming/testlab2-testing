@@ -2,8 +2,7 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.net.URI
-import java.time.Instant
+import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2.constants.TestregelInnholdstype
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestregelStatus
@@ -19,6 +18,7 @@ import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterProperties
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutotestingService
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.assertj.core.api.Assertions
@@ -31,6 +31,7 @@ import org.mockito.MockitoAnnotations
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -38,8 +39,14 @@ import org.springframework.test.web.client.ExpectedCount
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers
 import org.springframework.test.web.client.response.MockRestResponseCreators
+import java.net.URI
+import java.time.Instant
 
-@RestClientTest(AutoTesterClient::class, AutoTesterProperties::class)
+@RestClientTest(
+    AutoTesterClient::class,
+    AutoTesterProperties::class,
+    AutotestingService::class,
+    MaalingService::class)
 class MaalingResourceMockedTest {
 
   @Autowired private lateinit var server: MockRestServiceServer
@@ -59,7 +66,7 @@ class MaalingResourceMockedTest {
 
   @MockBean private lateinit var brukarService: BrukarService
 
-  @MockBean private lateinit var maalingTestingService: MaalingTestingService
+  @SpyBean private lateinit var maalingTestingService: MaalingTestingService
 
   @MockBean private lateinit var maalingCrawlingService: MaalingCrawlingService
 
@@ -95,6 +102,8 @@ class MaalingResourceMockedTest {
     val maaling =
         Maaling.Kvalitetssikring(id, "Testmaaling", maalingDateStart, listOf(crawlResultat))
 
+    val brukar = brukarService.getCurrentUser()
+
     `when`(maalingDAO.getMaaling(id)).thenReturn(maaling)
     `when`(testregelDAO.getTestreglarForMaaling(id))
         .thenReturn(
@@ -116,6 +125,11 @@ class MaalingResourceMockedTest {
                         "QW",
                         "1.2.3",
                         1))))
+
+    runBlocking {
+      `when`(maalingTestingService.startTesting(maaling, brukar))
+          .thenThrow(IllegalArgumentException("QualWeb regel id må vera på formen QW-ACT-RXX"))
+    }
 
     val result = maalingResource.putNewStatus(id, status)
 

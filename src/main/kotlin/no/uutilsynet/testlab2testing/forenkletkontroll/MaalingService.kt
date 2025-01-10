@@ -14,7 +14,6 @@ import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters.Companion.validateParameters
-import no.uutilsynet.testlab2testing.sideutval.crawling.logger
 import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.manuelltesting.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
@@ -22,6 +21,7 @@ import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.toSingleResult
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 
@@ -34,6 +34,8 @@ class MaalingService(
     val aggregeringService: AggregeringService,
     val autoTesterClient: AutoTesterClient
 ) {
+
+  private val logger = LoggerFactory.getLogger(MaalingService::class.java)
 
   fun nyMaaling(kontrollId: Int, opprettKontroll: KontrollResource.OpprettKontroll) = runCatching {
     val dto = opprettKontroll.toNyMaaling()
