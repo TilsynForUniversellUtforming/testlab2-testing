@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import java.time.Instant
-import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2.constants.TestregelInnholdstype
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestregelStatus
@@ -102,7 +101,7 @@ class MaalingResourceMockedTest {
     val maaling =
         Maaling.Kvalitetssikring(id, "Testmaaling", maalingDateStart, listOf(crawlResultat))
 
-    val brukar = brukarService.getCurrentUser()
+    brukarService.getCurrentUser()
 
     `when`(maalingDAO.getMaaling(id)).thenReturn(maaling)
     `when`(testregelDAO.getTestreglarForMaaling(id))
@@ -125,11 +124,6 @@ class MaalingResourceMockedTest {
                         "QW",
                         "1.2.3",
                         1))))
-
-    runBlocking {
-      `when`(maalingTestingService.startTesting(maaling, brukar))
-          .thenThrow(IllegalArgumentException("QualWeb regel id må vera på formen QW-ACT-RXX"))
-    }
 
     val result = maalingResource.putNewStatus(id, status)
 
