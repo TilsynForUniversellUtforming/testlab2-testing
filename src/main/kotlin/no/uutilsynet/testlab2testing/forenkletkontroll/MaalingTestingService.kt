@@ -4,7 +4,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import no.uutilsynet.testlab2testing.brukar.Brukar
-import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.testing.manuelltesting.AutotestingService
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service
 @Service
 class MaalingTestingService(
     val autotestingService: AutotestingService,
-    val brukarService: BrukarService,
     val maalingDAO: MaalingDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val testregelDAO: TestregelDAO,
