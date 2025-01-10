@@ -1,9 +1,10 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll
+package no.uutilsynet.testlab2testing.sideutval.crawling
 
 import java.net.URI
 import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
+import no.uutilsynet.testlab2testing.forenkletkontroll.Framgang
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate

@@ -16,6 +16,9 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testKoeyrin
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
+import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterProperties
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.assertj.core.api.Assertions
@@ -50,13 +53,15 @@ class MaalingResourceMockedTest {
 
   @MockBean private lateinit var utvalDAO: UtvalDAO
 
-  @MockBean private lateinit var crawlerClient: CrawlerClient
-
   @MockBean private lateinit var aggregeringService: AggregeringService
 
   @MockBean private lateinit var sideutvalDAO: SideutvalDAO
 
   @MockBean private lateinit var brukarService: BrukarService
+
+  @MockBean private lateinit var maalingTestingService: MaalingTestingService
+
+  @MockBean private lateinit var maalingCrawlingService: MaalingCrawlingService
 
   private lateinit var maalingResource: MaalingResource
 
@@ -69,10 +74,6 @@ class MaalingResourceMockedTest {
     maalingResource =
         MaalingResource(
             maalingDAO,
-            loeysingsRegisterClient,
-            testregelDAO,
-            crawlerClient,
-            autoTesterClient,
             sideutvalDAO,
             MaalingService(
                 maalingDAO,
@@ -81,7 +82,9 @@ class MaalingResourceMockedTest {
                 utvalDAO,
                 aggregeringService,
                 autoTesterClient),
-            brukarService)
+            brukarService,
+            maalingTestingService,
+            maalingCrawlingService)
   }
 
   @Test

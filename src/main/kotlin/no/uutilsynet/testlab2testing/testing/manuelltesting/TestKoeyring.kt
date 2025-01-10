@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll
+package no.uutilsynet.testlab2testing.testing.manuelltesting
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonSubTypes
@@ -7,7 +7,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URL
 import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.forenkletkontroll.Framgang
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "tilstand")
 @JsonSubTypes(

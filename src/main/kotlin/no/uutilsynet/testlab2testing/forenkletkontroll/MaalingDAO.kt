@@ -1,5 +1,9 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
+import java.net.URI
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.*
@@ -20,6 +24,11 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
+import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
@@ -36,10 +45,6 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import java.net.URI
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.time.Instant
 
 @Component
 class MaalingDAO(

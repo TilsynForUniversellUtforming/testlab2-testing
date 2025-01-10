@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.dto
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class EditMaalingDTO(

@@ -5,10 +5,14 @@ import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateStatus
-import no.uutilsynet.testlab2testing.forenkletkontroll.CrawlParameters.Companion.validateParameters
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters.Companion.validateParameters
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
+import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
