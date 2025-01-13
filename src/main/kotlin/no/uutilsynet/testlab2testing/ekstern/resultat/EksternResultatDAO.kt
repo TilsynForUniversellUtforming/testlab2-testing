@@ -130,11 +130,12 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     runCatching {
           jdbcTemplate.queryForObject(
-              query.trimIndent(), mapOf("kontrollId" to id), Int::class.java) == 1
+              query.trimIndent(), mapOf("kontrollId" to id), Int::class.java)
+              ?: 0
         }
         .fold(
             onSuccess = {
-              return it
+              return it > 0
             },
             onFailure = {
               logger.error("Feil ved henting av publisert status for kontroll $id", it)
@@ -145,9 +146,9 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun erPublisertQuery(kontrolltype: Kontrolltype): String {
     return if (kontrolltype == Kontrolltype.Statusmaaling ||
         kontrolltype == Kontrolltype.ForenklaKontroll) {
-      "select count(*) from rapport r join maalingv1 m on m.id=r.maaling_id where m.kontrollid=:kontrollId and publisert is not null"
+      """select count(*) from "rapport" r join "maalingv1" m on m.id=r.maaling_id where m.kontrollid=:kontrollId and publisert is not null"""
     } else {
-      "select count(*) from rapport r join testgrunnlag tg on tg.id=r.testgrunnlag_id where tg.kontroll_id=:kontrollId and publisert is not null"
+      """select count(*) from "rapport" r join "testgrunnlag" tg on tg.id=r.testgrunnlag_id where tg.kontroll_id=:kontrollId and publisert is not null"""
     }
   }
 }
