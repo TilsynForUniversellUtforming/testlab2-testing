@@ -75,15 +75,7 @@ class LoeysingsRegisterClient(
 
   @Cacheable("loeysing", unless = "#result==null")
   fun getLoeysingFromId(loeysingId: Int): Loeysing {
-    return runCatching {
-          getMany(listOf(loeysingId)).let { loeysingList ->
-            loeysingList.getOrThrow().firstOrNull()?.let {
-              return it
-            }
-          }
-          throw RuntimeException("Fant ikkje løsning med id $loeysingId")
-        }
-        .getOrThrow()
+    return getMany(listOf(loeysingId)).mapCatching { it.first() }.getOrThrow()
   }
 
   @Cacheable("loeysingarExpanded")
