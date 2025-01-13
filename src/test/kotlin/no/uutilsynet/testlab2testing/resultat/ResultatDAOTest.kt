@@ -30,6 +30,7 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.cache.CacheManager
 import org.springframework.context.annotation.Bean
@@ -40,9 +41,15 @@ import org.springframework.test.context.ActiveProfiles
 @SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ResultatDAOTest {
-
-  @Autowired private var jdbcTemplate: NamedParameterJdbcTemplate? = null
+class ResultatDAOTest(
+    @Autowired val resultatDAO: ResultatDAO,
+    @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
+    @Autowired val aggregeringDAO: AggregeringDAO,
+    @Autowired val maalingDAO: MaalingDAO,
+    @Autowired val testregelDAO: TestregelDAO,
+    @Autowired val utvalDAO: UtvalDAO,
+    @Autowired val kontrollDAO: KontrollDAO
+) {
 
   @MockBean lateinit var sideutvalDAO: SideutvalDAO
 
@@ -50,9 +57,7 @@ class ResultatDAOTest {
 
   @MockBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
-  @MockBean lateinit var cacheManager: CacheManager
-
-  private var resultatDAO: ResultatDAO? = null
+  @SpyBean lateinit var cacheManager: CacheManager
 
   private var testregelId: Int = 0
   private var utvalId: Int = 0
@@ -62,7 +67,6 @@ class ResultatDAOTest {
 
   @BeforeAll
   fun setup() {
-    resultatDAO = ResultatDAO(jdbcTemplate!!)
     testregelId = createTestregel()
     maalingIds = createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"))
 
@@ -76,7 +80,7 @@ class ResultatDAOTest {
   @Test
   fun getTestresultatMaaling() {
 
-    val resultat: List<ResultatLoeysingDTO> = resultatDAO!!.getTestresultatMaaling()
+    val resultat: List<ResultatLoeysingDTO> = resultatDAO.getTestresultatMaaling()
 
     assertThat(resultat.size).isEqualTo(2)
 
@@ -106,7 +110,7 @@ class ResultatDAOTest {
             3,
             testregelId)
 
-    val resultat = resultatDAO!!.getTestresultatMaaling(maalingIds[0])
+    val resultat = resultatDAO.getTestresultatMaaling(maalingIds[0])
 
     assertThat(resultat.map { it.testgrunnlagId }).isEqualTo(listOf(expected1.testgrunnlagId))
     assertThat(resultat.map { it.testgrunnlagId }).isNotEqualTo(listOf(maalingIds[1]))
@@ -115,7 +119,7 @@ class ResultatDAOTest {
   @Test
   fun getTestresultatTestgrunnlag() {
 
-    val resultat = resultatDAO!!.getTestresultatTestgrunnlag()
+    val resultat = resultatDAO.getTestresultatTestgrunnlag()
 
     assertThat(resultat.map { it.testType }.filter { it == TestgrunnlagType.OPPRINNELEG_TEST })
         .isNotEmpty()
@@ -130,7 +134,7 @@ class ResultatDAOTest {
   @Test
   fun testGetTestresultatTestgrunnlag() {
 
-    val resultat = resultatDAO!!.getTestresultatTestgrunnlag(testgrunnlagId = testgrunnlagIds[0])
+    val resultat = resultatDAO.getTestresultatTestgrunnlag(testgrunnlagId = testgrunnlagIds[0])
 
     assertThat(resultat.size).isEqualTo(2)
   }
@@ -138,7 +142,7 @@ class ResultatDAOTest {
   @Test
   fun getResultat() {
 
-    val resultat = resultatDAO!!.getAllResultat()
+    val resultat = resultatDAO.getAllResultat()
 
     assertThat(resultat.size).isEqualTo(6)
     assertThat(resultat.map { it.typeKontroll }).contains(Kontrolltype.ForenklaKontroll)
@@ -154,7 +158,7 @@ class ResultatDAOTest {
   @Test
   fun getResultatKontrollWithTestgrunnlagAndMaaling() {
 
-    val resultat = resultatDAO!!.getAllResultat()
+    val resultat = resultatDAO.getAllResultat()
 
     assertThat(resultat.size).isNotEqualTo(0)
     resultat.map { it.typeKontroll }.contains(Kontrolltype.ForenklaKontroll)
@@ -167,10 +171,9 @@ class ResultatDAOTest {
   @Test
   fun getResultatKontrollLoeysing() {
 
-    val testgrunnlagDAO = TestgrunnlagDAO(jdbcTemplate!!)
     val existing = testgrunnlagDAO.getTestgrunnlag(testgrunnlagIds[0]).getOrThrow()
 
-    val resultat = resultatDAO!!.getResultatKontrollLoeysing(existing.kontrollId, 2)
+    val resultat = resultatDAO.getResultatKontrollLoeysing(existing.kontrollId, 2)
 
     assertThat(resultat.size).isEqualTo(2)
     assertThat(resultat[0].loeysingId).isEqualTo(2)
@@ -178,10 +181,9 @@ class ResultatDAOTest {
 
   @Test
   fun getResultatKontroll() {
-    val testgrunnlagDAO = TestgrunnlagDAO(jdbcTemplate!!)
     val existing = testgrunnlagDAO.getTestgrunnlag(testgrunnlagIds[0]).getOrThrow()
 
-    val resultat = resultatDAO!!.getResultatKontroll(existing.kontrollId)
+    val resultat = resultatDAO.getResultatKontroll(existing.kontrollId)
 
     assertThat(resultat.size).isEqualTo(4)
   }
@@ -200,7 +202,7 @@ class ResultatDAOTest {
             4,
         )
 
-    val resultat = resultatDAO!!.getResultatPrTema(null, null, null, null, null)
+    val resultat = resultatDAO.getResultatPrTema(null, null, null, null, null)
 
     assertThat(resultat.size).isEqualTo(1)
 
@@ -211,7 +213,7 @@ class ResultatDAOTest {
   fun getResultatPrKrav() {
     val expected = ResultatKravBase(1, 50, 12, 24, 4, 4)
 
-    val resultat = resultatDAO!!.getResultatPrKrav(null, null, null, null, null)
+    val resultat = resultatDAO.getResultatPrKrav(null, null, null, null, null)
 
     assertThat(resultat.size).isEqualTo(1)
 
@@ -224,7 +226,6 @@ class ResultatDAOTest {
       testgrunnlagId: Int?,
       loeysungIds: List<Int> = listOf(1)
   ) {
-    val aggregeringDAO = AggregeringDAO(jdbcTemplate!!)
 
     loeysungIds.forEach {
       val aggregeringTestregel =
@@ -249,7 +250,6 @@ class ResultatDAOTest {
   }
 
   fun createTestregel(): Int {
-    val testregelDAO = TestregelDAO(jdbcTemplate!!)
 
     val temaId = testregelDAO.createTema("Bilder")
 
@@ -273,9 +273,6 @@ class ResultatDAOTest {
   }
 
   fun createTestMaaling(testregelIds: List<Int>, kontrollId: Int, maalingNamn: String): Int {
-    val maalingDAO =
-        MaalingDAO(
-            jdbcTemplate!!, loeysingsRegisterClient, sideutvalDAO, brukarService, cacheManager)
     val maalingId =
         maalingDAO.createMaaling(
             maalingNamn, Instant.now(), listOf(1), testregelIds, CrawlParameters())
@@ -312,7 +309,6 @@ class ResultatDAOTest {
       kontroll: Kontroll,
       loeysingId: List<Int> = listOf(1)
   ) {
-    val utvalDAO = UtvalDAO(jdbcTemplate!!)
 
     utvalId = utvalDAO.createUtval("test-skal-slettes", loeysingId).getOrThrow()
 
@@ -334,8 +330,6 @@ class ResultatDAOTest {
     val opprettKontroll =
         KontrollResource.OpprettKontroll(
             kontrollNamn, "Ola Nordmann", Sakstype.Arkivsak, "1234", kontrolltype)
-
-    val kontrollDAO = KontrollDAO(jdbcTemplate!!)
 
     val kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
@@ -364,7 +358,6 @@ class ResultatDAOTest {
       opprettTestgrunnlag: OpprettTestgrunnlag,
       kontroll: KontrollDAO.KontrollDB
   ): Int {
-    val testgrunnlagDAO = TestgrunnlagDAO(jdbcTemplate!!)
 
     val nyttTestgrunnlag =
         NyttTestgrunnlag(
