@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.net.URI
+import java.time.Instant
+import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
@@ -34,9 +37,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
-import java.net.URI
-import java.time.Instant
-import java.time.LocalDate
 
 @SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
 @ActiveProfiles("test")
