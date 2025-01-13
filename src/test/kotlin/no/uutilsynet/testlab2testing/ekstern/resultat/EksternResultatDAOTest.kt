@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
-import java.time.Instant
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.Sakstype
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
@@ -10,14 +9,13 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import java.time.Instant
 
 @SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
 @ActiveProfiles("test")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EksternResultatDAOTest(
     @Autowired val eksternResultatDAO: EksternResultatDAO,
     @Autowired val kontrollDAO: KontrollDAO,
