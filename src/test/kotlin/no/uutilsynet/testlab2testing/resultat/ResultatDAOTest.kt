@@ -110,7 +110,7 @@ class ResultatDAOTest(
             3,
             testregelId)
 
-    val resultat = resultatDAO!!.getTestresultatMaaling(maalingIds[0])
+    val resultat = resultatDAO.getTestresultatMaaling(maalingIds[0])
 
     assertThat(resultat.map { it.testgrunnlagId }).isEqualTo(listOf(expected1.testgrunnlagId))
     assertThat(resultat.map { it.testgrunnlagId }).isNotEqualTo(listOf(maalingIds[1]))
@@ -119,7 +119,7 @@ class ResultatDAOTest(
   @Test
   fun getTestresultatTestgrunnlag() {
 
-    val resultat = resultatDAO!!.getTestresultatTestgrunnlag()
+    val resultat = resultatDAO.getTestresultatTestgrunnlag()
 
     assertThat(resultat.map { it.testType }.filter { it == TestgrunnlagType.OPPRINNELEG_TEST })
         .isNotEmpty()
@@ -134,7 +134,7 @@ class ResultatDAOTest(
   @Test
   fun testGetTestresultatTestgrunnlag() {
 
-    val resultat = resultatDAO!!.getTestresultatTestgrunnlag(testgrunnlagId = testgrunnlagIds[0])
+    val resultat = resultatDAO.getTestresultatTestgrunnlag(testgrunnlagId = testgrunnlagIds[0])
 
     assertThat(resultat.size).isEqualTo(2)
   }
@@ -142,7 +142,7 @@ class ResultatDAOTest(
   @Test
   fun getResultat() {
 
-    val resultat = resultatDAO!!.getAllResultat()
+    val resultat = resultatDAO.getAllResultat()
 
     assertThat(resultat.size).isEqualTo(6)
     assertThat(resultat.map { it.typeKontroll }).contains(Kontrolltype.ForenklaKontroll)
