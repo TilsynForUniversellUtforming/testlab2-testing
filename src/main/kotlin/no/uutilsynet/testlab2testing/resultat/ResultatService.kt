@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
@@ -14,6 +13,7 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
+import java.time.LocalDate
 
 @Component
 class ResultatService(
@@ -156,7 +156,7 @@ class ResultatService(
       result.map { it.loeysingId }
 
   private fun erKontrollPublisert(result: List<ResultatLoeysingDTO>) =
-      eksternResultatDAO.erKontrollPublisert(result.first().testgrunnlagId, getKontrolltype(result))
+      eksternResultatDAO.erKontrollPublisert(result.first().id, getKontrolltype(result))
 
   private fun resultatPrLoeysing(
       result: List<ResultatLoeysingDTO>,
