@@ -78,10 +78,18 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
         .thenReturn(listOf(expectedResultat))
 
     val testListElementDB =
-        TestListElementDB("1", 1, 1, Kontrolltype.ForenklaKontroll, "Forenkla kontroll",Instant.now())
+        TestListElementDB(
+            "1", 1, 1, Kontrolltype.ForenklaKontroll, "Forenkla kontroll", Instant.now())
 
     val expected =
-        TestEkstern("1", 1, "Loeysingsnamn", 0.5, Kontrolltype.ForenklaKontroll, "Forenkla kontroll", Instant.now())
+        TestEkstern(
+            "1",
+            1,
+            "Loeysingsnamn",
+            0.5,
+            Kontrolltype.ForenklaKontroll,
+            "Forenkla kontroll",
+            Instant.now())
 
     val result = eksternResultatService.toTestListEkstern(testListElementDB)
 
