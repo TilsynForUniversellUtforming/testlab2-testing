@@ -13,7 +13,9 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getTestsForLoeysingIds(loeysingIdList: List<Int>): List<TestListElementDB> {
     return jdbcTemplate.query(
-        """select r.id_ekstern, case when tg.kontroll_id is not null then tg.kontroll_id else m.kontrollid end as kontroll_id , r.loeysing_id, case when k1.kontrolltype is not null then k1.kontrolltype else k2.kontrolltype end as kontrolltype, r.publisert
+        """select r.id_ekstern, case when tg.kontroll_id is not null then tg.kontroll_id else m.kontrollid end as kontroll_id , r.loeysing_id, 
+            case when k1.kontrolltype is not null then k1.kontrolltype else k2.kontrolltype end as kontrolltype, 
+            case when k1.tittel is not null then k1.tittel else k2.tittel end as kontrollnamn,r.publisert
             from testlab2_testing.rapport r
             left join testlab2_testing.testgrunnlag tg on r.testgrunnlag_id=tg.id
             left join testlab2_testing.maalingv1 m on r.maaling_id=m.id
@@ -28,6 +30,7 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               rs.getInt("kontroll_id"),
               rs.getInt("loeysing_id"),
               Kontrolltype.valueOf(rs.getString("kontrolltype")),
+              rs.getString("kontrollnamn"),
               rs.getTimestamp("publisert").toInstant())
         }
   }

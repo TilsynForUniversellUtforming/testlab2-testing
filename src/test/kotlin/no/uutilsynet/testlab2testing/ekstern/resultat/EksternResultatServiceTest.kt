@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 
-@SpringBootTest(properties = ["spring.datasource.url: jdbc:tc:postgresql:16-alpine:///test-db"])
+@SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternResultatService) {
 
@@ -78,10 +78,10 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
         .thenReturn(listOf(expectedResultat))
 
     val testListElementDB =
-        TestListElementDB("1", 1, 1, Kontrolltype.ForenklaKontroll, Instant.now())
+        TestListElementDB("1", 1, 1, Kontrolltype.ForenklaKontroll, "Forenkla kontroll",Instant.now())
 
     val expected =
-        TestEkstern("1", 1, "Loeysingsnamn", 0.5, Kontrolltype.ForenklaKontroll, Instant.now())
+        TestEkstern("1", 1, "Loeysingsnamn", 0.5, Kontrolltype.ForenklaKontroll, "Forenkla kontroll", Instant.now())
 
     val result = eksternResultatService.toTestListEkstern(testListElementDB)
 
