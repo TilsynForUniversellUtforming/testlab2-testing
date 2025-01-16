@@ -160,7 +160,7 @@ class MaalingResource(
           val newStatus = validateStatus(statusDTO.status).getOrThrow()
           ResponseEntity.badRequest().build<Any>()
 
-          var brukar = brukarService.getCurrentUser()
+          val brukar = brukarService.getCurrentUser()
 
           when (maaling) {
             is Maaling.Planlegging -> {

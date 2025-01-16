@@ -11,6 +11,7 @@ data class TestEkstern(
     val loeysingNamn: String,
     val score: Double,
     val kontrollType: Kontrolltype,
+    val kontrollNamn: String,
     val publisert: Instant?
 )
 

@@ -22,20 +22,16 @@ class BrukarService(val brukarDAO: BrukarDAO) {
     return Brukar("anonym", "anonymous")
   }
 
-  fun saveIfNotExists(brukar: Brukar): Int {
+  fun getUserId(brukar: Brukar): Int {
     return brukarDAO.getBrukarId(brukar.brukarnamn) ?: brukarDAO.saveBrukar(brukar)
   }
 
   fun getUserId(): Int? {
     val brukar = getCurrentUser()
-    return saveIfNotExists(brukar)
+    return getUserId(brukar)
   }
 
   fun getBrukarById(brukarId: Int): Brukar? {
     return brukarDAO.getBrukarById(brukarId)
-  }
-
-  fun getBrukarIdByBrukarnamn(brukarnamn: String): Int? {
-    return brukarDAO.getBrukarId(brukarnamn)
   }
 }

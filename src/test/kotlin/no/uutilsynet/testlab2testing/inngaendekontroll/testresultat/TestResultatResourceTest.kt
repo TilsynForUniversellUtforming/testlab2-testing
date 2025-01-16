@@ -19,14 +19,8 @@ import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
-import org.junit.jupiter.api.Order
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.TestMethodOrder
-import org.junit.jupiter.api.assertDoesNotThrow
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -75,7 +69,7 @@ class TestResultatResourceTest(
 
     doReturn(Brukar("testbrukar@digdir.no", "Test Brukar")).`when`(brukarService).getCurrentUser()
 
-    brukarService.saveIfNotExists(Brukar("testbrukar@digdir.no", "Test Brukar"))
+    brukarService.getUserId(Brukar("testbrukar@digdir.no", "Test Brukar"))
 
     val kontroll =
         Kontroll(
