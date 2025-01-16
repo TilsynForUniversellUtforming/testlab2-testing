@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
+import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
@@ -354,18 +355,26 @@ class MaalingDAO(
       urlAggSideTR: String?,
       urlAggLoeysing: String?
   ): AutoTesterClient.AutoTesterLenker? {
+
     val lenker =
         if (urlFulltResultat != null)
             AutoTesterClient.AutoTesterLenker(
-                URI(urlFulltResultat).toURL(),
-                URI(urlBrot).toURL(),
-                URI(urlAggTR).toURL(),
-                URI(urlAggSK).toURL(),
-                URI(urlAggSide).toURL(),
-                URI(urlAggSideTR).toURL(),
-                URI(urlAggLoeysing).toURL())
+                verifiedAutotestlenker(urlFulltResultat),
+                verifiedAutotestlenker(urlBrot),
+                verifiedAutotestlenker(urlAggTR),
+                verifiedAutotestlenker(urlAggSK),
+                verifiedAutotestlenker(urlAggSide),
+                verifiedAutotestlenker(urlAggSideTR),
+                verifiedAutotestlenker(urlAggLoeysing))
         else null
     return lenker
+  }
+
+  private fun verifiedAutotestlenker(autotesterLenke: String?): URL {
+    if (autotesterLenke == null) {
+      throw RuntimeException("autotestlenke er null")
+    }
+    return URI(autotesterLenke).toURL()
   }
 
   private fun feila(
@@ -556,7 +565,7 @@ class MaalingDAO(
 
   private fun getBrukar(brukar: Brukar?): Int? {
     if (brukar != null) {
-      return brukarService.getBrukarIdByBrukarnamn(brukar.brukarnamn)
+      return brukarService.getUserId(brukar)
     }
     return null
   }
