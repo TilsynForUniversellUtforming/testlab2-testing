@@ -2,7 +2,6 @@ package no.uutilsynet.testlab2testing.resultat
 
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
@@ -24,8 +23,7 @@ class ResultatService(
     val eksternResultatDAO: EksternResultatDAO,
     val automatiskResultatService: AutomatiskResultatService,
     val manueltResultatService: ManueltResultatService,
-    val testregelService: TestregelService,
-    val brukarService: BrukarService
+    val testregelService: TestregelService
 ) {
 
   fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
@@ -374,7 +372,10 @@ class ResultatService(
                   result.first().typeKontroll,
                   result.first().namn,
                   result.map { it.testar }.flatten().distinct(),
-                  result.map { it.score }.average(),
+                  result
+                      .filter { !erIkkjeForekomst(it.talElementBrot, it.talElementSamsvar) }
+                      .map { it.score }
+                      .average(),
                   kravId,
                   result.first().kravTittel,
                   talTestaElement(result),
