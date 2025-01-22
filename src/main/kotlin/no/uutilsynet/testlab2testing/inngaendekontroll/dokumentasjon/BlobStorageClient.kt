@@ -2,21 +2,19 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
 import com.azure.storage.blob.sas.BlobSasPermission
 import com.azure.storage.blob.sas.BlobServiceSasSignatureValues
-import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.net.HttpURLConnection
-import java.net.Proxy
-import java.net.URI
-import java.time.Instant
-import java.time.OffsetDateTime
-import javax.imageio.ImageIO
 import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.net.URI
+import java.time.Instant
+import java.time.OffsetDateTime
+import javax.imageio.ImageIO
 
 @Component
 class BlobStorageClient(
