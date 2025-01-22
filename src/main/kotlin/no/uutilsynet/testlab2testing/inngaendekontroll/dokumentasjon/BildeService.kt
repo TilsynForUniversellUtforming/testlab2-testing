@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
 import java.awt.Image
 import java.awt.image.BufferedImage
+import java.net.HttpURLConnection
 import javax.imageio.ImageIO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
@@ -127,5 +128,9 @@ class BildeService(
         BildeRequest(image, thumbnail, newFileName, fileExtension)
       }
     }
+  }
+
+  fun getBilde(bildesti: String): HttpURLConnection {
+    return blobClient.getBildeSti(bildesti)
   }
 }

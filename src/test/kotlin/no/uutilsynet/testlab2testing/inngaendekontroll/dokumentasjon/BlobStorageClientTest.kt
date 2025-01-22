@@ -13,10 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
 
 class BlobStorageClientTest {
 
@@ -30,7 +27,10 @@ class BlobStorageClientTest {
           "account",
           "container",
           1,
+          "localhost",
       )
+
+  private val mockServerProperties = mock(ServerProperties::class.java)
 
   @BeforeEach
   fun setup() {
@@ -52,7 +52,8 @@ class BlobStorageClientTest {
     val bildeStiList = listOf(BildeSti(1, bildeName, thumbName, Instant.now()))
 
     val blobStorageClient =
-        BlobStorageClient(mockBlockStorageProperties, mockBlobContainerClientFactory)
+        BlobStorageClient(
+            mockBlockStorageProperties, mockBlobContainerClientFactory, mockServerProperties)
 
     val result = blobStorageClient.getBildeStiList(bildeStiList)
 
@@ -76,7 +77,8 @@ class BlobStorageClientTest {
     val cloudImageDetails = listOf(BildeRequest(image, thumbnail, "1_0", "png"))
 
     val blobStorageClient =
-        BlobStorageClient(mockBlockStorageProperties, mockBlobContainerClientFactory)
+        BlobStorageClient(
+            mockBlockStorageProperties, mockBlobContainerClientFactory, mockServerProperties)
 
     val results = blobStorageClient.uploadBilder(cloudImageDetails)
 
@@ -90,7 +92,8 @@ class BlobStorageClientTest {
   fun `deleteImage skal bruke deleteIfExists`() {
     val imagePath = "1_0.png"
     val blobStorageClient =
-        BlobStorageClient(mockBlockStorageProperties, mockBlobContainerClientFactory)
+        BlobStorageClient(
+            mockBlockStorageProperties, mockBlobContainerClientFactory, mockServerProperties)
 
     val result = blobStorageClient.deleteBilde(imagePath)
 
@@ -102,7 +105,8 @@ class BlobStorageClientTest {
   fun `restoreImage skal bruke undelete`() {
     val imagePath = "1_0.png"
     val blobStorageClient =
-        BlobStorageClient(mockBlockStorageProperties, mockBlobContainerClientFactory)
+        BlobStorageClient(
+            mockBlockStorageProperties, mockBlobContainerClientFactory, mockServerProperties)
 
     val result = blobStorageClient.restoreBilde(imagePath)
 
