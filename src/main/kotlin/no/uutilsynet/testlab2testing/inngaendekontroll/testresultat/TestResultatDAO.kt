@@ -64,8 +64,9 @@ class TestResultatDAO(
       testgrunnlagId: Int? = null
   ): Result<List<ResultatManuellKontroll>> = runCatching {
     val testResultat =
-        jdbcTemplate.query(
-            """
+        jdbcTemplate
+            .query(
+                """
                 select ti.id    as id,
                        ti.testgrunnlag_id,
                        ti.loeysing_id,
@@ -86,27 +87,30 @@ class TestResultatDAO(
                 and ${if (testgrunnlagId != null) "ti.testgrunnlag_id = :testgrunnlag_id" else "true"}
                 order by id
             """
-                .trimIndent(),
-            mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId),
-        ) { rs, _ ->
-          ResultatManuellKontroll(
-              id = rs.getInt("id"),
-              testgrunnlagId = rs.getInt("testgrunnlag_id"),
-              loeysingId = rs.getInt("loeysing_id"),
-              testregelId = rs.getInt("testregel_id"),
-              sideutvalId = rs.getInt("sideutval_id"),
-              brukar = Brukar(rs.getString("brukar_brukarnamn"), rs.getString("brukar_namn")),
-              elementOmtale = rs.getString("element_omtale"),
-              elementResultat =
-                  runCatching { enumValueOf<TestresultatUtfall>(rs.getString("element_resultat")) }
-                      .getOrNull(),
-              elementUtfall = rs.getString("element_utfall"),
-              svar = emptyList<ResultatManuellKontrollBase.Svar>(),
-              testVartUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant(),
-              status = enumValueOf<ResultatManuellKontrollBase.Status>(rs.getString("status")),
-              kommentar = rs.getString("kommentar"),
-              sistLagra = rs.getTimestamp("sist_lagra").toInstant())
-        }.toList()
+                    .trimIndent(),
+                mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId),
+            ) { rs, _ ->
+              ResultatManuellKontroll(
+                  id = rs.getInt("id"),
+                  testgrunnlagId = rs.getInt("testgrunnlag_id"),
+                  loeysingId = rs.getInt("loeysing_id"),
+                  testregelId = rs.getInt("testregel_id"),
+                  sideutvalId = rs.getInt("sideutval_id"),
+                  brukar = Brukar(rs.getString("brukar_brukarnamn"), rs.getString("brukar_namn")),
+                  elementOmtale = rs.getString("element_omtale"),
+                  elementResultat =
+                      runCatching {
+                            enumValueOf<TestresultatUtfall>(rs.getString("element_resultat"))
+                          }
+                          .getOrNull(),
+                  elementUtfall = rs.getString("element_utfall"),
+                  svar = emptyList<ResultatManuellKontrollBase.Svar>(),
+                  testVartUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant(),
+                  status = enumValueOf<ResultatManuellKontrollBase.Status>(rs.getString("status")),
+                  kommentar = rs.getString("kommentar"),
+                  sistLagra = rs.getTimestamp("sist_lagra").toInstant())
+            }
+            .toList()
 
     val svarMap =
         jdbcTemplate
@@ -297,5 +301,4 @@ class TestResultatDAO(
             DataClassRowMapper.newInstance(BildeSti::class.java))
         .toList()
   }
-
 }
