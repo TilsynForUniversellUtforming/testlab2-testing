@@ -106,7 +106,7 @@ class TestResultatDAO(
               status = enumValueOf<ResultatManuellKontrollBase.Status>(rs.getString("status")),
               kommentar = rs.getString("kommentar"),
               sistLagra = rs.getTimestamp("sist_lagra").toInstant())
-        }
+        }.toList()
 
     val svarMap =
         jdbcTemplate
@@ -290,23 +290,12 @@ class TestResultatDAO(
   }
 
   fun getBildePathsForTestresultat(testresultatId: Int) = runCatching {
-    jdbcTemplate.query(
-        "select id, bilde, thumbnail, opprettet from testresultat_bilde where testresultat_id = :testresultat_id",
-        mapOf("testresultat_id" to testresultatId),
-        DataClassRowMapper.newInstance(BildeSti::class.java))
+    jdbcTemplate
+        .query(
+            "select id, bilde, thumbnail, opprettet from testresultat_bilde where testresultat_id = :testresultat_id",
+            mapOf("testresultat_id" to testresultatId),
+            DataClassRowMapper.newInstance(BildeSti::class.java))
+        .toList()
   }
 
-  fun getBrukarForTestgrunnlag(testgrunnlagId: Int): List<String> {
-
-    return jdbcTemplate.queryForList(
-        """
-                select distinct b.namn as namn
-                from testresultat ti
-                join brukar b on ti.brukar_id = b.id
-                where ti.testgrunnlag_id = :testgrunnlag_id
-            """
-            .trimIndent(),
-        mapOf("testgrunnlag_id" to testgrunnlagId),
-        String::class.java)
-  }
 }
