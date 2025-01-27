@@ -13,10 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
 
 class BlobStorageClientTest {
 
@@ -30,6 +27,7 @@ class BlobStorageClientTest {
           "account",
           "container",
           1,
+          "localhost",
       )
 
   @BeforeEach
@@ -63,10 +61,10 @@ class BlobStorageClientTest {
 
     assertTrue(
         bilde.bildeURI.toString() ==
-            "https://${mockBlockStorageProperties.account}.blob.core.windows.net/${mockBlockStorageProperties.container}/$bildeName?$expectedSasToken")
+            "${mockBlockStorageProperties.eksternalhost}/bilder/sti/$bildeName")
     assertTrue(
         bilde.thumbnailURI.toString() ==
-            "https://${mockBlockStorageProperties.account}.blob.core.windows.net/${mockBlockStorageProperties.container}/$thumbName?$expectedSasToken")
+            "${mockBlockStorageProperties.eksternalhost}/bilder/sti/$thumbName")
   }
 
   @Test

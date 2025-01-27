@@ -6,13 +6,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 
 @RestController
@@ -52,13 +46,19 @@ class BildeResource(val bildeService: BildeService) {
           .fold(
               { ResponseEntity.ok(it) },
               {
-                logger.error("Feil ved opplasting av bilder", it)
+                logger.error("Feil ved henting av bilder", it)
                 ResponseEntity.internalServerError().build()
               })
 
   @CacheEvict(value = ["bildeCache"], allEntries = true)
   @Scheduled(fixedRateString = "\${blobstorage.sasttl}")
   fun emptyBildeCache() {
-    logger.info("Tømmer bildeCache")
+    logger.debug("Tømmer bildeCache")
+  }
+
+  @GetMapping("sti/{bildesti}")
+  fun getBilde(@PathVariable("bildesti") bildesti: String): ResponseEntity<String> {
+    return ResponseEntity.ok(
+        bildeService.getBilde(bildesti).inputStream.readAllBytes().toString(Charsets.UTF_8))
   }
 }
