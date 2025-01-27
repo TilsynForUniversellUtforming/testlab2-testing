@@ -112,5 +112,5 @@ class BlobStorageClient(
 
 @ConfigurationProperties(prefix = "server")
 data class ServerProperties(
-    val port: Int,
+    val port: Int = 8080,
 )
