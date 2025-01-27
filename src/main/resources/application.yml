@@ -23,7 +23,7 @@ server:
         include-stacktrace: never
 spring:
     config:
-        import: optional:classpath:./dev.properties
+        import: optional:classpath:./dev.yml
     datasource:
         hikari:
             schema: testlab2_testing
@@ -34,16 +34,6 @@ spring:
         schemas: testlab2_testing
     security:
         oauth2:
-            client:
-                provider:
-                    brukar:
-                        issuer-uri: ''
-                registration:
-                    brukar:
-                        client-id: ''
-                        client-name: ''
-                        client-secret: ''
-                        scope: openid,profile
             resourceserver:
                 jwt:
                     issuer-uri:
@@ -58,3 +48,13 @@ spring:
 springdoc:
     swagger-ui:
         path: /api-dokumentasjon
+
+logging:
+    level:
+        org:
+            springframework:
+                boot:
+                    autoconfigure:
+                        security: DEBUG
+                security: DEBUG
+
