@@ -52,9 +52,7 @@ class BlobStorageClientTest {
     val bildeStiList = listOf(BildeSti(1, bildeName, thumbName, Instant.now()))
 
     val blobStorageClient =
-        BlobStorageClient(
-            mockBlockStorageProperties, mockBlobContainerClientFactory
-        )
+        BlobStorageClient(mockBlockStorageProperties, mockBlobContainerClientFactory)
 
     val result = blobStorageClient.getBildeStiList(bildeStiList)
 
@@ -78,9 +76,7 @@ class BlobStorageClientTest {
     val cloudImageDetails = listOf(BildeRequest(image, thumbnail, "1_0", "png"))
 
     val blobStorageClient =
-        BlobStorageClient(
-            mockBlockStorageProperties, mockBlobContainerClientFactory
-        )
+        BlobStorageClient(mockBlockStorageProperties, mockBlobContainerClientFactory)
 
     val results = blobStorageClient.uploadBilder(cloudImageDetails)
 
@@ -94,9 +90,7 @@ class BlobStorageClientTest {
   fun `deleteImage skal bruke deleteIfExists`() {
     val imagePath = "1_0.png"
     val blobStorageClient =
-        BlobStorageClient(
-            mockBlockStorageProperties, mockBlobContainerClientFactory
-        )
+        BlobStorageClient(mockBlockStorageProperties, mockBlobContainerClientFactory)
 
     val result = blobStorageClient.deleteBilde(imagePath)
 
@@ -108,9 +102,7 @@ class BlobStorageClientTest {
   fun `restoreImage skal bruke undelete`() {
     val imagePath = "1_0.png"
     val blobStorageClient =
-        BlobStorageClient(
-            mockBlockStorageProperties, mockBlobContainerClientFactory
-        )
+        BlobStorageClient(mockBlockStorageProperties, mockBlobContainerClientFactory)
 
     val result = blobStorageClient.restoreBilde(imagePath)
 
