@@ -53,7 +53,8 @@ class BlobStorageClientTest {
 
     val blobStorageClient =
         BlobStorageClient(
-            mockBlockStorageProperties, mockBlobContainerClientFactory, mockServerProperties)
+            mockBlockStorageProperties, mockBlobContainerClientFactory
+        )
 
     val result = blobStorageClient.getBildeStiList(bildeStiList)
 
@@ -78,7 +79,8 @@ class BlobStorageClientTest {
 
     val blobStorageClient =
         BlobStorageClient(
-            mockBlockStorageProperties, mockBlobContainerClientFactory, mockServerProperties)
+            mockBlockStorageProperties, mockBlobContainerClientFactory
+        )
 
     val results = blobStorageClient.uploadBilder(cloudImageDetails)
 
@@ -93,7 +95,8 @@ class BlobStorageClientTest {
     val imagePath = "1_0.png"
     val blobStorageClient =
         BlobStorageClient(
-            mockBlockStorageProperties, mockBlobContainerClientFactory, mockServerProperties)
+            mockBlockStorageProperties, mockBlobContainerClientFactory
+        )
 
     val result = blobStorageClient.deleteBilde(imagePath)
 
@@ -106,7 +109,8 @@ class BlobStorageClientTest {
     val imagePath = "1_0.png"
     val blobStorageClient =
         BlobStorageClient(
-            mockBlockStorageProperties, mockBlobContainerClientFactory, mockServerProperties)
+            mockBlockStorageProperties, mockBlobContainerClientFactory
+        )
 
     val result = blobStorageClient.restoreBilde(imagePath)
 
