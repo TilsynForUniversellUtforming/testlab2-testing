@@ -30,8 +30,6 @@ class BlobStorageClientTest {
           "localhost",
       )
 
-  private val mockServerProperties = mock(ServerProperties::class.java)
-
   @BeforeEach
   fun setup() {
     `when`(mockBlobContainerClientFactory.createBlobContainerClient())
