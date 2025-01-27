@@ -8,4 +8,5 @@ data class BlobStorageProperties(
     val account: String,
     val container: String,
     val sasttl: Int,
+    val eksternalhost: String,
 )

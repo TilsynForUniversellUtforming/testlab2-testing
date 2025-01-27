@@ -21,3 +21,10 @@ data class Bilde(
     val thumbnailURI: URI,
     override val opprettet: Instant
 ) : BildeBase(id, opprettet)
+
+data class BildeListItem(
+    val bildeURI: URI,
+    val thumbnailURI: URI,
+)
+
+fun Bilde.toBildeListItem() = BildeListItem(bildeURI, thumbnailURI)
