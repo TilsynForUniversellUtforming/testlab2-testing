@@ -30,8 +30,6 @@ class BlobStorageClientTest {
           "localhost",
       )
 
-  private val mockServerProperties = mock(ServerProperties::class.java)
-
   @BeforeEach
   fun setup() {
     `when`(mockBlobContainerClientFactory.createBlobContainerClient())
@@ -63,10 +61,10 @@ class BlobStorageClientTest {
 
     assertTrue(
         bilde.bildeURI.toString() ==
-            "https://${mockBlockStorageProperties.account}.blob.core.windows.net/${mockBlockStorageProperties.container}/$bildeName?$expectedSasToken")
+            "${mockBlockStorageProperties.eksternalhost}/bilder/sti/$bildeName")
     assertTrue(
         bilde.thumbnailURI.toString() ==
-            "https://${mockBlockStorageProperties.account}.blob.core.windows.net/${mockBlockStorageProperties.container}/$thumbName?$expectedSasToken")
+            "${mockBlockStorageProperties.eksternalhost}/bilder/sti/$thumbName")
   }
 
   @Test
