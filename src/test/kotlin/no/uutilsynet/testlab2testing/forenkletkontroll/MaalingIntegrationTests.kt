@@ -375,7 +375,7 @@ class MaalingIntegrationTests(
               listOf(1),
               testRegelList.map { it.id },
               crawlParameters)
-      val planlagtMaaling = maalingDAO.getMaaling(id)!! as Maaling.Planlegging
+      val planlagtMaaling = maalingDAO.getMaaling(id) as Maaling.Planlegging
       val sistOppdatert = Instant.now()
       val crawlingMaaling =
           Maaling.toCrawling(
