@@ -4,6 +4,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.CacheEvict
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.web.bind.annotation.*
@@ -58,7 +59,12 @@ class BildeResource(val bildeService: BildeService) {
 
   @GetMapping("sti/{bildesti}")
   fun getBilde(@PathVariable("bildesti") bildesti: String): ResponseEntity<String> {
-    return ResponseEntity.ok(
-        bildeService.getBilde(bildesti).inputStream.readAllBytes().toString(Charsets.UTF_8))
+
+    val bildeConnection = bildeService.getBilde(bildesti)
+    val contentType = MediaType.parseMediaType(bildeConnection.contentType)
+
+    return ResponseEntity.ok()
+        .contentType(contentType)
+        .body(bildeService.getBilde(bildesti).inputStream.readAllBytes().toString(Charsets.UTF_8))
   }
 }
