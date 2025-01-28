@@ -346,7 +346,7 @@ class MaalingIntegrationTests(
               HttpEntity.EMPTY,
               urlListType)!!
 
-      Assertions.assertThat(urlList.body!!).containsExactly(URL(uutilsynetLoeysing.url, "/"))
+      Assertions.assertThat(urlList.body!!).containsExactly(uutilsynetLoeysing.url)
     }
 
     @DisplayName("så får man hentet nettsidene som er crawlet for gitt løysing")
@@ -363,7 +363,7 @@ class MaalingIntegrationTests(
               HttpEntity.EMPTY,
               urlListType)!!
 
-      Assertions.assertThat(urlList.body!!).containsExactly(URL(uutilsynetLoeysing.url, "/"))
+      Assertions.assertThat(urlList.body!!).containsExactly(uutilsynetLoeysing.url)
     }
 
     private fun createMaaling(): Pair<Int, Instant> {
@@ -375,7 +375,7 @@ class MaalingIntegrationTests(
               listOf(1),
               testRegelList.map { it.id },
               crawlParameters)
-      val planlagtMaaling = maalingDAO.getMaaling(id)!! as Maaling.Planlegging
+      val planlagtMaaling = maalingDAO.getMaaling(id) as Maaling.Planlegging
       val sistOppdatert = Instant.now()
       val crawlingMaaling =
           Maaling.toCrawling(
