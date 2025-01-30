@@ -13,7 +13,7 @@ crawler:
     code: ''
     url:
 kravregister:
-    host: http://localhost:8082
+    host: http://localhost:8002
 loeysingsregister:
     host: http://localhost:8000
 rapportVerktoey:
@@ -45,6 +45,8 @@ spring:
     sql:
         init:
             platform: postgresql
+    profiles:
+        active: tokenClient
 springdoc:
     swagger-ui:
         path: /api-dokumentasjon

@@ -22,7 +22,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 
 @DisplayName("Tester for MaalingDAO")
 @SpringBootTest
@@ -33,7 +33,7 @@ class MaalingDAOTest(
     @Autowired val sideutvalDAO: SideutvalDAO
 ) {
 
-  @MockBean lateinit var aggregeringService: AggregeringService
+  @MockitoBean lateinit var aggregeringService: AggregeringService
 
   @BeforeAll
   fun beforeAll() {

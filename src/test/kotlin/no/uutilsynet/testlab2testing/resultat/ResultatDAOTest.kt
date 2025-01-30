@@ -29,14 +29,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.cache.CacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 
 @SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
 @ActiveProfiles("test")
@@ -51,13 +51,13 @@ class ResultatDAOTest(
     @Autowired val kontrollDAO: KontrollDAO
 ) {
 
-  @MockBean lateinit var sideutvalDAO: SideutvalDAO
+  @MockitoBean lateinit var sideutvalDAO: SideutvalDAO
 
-  @MockBean lateinit var brukarService: BrukarService
+  @MockitoBean lateinit var brukarService: BrukarService
 
-  @MockBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+  @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
-  @SpyBean lateinit var cacheManager: CacheManager
+  @MockitoSpyBean lateinit var cacheManager: CacheManager
 
   private var testregelId: Int = 0
   private var utvalId: Int = 0

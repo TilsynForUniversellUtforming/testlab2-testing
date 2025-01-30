@@ -34,7 +34,7 @@ import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 
 private val TEST_URL = URI("http://localhost:8080/").toURL()
 
@@ -44,13 +44,13 @@ private const val TEST_ORGNR = "123456789"
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringService) {
 
-  @MockBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+  @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
-  @MockBean lateinit var kravregisterClient: KravregisterClient
+  @MockitoBean lateinit var kravregisterClient: KravregisterClient
 
-  @MockBean lateinit var autoTesterClient: AutoTesterClient
+  @MockitoBean lateinit var autoTesterClient: AutoTesterClient
 
-  @MockBean lateinit var sideutvalDAO: SideutvalDAO
+  @MockitoBean lateinit var sideutvalDAO: SideutvalDAO
 
   @Autowired lateinit var maalingDao: MaalingDAO
 
@@ -118,7 +118,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
 
   fun createTestMaaling(): AggregertResultatTestregel {
     val crawlParameters = CrawlParameters(10, 10)
-    val testregelNoekkel = RandomStringUtils.randomAlphanumeric(5)
+    val testregelNoekkel = RandomStringUtils.secure().nextAlphabetic(5)
 
     val testregel =
         TestregelInit(
