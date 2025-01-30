@@ -209,6 +209,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
   }
 
+  @Suppress("UNCHECKED_CAST")
   fun sqlArrayToList(sqlArray: java.sql.Array): List<Int> {
     val array = sqlArray.array as Array<Int>
     return listOf(*array)

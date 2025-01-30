@@ -35,3 +35,4 @@ build/
 ### MacOS ###
 .DS_Store
 src/main/resources/dev.properties
+/src/main/resources/dev.yml

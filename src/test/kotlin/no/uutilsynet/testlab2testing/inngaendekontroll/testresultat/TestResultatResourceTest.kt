@@ -24,11 +24,11 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(OrderAnnotation::class)
@@ -46,7 +46,7 @@ class TestResultatResourceTest(
   private var location: URI by Delegates.notNull()
   private var testgrunnlagId: Int by Delegates.notNull()
 
-  @SpyBean lateinit var brukarService: BrukarService
+  @MockitoSpyBean lateinit var brukarService: BrukarService
 
   @AfterAll
   fun cleanup() {

@@ -14,15 +14,15 @@ import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 
 @SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternResultatService) {
 
-  @MockBean lateinit var eksternResultatDAO: EksternResultatDAO
+  @MockitoBean lateinit var eksternResultatDAO: EksternResultatDAO
 
-  @MockBean lateinit var resultatService: ResultatService
+  @MockitoBean lateinit var resultatService: ResultatService
 
   @Test
   fun getRapportForLoeysing() {
