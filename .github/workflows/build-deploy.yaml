@@ -24,7 +24,7 @@ jobs:
         ports:
           - 5432:5432
       loeysingsregister:
-        image: ${{ secrets.ACR_ENDPOINT }}/testlab2-loeysingsregister:latest
+        image: ${{ secrets.LOEYSINGSREGISTERIMAGE }}
         credentials:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
