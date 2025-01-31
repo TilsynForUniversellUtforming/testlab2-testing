@@ -3,7 +3,6 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 import java.net.URI
 import java.net.URL
 import java.time.Instant
-import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
@@ -22,7 +21,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
 
 @DisplayName("Tester for MaalingDAO")
 @SpringBootTest
@@ -32,8 +30,6 @@ class MaalingDAOTest(
     @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
     @Autowired val sideutvalDAO: SideutvalDAO
 ) {
-
-  @MockBean lateinit var aggregeringService: AggregeringService
 
   @BeforeAll
   fun beforeAll() {

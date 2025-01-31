@@ -12,20 +12,18 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.ArgumentMatchers.anyList
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.mock.web.MockMultipartFile
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BildeServiceTest(@Autowired val bildeService: BildeService) {
-  @MockBean lateinit var blobClient: BlobStorageClient
+  @MockitoBean lateinit var blobClient: BlobStorageClient
 
-  @MockBean lateinit var testResultatDAO: TestResultatDAO
+  @MockitoBean lateinit var testResultatDAO: TestResultatDAO
 
   @Test
   @DisplayName("Skal lagre bilder som blir lastet opp i databasen")

@@ -1,0 +1,62 @@
+api:
+    token: ''
+autotester:
+    code: ''
+    url: http://localhost:7071/api/orchestrators/orchestrator
+blobstorage:
+    account: account
+    connection: DefaultEndpointsProtocol=https;AccountName=account;AccountKey=key;EndpointSuffix=example.com
+    container: container
+    eksternalhost: localhost
+    sasttl: 3600000
+crawler:
+    code: ''
+    url:
+kravregister:
+    host: http://localhost:8002
+loeysingsregister:
+    host: http://localhost:8000
+rapportVerktoey:
+    host: http://localhost:8084
+server:
+    error:
+        include-stacktrace: never
+spring:
+    config:
+        import: optional:classpath:./dev.yml
+    datasource:
+        hikari:
+            schema: testlab2_testing
+        password:
+        url: jdbc:postgresql://localhost:5432/postgres?currentSchema=testlab2_testing
+        username:
+    flyway:
+        schemas: testlab2_testing
+    security:
+        oauth2:
+            resourceserver:
+                jwt:
+                    issuer-uri: https://localhost
+    servlet:
+        multipart:
+            enabled: true
+            max-file-size: 2MB
+            max-request-size: 2MB
+    sql:
+        init:
+            platform: postgresql
+    profiles:
+        active: tokenClient
+springdoc:
+    swagger-ui:
+        path: /api-dokumentasjon
+
+logging:
+    level:
+        org:
+            springframework:
+                boot:
+                    autoconfigure:
+                        security: DEBUG
+                security: DEBUG
+
