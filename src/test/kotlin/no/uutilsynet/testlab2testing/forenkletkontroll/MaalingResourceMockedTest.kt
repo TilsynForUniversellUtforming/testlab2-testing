@@ -7,7 +7,6 @@ import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestregelInnholdstype
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestregelStatus
-import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.crawlResultat
@@ -15,7 +14,6 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDate
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testKoeyringList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterProperties
@@ -31,11 +29,10 @@ import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.client.ExpectedCount
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers
@@ -51,23 +48,23 @@ class MaalingResourceMockedTest {
   @Autowired private lateinit var server: MockRestServiceServer
   @Autowired private lateinit var autoTesterClient: AutoTesterClient
 
-  @MockBean private lateinit var maalingDAO: MaalingDAO
+  @Autowired private lateinit var autotesterService: AutotestingService
 
-  @MockBean private lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+  @MockitoBean private lateinit var maalingDAO: MaalingDAO
 
-  @MockBean private lateinit var testregelDAO: TestregelDAO
+  @MockitoBean private lateinit var maalingService: MaalingService
 
-  @MockBean private lateinit var utvalDAO: UtvalDAO
+  @MockitoBean private lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
-  @MockBean private lateinit var aggregeringService: AggregeringService
+  @MockitoBean private lateinit var testregelDAO: TestregelDAO
 
-  @MockBean private lateinit var sideutvalDAO: SideutvalDAO
+  @MockitoBean private lateinit var sideutvalDAO: SideutvalDAO
 
-  @MockBean private lateinit var brukarService: BrukarService
+  @MockitoBean private lateinit var brukarService: BrukarService
 
-  @SpyBean private lateinit var maalingTestingService: MaalingTestingService
+  @MockitoBean private lateinit var maalingCrawlingService: MaalingCrawlingService
 
-  @MockBean private lateinit var maalingCrawlingService: MaalingCrawlingService
+  private lateinit var maalingTestingService: MaalingTestingService
 
   private lateinit var maalingResource: MaalingResource
 
@@ -77,17 +74,15 @@ class MaalingResourceMockedTest {
   @BeforeEach
   fun setup() {
     MockitoAnnotations.openMocks(this)
+
+    maalingTestingService =
+        MaalingTestingService(
+            autotesterService, maalingDAO, loeysingsRegisterClient, testregelDAO, maalingService)
     maalingResource =
         MaalingResource(
             maalingDAO,
             sideutvalDAO,
-            MaalingService(
-                maalingDAO,
-                loeysingsRegisterClient,
-                testregelDAO,
-                utvalDAO,
-                aggregeringService,
-                autoTesterClient),
+            maalingService,
             brukarService,
             maalingTestingService,
             maalingCrawlingService)

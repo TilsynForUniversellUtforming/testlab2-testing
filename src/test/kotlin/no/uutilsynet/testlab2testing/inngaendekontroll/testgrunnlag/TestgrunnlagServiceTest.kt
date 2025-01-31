@@ -12,15 +12,15 @@ import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagService) {
 
-  @MockBean private lateinit var testgrunnlagDAO: TestgrunnlagDAO
+  @MockitoBean private lateinit var testgrunnlagDAO: TestgrunnlagDAO
 
-  @MockBean private lateinit var testResultatDAO: TestResultatDAO
+  @MockitoBean private lateinit var testResultatDAO: TestResultatDAO
 
   @Test
   fun `hvis vi har en ferdig test, skal vi kunne lage en retest`() {
