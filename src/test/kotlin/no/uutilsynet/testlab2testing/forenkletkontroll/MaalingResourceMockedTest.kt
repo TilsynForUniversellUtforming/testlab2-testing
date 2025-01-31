@@ -2,12 +2,9 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.net.URI
-import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestregelInnholdstype
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestregelStatus
-import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.crawlResultat
@@ -15,7 +12,6 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDate
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testKoeyringList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterProperties
@@ -35,11 +31,12 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.client.ExpectedCount
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers
 import org.springframework.test.web.client.response.MockRestResponseCreators
+import java.net.URI
+import java.time.Instant
 
 @RestClientTest(
     AutoTesterClient::class,
@@ -51,21 +48,21 @@ class MaalingResourceMockedTest {
   @Autowired private lateinit var server: MockRestServiceServer
   @Autowired private lateinit var autoTesterClient: AutoTesterClient
 
+  @Autowired private lateinit var autotesterService: AutotestingService
+
   @MockitoBean private lateinit var maalingDAO: MaalingDAO
+
+  @MockitoBean private lateinit var maalingService: MaalingService
 
   @MockitoBean private lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
   @MockitoBean private lateinit var testregelDAO: TestregelDAO
 
-  @MockitoBean private lateinit var utvalDAO: UtvalDAO
-
-  @MockitoBean private lateinit var aggregeringService: AggregeringService
-
   @MockitoBean private lateinit var sideutvalDAO: SideutvalDAO
 
   @MockitoBean private lateinit var brukarService: BrukarService
 
-  @MockitoSpyBean private lateinit var maalingTestingService: MaalingTestingService
+  private lateinit var maalingTestingService: MaalingTestingService
 
   @MockitoBean private lateinit var maalingCrawlingService: MaalingCrawlingService
 
@@ -77,17 +74,15 @@ class MaalingResourceMockedTest {
   @BeforeEach
   fun setup() {
     MockitoAnnotations.openMocks(this)
+
+    maalingTestingService =
+        MaalingTestingService(
+            autotesterService, maalingDAO, loeysingsRegisterClient, testregelDAO, maalingService)
     maalingResource =
         MaalingResource(
             maalingDAO,
             sideutvalDAO,
-            MaalingService(
-                maalingDAO,
-                loeysingsRegisterClient,
-                testregelDAO,
-                utvalDAO,
-                aggregeringService,
-                autoTesterClient),
+            maalingService,
             brukarService,
             maalingTestingService,
             maalingCrawlingService)
