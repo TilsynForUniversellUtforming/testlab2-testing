@@ -64,8 +64,6 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/postgres
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: postgres
-          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_BRUKAR_CLIENTID: test
-          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_BRUKAR_CLIENTSECRET: test
           FEATURES_START_TESTING: true
           LOEYSINGSREGISTER_HOST: 'http://localhost:8000'
           GITHUB_TOKEN_REF: ${{ secrets.PAT }}
