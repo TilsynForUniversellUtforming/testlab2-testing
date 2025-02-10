@@ -14,9 +14,9 @@ import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters.Companion.validateParameters
-import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
-import no.uutilsynet.testlab2testing.testing.manuelltesting.AutotesterTestresultat
-import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
+import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.automatisk.AutotesterTestresultat
+import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO

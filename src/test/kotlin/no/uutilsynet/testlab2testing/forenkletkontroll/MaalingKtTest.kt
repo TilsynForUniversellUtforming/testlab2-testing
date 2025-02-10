@@ -11,8 +11,8 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetL
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters.Companion.validateParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
-import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
-import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
+import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo

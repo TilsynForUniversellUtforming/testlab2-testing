@@ -10,7 +10,7 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
-import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
+import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.TestregelBase
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "status")

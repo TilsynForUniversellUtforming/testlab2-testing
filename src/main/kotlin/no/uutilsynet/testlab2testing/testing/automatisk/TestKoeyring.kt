@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.testing.manuelltesting
+package no.uutilsynet.testlab2testing.testing.automatisk
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonSubTypes

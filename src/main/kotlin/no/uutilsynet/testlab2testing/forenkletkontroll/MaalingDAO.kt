@@ -28,8 +28,8 @@ import no.uutilsynet.testlab2testing.loeysing.UtvalId
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
-import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
-import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
+import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql

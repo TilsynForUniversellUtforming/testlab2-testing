@@ -4,7 +4,7 @@ import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.testing.manuelltesting.TestResultat
+import no.uutilsynet.testlab2testing.testing.automatisk.TestResultat
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.springframework.stereotype.Service
 

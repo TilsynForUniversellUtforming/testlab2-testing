@@ -18,7 +18,7 @@ import no.uutilsynet.testlab2testing.loeysing.UtvalId
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters.Companion.validateParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
-import no.uutilsynet.testlab2testing.testing.manuelltesting.AutotesterTestresultat
+import no.uutilsynet.testlab2testing.testing.automatisk.AutotesterTestresultat
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
