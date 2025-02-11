@@ -55,7 +55,7 @@ For eksempel `autotester.code`.
 * Testregel: Klassar knytt til testregler
 * Wordrapport: Integrasjon med Rapportverktøy
 
-  ### Security
+  ### Auth
   * https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html
   
   
