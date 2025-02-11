@@ -14,8 +14,8 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
-import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
-import no.uutilsynet.testlab2testing.testing.manuelltesting.TestKoeyring
+import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*

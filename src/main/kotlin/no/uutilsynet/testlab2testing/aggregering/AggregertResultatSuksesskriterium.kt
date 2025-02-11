@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.aggregering
 
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.testing.manuelltesting.AutotesterTestresultat
+import no.uutilsynet.testlab2testing.testing.automatisk.AutotesterTestresultat
 
 data class AggregertResultatSuksesskriterium(
     val maalingId: Int?,

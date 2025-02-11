@@ -15,9 +15,9 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testKoeyrin
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
-import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterClient
-import no.uutilsynet.testlab2testing.testing.manuelltesting.AutoTesterProperties
-import no.uutilsynet.testlab2testing.testing.manuelltesting.AutotestingService
+import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
+import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterProperties
+import no.uutilsynet.testlab2testing.testing.automatisk.AutotestingService
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.assertj.core.api.Assertions

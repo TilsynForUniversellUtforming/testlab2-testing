@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.testing.manuelltesting
+package no.uutilsynet.testlab2testing.testing.automatisk
 
 import java.net.URL
 import java.time.Instant

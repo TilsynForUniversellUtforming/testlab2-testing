@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.time.Month
-import no.uutilsynet.testlab2testing.testing.manuelltesting.TestResultat
+import no.uutilsynet.testlab2testing.testing.automatisk.TestResultat
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
