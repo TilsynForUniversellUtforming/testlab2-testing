@@ -1,9 +1,5 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
-import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -11,6 +7,10 @@ import java.net.HttpURLConnection
 import java.net.Proxy
 import java.net.URI
 import javax.imageio.ImageIO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
+import org.slf4j.LoggerFactory
 
 abstract class ImageStorageClient(private val blobStorageProperties: BlobStorageProperties) {
 
@@ -58,11 +58,11 @@ abstract class ImageStorageClient(private val blobStorageProperties: BlobStorage
     }
   }
 
-    fun getBildeSti(path: String): HttpURLConnection {
-        val sasToken = getSasToken()
-        val storageUri = toBlobUri(path, sasToken)
-        return storageUri.toURL().openConnection(Proxy.NO_PROXY) as HttpURLConnection
-    }
+  fun getBildeSti(path: String): HttpURLConnection {
+    val sasToken = getSasToken()
+    val storageUri = toBlobUri(path, sasToken)
+    return storageUri.toURL().openConnection(Proxy.NO_PROXY) as HttpURLConnection
+  }
 
   abstract fun uploadToStorage(data: ByteArrayInputStream, fileName: String): Result<Unit>
 

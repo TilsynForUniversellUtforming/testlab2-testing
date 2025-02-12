@@ -2,22 +2,19 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
 import com.azure.storage.blob.sas.BlobSasPermission
 import com.azure.storage.blob.sas.BlobServiceSasSignatureValues
-import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
 import java.io.ByteArrayInputStream
 import java.net.URI
 import java.time.Instant
 import java.time.OffsetDateTime
+import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
+import org.springframework.stereotype.Component
 
 @Component
 class BlobStorageClient(
     private val blobStorageProperties: BlobStorageProperties,
     blobContainerClientFactory: BlobContainerClientFactory,
 ) : ImageStorageClient(blobStorageProperties) {
-
-  private val logger = LoggerFactory.getLogger(BlobStorageClient::class.java)
 
   private val blobContainerClient = blobContainerClientFactory.createBlobContainerClient()
 
@@ -49,13 +46,12 @@ class BlobStorageClient(
     return blobContainerClient.generateSas(sasValues)
   }
 
-    override fun getSasToken(): String {
-        val expiryTime =
-            OffsetDateTime.ofInstant(
-                Instant.now().plusMillis(blobStorageProperties.sasttl.toLong()), ZONEID_OSLO
-            )
-        val permission = BlobSasPermission().setReadPermission(true).setWritePermission(false)
-        val sasValues = BlobServiceSasSignatureValues(expiryTime, permission)
-        return generateSas(sasValues)
-    }
+  override fun getSasToken(): String {
+    val expiryTime =
+        OffsetDateTime.ofInstant(
+            Instant.now().plusMillis(blobStorageProperties.sasttl.toLong()), ZONEID_OSLO)
+    val permission = BlobSasPermission().setReadPermission(true).setWritePermission(false)
+    val sasValues = BlobServiceSasSignatureValues(expiryTime, permission)
+    return generateSas(sasValues)
+  }
 }

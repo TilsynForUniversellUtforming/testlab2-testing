@@ -1,5 +1,9 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
+import java.awt.Image
+import java.awt.image.BufferedImage
+import java.net.HttpURLConnection
+import javax.imageio.ImageIO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -9,10 +13,6 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import org.springframework.util.MimeTypeUtils
 import org.springframework.web.multipart.MultipartFile
-import java.awt.Image
-import java.awt.image.BufferedImage
-import java.net.HttpURLConnection
-import javax.imageio.ImageIO
 
 private const val GJENNOPPRETT_BILDE_FEIL = "Kunne ikkje gjenopprette bilde"
 
@@ -29,7 +29,8 @@ class BildeService(
     val antallBilder = testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
     val kontrolInfo = testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
     val imageDetails =
-        multipartFilesToImageDetails(testresultatId, antallBilder.size, bilder, kontrolInfo).getOrThrow()
+        multipartFilesToImageDetails(testresultatId, antallBilder.size, bilder, kontrolInfo)
+            .getOrThrow()
 
     blobClient.uploadBilder(imageDetails).forEach { bildeResultat ->
       if (bildeResultat.isSuccess) {
@@ -45,21 +46,17 @@ class BildeService(
   fun deleteBilder(testresultatId: Int, bildeId: Int? = null) = runCatching {
     val kontrolInfo = testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
     val bildeStiList: List<BildeSti> =
-      getBildeSti(bildeId, testresultatId)
-        .map { appendDirectoryToPath(it, kontrolInfo) }
+        getBildeSti(bildeId, testresultatId).map { appendDirectoryToPath(it, kontrolInfo) }
 
     bildeStiList.forEach { bildeSti -> deleteBilde(bildeSti) }
   }
 
-  private fun appendDirectoryToPath(
-      it: BildeSti,
-      kontrolInfo: KontrollDocumentation
-  ) = it.copy(bilde = getDirectory(kontrolInfo) + it.bilde, thumbnail = getDirectory(kontrolInfo) + it.thumbnail)
+  private fun appendDirectoryToPath(it: BildeSti, kontrolInfo: KontrollDocumentation) =
+      it.copy(
+          bilde = getDirectory(kontrolInfo) + it.bilde,
+          thumbnail = getDirectory(kontrolInfo) + it.thumbnail)
 
-  private fun getBildeSti(
-    bildeId: Int?,
-    testresultatId: Int
-  ): List<BildeSti> {
+  private fun getBildeSti(bildeId: Int?, testresultatId: Int): List<BildeSti> {
     return if (bildeId != null) {
       getBildeStiFromBildeId(bildeId)
     } else {
@@ -67,10 +64,10 @@ class BildeService(
     }
   }
 
-  private fun getBildeStiFromBildeId(bildeId: Int) = listOf(
-    testResultatDAO.getBildeSti(bildeId).getOrThrow()
-      ?: throw IllegalArgumentException("Fann ikkje bilde for bilde-id $bildeId")
-  )
+  private fun getBildeStiFromBildeId(bildeId: Int) =
+      listOf(
+          testResultatDAO.getBildeSti(bildeId).getOrThrow()
+              ?: throw IllegalArgumentException("Fann ikkje bilde for bilde-id $bildeId"))
 
   private fun deleteBilde(bildeSti: BildeSti) {
     blobClient.deleteBilde(bildeSti.bilde).onFailure {
@@ -102,9 +99,10 @@ class BildeService(
   @Cacheable("bildeCache", key = "#testresultatId")
   fun listBildeForTestresultat(testresultatId: Int): Result<List<Bilde>> = runCatching {
     val kontrolInfo = testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
-    val paths = testResultatDAO.getBildePathsForTestresultat(testresultatId)
-      .getOrThrow()
-      .map { appendDirectoryToPath(it, kontrolInfo) }
+    val paths =
+        testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow().map {
+          appendDirectoryToPath(it, kontrolInfo)
+        }
 
     return blobClient.getBildeStiList(paths)
   }
@@ -120,10 +118,10 @@ class BildeService(
   }
 
   private fun multipartFilesToImageDetails(
-    testresultatId: Int,
-    indexOffset: Int,
-    bildeList: List<MultipartFile>,
-    kontrolInfo: KontrollDocumentation
+      testresultatId: Int,
+      indexOffset: Int,
+      bildeList: List<MultipartFile>,
+      kontrolInfo: KontrollDocumentation
   ): Result<List<BildeRequest>> {
     val allowedMIMETypes =
         listOf(MimeTypeUtils.IMAGE_JPEG_VALUE, MimeTypeUtils.IMAGE_PNG_VALUE, "image/bmp")
@@ -152,7 +150,7 @@ class BildeService(
   }
 
   private fun getDirectory(kontrolInfo: KontrollDocumentation) =
-    "${kontrolInfo.kontrollId}${kontrolInfo.tittel}/"
+      "${kontrolInfo.kontrollId}${kontrolInfo.tittel}/"
 
   fun getBilde(bildesti: String): HttpURLConnection {
     return blobClient.getBildeSti(bildesti)
