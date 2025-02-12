@@ -22,8 +22,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BildeServiceTest(@Autowired val bildeService: BildeService) {
-  @MockitoSpyBean
-  lateinit var blobClient: BlobStorageClient
+  @MockitoSpyBean lateinit var blobClient: BlobStorageClient
 
   @MockitoBean lateinit var testResultatDAO: TestResultatDAO
 
