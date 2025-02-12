@@ -1,7 +1,5 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
-import java.sql.Timestamp
-import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
@@ -10,6 +8,8 @@ import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.sql.Timestamp
+import java.time.Instant
 
 @Component
 class TestResultatDAO(
@@ -301,4 +301,24 @@ class TestResultatDAO(
             DataClassRowMapper.newInstance(BildeSti::class.java))
         .toList()
   }
+
+    fun getKontrollForTestresultat(testresultatId: Int): Result<KontrollDocumentation> = runCatching {
+        val query = """
+            select tittel,kontroll_id from testresultat tr
+            join testgrunnlag tg on tg.id=tr.testgrunnlag_id
+            join kontroll k on k.id=tg.kontroll_id
+        """.trimIndent()
+
+        jdbcTemplate.queryForObject(
+            query,
+            mapOf("testresultat_id" to testresultatId)
+        ) { rs, _ ->
+            KontrollDocumentation(rs.getString("tittel"), rs.getInt("kontroll_id"))
+        }?: throw RuntimeException("No kontroll found for testresultat $testresultatId")
+    }
 }
+
+data class KontrollDocumentation(
+    val tittel: String,
+    val kontrollId: Int
+)
