@@ -5,8 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.1</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <version>3.4.0</version>
     </parent>
     <groupId>no.uutilsynet</groupId>
     <artifactId>testlab2-testing</artifactId>
@@ -16,7 +15,7 @@
     <properties>
         <java.version>21</java.version>
         <kotlin.version>2.1.10</kotlin.version>
-        <docker.image.prefix>acrddtprod.azurecr.io</docker.image.prefix>
+        <docker.image.prefix>localhost</docker.image.prefix>
     </properties>
     <dependencies>
         <!-- Spring Boot -->
@@ -207,12 +206,12 @@
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
-                <version>3.4.2</version>
+                <version>3.4.0</version>
                 <configuration>
                     <to>
                         <!--suppress UnresolvedMavenProperty -->
-                        <image>${docker.image.prefix}/testlab2-testing:${git.commit.id}</image>
-                        <tags>latest</tags>
+                        <image>${docker.image.prefix}/testlab2-testing</image>
+                        <tags>${git.commit.id}</tags>
                     </to>
                     <from>
                         <image>eclipse-temurin:21</image>
@@ -221,6 +220,7 @@
                         <ports>
                             <port>8080</port>
                         </ports>
+                        <user>nobody</user>
                     </container>
                 </configuration>
             </plugin>
