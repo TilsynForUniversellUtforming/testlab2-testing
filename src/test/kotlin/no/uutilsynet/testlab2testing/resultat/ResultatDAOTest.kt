@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URI
-import java.time.Instant
-import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
@@ -27,6 +24,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.web.client.RestTemplateBuilder
@@ -37,6 +35,9 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+import java.net.URI
+import java.time.Instant
+import java.time.LocalDate
 
 @SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
 @ActiveProfiles("test")
@@ -51,6 +52,8 @@ class ResultatDAOTest(
     @Autowired val kontrollDAO: KontrollDAO
 ) {
 
+  val logger = LoggerFactory.getLogger(ResultatDAOTest::class.java)
+
   @MockitoBean lateinit var sideutvalDAO: SideutvalDAO
 
   @MockitoBean lateinit var brukarService: BrukarService
@@ -58,6 +61,8 @@ class ResultatDAOTest(
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
   @MockitoSpyBean lateinit var cacheManager: CacheManager
+
+  private val testresultatIds = mutableMapOf<Int, Kontrolltype>()
 
   private var testregelId: Int = 0
   private var utvalId: Int = 0
@@ -141,6 +146,9 @@ class ResultatDAOTest(
 
   @Test
   fun getResultat() {
+
+    println("Testresultatid $testresultatIds")
+    logger.info("Testresultatid $testresultatIds")
 
     val resultat = resultatDAO.getAllResultat()
 
@@ -245,7 +253,12 @@ class ResultatDAOTest(
               0.5,
               0.5,
               testgrunnlagId)
-      aggregeringDAO.createAggregertResultatTestregel(aggregeringTestregel)
+      val id = aggregeringDAO.createAggregertResultatTestregel(aggregeringTestregel)
+      if (maalingId != null) {
+        testresultatIds[id] = Kontrolltype.ForenklaKontroll
+      } else {
+        testresultatIds[id] = Kontrolltype.InngaaendeKontroll
+      }
     }
   }
 
