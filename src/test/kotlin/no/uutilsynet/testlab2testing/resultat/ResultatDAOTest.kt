@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.net.URI
+import java.time.Instant
+import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
@@ -29,9 +32,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
-import java.net.URI
-import java.time.Instant
-import java.time.LocalDate
 
 @SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
 @ActiveProfiles("test")
@@ -50,6 +50,7 @@ class ResultatDAOTest(
 
   private val testresultatIds = mutableMapOf<Int, Kontrolltype>()
   private val resultatPrKontroll = mutableMapOf<Int, Int>()
+  private val kontrollar = mutableListOf<KontrollDAO.KontrollDB>()
 
   private var testregelId: Int = 0
   private var utvalId: Int = 0
@@ -113,7 +114,7 @@ class ResultatDAOTest(
 
     val resultat = resultatDAO.getTestresultatTestgrunnlag()
 
-    val negatives = resultat.map { it.testgrunnlagId }.filter { it != testgrunnlagIds[0] }
+    val negatives = resultat.filter { it.testgrunnlagId != testgrunnlagIds[0] }.map { it.id }
     logger.info("Negatives testgrunnlag $negatives " + resultat)
 
     assertThat(resultat.map { it.testType }.filter { it == TestgrunnlagType.OPPRINNELEG_TEST })
@@ -195,10 +196,7 @@ class ResultatDAOTest(
             " kontrollId " +
             existing.kontrollId +
             " " +
-            resultat.map { it.id })
-
-    val negatives = resultat.map { it.id }.filter { it != existing.kontrollId }
-    logger.info("Negatives kontroll $negatives")
+            resultat)
 
     assertThat(resultat.size).isEqualTo(4)
   }
