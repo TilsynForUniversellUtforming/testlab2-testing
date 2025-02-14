@@ -313,7 +313,9 @@ class ResultatDAOTest(
 
     opprettUtvalg(kontrollDAO, kontroll, loeysingId)
 
-    return kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
+    val nykontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
+    logger.info("Kontroll id $kontroll")
+    return nykontroll
   }
 
   private fun opprettUtvalg(
@@ -363,7 +365,6 @@ class ResultatDAOTest(
   ): List<Int> {
     val kontroll =
         createKontroll("Inngåande kontroll", Kontrolltype.InngaaendeKontroll, loeysingList)
-    logger.info("Kontroll id $kontroll")
     return testgrunnlagList.map { createTestgrunnlag(it, kontroll) }
   }
 
