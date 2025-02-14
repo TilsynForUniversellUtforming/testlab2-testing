@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URI
-import java.time.Instant
-import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
@@ -32,6 +29,9 @@ import org.springframework.context.annotation.Bean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
+import java.net.URI
+import java.time.Instant
+import java.time.LocalDate
 
 @SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
 @ActiveProfiles("test")
@@ -114,7 +114,7 @@ class ResultatDAOTest(
     val resultat = resultatDAO.getTestresultatTestgrunnlag()
 
     val negatives = resultat.map { it.testgrunnlagId }.filter { it != testgrunnlagIds[0] }
-    logger.info("Negatives testgrunnlag $negatives " + resultat.map { it.id })
+    logger.info("Negatives testgrunnlag $negatives " + resultat)
 
     assertThat(resultat.map { it.testType }.filter { it == TestgrunnlagType.OPPRINNELEG_TEST })
         .isNotEmpty()
@@ -131,7 +131,7 @@ class ResultatDAOTest(
 
     val resultat = resultatDAO.getTestresultatTestgrunnlag(testgrunnlagId = testgrunnlagIds[0])
 
-    logger.info("Testgrunnlag " + testgrunnlagIds[0] + " " + resultat.map { it.id })
+    logger.info("Testgrunnlag " + testgrunnlagIds[0] + " " + resultat)
 
     assertThat(resultat.size).isEqualTo(2)
   }
