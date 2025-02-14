@@ -113,6 +113,9 @@ class ResultatDAOTest(
 
     val resultat = resultatDAO.getTestresultatTestgrunnlag()
 
+    val negatives = resultat.map { it.testgrunnlagId }.filter { it != testgrunnlagIds[0] }
+    logger.info("Negatives $negatives")
+
     assertThat(resultat.map { it.testType }.filter { it == TestgrunnlagType.OPPRINNELEG_TEST })
         .isNotEmpty()
     assertThat(resultat.map { it.testType }.filter { it == TestgrunnlagType.RETEST }).isNotEmpty()
@@ -183,6 +186,9 @@ class ResultatDAOTest(
     logger.info("ResultatPrKontroll " + resultatPrKontroll)
 
     val resultat = resultatDAO.getResultatKontroll(existing.kontrollId)
+
+    val negatives = resultat.map { it.id }.filter { it != existing.kontrollId }
+    logger.info("Negatives $negatives")
 
     assertThat(resultat.size).isEqualTo(4)
   }
