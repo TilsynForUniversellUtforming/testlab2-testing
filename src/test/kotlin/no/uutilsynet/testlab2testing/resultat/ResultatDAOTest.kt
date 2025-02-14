@@ -114,7 +114,7 @@ class ResultatDAOTest(
     val resultat = resultatDAO.getTestresultatTestgrunnlag()
 
     val negatives = resultat.map { it.testgrunnlagId }.filter { it != testgrunnlagIds[0] }
-    logger.info("Negatives testgrunnlag $negatives")
+    logger.info("Negatives testgrunnlag $negatives " + resultat.map { it.id })
 
     assertThat(resultat.map { it.testType }.filter { it == TestgrunnlagType.OPPRINNELEG_TEST })
         .isNotEmpty()
@@ -130,6 +130,8 @@ class ResultatDAOTest(
   fun testGetTestresultatTestgrunnlag() {
 
     val resultat = resultatDAO.getTestresultatTestgrunnlag(testgrunnlagId = testgrunnlagIds[0])
+
+    logger.info("Testgrunnlag " + testgrunnlagIds[0] + " " + resultat.map { it.id })
 
     assertThat(resultat.size).isEqualTo(2)
   }
@@ -182,10 +184,18 @@ class ResultatDAOTest(
   fun getResultatKontroll() {
 
     val existing = testgrunnlagDAO.getTestgrunnlag(testgrunnlagIds[0]).getOrThrow()
-    logger.info("Testgrunnlag " + testgrunnlagIds[0] + " kontrollId " + existing.kontrollId)
+
     logger.info("ResultatPrKontroll " + resultatPrKontroll)
 
     val resultat = resultatDAO.getResultatKontroll(existing.kontrollId)
+
+    logger.info(
+        "Testgrunnlag " +
+            testgrunnlagIds[0] +
+            " kontrollId " +
+            existing.kontrollId +
+            " " +
+            resultat.map { it.id })
 
     val negatives = resultat.map { it.id }.filter { it != existing.kontrollId }
     logger.info("Negatives kontroll $negatives")
