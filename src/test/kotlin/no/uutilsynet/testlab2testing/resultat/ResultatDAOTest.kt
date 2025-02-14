@@ -49,6 +49,7 @@ class ResultatDAOTest(
   val logger = LoggerFactory.getLogger(ResultatDAOTest::class.java)
 
   private val testresultatIds = mutableMapOf<Int, Kontrolltype>()
+  private val resultatPrKontroll = mutableMapOf<Int, Int>()
 
   private var testregelId: Int = 0
   private var utvalId: Int = 0
@@ -135,6 +136,7 @@ class ResultatDAOTest(
 
     println("Testresultatid $testresultatIds")
     logger.info("Testresultatid $testresultatIds")
+    logger.info("ResultatPrKontroll " + resultatPrKontroll)
 
     val resultat = resultatDAO.getAllResultat()
 
@@ -175,7 +177,10 @@ class ResultatDAOTest(
 
   @Test
   fun getResultatKontroll() {
+
     val existing = testgrunnlagDAO.getTestgrunnlag(testgrunnlagIds[0]).getOrThrow()
+    logger.info("Testgrunnlag " + testgrunnlagIds[0] + " kontrollId " + existing.kontrollId)
+    logger.info("ResultatPrKontroll " + resultatPrKontroll)
 
     val resultat = resultatDAO.getResultatKontroll(existing.kontrollId)
 
@@ -218,7 +223,8 @@ class ResultatDAOTest(
       maalingId: Int?,
       testregelId: Int,
       testgrunnlagId: Int?,
-      loeysungIds: List<Int> = listOf(1)
+      kontrollId: Int,
+      loeysungIds: List<Int> = listOf(1),
   ) {
 
     loeysungIds.forEach {
@@ -240,6 +246,7 @@ class ResultatDAOTest(
               0.5,
               testgrunnlagId)
       val id = aggregeringDAO.createAggregertResultatTestregel(aggregeringTestregel)
+      resultatPrKontroll[kontrollId] = resultatPrKontroll[kontrollId]?.plus(1) ?: 1
       if (maalingId != null) {
         testresultatIds[id] = Kontrolltype.ForenklaKontroll
       } else {
@@ -277,7 +284,7 @@ class ResultatDAOTest(
             maalingNamn, Instant.now(), listOf(1), testregelIds, CrawlParameters())
     maalingDAO.updateKontrollId(maalingId, kontrollId)
 
-    createAggregertTestresultat(maalingId, testregelIds[0], null)
+    createAggregertTestresultat(maalingId, testregelIds[0], null, kontrollId)
 
     return maalingId
   }
@@ -368,7 +375,7 @@ class ResultatDAOTest(
     val testgrunnlagId = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag).getOrThrow()
 
     createAggregertTestresultat(
-        null, testregelId, testgrunnlagId, kontroll.sideutval.map { it.loeysingId })
+        null, testregelId, testgrunnlagId, kontroll.id, kontroll.sideutval.map { it.loeysingId })
     return testgrunnlagId
   }
 }
