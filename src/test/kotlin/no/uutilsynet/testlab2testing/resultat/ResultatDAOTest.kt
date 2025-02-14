@@ -350,7 +350,7 @@ class ResultatDAOTest(
     val kontroll =
         Kontroll(
             kontrollId,
-            Kontrolltype.InngaaendeKontroll,
+            kontrolltype,
             opprettKontroll.tittel,
             opprettKontroll.saksbehandler,
             opprettKontroll.sakstype,
