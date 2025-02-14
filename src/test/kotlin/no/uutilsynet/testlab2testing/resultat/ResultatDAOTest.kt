@@ -3,7 +3,6 @@ package no.uutilsynet.testlab2testing.resultat
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
-import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
@@ -13,10 +12,8 @@ import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
-import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
-import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelInit
@@ -28,13 +25,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.web.client.RestTemplateBuilder
-import org.springframework.cache.CacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.bean.override.mockito.MockitoBean
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import java.net.URI
 import java.time.Instant
 import java.time.LocalDate
@@ -53,14 +47,6 @@ class ResultatDAOTest(
 ) {
 
   val logger = LoggerFactory.getLogger(ResultatDAOTest::class.java)
-
-  @MockitoBean lateinit var sideutvalDAO: SideutvalDAO
-
-  @MockitoBean lateinit var brukarService: BrukarService
-
-  @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
-
-  @MockitoSpyBean lateinit var cacheManager: CacheManager
 
   private val testresultatIds = mutableMapOf<Int, Kontrolltype>()
 
