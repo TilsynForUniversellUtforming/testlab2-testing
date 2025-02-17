@@ -228,6 +228,18 @@ class ResultatDAOTest(
       loeysungIds: List<Int> = listOf(1),
   ) {
 
+    logger.info(
+        "Create aggregert testresultat maalingId " +
+            maalingId +
+            " testregelId" +
+            testregelId +
+            " testgrunnlagId" +
+            testgrunnlagId +
+            " kontrollId" +
+            kontrollId +
+            " loeysingsid" +
+            loeysungIds)
+
     loeysungIds.forEach {
       val aggregeringTestregel =
           AggregeringPerTestregelDTO(
