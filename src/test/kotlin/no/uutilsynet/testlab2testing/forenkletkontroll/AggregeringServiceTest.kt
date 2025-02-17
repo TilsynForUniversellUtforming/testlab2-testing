@@ -8,7 +8,9 @@ import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.common.TestlabLocale
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
@@ -19,6 +21,7 @@ import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
+import no.uutilsynet.testlab2testing.resultat.OpprettTestgrunnlag
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
@@ -30,7 +33,6 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Offset
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -41,8 +43,10 @@ private val TEST_URL = URI("http://localhost:8080/").toURL()
 private const val TEST_ORGNR = "123456789"
 
 @SpringBootTest(properties = ["spring.datasource.url: jdbc:tc:postgresql:16-alpine:///test-db"])
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringService) {
+class AggregeringServiceTest(
+    @Autowired val aggregeringService: AggregeringService,
+    @Autowired val testUtils: TestUtils
+) {
 
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
@@ -177,11 +181,17 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1)))
         .thenReturn(mapOf(1 to URI("https://www.example.com").toURL()))
 
-    val sakId = createTestKontroll()
+    val testregelId = testUtils.createTestregel()
+    val kontroll =
+        testUtils.createKontroll(
+            "Kontroll", Kontrolltype.InngaaendeKontroll, listOf(1), testregelId)
+    val testgrunnlagbase = OpprettTestgrunnlag("Testgrunnlag", TestgrunnlagType.OPPRINNELEG_TEST)
+    val testgrunnlagId = testUtils.createTestgrunnlag(testgrunnlagbase, kontroll)
+
     val resultatKontroll1 =
         ResultatManuellKontroll(
             1,
-            sakId,
+            testgrunnlagId,
             loeysingId = 1,
             testregelId = 1,
             sideutvalId = 1,
@@ -198,7 +208,7 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     val resultatKontrol2 =
         ResultatManuellKontroll(
             1,
-            sakId,
+            testgrunnlagId,
             loeysingId = 1,
             testregelId = 1,
             sideutvalId = 1,
@@ -222,14 +232,14 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
             listOf(resultatKontroll1, resultatKontrol2))
     assertThat(status2.isSuccess).isEqualTo(true)
 
-    val result = aggregeringService.getAggregertResultatTestregel(testgrunnlagId = sakId)
+    val result = aggregeringService.getAggregertResultatTestregel(testgrunnlagId = testgrunnlagId)
     assertThat(result).hasSize(1)
     assertThat(result[0].talElementBrot).isEqualTo(1)
     assertThat(result[0].talElementSamsvar).isEqualTo(1)
 
     aggregeringService.saveAggregertResultatSide(listOf(resultatKontroll1, resultatKontrol2))
     aggregeringService.saveAggregertResultatSide(listOf(resultatKontroll1, resultatKontrol2))
-    val result2 = aggregeringService.getAggregertResultatSide(testgrunnlagId = sakId)
+    val result2 = aggregeringService.getAggregertResultatSide(testgrunnlagId = testgrunnlagId)
     assertThat(result2).hasSize(1)
     assertThat(result2[0].talElementBrot).isEqualTo(1)
     assertThat(result2[0].talElementSamsvar).isEqualTo(1)
@@ -239,7 +249,8 @@ class AggregeringServiceTest(@Autowired val aggregeringService: AggregeringServi
     aggregeringService.saveAggregertResultatSuksesskriterium(
         listOf(resultatKontroll1, resultatKontrol2))
 
-    val result3 = aggregeringService.getAggregertResultatSuksesskriterium(testgrunnlagId = sakId)
+    val result3 =
+        aggregeringService.getAggregertResultatSuksesskriterium(testgrunnlagId = testgrunnlagId)
 
     assertThat(result3).hasSize(1)
     assertThat(result3[0].talSiderBrot).isEqualTo(1)
