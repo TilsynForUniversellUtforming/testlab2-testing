@@ -37,12 +37,15 @@ import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.junit.jupiter.Container
 
 private val TEST_URL = URI("http://localhost:8080/").toURL()
 
 private const val TEST_ORGNR = "123456789"
 
-@SpringBootTest(properties = ["spring.datasource.url: jdbc:tc:postgresql:16-alpine:///test-db"])
+@SpringBootTest(
+    properties = ["spring.datasource.url: jdbc:tc:postgresql:16-alpine:///AggregeringServiceTest"])
 class AggregeringServiceTest(
     @Autowired val aggregeringService: AggregeringService,
     @Autowired val testUtils: TestUtils
@@ -68,6 +71,12 @@ class AggregeringServiceTest(
   private var utvalId: Int by Delegates.notNull()
 
   val testreglerSomSkalSlettes: MutableList<Int> = mutableListOf()
+
+  companion object {
+    @Container
+    @JvmStatic
+    var postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:15.3")
+  }
 
   @Test
   fun saveAggregeringTestregel() {

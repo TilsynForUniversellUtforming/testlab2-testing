@@ -21,14 +21,11 @@ import org.springframework.context.annotation.Bean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
-import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
 
-@SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
+@SpringBootTest(
+    properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///ResultatDAOTest-db"])
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Testcontainers
 class ResultatDAOTest(
     @Autowired val resultatDAO: ResultatDAO,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
@@ -46,12 +43,6 @@ class ResultatDAOTest(
 
   private var maalingIds = listOf<Int>()
   private var testgrunnlagIds = listOf<Int>()
-
-  companion object {
-    @Container
-    @JvmStatic
-    var postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:15.3").withReuse(true)
-  }
 
   @BeforeAll
   fun setup() {
