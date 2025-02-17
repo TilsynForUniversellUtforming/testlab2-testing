@@ -114,7 +114,7 @@ class ResultatDAOTest(
 
     val resultat = resultatDAO.getTestresultatTestgrunnlag()
 
-    val negatives = resultat.filter { it.testgrunnlagId != testgrunnlagIds[0] }.map { it.id }
+    val negatives = resultat.filter { !testgrunnlagIds.contains(it.testgrunnlagId) }.map { it.id }
     logger.info("Negatives testgrunnlag $negatives " + resultat)
 
     assertThat(resultat.map { it.testType }.filter { it == TestgrunnlagType.OPPRINNELEG_TEST })
@@ -123,8 +123,7 @@ class ResultatDAOTest(
     assertThat(resultat.map { it.typeKontroll }.contains(Kontrolltype.InngaaendeKontroll)).isTrue()
     assertThat(resultat.map { it.typeKontroll }.filter { it == Kontrolltype.ForenklaKontroll }.size)
         .isEqualTo(0)
-    assertThat(resultat.map { it.testgrunnlagId }.filter { it == testgrunnlagIds[0] }.size)
-        .isEqualTo(2)
+    assertThat(resultat.map { it.testgrunnlagId }).containsAll(testgrunnlagIds)
   }
 
   @Test
@@ -191,7 +190,9 @@ class ResultatDAOTest(
     val resultat = resultatDAO.getResultatKontroll(existing.kontrollId)
 
     logger.info(
-        "Testgrunnlag " +
+        "Tesrege l " +
+            testregelId +
+            " Testgrunnlag " +
             testgrunnlagIds[0] +
             " kontrollId " +
             existing.kontrollId +
@@ -389,6 +390,8 @@ class ResultatDAOTest(
             sideutval = kontroll.sideutval,
             testregelIdList = listOf(testregelId))
     val testgrunnlagId = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag).getOrThrow()
+
+    logger.info("Testgrunnlag id $testgrunnlagId for testregel $testregelId")
 
     createAggregertTestresultat(
         null, testregelId, testgrunnlagId, kontroll.id, kontroll.sideutval.map { it.loeysingId })
