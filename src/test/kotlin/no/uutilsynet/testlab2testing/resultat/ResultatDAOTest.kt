@@ -266,6 +266,8 @@ class ResultatDAOTest(
         testUtils.createTestMaaling(
             testregelIds, kontroll.sideutval.map { it.loeysingId }, maalingNamn, kontroll.id)
 
+    logger.info("Maaling Id " + maalingId)
+
     createAggregertTestresultat(maalingId, testregelIds[0], null, kontroll.id, loeysingList)
 
     return maalingId
@@ -276,6 +278,8 @@ class ResultatDAOTest(
       val kontroll =
           testUtils.createKontroll(
               "Forenkla kontroll 20204", Kontrolltype.ForenklaKontroll, listOf(1), testregelId)
+
+      logger.info("Kontroll Id forenkla kontroll " + kontroll.id)
 
       createTestMaaling(listOf(testregelId), kontroll, it)
     }
