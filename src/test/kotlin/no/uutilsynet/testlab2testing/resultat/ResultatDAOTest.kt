@@ -5,7 +5,6 @@ import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
 import no.uutilsynet.testlab2testing.common.TestUtils
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
@@ -13,7 +12,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.web.client.RestTemplateBuilder
@@ -30,11 +28,8 @@ class ResultatDAOTest(
     @Autowired val resultatDAO: ResultatDAO,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val aggregeringDAO: AggregeringDAO,
-    @Autowired val testUtils: TestUtils,
-    @Autowired val maalingDAO: MaalingDAO
+    @Autowired val testUtils: TestUtils
 ) {
-
-  val logger = LoggerFactory.getLogger(ResultatDAOTest::class.java)
 
   private val testresultatIds = mutableMapOf<Int, Kontrolltype>()
   private val resultatPrKontroll = mutableMapOf<Int, Int>()
@@ -60,12 +55,6 @@ class ResultatDAOTest(
   fun getTestresultatMaaling() {
 
     val resultat: List<ResultatLoeysingDTO> = resultatDAO.getTestresultatMaaling()
-
-    val maalinger = maalingDAO.getMaalingList()
-
-    logger.info("Maalinger $maalinger")
-
-    println("Resultat maaling $resultat")
 
     assertThat(resultat.size).isEqualTo(2)
 
@@ -120,21 +109,11 @@ class ResultatDAOTest(
 
     val resultat = resultatDAO.getTestresultatTestgrunnlag(testgrunnlagId = testgrunnlagIds[0])
 
-    logger.info("Testgrunnlag " + testgrunnlagIds[0] + " " + resultat)
-
     assertThat(resultat.size).isEqualTo(2)
   }
 
   @Test
   fun getResultat() {
-
-    println("Testresultatid $testresultatIds")
-    logger.info("Testresultatid $testresultatIds")
-    logger.info("ResultatPrKontroll " + resultatPrKontroll)
-    logger.info("Alle resultat " + resultatDAO.getAllResultat())
-
-    val alleResultat = aggregeringDAO.getAllAggregeringTestregel()
-    logger.info("Alle testresultat " + alleResultat)
 
     val resultat = resultatDAO.getAllResultat()
 
@@ -178,19 +157,7 @@ class ResultatDAOTest(
 
     val existing = testgrunnlagDAO.getTestgrunnlag(testgrunnlagIds[0]).getOrThrow()
 
-    logger.info("ResultatPrKontroll " + resultatPrKontroll)
-
     val resultat = resultatDAO.getResultatKontroll(existing.kontrollId)
-
-    logger.info(
-        "Tesregel " +
-            testregelId +
-            " Testgrunnlag " +
-            testgrunnlagIds[0] +
-            " kontrollId " +
-            existing.kontrollId +
-            " " +
-            resultat)
 
     assertThat(resultat.size).isEqualTo(4)
   }
@@ -231,21 +198,8 @@ class ResultatDAOTest(
       maalingId: Int?,
       testregelId: Int,
       testgrunnlagId: Int?,
-      kontrollId: Int,
       loeysungIds: List<Int> = listOf(1),
   ): List<Int> {
-
-    logger.info(
-        "Create aggregert testresultat maalingId " +
-            maalingId +
-            " testregelId " +
-            testregelId +
-            " testgrunnlagId " +
-            testgrunnlagId +
-            " kontrollId " +
-            kontrollId +
-            " loeysingsid" +
-            loeysungIds)
 
     return loeysungIds.map {
       val aggregeringTestregel =
@@ -279,25 +233,12 @@ class ResultatDAOTest(
         testUtils.createTestMaaling(
             testregelIds, kontroll.sideutval.map { it.loeysingId }, maalingNamn, kontroll.id)
 
-    val resultatId =
-        createAggregertTestresultat(maalingId, testregelIds[0], null, kontroll.id, loeysingList)
+    val resultatId = createAggregertTestresultat(maalingId, testregelIds[0], null, loeysingList)
 
     resultatId.forEach({
       testresultatIds[it] = Kontrolltype.ForenklaKontroll
       resultatPrKontroll[kontroll.id] = resultatPrKontroll[kontroll.id]?.plus(1) ?: 1
     })
-
-    logger.info(
-        "Maaling Id " +
-            maalingId +
-            " loeysingList " +
-            loeysingList +
-            "testregelId " +
-            testregelIds +
-            "kontrollId " +
-            kontroll.id +
-            " resultatids" +
-            resultatId)
 
     return maalingId
   }
@@ -307,8 +248,6 @@ class ResultatDAOTest(
       val kontroll =
           testUtils.createKontroll(
               "Forenkla kontroll 20204", Kontrolltype.ForenklaKontroll, listOf(1), testregelId)
-
-      logger.info("Kontroll Id forenkla kontroll " + kontroll.id)
 
       createTestMaaling(listOf(testregelId), kontroll, it)
     }
@@ -325,8 +264,7 @@ class ResultatDAOTest(
     return testgrunnlagList
         .map { testUtils.createTestgrunnlag(it, kontroll) }
         .map {
-          val resultatId =
-              createAggregertTestresultat(null, testregelId, it, kontroll.id, loeysingList)
+          val resultatId = createAggregertTestresultat(null, testregelId, it, loeysingList)
           resultatId.forEach({
             testresultatIds[it] = Kontrolltype.ForenklaKontroll
             resultatPrKontroll[kontroll.id] = resultatPrKontroll[kontroll.id]?.plus(1) ?: 1
@@ -334,14 +272,6 @@ class ResultatDAOTest(
           it
         }
   }
-
-  /*  companion object {
-
-    @Container
-    @ServiceConnection
-    @JvmStatic
-    var postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:16-alpine")
-  } */
 }
 
 data class OpprettTestgrunnlag(
