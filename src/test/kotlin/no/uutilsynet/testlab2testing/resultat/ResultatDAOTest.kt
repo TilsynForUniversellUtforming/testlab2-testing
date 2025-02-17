@@ -1,25 +1,15 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URI
-import java.time.Instant
-import java.time.LocalDate
-import no.uutilsynet.testlab2.constants.*
+import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
-import no.uutilsynet.testlab2testing.common.TestlabLocale
+import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
-import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
-import no.uutilsynet.testlab2testing.kontroll.KontrollResource
-import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
-import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
-import no.uutilsynet.testlab2testing.testregel.TestConstants
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelInit
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -32,6 +22,9 @@ import org.springframework.context.annotation.Bean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
+import java.time.Instant
+import java.time.LocalDate
+
 
 @SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
 @ActiveProfiles("test")
@@ -41,26 +34,22 @@ class ResultatDAOTest(
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val aggregeringDAO: AggregeringDAO,
     @Autowired val maalingDAO: MaalingDAO,
-    @Autowired val testregelDAO: TestregelDAO,
-    @Autowired val utvalDAO: UtvalDAO,
-    @Autowired val kontrollDAO: KontrollDAO
+    @Autowired val testUtils: TestUtils
 ) {
 
   val logger = LoggerFactory.getLogger(ResultatDAOTest::class.java)
 
   private val testresultatIds = mutableMapOf<Int, Kontrolltype>()
   private val resultatPrKontroll = mutableMapOf<Int, Int>()
-  private val kontrollar = mutableListOf<KontrollDAO.KontrollDB>()
 
   private var testregelId: Int = 0
-  private var utvalId: Int = 0
 
   private var maalingIds = listOf<Int>()
   private var testgrunnlagIds = listOf<Int>()
 
   @BeforeAll
   fun setup() {
-    testregelId = createTestregel()
+    testregelId = testUtils.createTestregel()
     maalingIds = createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"))
 
     val testgrunnlagList =
@@ -270,29 +259,6 @@ class ResultatDAOTest(
     }
   }
 
-  fun createTestregel(): Int {
-
-    val temaId = testregelDAO.createTema("Bilder")
-
-    val innholdstypeTesting = testregelDAO.createInnholdstypeTesting("Tekst")
-
-    val testregelInit =
-        TestregelInit(
-            testregelId = "QW-ACT-R1",
-            namn = TestConstants.name,
-            kravId = TestConstants.testregelTestKravId,
-            status = TestregelStatus.publisert,
-            type = TestregelInnholdstype.nett,
-            modus = TestregelModus.automatisk,
-            spraak = TestlabLocale.nb,
-            testregelSchema = TestConstants.testregelSchemaAutomatisk,
-            innhaldstypeTesting = innholdstypeTesting,
-            tema = temaId,
-            testobjekt = 1,
-            kravTilSamsvar = "")
-    return testregelDAO.createTestregel(testregelInit)
-  }
-
   fun createTestMaaling(testregelIds: List<Int>, kontrollId: Int, maalingNamn: String): Int {
     val maalingId =
         maalingDAO.createMaaling(
@@ -307,65 +273,12 @@ class ResultatDAOTest(
   fun createTestMaalingar(maalingNamn: List<String>): List<Int> {
     return maalingNamn.map {
       val kontrollId =
-          createKontroll("Forenkla kontroll 20204", Kontrolltype.ForenklaKontroll, listOf(1)).id
+          testUtils
+              .createKontroll(
+                  "Forenkla kontroll 20204", Kontrolltype.ForenklaKontroll, listOf(1), testregelId)
+              .id
       createTestMaaling(listOf(testregelId), kontrollId, it)
     }
-  }
-
-  fun createKontroll(
-      kontrollNamn: String,
-      kontrolltype: Kontrolltype,
-      loeysingId: List<Int>
-  ): KontrollDAO.KontrollDB {
-
-    val (kontrollDAO, kontrollId, kontroll) = opprettKontroll(kontrollNamn, kontrolltype)
-
-    opprettUtvalg(kontrollDAO, kontroll, loeysingId)
-
-    val nykontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
-    logger.info("Kontroll id $kontroll")
-    return nykontroll
-  }
-
-  private fun opprettUtvalg(
-      kontrollDAO: KontrollDAO,
-      kontroll: Kontroll,
-      loeysingId: List<Int> = listOf(1)
-  ) {
-
-    utvalId = utvalDAO.createUtval("test-skal-slettes", loeysingId).getOrThrow()
-
-    val sideUtval =
-        loeysingId.map {
-          SideutvalBase(it, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null)
-        }
-
-    kontrollDAO.updateKontroll(kontroll, null, listOf(testregelId))
-
-    /* Add sideutval */
-    kontrollDAO.updateKontroll(kontroll, sideUtval)
-  }
-
-  private fun opprettKontroll(
-      kontrollNamn: String,
-      kontrolltype: Kontrolltype
-  ): Triple<KontrollDAO, Int, Kontroll> {
-    val opprettKontroll =
-        KontrollResource.OpprettKontroll(
-            kontrollNamn, "Ola Nordmann", Sakstype.Arkivsak, "1234", kontrolltype)
-
-    val kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
-
-    val kontroll =
-        Kontroll(
-            kontrollId,
-            kontrolltype,
-            opprettKontroll.tittel,
-            opprettKontroll.saksbehandler,
-            opprettKontroll.sakstype,
-            opprettKontroll.arkivreferanse,
-        )
-    return Triple(kontrollDAO, kontrollId, kontroll)
   }
 
   private fun createTestgrunnlagList(
@@ -373,7 +286,8 @@ class ResultatDAOTest(
       loeysingList: List<Int>
   ): List<Int> {
     val kontroll =
-        createKontroll("Inngåande kontroll", Kontrolltype.InngaaendeKontroll, loeysingList)
+        testUtils.createKontroll(
+            "Inngåande kontroll", Kontrolltype.InngaaendeKontroll, loeysingList, testregelId)
     return testgrunnlagList.map { createTestgrunnlag(it, kontroll) }
   }
 
