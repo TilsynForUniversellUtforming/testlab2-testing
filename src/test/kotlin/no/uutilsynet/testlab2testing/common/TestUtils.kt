@@ -1,7 +1,9 @@
 package no.uutilsynet.testlab2testing.common
 
 import java.net.URI
+import java.time.Instant
 import no.uutilsynet.testlab2.constants.*
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
@@ -9,6 +11,7 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.resultat.OpprettTestgrunnlag
+import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelInit
@@ -18,7 +21,8 @@ import org.springframework.stereotype.Service
 class TestUtils(
     val testregelDAO: TestregelDAO,
     val kontrollDAO: KontrollDAO,
-    val testgrunnlagDAO: TestgrunnlagDAO
+    val testgrunnlagDAO: TestgrunnlagDAO,
+    val maalingDAO: MaalingDAO
 ) {
 
   var testregelId: Int = 0
@@ -115,5 +119,19 @@ class TestUtils(
             opprettKontroll.arkivreferanse,
         )
     return Triple(kontrollDAO, kontrollId, kontroll)
+  }
+
+  fun createTestMaaling(
+      testregelIds: List<Int>,
+      loeysingList: List<Int>,
+      maalingNamn: String,
+      kontrollId: Int
+  ): Int {
+    val maalingId =
+        maalingDAO.createMaaling(
+            maalingNamn, Instant.now(), loeysingList, testregelIds, CrawlParameters())
+    maalingDAO.updateKontrollId(maalingId, kontrollId)
+
+    return maalingId
   }
 }

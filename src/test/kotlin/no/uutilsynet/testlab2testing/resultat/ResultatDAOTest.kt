@@ -1,17 +1,13 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.time.Instant
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
 import no.uutilsynet.testlab2testing.common.TestUtils
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
-import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -32,7 +28,6 @@ class ResultatDAOTest(
     @Autowired val resultatDAO: ResultatDAO,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val aggregeringDAO: AggregeringDAO,
-    @Autowired val maalingDAO: MaalingDAO,
     @Autowired val testUtils: TestUtils
 ) {
 
@@ -56,12 +51,15 @@ class ResultatDAOTest(
             OpprettTestgrunnlag("Tilsyn 20204", TestgrunnlagType.OPPRINNELEG_TEST),
             OpprettTestgrunnlag("Tilsyn 20204 Retest", TestgrunnlagType.RETEST))
     testgrunnlagIds = createTestgrunnlagList(testgrunnlagList, listOf(1, 2))
+    println(testgrunnlagIds)
   }
 
   @Test
   fun getTestresultatMaaling() {
 
     val resultat: List<ResultatLoeysingDTO> = resultatDAO.getTestresultatMaaling()
+
+    println("Resultat maaling $resultat")
 
     assertThat(resultat.size).isEqualTo(2)
 
@@ -178,7 +176,7 @@ class ResultatDAOTest(
     val resultat = resultatDAO.getResultatKontroll(existing.kontrollId)
 
     logger.info(
-        "Tesrege l " +
+        "Tesregel " +
             testregelId +
             " Testgrunnlag " +
             testgrunnlagIds[0] +
@@ -258,25 +256,28 @@ class ResultatDAOTest(
     }
   }
 
-  fun createTestMaaling(testregelIds: List<Int>, kontrollId: Int, maalingNamn: String): Int {
+  fun createTestMaaling(
+      testregelIds: List<Int>,
+      kontroll: KontrollDAO.KontrollDB,
+      maalingNamn: String
+  ): Int {
+    val loeysingList = kontroll.sideutval.map { it.loeysingId }
     val maalingId =
-        maalingDAO.createMaaling(
-            maalingNamn, Instant.now(), listOf(1), testregelIds, CrawlParameters())
-    maalingDAO.updateKontrollId(maalingId, kontrollId)
+        testUtils.createTestMaaling(
+            testregelIds, kontroll.sideutval.map { it.loeysingId }, maalingNamn, kontroll.id)
 
-    createAggregertTestresultat(maalingId, testregelIds[0], null, kontrollId)
+    createAggregertTestresultat(maalingId, testregelIds[0], null, kontroll.id, loeysingList)
 
     return maalingId
   }
 
   fun createTestMaalingar(maalingNamn: List<String>): List<Int> {
     return maalingNamn.map {
-      val kontrollId =
-          testUtils
-              .createKontroll(
-                  "Forenkla kontroll 20204", Kontrolltype.ForenklaKontroll, listOf(1), testregelId)
-              .id
-      createTestMaaling(listOf(testregelId), kontrollId, it)
+      val kontroll =
+          testUtils.createKontroll(
+              "Forenkla kontroll 20204", Kontrolltype.ForenklaKontroll, listOf(1), testregelId)
+
+      createTestMaaling(listOf(testregelId), kontroll, it)
     }
   }
 
@@ -287,28 +288,13 @@ class ResultatDAOTest(
     val kontroll =
         testUtils.createKontroll(
             "Inngåande kontroll", Kontrolltype.InngaaendeKontroll, loeysingList, testregelId)
-    return testgrunnlagList.map { createTestgrunnlag(it, kontroll) }
-  }
 
-  private fun createTestgrunnlag(
-      opprettTestgrunnlag: OpprettTestgrunnlag,
-      kontroll: KontrollDAO.KontrollDB
-  ): Int {
-
-    val nyttTestgrunnlag =
-        NyttTestgrunnlag(
-            kontrollId = kontroll.id,
-            namn = opprettTestgrunnlag.testgrunnlagNamn,
-            type = opprettTestgrunnlag.testgrunnlagType,
-            sideutval = kontroll.sideutval,
-            testregelIdList = listOf(testregelId))
-    val testgrunnlagId = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag).getOrThrow()
-
-    logger.info("Testgrunnlag id $testgrunnlagId for testregel $testregelId")
-
-    createAggregertTestresultat(
-        null, testregelId, testgrunnlagId, kontroll.id, kontroll.sideutval.map { it.loeysingId })
-    return testgrunnlagId
+    return testgrunnlagList
+        .map { testUtils.createTestgrunnlag(it, kontroll) }
+        .map {
+          createAggregertTestresultat(null, testregelId, it, kontroll.id, loeysingList)
+          it
+        }
   }
 }
 
