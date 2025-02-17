@@ -129,6 +129,9 @@ class ResultatDAOTest(
     logger.info("ResultatPrKontroll " + resultatPrKontroll)
     logger.info("Alle resultat " + resultatDAO.getAllResultat())
 
+    val alleResultat = aggregeringDAO.getAllAggregeringTestregel()
+    logger.info("Alle testresultat " + alleResultat)
+
     val resultat = resultatDAO.getAllResultat()
 
     assertThat(resultat.size).isEqualTo(6)
@@ -226,21 +229,21 @@ class ResultatDAOTest(
       testgrunnlagId: Int?,
       kontrollId: Int,
       loeysungIds: List<Int> = listOf(1),
-  ) {
+  ): List<Int> {
 
     logger.info(
         "Create aggregert testresultat maalingId " +
             maalingId +
-            " testregelId" +
+            " testregelId " +
             testregelId +
-            " testgrunnlagId" +
+            " testgrunnlagId " +
             testgrunnlagId +
-            " kontrollId" +
+            " kontrollId " +
             kontrollId +
             " loeysingsid" +
             loeysungIds)
 
-    loeysungIds.forEach {
+    return loeysungIds.map {
       val aggregeringTestregel =
           AggregeringPerTestregelDTO(
               maalingId,
@@ -258,13 +261,7 @@ class ResultatDAOTest(
               0.5,
               0.5,
               testgrunnlagId)
-      val id = aggregeringDAO.createAggregertResultatTestregel(aggregeringTestregel)
-      resultatPrKontroll[kontrollId] = resultatPrKontroll[kontrollId]?.plus(1) ?: 1
-      if (maalingId != null) {
-        testresultatIds[id] = Kontrolltype.ForenklaKontroll
-      } else {
-        testresultatIds[id] = Kontrolltype.InngaaendeKontroll
-      }
+      aggregeringDAO.createAggregertResultatTestregel(aggregeringTestregel)
     }
   }
 
@@ -278,7 +275,13 @@ class ResultatDAOTest(
         testUtils.createTestMaaling(
             testregelIds, kontroll.sideutval.map { it.loeysingId }, maalingNamn, kontroll.id)
 
-    createAggregertTestresultat(maalingId, testregelIds[0], null, kontroll.id, loeysingList)
+    val resultatId =
+        createAggregertTestresultat(maalingId, testregelIds[0], null, kontroll.id, loeysingList)
+
+    resultatId.forEach({
+      testresultatIds[it] = Kontrolltype.ForenklaKontroll
+      resultatPrKontroll[kontroll.id] = resultatPrKontroll[kontroll.id]?.plus(1) ?: 1
+    })
 
     logger.info(
         "Maaling Id " +
@@ -290,7 +293,7 @@ class ResultatDAOTest(
             "kontrollId " +
             kontroll.id +
             " resultatids" +
-            testresultatIds.filter { it.value == Kontrolltype.ForenklaKontroll })
+            resultatId)
 
     return maalingId
   }
@@ -318,7 +321,12 @@ class ResultatDAOTest(
     return testgrunnlagList
         .map { testUtils.createTestgrunnlag(it, kontroll) }
         .map {
-          createAggregertTestresultat(null, testregelId, it, kontroll.id, loeysingList)
+          val resultatId =
+              createAggregertTestresultat(null, testregelId, it, kontroll.id, loeysingList)
+          resultatId.forEach({
+            testresultatIds[it] = Kontrolltype.ForenklaKontroll
+            resultatPrKontroll[kontroll.id] = resultatPrKontroll[kontroll.id]?.plus(1) ?: 1
+          })
           it
         }
   }
