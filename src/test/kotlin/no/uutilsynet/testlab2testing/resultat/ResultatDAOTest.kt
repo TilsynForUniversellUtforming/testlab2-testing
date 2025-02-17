@@ -5,6 +5,7 @@ import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
 import no.uutilsynet.testlab2testing.common.TestUtils
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
@@ -32,7 +33,8 @@ class ResultatDAOTest(
     @Autowired val resultatDAO: ResultatDAO,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val aggregeringDAO: AggregeringDAO,
-    @Autowired val testUtils: TestUtils
+    @Autowired val testUtils: TestUtils,
+    @Autowired val maalingDAO: MaalingDAO
 ) {
 
   val logger = LoggerFactory.getLogger(ResultatDAOTest::class.java)
@@ -67,6 +69,10 @@ class ResultatDAOTest(
   fun getTestresultatMaaling() {
 
     val resultat: List<ResultatLoeysingDTO> = resultatDAO.getTestresultatMaaling()
+
+    val maalinger = maalingDAO.getMaalingList()
+
+    logger.info("Maalinger $maalinger")
 
     println("Resultat maaling $resultat")
 
