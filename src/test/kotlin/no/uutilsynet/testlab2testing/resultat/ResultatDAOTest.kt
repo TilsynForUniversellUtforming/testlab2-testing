@@ -51,7 +51,6 @@ class ResultatDAOTest(
             OpprettTestgrunnlag("Tilsyn 20204", TestgrunnlagType.OPPRINNELEG_TEST),
             OpprettTestgrunnlag("Tilsyn 20204 Retest", TestgrunnlagType.RETEST))
     testgrunnlagIds = createTestgrunnlagList(testgrunnlagList, listOf(1, 2))
-    println(testgrunnlagIds)
   }
 
   @Test
@@ -128,6 +127,7 @@ class ResultatDAOTest(
     println("Testresultatid $testresultatIds")
     logger.info("Testresultatid $testresultatIds")
     logger.info("ResultatPrKontroll " + resultatPrKontroll)
+    logger.info("Alle resultat " + resultatDAO.getAllResultat())
 
     val resultat = resultatDAO.getAllResultat()
 
@@ -266,9 +266,19 @@ class ResultatDAOTest(
         testUtils.createTestMaaling(
             testregelIds, kontroll.sideutval.map { it.loeysingId }, maalingNamn, kontroll.id)
 
-    logger.info("Maaling Id " + maalingId)
-
     createAggregertTestresultat(maalingId, testregelIds[0], null, kontroll.id, loeysingList)
+
+    logger.info(
+        "Maaling Id " +
+            maalingId +
+            " loeysingList " +
+            loeysingList +
+            "testregelId " +
+            testregelIds +
+            "kontrollId " +
+            kontroll.id +
+            " resultatids" +
+            testresultatIds.filter { it.value == Kontrolltype.ForenklaKontroll })
 
     return maalingId
   }
