@@ -43,7 +43,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 
 @SpringBootTest(
-    properties = arrayOf("spring.datasource.url: jdbc:tc:postgresql:16-alpine:///test-db"))
+    properties =
+        arrayOf("spring.datasource.url: jdbc:tc:postgresql:16-alpine:///ResultatServiceTest"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ResultatServiceTest(
     @Autowired val resultatService: ResultatService,
