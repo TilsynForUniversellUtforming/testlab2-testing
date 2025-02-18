@@ -19,7 +19,7 @@ private const val GJENNOPPRETT_BILDE_FEIL = "Kunne ikkje gjenopprette bilde"
 @Service
 class BildeService(
     @Autowired val testResultatDAO: TestResultatDAO,
-    @Lazy val blobClient: BlobStorageClient,
+    @Lazy val blobClient: ImageStorageService,
 ) {
 
   private val logger = LoggerFactory.getLogger(BildeService::class.java)
@@ -31,6 +31,10 @@ class BildeService(
     val imageDetails =
         multipartFilesToImageDetails(testresultatId, antallBilder.size, bilder, kontrolInfo)
             .getOrThrow()
+
+    logger.info("Creating image $imageDetails")
+
+    println("Creating image" + imageDetails)
 
     blobClient.uploadBilder(imageDetails).forEach { bildeResultat ->
       if (bildeResultat.isSuccess) {
@@ -76,24 +80,21 @@ class BildeService(
     }
 
     blobClient.deleteBilde(bildeSti.thumbnail).onFailure {
-      blobClient.restoreBilde(bildeSti.bilde).onFailure { ex ->
-        logger.error(GJENNOPPRETT_BILDE_FEIL, ex)
-      }
+      restoreBilde(bildeSti.bilde)
       logger.error("Kunne ikkje slette thumbnail frå blob storage")
       throw it
     }
 
     testResultatDAO.deleteBilde(bildeSti.id).onFailure {
       logger.error("Kunne ikkje slette bilde frå database", it)
-      blobClient.restoreBilde(bildeSti.bilde).onFailure { ex ->
-        logger.error(GJENNOPPRETT_BILDE_FEIL, ex)
-      }
-      blobClient.restoreBilde(bildeSti.thumbnail).onFailure { ex ->
-        logger.error(GJENNOPPRETT_BILDE_FEIL, ex)
-      }
-
+      restoreBilde(bildeSti.bilde)
+      restoreBilde(bildeSti.thumbnail)
       throw it
     }
+  }
+
+  private fun restoreBilde(path: String) {
+    blobClient.restoreBilde(path).onFailure { ex -> logger.error(GJENNOPPRETT_BILDE_FEIL, ex) }
   }
 
   @Cacheable("bildeCache", key = "#testresultatId")

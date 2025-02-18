@@ -7,20 +7,15 @@ import java.net.URI
 import java.time.Instant
 import java.time.OffsetDateTime
 import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
 import org.springframework.stereotype.Component
 
 @Component
 class BlobStorageClient(
     private val blobStorageProperties: BlobStorageProperties,
     blobContainerClientFactory: BlobContainerClientFactory,
-) : ImageStorageClient(blobStorageProperties) {
+) : ImageStorageClient {
 
   private val blobContainerClient = blobContainerClientFactory.createBlobContainerClient()
-
-  override fun uploadBilder(cloudImageDetails: List<BildeRequest>): List<Result<BildeRequest>> {
-    return super.uploadBilder(cloudImageDetails)
-  }
 
   override fun deleteBilde(imagePath: String) = runCatching {
     val blobClient = blobContainerClient.getBlobClient(imagePath)

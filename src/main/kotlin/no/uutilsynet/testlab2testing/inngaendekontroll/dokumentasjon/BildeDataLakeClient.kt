@@ -4,16 +4,16 @@ import com.azure.storage.file.datalake.DataLakeFileSystemClient
 import com.azure.storage.file.datalake.DataLakeServiceClientBuilder
 import com.azure.storage.file.datalake.sas.DataLakeServiceSasSignatureValues
 import com.azure.storage.file.datalake.sas.PathSasPermission
+import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
+import org.springframework.stereotype.Component
 import java.io.ByteArrayInputStream
 import java.net.URI
 import java.time.Instant
 import java.time.OffsetDateTime
-import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
-import org.springframework.stereotype.Component
 
 @Component
 class BildeDataLakeClient(private val blobStorageProperties: BlobStorageProperties) :
-    ImageStorageClient(blobStorageProperties) {
+    ImageStorageClient {
 
   private val dataLakeFileSystemClient = createDatalakeClient()
 
@@ -56,6 +56,27 @@ class BildeDataLakeClient(private val blobStorageProperties: BlobStorageProperti
   }
 
   override fun restoreBilde(imagePath: String): Result<Unit> {
-    throw NotImplementedError("Not implemented")
+    return runCatching {
+      val dataLakeFileClient = dataLakeFileSystemClient.getFileClient(imagePath)
+
+      getDeletionId(imagePath)
+          .onSuccess {
+            dataLakeFileSystemClient.undeletePath(
+                dataLakeFileClient.filePath, getDeletionId(imagePath).getOrThrow())
+          }
+          .onFailure { throw RuntimeException("Kunne ikkje hente restore fil $imagePath") }
+    }
+  }
+
+  fun getDeletionId(imagePath: String): Result<String> {
+    return runCatching {
+      val dataLakeFileClient = dataLakeFileSystemClient.getFileClient(imagePath)
+      for (item in dataLakeFileSystemClient.listDeletedPaths()) {
+        if (item.path == dataLakeFileClient.filePath) {
+          item.deletionId
+        }
+      }
+      throw RuntimeException("Kunne ikkje hente slettings-id for filen")
+    }
   }
 }
