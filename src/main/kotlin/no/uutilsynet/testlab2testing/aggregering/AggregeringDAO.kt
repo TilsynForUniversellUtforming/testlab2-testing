@@ -1,12 +1,12 @@
 package no.uutilsynet.testlab2testing.aggregering
 
-import java.net.URI
-import java.sql.ResultSet
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
+import java.net.URI
+import java.sql.ResultSet
 
 @Component
 class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -335,9 +335,4 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           talSiderBrot = rs.getInt("tal_sider_brot"),
           talSiderIkkjeForekomst = rs.getInt("tal_sider_ikkje_forekomst"),
           testgrunnlagId = rs.getInt("testgrunnlag_id"))
-
-  fun getAllAggregeringTestregel(): List<AggregeringPerTestregelDTO> {
-    val query = """select * from "testlab2_testing"."aggregering_testregel" """
-    return jdbcTemplate.query(query) { rs, _ -> aggregeringPerTestregelRowmapper(rs) }
-  }
 }
