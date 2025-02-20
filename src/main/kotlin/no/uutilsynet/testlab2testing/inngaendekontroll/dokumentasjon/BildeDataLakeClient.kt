@@ -2,15 +2,17 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
 import com.azure.storage.file.datalake.DataLakeFileSystemClient
 import com.azure.storage.file.datalake.DataLakeServiceClientBuilder
+import com.azure.storage.file.datalake.models.PathHttpHeaders
 import com.azure.storage.file.datalake.sas.DataLakeServiceSasSignatureValues
 import com.azure.storage.file.datalake.sas.PathSasPermission
-import java.io.ByteArrayInputStream
-import java.net.URI
-import java.time.Instant
-import java.time.OffsetDateTime
 import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.io.ByteArrayInputStream
+import java.net.URI
+import java.net.URLConnection
+import java.time.Instant
+import java.time.OffsetDateTime
 
 @Component
 class BildeDataLakeClient(private val blobStorageProperties: BlobStorageProperties) :
@@ -29,11 +31,17 @@ class BildeDataLakeClient(private val blobStorageProperties: BlobStorageProperti
 
   override fun uploadToStorage(data: ByteArrayInputStream, fileName: String): Result<Unit> {
     return runCatching {
-      logger.info("Uploading file $fileName to datalake")
       val fileClient = dataLakeFileSystemClient.getFileClient(fileName)
-      val result = fileClient.upload(data, data.available().toLong(), true)
-      logger.info("Upload status $result")
+      fileClient.upload(data, data.available().toLong(), true)
+      fileClient.setHttpHeaders(contentTypeHttpHeaders(fileName))
+      logger.info("Uploading file $fileName to datalake")
     }
+  }
+
+  private fun contentTypeHttpHeaders(fileName: String): PathHttpHeaders? {
+    val contentType = URLConnection.guessContentTypeFromName(fileName)
+    val headers = PathHttpHeaders().setContentType(contentType.toString())
+    return headers
   }
 
   override fun toBlobUri(filnamn: String, sasToken: String): URI {

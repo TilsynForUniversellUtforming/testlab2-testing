@@ -1,9 +1,5 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
-import java.awt.Image
-import java.awt.image.BufferedImage
-import java.net.HttpURLConnection
-import javax.imageio.ImageIO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,6 +9,10 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import org.springframework.util.MimeTypeUtils
 import org.springframework.web.multipart.MultipartFile
+import java.awt.Image
+import java.awt.image.BufferedImage
+import java.net.HttpURLConnection
+import javax.imageio.ImageIO
 
 private const val GJENNOPPRETT_BILDE_FEIL = "Kunne ikkje gjenopprette bilde"
 
@@ -31,10 +31,6 @@ class BildeService(
     val imageDetails =
         multipartFilesToImageDetails(testresultatId, antallBilder.size, bilder, kontrolInfo)
             .getOrThrow()
-
-    logger.info("Creating image $imageDetails")
-
-    println("Creating image" + imageDetails)
 
     blobClient.uploadBilder(imageDetails).forEach { bildeResultat ->
       if (bildeResultat.isSuccess) {
@@ -123,6 +119,8 @@ class BildeService(
       bildeList.mapIndexed { index, bilde ->
         val originalFileName =
             bilde.originalFilename ?: throw IllegalArgumentException("Filnamn er tomt")
+
+        logger.info("Content type: ${bilde.contentType}")
 
         require(allowedMIMETypes.contains(bilde.contentType)) {
           "$originalFileName har annen filtype enn ${allowedMIMETypes.joinToString(",")}"
