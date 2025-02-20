@@ -301,4 +301,22 @@ class TestResultatDAO(
             DataClassRowMapper.newInstance(BildeSti::class.java))
         .toList()
   }
+
+  fun getKontrollForTestresultat(testresultatId: Int): Result<KontrollDocumentation> = runCatching {
+    val query =
+        """
+            select tittel,kontroll_id from testresultat tr
+            join testgrunnlag tg on tg.id=tr.testgrunnlag_id
+            join kontroll k on k.id=tg.kontroll_id
+            where tr.id=:testresultat_id
+        """
+            .trimIndent()
+
+    jdbcTemplate.queryForObject(query, mapOf("testresultat_id" to testresultatId)) { rs, _ ->
+      KontrollDocumentation(rs.getString("tittel"), rs.getInt("kontroll_id"))
+    }
+        ?: throw RuntimeException("No kontroll found for testresultat $testresultatId")
+  }
 }
+
+data class KontrollDocumentation(val tittel: String, val kontrollId: Int)

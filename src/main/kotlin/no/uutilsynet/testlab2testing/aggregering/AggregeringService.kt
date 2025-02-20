@@ -539,8 +539,6 @@ class AggregeringService(
       "Ugyldige nettsider i testresultat"
     }
 
-    testresultatMap.mapKeys { sideutvalIdUrlMap[it.key] }
-
     return testresultatMap
         .mapKeys { sideutvalIdUrlMap[it.key] }
         .filterKeys { it != null }

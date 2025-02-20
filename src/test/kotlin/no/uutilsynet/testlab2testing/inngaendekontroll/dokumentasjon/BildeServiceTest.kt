@@ -7,6 +7,7 @@ import java.time.Instant
 import javax.imageio.ImageIO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.KontrollDocumentation
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -17,11 +18,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BildeServiceTest(@Autowired val bildeService: BildeService) {
-  @MockitoBean lateinit var blobClient: BlobStorageClient
+  @MockitoSpyBean lateinit var imageStorageService: ImageStorageService
 
   @MockitoBean lateinit var testResultatDAO: TestResultatDAO
 
@@ -45,6 +47,9 @@ class BildeServiceTest(@Autowired val bildeService: BildeService) {
     `when`(testResultatDAO.getBildePathsForTestresultat(testresultatId))
         .thenReturn(Result.success(emptyList()))
 
+    `when`(testResultatDAO.getKontrollForTestresultat(testresultatId))
+        .thenReturn(Result.success(KontrollDocumentation("Testkontroll", 1)))
+
     `when`(
             testResultatDAO.saveBilde(
                 testresultatId,
@@ -52,12 +57,12 @@ class BildeServiceTest(@Autowired val bildeService: BildeService) {
                 expectedBildeDetalj.fullThumbnailName))
         .thenReturn(Result.success(1))
 
-    `when`(blobClient.uploadBilder(anyList()))
+    `when`(imageStorageService.uploadBilder(anyList()))
         .thenReturn(expectedImageDetails.map { Result.success(it) })
 
     bildeService.createBilde(testresultatId, bilde)
 
-    verify(blobClient, times(1)).uploadBilder(anyList())
+    verify(imageStorageService, times(1)).uploadBilder(anyList())
     verify(testResultatDAO, times(1))
         .saveBilde(1, expectedBildeDetalj.fullFileName, expectedBildeDetalj.fullThumbnailName)
   }
@@ -89,6 +94,9 @@ class BildeServiceTest(@Autowired val bildeService: BildeService) {
                   (BildeSti(1, "1_${it}.jpg", "1_${it}_thumb.jpg", Instant.now()))
                 }))
 
+    `when`(testResultatDAO.getKontrollForTestresultat(testresultatId))
+        .thenReturn(Result.success(KontrollDocumentation("Testkontroll", 1)))
+
     `when`(
             testResultatDAO.saveBilde(
                 testresultatId,
@@ -96,12 +104,12 @@ class BildeServiceTest(@Autowired val bildeService: BildeService) {
                 expectedBildeDetalj.fullThumbnailName))
         .thenReturn(Result.success(1))
 
-    `when`(blobClient.uploadBilder(anyList()))
+    `when`(imageStorageService.uploadBilder(anyList()))
         .thenReturn(expectedImageDetails.map { Result.success(it) })
 
     bildeService.createBilde(testresultatId, bilde)
 
-    verify(blobClient, times(1)).uploadBilder(anyList())
+    verify(imageStorageService, times(1)).uploadBilder(anyList())
     verify(testResultatDAO, times(1))
         .saveBilde(1, expectedBildeDetalj.fullFileName, expectedBildeDetalj.fullThumbnailName)
   }

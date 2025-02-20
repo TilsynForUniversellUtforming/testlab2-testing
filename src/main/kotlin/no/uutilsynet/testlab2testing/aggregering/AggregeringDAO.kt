@@ -335,9 +335,4 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           talSiderBrot = rs.getInt("tal_sider_brot"),
           talSiderIkkjeForekomst = rs.getInt("tal_sider_ikkje_forekomst"),
           testgrunnlagId = rs.getInt("testgrunnlag_id"))
-
-  fun getAllAggregeringTestregel(): List<AggregeringPerTestregelDTO> {
-    val query = """select * from "testlab2_testing"."aggregering_testregel" """
-    return jdbcTemplate.query(query) { rs, _ -> aggregeringPerTestregelRowmapper(rs) }
-  }
 }
