@@ -308,6 +308,7 @@ class TestResultatDAO(
             select tittel,kontroll_id from testresultat tr
             join testgrunnlag tg on tg.id=tr.testgrunnlag_id
             join kontroll k on k.id=tg.kontroll_id
+            where tr.id=:testresultat_id
         """
             .trimIndent()
 

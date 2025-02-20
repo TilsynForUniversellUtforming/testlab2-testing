@@ -4,16 +4,19 @@ import com.azure.storage.file.datalake.DataLakeFileSystemClient
 import com.azure.storage.file.datalake.DataLakeServiceClientBuilder
 import com.azure.storage.file.datalake.sas.DataLakeServiceSasSignatureValues
 import com.azure.storage.file.datalake.sas.PathSasPermission
-import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
-import org.springframework.stereotype.Component
 import java.io.ByteArrayInputStream
 import java.net.URI
 import java.time.Instant
 import java.time.OffsetDateTime
+import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 
 @Component
 class BildeDataLakeClient(private val blobStorageProperties: BlobStorageProperties) :
     ImageStorageClient {
+
+  private val logger = LoggerFactory.getLogger(BildeDataLakeClient::class.java)
 
   private val dataLakeFileSystemClient = createDatalakeClient()
 
@@ -26,9 +29,10 @@ class BildeDataLakeClient(private val blobStorageProperties: BlobStorageProperti
 
   override fun uploadToStorage(data: ByteArrayInputStream, fileName: String): Result<Unit> {
     return runCatching {
+      logger.info("Uploading file $fileName to datalake")
       val fileClient = dataLakeFileSystemClient.getFileClient(fileName)
-      fileClient.upload(data, data.available().toLong(), true)
-      fileClient.flush(data.available().toLong(), true)
+      val result = fileClient.upload(data, data.available().toLong(), true)
+      logger.info("Upload status $result")
     }
   }
 

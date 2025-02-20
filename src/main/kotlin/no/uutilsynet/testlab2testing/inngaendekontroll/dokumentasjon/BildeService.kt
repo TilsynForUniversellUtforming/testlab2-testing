@@ -48,17 +48,11 @@ class BildeService(
 
   @CacheEvict(value = ["bildeCache"], key = "#testresultatId")
   fun deleteBilder(testresultatId: Int, bildeId: Int? = null) = runCatching {
-    val kontrolInfo = testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
-    val bildeStiList: List<BildeSti> =
-        getBildeSti(bildeId, testresultatId).map { appendDirectoryToPath(it, kontrolInfo) }
+    testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
+    val bildeStiList: List<BildeSti> = getBildeSti(bildeId, testresultatId)
 
     bildeStiList.forEach { bildeSti -> deleteBilde(bildeSti) }
   }
-
-  private fun appendDirectoryToPath(it: BildeSti, kontrolInfo: KontrollDocumentation) =
-      it.copy(
-          bilde = getDirectory(kontrolInfo) + it.bilde,
-          thumbnail = getDirectory(kontrolInfo) + it.thumbnail)
 
   private fun getBildeSti(bildeId: Int?, testresultatId: Int): List<BildeSti> {
     return if (bildeId != null) {
@@ -99,13 +93,11 @@ class BildeService(
 
   @Cacheable("bildeCache", key = "#testresultatId")
   fun listBildeForTestresultat(testresultatId: Int): Result<List<Bilde>> = runCatching {
-    val kontrolInfo = testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
-    val paths =
-        testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow().map {
-          appendDirectoryToPath(it, kontrolInfo)
-        }
+    testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
+    val paths = testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
 
-    return blobClient.getBildeStiList(paths)
+    val bilder = blobClient.getBildeStiList(paths)
+    return bilder
   }
 
   private fun createThumbnailImage(originalImage: BufferedImage): BufferedImage {

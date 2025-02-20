@@ -5,7 +5,6 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
 import java.net.Proxy
-import java.net.URI
 import javax.imageio.ImageIO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
@@ -13,6 +12,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
+import org.springframework.web.util.UriComponentsBuilder
 
 @Service
 class ImageStorageService(
@@ -22,11 +22,11 @@ class ImageStorageService(
 
   private val logger = LoggerFactory.getLogger(ImageStorageService::class.java)
 
-  private val bildepath = "/bilder/sti/"
+  private val bildepath = "/bilder/sti"
 
   fun uploadBilder(cloudImageDetails: List<BildeRequest>): List<Result<BildeRequest>> =
       cloudImageDetails.map { detail ->
-        println("Uploading image ${detail.fileName}")
+        logger.info("Uploading image ${detail.fileName}")
         runCatching {
               val imagesToUpload =
                   listOf(
@@ -47,21 +47,40 @@ class ImageStorageService(
   fun getBildeStiList(bildeStiList: List<BildeSti>): Result<List<Bilde>> =
       runCatching {
             imageStorageClient.getSasToken()
-            bildeStiList.map { bilde ->
-              Bilde(
-                  id = bilde.id,
-                  bildeURI = URI(blobStorageProperties.eksternalhost + bildepath + bilde.bilde),
-                  thumbnailURI =
-                      URI(blobStorageProperties.eksternalhost + bildepath + bilde.thumbnail),
-                  opprettet = bilde.opprettet)
-            }
+
+            val result =
+                bildeStiList.map { bilde ->
+                  Bilde(
+                      id = bilde.id,
+                      bildeURI = getBaseUri().queryParam("bildesti", bilde.bilde).build().toUri(),
+                      thumbnailURI =
+                          getBaseUri().queryParam("bildesti", bilde.thumbnail).build().toUri(),
+                      opprettet = bilde.opprettet)
+                }
+            logger.info("Hentet bilder" + result)
+            result
           }
           .onFailure { logger.error("Kunne ikkje hente bilder", it) }
+
+  private fun getBaseUri(): UriComponentsBuilder {
+    val uriParts = blobStorageProperties.eksternalhost.split(":")
+    val host = uriParts.take(uriParts.size - 1).joinToString(":")
+    val port = uriParts.last()
+
+    if (port.matches(Regex("\\d+"))) {
+      return UriComponentsBuilder.newInstance().host(host).port(port.toInt()).path(bildepath)
+    }
+    return UriComponentsBuilder.newInstance()
+        .host(blobStorageProperties.eksternalhost)
+        .path(bildepath)
+  }
 
   private fun uploadSingleBilde(image: BufferedImage, fileName: String, fileExtension: String) {
     ByteArrayOutputStream().use { os ->
       ImageIO.write(image, fileExtension, os)
-      imageStorageClient.uploadToStorage(ByteArrayInputStream(os.toByteArray()), fileName)
+      imageStorageClient
+          .uploadToStorage(ByteArrayInputStream(os.toByteArray()), fileName)
+          .onFailure { throw it }
     }
   }
 
