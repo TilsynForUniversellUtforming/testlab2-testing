@@ -19,17 +19,17 @@ class EksternResultatResource(
   fun findTestForOrgNr(
       @RequestParam("orgnr") orgnr: String?,
       @RequestParam("searchparam") searchparam: String?
-  ): ResponseEntity<TestListElementEkstern?> {
+  ): ResponseEntity<Any?> {
     logger.debug("Henter tester for orgnr $orgnr")
 
     return try {
       val result = findTests(searchparam, orgnr)
       ResponseEntity.ok(result)
     } catch (e: NoSuchElementException) {
-      ResponseEntity.notFound().build<TestListElementEkstern>()
+      ResponseEntity.notFound().build()
     } catch (e: Exception) {
       logger.error(e.message)
-      ResponseEntity.badRequest().build<TestListElementEkstern>()
+      ResponseEntity.badRequest().body(e.message)
     }
   }
 

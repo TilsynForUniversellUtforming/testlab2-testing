@@ -50,13 +50,3 @@ spring:
 springdoc:
     swagger-ui:
         path: /api-dokumentasjon
-
-logging:
-    level:
-        org:
-            springframework:
-                boot:
-                    autoconfigure:
-                        security: DEBUG
-                security: DEBUG
-

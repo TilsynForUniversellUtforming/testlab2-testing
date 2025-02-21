@@ -60,13 +60,18 @@ class EksternResultatService(
       loeysingar.filter { loeysing -> loeysing.loeysingId == loeysingId }
 
   private fun getVerksemd(orgnr: String): VerksemdEkstern {
-    return runCatching {
-          loeysingsRegisterClient.searchVerksemd(orgnr).getOrThrow().map {
-            VerksemdEkstern(it.namn, it.organisasjonsnummer)
-          }
-        }
-        .getOrDefault(listOf(VerksemdEkstern(orgnr, orgnr)))
-        .first()
+    try {
+      return loeysingsRegisterClient
+          .searchVerksemd(orgnr)
+          .getOrThrow()
+          .map { VerksemdEkstern(it.namn, it.organisasjonsnummer) }
+          .single()
+    } catch (e: IllegalArgumentException) {
+      if (e.message?.contains("List has more than one element") == true) {
+        throw IllegalArgumentException("Fant fleire verksemder. Spesifiser søket meir")
+      }
+      throw e
+    }
   }
 
   private fun List<Loeysing>.toListElementForLoeysingar(): List<TestListElementDB> {
