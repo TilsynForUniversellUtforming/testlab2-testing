@@ -5,14 +5,14 @@ import com.azure.storage.file.datalake.DataLakeServiceClientBuilder
 import com.azure.storage.file.datalake.models.PathHttpHeaders
 import com.azure.storage.file.datalake.sas.DataLakeServiceSasSignatureValues
 import com.azure.storage.file.datalake.sas.PathSasPermission
-import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
 import java.io.ByteArrayInputStream
 import java.net.URI
 import java.net.URLConnection
 import java.time.Instant
 import java.time.OffsetDateTime
+import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 
 @Component
 class BildeDataLakeClient(private val blobStorageProperties: BlobStorageProperties) :

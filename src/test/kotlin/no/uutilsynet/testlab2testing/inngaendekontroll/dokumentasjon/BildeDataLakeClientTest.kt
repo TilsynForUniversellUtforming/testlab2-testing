@@ -1,11 +1,11 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import org.junit.Ignore
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 
 @SpringBootTest()
 class BildeDataLakeClientTest(@Autowired val dataLakeClient: BildeDataLakeClient) {
