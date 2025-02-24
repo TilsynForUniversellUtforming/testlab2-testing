@@ -68,11 +68,9 @@ class ImageStorageService(
     val port = uriParts.last()
 
     if (port.matches(Regex("\\d+"))) {
-      return UriComponentsBuilder.newInstance().host(host).port(port.toInt()).path(bildepath)
+      return UriComponentsBuilder.fromUriString(host).port(port.toInt()).path(bildepath)
     }
-    return UriComponentsBuilder.newInstance()
-        .host(blobStorageProperties.eksternalhost)
-        .path(bildepath)
+    return UriComponentsBuilder.fromUriString(blobStorageProperties.eksternalhost).path(bildepath)
   }
 
   private fun uploadSingleBilde(image: BufferedImage, fileName: String, fileExtension: String) {
