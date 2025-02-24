@@ -3,8 +3,6 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 import com.azure.storage.blob.BlobClient
 import com.azure.storage.blob.BlobContainerClient
 import com.azure.storage.blob.sas.BlobServiceSasSignatureValues
-import java.awt.image.BufferedImage
-import java.time.Instant
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
 import org.junit.jupiter.api.Assertions
@@ -14,6 +12,8 @@ import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.*
+import java.awt.image.BufferedImage
+import java.time.Instant
 
 class BlobStorageClientTest {
 
@@ -62,11 +62,11 @@ class BlobStorageClientTest {
     val bilde = firstResult!!
 
     assertTrue(
-        bilde.bildeURI.toString() ==
-            "${mockBlockStorageProperties.eksternalhost}/bilder/sti/$bildeName")
+        bilde.bildeURI.toString().removePrefix("//") ==
+            "${mockBlockStorageProperties.eksternalhost}/bilder/sti?bildesti=$bildeName")
     assertTrue(
-        bilde.thumbnailURI.toString() ==
-            "${mockBlockStorageProperties.eksternalhost}/bilder/sti/$thumbName")
+        bilde.thumbnailURI.toString().removePrefix("//") ==
+            "${mockBlockStorageProperties.eksternalhost}/bilder/sti?bildesti=$thumbName")
   }
 
   @Test
