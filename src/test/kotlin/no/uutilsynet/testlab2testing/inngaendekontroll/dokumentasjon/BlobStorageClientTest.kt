@@ -52,7 +52,9 @@ class BlobStorageClientTest {
     val blobStorageClient =
         BlobStorageClient(mockBlockStorageProperties, mockBlobContainerClientFactory)
 
-    val result = blobStorageClient.getBildeStiList(bildeStiList)
+    val imageStorageService = ImageStorageService(mockBlockStorageProperties, blobStorageClient)
+
+    val result = imageStorageService.getBildeStiList(bildeStiList)
 
     assertTrue(result.isSuccess)
     val firstResult = result.getOrNull()?.first()
@@ -60,11 +62,11 @@ class BlobStorageClientTest {
     val bilde = firstResult!!
 
     assertTrue(
-        bilde.bildeURI.toString() ==
-            "${mockBlockStorageProperties.eksternalhost}/bilder/sti/$bildeName")
+        bilde.bildeURI.toString().removePrefix("//") ==
+            "${mockBlockStorageProperties.eksternalhost}/bilder/sti?bildesti=$bildeName")
     assertTrue(
-        bilde.thumbnailURI.toString() ==
-            "${mockBlockStorageProperties.eksternalhost}/bilder/sti/$thumbName")
+        bilde.thumbnailURI.toString().removePrefix("//") ==
+            "${mockBlockStorageProperties.eksternalhost}/bilder/sti?bildesti=$thumbName")
   }
 
   @Test
@@ -76,7 +78,9 @@ class BlobStorageClientTest {
     val blobStorageClient =
         BlobStorageClient(mockBlockStorageProperties, mockBlobContainerClientFactory)
 
-    val results = blobStorageClient.uploadBilder(cloudImageDetails)
+    val imageStorageService = ImageStorageService(mockBlockStorageProperties, blobStorageClient)
+
+    val results = imageStorageService.uploadBilder(cloudImageDetails)
 
     verify(mockBlobContainerClient, times(cloudImageDetails.size * 2)).getBlobClient(anyString())
 

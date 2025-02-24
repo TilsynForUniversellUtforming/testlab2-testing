@@ -59,8 +59,8 @@ class BildeResource(val bildeService: BildeService) {
     logger.debug("Tømmer bildeCache")
   }
 
-  @GetMapping("sti/{bildesti}")
-  fun getBilde(@PathVariable("bildesti") bildesti: String): ResponseEntity<InputStreamResource> {
+  @GetMapping("sti")
+  fun getBilde(@RequestParam("bildesti") bildesti: String): ResponseEntity<InputStreamResource> {
 
     val bildeConnection = bildeService.getBilde(bildesti)
     val contentType: String = bildeConnection.contentType ?: "image/jpeg"

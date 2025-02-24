@@ -4,10 +4,7 @@ import java.awt.Image
 import java.awt.image.BufferedImage
 import java.net.HttpURLConnection
 import javax.imageio.ImageIO
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.annotation.CacheEvict
@@ -22,7 +19,7 @@ private const val GJENNOPPRETT_BILDE_FEIL = "Kunne ikkje gjenopprette bilde"
 @Service
 class BildeService(
     @Autowired val testResultatDAO: TestResultatDAO,
-    @Lazy val blobClient: BlobStorageClient,
+    @Lazy val blobClient: ImageStorageService,
 ) {
 
   private val logger = LoggerFactory.getLogger(BildeService::class.java)
@@ -30,8 +27,10 @@ class BildeService(
   @CacheEvict(value = ["bildeCache"], key = "#testresultatId")
   fun createBilde(testresultatId: Int, bilder: List<MultipartFile>) = runCatching {
     val antallBilder = testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
+    val kontrolInfo = testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
     val imageDetails =
-        multipartFilesToImageDetails(testresultatId, antallBilder.size, bilder).getOrThrow()
+        multipartFilesToImageDetails(testresultatId, antallBilder.size, bilder, kontrolInfo)
+            .getOrThrow()
 
     blobClient.uploadBilder(imageDetails).forEach { bildeResultat ->
       if (bildeResultat.isSuccess) {
@@ -45,17 +44,24 @@ class BildeService(
 
   @CacheEvict(value = ["bildeCache"], key = "#testresultatId")
   fun deleteBilder(testresultatId: Int, bildeId: Int? = null) = runCatching {
-    val bildeStiList: List<BildeSti> =
-        if (bildeId != null) {
-          listOf(
-              testResultatDAO.getBildeSti(bildeId).getOrThrow()
-                  ?: throw IllegalArgumentException("Fann ikkje bilde for bilde-id $bildeId"))
-        } else {
-          testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
-        }
+    testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
+    val bildeStiList: List<BildeSti> = getBildeSti(bildeId, testresultatId)
 
     bildeStiList.forEach { bildeSti -> deleteBilde(bildeSti) }
   }
+
+  private fun getBildeSti(bildeId: Int?, testresultatId: Int): List<BildeSti> {
+    return if (bildeId != null) {
+      getBildeStiFromBildeId(bildeId)
+    } else {
+      testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
+    }
+  }
+
+  private fun getBildeStiFromBildeId(bildeId: Int) =
+      listOf(
+          testResultatDAO.getBildeSti(bildeId).getOrThrow()
+              ?: throw IllegalArgumentException("Fann ikkje bilde for bilde-id $bildeId"))
 
   private fun deleteBilde(bildeSti: BildeSti) {
     blobClient.deleteBilde(bildeSti.bilde).onFailure {
@@ -64,30 +70,30 @@ class BildeService(
     }
 
     blobClient.deleteBilde(bildeSti.thumbnail).onFailure {
-      blobClient.restoreBilde(bildeSti.bilde).onFailure { ex ->
-        logger.error(GJENNOPPRETT_BILDE_FEIL, ex)
-      }
+      restoreBilde(bildeSti.bilde)
       logger.error("Kunne ikkje slette thumbnail frå blob storage")
       throw it
     }
 
     testResultatDAO.deleteBilde(bildeSti.id).onFailure {
       logger.error("Kunne ikkje slette bilde frå database", it)
-      blobClient.restoreBilde(bildeSti.bilde).onFailure { ex ->
-        logger.error(GJENNOPPRETT_BILDE_FEIL, ex)
-      }
-      blobClient.restoreBilde(bildeSti.thumbnail).onFailure { ex ->
-        logger.error(GJENNOPPRETT_BILDE_FEIL, ex)
-      }
-
+      restoreBilde(bildeSti.bilde)
+      restoreBilde(bildeSti.thumbnail)
       throw it
     }
   }
 
+  private fun restoreBilde(path: String) {
+    blobClient.restoreBilde(path).onFailure { ex -> logger.error(GJENNOPPRETT_BILDE_FEIL, ex) }
+  }
+
   @Cacheable("bildeCache", key = "#testresultatId")
   fun listBildeForTestresultat(testresultatId: Int): Result<List<Bilde>> = runCatching {
+    testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
     val paths = testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
-    return blobClient.getBildeStiList(paths)
+
+    val bilder = blobClient.getBildeStiList(paths)
+    return bilder
   }
 
   private fun createThumbnailImage(originalImage: BufferedImage): BufferedImage {
@@ -103,7 +109,8 @@ class BildeService(
   private fun multipartFilesToImageDetails(
       testresultatId: Int,
       indexOffset: Int,
-      bildeList: List<MultipartFile>
+      bildeList: List<MultipartFile>,
+      kontrolInfo: KontrollDocumentation
   ): Result<List<BildeRequest>> {
     val allowedMIMETypes =
         listOf(MimeTypeUtils.IMAGE_JPEG_VALUE, MimeTypeUtils.IMAGE_PNG_VALUE, "image/bmp")
@@ -112,6 +119,8 @@ class BildeService(
       bildeList.mapIndexed { index, bilde ->
         val originalFileName =
             bilde.originalFilename ?: throw IllegalArgumentException("Filnamn er tomt")
+
+        logger.info("Content type: ${bilde.contentType}")
 
         require(allowedMIMETypes.contains(bilde.contentType)) {
           "$originalFileName har annen filtype enn ${allowedMIMETypes.joinToString(",")}"
@@ -123,12 +132,16 @@ class BildeService(
         val thumbnail = createThumbnailImage(image)
 
         val bildeIndex = indexOffset + index
-        val newFileName = "${testresultatId}_${bildeIndex}"
+        val directory = getDirectory(kontrolInfo)
+        val newFileName = "${directory}${testresultatId}_${bildeIndex}"
 
         BildeRequest(image, thumbnail, newFileName, fileExtension)
       }
     }
   }
+
+  private fun getDirectory(kontrolInfo: KontrollDocumentation) =
+      "${kontrolInfo.kontrollId}${kontrolInfo.tittel}/"
 
   fun getBilde(bildesti: String): HttpURLConnection {
     return blobClient.getBildeSti(bildesti)
