@@ -13,6 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestregelImportServiceTest(@Autowired val testregelImportService: TestregelImportService) {
 
+  private val unntakNett = listOf("1.3.4")
+
   @Disabled
   @Test
   fun readTestreglerFolder() {
@@ -92,10 +94,6 @@ class TestregelImportServiceTest(@Autowired val testregelImportService: Testrege
 
   @Test
   fun testImport() {
-    val testregelList = testregelImportService.getTestregelList()
-    val testregelarNett = testregelImportService.getTestreglarNett(testregelList)
-    testregelarNett.forEach {
-      testregelImportService.getTestreglarForKrav(it,TestregelType.Nett)
-    }
+    testregelImportService.importTestreglarNett()
   }
 }

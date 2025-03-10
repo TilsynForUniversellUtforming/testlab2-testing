@@ -3,17 +3,21 @@ package no.uutilsynet.testlab2testing.testregel.import
 import GithubFolder
 import TestregelMetadata
 import com.fasterxml.jackson.databind.ObjectMapper
-import java.nio.charset.Charset
-import java.time.Instant
-import java.util.Base64
+import no.uutilsynet.testlab2.constants.TestregelInnholdstype
+import no.uutilsynet.testlab2.constants.TestregelModus
+import no.uutilsynet.testlab2.constants.TestregelStatus
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.*
+import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestTemplate
+import java.nio.charset.Charset
+import java.time.Instant
+import java.util.*
 
 // import kotlin.io.encoding.Base64
 
@@ -26,6 +30,8 @@ class TestregelImportService(
     val kravregisterClient: KravregisterClient,
     val testregelDAO: TestregelDAO
 ) {
+
+  val logger = LoggerFactory.getLogger(TestregelImportService::class.java)
 
   val repoApiAddress =
       "https://api.github.com/repos/TilsynForUniversellUtforming/testreglar-wcag-2.x/contents/"
@@ -102,7 +108,7 @@ class TestregelImportService(
   fun getTestregelList(): List<String> {
     val testregelFolders = doRequest(repoApiAddress + TESTREGLAR)
     val testregelar: List<String>? =
-        testregelFolders?.filter { it.name != "felles" }?.map { testregel -> testregel.name }
+        testregelFolders.filter { it.name != "felles" }?.map { testregel -> testregel.name }
     return testregelar ?: emptyList()
   }
 
@@ -112,42 +118,43 @@ class TestregelImportService(
         restClient
             .get()
             .uri(url)
+            .header("Authorization", "token ${properties.token}")
             .accept(MediaType.parseMediaType("application/vnd.github.raw+json; charset=utf-8"))
             .retrieve()
             .body(Array<GithubFolder>::class.java)
 
-      if(folderResponse!=null) {
-          return folderResponse.asList()
-      }
-      println("Url $url")
-      throw IllegalStateException("No response from github")
+    if (folderResponse != null) {
+      return folderResponse.asList()
+    }
+    println("Url $url")
+    throw IllegalStateException("No response from github")
   }
 
   fun getTestreglarFolder(): List<GithubFolder>? = doRequest(repoApiAddress + TESTREGLAR)
 
   fun getTestregelTypeFolder(testregel: String): List<GithubFolder> =
-    doRequest("$repoApiAddress$TESTREGLAR/$testregel")
+      doRequest("$repoApiAddress$TESTREGLAR/$testregel")
 
   fun getTypeForTestregel(testregel: String, type: TestregelType): List<GithubFolder> {
-      return doRequest("$repoApiAddress$TESTREGLAR/$testregel/$type")
+    return doRequest("$repoApiAddress$TESTREGLAR/$testregel/$type")
   }
 
   fun getTestregel(testregel: String, type: TestregelType, name: String): GithubFolder {
     val url = "$repoApiAddress$TESTREGLAR/$testregel/$type/$name"
 
-    val response = restClient
-        .get()
-        .uri(url)
-        .accept(MediaType.APPLICATION_JSON)
-        .retrieve()
-        .body(GithubFolder::class.java)
+    val response =
+        restClient
+            .get()
+            .uri(url)
+            .header("Authorization", "token ${properties.token}")
+            .accept(MediaType.APPLICATION_JSON)
+            .retrieve()
+            .body(GithubFolder::class.java)
 
-
-
-      if(response!=null) {
-          return response
-      }
-      throw IllegalStateException("No response from github")
+    if (response != null) {
+      return response
+    }
+    throw IllegalStateException("No response from github")
   }
 
   fun getTestregelDataAsString(testregel: GithubFolder): String? {
@@ -162,12 +169,19 @@ class TestregelImportService(
 
   fun githubContentToTestregel(githubSource: String): TestregelInit {
     val objectMapper = ObjectMapper()
-
-    val testregelMeta = objectMapper.readValue(githubSource, TestregelMetadata::class.java)
+    val testregelMeta =
+        runCatching { objectMapper.readValue(githubSource, TestregelMetadata::class.java) }
+            .fold(
+                onSuccess = { it },
+                onFailure = {
+                  println("Feil ved mapping av testregel")
+                  println(githubSource)
+                  throw it
+                })
 
     val krav = extractKrav(testregelMeta.id)
 
-    val kravId = kravregisterClient.getKrav(krav).getOrThrow().id
+    val kravId = kravregisterClient.getKrav(krav).id
 
     return TestregelInit(
         testregelId = testregelMeta.id,
@@ -185,21 +199,10 @@ class TestregelImportService(
   }
 
   fun extractKrav(testregelId: String): String {
-    val kravInit = testregelId.dropLast(1)
-    if (kravInit.startsWith("nett")) {
-      return kravInit.drop(5)
-    }
-    if (kravInit.startsWith("app")) {
-      return kravInit.drop(4)
-    }
-    return kravInit
+    return testregelId.removeSuffix("-2022").dropLast(1).removePrefix("nett-").removePrefix("app-")
   }
 
-  fun getTestregelFiler() {
-    val testregelList = getTestregelList()
-  }
-
-  fun getTestreglarApp(testregelList: List<String>): List<String> {
+    fun getTestreglarApp(testregelList: List<String>): List<String> {
     return testregelList
         .filter { !unntakApp.contains(it) }
         .map { getTypeForTestregel(it, TestregelType.App) }
@@ -208,38 +211,31 @@ class TestregelImportService(
   }
 
   fun getTestreglarNett(testregelList: List<String>): List<String> {
-      return testregelList
-          .filter { !unntakNett.contains(it) }
-          .map { getTypeForTestregel(it, TestregelType.Nett) }
-          .map { it.map { it.name } }
-          .flatten()
+    return testregelList
+        .filter { !unntakNett.contains(it) }
+        .map { getTypeForTestregel(it, TestregelType.Nett) }
+        .map { it.map { it.name } }
+        .flatten()
   }
 
-    fun getTestreglarForKrav(krav: String, testregelType: TestregelType) {
-        getTestregelFiler(krav, testregelType)
-            .map {getTestregel(krav, testregelType, it)}
-            .mapNotNull { getTestregelDataAsString(it) }
-            .map { githubContentToTestregel(it) }
-            .map { createOrUpdate(it) }
-    }
+  fun getTestreglarForKrav(krav: String, testregelType: TestregelType): List<Int> {
+    return getTestregelFiler(krav, testregelType)
+        .asSequence()
+        .map { getTestregel(krav, testregelType, it) }
+        .mapNotNull { getTestregelDataAsString(it) }
+        .filter { it.isNotEmpty() }
+        .map { githubContentToTestregel(it) }
+        .map { createOrUpdate(it) }
+        .toList()
+  }
 
-    private fun mapFilnamnListToGithubContent(
-        filanamnListe: List<String>,
-        krav: String,
-        testregelType: TestregelType
-    ) = filanamnListe.map {
-        getTestregel(krav, testregelType, it)
-    }
+    private fun getTestregelFiler(krav: String, testregelType: TestregelType) =
+      getTypeForTestregel(krav, testregelType).map { it.name }
 
-    private fun getTestregelFiler(
-        krav: String,
-        testregelType: TestregelType
-    ) = getTypeForTestregel(krav, testregelType).map { it.name }
-
-
-    fun createOrUpdate(testregel: TestregelInit): Int {
+  fun createOrUpdate(testregel: TestregelInit): Int {
     val existing = testregelDAO.getTestregelByTestregelId(testregel.testregelId)
     return if (existing != null) {
+      logger.info("Update testregel ${testregel.testregelId}")
       val updated =
           Testregel(
               id = existing.id,
@@ -261,7 +257,30 @@ class TestregelImportService(
 
       testregelDAO.updateTestregel(updated)
     } else {
+      logger.info("Create testregel ${testregel.testregelId}")
       testregelDAO.createTestregel(testregel)
+    }
+  }
+
+  fun importTestreglarNett(): Result<Int> {
+    return runCatching {
+      val testregelList = getTestregelList()
+      testregelList
+          .filter { !unntakNett.contains(it) }
+          .map { getTestreglarForKrav(it, TestregelType.Nett) }
+          .flatten()
+          .sum()
+    }
+  }
+
+  fun importTestreglarApp(): Result<Int> {
+    return runCatching {
+      val testregelList = getTestregelList()
+      testregelList
+          .filter { !unntakApp.contains(it) }
+          .map { getTestreglarForKrav(it, TestregelType.App) }
+          .flatten()
+          .sum()
     }
   }
 }
