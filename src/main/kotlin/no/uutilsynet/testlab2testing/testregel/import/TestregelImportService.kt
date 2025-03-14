@@ -3,6 +3,9 @@ package no.uutilsynet.testlab2testing.testregel.import
 import GithubFolder
 import TestregelMetadata
 import com.fasterxml.jackson.databind.ObjectMapper
+import java.nio.charset.Charset
+import java.time.Instant
+import java.util.*
 import no.uutilsynet.testlab2.constants.TestregelInnholdstype
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestregelStatus
@@ -15,9 +18,6 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestTemplate
-import java.nio.charset.Charset
-import java.time.Instant
-import java.util.*
 
 // import kotlin.io.encoding.Base64
 
@@ -202,7 +202,7 @@ class TestregelImportService(
     return testregelId.removeSuffix("-2022").dropLast(1).removePrefix("nett-").removePrefix("app-")
   }
 
-    fun getTestreglarApp(testregelList: List<String>): List<String> {
+  fun getTestreglarApp(testregelList: List<String>): List<String> {
     return testregelList
         .filter { !unntakApp.contains(it) }
         .map { getTypeForTestregel(it, TestregelType.App) }
@@ -229,7 +229,7 @@ class TestregelImportService(
         .toList()
   }
 
-    private fun getTestregelFiler(krav: String, testregelType: TestregelType) =
+  private fun getTestregelFiler(krav: String, testregelType: TestregelType) =
       getTypeForTestregel(krav, testregelType).map { it.name }
 
   fun createOrUpdate(testregel: TestregelInit): Int {
