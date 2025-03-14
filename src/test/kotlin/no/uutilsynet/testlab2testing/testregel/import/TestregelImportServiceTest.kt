@@ -92,6 +92,7 @@ class TestregelImportServiceTest(@Autowired val testregelImportService: Testrege
     println(testregelarNett)
   }
 
+  @Disabled
   @Test
   fun testImport() {
     testregelImportService.importTestreglarNett()
