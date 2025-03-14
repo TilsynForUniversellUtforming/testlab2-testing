@@ -207,7 +207,7 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun setTestregelId(testregelInit: TestregelInit): String {
     return if (testregelInit.modus == TestregelModus.automatisk) {
       testregelInit.testregelSchema
-    } else testregelInit.namn
+    } else testregelInit.testregelId
   }
 
   @Cacheable("innhaldstypeForTesting")

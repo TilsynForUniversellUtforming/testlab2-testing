@@ -8,24 +8,18 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
+import no.uutilsynet.testlab2testing.testregel.import.TestregelImportService
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("v1/testreglar")
 class TestregelResource(
     val testregelDAO: TestregelDAO,
     val maalingDAO: MaalingDAO,
-    val kravregisterClient: KravregisterClient
+    val kravregisterClient: KravregisterClient,
+    val testregelImportService: TestregelImportService
 ) {
 
   val logger = LoggerFactory.getLogger(TestregelResource::class.java)
@@ -125,6 +119,15 @@ class TestregelResource(
             logger.error("Feila ved henting av tema for testreglar", it)
             ResponseEntity.internalServerError().body(it.message)
           }
+
+  @PostMapping("import")
+  fun importTestreglar() {
+    runCatching {
+      val testreglarNett = testregelImportService.importTestreglarNett().getOrThrow()
+      val testreglarApp = testregelImportService.importTestreglarApp().getOrThrow()
+      logger.info("Importerte testreglar for nett: $testreglarNett  for app: $testreglarApp")
+    }
+  }
 
   fun validateKrav(kravId: Int) =
       runCatching { kravregisterClient.getWcagKrav(kravId) }
