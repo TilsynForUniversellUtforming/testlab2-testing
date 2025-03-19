@@ -18,8 +18,8 @@ class SecurityConfig {
   @Bean
   @Profile("security")
   open fun filterChain(
-    http: HttpSecurity,
-    @Autowired authenticationFilter: AuthenticationFilter
+      http: HttpSecurity,
+      @Autowired authenticationFilter: AuthenticationFilter
   ): SecurityFilterChain {
 
     http {
