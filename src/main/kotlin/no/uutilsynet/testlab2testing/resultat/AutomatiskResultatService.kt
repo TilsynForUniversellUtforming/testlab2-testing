@@ -88,4 +88,11 @@ class AutomatiskResultatService(
     val maalingId = maalingDAO.getMaalingIdFromKontrollId(kontrollId)
     return getKontrollResultatMaaling(maalingId)
   }
+
+  override fun getBrukararForTest(kontrollId: Int): List<String> {
+    val maalingId =
+        maalingDAO.getMaalingIdFromKontrollId(kontrollId)
+            ?: throw RuntimeException("Fant ikkje maalingId for kontrollId $kontrollId")
+    return maalingDAO.getTestarTestkoeyringarForMaaling(maalingId).map { it.namn }.distinct()
+  }
 }

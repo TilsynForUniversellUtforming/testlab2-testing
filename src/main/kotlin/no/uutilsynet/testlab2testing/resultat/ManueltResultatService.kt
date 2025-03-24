@@ -7,6 +7,7 @@ import no.uutilsynet.testlab2testing.common.Constants
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagList
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
@@ -114,4 +115,19 @@ class ManueltResultatService(
 
     return resultatTestgrunnlag
   }
+
+  override fun getBrukararForTest(kontrollId: Int): List<String> {
+    return testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).let { testgrunnlag ->
+      getTestgrunnlagIds(testgrunnlag).map { testgrunnlagId ->
+        return testResultatDAO
+            .getBrukararForTestgrunnlag(testgrunnlagId)
+            .getOrThrow()
+            .map { it.namn }
+            .distinct()
+      }
+    }
+  }
+
+  private fun getTestgrunnlagIds(it: TestgrunnlagList) =
+      listOf(it.opprinneligTest.id) + it.restestar.map { it.id }
 }

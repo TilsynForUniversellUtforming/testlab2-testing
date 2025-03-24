@@ -320,6 +320,22 @@ class MaalingDAO(
         })
   }
 
+  fun getTestarTestkoeyringarForMaaling(maalingId: Int): List<Brukar> {
+    val query =
+        """
+            select b.id, brukarnamn, namn from testkoeyring tk join brukar b on tk.brukar_id = b.id where maaling_id = :maalingId
+            
+        """
+            .trimIndent()
+
+    return jdbcTemplate.query(
+        query,
+        mapOf("maalingId" to maalingId),
+        fun(rs: ResultSet, _: Int): Brukar {
+          return Brukar(rs.getString("brukarnamn"), rs.getString("namn"))
+        })
+  }
+
   private fun ferdig(
       rs: ResultSet,
       crawlResultatForLoeysing: CrawlResultat.Ferdig,

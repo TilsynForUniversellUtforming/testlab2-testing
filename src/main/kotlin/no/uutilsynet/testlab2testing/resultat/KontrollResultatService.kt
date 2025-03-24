@@ -36,4 +36,6 @@ sealed class KontrollResultatService(
   open fun getKontrollResultat(kontrollId: Int): List<ResultatLoeysingDTO> {
     throw NotImplementedError("Ikke implementert")
   }
+
+  abstract fun getBrukararForTest(kontrollId: Int): List<String>
 }

@@ -317,6 +317,23 @@ class TestResultatDAO(
     }
         ?: throw RuntimeException("No kontroll found for testresultat $testresultatId")
   }
+
+  fun getBrukararForTestgrunnlag(testgrunnlagId: Int): Result<List<Brukar>> {
+    return runCatching {
+      val query =
+          """
+            select distinct b.brukarnamn, b.namn
+            from testresultat tr
+            join brukar b on tr.brukar_id = b.id
+            where tr.testgrunnlag_id = :testgrunnlagId
+        """
+              .trimIndent()
+
+      jdbcTemplate.query(query, mapOf("testgrunnlagId" to testgrunnlagId)) { rs, _ ->
+        Brukar(rs.getString("brukarnamn"), rs.getString("namn"))
+      }
+    }
+  }
 }
 
 data class KontrollDocumentation(val tittel: String, val kontrollId: Int)

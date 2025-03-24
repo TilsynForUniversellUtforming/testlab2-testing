@@ -148,7 +148,7 @@ class ResultatService(
   ): List<LoeysingResultat> {
     val loeysingar = getLoeysingMap(mapResultatToLoeysingId(result)).getOrThrow()
     val statusLoeysingar = progresjonPrLoeysing(testgrunnlagId, kontrolltype, loeysingar)
-    val resultatLoeysingar = resultatPrLoeysing(result, loeysingar, statusLoeysingar)
+    val resultatLoeysingar = resultatPrLoeysing(result, loeysingar, statusLoeysingar, kontrolltype)
     return resultatLoeysingar
   }
 
@@ -162,7 +162,10 @@ class ResultatService(
       result: List<ResultatLoeysingDTO>,
       loeysingar: LoysingList,
       statusLoeysingar: Map<Int, Int>,
+      kontrolltype: Kontrolltype,
   ): List<LoeysingResultat> {
+    val testarar = getBrukararForTest(result.first().id, kontrolltype)
+
     val resultLoeysingar =
         result
             .groupBy { it.loeysingId }
@@ -176,11 +179,21 @@ class ResultatService(
                   talTestaElementDTO(resultLoeysing),
                   calculateTalElementSamsvar(resultLoeysing),
                   calculateTalElementBrot(resultLoeysing),
-                  resultLoeysing.first().testar,
+                  testarar,
                   statusLoeysingar[loeysingId] ?: 0)
             }
 
     return resultLoeysingar
+  }
+
+  fun getBrukararForTest(kontrollId: Int, kontrolltype: Kontrolltype): List<String> {
+    return when (kontrolltype) {
+      Kontrolltype.ForenklaKontroll,
+      Kontrolltype.Statusmaaling -> automatiskResultatService.getBrukararForTest(kontrollId)
+      Kontrolltype.InngaaendeKontroll,
+      Kontrolltype.Tilsyn,
+      Kontrolltype.Uttalesak -> manueltResultatService.getBrukararForTest(kontrollId)
+    }
   }
 
   private fun limitResultatList(resultLoeysingar: List<LoeysingResultat>): List<LoeysingResultat> {
