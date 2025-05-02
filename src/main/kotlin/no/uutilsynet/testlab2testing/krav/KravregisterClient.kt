@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.krav
 
+import no.uutilsynet.testlab2testing.messages.testregel.ERROR_GET_KRAV_LIST
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.cache.annotation.Cacheable
@@ -44,6 +45,14 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
   fun getSuksesskriteriumFromKrav(kravId: Int): String {
     return runCatching { getWcagKrav(kravId).suksesskriterium }.getOrThrow()
   }
+
+    fun getKravListe() : List<KravWcag2x> {
+        val result = restTemplate.getForObject(
+            "${properties.host}/v1/krav/wcag2krav", Array<KravWcag2x>::class.java) ?: throw RuntimeException(
+            ERROR_GET_KRAV_LIST
+        )
+        return result.toList()
+    }
 }
 
 @ConfigurationProperties(prefix = "kravregister")
