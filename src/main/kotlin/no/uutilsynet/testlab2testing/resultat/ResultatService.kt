@@ -9,6 +9,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManu
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.krav.KravWcag2x
+import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelService
@@ -23,7 +24,8 @@ class ResultatService(
     val eksternResultatDAO: EksternResultatDAO,
     val automatiskResultatService: AutomatiskResultatService,
     val manueltResultatService: ManueltResultatService,
-    val testregelService: TestregelService
+    val testregelService: TestregelService,
+    val kravregisterClient: KravregisterClient
 ) {
 
   fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
@@ -361,7 +363,7 @@ class ResultatService(
 
   fun ResultatKravBase.toResultatKrav(): ResultatKrav {
     return ResultatKrav(
-        suksesskriterium = testregelService.getSuksesskriteriumFromKrav(kravId),
+        suksesskriterium = getKravTittel(),
         score = score,
         talTestaElement =
             talElementBrot + talElementSamsvar + talElementVarsel + talElementIkkjeForekomst,
@@ -370,6 +372,8 @@ class ResultatService(
         talElementVarsel = talElementVarsel,
         talElementIkkjeForekomst = talElementIkkjeForekomst)
   }
+
+  private fun ResultatKravBase.getKravTittel() = kravregisterClient.getWcagKrav(kravId).tittel
 
   private fun List<ResultatLoeysingDTO>.toResultatOversiktLoeysing():
       List<ResultatOversiktLoeysing> {

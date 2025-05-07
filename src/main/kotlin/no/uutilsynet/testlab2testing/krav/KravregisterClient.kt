@@ -15,24 +15,18 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
   fun getKrav(suksesskriterium: String): KravWcag2x {
     logger.info(
         "Henter krav fra ${properties.host}/v1/krav/wcag2krav/suksesskriterium/$suksesskriterium .")
-    return runCatching {
-          restTemplate.getForObject(
-              "${properties.host}/v1/krav/wcag2krav/suksesskriterium/$suksesskriterium",
-              KravWcag2x::class.java)
-              ?: throw RuntimeException(
-                  "Kravregisteret returnerte null for suksesskriterium $suksesskriterium")
-        }
-        .getOrThrow()
+    return restTemplate.getForObject(
+        "${properties.host}/v1/krav/wcag2krav/suksesskriterium/$suksesskriterium",
+        KravWcag2x::class.java)
+        ?: throw RuntimeException(
+            "Kravregisteret returnerte null for suksesskriterium $suksesskriterium")
   }
 
   @Cacheable("kravFromId", unless = "#result==null")
   fun getWcagKrav(kravId: Int): KravWcag2x {
-    return runCatching {
-          restTemplate.getForObject(
-              "${properties.host}/v1/krav/wcag2krav/$kravId", KravWcag2x::class.java)
-              ?: throw RuntimeException("Kravregisteret returnerte null for kravId $kravId")
-        }
-        .getOrThrow()
+    return restTemplate.getForObject(
+        "${properties.host}/v1/krav/wcag2krav/$kravId", KravWcag2x::class.java)
+        ?: throw RuntimeException("Kravregisteret returnerte null for kravId $kravId")
   }
 
   @Cacheable("suksesskriteriumFromId", unless = "#result==null")
@@ -42,7 +36,7 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
 
   @Cacheable("suksesskriteriumFromKrav", unless = "#result == null")
   fun getSuksesskriteriumFromKrav(kravId: Int): String {
-    return runCatching { getWcagKrav(kravId).suksesskriterium }.getOrThrow()
+    return getWcagKrav(kravId).suksesskriterium
   }
 }
 
