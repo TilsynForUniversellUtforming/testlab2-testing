@@ -9,13 +9,12 @@ class TestregelService(val testregelDAO: TestregelDAO, val kravregisterClient: K
 
   fun getKravWcag2x(testregelId: Int): KravWcag2x {
     val krav =
-        getTestregel(testregelId)?.kravId?.let { kravregisterClient.getWcagKrav(it) }
-            ?: throw RuntimeException("Fant ikke krav for testregel $testregelId")
+        getTestregel(testregelId).kravId.let { kravregisterClient.getWcagKrav(it) }
     return krav
   }
 
-  private fun getTestregel(testregelId: Int) = testregelDAO.getTestregel(testregelId)
+  fun getTestregel(testregelId: Int): Testregel =
+      testregelDAO.getTestregel(testregelId)
+          ?: throw IllegalArgumentException("Fant ikkje testregel med id $testregelId")
 
-  fun getSuksesskriteriumFromKrav(kravId: Int) =
-      kravregisterClient.getSuksesskriteriumFromKrav(kravId)
 }
