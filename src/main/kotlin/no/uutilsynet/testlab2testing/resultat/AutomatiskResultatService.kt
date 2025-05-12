@@ -23,7 +23,7 @@ class AutomatiskResultatService(
       kravId: Int
   ): List<TestresultatDetaljert> {
     val maalingId = getMaalingForKontroll(kontrollId)
-      getTestreglarForKrav(kravId)
+    getTestreglarForKrav(kravId)
 
     return getResultatForMaaling(maalingId, loeysingId).filter {
       filterByTestregel(it.testregelId, listOf(kravId))
