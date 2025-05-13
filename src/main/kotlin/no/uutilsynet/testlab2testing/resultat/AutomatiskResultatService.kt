@@ -20,13 +20,11 @@ class AutomatiskResultatService(
   fun getResultatForAutomatiskKontroll(
       kontrollId: Int,
       loeysingId: Int,
-      kravId: Int
+      testregelId: Int
   ): List<TestresultatDetaljert> {
     val maalingId = getMaalingForKontroll(kontrollId)
-    getTestreglarForKrav(kravId)
-
     return getResultatForMaaling(maalingId, loeysingId).filter {
-      filterByTestregel(it.testregelId, listOf(kravId))
+      filterByTestregel(it.testregelId, listOf(testregelId))
     }
   }
 

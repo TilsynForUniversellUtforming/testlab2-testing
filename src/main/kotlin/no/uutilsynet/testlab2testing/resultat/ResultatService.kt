@@ -315,17 +315,19 @@ class ResultatService(
   fun getResultatListKontroll(
       kontrollId: Int,
       loeysingId: Int,
-      kravid: Int
+      testregelId: Int
   ): List<TestresultatDetaljert> {
     val typeKontroll =
         kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().kontrolltype
     return when (typeKontroll) {
       Kontrolltype.ForenklaKontroll ->
-          automatiskResultatService.getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
+          automatiskResultatService.getResultatForAutomatiskKontroll(
+              kontrollId, loeysingId, testregelId)
       Kontrolltype.InngaaendeKontroll,
       Kontrolltype.Tilsyn,
       Kontrolltype.Uttalesak,
-      Kontrolltype.Statusmaaling -> getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
+      Kontrolltype.Statusmaaling ->
+          getResulatForManuellKontroll(kontrollId, loeysingId, testregelId)
     }
   }
 
