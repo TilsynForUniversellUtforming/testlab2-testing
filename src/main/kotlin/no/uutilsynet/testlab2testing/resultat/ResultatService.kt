@@ -286,8 +286,9 @@ class ResultatService(
     return resultat
   }
 
-  private fun mapKrav(result: ResultatLoeysingDTO): ResultatLoeysing {
+  private fun mapTestregel(result: ResultatLoeysingDTO): ResultatLoeysing {
     val krav = getKravWcag2x(result)
+    val testregel = testregelService.getTestregel(result.testregelId)
 
     return ResultatLoeysing(
         id = result.id,
@@ -302,6 +303,7 @@ class ResultatService(
         talElementSamsvar = result.talElementSamsvar,
         talElementBrot = result.talElementBrot,
         testregelId = result.testregelId,
+        testregeltTittel = testregel.namn,
         kravId = krav.id,
         kravTittel = krav.tittel)
   }
@@ -313,17 +315,19 @@ class ResultatService(
   fun getResultatListKontroll(
       kontrollId: Int,
       loeysingId: Int,
-      kravid: Int
+      testregelId: Int
   ): List<TestresultatDetaljert> {
     val typeKontroll =
         kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().kontrolltype
     return when (typeKontroll) {
       Kontrolltype.ForenklaKontroll ->
-          automatiskResultatService.getResultatForAutomatiskKontroll(kontrollId, loeysingId, kravid)
+          automatiskResultatService.getResultatForAutomatiskKontroll(
+              kontrollId, loeysingId, testregelId)
       Kontrolltype.InngaaendeKontroll,
       Kontrolltype.Tilsyn,
       Kontrolltype.Uttalesak,
-      Kontrolltype.Statusmaaling -> getResulatForManuellKontroll(kontrollId, loeysingId, kravid)
+      Kontrolltype.Statusmaaling ->
+          getResulatForManuellKontroll(kontrollId, loeysingId, testregelId)
     }
   }
 
@@ -380,9 +384,9 @@ class ResultatService(
 
     val loeysingar = this.map { it.loeysingId }.let { getLoeysingMap(it).getOrThrow() }
 
-    return this.map { krav -> mapKrav(krav) }
-        .groupBy { it.kravId }
-        .map { (kravId, result) ->
+    return this.map { resultat -> mapTestregel(resultat) }
+        .groupBy { it.testregelId }
+        .map { (testregelId, result) ->
           ResultatOversiktLoeysing(
                   result.first().loeysingId,
                   loeysingar.getNamn(result.first().loeysingId),
@@ -393,8 +397,8 @@ class ResultatService(
                       .filter { !erIkkjeForekomst(it.talElementBrot, it.talElementSamsvar) }
                       .map { it.score }
                       .average(),
-                  kravId,
-                  result.first().kravTittel,
+                  testregelId,
+                  result.first().testregeltTittel,
                   talTestaElement(result),
                   result.sumOf { it.talElementBrot },
                   result.sumOf { it.talElementSamsvar })

@@ -79,17 +79,17 @@ class EksternResultatResource(
             onFailure = { ErrorHandlingUtil.handleErrors(it) })
   }
 
-  @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/krav/{kravId}")
+  @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/testregel/{testregelId}")
   fun getDetaljertResultat(
       @PathVariable rapportId: String,
       @PathVariable loeysingId: Int,
-      @PathVariable kravId: Int
+      @PathVariable testregelId: Int
   ): ResponseEntity<out Any> {
 
     return kotlin
         .runCatching {
           eksternResultatService.getResultatListKontrollAsEksterntResultat(
-              rapportId, loeysingId, kravId)
+              rapportId, loeysingId, testregelId)
         }
         .fold(
             onSuccess = { results -> ResponseEntity.ok(results) },

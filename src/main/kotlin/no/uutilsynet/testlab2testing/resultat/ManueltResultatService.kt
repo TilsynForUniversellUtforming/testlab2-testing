@@ -30,16 +30,15 @@ class ManueltResultatService(
   fun getResulatForManuellKontroll(
       kontrollId: Int,
       loeysingId: Int,
-      kravId: Int
+      testregelId: Int
   ): List<TestresultatDetaljert> {
     val testresultat = getTestresultatForKontroll(kontrollId, loeysingId)
-    val testregelIdsForKrav: List<Int> = getTestreglarForKrav(kravId)
 
     val sideutvalIdUrlMap: Map<Int, URL> = getSideutvalMap(testresultat)
 
     return testresultat
         .map { resultatManuellKontrollTotestresultatDetaljert(it, sideutvalIdUrlMap) }
-        .filter { filterByTestregel(it.testregelId, testregelIdsForKrav) }
+        .filter { filterByTestregel(it.testregelId, listOf(testregelId)) }
         .filter { it.elementResultat != null }
   }
 

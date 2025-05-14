@@ -5,13 +5,13 @@ import java.time.LocalDateTime
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
-import no.uutilsynet.testlab2testing.krav.KravWcag2x
+import no.uutilsynet.testlab2testing.testregel.Testregel
 
 data class TestresultatDetaljertEkstern(
     val testregelNoekkel: String,
     val side: URL,
     val suksesskriterium: List<String>,
-    val kravTittel: String,
+    val testregelTittel: String,
     val testVartUtfoert: LocalDateTime?,
     val elementUtfall: String?,
     val elementResultat: TestresultatUtfall?,
@@ -19,12 +19,12 @@ data class TestresultatDetaljertEkstern(
     val bilder: List<Bilde>?
 )
 
-fun TestresultatDetaljert.toTestresultatDetaljertEkstern(krav: KravWcag2x) =
+fun TestresultatDetaljert.toTestresultatDetaljertEkstern(testregel: Testregel) =
     TestresultatDetaljertEkstern(
         testregelNoekkel = this.testregelNoekkel,
         side = this.side,
         suksesskriterium = this.suksesskriterium,
-        kravTittel = krav.tittel,
+        testregelTittel = testregel.namn,
         testVartUtfoert = this.testVartUtfoert,
         elementUtfall = this.elementUtfall,
         elementResultat = this.elementResultat,

@@ -3,7 +3,6 @@ package no.uutilsynet.testlab2testing.ekstern.resultat
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
-import no.uutilsynet.testlab2testing.krav.KravWcag2x
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
@@ -11,6 +10,8 @@ import no.uutilsynet.testlab2testing.resultat.LoeysingResultat
 import no.uutilsynet.testlab2testing.resultat.Resultat
 import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing
 import no.uutilsynet.testlab2testing.resultat.ResultatService
+import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -23,7 +24,8 @@ class EksternResultatService(
     @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val maalingDAO: MaalingDAO,
-    @Autowired val kravregisterClient: KravregisterClient
+    @Autowired val kravregisterClient: KravregisterClient,
+    private val testregelService: TestregelService
 ) {
 
   private val logger = LoggerFactory.getLogger(EksternResultatResource::class.java)
@@ -154,16 +156,19 @@ class EksternResultatService(
 
   private fun testresultatToDetaljertEkstern(
       kontrollLoeysing: KontrollIdLoeysingId,
-      krav: KravWcag2x
-  ) = getResultatPrKrav(kontrollLoeysing, krav.id).map { it.toTestresultatDetaljertEkstern(krav) }
+      testregel: Testregel
+  ) =
+      getResultatPrTestregel(kontrollLoeysing, testregel).map {
+        it.toTestresultatDetaljertEkstern(testregel)
+      }
 
-  private fun getKravFromKravId(kravId: Int): KravWcag2x {
-    return kravregisterClient.getWcagKrav(kravId)
+  private fun getTestregelFromTestregelId(testregelId: Int): Testregel {
+    return testregelService.getTestregel(testregelId)
   }
 
-  private fun getResultatPrKrav(kontrollLoeysing: KontrollIdLoeysingId, kravId: Int) =
+  private fun getResultatPrTestregel(kontrollLoeysing: KontrollIdLoeysingId, testregel: Testregel) =
       resultatService.getResultatListKontroll(
-          kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, kravId)
+          kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, testregel.id)
 
   private fun getKontrollIdLoeysingIdsForRapportId(rapportId: String): List<KontrollIdLoeysingId> {
     return eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId)).getOrThrow()
@@ -172,12 +177,12 @@ class EksternResultatService(
   fun getResultatListKontrollAsEksterntResultat(
       rapportId: String,
       loeysingId: Int,
-      kravId: Int
+      testregelId: Int
   ): List<TestresultatDetaljertEkstern> {
     return getKontrollLoeysing(rapportId, loeysingId)
         .mapCatching {
-          val krav = getKravFromKravId(kravId)
-          testresultatToDetaljertEkstern(it, krav)
+          val testregel = getTestregelFromTestregelId(testregelId)
+          testresultatToDetaljertEkstern(it, testregel)
         }
         .getOrThrow()
   }
