@@ -6,6 +6,7 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
+import no.uutilsynet.testlab2testing.loeysing.Verksemd
 import no.uutilsynet.testlab2testing.resultat.LoeysingResultat
 import no.uutilsynet.testlab2testing.resultat.Resultat
 import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing
@@ -25,13 +26,14 @@ class EksternResultatService(
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val maalingDAO: MaalingDAO,
     @Autowired val kravregisterClient: KravregisterClient,
-    private val testregelService: TestregelService
+    @Autowired val testregelService: TestregelService,
+    @Autowired val logMessages: LogMessages
 ) {
 
   private val logger = LoggerFactory.getLogger(EksternResultatResource::class.java)
 
   fun findTestForOrgNr(org: String): Result<TestListElementEkstern> {
-    val verksemd: VerksemdEkstern = getVerksemd(org)
+    val verksemd: VerksemdEkstern = getVerksemd(org).getOrThrow()
     val testEksternList = getLoysingarForOrgnr(org).toListElementForLoeysingar().toTestEksternList()
 
     return Result.success(TestListElementEkstern(verksemd = verksemd, testList = testEksternList))
@@ -61,22 +63,37 @@ class EksternResultatService(
   private fun filterLoeysingarOnId(loeysingar: List<LoeysingResultat>, loeysingId: Int) =
       loeysingar.filter { loeysing -> loeysing.loeysingId == loeysingId }
 
-  private fun getVerksemd(orgnr: String): VerksemdEkstern {
-    return runCatching {
-          loeysingsRegisterClient.searchVerksemd(orgnr).getOrThrow().map {
-            VerksemdEkstern(it.namn, it.organisasjonsnummer)
-          }
-        }
-        .getOrDefault(listOf(VerksemdEkstern(orgnr, orgnr)))
-        .first()
+  private fun getVerksemd(orgnr: String): Result<VerksemdEkstern> {
+    return searchForOrganization(orgnr).mapCatching { verksemder ->
+      mapToVerksemdEkstern(verksemder)
+          .ifEmpty { listOf(VerksemdEkstern(orgnr, orgnr)) }
+          .singleWithMessage(orgnr)
+    }
+  }
+
+  private fun List<VerksemdEkstern>.singleWithMessage(orgnr: String): VerksemdEkstern {
+    return runCatching { this.single() }
+        .fold(
+            onSuccess = { it },
+            onFailure = {
+              throw IllegalArgumentException(logMessages.verksemdMultipleFoundForSearch(orgnr))
+            })
+  }
+
+  private fun searchForOrganization(orgnr: String) = loeysingsRegisterClient.searchVerksemd(orgnr)
+
+  private fun mapToVerksemdEkstern(
+      verksemder: List<Verksemd>,
+  ): List<VerksemdEkstern> {
+    return verksemder.map { VerksemdEkstern(it.namn, it.organisasjonsnummer) }
   }
 
   private fun List<Loeysing>.toListElementForLoeysingar(): List<TestListElementDB> {
     val testList = this.map { it.id }.let { eksternResultatDAO.getTestsForLoeysingIds(it) }
 
     if (testList.isEmpty()) {
-      logger.info("Fann ingen gyldige testar for orgnr ${this.first().orgnummer}")
-      throw NoSuchElementException("Fann ingen gyldige testar for orgnr ${this.first().orgnummer}")
+      logger.warn(logMessages.teststNotFoundForOrgnr(this.first().orgnummer))
+      throw NoSuchElementException(logMessages.teststNotFoundForOrgnr(this.first().orgnummer))
     }
 
     return testList
@@ -85,8 +102,8 @@ class EksternResultatService(
   private fun getLoysingarForOrgnr(orgnr: String): List<Loeysing> {
     val loeysingList = loeysingsRegisterClient.searchLoeysingByVerksemd(orgnr).getOrThrow()
     if (loeysingList.isEmpty()) {
-      logger.info("Fann ingen løysingar for verkemd med orgnr $orgnr")
-      throw NoSuchElementException("Fann ingen løysingar for verkemd med orgnr $orgnr")
+      logger.warn(logMessages.loeysingNotFoundForOrgnr(orgnr))
+      throw NoSuchElementException(logMessages.loeysingNotFoundForOrgnr(orgnr))
     }
     return loeysingList
   }
