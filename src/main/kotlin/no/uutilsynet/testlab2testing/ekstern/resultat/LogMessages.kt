@@ -31,5 +31,4 @@ class LogMessages(@Autowired val messageSource: MessageSource) {
         "Fant fleire verksemder for søk etter {0}. Spesifiser søket nærmare",
         LocaleContextHolder.getLocale())
   }
-
 }
