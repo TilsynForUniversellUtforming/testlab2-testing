@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.ekstern.resultat
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -29,7 +30,7 @@ class EksternResultatResource(
       ResponseEntity.notFound().build()
     } catch (e: IllegalArgumentException) {
       logger.warn(e.message)
-      ResponseEntity.badRequest().body(e.message)
+      ResponseEntity.status(HttpStatusCode.valueOf(422)).body(e.message)
     } catch (e: Exception) {
       logger.error(e.message)
       ResponseEntity.badRequest().build()
