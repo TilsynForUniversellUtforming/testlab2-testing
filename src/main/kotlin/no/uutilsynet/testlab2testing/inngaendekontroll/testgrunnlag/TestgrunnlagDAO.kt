@@ -1,7 +1,5 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
-import java.sql.Timestamp
-import java.time.Instant
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.slf4j.LoggerFactory
@@ -12,6 +10,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.sql.Timestamp
+import java.time.Instant
 
 @Component
 class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -20,77 +20,90 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getTestgrunnlag(testgrunnlagId: Int): Result<TestgrunnlagKontroll> {
 
-    val testgrunnlag =
-        DataAccessUtils.singleResult(
-            jdbcTemplate.query(
-                """select id, kontroll_id, namn, type, dato_oppretta from "testlab2_testing"."testgrunnlag" where id = :testgrunnlagId""",
-                mapOf("testgrunnlagId" to testgrunnlagId),
-            ) { rs, _ ->
-              TestgrunnlagKontroll(
-                  rs.getInt("id"),
-                  rs.getInt("kontroll_id"),
-                  rs.getString("namn"),
-                  emptyList(),
-                  emptyList(),
-                  TestgrunnlagType.valueOf(rs.getString("type")),
-                  emptyList(),
-                  rs.getTimestamp("dato_oppretta").toInstant())
-            })
 
-    if (testgrunnlag == null) {
-      return Result.failure(IllegalArgumentException())
-    }
-
-    val testreglar =
-        jdbcTemplate.query(
-            """
-              select 
-                t.id,
-                t.krav_id,
-                t.testregel_schema,
-                t.namn,
-                t.modus,
-                t.testregel_id,
-                t.versjon,
-                t.status,
-                t.dato_sist_endra,
-                t.modus,
-                t.spraak,
-                t.tema,
-                t.type,
-                t.testobjekt,
-                t.krav_til_samsvar,
-                t.innhaldstype_testing
-              from "testlab2_testing"."testgrunnlag_testregel_kontroll" ttk 
-              join "testlab2_testing"."testregel" t on t.id = ttk.testregel_id
-                where testgrunnlag_id = :testgrunnlagId
-            """
-                .trimMargin(),
-            mapOf("testgrunnlagId" to testgrunnlagId),
-            DataClassRowMapper.newInstance(Testregel::class.java))
-
-    val sideutval =
-        jdbcTemplate.query(
-            """
-              select 
-                ks.id, 
-                ks.sideutval_type_id as type_id,
-                ks.loeysing_id,
-                ks.egendefinert_objekt as egendefinert_type,
-                ks.url,
-                ks.begrunnelse 
-              from "testlab2_testing"."kontroll_sideutval" ks
-                join "testlab2_testing"."testgrunnlag_sideutval_kontroll" tsk on ks.id = tsk.sideutval_id
-              where tsk.testgrunnlag_id = :testgrunnlagId
-            """
-                .trimIndent(),
-            mapOf("testgrunnlagId" to testgrunnlagId),
-            DataClassRowMapper.newInstance(Sideutval::class.java))
-
-    return Result.success(testgrunnlag.copy(testreglar = testreglar, sideutval = sideutval))
+          return getTestgrunnlagKontroll(testgrunnlagId).mapCatching {
+                it.copy(
+                    testreglar = getTestreglarForTestgrunnlag(testgrunnlagId),
+                    sideutval = getSideutvalForTestgrunnlag(testgrunnlagId)
+                )
+          }
   }
 
-  fun getOpprinneligTestgrunnlag(kontrollId: Int): Result<Int> = runCatching {
+    private fun getSideutvalForTestgrunnlag(testgrunnlagId: Int): List<Sideutval> {
+            return jdbcTemplate.query(
+                """
+                  select 
+                    ks.id, 
+                    ks.sideutval_type_id as type_id,
+                    ks.loeysing_id,
+                    ks.egendefinert_objekt as egendefinert_type,
+                    ks.url,
+                    ks.begrunnelse 
+                  from "testlab2_testing"."kontroll_sideutval" ks
+                    join "testlab2_testing"."testgrunnlag_sideutval_kontroll" tsk on ks.id = tsk.sideutval_id
+                  where tsk.testgrunnlag_id = :testgrunnlagId
+                """
+                    .trimIndent(),
+                mapOf("testgrunnlagId" to testgrunnlagId),
+                DataClassRowMapper.newInstance(Sideutval::class.java)
+            ).toList()
+    }
+
+    private fun getTestreglarForTestgrunnlag(testgrunnlagId: Int): List<Testregel> {
+        return jdbcTemplate.query(
+                """
+                  select 
+                    t.id,
+                    t.krav_id,
+                    t.testregel_schema,
+                    t.namn,
+                    t.modus,
+                    t.testregel_id,
+                    t.versjon,
+                    t.status,
+                    t.dato_sist_endra,
+                    t.modus,
+                    t.spraak,
+                    t.tema,
+                    t.type,
+                    t.testobjekt,
+                    t.krav_til_samsvar,
+                    t.innhaldstype_testing
+                  from "testlab2_testing"."testgrunnlag_testregel_kontroll" ttk 
+                  join "testlab2_testing"."testregel" t on t.id = ttk.testregel_id
+                    where testgrunnlag_id = :testgrunnlagId
+                """
+                    .trimMargin(),
+                mapOf("testgrunnlagId" to testgrunnlagId),
+                DataClassRowMapper.newInstance(Testregel::class.java)
+            ).toList()
+    }
+
+    private fun getTestgrunnlagKontroll(testgrunnlagId: Int): Result<TestgrunnlagKontroll> {
+        val testgrunnlag =
+            DataAccessUtils.singleResult(
+                jdbcTemplate.query(
+                    """select id, kontroll_id, namn, type, dato_oppretta from "testlab2_testing"."testgrunnlag" where id = :testgrunnlagId""",
+                    mapOf("testgrunnlagId" to testgrunnlagId),
+                ) { rs, _ ->
+                    TestgrunnlagKontroll(
+                        rs.getInt("id"),
+                        rs.getInt("kontroll_id"),
+                        rs.getString("namn"),
+                        emptyList(),
+                        emptyList(),
+                        TestgrunnlagType.valueOf(rs.getString("type")),
+                        rs.getTimestamp("dato_oppretta").toInstant()
+                    )
+                })
+
+        if(testgrunnlag == null) {
+            return Result.failure(IllegalArgumentException("Testgrunnlag med id $testgrunnlagId finnes ikkje"))
+        }
+        return Result.success(testgrunnlag)
+    }
+
+    fun getOpprinneligTestgrunnlag(kontrollId: Int): Result<Int> = runCatching {
     val result =
         DataAccessUtils.singleResult(
             jdbcTemplate.query(
@@ -148,7 +161,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val testgrunnlagId = keyHolder.keys?.get("id") as Int
 
       saveTestgrunnlagUtval(testgrunnlagId, testgrunnlag.sideutval.map { it.id })
-      saveTestgrunnlagTestregel(testgrunnlagId, testgrunnlag.testregelIdList)
+       saveTestgrunnlagTestregel(testgrunnlagId, testgrunnlag.testregelIdList)
       testgrunnlagId
     }
   }

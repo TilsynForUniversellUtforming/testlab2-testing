@@ -1,9 +1,13 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
+import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.InputStreamResource
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatusCode
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -11,7 +15,8 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/ekstern/tester")
 class EksternResultatResource(
     @Autowired val eksternResultatService: EksternResultatService,
-    @Autowired val publiseringService: EksternResultatPubliseringService
+    @Autowired val publiseringService: EksternResultatPubliseringService,
+    @Autowired val bildeService: BildeService
 ) {
 
   private val logger = LoggerFactory.getLogger(EksternResultatResource::class.java)
@@ -46,6 +51,17 @@ class EksternResultatResource(
       throw IllegalArgumentException("Mangler søkeparameter")
     }
   }
+
+    @GetMapping("rapport/{rapportId}")
+    fun getRestultatRapport(
+        @PathVariable rapportId: String
+    ): ResponseEntity<out Any> {
+        return kotlin
+            .runCatching { eksternResultatService.getResultatForRapport(rapportId) }
+            .fold(
+                onSuccess = { ResponseEntity.ok(it) },
+                onFailure = { ErrorHandlingUtil.handleErrors(it) })
+    }
 
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}")
   fun getResultRapportLoeysing(
@@ -113,4 +129,20 @@ class EksternResultatResource(
       ResponseEntity.badRequest().build<Boolean>()
     }
   }
+
+    @GetMapping("sti")
+    fun getBilde(@RequestParam("bildesti") bildesti: String): ResponseEntity<InputStreamResource> {
+
+        val bildeConnection = bildeService.getBilde(bildesti)
+        val contentType: String = bildeConnection.contentType ?: "image/jpeg"
+        val mediaType = MediaType.parseMediaType(contentType)
+
+        val headers = HttpHeaders()
+        headers["Content-Disposition"] = "inline; filename=\"$bildesti\""
+
+        return ResponseEntity.ok()
+            .headers(headers)
+            .contentType(mediaType)
+            .body(InputStreamResource(bildeService.getBilde(bildesti).inputStream))
+    }
 }

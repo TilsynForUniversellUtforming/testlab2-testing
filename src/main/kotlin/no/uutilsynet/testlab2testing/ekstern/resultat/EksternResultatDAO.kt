@@ -65,6 +65,7 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               return Result.success(true)
             },
             onFailure = {
+                logger.error("Feila ved publisering av resultat for testgrunnlag $testgrunnlagId og løysing $loeysingId", it)
               return Result.failure(it)
             })
   }
@@ -133,7 +134,7 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     runCatching {
           jdbcTemplate.queryForObject(
-              query.trimIndent(), mapOf("kontrollId" to id), Int::class.java)
+              query.trimIndent(), mapOf("id" to id), Int::class.java)
               ?: 0
         }
         .fold(
@@ -149,9 +150,9 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun erPublisertQuery(kontrolltype: Kontrolltype): String {
     return if (kontrolltype == Kontrolltype.Statusmaaling ||
         kontrolltype == Kontrolltype.ForenklaKontroll) {
-      """select count(*) from "rapport" r join "maalingv1" m on m.id=r.maaling_id where m.kontrollid=:kontrollId and publisert is not null"""
+      """select count(*) from "rapport" r join "maalingv1" m on m.id=r.maaling_id where m.id=:id and publisert is not null"""
     } else {
-      """select count(*) from "rapport" r join "testgrunnlag" tg on tg.id=r.testgrunnlag_id where tg.kontroll_id=:kontrollId and publisert is not null"""
+      """select count(*) from "rapport" r join "testgrunnlag" tg on tg.id=r.testgrunnlag_id where tg.id=:id and publisert is not null"""
     }
   }
 }

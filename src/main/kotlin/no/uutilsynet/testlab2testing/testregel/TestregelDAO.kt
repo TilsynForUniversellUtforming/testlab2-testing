@@ -1,10 +1,8 @@
 package no.uutilsynet.testlab2testing.testregel
 
-import java.sql.Timestamp
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.deleteTestregelSql
+import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestelListByIdList
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelByTestregelId
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelListSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelSql
@@ -21,6 +19,9 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.sql.Timestamp
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 @Component
 class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -29,6 +30,9 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     val getTestregelListSql =
         """select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type , modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing  from "testlab2_testing"."testregel" order by id"""
+
+    val getTestelListByIdList =
+        """select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type , modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing  from "testlab2_testing"."testregel" where id in (:ids) order by id"""
 
     val getTestregelSql =
         """select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type, modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing from "testlab2_testing"."testregel" where id = :id order by id"""
@@ -69,11 +73,17 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           jdbcTemplate.query(
               getTestregelByTestregelId, mapOf("testregelId" to testregelId), testregelRowMapper))
 
-  fun getMany(testregelIdList: List<Int>): List<TestregelBase> =
+  /*fun getMany(testregelIdList: List<Int>): List<TestregelBase> =
       jdbcTemplate.query(
           """select tr.id, tr.namn, tr.krav_id, tr.modus, tr.type from "testlab2_testing"."testregel" tr where tr.id in (:ids)""",
           mapOf("ids" to testregelIdList),
-          DataClassRowMapper.newInstance(TestregelBase::class.java))
+          DataClassRowMapper.newInstance(TestregelBase::class.java))*/
+
+    fun getMany(testregelIdList:List<Int>) : List<Testregel> =
+        jdbcTemplate.query(
+            getTestelListByIdList,
+            mapOf("ids" to testregelIdList),
+            testregelRowMapper)
 
   @Transactional
   @CacheEvict(

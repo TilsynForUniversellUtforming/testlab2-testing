@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
-import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
@@ -13,6 +12,7 @@ import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import java.time.Instant
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -54,7 +54,6 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
             kontrollId = kontrollId,
             namn = "Original",
             type = TestgrunnlagType.OPPRINNELEG_TEST,
-            aktivitet = null,
             datoOppretta = Instant.now())
 
     `when`(testgrunnlagDAO.getTestgrunnlag(originalTestgrunnlagId))

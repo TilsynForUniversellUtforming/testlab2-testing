@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.kontroll
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.Sakstype
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlagFromKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestStatus
@@ -236,30 +236,16 @@ class KontrollResource(
 
   fun createOrUpdateTestgrunnlag(kontrollId: Int): Result<Int> {
     val kontroll = getKontrollResult(kontrollId).getOrThrow()
-    val testregelIdList = kontroll.testreglar?.testregelList?.map { it.id } ?: emptyList()
-    val sideutval = getSideutvalByKontrollAndLoeysing(kontroll)
 
     val nyttTestgrunnlag =
-        NyttTestgrunnlag(
+        NyttTestgrunnlagFromKontroll(
             kontroll.id,
             "Testgrunnlag for kontroll ${kontroll.tittel}",
             OPPRINNELEG_TEST,
-            sideutval,
-            testregelIdList)
-    return testgrunnlagService.createOrUpdate(nyttTestgrunnlag)
+            kontroll.sideutvalList,
+            kontroll.testreglar?.testregelList
+        )
+    return testgrunnlagService.createOrUpdateFromKontroll(nyttTestgrunnlag)
   }
 
-  private fun getSideutvalByKontrollAndLoeysing(kontroll: Kontroll): List<Sideutval> {
-    val sideutval =
-        kontroll.sideutvalList
-            .map { it.loeysingId }
-            .let { loeysingIdList ->
-              if (loeysingIdList.isNotEmpty()) {
-                kontrollDAO.findSideutvalByKontrollAndLoeysing(kontroll.id, loeysingIdList)
-              } else {
-                emptyList()
-              }
-            }
-    return sideutval
-  }
 }
