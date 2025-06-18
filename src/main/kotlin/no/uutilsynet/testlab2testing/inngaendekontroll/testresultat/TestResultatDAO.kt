@@ -1,13 +1,13 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
+import java.sql.Timestamp
+import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import java.sql.Timestamp
-import java.time.Instant
 
 @Component
 class TestResultatDAO(
@@ -110,20 +110,19 @@ class TestResultatDAO(
             }
             .toList()
 
-      val svarMap =
-          getSvarMapForTestresultat(resultatId, testgrunnlagId)
+    val svarMap = getSvarMapForTestresultat(resultatId, testgrunnlagId)
 
-      testResultat.map { it.copy(svar = svarMap[it.id] ?: emptyList()) }
+    testResultat.map { it.copy(svar = svarMap[it.id] ?: emptyList()) }
   }
 
-    private fun getSvarMapForTestresultat(
-        resultatId: Int?,
-        testgrunnlagId: Int?
-    ): Map<Int, List<ResultatManuellKontrollBase.Svar>> {
-        val svarMap =
-            jdbcTemplate
-                .query(
-                    """
+  private fun getSvarMapForTestresultat(
+      resultatId: Int?,
+      testgrunnlagId: Int?
+  ): Map<Int, List<ResultatManuellKontrollBase.Svar>> {
+    val svarMap =
+        jdbcTemplate
+            .query(
+                """
                     select 
                         ti.id,
                           tis.steg,
@@ -134,19 +133,17 @@ class TestResultatDAO(
                     and ${if (testgrunnlagId != null) "ti.testgrunnlag_id = :testgrunnlag_id" else "true"}
                     order by id, steg
                 """
-                        .trimIndent(),
-                    mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId)
-                ) { rs, _ ->
-                    SvarDB(
-                        rs.getInt("id"),
-                        ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar"))
-                    )
+                    .trimIndent(),
+                mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId)) { rs, _ ->
+                  SvarDB(
+                      rs.getInt("id"),
+                      ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar")))
                 }
-                .groupBy({ it.resultatManuellKontrollId }, { it.svar })
-        return svarMap
-    }
+            .groupBy({ it.resultatManuellKontrollId }, { it.svar })
+    return svarMap
+  }
 
-    @Transactional
+  @Transactional
   fun createRetest(retestResultat: ResultatManuellKontrollBase): Result<Unit> = runCatching {
     val brukarId: Int = brukarService.getUserId() ?: throw RuntimeException("No authenticated user")
 
@@ -184,28 +181,27 @@ class TestResultatDAO(
   fun update(testResultat: ResultatManuellKontroll): Result<Unit> = runCatching {
     val now = Timestamp.from(Instant.now())
 
-      val testVartUtfoert =
-          setTestVartUtfoert(testResultat, now)
+    val testVartUtfoert = setTestVartUtfoert(testResultat, now)
 
-      updateTestresultat(testResultat, testVartUtfoert, now)
+    updateTestresultat(testResultat, testVartUtfoert, now)
 
     // slett gamle svar og lagre de nye
-      deleteGamleSvar(testResultat)
+    deleteGamleSvar(testResultat)
 
-      saveNyeSvar(testResultat)
+    saveNyeSvar(testResultat)
   }
 
-    private fun saveNyeSvar(testResultat: ResultatManuellKontroll) {
-        testResultat.svar.forEach { saveSvar(testResultat.id, it) }
-    }
+  private fun saveNyeSvar(testResultat: ResultatManuellKontroll) {
+    testResultat.svar.forEach { saveSvar(testResultat.id, it) }
+  }
 
-    private fun updateTestresultat(
-        testResultat: ResultatManuellKontroll,
-        testVartUtfoert: Timestamp?,
-        now: Timestamp?
-    ) {
-        jdbcTemplate.update(
-            """
+  private fun updateTestresultat(
+      testResultat: ResultatManuellKontroll,
+      testVartUtfoert: Timestamp?,
+      now: Timestamp?
+  ) {
+    jdbcTemplate.update(
+        """
           update testresultat
           set element_omtale    = :elementOmtale,
               element_resultat  = :elementResultat,
@@ -216,46 +212,42 @@ class TestResultatDAO(
               sist_lagra = :sist_lagra
           where id = :id
         """
-                .trimIndent(),
-            mapOf(
-                "elementOmtale" to testResultat.elementOmtale,
-                "elementResultat" to testResultat.elementResultat?.name,
-                "elementUtfall" to testResultat.elementUtfall,
-                "testVartUtfoert" to testVartUtfoert,
-                "status" to testResultat.status.name,
-                "id" to testResultat.id,
-                "kommentar" to testResultat.kommentar,
-                "sist_lagra" to now
-            )
-        )
-    }
+            .trimIndent(),
+        mapOf(
+            "elementOmtale" to testResultat.elementOmtale,
+            "elementResultat" to testResultat.elementResultat?.name,
+            "elementUtfall" to testResultat.elementUtfall,
+            "testVartUtfoert" to testVartUtfoert,
+            "status" to testResultat.status.name,
+            "id" to testResultat.id,
+            "kommentar" to testResultat.kommentar,
+            "sist_lagra" to now))
+  }
 
-    private fun deleteGamleSvar(testResultat: ResultatManuellKontroll) {
-        jdbcTemplate.update(
-            """
+  private fun deleteGamleSvar(testResultat: ResultatManuellKontroll) {
+    jdbcTemplate.update(
+        """
                 delete from testresultat_svar
                 where testresultat_id = :id
             """
-                .trimIndent(),
-            mapOf("id" to testResultat.id)
-        )
-    }
+            .trimIndent(),
+        mapOf("id" to testResultat.id))
+  }
 
-    private fun setTestVartUtfoert(
-        testResultat: ResultatManuellKontroll,
-        now: Timestamp?
-    ): Timestamp? {
-        val testVartUtfoert =
-            if (testResultat.elementOmtale != null &&
-                testResultat.elementResultat != null &&
-                testResultat.elementUtfall != null
-            )
-                now
-            else null
-        return testVartUtfoert
-    }
+  private fun setTestVartUtfoert(
+      testResultat: ResultatManuellKontroll,
+      now: Timestamp?
+  ): Timestamp? {
+    val testVartUtfoert =
+        if (testResultat.elementOmtale != null &&
+            testResultat.elementResultat != null &&
+            testResultat.elementUtfall != null)
+            now
+        else null
+    return testVartUtfoert
+  }
 
-    @Transactional
+  @Transactional
   fun delete(id: Int): Result<Unit> = runCatching {
     jdbcTemplate.update(
         """
@@ -300,8 +292,6 @@ class TestResultatDAO(
             .trimIndent(),
         batchValues.toTypedArray())
   }
-
-
 
   fun getKontrollForTestresultat(testresultatId: Int): Result<KontrollDocumentation> = runCatching {
     val query =

@@ -15,4 +15,11 @@ class TestregelService(val testregelDAO: TestregelDAO, val kravregisterClient: K
   fun getTestregel(testregelId: Int): Testregel =
       testregelDAO.getTestregel(testregelId)
           ?: throw IllegalArgumentException("Fant ikkje testregel med id $testregelId")
+
+  fun getTestregelFromSchema(testregelKey: String): Testregel {
+    testregelDAO.getTestregelByTestregelId(testregelKey).let { testregel ->
+      return testregel
+          ?: throw RuntimeException("Fant ikke testregel med testregelId $testregelKey")
+    }
+  }
 }

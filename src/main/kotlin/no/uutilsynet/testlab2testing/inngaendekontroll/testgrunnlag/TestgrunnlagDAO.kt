@@ -20,18 +20,17 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getTestgrunnlag(testgrunnlagId: Int): Result<TestgrunnlagKontroll> {
 
-
-          return getTestgrunnlagKontroll(testgrunnlagId).mapCatching {
-                it.copy(
-                    testreglar = getTestreglarForTestgrunnlag(testgrunnlagId),
-                    sideutval = getSideutvalForTestgrunnlag(testgrunnlagId)
-                )
-          }
+    return getTestgrunnlagKontroll(testgrunnlagId).mapCatching {
+      it.copy(
+          testreglar = getTestreglarForTestgrunnlag(testgrunnlagId),
+          sideutval = getSideutvalForTestgrunnlag(testgrunnlagId))
+    }
   }
 
-    private fun getSideutvalForTestgrunnlag(testgrunnlagId: Int): List<Sideutval> {
-            return jdbcTemplate.query(
-                """
+  private fun getSideutvalForTestgrunnlag(testgrunnlagId: Int): List<Sideutval> {
+    return jdbcTemplate
+        .query(
+            """
                   select 
                     ks.id, 
                     ks.sideutval_type_id as type_id,
@@ -43,15 +42,16 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     join "testlab2_testing"."testgrunnlag_sideutval_kontroll" tsk on ks.id = tsk.sideutval_id
                   where tsk.testgrunnlag_id = :testgrunnlagId
                 """
-                    .trimIndent(),
-                mapOf("testgrunnlagId" to testgrunnlagId),
-                DataClassRowMapper.newInstance(Sideutval::class.java)
-            ).toList()
-    }
+                .trimIndent(),
+            mapOf("testgrunnlagId" to testgrunnlagId),
+            DataClassRowMapper.newInstance(Sideutval::class.java))
+        .toList()
+  }
 
-    private fun getTestreglarForTestgrunnlag(testgrunnlagId: Int): List<Testregel> {
-        return jdbcTemplate.query(
-                """
+  private fun getTestreglarForTestgrunnlag(testgrunnlagId: Int): List<Testregel> {
+    return jdbcTemplate
+        .query(
+            """
                   select 
                     t.id,
                     t.krav_id,
@@ -73,37 +73,37 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   join "testlab2_testing"."testregel" t on t.id = ttk.testregel_id
                     where testgrunnlag_id = :testgrunnlagId
                 """
-                    .trimMargin(),
+                .trimMargin(),
+            mapOf("testgrunnlagId" to testgrunnlagId),
+            DataClassRowMapper.newInstance(Testregel::class.java))
+        .toList()
+  }
+
+  private fun getTestgrunnlagKontroll(testgrunnlagId: Int): Result<TestgrunnlagKontroll> {
+    val testgrunnlag =
+        DataAccessUtils.singleResult(
+            jdbcTemplate.query(
+                """select id, kontroll_id, namn, type, dato_oppretta from "testlab2_testing"."testgrunnlag" where id = :testgrunnlagId""",
                 mapOf("testgrunnlagId" to testgrunnlagId),
-                DataClassRowMapper.newInstance(Testregel::class.java)
-            ).toList()
+            ) { rs, _ ->
+              TestgrunnlagKontroll(
+                  rs.getInt("id"),
+                  rs.getInt("kontroll_id"),
+                  rs.getString("namn"),
+                  emptyList(),
+                  emptyList(),
+                  TestgrunnlagType.valueOf(rs.getString("type")),
+                  rs.getTimestamp("dato_oppretta").toInstant())
+            })
+
+    if (testgrunnlag == null) {
+      return Result.failure(
+          IllegalArgumentException("Testgrunnlag med id $testgrunnlagId finnes ikkje"))
     }
+    return Result.success(testgrunnlag)
+  }
 
-    private fun getTestgrunnlagKontroll(testgrunnlagId: Int): Result<TestgrunnlagKontroll> {
-        val testgrunnlag =
-            DataAccessUtils.singleResult(
-                jdbcTemplate.query(
-                    """select id, kontroll_id, namn, type, dato_oppretta from "testlab2_testing"."testgrunnlag" where id = :testgrunnlagId""",
-                    mapOf("testgrunnlagId" to testgrunnlagId),
-                ) { rs, _ ->
-                    TestgrunnlagKontroll(
-                        rs.getInt("id"),
-                        rs.getInt("kontroll_id"),
-                        rs.getString("namn"),
-                        emptyList(),
-                        emptyList(),
-                        TestgrunnlagType.valueOf(rs.getString("type")),
-                        rs.getTimestamp("dato_oppretta").toInstant()
-                    )
-                })
-
-        if(testgrunnlag == null) {
-            return Result.failure(IllegalArgumentException("Testgrunnlag med id $testgrunnlagId finnes ikkje"))
-        }
-        return Result.success(testgrunnlag)
-    }
-
-    fun getOpprinneligTestgrunnlag(kontrollId: Int): Result<Int> = runCatching {
+  fun getOpprinneligTestgrunnlag(kontrollId: Int): Result<Int> = runCatching {
     val result =
         DataAccessUtils.singleResult(
             jdbcTemplate.query(
@@ -119,16 +119,24 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getTestgrunnlagForKontroll(kontrollId: Int): TestgrunnlagList {
     logger.info("Henter testgrunnlag for kontroll $kontrollId")
-    val testgrunnlagIds =
-        jdbcTemplate.queryForList(
-            """select t.id from "testlab2_testing"."testgrunnlag" t where t.kontroll_id = :kontrollId""",
-            mapOf("kontrollId" to kontrollId),
-            Int::class.java)
+    val testgrunnlagIds = getTestgrunnlagIds(kontrollId)
+
     val testgrunnlag =
         testgrunnlagIds.map { id -> getTestgrunnlag(id).getOrThrow() }.groupBy { it.type }
     return TestgrunnlagList(
         testgrunnlag[TestgrunnlagType.OPPRINNELEG_TEST]?.firstOrNull()!!,
         testgrunnlag[TestgrunnlagType.RETEST]?.toList() ?: emptyList())
+  }
+
+  private fun getTestgrunnlagIds(kontrollId: Int): List<Int> {
+    val testgrunnlagIds =
+        jdbcTemplate
+            .queryForList(
+                """select t.id from "testlab2_testing"."testgrunnlag" t where t.kontroll_id = :kontrollId""",
+                mapOf("kontrollId" to kontrollId),
+                Int::class.java)
+            .toList()
+    return testgrunnlagIds
   }
 
   @Transactional
@@ -161,23 +169,25 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val testgrunnlagId = keyHolder.keys?.get("id") as Int
 
       saveTestgrunnlagUtval(testgrunnlagId, testgrunnlag.sideutval.map { it.id })
-       saveTestgrunnlagTestregel(testgrunnlagId, testgrunnlag.testregelIdList)
+      saveTestgrunnlagTestregel(testgrunnlagId, testgrunnlag.testregelIdList)
       testgrunnlagId
     }
   }
 
   fun kontrollHasTestresultat(kontrollId: Int): Boolean {
     val resultat =
-        jdbcTemplate.query(
-            """
+        jdbcTemplate
+            .query(
+                """
         select 1 from "testlab2_testing"."testresultat" tr
           join "testlab2_testing"."testgrunnlag" tg on tr.testgrunnlag_id = tg.id
         where tg.kontroll_id = :kontrollId
       """
-                .trimIndent(),
-            mapOf("kontrollId" to kontrollId)) { rs, _ ->
-              rs.getInt(1)
-            }
+                    .trimIndent(),
+                mapOf("kontrollId" to kontrollId)) { rs, _ ->
+                  rs.getInt(1)
+                }
+            .toList()
 
     return resultat.isNotEmpty()
   }

@@ -1,8 +1,8 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
+import java.time.Instant
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
 import no.uutilsynet.testlab2testing.testregel.Testregel
-import java.time.Instant
 
 data class TestgrunnlagKontroll(
     val id: Int,

@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
+import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
@@ -9,7 +10,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Instant
 
 @Service
 class TestgrunnlagService(
@@ -19,19 +19,19 @@ class TestgrunnlagService(
 ) {
   val logger: Logger = LoggerFactory.getLogger(TestgrunnlagService::class.java)
 
-    fun createOrUpdateFromKontroll(testgrunnlag: NyttTestgrunnlag): Result<Int> {
-        val opprinneligTestgrunnlag =
-            testgrunnlagDAO.getOpprinneligTestgrunnlag(testgrunnlag.kontrollId)
+  fun createOrUpdateFromKontroll(testgrunnlag: NyttTestgrunnlagFromKontroll): Result<Int> {
+    val opprinneligTestgrunnlag =
+        testgrunnlagDAO.getOpprinneligTestgrunnlag(testgrunnlag.kontrollId)
 
-        return if (opprinneligTestgrunnlag.isSuccess) {
-            opprinneligTestgrunnlag
-                .mapCatching { testgrunnlagDAO.getTestgrunnlag(it) }
-                .mapCatching { updateExisting(it.getOrThrow(), testgrunnlag) }
-                .map { it.getOrThrow().id }
-        } else {
-            testgrunnlagDAO.createTestgrunnlag(testgrunnlag)
-        }
+    return if (opprinneligTestgrunnlag.isSuccess) {
+      opprinneligTestgrunnlag
+          .mapCatching { testgrunnlagDAO.getTestgrunnlag(it) }
+          .mapCatching { updateExisting(it.getOrThrow(), testgrunnlag) }
+          .map { it.getOrThrow().id }
+    } else {
+      testgrunnlagDAO.createTestgrunnlag(testgrunnlag.toNyttTestgrunnlag())
     }
+  }
 
   fun kontrollHasTestresultat(kontrollId: Int): Boolean =
       testgrunnlagDAO.kontrollHasTestresultat(kontrollId)
@@ -137,27 +137,21 @@ class TestgrunnlagService(
 
   private fun updateExisting(
       eksisterendeTestgrunnlag: TestgrunnlagKontroll,
-      testgrunnlag: NyttTestgrunnlag
+      testgrunnlag: NyttTestgrunnlagFromKontroll
   ) =
       testgrunnlagDAO.updateTestgrunnlag(
           eksisterendeTestgrunnlag.copy(
               namn = testgrunnlag.namn,
-              testreglar =
-                  testregelDAO.getMany(testgrunnlag.testregelIdList),
-              sideutval =
-                testgrunnlag.sideutval,
+              testreglar = testgrunnlag.testregelIdList,
+              sideutval = testgrunnlag.sideutval,
           ))
 
-    private fun updateExistingFromKontroll(
-        eksisterendeTestgrunnlag: TestgrunnlagKontroll,
-        testgrunnlag: NyttTestgrunnlagFromKontroll
-    ) =
-        testgrunnlagDAO.updateTestgrunnlag(
-            eksisterendeTestgrunnlag.copy(
-                namn = testgrunnlag.namn,
-                testreglar =
-                    testgrunnlag.testregelIdList?: emptyList(),
-                sideutval =
-                    testgrunnlag.sideutval,
-            ))
+  fun NyttTestgrunnlagFromKontroll.toNyttTestgrunnlag(): NyttTestgrunnlag {
+    return NyttTestgrunnlag(
+        kontrollId = this.kontrollId,
+        namn = this.namn,
+        type = this.type,
+        sideutval = this.sideutval,
+        testregelIdList = this.testregelIdList.map { it.id })
+  }
 }

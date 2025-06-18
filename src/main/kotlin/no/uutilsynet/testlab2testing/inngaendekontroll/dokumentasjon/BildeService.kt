@@ -61,7 +61,7 @@ class BildeService(
 
   private fun getBildeStiFromBildeId(bildeId: Int) =
       listOf(
-        bildeDAO.getBildeSti(bildeId).getOrThrow()
+          bildeDAO.getBildeSti(bildeId).getOrThrow()
               ?: throw IllegalArgumentException("Fann ikkje bilde for bilde-id $bildeId"))
 
   private fun deleteBilde(bildeSti: BildeSti) {
@@ -150,6 +150,5 @@ class BildeService(
 
   fun erBildePublisert(bildeSti: String) {
     bildeDAO.erBildeTilPublisertTestgrunnlag(bildeSti)
-
   }
 }

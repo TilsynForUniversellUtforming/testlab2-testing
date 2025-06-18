@@ -243,9 +243,7 @@ class KontrollResource(
             "Testgrunnlag for kontroll ${kontroll.tittel}",
             OPPRINNELEG_TEST,
             kontroll.sideutvalList,
-            kontroll.testreglar?.testregelList
-        )
+            kontroll.testreglar?.testregelList ?: emptyList())
     return testgrunnlagService.createOrUpdateFromKontroll(nyttTestgrunnlag)
   }
-
 }

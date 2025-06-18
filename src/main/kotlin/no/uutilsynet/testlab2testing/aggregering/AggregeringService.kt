@@ -13,6 +13,7 @@ import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -26,6 +27,7 @@ class AggregeringService(
     val aggregeringDAO: AggregeringDAO,
     val testResultatDAO: TestResultatDAO,
     val sideutvalDAO: SideutvalDAO,
+    val testregelService: TestregelService
 ) {
 
   private val logger = LoggerFactory.getLogger(AggregeringService::class.java)
@@ -120,7 +122,7 @@ class AggregeringService(
       aggregertResultatTestregel: AggregertResultatTestregel
   ): AggregeringPerTestregelDTO {
 
-    val testregel = getTestregelFromSchema(aggregertResultatTestregel.testregelId)
+    val testregel = testregelService.getTestregelFromSchema(aggregertResultatTestregel.testregelId)
 
     return AggregeringPerTestregelDTO(
         aggregertResultatTestregel.maalingId,
@@ -230,13 +232,6 @@ class AggregeringService(
 
   private fun getLoeysing(loeysingId: Int): Loeysing =
       loeysingsRegisterClient.getLoeysingFromId(loeysingId)
-
-  fun getTestregelFromSchema(testregelKey: String): Testregel {
-    testregelDAO.getTestregelByTestregelId(testregelKey).let { testregel ->
-      return testregel
-          ?: throw RuntimeException("Fant ikke testregel med testregelId $testregelKey")
-    }
-  }
 
   fun getTestregel(testregelId: Int): Testregel {
     return testregelDAO.getTestregel(testregelId)

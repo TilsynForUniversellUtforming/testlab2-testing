@@ -204,14 +204,15 @@ class EksternResultatService(
         .getOrThrow()
   }
 
-    fun getResultatForRapport(rapportId: String): List<TestEkstern> {
-        val loeysingar = getLoeysingarFromRapport(rapportId)
+  fun getResultatForRapport(rapportId: String): List<TestEkstern> {
+    val loeysingar = getLoeysingarFromRapport(rapportId)
 
-        return eksternResultatDAO.getTestsForLoeysingIds(loeysingar).toTestEksternList()
+    return eksternResultatDAO.getTestsForLoeysingIds(loeysingar).toTestEksternList()
+  }
+
+  private fun getLoeysingarFromRapport(rapportId: String): List<Int> {
+    return eksternResultatDAO.findKontrollLoeysingFromRapportId(rapportId).getOrThrow().map {
+      it.loeysingId
     }
-
-    private fun getLoeysingarFromRapport(rapportId: String): List<Int> {
-        return eksternResultatDAO.findKontrollLoeysingFromRapportId(rapportId).getOrThrow().map { it.loeysingId }
-    }
-
+  }
 }

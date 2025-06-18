@@ -82,7 +82,8 @@ class EksternResultatPubliseringService(
       kontroll: KontrollDAO.KontrollDB,
       loeysingId: Int
   ): Result<Boolean> {
-      logger.info("Kontroll med id ${kontroll.id} publiserer resultat for loeysing med id $loeysingId og type ${kontroll.kontrolltype}")
+    logger.info(
+        "Kontroll med id ${kontroll.id} publiserer resultat for loeysing med id $loeysingId og type ${kontroll.kontrolltype}")
     return when (kontroll.kontrolltype) {
       Kontrolltype.Statusmaaling,
       Kontrolltype.ForenklaKontroll -> publiserResultatForMaaling(kontroll.id, loeysingId)
@@ -93,9 +94,11 @@ class EksternResultatPubliseringService(
   }
 
   private fun publiserResultatForTestgrunnlag(kontrollId: Int, loeysingId: Int): Result<Boolean> {
-      logger.info("Startar publisering resultat for testgrunnlag for kontroll med id $kontrollId og loeysing med id $loeysingId")
+    logger.info(
+        "Startar publisering resultat for testgrunnlag for kontroll med id $kontrollId og loeysing med id $loeysingId")
     val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
-    logger.info("Publiserer resultat for testgrunnlag med id $testgrunnlagId for loeysing med id $loeysingId")
+    logger.info(
+        "Publiserer resultat for testgrunnlag med id $testgrunnlagId for loeysing med id $loeysingId")
     return eksternResultatDAO.publisertTestgrunnlagResultat(testgrunnlagId, loeysingId)
   }
 

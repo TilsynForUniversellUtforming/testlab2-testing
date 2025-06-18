@@ -65,7 +65,9 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               return Result.success(true)
             },
             onFailure = {
-                logger.error("Feila ved publisering av resultat for testgrunnlag $testgrunnlagId og løysing $loeysingId", it)
+              logger.error(
+                  "Feila ved publisering av resultat for testgrunnlag $testgrunnlagId og løysing $loeysingId",
+                  it)
               return Result.failure(it)
             })
   }
@@ -133,9 +135,7 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val query = erPublisertQuery(typeKontroll)
 
     runCatching {
-          jdbcTemplate.queryForObject(
-              query.trimIndent(), mapOf("id" to id), Int::class.java)
-              ?: 0
+          jdbcTemplate.queryForObject(query.trimIndent(), mapOf("id" to id), Int::class.java) ?: 0
         }
         .fold(
             onSuccess = {

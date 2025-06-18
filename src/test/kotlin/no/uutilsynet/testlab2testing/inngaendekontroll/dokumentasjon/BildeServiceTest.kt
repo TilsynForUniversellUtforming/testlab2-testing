@@ -1,5 +1,10 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
+import java.awt.Image
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
+import java.time.Instant
+import javax.imageio.ImageIO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.KontrollDocumentation
@@ -14,11 +19,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
-import java.awt.Image
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
-import java.time.Instant
-import javax.imageio.ImageIO
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -27,7 +27,7 @@ class BildeServiceTest(@Autowired val bildeService: BildeService) {
 
   @MockitoBean lateinit var testResultatDAO: TestResultatDAO
 
-    @MockitoBean lateinit var bildeDAO: BildeDAO
+  @MockitoBean lateinit var bildeDAO: BildeDAO
 
   @Test
   @DisplayName("Skal lagre bilder som blir lastet opp i databasen")
@@ -53,7 +53,7 @@ class BildeServiceTest(@Autowired val bildeService: BildeService) {
         .thenReturn(Result.success(KontrollDocumentation("Testkontroll", 1)))
 
     `when`(
-        bildeDAO.saveBilde(
+            bildeDAO.saveBilde(
                 testresultatId,
                 expectedBildeDetalj.fullFileName,
                 expectedBildeDetalj.fullThumbnailName))
@@ -100,7 +100,7 @@ class BildeServiceTest(@Autowired val bildeService: BildeService) {
         .thenReturn(Result.success(KontrollDocumentation("Testkontroll", 1)))
 
     `when`(
-        bildeDAO.saveBilde(
+            bildeDAO.saveBilde(
                 testresultatId,
                 expectedBildeDetalj.fullFileName,
                 expectedBildeDetalj.fullThumbnailName))

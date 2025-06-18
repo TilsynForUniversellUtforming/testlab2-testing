@@ -16,4 +16,5 @@ data class NyttTestgrunnlagFromKontroll(
     val namn: String,
     val type: TestgrunnlagType,
     val sideutval: List<Sideutval>,
-    val testregelIdList: List<Testregel>?)
+    val testregelIdList: List<Testregel>
+)

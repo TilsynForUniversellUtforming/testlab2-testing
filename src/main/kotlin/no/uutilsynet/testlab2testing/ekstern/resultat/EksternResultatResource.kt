@@ -52,16 +52,14 @@ class EksternResultatResource(
     }
   }
 
-    @GetMapping("rapport/{rapportId}")
-    fun getRestultatRapport(
-        @PathVariable rapportId: String
-    ): ResponseEntity<out Any> {
-        return kotlin
-            .runCatching { eksternResultatService.getResultatForRapport(rapportId) }
-            .fold(
-                onSuccess = { ResponseEntity.ok(it) },
-                onFailure = { ErrorHandlingUtil.handleErrors(it) })
-    }
+  @GetMapping("rapport/{rapportId}")
+  fun getRestultatRapport(@PathVariable rapportId: String): ResponseEntity<out Any> {
+    return kotlin
+        .runCatching { eksternResultatService.getResultatForRapport(rapportId) }
+        .fold(
+            onSuccess = { ResponseEntity.ok(it) },
+            onFailure = { ErrorHandlingUtil.handleErrors(it) })
+  }
 
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}")
   fun getResultRapportLoeysing(
@@ -130,19 +128,19 @@ class EksternResultatResource(
     }
   }
 
-    @GetMapping("sti")
-    fun getBilde(@RequestParam("bildesti") bildesti: String): ResponseEntity<InputStreamResource> {
+  @GetMapping("sti")
+  fun getBilde(@RequestParam("bildesti") bildesti: String): ResponseEntity<InputStreamResource> {
 
-        val bildeConnection = bildeService.getBilde(bildesti)
-        val contentType: String = bildeConnection.contentType ?: "image/jpeg"
-        val mediaType = MediaType.parseMediaType(contentType)
+    val bildeConnection = bildeService.getBilde(bildesti)
+    val contentType: String = bildeConnection.contentType ?: "image/jpeg"
+    val mediaType = MediaType.parseMediaType(contentType)
 
-        val headers = HttpHeaders()
-        headers["Content-Disposition"] = "inline; filename=\"$bildesti\""
+    val headers = HttpHeaders()
+    headers["Content-Disposition"] = "inline; filename=\"$bildesti\""
 
-        return ResponseEntity.ok()
-            .headers(headers)
-            .contentType(mediaType)
-            .body(InputStreamResource(bildeService.getBilde(bildesti).inputStream))
-    }
+    return ResponseEntity.ok()
+        .headers(headers)
+        .contentType(mediaType)
+        .body(InputStreamResource(bildeService.getBilde(bildesti).inputStream))
+  }
 }

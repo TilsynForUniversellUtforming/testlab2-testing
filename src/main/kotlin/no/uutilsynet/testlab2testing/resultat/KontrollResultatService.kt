@@ -10,11 +10,6 @@ sealed class KontrollResultatService(
     val kravregisterClient: KravregisterClient
 ) {
 
-  protected fun getTestreglarForKrav(kravId: Int): List<Int> {
-    val testregelIds: List<Int> = testregelDAO.getTestregelForKrav(kravId).map { it.id }
-    return testregelIds
-  }
-
   protected fun filterByTestregel(testregelId: Int, testregelIdsForKrav: List<Int>): Boolean {
     return testregelIdsForKrav.contains(testregelId)
   }
