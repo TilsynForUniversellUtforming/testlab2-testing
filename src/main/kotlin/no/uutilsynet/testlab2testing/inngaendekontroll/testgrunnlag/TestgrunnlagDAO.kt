@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
+import java.sql.Timestamp
+import java.time.Instant
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.slf4j.LoggerFactory
@@ -10,8 +12,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import java.sql.Timestamp
-import java.time.Instant
 
 @Component
 class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
