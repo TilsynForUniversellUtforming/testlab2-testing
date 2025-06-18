@@ -10,6 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.context.annotation.Lazy
+import org.springframework.core.io.InputStreamResource
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.util.MimeTypeUtils
 import org.springframework.web.multipart.MultipartFile
@@ -148,7 +152,21 @@ class BildeService(
     return blobClient.getBildeSti(bildesti)
   }
 
-  fun erBildePublisert(bildeSti: String) {
-    bildeDAO.erBildeTilPublisertTestgrunnlag(bildeSti)
+  fun getBildeResponse(bildesti: String): ResponseEntity<InputStreamResource> {
+    val bildeConnection = getBilde(bildesti)
+    val contentType: String = bildeConnection.contentType ?: "image/jpeg"
+    val mediaType = MediaType.parseMediaType(contentType)
+
+    val headers = HttpHeaders()
+    headers["Content-Disposition"] = "inline; filename=\"$bildesti\""
+
+    return ResponseEntity.ok()
+        .headers(headers)
+        .contentType(mediaType)
+        .body(InputStreamResource(getBilde(bildesti).inputStream))
+  }
+
+  fun erBildePublisert(bildeSti: String): Boolean {
+    return bildeDAO.erBildeTilPublisertTestgrunnlag(bildeSti)
   }
 }
