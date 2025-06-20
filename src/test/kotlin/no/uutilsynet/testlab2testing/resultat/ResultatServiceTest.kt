@@ -191,7 +191,6 @@ class ResultatServiceTest(
             emptyList(),
             emptyList(),
             TestgrunnlagType.OPPRINNELEG_TEST,
-            null,
             Instant.now())
     val testgrunnlagList = TestgrunnlagList(testgrunnlagKontroll, emptyList())
     val testregel =

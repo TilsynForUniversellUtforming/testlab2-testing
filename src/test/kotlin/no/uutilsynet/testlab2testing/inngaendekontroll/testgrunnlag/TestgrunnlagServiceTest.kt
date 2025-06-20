@@ -54,7 +54,6 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
             kontrollId = kontrollId,
             namn = "Original",
             type = TestgrunnlagType.OPPRINNELEG_TEST,
-            aktivitet = null,
             datoOppretta = Instant.now())
 
     `when`(testgrunnlagDAO.getTestgrunnlag(originalTestgrunnlagId))

@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
 import java.time.Instant
-import no.uutilsynet.testlab2testing.inngaendekontroll.aktivitet.Aktivitet
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
 import no.uutilsynet.testlab2testing.testregel.Testregel
 
@@ -12,7 +11,6 @@ data class TestgrunnlagKontroll(
     val testreglar: List<Testregel> = emptyList(),
     val sideutval: List<Sideutval> = emptyList(),
     val type: TestgrunnlagType,
-    val aktivitet: List<Aktivitet>?,
     val datoOppretta: Instant
 )
 

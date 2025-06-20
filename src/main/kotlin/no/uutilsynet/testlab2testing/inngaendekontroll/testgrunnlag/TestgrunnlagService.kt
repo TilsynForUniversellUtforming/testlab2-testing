@@ -5,7 +5,6 @@ import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
-import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -15,13 +14,12 @@ import org.springframework.stereotype.Service
 @Service
 class TestgrunnlagService(
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
-    @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val testregelDAO: TestregelDAO,
     @Autowired val testResultatDAO: TestResultatDAO
 ) {
   val logger: Logger = LoggerFactory.getLogger(TestgrunnlagService::class.java)
 
-  fun createOrUpdate(testgrunnlag: NyttTestgrunnlag): Result<Int> {
+  fun createOrUpdateFromKontroll(testgrunnlag: NyttTestgrunnlagFromKontroll): Result<Int> {
     val opprinneligTestgrunnlag =
         testgrunnlagDAO.getOpprinneligTestgrunnlag(testgrunnlag.kontrollId)
 
@@ -31,7 +29,7 @@ class TestgrunnlagService(
           .mapCatching { updateExisting(it.getOrThrow(), testgrunnlag) }
           .map { it.getOrThrow().id }
     } else {
-      testgrunnlagDAO.createTestgrunnlag(testgrunnlag)
+      testgrunnlagDAO.createTestgrunnlag(testgrunnlag.toNyttTestgrunnlag())
     }
   }
 
@@ -139,17 +137,21 @@ class TestgrunnlagService(
 
   private fun updateExisting(
       eksisterendeTestgrunnlag: TestgrunnlagKontroll,
-      testgrunnlag: NyttTestgrunnlag
+      testgrunnlag: NyttTestgrunnlagFromKontroll
   ) =
       testgrunnlagDAO.updateTestgrunnlag(
           eksisterendeTestgrunnlag.copy(
               namn = testgrunnlag.namn,
-              testreglar =
-                  testregelDAO.getTestregelList().filter {
-                    testgrunnlag.testregelIdList.contains(it.id)
-                  },
-              sideutval =
-                  kontrollDAO.findSideutvalByKontrollAndLoeysing(
-                      testgrunnlag.kontrollId, testgrunnlag.sideutval.map { it.loeysingId }),
+              testreglar = testgrunnlag.testregelIdList,
+              sideutval = testgrunnlag.sideutval,
           ))
+
+  fun NyttTestgrunnlagFromKontroll.toNyttTestgrunnlag(): NyttTestgrunnlag {
+    return NyttTestgrunnlag(
+        kontrollId = this.kontrollId,
+        namn = this.namn,
+        type = this.type,
+        sideutval = this.sideutval,
+        testregelIdList = this.testregelIdList.map { it.id })
+  }
 }

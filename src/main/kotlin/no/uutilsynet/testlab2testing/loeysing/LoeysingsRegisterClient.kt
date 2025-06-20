@@ -108,7 +108,8 @@ class LoeysingsRegisterClient(
               .build()
               .toUri()
       restTemplate.getForObject(uri, Array<Verksemd>::class.java)?.toList()
-          ?: throw RuntimeException("loeysingsregisteret returnerte null for verksemdsøk $search")
+          ?: throw NoSuchElementException(
+              "loeysingsregisteret returnerte null for verksemdsøk $search")
     }
   }
 

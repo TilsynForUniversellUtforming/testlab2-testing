@@ -10,6 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.context.annotation.Lazy
+import org.springframework.core.io.InputStreamResource
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.util.MimeTypeUtils
 import org.springframework.web.multipart.MultipartFile
@@ -19,6 +23,7 @@ private const val GJENNOPPRETT_BILDE_FEIL = "Kunne ikkje gjenopprette bilde"
 @Service
 class BildeService(
     @Autowired val testResultatDAO: TestResultatDAO,
+    @Autowired val bildeDAO: BildeDAO,
     @Lazy val blobClient: ImageStorageService,
 ) {
 
@@ -26,7 +31,7 @@ class BildeService(
 
   @CacheEvict(value = ["bildeCache"], key = "#testresultatId")
   fun createBilde(testresultatId: Int, bilder: List<MultipartFile>) = runCatching {
-    val antallBilder = testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
+    val antallBilder = bildeDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
     val kontrolInfo = testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
     val imageDetails =
         multipartFilesToImageDetails(testresultatId, antallBilder.size, bilder, kontrolInfo)
@@ -35,7 +40,7 @@ class BildeService(
     blobClient.uploadBilder(imageDetails).forEach { bildeResultat ->
       if (bildeResultat.isSuccess) {
         val bildeDetalj = bildeResultat.getOrThrow()
-        testResultatDAO
+        bildeDAO
             .saveBilde(testresultatId, bildeDetalj.fullFileName, bildeDetalj.fullThumbnailName)
             .getOrThrow()
       }
@@ -54,13 +59,13 @@ class BildeService(
     return if (bildeId != null) {
       getBildeStiFromBildeId(bildeId)
     } else {
-      testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
+      bildeDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
     }
   }
 
   private fun getBildeStiFromBildeId(bildeId: Int) =
       listOf(
-          testResultatDAO.getBildeSti(bildeId).getOrThrow()
+          bildeDAO.getBildeSti(bildeId).getOrThrow()
               ?: throw IllegalArgumentException("Fann ikkje bilde for bilde-id $bildeId"))
 
   private fun deleteBilde(bildeSti: BildeSti) {
@@ -75,7 +80,7 @@ class BildeService(
       throw it
     }
 
-    testResultatDAO.deleteBilde(bildeSti.id).onFailure {
+    bildeDAO.deleteBilde(bildeSti.id).onFailure {
       logger.error("Kunne ikkje slette bilde frå database", it)
       restoreBilde(bildeSti.bilde)
       restoreBilde(bildeSti.thumbnail)
@@ -90,7 +95,7 @@ class BildeService(
   @Cacheable("bildeCache", key = "#testresultatId")
   fun listBildeForTestresultat(testresultatId: Int): Result<List<Bilde>> = runCatching {
     testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
-    val paths = testResultatDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
+    val paths = bildeDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
 
     val bilder = blobClient.getBildeStiList(paths)
     return bilder
@@ -145,5 +150,23 @@ class BildeService(
 
   fun getBilde(bildesti: String): HttpURLConnection {
     return blobClient.getBildeSti(bildesti)
+  }
+
+  fun getBildeResponse(bildesti: String): ResponseEntity<InputStreamResource> {
+    val bildeConnection = getBilde(bildesti)
+    val contentType: String = bildeConnection.contentType ?: "image/jpeg"
+    val mediaType = MediaType.parseMediaType(contentType)
+
+    val headers = HttpHeaders()
+    headers["Content-Disposition"] = "inline; filename=\"$bildesti\""
+
+    return ResponseEntity.ok()
+        .headers(headers)
+        .contentType(mediaType)
+        .body(InputStreamResource(bildeConnection.inputStream))
+  }
+
+  fun erBildePublisert(bildeSti: String): Boolean {
+    return bildeDAO.erBildeTilPublisertTestgrunnlag(bildeSti)
   }
 }

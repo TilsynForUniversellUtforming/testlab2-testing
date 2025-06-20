@@ -5,8 +5,6 @@ import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
-import org.springframework.dao.support.DataAccessUtils
-import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -63,7 +61,7 @@ class TestResultatDAO(
       resultatId: Int? = null,
       testgrunnlagId: Int? = null
   ): Result<List<ResultatManuellKontroll>> = runCatching {
-    val testResultat =
+    val testResultat: List<ResultatManuellKontroll> =
         jdbcTemplate
             .query(
                 """
@@ -112,20 +110,29 @@ class TestResultatDAO(
             }
             .toList()
 
+    val svarMap = getSvarMapForTestresultat(resultatId, testgrunnlagId)
+
+    testResultat.map { it.copy(svar = svarMap[it.id] ?: emptyList()) }
+  }
+
+  private fun getSvarMapForTestresultat(
+      resultatId: Int?,
+      testgrunnlagId: Int?
+  ): Map<Int, List<ResultatManuellKontrollBase.Svar>> {
     val svarMap =
         jdbcTemplate
             .query(
                 """
-                select 
-                    ti.id,
-                      tis.steg,
-                       tis.svar
-                from testresultat ti
-                  join testresultat_svar tis on ti.id = tis.testresultat_id
-                where ${if (resultatId != null) "ti.id = :id" else "true"}
-                and ${if (testgrunnlagId != null) "ti.testgrunnlag_id = :testgrunnlag_id" else "true"}
-                order by id, steg
-            """
+                    select 
+                        ti.id,
+                          tis.steg,
+                           tis.svar
+                    from testresultat ti
+                      join testresultat_svar tis on ti.id = tis.testresultat_id
+                    where ${if (resultatId != null) "ti.id = :id" else "true"}
+                    and ${if (testgrunnlagId != null) "ti.testgrunnlag_id = :testgrunnlag_id" else "true"}
+                    order by id, steg
+                """
                     .trimIndent(),
                 mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId)) { rs, _ ->
                   SvarDB(
@@ -133,8 +140,7 @@ class TestResultatDAO(
                       ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar")))
                 }
             .groupBy({ it.resultatManuellKontrollId }, { it.svar })
-
-    testResultat.map { it.copy(svar = svarMap[it.id] ?: emptyList()) }
+    return svarMap
   }
 
   @Transactional
@@ -175,25 +181,37 @@ class TestResultatDAO(
   fun update(testResultat: ResultatManuellKontroll): Result<Unit> = runCatching {
     val now = Timestamp.from(Instant.now())
 
-    val testVartUtfoert =
-        if (testResultat.elementOmtale != null &&
-            testResultat.elementResultat != null &&
-            testResultat.elementUtfall != null)
-            now
-        else null
+    val testVartUtfoert = setTestVartUtfoert(testResultat, now)
 
+    updateTestresultat(testResultat, testVartUtfoert, now)
+
+    // slett gamle svar og lagre de nye
+    deleteGamleSvar(testResultat)
+
+    saveNyeSvar(testResultat)
+  }
+
+  private fun saveNyeSvar(testResultat: ResultatManuellKontroll) {
+    testResultat.svar.forEach { saveSvar(testResultat.id, it) }
+  }
+
+  private fun updateTestresultat(
+      testResultat: ResultatManuellKontroll,
+      testVartUtfoert: Timestamp?,
+      now: Timestamp?
+  ) {
     jdbcTemplate.update(
         """
-      update testresultat
-      set element_omtale    = :elementOmtale,
-          element_resultat  = :elementResultat,
-          element_utfall    = :elementUtfall,
-          test_vart_utfoert = :testVartUtfoert,
-          status = :status,
-          kommentar = :kommentar,
-          sist_lagra = :sist_lagra
-      where id = :id
-    """
+          update testresultat
+          set element_omtale    = :elementOmtale,
+              element_resultat  = :elementResultat,
+              element_utfall    = :elementUtfall,
+              test_vart_utfoert = :testVartUtfoert,
+              status = :status,
+              kommentar = :kommentar,
+              sist_lagra = :sist_lagra
+          where id = :id
+        """
             .trimIndent(),
         mapOf(
             "elementOmtale" to testResultat.elementOmtale,
@@ -204,16 +222,29 @@ class TestResultatDAO(
             "id" to testResultat.id,
             "kommentar" to testResultat.kommentar,
             "sist_lagra" to now))
+  }
 
-    // slett gamle svar og lagre de nye
+  private fun deleteGamleSvar(testResultat: ResultatManuellKontroll) {
     jdbcTemplate.update(
         """
-            delete from testresultat_svar
-            where testresultat_id = :id
-        """
+                delete from testresultat_svar
+                where testresultat_id = :id
+            """
             .trimIndent(),
         mapOf("id" to testResultat.id))
-    testResultat.svar.forEach { saveSvar(testResultat.id, it) }
+  }
+
+  private fun setTestVartUtfoert(
+      testResultat: ResultatManuellKontroll,
+      now: Timestamp?
+  ): Timestamp? {
+    val testVartUtfoert =
+        if (testResultat.elementOmtale != null &&
+            testResultat.elementResultat != null &&
+            testResultat.elementUtfall != null)
+            now
+        else null
+    return testVartUtfoert
   }
 
   @Transactional
@@ -260,46 +291,6 @@ class TestResultatDAO(
         """
             .trimIndent(),
         batchValues.toTypedArray())
-  }
-
-  @Transactional
-  fun saveBilde(testresultatId: Int, bildePath: String, thumbnailPath: String) = runCatching {
-    jdbcTemplate.update(
-        """
-              insert into testresultat_bilde (testresultat_id, bilde, thumbnail, opprettet)
-              values (:testresultat_id, :bilde, :thumbnail, :opprettet)
-              on conflict (testresultat_id, bilde, thumbnail) do update
-              set opprettet = excluded.opprettet;
-            """
-            .trimMargin(),
-        mapOf(
-            "testresultat_id" to testresultatId,
-            "bilde" to bildePath,
-            "thumbnail" to thumbnailPath,
-            "opprettet" to Timestamp.from(Instant.now())))
-  }
-
-  @Transactional
-  fun deleteBilde(bildeId: Int) = runCatching {
-    jdbcTemplate.update(
-        "delete from testresultat_bilde where id = :bilde_id", mapOf("bilde_id" to bildeId))
-  }
-
-  fun getBildeSti(bildeId: Int) = runCatching {
-    DataAccessUtils.singleResult(
-        jdbcTemplate.query(
-            "select id, bilde, thumbnail, opprettet from testresultat_bilde where id = :id",
-            mapOf("id" to bildeId),
-            DataClassRowMapper.newInstance(BildeSti::class.java)))
-  }
-
-  fun getBildePathsForTestresultat(testresultatId: Int) = runCatching {
-    jdbcTemplate
-        .query(
-            "select id, bilde, thumbnail, opprettet from testresultat_bilde where testresultat_id = :testresultat_id",
-            mapOf("testresultat_id" to testresultatId),
-            DataClassRowMapper.newInstance(BildeSti::class.java))
-        .toList()
   }
 
   fun getKontrollForTestresultat(testresultatId: Int): Result<KontrollDocumentation> = runCatching {
