@@ -163,7 +163,7 @@ class BildeService(
     return ResponseEntity.ok()
         .headers(headers)
         .contentType(mediaType)
-        .body(InputStreamResource(getBilde(bildesti).inputStream))
+        .body(InputStreamResource(bildeConnection.inputStream))
   }
 
   fun erBildePublisert(bildeSti: String): Boolean {

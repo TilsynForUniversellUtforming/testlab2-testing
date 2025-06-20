@@ -51,7 +51,7 @@ class EksternResultatResource(
   }
 
   @GetMapping("rapport/{rapportId}")
-  fun getRestultatRapport(@PathVariable rapportId: String): ResponseEntity<out Any> {
+  fun getResultatRapport(@PathVariable rapportId: String): ResponseEntity<out Any> {
     return kotlin
         .runCatching { eksternResultatService.getResultatForRapport(rapportId) }
         .fold(
@@ -126,7 +126,7 @@ class EksternResultatResource(
     }
   }
 
-  @GetMapping("sti")
+  @GetMapping("bilder/sti")
   fun getBilde(@RequestParam("bildesti") bildesti: String): ResponseEntity<InputStreamResource> {
 
     if (!bildeService.erBildePublisert(bildesti)) {

@@ -1,12 +1,12 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
-import java.net.URL
-import java.time.LocalDateTime
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.springframework.web.util.UriComponentsBuilder
+import java.net.URL
+import java.time.LocalDateTime
 
 data class TestresultatDetaljertEkstern(
     val testregelNoekkel: String,
@@ -34,16 +34,15 @@ fun TestresultatDetaljert.toTestresultatDetaljertEkstern(testregel: Testregel) =
     )
 
 fun Bilde.toEksternPath(): Bilde {
-  UriComponentsBuilder.fromUri(this.bildeURI).path("ekstern${this.bildeURI.path}").build()
   return this.copy(
       bildeURI =
           UriComponentsBuilder.fromUri(this.bildeURI)
-              .replacePath("ekstern${this.bildeURI.path}")
+              .replacePath("ekstern/tester/${this.bildeURI.path}")
               .build()
               .toUri(),
       thumbnailURI =
           UriComponentsBuilder.fromUri(this.thumbnailURI)
-              .replacePath("ekstern${this.thumbnailURI.path}")
+              .replacePath("ekstern/tester/${this.thumbnailURI.path}")
               .build()
               .toUri())
 }
