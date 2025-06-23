@@ -17,17 +17,19 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun RegelsettBase.toRegelsett(): Regelsett {
     val testregelList =
-        jdbcTemplate.query(
-            """
+        jdbcTemplate
+            .query(
+                """
         select tr.id, tr.testregel_id,tr.versjon,tr.namn, tr.krav_id, tr.status, tr.dato_sist_endra,tr.type , tr.modus ,tr.spraak,tr.tema,tr.testobjekt,tr.krav_til_samsvar,tr.testregel_schema,tr.innhaldstype_testing
         from regelsett_testregel rt
           join testregel tr on tr.id = rt.testregel_id
         where rt.regelsett_id = :regelsett_id
         order by tr.id
       """
-                .trimIndent(),
-            mapOf("regelsett_id" to this.id),
-            testregelRowMapper).toList()
+                    .trimIndent(),
+                mapOf("regelsett_id" to this.id),
+                testregelRowMapper)
+            .toList()
 
     return Regelsett(
         this.id, this.namn, this.modus, this.standard, testregelList.map { it.toTestregelBase() })
@@ -65,8 +67,8 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getRegelsettTestreglarList(includeInactive: Boolean): List<Regelsett> =
       getRegelsettBaseList(includeInactive).map { it.toRegelsett() }
 
-    @Cacheable("regelsettlist", unless = "#result.isEmpty()")
-   fun getRegelsettResponseList(includeInactive: Boolean): List<RegelsettResponse> =
+  @Cacheable("regelsettlist", unless = "#result.isEmpty()")
+  fun getRegelsettResponseList(includeInactive: Boolean): List<RegelsettResponse> =
       getRegelsettTestreglarList(includeInactive).map { toRegelsettResponse(it) }
 
   @Transactional

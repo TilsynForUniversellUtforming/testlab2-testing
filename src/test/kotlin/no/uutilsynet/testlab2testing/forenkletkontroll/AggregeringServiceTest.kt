@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
+import java.net.URI
+import java.time.Instant
+import kotlin.random.Random
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
@@ -30,9 +33,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
-import java.net.URI
-import java.time.Instant
-import kotlin.random.Random
 
 private val TEST_URL = URI("http://localhost:8080/").toURL()
 
@@ -57,7 +57,7 @@ class AggregeringServiceTest(
 
   @Autowired lateinit var testregelService: TestregelService
 
-    val testreglerSomSkalSlettes: MutableList<Int> = mutableListOf()
+  val testreglerSomSkalSlettes: MutableList<Int> = mutableListOf()
 
   companion object {
     @Container
@@ -314,5 +314,4 @@ class AggregeringServiceTest(
     }
     return testresultat
   }
-
 }
