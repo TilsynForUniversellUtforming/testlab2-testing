@@ -1,13 +1,13 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
-import java.sql.Timestamp
-import java.time.Instant
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.sql.Timestamp
+import java.time.Instant
 
 @Component
 class BildeDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -53,6 +53,17 @@ class BildeDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun erBildeTilPublisertTestgrunnlag(bildesti: String): Boolean {
+
+    val query = setCorrectQuery(bildesti)
+
+    return jdbcTemplate.queryForObject(query, mapOf("bilde" to bildesti), Boolean::class.java)
+        ?: false
+  }
+
+  private fun setCorrectQuery(
+      bildesti: String,
+  ): String {
+
     val bildeQuery =
         """select exists(select tg.id, bilde, r.id_ekstern from testlab2_testing.testresultat_bilde tb
                     join testlab2_testing.testresultat tr on tb.testresultat_id=tr.id
@@ -68,18 +79,6 @@ class BildeDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     join testlab2_testing.rapport r on tg.id=r.testgrunnlag_id
                     where thumbnail=:bilde
                     and publisert is not null)"""
-
-    val query = setCorrectQuery(bildesti, thumbnailQuery, bildeQuery)
-
-    return jdbcTemplate.queryForObject(query, mapOf("bilde" to bildesti), Boolean::class.java)
-        ?: false
-  }
-
-  private fun setCorrectQuery(
-      bildesti: String,
-      thumbnailQuery: String,
-      bildeQuery: String
-  ): String {
     val query =
         if (bildesti.contains("thumb")) {
           thumbnailQuery
