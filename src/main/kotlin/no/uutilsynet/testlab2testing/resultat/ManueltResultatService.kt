@@ -13,19 +13,19 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultat
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.springframework.stereotype.Service
 
 @Service
 class ManueltResultatService(
     resultatDAO: ResultatDAO,
-    testregelDAO: TestregelDAO,
     kravregisterClient: KravregisterClient,
+    testregelService: TestregelService,
     val testgrunnlagDAO: TestgrunnlagDAO,
     val testResultatDAO: TestResultatDAO,
     val sideutvalDAO: SideutvalDAO,
-    val bildeService: BildeService
-) : KontrollResultatService(resultatDAO, testregelDAO, kravregisterClient) {
+    val bildeService: BildeService,
+) : KontrollResultatService(resultatDAO, kravregisterClient, testregelService) {
 
   fun getResulatForManuellKontroll(
       kontrollId: Int,

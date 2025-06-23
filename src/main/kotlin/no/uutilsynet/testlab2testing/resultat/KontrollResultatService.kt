@@ -2,12 +2,12 @@ package no.uutilsynet.testlab2testing.resultat
 
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 
 sealed class KontrollResultatService(
     val resultatDAO: ResultatDAO,
-    val testregelDAO: TestregelDAO,
-    val kravregisterClient: KravregisterClient
+    val kravregisterClient: KravregisterClient,
+    val testregelService: TestregelService
 ) {
 
   protected fun filterByTestregel(testregelId: Int, testregelIdsForKrav: List<Int>): Boolean {
@@ -15,13 +15,11 @@ sealed class KontrollResultatService(
   }
 
   protected fun getTestregelIdFromSchema(testregelKey: String): Testregel {
-    return testregelDAO.getTestregelByTestregelId(testregelKey)
-        ?: throw RuntimeException("Fant ikkje testregel for testregelId $testregelKey")
+    return testregelService.getTestregelByTestregelId(testregelKey)
   }
 
   protected fun getTesteregelFromId(testregelId: Int): Testregel {
-    return testregelDAO.getTestregel(testregelId)
-        ?: throw RuntimeException("Fant ikkje testregel for id $testregelId")
+    return testregelService.getTestregel(testregelId)
   }
 
   protected fun getSuksesskriteriumFromTestregel(kravId: Int): List<String> {

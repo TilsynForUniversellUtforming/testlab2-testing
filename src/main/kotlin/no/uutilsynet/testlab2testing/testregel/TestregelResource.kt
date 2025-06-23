@@ -5,6 +5,7 @@ import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHan
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
@@ -22,6 +23,7 @@ class TestregelResource(
     val testregelImportService: TestregelImportService
 ) {
 
+  private final val maalingService: MaalingService = TODO("initialize me")
   val logger = LoggerFactory.getLogger(TestregelResource::class.java)
 
   private val locationForId: (Int) -> URI = { id -> URI("/v1/testreglar/${id}") }
@@ -40,7 +42,7 @@ class TestregelResource(
             val testregelList =
                 if (maalingId != null) {
                   logger.debug("Henter testreglar for måling $maalingId")
-                  testregelDAO.getTestreglarForMaaling(maalingId).getOrThrow()
+                  maalingService.getTestreglarForMaaling(maalingId).getOrThrow()
                 } else {
                   testregelDAO.getTestregelList()
                 }

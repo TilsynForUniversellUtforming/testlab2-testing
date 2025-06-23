@@ -17,7 +17,7 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
@@ -36,7 +36,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 @ActiveProfiles("test")
 class TestResultatResourceTest(
     @Autowired val kontrollDAO: KontrollDAO,
-    @Autowired val testregelDAO: TestregelDAO,
+    @Autowired val testregelService: TestregelService,
     @Autowired val utvalDAO: UtvalDAO,
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO
@@ -87,7 +87,7 @@ class TestResultatResourceTest(
     kontrollDAO.updateKontroll(kontroll, utvalId)
 
     /* Add testreglar */
-    val testregel = testregelDAO.getTestregelList().first()
+    val testregel = testregelService.getTestregelList().first()
     kontrollDAO.updateKontroll(kontroll, null, listOf(testregel.id))
 
     /* Add sideutval */

@@ -5,7 +5,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestResultat
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.springframework.stereotype.Service
 
 @Service
@@ -13,9 +13,9 @@ class AutomatiskResultatService(
     val maalingDAO: MaalingDAO,
     val maalingService: MaalingService,
     resultatDAO: ResultatDAO,
-    testregelDAO: TestregelDAO,
+    testregelService: TestregelService,
     kravregisterClient: KravregisterClient
-) : KontrollResultatService(resultatDAO, testregelDAO, kravregisterClient) {
+) : KontrollResultatService(resultatDAO, kravregisterClient, testregelService) {
 
   fun getResultatForAutomatiskKontroll(
       kontrollId: Int,

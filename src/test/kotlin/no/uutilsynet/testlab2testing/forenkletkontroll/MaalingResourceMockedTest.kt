@@ -19,7 +19,7 @@ import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterProperties
 import no.uutilsynet.testlab2testing.testing.automatisk.AutotestingService
 import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.assertj.core.api.Assertions
 import org.hamcrest.CoreMatchers
 import org.junit.jupiter.api.BeforeEach
@@ -56,7 +56,7 @@ class MaalingResourceMockedTest {
 
   @MockitoBean private lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
-  @MockitoBean private lateinit var testregelDAO: TestregelDAO
+  @MockitoBean private lateinit var testregelService: TestregelService
 
   @MockitoBean private lateinit var sideutvalDAO: SideutvalDAO
 
@@ -77,7 +77,11 @@ class MaalingResourceMockedTest {
 
     maalingTestingService =
         MaalingTestingService(
-            autotesterService, maalingDAO, loeysingsRegisterClient, testregelDAO, maalingService)
+            autotesterService,
+            maalingDAO,
+            loeysingsRegisterClient,
+            maalingService,
+            testregelService)
     maalingResource =
         MaalingResource(
             maalingDAO,
@@ -99,7 +103,7 @@ class MaalingResourceMockedTest {
     brukarService.getCurrentUser()
 
     `when`(maalingDAO.getMaaling(id)).thenReturn(maaling)
-    `when`(testregelDAO.getTestreglarForMaaling(id))
+    `when`(maalingService.getTestreglarForMaaling(id))
         .thenReturn(
             Result.success(
                 listOf(
@@ -176,7 +180,7 @@ class MaalingResourceMockedTest {
     `when`(maalingDAO.getMaaling(id)).thenReturn(maaling)
     `when`(maalingDAO.save(maalingTesting)).thenReturn(Result.success(maalingTesting))
     `when`(sideutvalDAO.getCrawlResultatNettsider(id, uutilsynetLoeysing.id)).thenReturn(nettsider)
-    `when`(testregelDAO.getTestreglarForMaaling(id)).thenReturn(Result.success(testregelList))
+    `when`(maalingService.getTestreglarForMaaling(id)).thenReturn(Result.success(testregelList))
     `when`(loeysingsRegisterClient.getMany(listOf(uutilsynetLoeysing.id)))
         .thenReturn(Result.success(listOf(uutilsynetLoeysing)))
 
