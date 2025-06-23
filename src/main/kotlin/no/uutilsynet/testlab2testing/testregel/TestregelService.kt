@@ -52,7 +52,23 @@ class TestregelService(val testregelDAO: TestregelDAO, val kravregisterClient: K
     return testregelDAO.getTemaForTestregel()
   }
 
-  fun getTestregelForKrav(kravId: Int): Any {
+  fun getTestregelForKrav(kravId: Int): List<Testregel> {
     return testregelDAO.getTestregelForKrav(kravId)
+  }
+
+  fun getInnhaldstypeForTesting(): List<InnhaldstypeTesting> {
+    return testregelDAO.getInnhaldstypeForTesting()
+  }
+
+  fun getTestobjekt(): List<Testobjekt> {
+    return testregelDAO.getTestobjekt()
+  }
+
+  fun updateTestregel(testregel: Testregel): Int {
+    return testregelDAO.updateTestregel(testregel)
+  }
+
+  fun deleteTestregel(testregelId: Int): Int {
+    return testregelDAO.deleteTestregel(testregelId)
   }
 }

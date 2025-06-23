@@ -286,4 +286,12 @@ class MaalingService(
       testregelService.getTestregelList().filter { testregelIds.contains(it.id) }
     }
   }
+
+  fun getMaalingForTestregel(testregelId: Int): List<Int> {
+    return maalingDAO.getMaalingIdForTestregel(testregelId).getOrDefault(emptyList())
+  }
+
+  fun getMaalingList(maalingIds: List<Int>): List<MaalingListElement> {
+    return maalingDAO.getMaalingList().filter { maalingIds.contains(it.id) }
+  }
 }
