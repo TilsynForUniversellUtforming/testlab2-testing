@@ -53,15 +53,39 @@ class BildeDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun erBildeTilPublisertTestgrunnlag(bildesti: String): Boolean {
-    return jdbcTemplate.queryForObject(
+    val bildeQuery =
         """select exists(select tg.id, bilde, r.id_ekstern from testlab2_testing.testresultat_bilde tb
                     join testlab2_testing.testresultat tr on tb.testresultat_id=tr.id
                     join testlab2_testing.testgrunnlag tg on tr.testgrunnlag_id=tg.id
                     join testlab2_testing.rapport r on tg.id=r.testgrunnlag_id
                     where bilde=:bilde
-                    and publisert is not null)""",
-        mapOf("bilde" to bildesti),
-        Boolean::class.java)
+                    and publisert is not null)"""
+
+    val thumbnailQuery =
+        """select exists(select tg.id, thumbnail, r.id_ekstern from testlab2_testing.testresultat_bilde tb
+                    join testlab2_testing.testresultat tr on tb.testresultat_id=tr.id
+                    join testlab2_testing.testgrunnlag tg on tr.testgrunnlag_id=tg.id
+                    join testlab2_testing.rapport r on tg.id=r.testgrunnlag_id
+                    where thumbnail=:bilde
+                    and publisert is not null)"""
+
+    val query = setCorrectQuery(bildesti, thumbnailQuery, bildeQuery)
+
+    return jdbcTemplate.queryForObject(query, mapOf("bilde" to bildesti), Boolean::class.java)
         ?: false
+  }
+
+  private fun setCorrectQuery(
+      bildesti: String,
+      thumbnailQuery: String,
+      bildeQuery: String
+  ): String {
+    val query =
+        if (bildesti.contains("thumb")) {
+          thumbnailQuery
+        } else {
+          bildeQuery
+        }
+    return query
   }
 }
