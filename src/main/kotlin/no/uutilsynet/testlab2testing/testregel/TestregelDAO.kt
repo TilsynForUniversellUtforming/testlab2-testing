@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.testregel
 
-import java.sql.Timestamp
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.deleteTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelByTestregelId
@@ -10,7 +7,6 @@ import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getT
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelListSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelListByIdSql
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
@@ -22,6 +18,9 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.sql.Timestamp
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 @Component
 class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -46,16 +45,6 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     val maalingTestregelListByIdSql =
         """select maaling_id from "testlab2_testing"."maaling_testregel" where testregel_id = :testregel_id"""
-
-    val maalingTestregelSql =
-        """
-      select tr.id,tr.testregel_id,tr.versjon,tr.namn, tr.krav_id, tr.status, tr.dato_sist_endra,tr.type , tr.modus ,tr.spraak,tr.tema,tr.testobjekt,tr.krav_til_samsvar,tr.testregel_schema, tr.innhaldstype_testing
-      from "testlab2_testing"."maalingv1" m
-        join "testlab2_testing"."maaling_testregel" mt on m.id = mt.maaling_id
-        join "testlab2_testing"."testregel" tr on mt.testregel_id = tr.id
-      where m.id = :id
-    """
-            .trimIndent()
   }
 
   @Cacheable("testregel", unless = "#result==null")
@@ -201,10 +190,6 @@ class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getMaalingTestregelListById(testregelId: Int): List<Int> =
       jdbcTemplate.queryForList(
           maalingTestregelListByIdSql, mapOf("testregel_id" to testregelId), Int::class.java)
-
-  fun getTestreglarForMaaling(maalingId: Int): Result<List<Testregel>> = runCatching {
-    jdbcTemplate.query(maalingTestregelSql, mapOf("id" to maalingId), testregelRowMapper)
-  }
 
   fun setTestregelId(testregelInit: TestregelInit): String {
     return if (testregelInit.modus == TestregelModus.automatisk) {

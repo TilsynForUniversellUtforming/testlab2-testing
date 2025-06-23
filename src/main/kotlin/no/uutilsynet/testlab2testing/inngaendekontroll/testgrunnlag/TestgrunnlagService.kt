@@ -5,7 +5,6 @@ import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,8 +13,7 @@ import org.springframework.stereotype.Service
 @Service
 class TestgrunnlagService(
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
-    @Autowired val testregelDAO: TestregelDAO,
-    @Autowired val testResultatDAO: TestResultatDAO
+    @Autowired val testResultatDAO: TestResultatDAO,
 ) {
   val logger: Logger = LoggerFactory.getLogger(TestgrunnlagService::class.java)
 

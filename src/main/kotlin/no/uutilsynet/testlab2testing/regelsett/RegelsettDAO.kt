@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.regelsett
 
+import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.dao.support.DataAccessUtils
@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional
 
 @Component
 class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+
+  private val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
 
   fun RegelsettBase.toRegelsett(): Regelsett {
     val testregelList =
@@ -25,7 +27,7 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       """
                 .trimIndent(),
             mapOf("regelsett_id" to this.id),
-            testregelRowMapper)
+            testregelRowMapper).toList()
 
     return Regelsett(
         this.id, this.namn, this.modus, this.standard, testregelList.map { it.toTestregelBase() })
@@ -60,11 +62,11 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         DataClassRowMapper.newInstance(RegelsettBase::class.java))
   }
 
-  @Cacheable("regelsettlist", unless = "#result.isEmpty()")
   fun getRegelsettTestreglarList(includeInactive: Boolean): List<Regelsett> =
       getRegelsettBaseList(includeInactive).map { it.toRegelsett() }
 
-  fun getRegelsettResponseList(includeInactive: Boolean): List<RegelsettResponse> =
+    @Cacheable("regelsettlist", unless = "#result.isEmpty()")
+   fun getRegelsettResponseList(includeInactive: Boolean): List<RegelsettResponse> =
       getRegelsettTestreglarList(includeInactive).map { toRegelsettResponse(it) }
 
   @Transactional

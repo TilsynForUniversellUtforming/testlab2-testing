@@ -19,7 +19,7 @@ import no.uutilsynet.testlab2testing.testing.automatisk.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -29,10 +29,10 @@ import org.springframework.stereotype.Service
 class MaalingService(
     val maalingDAO: MaalingDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
-    val testregelDAO: TestregelDAO,
     val utvalDAO: UtvalDAO,
     val aggregeringService: AggregeringService,
-    val autoTesterClient: AutoTesterClient
+    val autoTesterClient: AutoTesterClient,
+    val testregelService: TestregelService
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingService::class.java)
@@ -98,13 +98,13 @@ class MaalingService(
   fun deleteMaaling(id: Int): Result<Unit> = runCatching { maalingDAO.deleteMaaling(id) }
 
   private fun validatedTestregeldList(dto: MaalingResource.NyMaalingDTO): List<Int> {
-    val testregelIdList =
-        validateIdList(
-                dto.testregelIdList,
-                testregelDAO.getTestregelList().map { it.id },
-                "testregelIdList")
-            .getOrThrow()
-    return testregelIdList
+    return validatedTestregelList(dto.testregelIdList)
+  }
+
+  private fun validatedTestregelList(testregelIdList: List<Int>): List<Int> {
+    return validateIdList(
+            testregelIdList, testregelService.getTestregelList().map { it.id }, "testregelIdList")
+        .getOrThrow()
   }
 
   private fun validatedUtvalId(dto: MaalingResource.NyMaalingDTO): Int? {
@@ -160,13 +160,12 @@ class MaalingService(
     }
   }
 
-  private fun EditMaalingDTO.getTestreglarForMaaling(maaling: Maaling) =
-      (this.testregelIdList?.let { idList ->
-        testregelDAO.getTestregelList().filter { idList.contains(it.id) }
-      }
-          ?: emptyList<Testregel>().also {
-            logger.warn("Måling ${maaling.id} har ikkje testreglar")
-          })
+  private fun EditMaalingDTO.getTestreglarForMaaling(maaling: Maaling): List<Testregel> {
+    return this.testregelIdList?.let { idList ->
+      testregelService.getTestregelList().filter { idList.contains(it.id) }
+    }
+        ?: emptyList<Testregel>().also { logger.warn("Måling ${maaling.id} har ikkje testreglar") }
+  }
 
   private fun EditMaalingDTO.getLoeysingForMaaling(maaling: Maaling): List<Loeysing> {
     val loeysingList =
@@ -279,5 +278,12 @@ class MaalingService(
           emptyList()
         }
     return validIds
+  }
+
+  fun getTestreglarForMaaling(maalingId: Int): Result<List<Testregel>> {
+    return runCatching {
+      val testregelIds = maalingDAO.getTestrelIdForMaaling(maalingId)
+      testregelService.getTestregelList().filter { testregelIds.contains(it.id) }
+    }
   }
 }

@@ -1,9 +1,5 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import java.net.URI
-import java.time.Instant
-import kotlin.properties.Delegates
-import kotlin.random.Random
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
@@ -13,22 +9,17 @@ import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
-import no.uutilsynet.testlab2testing.kontroll.Kontroll
-import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
-import no.uutilsynet.testlab2testing.kontroll.KontrollResource
-import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.resultat.OpprettTestgrunnlag
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelInit
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Offset
@@ -39,6 +30,9 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
+import java.net.URI
+import java.time.Instant
+import kotlin.random.Random
 
 private val TEST_URL = URI("http://localhost:8080/").toURL()
 
@@ -61,16 +55,9 @@ class AggregeringServiceTest(
 
   @Autowired lateinit var maalingDao: MaalingDAO
 
-  @Autowired lateinit var testregelDAO: TestregelDAO
+  @Autowired lateinit var testregelService: TestregelService
 
-  @Autowired lateinit var kontrollDAO: KontrollDAO
-
-  @Autowired lateinit var utvalDAO: UtvalDAO
-
-  private var kontrollId: Int by Delegates.notNull()
-  private var utvalId: Int by Delegates.notNull()
-
-  val testreglerSomSkalSlettes: MutableList<Int> = mutableListOf()
+    val testreglerSomSkalSlettes: MutableList<Int> = mutableListOf()
 
   companion object {
     @Container
@@ -149,7 +136,7 @@ class AggregeringServiceTest(
             kravTilSamsvar = "")
 
     val testregelId =
-        testregelDAO.createTestregel(testregel).also { testreglerSomSkalSlettes.add(it) }
+        testregelService.createTestregel(testregel).also { testreglerSomSkalSlettes.add(it) }
 
     val maalingId =
         maalingDao.createMaaling(
@@ -328,43 +315,4 @@ class AggregeringServiceTest(
     return testresultat
   }
 
-  private fun createTestKontroll(): Int {
-    val opprettKontroll =
-        KontrollResource.OpprettKontroll(
-            "manuell-kontroll",
-            "Ola Nordmann",
-            Sakstype.Arkivsak,
-            "1234",
-            Kontrolltype.InngaaendeKontroll)
-
-    kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
-
-    val kontroll =
-        Kontroll(
-            kontrollId,
-            Kontrolltype.InngaaendeKontroll,
-            opprettKontroll.tittel,
-            opprettKontroll.saksbehandler,
-            opprettKontroll.sakstype,
-            opprettKontroll.arkivreferanse,
-        )
-
-    /* Add utval */
-    val loeysingId = 1
-    utvalId = utvalDAO.createUtval("test-skal-slettes", listOf(loeysingId)).getOrThrow()
-    kontrollDAO.updateKontroll(kontroll, utvalId)
-
-    /* Add testreglar */
-    val testregel = testregelDAO.getTestregelList().first()
-    kontrollDAO.updateKontroll(kontroll, null, listOf(testregel.id))
-
-    /* Add sideutval */
-    kontrollDAO.updateKontroll(
-        kontroll,
-        listOf(
-            SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
-        ))
-
-    return kontrollId
-  }
 }

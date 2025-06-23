@@ -10,7 +10,7 @@ import no.uutilsynet.testlab2testing.testing.automatisk.AutotestingService
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -20,8 +20,8 @@ class MaalingTestingService(
     val autotestingService: AutotestingService,
     val maalingDAO: MaalingDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
-    val testregelDAO: TestregelDAO,
-    val maalingService: MaalingService
+    val maalingService: MaalingService,
+    val testregelService: TestregelService
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingTestingService::class.java)
@@ -76,13 +76,16 @@ class MaalingTestingService(
   }
 
   private suspend fun testreglarForMaaling(maalingId: Int): List<Testregel> {
-    val testreglar =
-        withContext(Dispatchers.IO) { testregelDAO.getTestreglarForMaaling(maalingId) }
-            .getOrElse {
-              logger.error("Feila ved henting av actregler for måling $maalingId", it)
-              throw it
-            }
-            .onEach { it.validateTestregel().getOrThrow() }
-    return testreglar
+    return withContext(Dispatchers.IO) { getTestregelarForMaaling(maalingId) }
+  }
+
+  private fun getTestregelarForMaaling(maalingId: Int): List<Testregel> {
+    return maalingService
+        .getTestreglarForMaaling(maalingId)
+        .getOrElse {
+          logger.error("Feila ved henting av testreglar for måling $maalingId", it)
+          throw it
+        }
+        .onEach { it.validateTestregel().getOrThrow() }
   }
 }
