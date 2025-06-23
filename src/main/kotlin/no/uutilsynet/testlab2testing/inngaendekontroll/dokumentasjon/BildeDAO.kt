@@ -1,13 +1,13 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
+import java.sql.Timestamp
+import java.time.Instant
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import java.sql.Timestamp
-import java.time.Instant
 
 @Component
 class BildeDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
