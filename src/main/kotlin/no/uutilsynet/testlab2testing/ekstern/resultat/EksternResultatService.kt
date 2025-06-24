@@ -208,5 +208,4 @@ class EksternResultatService(
 
     return eksternResultatDAO.getTestsForRapportIds(rapportId).toTestEksternList()
   }
-
 }
