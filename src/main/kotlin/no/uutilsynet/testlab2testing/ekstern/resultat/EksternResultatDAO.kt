@@ -180,18 +180,20 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             })
   }
 
-  fun erKontrollPublisert(id: Int, typeKontroll: Kontrolltype): Boolean {
+  fun erKontrollPublisert(kontrollId: Int, typeKontroll: Kontrolltype): Boolean {
     val query = erPublisertQuery(typeKontroll)
 
     runCatching {
-          jdbcTemplate.queryForObject(query.trimIndent(), mapOf("id" to id), Int::class.java) ?: 0
+          jdbcTemplate.queryForObject(
+              query.trimIndent(), mapOf("id" to kontrollId), Int::class.java)
+              ?: 0
         }
         .fold(
             onSuccess = {
               return it > 0
             },
             onFailure = {
-              logger.error("Feil ved henting av publisert status for kontroll $id", it)
+              logger.error("Feil ved henting av publisert status for kontroll $kontrollId", it)
               return false
             })
   }
@@ -199,9 +201,9 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun erPublisertQuery(kontrolltype: Kontrolltype): String {
     return if (kontrolltype == Kontrolltype.Statusmaaling ||
         kontrolltype == Kontrolltype.ForenklaKontroll) {
-      """select count(*) from "rapport" r join "maalingv1" m on m.id=r.maaling_id where m.id=:id and publisert is not null"""
+      "select count(*) from rapport r join maalingv1 m on m.id=r.maaling_id where m.kontrollid=:kontrollId and publisert is not null"
     } else {
-      """select count(*) from "rapport" r join "testgrunnlag" tg on tg.id=r.testgrunnlag_id where tg.id=:id and publisert is not null"""
+      "select count(*) from rapport r join testgrunnlag tg on tg.id=r.testgrunnlag_id where tg.kontroll_id=:kontrollId and publisert is not null"
     }
   }
 
