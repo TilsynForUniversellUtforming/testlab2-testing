@@ -13,9 +13,9 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getTestsForLoeysingIds(loeysingIdList: List<Int>): List<TestListElementDB> {
     return jdbcTemplate.query(
-        """select r.id_ekstern, case when tg.kontroll_id is not null then tg.kontroll_id else m.kontrollid end as kontroll_id , r.loeysing_id, 
-            case when k1.kontrolltype is not null then k1.kontrolltype else k2.kontrolltype end as kontrolltype, 
-            case when k1.tittel is not null then k1.tittel else k2.tittel end as kontrollnamn,r.publisert
+        """select r.id_ekstern, coalesce(tg.kontroll_id, m.kontrollid) as kontroll_id , r.loeysing_id, 
+            coalesce(k1.kontrolltype, k2.kontrolltype) as kontrolltype, 
+            coalesce(k1.tittel, k2.tittel) as kontrollnamn,r.publisert
             from testlab2_testing.rapport r
             left join testlab2_testing.testgrunnlag tg on r.testgrunnlag_id=tg.id
             left join testlab2_testing.maalingv1 m on r.maaling_id=m.id
@@ -25,6 +25,30 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           and r.loeysing_id in (:loeysingIdList)"""
             .trimIndent(),
         mapOf("loeysingIdList" to loeysingIdList)) { rs, _ ->
+          TestListElementDB(
+              rs.getString("id_ekstern"),
+              rs.getInt("kontroll_id"),
+              rs.getInt("loeysing_id"),
+              Kontrolltype.valueOf(rs.getString("kontrolltype")),
+              rs.getString("kontrollnamn"),
+              rs.getTimestamp("publisert").toInstant())
+        }
+  }
+
+  fun getTestsForRapportIds(rapportId: String): List<TestListElementDB> {
+    return jdbcTemplate.query(
+        """select r.id_ekstern, coalesce(tg.kontroll_id, m.kontrollid) as kontroll_id , r.loeysing_id, 
+            coalesce(k1.kontrolltype, k2.kontrolltype) as kontrolltype, 
+            coalesce(k1.tittel, k2.tittel) as kontrollnamn,r.publisert
+            from testlab2_testing.rapport r
+            left join testlab2_testing.testgrunnlag tg on r.testgrunnlag_id=tg.id
+            left join testlab2_testing.maalingv1 m on r.maaling_id=m.id
+            left join testlab2_testing.kontroll k1 on tg.kontroll_id=k1.id
+            left join testlab2_testing.kontroll k2 on m.kontrollid=k2.id
+            where publisert is not null
+            and r.id_ekstern = :rapportId"""
+            .trimIndent(),
+        mapOf("rapportId" to rapportId)) { rs, _ ->
           TestListElementDB(
               rs.getString("id_ekstern"),
               rs.getInt("kontroll_id"),
@@ -50,14 +74,18 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             DataClassRowMapper.newInstance(KontrollIdLoeysingId::class.java))
       }
 
-  fun publisertTestgrunnlagResultat(testgrunnlagId: Int, loeysingId: Int): Result<Boolean> {
+  fun publisertTestgrunnlagResultat(
+      testgrunnlagId: Int,
+      loeysingId: Int,
+      rapportId: String?
+  ): Result<Boolean> {
     runCatching {
           jdbcTemplate.update(
-              """
-          insert into rapport(testgrunnlag_id,loeysing_id,publisert) values(:testgrunnlagId, :loeysingId,now()) on conflict(testgrunnlag_id,loeysing_id) do update set publisert = now()
-        """
-                  .trimIndent(),
-              mapOf("testgrunnlagId" to testgrunnlagId, "loeysingId" to loeysingId))
+              publiseringsQueryTestgrunnlag(rapportId).trimIndent(),
+              mapOf(
+                  "testgrunnlagId" to testgrunnlagId,
+                  "loeysingId" to loeysingId,
+                  "rapportId" to rapportId))
         }
         .fold(
             onSuccess = {
@@ -72,15 +100,16 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             })
   }
 
-  fun publiserMaalingResultat(maalingId: Int, loeysingId: Int): Result<Boolean> {
+  fun publiserMaalingResultat(
+      maalingId: Int,
+      loeysingId: Int,
+      rapportId: String?
+  ): Result<Boolean> {
 
     runCatching {
           jdbcTemplate.update(
-              """
-          insert into rapport(maaling_id,loeysing_id,publisert) values(:maalingId, :loeysingId,now()) on conflict(maaling_id,loeysing_id) do update set publisert = now()
-        """
-                  .trimIndent(),
-              mapOf("maalingId" to maalingId, "loeysingId" to loeysingId))
+              publiseringsQueryMaaling(rapportId).trimIndent(),
+              mapOf("maalingId" to maalingId, "loeysingId" to loeysingId, "rapportId" to rapportId))
         }
         .fold(
             onSuccess = {
@@ -90,6 +119,26 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             onFailure = {
               return Result.failure(it)
             })
+  }
+
+  private fun publiseringsQueryMaaling(rapportId: String?): String {
+    return if (rapportId != null) {
+      """insert into rapport(id_ekstern,maaling_id,loeysing_id,publisert) values(:rapportId,:maalingId, :loeysingId,now()) on conflict(maaling_id,loeysing_id) do update set publisert = now()"""
+    } else {
+      """insert into rapport(maaling_id,loeysing_id,publisert) values(:maalingId, :loeysingId,now()) on conflict(maaling_id,loeysing_id) do update set publisert = now()"""
+    }
+  }
+
+  private fun publiseringsQueryTestgrunnlag(rapportId: String?): String {
+    return if (rapportId != null) {
+      """
+          insert into rapport(id_ekstern,testgrunnlag_id,loeysing_id,publisert) values(:rapportId,:testgrunnlagId, :loeysingId,now()) on conflict(testgrunnlag_id,loeysing_id) do update set publisert = now()
+        """
+    } else {
+      """
+          insert into rapport(testgrunnlag_id,loeysing_id,publisert) values(:testgrunnlagId, :loeysingId,now()) on conflict(testgrunnlag_id,loeysing_id) do update set publisert = now()
+        """
+    }
   }
 
   fun avpubliserResultatTestgrunnlag(testgrunnlagId: Int, loeysingId: Int): Result<Boolean> {
@@ -153,6 +202,23 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       """select count(*) from "rapport" r join "maalingv1" m on m.id=r.maaling_id where m.id=:id and publisert is not null"""
     } else {
       """select count(*) from "rapport" r join "testgrunnlag" tg on tg.id=r.testgrunnlag_id where tg.id=:id and publisert is not null"""
+    }
+  }
+
+  fun getRapportIdForKontroll(kontrollId: Int): Result<String?> {
+    return runCatching {
+      jdbcTemplate
+          .queryForList(
+              """
+                select r.id_ekstern from rapport r 
+                left join maalingv1 m on m.id=r.maaling_id
+                left join testgrunnlag t on t.id=r.testgrunnlag_id
+                where case when r.maaling_id is not null then m.kontrollid else t.kontroll_id end = :kontrollId
+            """
+                  .trimIndent(),
+              mapOf("kontrollId" to kontrollId),
+              String::class.java)
+          .firstOrNull()
     }
   }
 }

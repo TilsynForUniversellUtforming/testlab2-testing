@@ -19,8 +19,8 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         select 
           k.id     as id,
           k.tittel as tittel,
-          testgrunnlag_id,
-          testtype,
+         coalesce(maaling_id, testgrunnlag_id) as testgrunnlag_id,
+         testtype,
           kontrolltype,
           loeysing_id,
           testregel_gjennomsnittleg_side_samsvar_prosent,

@@ -30,7 +30,7 @@ class EksternResultatService(
     @Autowired val logMessages: LogMessages
 ) {
 
-  private val logger = LoggerFactory.getLogger(EksternResultatResource::class.java)
+  private val logger = LoggerFactory.getLogger(EksternResultatService::class.java)
 
   fun findTestForOrgNr(org: String): Result<TestListElementEkstern> {
     val verksemd: VerksemdEkstern = getVerksemd(org).getOrThrow()
@@ -205,14 +205,7 @@ class EksternResultatService(
   }
 
   fun getResultatForRapport(rapportId: String): List<TestEkstern> {
-    val loeysingar = getLoeysingarFromRapport(rapportId)
 
-    return eksternResultatDAO.getTestsForLoeysingIds(loeysingar).toTestEksternList()
-  }
-
-  private fun getLoeysingarFromRapport(rapportId: String): List<Int> {
-    return eksternResultatDAO.findKontrollLoeysingFromRapportId(rapportId).getOrThrow().map {
-      it.loeysingId
-    }
+    return eksternResultatDAO.getTestsForRapportIds(rapportId).toTestEksternList()
   }
 }
