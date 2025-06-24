@@ -44,9 +44,10 @@ class EksternResultatPubliseringService(
   fun publiserResultat(kontrollId: Int) {
     runCatching {
           val kontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
+          val rapportId = eksternResultatDAO.getRapportIdForKontroll(kontroll.id).getOrThrow()
           logger.info("Publiserer resultat for kontroll med id $kontrollId")
           getLoeysingarForKontroll(kontroll).forEach {
-            publiserResultatForLoeysingForKontroll(kontroll, it.id)
+            publiserResultatForLoeysingForKontroll(kontroll, it.id, rapportId)
           }
         }
         .onFailure {
@@ -80,27 +81,38 @@ class EksternResultatPubliseringService(
 
   private fun publiserResultatForLoeysingForKontroll(
       kontroll: KontrollDAO.KontrollDB,
-      loeysingId: Int
+      loeysingId: Int,
+      rapportId: String?
   ): Result<Boolean> {
     return when (kontroll.kontrolltype) {
       Kontrolltype.Statusmaaling,
-      Kontrolltype.ForenklaKontroll -> publiserResultatForMaaling(kontroll.id, loeysingId)
+      Kontrolltype.ForenklaKontroll ->
+          publiserResultatForMaaling(kontroll.id, loeysingId, rapportId)
       Kontrolltype.Tilsyn,
       Kontrolltype.Uttalesak,
-      Kontrolltype.InngaaendeKontroll -> publiserResultatForTestgrunnlag(kontroll.id, loeysingId)
+      Kontrolltype.InngaaendeKontroll ->
+          publiserResultatForTestgrunnlag(kontroll.id, loeysingId, rapportId)
     }
   }
 
-  private fun publiserResultatForTestgrunnlag(kontrollId: Int, loeysingId: Int): Result<Boolean> {
+  private fun publiserResultatForTestgrunnlag(
+      kontrollId: Int,
+      loeysingId: Int,
+      rapportId: String?
+  ): Result<Boolean> {
     val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
-    return eksternResultatDAO.publisertTestgrunnlagResultat(testgrunnlagId, loeysingId)
+    return eksternResultatDAO.publisertTestgrunnlagResultat(testgrunnlagId, loeysingId, rapportId)
   }
 
-  private fun publiserResultatForMaaling(kontrollId: Int, loeysingId: Int): Result<Boolean> {
+  private fun publiserResultatForMaaling(
+      kontrollId: Int,
+      loeysingId: Int,
+      rapportId: String?
+  ): Result<Boolean> {
     val maalingId =
         maalingDAO.getMaalingIdFromKontrollId(kontrollId)
             ?: throw IllegalStateException("Fann ingen maaling for kontroll med id $kontrollId")
-    return eksternResultatDAO.publiserMaalingResultat(maalingId, loeysingId)
+    return eksternResultatDAO.publiserMaalingResultat(maalingId, loeysingId, rapportId)
   }
 
   private fun avpubliserResultatForLoeysingForKontroll(
