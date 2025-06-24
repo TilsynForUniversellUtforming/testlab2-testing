@@ -12,13 +12,9 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 
@@ -28,7 +24,7 @@ class TestgrunnlagDAOTest(
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val utvalDAO: UtvalDAO,
-    @Autowired val testregelDAO: TestregelDAO,
+    @Autowired val testregelService: TestregelService,
 ) {
 
   private var kontrollId: Int by Delegates.notNull()
@@ -138,7 +134,7 @@ class TestgrunnlagDAOTest(
     kontrollDAO.updateKontroll(kontroll, utvalId)
 
     /* Add testreglar */
-    val testregel = testregelDAO.getTestregelList().first()
+    val testregel = testregelService.getTestregelList().first()
     kontrollDAO.updateKontroll(kontroll, null, listOf(testregel.id))
 
     /* Add sideutval */

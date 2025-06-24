@@ -13,25 +13,25 @@ import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.resultat.OpprettTestgrunnlag
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.testregel.TestConstants
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelInit
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.springframework.stereotype.Service
 
 @Service
 class TestUtils(
-    val testregelDAO: TestregelDAO,
     val kontrollDAO: KontrollDAO,
     val testgrunnlagDAO: TestgrunnlagDAO,
-    val maalingDAO: MaalingDAO
+    val maalingDAO: MaalingDAO,
+    val testregelService: TestregelService
 ) {
 
   var testregelId: Int = 0
 
   fun createTestregel(): Int {
 
-    val temaId = testregelDAO.createTema("Bilder")
+    val temaId = testregelService.createTema("Bilder")
 
-    val innholdstypeTesting = testregelDAO.createInnholdstypeTesting("Tekst")
+    val innholdstypeTesting = testregelService.createInnhaldstypeForTesting("Tekst")
 
     val testregelInit =
         TestregelInit(
@@ -48,8 +48,7 @@ class TestUtils(
             testobjekt = 1,
             kravTilSamsvar = "")
 
-    testregelId = testregelDAO.createTestregel(testregelInit)
-    return testregelId
+    return testregelService.createTestregel(testregelInit)
   }
 
   fun createTestgrunnlag(

@@ -30,8 +30,8 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelInit
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -65,7 +65,7 @@ class ResultatServiceTest(
   @MockitoBean lateinit var testResultatDAO: TestResultatDAO
   @MockitoBean lateinit var sideutvalDAO: SideutvalDAO
   @MockitoBean lateinit var kravregisterClient: KravregisterClient
-  @MockitoSpyBean lateinit var testregelDAO: TestregelDAO
+  @MockitoSpyBean lateinit var testregelService: TestregelService
 
   @AfterAll
   fun cleanup() {
@@ -160,9 +160,9 @@ class ResultatServiceTest(
 
   fun createTestregel(): Int {
 
-    testregelDAO.createTema("Bilder")
+    testregelService.createTema("Bilder")
 
-    val innholdstypeTesting = testregelDAO.createInnholdstypeTesting("Tekst")
+    val innholdstypeTesting = testregelService.createInnhaldstypeForTesting("Tekst")
 
     val testregelInit =
         TestregelInit(
@@ -178,7 +178,7 @@ class ResultatServiceTest(
             tema = 1,
             testobjekt = 1,
             kravTilSamsvar = "")
-    return testregelDAO.createTestregel(testregelInit)
+    return testregelService.createTestregel(testregelInit)
   }
 
   @Test
@@ -254,8 +254,8 @@ class ResultatServiceTest(
 
     Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1))).thenReturn(sideUtvalList)
 
-    Mockito.`when`(testregelDAO.getTestregelForKrav(1)).thenReturn(listOf(testregel))
-    Mockito.`when`(testregelDAO.getTestregel(1)).thenReturn(testregel)
+    Mockito.`when`(testregelService.getTestregelForKrav(1)).thenReturn(listOf(testregel))
+    Mockito.`when`(testregelService.getTestregel(1)).thenReturn(testregel)
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
 
     val resultat = resultatService.getResulatForManuellKontroll(1, 1, 1)

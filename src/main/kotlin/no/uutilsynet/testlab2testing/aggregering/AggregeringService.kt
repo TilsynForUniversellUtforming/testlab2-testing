@@ -12,7 +12,6 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -23,7 +22,6 @@ class AggregeringService(
     val autoTesterClient: AutoTesterClient,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val kravregisterClient: KravregisterClient,
-    val testregelDAO: TestregelDAO,
     val aggregeringDAO: AggregeringDAO,
     val testResultatDAO: TestResultatDAO,
     val sideutvalDAO: SideutvalDAO,
@@ -234,8 +232,7 @@ class AggregeringService(
       loeysingsRegisterClient.getLoeysingFromId(loeysingId)
 
   fun getTestregel(testregelId: Int): Testregel {
-    return testregelDAO.getTestregel(testregelId)
-        ?: throw RuntimeException("Fant ikke testregel med id $testregelId")
+    return testregelService.getTestregel(testregelId)
   }
 
   fun getAggregertResultatTestregel(
@@ -584,8 +581,7 @@ class AggregeringService(
   }
 
   fun getKravIdFraTestregel(id: Int): Int {
-    return testregelDAO.getTestregel(id)?.kravId
-        ?: throw RuntimeException("Fant ikkje krav for testregel med id $id")
+    return getTestregel(id).kravId
   }
 
   fun calculateUtfall(utfall: List<TestresultatUtfall?>): TestresultatUtfall {
@@ -602,8 +598,7 @@ class AggregeringService(
   }
 
   fun ResultatManuellKontroll.kravId(): Int {
-    return testregelDAO.getTestregel(this.testregelId)?.kravId
-        ?: throw RuntimeException("Fant ikkje krav for testregel med id ${this.testregelId}")
+    return getKravIdFraTestregel(this.testregelId)
   }
 }
 
