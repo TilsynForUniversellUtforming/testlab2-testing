@@ -158,7 +158,7 @@ class ResultatService(
       result.map { it.loeysingId }
 
   private fun erKontrollPublisert(result: List<ResultatLoeysingDTO>) =
-      eksternResultatDAO.erKontrollPublisert(result.first().testgrunnlagId, getKontrolltype(result))
+      eksternResultatDAO.erKontrollPublisert(result.first().id, getKontrolltype(result))
 
   private fun resultatPrLoeysing(
       result: List<ResultatLoeysingDTO>,
