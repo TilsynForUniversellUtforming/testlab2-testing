@@ -77,7 +77,7 @@ data class ResultatOversiktLoeysing(
 
 data class ResultatTema(
     val temaNamn: String,
-    val score: Int,
+    val score: Double?,
     val talTestaElement: Int,
     val talElementBrot: Int,
     val talElementSamsvar: Int,
@@ -87,7 +87,7 @@ data class ResultatTema(
 
 data class ResultatKrav(
     val suksesskriterium: String,
-    val score: Int,
+    val score: Double?,
     val talTestaElement: Int,
     val talElementBrot: Int,
     val talElementSamsvar: Int,
@@ -97,7 +97,7 @@ data class ResultatKrav(
 
 data class ResultatKravBase(
     val kravId: Int,
-    val score: Int = 0,
+    val score: Double = 0.0,
     val talElementBrot: Int = 0,
     val talElementSamsvar: Int = 0,
     val talElementVarsel: Int = 0,
