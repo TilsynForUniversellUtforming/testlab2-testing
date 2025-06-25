@@ -123,9 +123,9 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   private fun publiseringsQueryMaaling(rapportId: String?): String {
     return if (rapportId != null) {
-      """insert into rapport(id_ekstern,maaling_id,loeysing_id,publisert) values(:rapportId,:maalingId, :loeysingId,now()) on conflict(maaling_id,loeysing_id) do update set publisert = now()"""
+      """insert into rapport(id_ekstern,maaling_id,loeysing_id,publisert) values(:rapportId,:maalingId, :loeysingId,now()) on conflict(maaling_id,loeysing_id) do update set publisert = now(), id_ekstern = :rapportId"""
     } else {
-      """insert into rapport(maaling_id,loeysing_id,publisert) values(:maalingId, :loeysingId,now()) on conflict(maaling_id,loeysing_id) do update set publisert = now()"""
+      """insert into rapport(maaling_id,loeysing_id,publisert) values(:maalingId, :loeysingId,now()) on conflict(maaling_id,loeysing_id) do update set publisert = now(), id_ekstern = :rapportId"""
     }
   }
 
@@ -201,9 +201,9 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun erPublisertQuery(kontrolltype: Kontrolltype): String {
     return if (kontrolltype == Kontrolltype.Statusmaaling ||
         kontrolltype == Kontrolltype.ForenklaKontroll) {
-      "select count(*) from rapport r join maalingv1 m on m.id=r.maaling_id where m.kontrollid=:kontrollId and publisert is not null"
+      "select count(*) from rapport r join maalingv1 m on m.id=r.maaling_id where m.kontrollid=:id and publisert is not null"
     } else {
-      "select count(*) from rapport r join testgrunnlag tg on tg.id=r.testgrunnlag_id where tg.kontroll_id=:kontrollId and publisert is not null"
+      "select count(*) from rapport r join testgrunnlag tg on tg.id=r.testgrunnlag_id where tg.kontroll_id=:id and publisert is not null"
     }
   }
 
