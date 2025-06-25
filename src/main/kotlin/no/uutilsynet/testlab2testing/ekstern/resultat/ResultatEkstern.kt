@@ -32,7 +32,7 @@ fun ResultatOversiktLoeysing.toResultatOversiktLoeysingEkstern() =
 
 data class ResultatTemaEkstern(
     val temaNamn: String,
-    val score: Int,
+    val score: Double?,
     val talTestaElement: Int,
     val talElementBrot: Int,
     val talElementSamsvar: Int,
@@ -53,7 +53,7 @@ fun ResultatTema.toResultatTemaEkstern() =
 
 data class ResultatKravEkstern(
     val suksesskriterium: String,
-    val score: Int,
+    val score: Double?,
     val talTestaElement: Int,
     val talElementBrot: Int,
     val talElementSamsvar: Int,

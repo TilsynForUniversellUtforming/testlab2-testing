@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
@@ -15,6 +14,7 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
+import java.time.LocalDate
 
 @Component
 class ResultatService(
@@ -338,7 +338,16 @@ class ResultatService(
       startDato: LocalDate?,
       sluttDato: LocalDate?
   ): List<ResultatTema> =
-      resultatDAO.getResultatPrTema(kontrollId, kontrolltype, loeysingId, startDato, sluttDato)
+      resultatDAO
+          .getResultatPrTema(kontrollId, kontrolltype, loeysingId, startDato, sluttDato)
+          .map { handleIkkjeForekomstTema(it) }
+
+  private fun handleIkkjeForekomstTema(it: ResultatTema) =
+      if (erIkkjeForekomst(it.talElementBrot, it.talElementSamsvar)) {
+        it.copy(score = null)
+      } else {
+        it
+      }
 
   fun getResultatPrKrav(
       kontrollId: Int?,
@@ -350,7 +359,15 @@ class ResultatService(
     return resultatDAO
         .getResultatPrKrav(kontrollId, kontrollType, loeysingId, fraDato, tilDato)
         .map { it.toResultatKrav() }
+        .map { handleIkkjeForekomstKrav(it) }
   }
+
+  private fun handleIkkjeForekomstKrav(it: ResultatKrav) =
+      if (erIkkjeForekomst(it.talElementBrot, it.talElementSamsvar)) {
+        it.copy(score = null)
+      } else {
+        it
+      }
 
   class LoysingList(val loeysingar: Map<Int, Loeysing.Expanded>) {
     fun getNamn(loeysingId: Int): String {
@@ -369,8 +386,7 @@ class ResultatService(
     return ResultatKrav(
         suksesskriterium = getKravTittel(),
         score = score,
-        talTestaElement =
-            talElementBrot + talElementSamsvar + talElementVarsel + talElementIkkjeForekomst,
+        talTestaElement = talElementBrot + talElementSamsvar,
         talElementBrot = talElementBrot,
         talElementSamsvar = talElementSamsvar,
         talElementVarsel = talElementVarsel,
