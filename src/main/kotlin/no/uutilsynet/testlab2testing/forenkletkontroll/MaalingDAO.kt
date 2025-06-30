@@ -1,10 +1,5 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import java.net.URI
-import java.net.URL
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.*
@@ -15,6 +10,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.insertMaalingLoeysingQuery
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.insertMaalingTestregelQuery
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.maalingRowmapper
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.maalingTestregelSql
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByDateSql
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByIdSql
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByStatus
@@ -30,10 +26,9 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
+import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelBase
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelSql
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
 import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.CacheEvict
@@ -46,6 +41,11 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.net.URI
+import java.net.URL
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.time.Instant
 
 @Component
 class MaalingDAO(
@@ -57,6 +57,8 @@ class MaalingDAO(
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
+
+  private val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
 
   data class MaalingDTO(
       val id: Int,
@@ -112,6 +114,16 @@ class MaalingDAO(
 
     val insertMaalingLoeysingQuery =
         """insert into "testlab2_testing"."maalingloeysing" (idMaaling, idLoeysing) values (:idMaaling, :idLoeysing)"""
+
+    val maalingTestregelSql =
+        """
+      select tr.id,tr.testregel_id,tr.versjon,tr.namn, tr.krav_id, tr.status, tr.dato_sist_endra,tr.type , tr.modus ,tr.spraak,tr.tema,tr.testobjekt,tr.krav_til_samsvar,tr.testregel_schema, tr.innhaldstype_testing
+      from "testlab2_testing"."maalingv1" m
+        join "testlab2_testing"."maaling_testregel" mt on m.id = mt.maaling_id
+        join "testlab2_testing"."testregel" tr on mt.testregel_id = tr.id
+      where m.id = :id
+    """
+            .trimIndent()
 
     fun updateMaalingParams(maaling: Maaling): Map<String, Any> {
       val status =
@@ -675,6 +687,22 @@ class MaalingDAO(
           mapOf("kontrollId" to kontrollId),
           Int::class.java)
           ?: throw NoSuchElementException("Fant ikke måling for kontroll $kontrollId")
+    }
+  }
+
+  fun getTestrelIdForMaaling(maalingId: Int): List<Int> {
+    return jdbcTemplate.queryForList(
+        """select testregel_id from "testlab2_testing"."maaling_testregel" where maaling_id = :maalingId""",
+        mapOf("maalingId" to maalingId),
+        Int::class.java)
+  }
+
+  fun getMaalingIdForTestregel(testregelId: Int): Result<List<Int>> {
+    return runCatching {
+      jdbcTemplate.queryForList(
+          """select maaling_id from "testlab2_testing"."maaling_testregel" where testregel_id = :testregelId""",
+          mapOf("testregelId" to testregelId),
+          Int::class.java)
     }
   }
 }
