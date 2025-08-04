@@ -62,7 +62,7 @@ class LoeysingsRegisterClient(
               .pathSegment("v1", "loeysing")
               .queryParam("search", search)
               .build()
-              .toUri()
+              .toUriString()
       restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
           ?: throw RuntimeException("loeysingsregisteret returnerte null for søk $search")
     }
@@ -106,7 +106,9 @@ class LoeysingsRegisterClient(
               .queryParam("search", search)
               .queryParam("atTime", ISO_INSTANT.format(Instant.now()))
               .build()
-              .toUri()
+              .toUriString()
+
+      logger.info("SearchVerkemd uri: $uri")
       restTemplate.getForObject(uri, Array<Verksemd>::class.java)?.toList()
           ?: throw NoSuchElementException(
               "loeysingsregisteret returnerte null for verksemdsøk $search")
@@ -121,7 +123,7 @@ class LoeysingsRegisterClient(
               .queryParam("search", search)
               .queryParam("atTime", ISO_INSTANT.format(Instant.now()))
               .build()
-              .toUri()
+              .toUriString()
       restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
           ?: throw RuntimeException("loeysingsregisteret returnerte null for verksemdsøk $search")
     }
