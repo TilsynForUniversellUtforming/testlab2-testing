@@ -29,7 +29,7 @@ class LocaleConfig() : WebMvcConfigurer {
   fun localeResolver(): CookieLocaleResolver {
     val localeResolver = CookieLocaleResolver("lang")
     localeResolver.setDefaultLocale(Locale.getDefault())
-    localeResolver.defaultTimeZone = TimeZone.getTimeZone("UTC")
+    localeResolver.defaultTimeZone = TimeZone.getTimeZone("CET")
     return localeResolver
   }
 

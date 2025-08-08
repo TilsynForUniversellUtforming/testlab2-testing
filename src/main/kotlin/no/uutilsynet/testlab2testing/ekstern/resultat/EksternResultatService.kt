@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
+import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
@@ -175,9 +176,9 @@ class EksternResultatService(
       kontrollLoeysing: KontrollIdLoeysingId,
       testregel: Testregel
   ) =
-      getResultatPrTestregel(kontrollLoeysing, testregel).map {
-        it.toTestresultatDetaljertEkstern(testregel)
-      }
+      getResultatPrTestregel(kontrollLoeysing, testregel)
+          .filter { it.elementResultat == TestresultatUtfall.brot }
+          .map { it.toTestresultatDetaljertEkstern(testregel) }
 
   private fun getTestregelFromTestregelId(testregelId: Int): Testregel {
     return testregelService.getTestregel(testregelId)
