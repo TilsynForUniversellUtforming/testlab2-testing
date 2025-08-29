@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.*
 class TestregelResource(
     val kravregisterClient: KravregisterClient,
     val testregelImportService: TestregelImportService,
-    val maalingService: MaalingService
+    val maalingService: MaalingService,
+    val testregelService: TestregelService
 ) {
 
-  private final val testregelService: TestregelService = TODO("initialize me")
   val logger = LoggerFactory.getLogger(TestregelResource::class.java)
 
   private val locationForId: (Int) -> URI = { id -> URI("/v1/testreglar/${id}") }

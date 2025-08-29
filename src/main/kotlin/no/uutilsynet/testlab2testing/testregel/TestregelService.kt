@@ -23,6 +23,10 @@ class TestregelService(val testregelDAO: TestregelDAO, val kravregisterClient: K
     }
   }
 
+  fun getTestregeListFromIds(testregelIdList: List<Int>): List<Testregel> {
+    return testregelDAO.getMany(testregelIdList)
+  }
+
   fun getTestregelList(): List<Testregel> {
     return testregelDAO.getTestregelList()
   }

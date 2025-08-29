@@ -161,9 +161,7 @@ class MaalingService(
   }
 
   private fun EditMaalingDTO.getTestreglarForMaaling(maaling: Maaling): List<Testregel> {
-    return this.testregelIdList?.let { idList ->
-      testregelService.getTestregelList().filter { idList.contains(it.id) }
-    }
+    return this.testregelIdList?.let { idList -> testregelService.getTestregeListFromIds(idList) }
         ?: emptyList<Testregel>().also { logger.warn("Måling ${maaling.id} har ikkje testreglar") }
   }
 
@@ -283,7 +281,7 @@ class MaalingService(
   fun getTestreglarForMaaling(maalingId: Int): Result<List<Testregel>> {
     return runCatching {
       val testregelIds = maalingDAO.getTestrelIdForMaaling(maalingId)
-      testregelService.getTestregelList().filter { testregelIds.contains(it.id) }
+      testregelService.getTestregeListFromIds(testregelIds)
     }
   }
 
