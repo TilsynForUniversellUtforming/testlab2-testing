@@ -4,7 +4,7 @@ import java.net.URI
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHandling
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
 import no.uutilsynet.testlab2testing.common.validateNamn
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("v1/testreglar")
 class TestregelResource(
-    val testregelDAO: TestregelDAO,
-    val maalingDAO: MaalingDAO,
     val kravregisterClient: KravregisterClient,
-    val testregelImportService: TestregelImportService
+    val testregelImportService: TestregelImportService,
+    val maalingService: MaalingService,
+    val testregelService: TestregelService
 ) {
 
   val logger = LoggerFactory.getLogger(TestregelResource::class.java)
@@ -27,9 +27,12 @@ class TestregelResource(
   private val locationForId: (Int) -> URI = { id -> URI("/v1/testreglar/${id}") }
 
   @GetMapping("{id}")
-  fun getTestregel(@PathVariable id: Int): ResponseEntity<Testregel> =
-      testregelDAO.getTestregel(id)?.let { ResponseEntity.ok(it) }
-          ?: ResponseEntity.notFound().build()
+  fun getTestregel(@PathVariable id: Int): ResponseEntity<Testregel> {
+    return runCatching { testregelService.getTestregel(id) }
+        .fold(
+            onSuccess = { ResponseEntity.ok(it) },
+            onFailure = { ResponseEntity.notFound().build() })
+  }
 
   @GetMapping
   fun getTestregelList(
@@ -40,9 +43,9 @@ class TestregelResource(
             val testregelList =
                 if (maalingId != null) {
                   logger.debug("Henter testreglar for måling $maalingId")
-                  testregelDAO.getTestreglarForMaaling(maalingId).getOrThrow()
+                  maalingService.getTestreglarForMaaling(maalingId).getOrThrow()
                 } else {
-                  testregelDAO.getTestregelList()
+                  testregelService.getTestregelList()
                 }
             ResponseEntity.ok(
                 testregelList.let {
@@ -65,7 +68,7 @@ class TestregelResource(
             validateSchema(testregelInit.testregelSchema, testregelInit.modus).getOrThrow()
             validateKrav(testregelInit.kravId)
 
-            testregelDAO.createTestregel(testregelInit)
+            testregelService.createTestregel(testregelInit)
           },
           locationForId)
 
@@ -74,31 +77,27 @@ class TestregelResource(
       executeWithErrorHandling {
         validateKrav(testregel.kravId)
         testregel.validateTestregel().getOrThrow()
-        testregelDAO.updateTestregel(testregel)
+        testregelService.updateTestregel(testregel)
       }
 
   @DeleteMapping("{testregelId}")
   fun deleteTestregel(@PathVariable("testregelId") testregelId: Int): ResponseEntity<out Any> =
       executeWithErrorHandling {
-        val maalingTestregelUsageList = testregelDAO.getMaalingTestregelListById(testregelId)
+        val maalingTestregelUsageList = maalingService.getMaalingForTestregel(testregelId)
         if (maalingTestregelUsageList.isNotEmpty()) {
-          val testregel =
-              testregelDAO.getTestregel(testregelId)
-                  ?: throw IllegalArgumentException("Testregel med id $testregelId finnes ikke")
-          val maalingList =
-              maalingDAO
-                  .getMaalingList()
-                  .filter { maalingTestregelUsageList.contains(it.id) }
-                  .map { it.navn }
+          val testregel = testregelService.getTestregel(testregelId)
+
+          val maalingList = maalingService.getMaalingList(maalingTestregelUsageList).map { it.navn }
+
           throw IllegalArgumentException(
               "Testregel $testregel er i bruk i følgjande målingar: ${maalingList.joinToString(", ")}")
         }
-        testregelDAO.deleteTestregel(testregelId)
+        testregelService.deleteTestregel(testregelId)
       }
 
   @GetMapping("innhaldstypeForTesting")
   fun getInnhaldstypeForTesting(): ResponseEntity<out Any> =
-      runCatching { ResponseEntity.ok(testregelDAO.getInnhaldstypeForTesting()) }
+      runCatching { ResponseEntity.ok(testregelService.getInnhaldstypeForTesting()) }
           .getOrElse {
             logger.error("Feila ved henting av innhaldstype for testing", it)
             ResponseEntity.internalServerError().body(it.message)
@@ -106,7 +105,7 @@ class TestregelResource(
 
   @GetMapping("temaForTestreglar")
   fun getTemaForTesreglar(): ResponseEntity<out Any> =
-      runCatching { ResponseEntity.ok(testregelDAO.getTemaForTestregel()) }
+      runCatching { ResponseEntity.ok(testregelService.getTemaForTestregel()) }
           .getOrElse {
             logger.error("Feila ved henting av tema for testreglar", it)
             ResponseEntity.internalServerError().body(it.message)
@@ -114,7 +113,7 @@ class TestregelResource(
 
   @GetMapping("testobjektForTestreglar")
   fun getTestobjektForTestreglar(): ResponseEntity<out Any> =
-      runCatching { ResponseEntity.ok(testregelDAO.getTestobjekt()) }
+      runCatching { ResponseEntity.ok(testregelService.getTestobjekt()) }
           .getOrElse {
             logger.error("Feila ved henting av tema for testreglar", it)
             ResponseEntity.internalServerError().body(it.message)

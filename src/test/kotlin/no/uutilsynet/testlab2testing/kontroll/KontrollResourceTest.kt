@@ -13,7 +13,7 @@ import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalResource
 import no.uutilsynet.testlab2testing.regelsett.Regelsett
 import no.uutilsynet.testlab2testing.regelsett.RegelsettCreate
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.*
 import org.junit.jupiter.api.DisplayName
@@ -24,7 +24,7 @@ import org.springframework.boot.test.web.server.LocalServerPort
 
 @DisplayName("KontrollResource")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
+class KontrollResourceTest(@Autowired val testregelService: TestregelService) {
   @LocalServerPort var port: Int = 0
 
   val kontrollInitBody =
@@ -212,7 +212,7 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
             .header("Location")
     val opprettetKontroll = get(location).`as`(Kontroll::class.java)
 
-    val testregel = testregelDAO.getTestregelList().first()
+    val testregel = testregelService.getTestregelList().first()
 
     /* Create regelsett */
     val nyttRegelsett =
@@ -275,7 +275,7 @@ class KontrollResourceTest(@Autowired val testregelDAO: TestregelDAO) {
             .header("Location")
     val opprettetKontroll = get(location).`as`(Kontroll::class.java)
 
-    val testregel = testregelDAO.getTestregelList().first()
+    val testregel = testregelService.getTestregelList().first()
 
     val updateBody =
         mapOf(

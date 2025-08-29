@@ -9,15 +9,15 @@ import no.uutilsynet.testlab2testing.kontroll.Sideutval
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class WordRapportBuilder(
-    @Autowired val testregelDAO: TestregelDAO,
     @Autowired val kontrollDAO: KontrollDAO,
-    @Autowired val kravregisterClient: KravregisterClient
+    @Autowired val kravregisterClient: KravregisterClient,
+    @Autowired val testregelService: TestregelService
 ) {
 
   var rapportNummer: String? = null
@@ -65,9 +65,7 @@ class WordRapportBuilder(
 
   fun ResultatManuellKontroll.toAvvik(index: Int): Avvik {
 
-    val testregel =
-        testregelDAO.getTestregel(this.testregelId)
-            ?: throw IllegalStateException("Testregel not found for id ${this.testregelId}")
+    val testregel = testregelService.getTestregel(this.testregelId)
 
     val side = finnSide(this.sideutvalId)
     return Avvik(
@@ -80,7 +78,7 @@ class WordRapportBuilder(
         elementUtfall = this.elementUtfall,
         tema =
             testregel.let {
-              testregelDAO.getTemaForTestregel().first { tema -> tema.id == it.tema }.tema
+              testregelService.getTemaForTestregel().first { tema -> tema.id == it.tema }.tema
             })
   }
 

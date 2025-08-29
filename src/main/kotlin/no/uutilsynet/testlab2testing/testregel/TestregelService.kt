@@ -22,4 +22,57 @@ class TestregelService(val testregelDAO: TestregelDAO, val kravregisterClient: K
           ?: throw RuntimeException("Fant ikke testregel med testregelId $testregelKey")
     }
   }
+
+  fun getTestregeListFromIds(testregelIdList: List<Int>): List<Testregel> {
+    return testregelDAO.getMany(testregelIdList)
+  }
+
+  fun getTestregelList(): List<Testregel> {
+    return testregelDAO.getTestregelList()
+  }
+
+  fun createTema(tema: String): Int {
+    return testregelDAO.createTema(tema)
+  }
+
+  fun createInnhaldstypeForTesting(innhaldstype: String): Int {
+    return testregelDAO.createInnholdstypeTesting(innhaldstype)
+  }
+
+  fun createTestregel(testregelInit: TestregelInit): Int {
+    return testregelDAO.createTestregel(testregelInit)
+  }
+
+  fun getMany(testregelIdList: List<Int>): List<Testregel> {
+    return testregelDAO.getMany(testregelIdList)
+  }
+
+  fun getTestregelByTestregelId(testregelKey: String): Testregel {
+    return testregelDAO.getTestregelByTestregelId(testregelKey)
+        ?: throw RuntimeException("Fant ikkje testregel for testregelId $testregelKey")
+  }
+
+  fun getTemaForTestregel(): List<Tema> {
+    return testregelDAO.getTemaForTestregel()
+  }
+
+  fun getTestregelForKrav(kravId: Int): List<Testregel> {
+    return testregelDAO.getTestregelForKrav(kravId)
+  }
+
+  fun getInnhaldstypeForTesting(): List<InnhaldstypeTesting> {
+    return testregelDAO.getInnhaldstypeForTesting()
+  }
+
+  fun getTestobjekt(): List<Testobjekt> {
+    return testregelDAO.getTestobjekt()
+  }
+
+  fun updateTestregel(testregel: Testregel): Int {
+    return testregelDAO.updateTestregel(testregel)
+  }
+
+  fun deleteTestregel(testregelId: Int): Int {
+    return testregelDAO.deleteTestregel(testregelId)
+  }
 }
