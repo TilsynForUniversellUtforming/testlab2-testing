@@ -131,4 +131,34 @@ class TestregelResource(
   fun validateKrav(kravId: Int) =
       runCatching { kravregisterClient.getWcagKrav(kravId) }
           .getOrElse { throw IllegalArgumentException("Krav med id $kravId finns ikkje") }
+
+  @GetMapping("aggregates")
+  fun getTestregelAggregates(): List<TestregelAggregate> {
+    val testregelBaseList = testregelService.getTestregelList()
+    val temaList = testregelService.getTemaForTestregel()
+    val testobjektList = testregelService.getTestobjekt()
+    val innhaldstypeTestingList = testregelService.getInnhaldstypeForTesting()
+    val kravList = kravregisterClient.listKrav()
+
+    return testregelBaseList.map { testregel ->
+      TestregelAggregate(
+          id = testregel.id,
+          namn = testregel.namn,
+          tema = temaList.firstOrNull { it.id == testregel.tema },
+          testobjekt = testobjektList.firstOrNull { it.id == testregel.testobjekt },
+          innhaldstypeTesting =
+              innhaldstypeTestingList.find { it.id == testregel.innhaldstypeTesting },
+          krav = kravList.firstOrNull { it.id == testregel.kravId }
+                  ?: throw IllegalArgumentException("Krav med id ${testregel.kravId} finns ikkje"),
+          modus = testregel.modus,
+          testregelSchema = testregel.testregelSchema,
+          testregelId = testregel.testregelId,
+          versjon = testregel.versjon,
+          status = testregel.status,
+          datoSistEndra = testregel.datoSistEndra,
+          type = testregel.type,
+          spraak = testregel.spraak,
+          kravTilSamsvar = testregel.kravTilSamsvar)
+    }
+  }
 }

@@ -7,7 +7,6 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
-
 @Service
 class KravregisterClient(val restTemplate: RestTemplate, val properties: KravRegisterProperties) {
 
@@ -43,12 +42,14 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
 
   @Cacheable("kravList", unless = "#result==null")
   fun listKrav(): List<KravWcag2x> {
-    return restTemplate.exchange(
-        "${properties.host}/v1/krav/wcag2krav",
-        org.springframework.http.HttpMethod.GET,
-        null,
-        object : ParameterizedTypeReference<List<KravWcag2x>>() {}
-    ).body ?: throw RuntimeException("Kravregisteret returnerte null for liste av krav")
+    return restTemplate
+        .exchange(
+            "${properties.host}/v1/krav/wcag2krav",
+            org.springframework.http.HttpMethod.GET,
+            null,
+            object : ParameterizedTypeReference<List<KravWcag2x>>() {})
+        .body
+        ?: throw RuntimeException("Kravregisteret returnerte null for liste av krav")
   }
 }
 

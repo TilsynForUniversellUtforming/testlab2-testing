@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.testregel
 
+import java.net.URI
 import no.uutilsynet.testlab2.constants.KravStatus
 import no.uutilsynet.testlab2.constants.WcagPrinsipp
 import no.uutilsynet.testlab2.constants.WcagRetninglinje
@@ -23,7 +24,6 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import java.net.URI
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -51,7 +51,8 @@ class TestregelIntegrationTests(
                 WcagPrinsipp.robust,
                 WcagRetninglinje.leselig,
                 "1.1.1",
-                WcagSamsvarsnivaa.A,"kommentar"))
+                WcagSamsvarsnivaa.A,
+                "kommentar"))
   }
 
   val deleteThese: MutableList<Int> = mutableListOf()
