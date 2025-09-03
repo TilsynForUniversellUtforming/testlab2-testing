@@ -11,6 +11,7 @@ import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
+import no.uutilsynet.testlab2testing.testregel.InnhaldstypeTesting
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -86,7 +87,7 @@ class KontrollResource(
 
   @GetMapping("/{id}")
   fun getKontroll(@PathVariable id: Int): ResponseEntity<Kontroll> {
-    return getKontrollResult(id)
+    return getKontrollAsResult(id)
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
             onFailure = {
@@ -100,7 +101,7 @@ class KontrollResource(
             })
   }
 
-  private fun getKontrollResult(kontrollId: Int): Result<Kontroll> = runCatching {
+  private fun getKontrollAsResult(kontrollId: Int): Result<Kontroll> = runCatching {
     val kontrollDB = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
 
     Kontroll(
@@ -190,7 +191,7 @@ class KontrollResource(
               }
             }
             if (updateBody.kontroll.kontrolltype == Kontrolltype.ForenklaKontroll) {
-              maalingService.updateMaaling(getKontrollResult(id).getOrThrow())
+              maalingService.updateMaaling(getKontrollAsResult(id).getOrThrow())
             } else {
               createOrUpdateTestgrunnlag(id)
             }
@@ -235,7 +236,7 @@ class KontrollResource(
   )
 
   fun createOrUpdateTestgrunnlag(kontrollId: Int): Result<Int> {
-    val kontroll = getKontrollResult(kontrollId).getOrThrow()
+    val kontroll = getKontrollAsResult(kontrollId).getOrThrow()
 
     val nyttTestgrunnlag =
         NyttTestgrunnlagFromKontroll(
@@ -246,4 +247,28 @@ class KontrollResource(
             kontroll.testreglar?.testregelList ?: emptyList())
     return testgrunnlagService.createOrUpdateFromKontroll(nyttTestgrunnlag)
   }
+
+    @GetMapping("/testmetadata/{kontrollId}")
+    fun testingMetadata(@PathVariable kontrollId: Int) : KontrollTestingMetadata{
+        val kontroll = getKontrollAsResult(kontrollId).getOrThrow()
+        val sideutvaltypar = kontrollDAO.getSideutvalType()
+        val innholdtypeTestingList = testregelService.getInnhaldstypeForTesting()
+
+        val innholdstypeTesting = innhaldstypeTestingForKontroll(kontroll, innholdtypeTestingList)
+
+        val sideutvalType = kontroll.sideutvalList.map {sideutval -> sideutvaltypar.first{it.id == sideutval.typeId} }
+
+        return KontrollTestingMetadata(innholdstypeTesting, sideutvalType)
+    }
+
+    private fun innhaldstypeTestingForKontroll(
+        kontroll: Kontroll,
+        innholdtypeTestingList: List<InnhaldstypeTesting>,
+    ): List<InnhaldstypeTesting> {
+        val innholdstypeTesting = kontroll.testreglar?.testregelList
+            ?.mapNotNull { testregel -> testregel.innhaldstypeTesting }
+            ?.map { innholdsype -> innholdtypeTestingList.first { it.id == innholdsype } }
+        return innholdstypeTesting?: throw IllegalStateException("Kontroll har ingen testreglar")
+    }
 }
+
