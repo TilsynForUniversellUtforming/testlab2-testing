@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.5</version>
+        <version>3.5.5</version>
     </parent>
     <groupId>no.uutilsynet</groupId>
     <artifactId>testlab2-testing</artifactId>
@@ -221,7 +221,7 @@
             <plugin>
                 <groupId>io.github.git-commit-id</groupId>
                 <artifactId>git-commit-id-maven-plugin</artifactId>
-                <version>5.0.0</version>
+                <version>9.0.2</version>
             </plugin>
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
@@ -247,7 +247,7 @@
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
-                <version>2.38.0</version>
+                <version>2.40.0</version>
                 <configuration>
                     <kotlin>
                         <ktfmt/>
@@ -258,7 +258,7 @@
                     <execution>
                         <phase>validate</phase>
                         <goals>
-                            <goal>check</goal>
+                            <goal>apply</goal>
                         </goals>
                     </execution>
                 </executions>

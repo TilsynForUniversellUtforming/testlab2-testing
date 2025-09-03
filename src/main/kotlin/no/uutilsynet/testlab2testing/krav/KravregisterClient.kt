@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.krav
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
@@ -37,6 +38,18 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
   @Cacheable("suksesskriteriumFromKrav", unless = "#result == null")
   fun getSuksesskriteriumFromKrav(kravId: Int): String {
     return getWcagKrav(kravId).suksesskriterium
+  }
+
+  @Cacheable("kravList", unless = "#result==null")
+  fun listKrav(): List<KravWcag2x> {
+    return restTemplate
+        .exchange(
+            "${properties.host}/v1/krav/wcag2krav",
+            org.springframework.http.HttpMethod.GET,
+            null,
+            object : ParameterizedTypeReference<List<KravWcag2x>>() {})
+        .body
+        ?: throw RuntimeException("Kravregisteret returnerte null for liste av krav")
   }
 }
 

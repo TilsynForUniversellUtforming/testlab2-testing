@@ -1,6 +1,9 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import java.net.URI
+import no.uutilsynet.testlab2.constants.KravStatus
+import no.uutilsynet.testlab2.constants.WcagPrinsipp
+import no.uutilsynet.testlab2.constants.WcagRetninglinje
 import no.uutilsynet.testlab2.constants.WcagSamsvarsnivaa
 import no.uutilsynet.testlab2testing.krav.KravWcag2x
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
@@ -39,16 +42,17 @@ class TestregelIntegrationTests(
             KravWcag2x(
                 1,
                 "1.1.1 Ikke-tekstlig innhold,Gjeldande",
-                "I bruk",
+                KravStatus.gjeldande,
                 "Innhald",
                 false,
                 false,
                 false,
                 "https://www.uutilsynet.no/wcag-standarden/111-ikke-tekstlig-innhold-niva/87",
-                "1. Mulig å oppfatte",
-                "1.2 Tidsbasert media",
+                WcagPrinsipp.robust,
+                WcagRetninglinje.leselig,
                 "1.1.1",
-                WcagSamsvarsnivaa.A))
+                WcagSamsvarsnivaa.A,
+                "kommentar"))
   }
 
   val deleteThese: MutableList<Int> = mutableListOf()
