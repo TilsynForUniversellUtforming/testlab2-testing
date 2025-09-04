@@ -1,9 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URI
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
@@ -41,6 +37,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+import java.net.URI
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import kotlin.properties.Delegates
 
 @SpringBootTest(
     properties =
@@ -258,7 +258,7 @@ class ResultatServiceTest(
     Mockito.`when`(testregelService.getTestregel(1)).thenReturn(testregel)
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
 
-    val resultat = resultatService.getResulatForManuellKontroll(1, 1, 1)
+    val resultat = resultatService.getResultatListKontroll(1, 1, 1)
     assertNotNull(resultat)
 
     assertTrue(resultat.isNotEmpty())
