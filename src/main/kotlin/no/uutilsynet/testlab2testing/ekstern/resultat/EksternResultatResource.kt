@@ -2,14 +2,19 @@ package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import jakarta.servlet.http.HttpServletResponse
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
+import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatusCode
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.io.ByteArrayOutputStream
 
 @RestController
 @RequestMapping("/ekstern/tester")
@@ -139,10 +144,10 @@ class EksternResultatResource(
   }
 
   @GetMapping("ekporter/rapport/{rapportId}/loeysing/{loeysingId}", produces = ["text/csv"])
-  fun getEksporterResultatLoeysing(
+  fun getEksporterResultatLoeysingCsv(
       @PathVariable rapportId: String,
       @PathVariable loeysingId: Int,
-      response: HttpServletResponse
+      response: HttpServletResponse,
   ) {
     val testresults = eksternResultatService.eksporterRapportForLoeysing(rapportId, loeysingId)
 
@@ -150,15 +155,71 @@ class EksternResultatResource(
 
     val writer = response.writer.buffered()
 
-    writer.write(""""Suksesskriterium", "Testregel", "Side", "Element", "Kommentar"""")
+    writer.write(""""Suksesskriterium", "Testregel", "Side", "Element"""")
     writer.newLine()
     testresults.forEach {
       writer.write(
           "\"${it.suksesskriterium}\", \"${it.testregelNoekkel}\", \"${it.side}\",\"${it.elementOmtale?.pointer ?: it.elementOmtale?.description ?: ""}\"")
       writer.newLine()
     }
+    writer.flush()
     response.setHeader(
         HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=${fileName}; charset=UTF-8")
     response.setHeader(HttpHeaders.CONTENT_TYPE, "text/csv; charset=UTF-8")
   }
+
+  @GetMapping(
+      "ekporter/rapport/{rapportId}/loeysing/{loeysingId}/xlsx",
+      produces = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"])
+  fun getEksporterResultatLoeysingExcel(
+      @PathVariable rapportId: String,
+      @PathVariable loeysingId: Int,
+  ): ResponseEntity<ByteArray> {
+
+    val testresults = eksternResultatService.eksporterRapportForLoeysing(rapportId, loeysingId)
+
+    val outputStream = ByteArrayOutputStream()
+
+    val workbook = SXSSFWorkbook()
+    val workSheet = workbook.createSheet()
+    writeHeaders(workSheet)
+
+    testresults.forEachIndexed { index, testresult ->
+      writeDataRow(workSheet, testresult, index + 1)
+    }
+
+    workbook.write(outputStream)
+    workbook.close()
+
+    val headers = HttpHeaders()
+    headers.contentType =
+        MediaType.parseMediaType(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    headers.setContentDispositionFormData("attachment", "resultat.xlsx")
+
+    outputStream.flush()
+
+    return ResponseEntity.ok().headers(headers).body(outputStream.toByteArray())
+  }
+
+  fun writeHeaders(workSheet: Sheet) {
+    val headerRow = workSheet.createRow(0)
+    headerRow.createCell(0).setCellValue("Suksesskriterium")
+    headerRow.createCell(1).setCellValue("Testregel")
+    headerRow.createCell(2).setCellValue("Side")
+    headerRow.createCell(3).setCellValue("Element")
+    headerRow.createCell(4).setCellValue("Utfall")
+  }
+
+  fun writeDataRow(workSheet: Sheet, testresultat: TestresultatDetaljert, rowNr: Int) {
+    val dataRow = workSheet.createRow(rowNr)
+    dataRow.createCell(0).setCellValue(testresultat.suksesskriterium.joinToString(", "))
+    dataRow.createCell(1).setCellValue(testresultat.testregelNoekkel)
+    dataRow.createCell(2).setCellValue(testresultat.side.toString())
+    dataRow.createCell(3).setCellValue(getElement(testresultat))
+    dataRow.createCell(4).setCellValue(testresultat.elementUtfall)
+  }
+
+  private fun getElement(testresultat: TestresultatDetaljert) =
+      testresultat.elementOmtale?.pointer ?: testresultat.elementOmtale?.description ?: ""
 }

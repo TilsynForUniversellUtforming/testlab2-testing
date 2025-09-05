@@ -351,7 +351,9 @@ class ResultatService(
       kontrollId: Int,
       loeysingId: Int,
   ): List<TestresultatDetaljert> {
-    return getResultService(kontrollId).getResultatBrotForKontroll(kontrollId, loeysingId)
+    return getResultService(kontrollId)
+        .getResultatBrotForKontroll(kontrollId, loeysingId)
+        .sortedBy { it.suksesskriterium.first() }
   }
 
   private fun getResultService(kontrollId: Int): KontrollResultatService {
