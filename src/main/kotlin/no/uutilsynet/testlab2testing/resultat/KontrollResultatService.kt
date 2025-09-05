@@ -37,18 +37,21 @@ sealed class KontrollResultatService(
     throw NotImplementedError("Ikke implementert")
   }
 
-
   abstract fun getBrukararForTest(kontrollId: Int): List<String>
 
   abstract fun getResultatForKontroll(kontrollId: Int, loeysingId: Int): List<TestresultatDetaljert>
 
-  abstract fun getResultatForKontroll(kontrollId: Int, loeysingId: Int, testregelId: Int): List<TestresultatDetaljert>
+  abstract fun getResultatForKontroll(
+      kontrollId: Int,
+      loeysingId: Int,
+      testregelId: Int
+  ): List<TestresultatDetaljert>
 
   abstract fun getAlleResultat(): List<ResultatLoeysingDTO>
 
   abstract fun progresjonPrLoeysing(
-    testgrunnlagId: Int,
-    loeysingar: LoysingList,
+      testgrunnlagId: Int,
+      loeysingar: LoysingList,
   ): Map<Int, Int>
 
   fun getResultatBrotForKontroll(kontrollId: Int, loeysingId: Int): List<TestresultatDetaljert> {

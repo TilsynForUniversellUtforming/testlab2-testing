@@ -1,5 +1,6 @@
-
 package no.uutilsynet.testlab2testing.resultat
+
+import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
@@ -16,56 +17,67 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
 import org.springframework.boot.test.context.SpringBootTest
-import java.time.Instant
 
 @SpringBootTest
 class ManueltResultatServiceTest {
 
-    private val testgrunnlagDAO = mock(TestgrunnlagDAO::class.java)
-    private val testResultatDAO = mock(TestResultatDAO::class.java)
-    private val sideutvalDAO = mock(SideutvalDAO::class.java)
-    private val bildeService = mock(BildeService::class.java)
-    private val resultatDAO = mock(ResultatDAO::class.java)
-    private val kravregisterClient = mock(KravregisterClient::class.java)
-    private val testregelService = mock(TestregelService::class.java)
+  private val testgrunnlagDAO = mock(TestgrunnlagDAO::class.java)
+  private val testResultatDAO = mock(TestResultatDAO::class.java)
+  private val sideutvalDAO = mock(SideutvalDAO::class.java)
+  private val bildeService = mock(BildeService::class.java)
+  private val resultatDAO = mock(ResultatDAO::class.java)
+  private val kravregisterClient = mock(KravregisterClient::class.java)
+  private val testregelService = mock(TestregelService::class.java)
 
-    private val manueltResultatService = ManueltResultatService(
-        resultatDAO,
-        kravregisterClient,
-        testregelService,
-        testgrunnlagDAO,
-        testResultatDAO,
-        sideutvalDAO,
-        bildeService
-    )
+  private val manueltResultatService =
+      ManueltResultatService(
+          resultatDAO,
+          kravregisterClient,
+          testregelService,
+          testgrunnlagDAO,
+          testResultatDAO,
+          sideutvalDAO,
+          bildeService)
 
-    @Test
-    fun `test getFilteredAndMappedResults with valid filter`() {
-        val mockResult = listOf(
-            ResultatManuellKontroll(1, 1, 1, 1, 1, Brukar("testbrukar","testbrukar"), null, null, null, listOf(
-                ResultatManuellKontrollBase.Svar("1", "Kommentar")
-            ), null, ResultatManuellKontrollBase.Status.Ferdig,"kommentar",
-                Instant.now())
-        )
-        `when`(testgrunnlagDAO.getTestgrunnlagForKontroll(1)).thenReturn(mock(TestgrunnlagList::class.java))
-        `when`(testResultatDAO.getManyResults(anyInt())).thenReturn(Result.success(mockResult))
-        `when`(sideutvalDAO.getSideutvalUrlMapKontroll(anyList())).thenReturn(emptyMap())
+  @Test
+  fun `test getFilteredAndMappedResults with valid filter`() {
+    val mockResult =
+        listOf(
+            ResultatManuellKontroll(
+                1,
+                1,
+                1,
+                1,
+                1,
+                Brukar("testbrukar", "testbrukar"),
+                null,
+                null,
+                null,
+                listOf(ResultatManuellKontrollBase.Svar("1", "Kommentar")),
+                null,
+                ResultatManuellKontrollBase.Status.Ferdig,
+                "kommentar",
+                Instant.now()))
+    `when`(testgrunnlagDAO.getTestgrunnlagForKontroll(1))
+        .thenReturn(mock(TestgrunnlagList::class.java))
+    `when`(testResultatDAO.getManyResults(anyInt())).thenReturn(Result.success(mockResult))
+    `when`(sideutvalDAO.getSideutvalUrlMapKontroll(anyList())).thenReturn(emptyMap())
 
-        val result = manueltResultatService.getFilteredAndMappedResults(1, 1) { it.testregelId == 1 }
+    val result = manueltResultatService.getFilteredAndMappedResults(1, 1) { it.testregelId == 1 }
 
-        assertEquals(1, result.size)
-    }
+    assertEquals(1, result.size)
+  }
 
-    @Test
-    fun `test getTestresultatForKontroll returns filtered results`() {
-        val mockTestgrunnlag = mock(TestgrunnlagList::class.java)
-        `when`(mockTestgrunnlag.opprinneligTest).thenReturn(mock(TestgrunnlagKontroll::class.java))
-        `when`(mockTestgrunnlag.opprinneligTest.id).thenReturn(1)
-        `when`(testgrunnlagDAO.getTestgrunnlagForKontroll(1)).thenReturn(mockTestgrunnlag)
-        `when`(testResultatDAO.getManyResults(1)).thenReturn(Result.success(emptyList()))
+  @Test
+  fun `test getTestresultatForKontroll returns filtered results`() {
+    val mockTestgrunnlag = mock(TestgrunnlagList::class.java)
+    `when`(mockTestgrunnlag.opprinneligTest).thenReturn(mock(TestgrunnlagKontroll::class.java))
+    `when`(mockTestgrunnlag.opprinneligTest.id).thenReturn(1)
+    `when`(testgrunnlagDAO.getTestgrunnlagForKontroll(1)).thenReturn(mockTestgrunnlag)
+    `when`(testResultatDAO.getManyResults(1)).thenReturn(Result.success(emptyList()))
 
-        val result = manueltResultatService.getTestresultatForKontroll(1, 1)
+    val result = manueltResultatService.getTestresultatForKontroll(1, 1)
 
-        assertTrue(result.isEmpty())
-    }
+    assertTrue(result.isEmpty())
+  }
 }

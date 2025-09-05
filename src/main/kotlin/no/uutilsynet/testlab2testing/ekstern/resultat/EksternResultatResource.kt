@@ -1,10 +1,12 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
+import jakarta.servlet.http.HttpServletResponse
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.InputStreamResource
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -14,7 +16,7 @@ import org.springframework.web.bind.annotation.*
 class EksternResultatResource(
     @Autowired val eksternResultatService: EksternResultatService,
     @Autowired val publiseringService: EksternResultatPubliseringService,
-    @Autowired val bildeService: BildeService
+    @Autowired val bildeService: BildeService,
 ) {
 
   private val logger = LoggerFactory.getLogger(EksternResultatResource::class.java)
@@ -22,7 +24,7 @@ class EksternResultatResource(
   @GetMapping
   fun findTestForOrgNr(
       @RequestParam("orgnr") orgnr: String?,
-      @RequestParam("searchparam") searchparam: String?
+      @RequestParam("searchparam") searchparam: String?,
   ): ResponseEntity<Any?> {
     logger.debug("Henter tester for orgnr $orgnr")
 
@@ -62,7 +64,7 @@ class EksternResultatResource(
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}")
   fun getResultRapportLoeysing(
       @PathVariable rapportId: String,
-      @PathVariable loeysingId: Int
+      @PathVariable loeysingId: Int,
   ): ResponseEntity<out Any> {
     return kotlin
         .runCatching { eksternResultatService.getRapportForLoeysing(rapportId, loeysingId) }
@@ -74,7 +76,7 @@ class EksternResultatResource(
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/tema")
   fun getResultatPrTema(
       @PathVariable rapportId: String,
-      @PathVariable loeysingId: Int
+      @PathVariable loeysingId: Int,
   ): ResponseEntity<out Any> {
     return eksternResultatService
         .getRapportPrTema(rapportId, loeysingId)
@@ -86,7 +88,7 @@ class EksternResultatResource(
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/krav")
   fun getResultatPrKrav(
       @PathVariable rapportId: String,
-      @PathVariable loeysingId: Int
+      @PathVariable loeysingId: Int,
   ): ResponseEntity<out Any> {
     return eksternResultatService
         .getRapportPrKrav(rapportId, loeysingId)
@@ -99,7 +101,7 @@ class EksternResultatResource(
   fun getDetaljertResultat(
       @PathVariable rapportId: String,
       @PathVariable loeysingId: Int,
-      @PathVariable testregelId: Int
+      @PathVariable testregelId: Int,
   ): ResponseEntity<out Any> {
 
     return kotlin
@@ -120,9 +122,9 @@ class EksternResultatResource(
       publiseringService.publiser(kontrollId)
       ResponseEntity.ok(true)
     } catch (e: NoSuchElementException) {
-      ResponseEntity.notFound().build<Boolean>()
+      ResponseEntity.notFound().build()
     } catch (e: Exception) {
-      ResponseEntity.badRequest().build<Boolean>()
+      ResponseEntity.badRequest().build()
     }
   }
 
@@ -134,5 +136,29 @@ class EksternResultatResource(
     }
 
     return bildeService.getBildeResponse(bildesti)
+  }
+
+  @GetMapping("ekporter/rapport/{rapportId}/loeysing/{loeysingId}", produces = ["text/csv"])
+  fun getEksporterResultatLoeysing(
+      @PathVariable rapportId: String,
+      @PathVariable loeysingId: Int,
+      response: HttpServletResponse
+  ) {
+    val testresults = eksternResultatService.eksporterRapportForLoeysing(rapportId, loeysingId)
+
+    val fileName = "export.csv"
+
+    val writer = response.writer.buffered()
+
+    writer.write(""""Suksesskriterium", "Testregel", "Side", "Element", "Kommentar"""")
+    writer.newLine()
+    testresults.forEach {
+      writer.write(
+          "\"${it.suksesskriterium}\", \"${it.testregelNoekkel}\", \"${it.side}\",\"${it.elementOmtale?.pointer ?: it.elementOmtale?.description ?: ""}\"")
+      writer.newLine()
+    }
+    response.setHeader(
+        HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=${fileName}; charset=UTF-8")
+    response.setHeader(HttpHeaders.CONTENT_TYPE, "text/csv; charset=UTF-8")
   }
 }
