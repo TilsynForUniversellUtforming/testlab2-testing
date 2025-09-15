@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
+import org.apache.poi.ooxml.POIXMLProperties
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.slf4j.LoggerFactory
@@ -168,9 +169,7 @@ class EksternResultatResource(
     response.setHeader(HttpHeaders.CONTENT_TYPE, "text/csv; charset=UTF-8")
   }
 
-  @GetMapping(
-      "ekporter/rapport/{rapportId}/loeysing/{loeysingId}/xlsx",
-      produces = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"])
+  @GetMapping("ekporter/rapport/{rapportId}/loeysing/{loeysingId}/xlsx")
   fun getEksporterResultatLoeysingExcel(
       @PathVariable rapportId: String,
       @PathVariable loeysingId: Int,
@@ -188,8 +187,13 @@ class EksternResultatResource(
       writeDataRow(workSheet, testresult, index + 1)
     }
 
-    workbook.write(outputStream)
-    workbook.close()
+    val xssworkbook = workbook.xssfWorkbook
+    val xmlProps: POIXMLProperties = workbook.xssfWorkbook.properties
+    val coreProps = xmlProps.coreProperties
+    coreProps.creator = "UU-tilsynet"
+
+    xssworkbook.write(outputStream)
+    xssworkbook.close()
 
     val headers = HttpHeaders()
     headers.contentType =
