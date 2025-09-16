@@ -13,6 +13,7 @@ import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.resultat.OpprettTestgrunnlag
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.testregel.TestConstants
+import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelInit
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.springframework.stereotype.Service
@@ -133,4 +134,23 @@ class TestUtils(
 
     return maalingId
   }
+
+    fun testregelObject() : Testregel {
+        return Testregel(
+            id = 1,
+            namn = "Test",
+            kravId = 5,
+            modus = TestregelModus.manuell,
+            testregelSchema = "schema",
+            testregelId = "1.1.1",
+            versjon = 1,
+            status = TestregelStatus.publisert,
+            datoSistEndra = Instant.now(),
+            type = TestregelInnholdstype.nett,
+            spraak = TestlabLocale.nb,
+            kravTilSamsvar = "svar",
+            tema = 2,
+            testobjekt = 3,
+            innhaldstypeTesting = 4)
+    }
 }

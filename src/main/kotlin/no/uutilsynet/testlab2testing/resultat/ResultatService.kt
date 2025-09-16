@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
@@ -11,8 +10,10 @@ import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelService
+import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
+import java.time.LocalDate
 
 @Component
 class ResultatService(
@@ -25,6 +26,8 @@ class ResultatService(
     val testregelService: TestregelService,
     val kravregisterClient: KravregisterClient,
 ) {
+
+    val logger = LoggerFactory.getLogger(ResultatService::class.java)
 
   private fun getKontrollResultatCommon(
       fetchResults: () -> List<ResultatLoeysingDTO>,
@@ -247,9 +250,7 @@ class ResultatService(
   }
 
   private fun getTypeKontroll(kontrollId: Int): Kontrolltype {
-    val typeKontroll =
-        kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().kontrolltype
-    return typeKontroll
+    return kontrollDAO.getKontrollType(kontrollId)
   }
 
   fun getResultatPrTema(
@@ -357,15 +358,7 @@ class ResultatService(
   }
 
   private fun getResultService(kontrollId: Int): KontrollResultatService {
-    val kontrolltype = getTypeKontroll(kontrollId)
-    getResultatService(kontrolltype)
-    return when (kontrolltype) {
-      Kontrolltype.ForenklaKontroll,
-      Kontrolltype.Statusmaaling -> automatiskResultatService
-      Kontrolltype.InngaaendeKontroll,
-      Kontrolltype.Tilsyn,
-      Kontrolltype.Uttalesak -> manueltResultatService
-    }
+    return getResultatService(getTypeKontroll(kontrollId))
   }
 
   private fun getResultatService(kontrolltype: Kontrolltype): KontrollResultatService {

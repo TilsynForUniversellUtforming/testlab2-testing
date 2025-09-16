@@ -1,19 +1,23 @@
 package no.uutilsynet.testlab2testing.sideutval.crawling
 
-import java.net.URI
-import java.net.URL
-import java.sql.ResultSet
-import java.sql.Timestamp
 import no.uutilsynet.testlab2testing.forenkletkontroll.Framgang
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.net.URI
+import java.net.URL
+import java.sql.ResultSet
+import java.sql.Timestamp
 
 @Component
 class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+
+    val logger: Logger = LoggerFactory.getLogger(SideutvalDAO::class.java)
 
   @Transactional
   fun saveCrawlResultat(crawlResultat: CrawlResultat, maalingId: Int) {

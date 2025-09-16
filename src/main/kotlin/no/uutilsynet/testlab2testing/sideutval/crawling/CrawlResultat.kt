@@ -12,7 +12,6 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-val logger: Logger = LoggerFactory.getLogger(CrawlResultat::class.java)
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
@@ -95,9 +94,10 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
       else -> crawlResultat
     }
 
-private fun onStatusCompleted(newStatus: CrawlStatus.Completed, crawlResultat: CrawlResultat) =
-    if (newStatus.output.isEmpty()) {
-      CrawlResultat.Feila(
+private fun onStatusCompleted(newStatus: CrawlStatus.Completed, crawlResultat: CrawlResultat) : CrawlResultat {
+    val logger: Logger = LoggerFactory.getLogger(CrawlResultat::class.java)
+    return if (newStatus.output.isEmpty()) {
+       CrawlResultat.Feila(
           "Crawling av ${crawlResultat.loeysing.url} feilet. Output fra crawleren var en tom liste.",
           crawlResultat.loeysing,
           Instant.now())
@@ -123,3 +123,4 @@ private fun onStatusCompleted(newStatus: CrawlStatus.Completed, crawlResultat: C
           validUrls.map { it.getOrThrow() },
       )
     }
+}
