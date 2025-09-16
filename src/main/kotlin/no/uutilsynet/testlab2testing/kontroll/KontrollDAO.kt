@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.kontroll
 
+import java.net.URI
+import java.sql.ResultSet
+import java.time.Instant
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.DataClassRowMapper
@@ -9,14 +12,10 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import java.net.URI
-import java.sql.ResultSet
-import java.time.Instant
 
 @Component
 class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
-    val logger = LoggerFactory.getLogger(KontrollDAO::class.java)
-
+  val logger = LoggerFactory.getLogger(KontrollDAO::class.java)
 
   fun createKontroll(kontroll: KontrollResource.OpprettKontroll): Result<Int> {
 
@@ -56,10 +55,12 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getKontroller(): Result<List<KontrollDB>> {
     val ids =
-        jdbcTemplate.queryForList(
-            """select id from "testlab2_testing"."kontroll"""",
-            emptyMap<String, String>(),
-            Int::class.java).toList()
+        jdbcTemplate
+            .queryForList(
+                """select id from "testlab2_testing"."kontroll"""",
+                emptyMap<String, String>(),
+                Int::class.java)
+            .toList()
     return getKontroller(ids)
   }
 
@@ -70,8 +71,9 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     return runCatching {
       val result =
-          jdbcTemplate.query(
-              """
+          jdbcTemplate
+              .query(
+                  """
                     select k.id             as id,
                            k.tittel         as tittel,
                            k.saksbehandler  as saksbehandler,
@@ -88,17 +90,18 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                         left join "testlab2_testing"."styringsdata_kontroll" sd on k.id = sd.kontroll_id
                     where k.id in (:ids)
                     """,
-              mapOf("ids" to ids),
-          ) { resultSet, _ ->
-            val kontrollId = resultSet.getInt("id")
-            val utval = getUtval(resultSet, kontrollId)
+                  mapOf("ids" to ids),
+              ) { resultSet, _ ->
+                val kontrollId = resultSet.getInt("id")
+                val utval = getUtval(resultSet, kontrollId)
 
-            val testreglar = getTestreglar(resultSet, kontrollId)
+                val testreglar = getTestreglar(resultSet, kontrollId)
 
-            val sideutvalList = getSideutvalList(kontrollId)
+                val sideutvalList = getSideutvalList(kontrollId)
 
-            createKontrollDB(resultSet, utval, testreglar, sideutvalList)
-          }.toList()
+                createKontrollDB(resultSet, utval, testreglar, sideutvalList)
+              }
+              .toList()
       if (result.size == ids.size) result
       else
           throw IllegalArgumentException(
@@ -127,8 +130,9 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   private fun getSideutvalList(kontrollId: Int): List<Sideutval> {
     val sideutvalList =
-        jdbcTemplate.query(
-            """
+        jdbcTemplate
+            .query(
+                """
                 select
                 id,
                 sideutval_type_id,
@@ -139,16 +143,17 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 from "testlab2_testing"."kontroll_sideutval"
                 where kontroll_id = :kontroll_id
               """
-                .trimIndent(),
-            mapOf("kontroll_id" to kontrollId)) { mapper, _ ->
-              Sideutval(
-                  id = mapper.getInt("id"),
-                  loeysingId = mapper.getInt("loeysing_id"),
-                  typeId = mapper.getInt("sideutval_type_id"),
-                  begrunnelse = mapper.getString("begrunnelse"),
-                  url = URI(mapper.getString("url")),
-                  egendefinertType = mapper.getString("egendefinert_objekt"))
-            }.toList()
+                    .trimIndent(),
+                mapOf("kontroll_id" to kontrollId)) { mapper, _ ->
+                  Sideutval(
+                      id = mapper.getInt("id"),
+                      loeysingId = mapper.getInt("loeysing_id"),
+                      typeId = mapper.getInt("sideutval_type_id"),
+                      begrunnelse = mapper.getString("begrunnelse"),
+                      url = URI(mapper.getString("url")),
+                      egendefinertType = mapper.getString("egendefinert_objekt"))
+                }
+            .toList()
     return sideutvalList
   }
 
@@ -181,10 +186,12 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   private fun getLoeysingIdListForKontroll(kontrollId: Int): List<Int> {
     val loeysingIdList =
-        jdbcTemplate.queryForList(
-            """select loeysing_id as id from "testlab2_testing"."kontroll_loeysing" where kontroll_id = :kontroll_id""",
-            mapOf("kontroll_id" to kontrollId),
-            Int::class.java).toList()
+        jdbcTemplate
+            .queryForList(
+                """select loeysing_id as id from "testlab2_testing"."kontroll_loeysing" where kontroll_id = :kontroll_id""",
+                mapOf("kontroll_id" to kontrollId),
+                Int::class.java)
+            .toList()
     return loeysingIdList
   }
 
@@ -420,15 +427,16 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           """select id, type from testlab2_testing.sideutval_type""",
           DataClassRowMapper.newInstance(SideutvalType::class.java))
 
-
-    fun getKontrollType(kontrollId:Int): Kontrolltype {
-        logger.info("Hentar kontrolltype for kontroll med id $kontrollId")
-        jdbcTemplate.queryForObject(
+  fun getKontrollType(kontrollId: Int): Kontrolltype {
+    logger.info("Hentar kontrolltype for kontroll med id $kontrollId")
+    jdbcTemplate
+        .queryForObject(
             """select kontrolltype from "testlab2_testing"."kontroll" where id = :kontrollId""",
             mapOf("kontrollId" to kontrollId),
-            String::class.java)?.let {
-            return Kontrolltype.valueOf(it)
-        } ?: throw IllegalArgumentException("Fant ikkje kontroll med id $kontrollId")
-    }
-
+            String::class.java)
+        ?.let {
+          return Kontrolltype.valueOf(it)
+        }
+        ?: throw IllegalArgumentException("Fant ikkje kontroll med id $kontrollId")
+  }
 }

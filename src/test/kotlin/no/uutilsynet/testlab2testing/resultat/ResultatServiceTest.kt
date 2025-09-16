@@ -1,5 +1,9 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.net.URI
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
@@ -36,10 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
-import java.net.URI
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import kotlin.properties.Delegates
 
 @SpringBootTest(
     properties =
@@ -62,10 +62,9 @@ class ResultatServiceTest(
   @MockitoBean lateinit var testgrunnlagDAO: TestgrunnlagDAO
   @MockitoBean lateinit var testResultatDAO: TestResultatDAO
   @MockitoBean lateinit var sideutvalDAO: SideutvalDAO
-  @MockitoSpyBean lateinit var kravregisterClient: KravregisterClient
+  @MockitoBean lateinit var kravregisterClient: KravregisterClient
   @MockitoSpyBean lateinit var testregelService: TestregelService
   @MockitoSpyBean lateinit var kontrollDAO: KontrollDAO
-
 
   @Test
   fun getTestresultatMaaling() {
@@ -92,10 +91,9 @@ class ResultatServiceTest(
     assertEquals(resultatKontroll.loeysingar.size, 1)
     assertEquals(resultatKontroll.loeysingar[0].score, 0.5)
 
-
-      utvalDAO.deleteUtval(utvalId)
-      kontrollDAO.deleteKontroll(kontrollId)
-      maalingDao.deleteMaaling(maalingId)
+    utvalDAO.deleteUtval(utvalId)
+    kontrollDAO.deleteKontroll(kontrollId)
+    maalingDao.deleteMaaling(maalingId)
   }
 
   fun createTestMaaling(): Int {
@@ -246,14 +244,13 @@ class ResultatServiceTest(
 
     val resultatliste = listOf(resultat1, resultat2)
 
-
     Mockito.`when`(testgrunnlagDAO.getTestgrunnlagForKontroll(1)).thenReturn(testgrunnlagList)
 
     Mockito.`when`(testResultatDAO.getManyResults(1)).thenReturn(Result.success(resultatliste))
 
     Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1))).thenReturn(sideUtvalList)
 
-    Mockito.`when`(testregelService.getTestregelForKrav(1)).thenReturn(listOf(testregel))
+    Mockito.doReturn(listOf(testregel)).`when`(testregelService).getTestregelForKrav(1)
     Mockito.`when`(testregelService.getTestregel(1)).thenReturn(testregel)
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
     Mockito.doReturn(Kontrolltype.InngaaendeKontroll).`when`(kontrollDAO).getKontrollType(1)

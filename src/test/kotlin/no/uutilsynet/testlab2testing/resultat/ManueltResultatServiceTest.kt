@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.net.URI
+import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
@@ -18,8 +20,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import java.net.URI
-import java.time.Instant
 
 @SpringBootTest
 class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
@@ -62,16 +62,16 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
                 "kommentar",
                 Instant.now()))
 
-      val testgrunnlagList = mock(TestgrunnlagKontroll::class.java)
+    val testgrunnlagList = mock(TestgrunnlagKontroll::class.java)
 
-      val testregel = testUtils.testregelObject()
-
+    val testregel = testUtils.testregelObject()
 
     `when`(testgrunnlagDAO.getTestgrunnlagForKontroll(1))
-        .thenReturn(TestgrunnlagList(testgrunnlagList, listOf( testgrunnlagList)))
+        .thenReturn(TestgrunnlagList(testgrunnlagList, listOf(testgrunnlagList)))
     `when`(testResultatDAO.getManyResults(anyInt())).thenReturn(Result.success(mockResult))
-    `when`(sideutvalDAO.getSideutvalUrlMapKontroll(anyList())).thenReturn(mapOf(1 to URI("https://test.com").toURL()))
-      `when`(testregelService.getTestregel(anyInt())).thenReturn(testregel)
+    `when`(sideutvalDAO.getSideutvalUrlMapKontroll(anyList()))
+        .thenReturn(mapOf(1 to URI("https://test.com").toURL()))
+    `when`(testregelService.getTestregel(anyInt())).thenReturn(testregel)
 
     val result = manueltResultatService.getFilteredAndMappedResults(1, 1) { it.testregelId == 1 }
 

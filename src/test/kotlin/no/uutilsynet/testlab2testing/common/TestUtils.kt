@@ -135,22 +135,22 @@ class TestUtils(
     return maalingId
   }
 
-    fun testregelObject() : Testregel {
-        return Testregel(
-            id = 1,
-            namn = "Test",
-            kravId = 5,
-            modus = TestregelModus.manuell,
-            testregelSchema = "schema",
-            testregelId = "1.1.1",
-            versjon = 1,
-            status = TestregelStatus.publisert,
-            datoSistEndra = Instant.now(),
-            type = TestregelInnholdstype.nett,
-            spraak = TestlabLocale.nb,
-            kravTilSamsvar = "svar",
-            tema = 2,
-            testobjekt = 3,
-            innhaldstypeTesting = 4)
-    }
+  fun testregelObject(): Testregel {
+    return Testregel(
+        id = 1,
+        namn = "Test",
+        kravId = 5,
+        modus = TestregelModus.manuell,
+        testregelSchema = "schema",
+        testregelId = "1.1.1",
+        versjon = 1,
+        status = TestregelStatus.publisert,
+        datoSistEndra = Instant.now(),
+        type = TestregelInnholdstype.nett,
+        spraak = TestlabLocale.nb,
+        kravTilSamsvar = "svar",
+        tema = 2,
+        testobjekt = 3,
+        innhaldstypeTesting = 4)
+  }
 }

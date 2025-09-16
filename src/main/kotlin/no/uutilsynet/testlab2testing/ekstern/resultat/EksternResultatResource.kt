@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import jakarta.servlet.http.HttpServletResponse
+import java.io.ByteArrayOutputStream
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
@@ -15,7 +16,6 @@ import org.springframework.http.HttpStatusCode
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.io.ByteArrayOutputStream
 
 @RestController
 @RequestMapping("/ekstern/tester")
