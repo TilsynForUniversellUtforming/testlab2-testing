@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
+import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
@@ -208,5 +209,11 @@ class EksternResultatService(
   fun getResultatForRapport(rapportId: String): List<TestEkstern> {
 
     return eksternResultatDAO.getTestsForRapportIds(rapportId).toTestEksternList()
+  }
+
+  fun eksporterRapportForLoeysing(rapportId: String, loeysingId: Int): List<TestresultatDetaljert> {
+    return getKontrollLoeysing(rapportId, loeysingId)
+        .mapCatching { resultatService.getBrotForRapportLoeysing(it.kontrollId, loeysingId) }
+        .getOrThrow()
   }
 }

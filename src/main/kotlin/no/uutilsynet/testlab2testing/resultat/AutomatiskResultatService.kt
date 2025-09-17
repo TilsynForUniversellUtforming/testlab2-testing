@@ -17,15 +17,22 @@ class AutomatiskResultatService(
     kravregisterClient: KravregisterClient
 ) : KontrollResultatService(resultatDAO, kravregisterClient, testregelService) {
 
-  fun getResultatForAutomatiskKontroll(
+  override fun getResultatForKontroll(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int
   ): List<TestresultatDetaljert> {
-    val maalingId = getMaalingForKontroll(kontrollId)
-    return getResultatForMaaling(maalingId, loeysingId).filter {
+    return getResultatForKontroll(kontrollId, loeysingId).filter {
       filterByTestregel(it.testregelId, listOf(testregelId))
     }
+  }
+
+  override fun getResultatForKontroll(
+      kontrollId: Int,
+      loeysingId: Int
+  ): List<TestresultatDetaljert> {
+    val maalingId = getMaalingForKontroll(kontrollId)
+    return getResultatForMaaling(maalingId, loeysingId)
   }
 
   private fun getAutotesterTestresultat(maalingId: Int, loeysingId: Int?): List<TestResultat> {
@@ -71,15 +78,21 @@ class AutomatiskResultatService(
         emptyList())
   }
 
-  fun getKontrollResultatMaaling(maalingId: Int?): List<ResultatLoeysingDTO> {
+  private fun getKontrollResultatMaaling(maalingId: Int?): List<ResultatLoeysingDTO> {
     val resultatMaaling =
-        maalingId?.let { resultatDAO.getTestresultatMaaling(it) }
-            ?: getKontrollResultatAlleMaalingar()
+        maalingId?.let { resultatDAO.getTestresultatMaaling(it) } ?: getAlleResultat()
     return resultatMaaling
   }
 
-  fun getKontrollResultatAlleMaalingar(): List<ResultatLoeysingDTO> {
+  override fun getAlleResultat(): List<ResultatLoeysingDTO> {
     return resultatDAO.getTestresultatMaaling()
+  }
+
+  override fun progresjonPrLoeysing(
+      testgrunnlagId: Int,
+      loeysingar: ResultatService.LoysingList,
+  ): Map<Int, Int> {
+    return loeysingar.loeysingar.keys.associateWith { 100 }
   }
 
   override fun getKontrollResultat(kontrollId: Int): List<ResultatLoeysingDTO> {

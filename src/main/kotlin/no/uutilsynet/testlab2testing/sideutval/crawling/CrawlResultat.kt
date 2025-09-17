@@ -12,8 +12,6 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-val logger: Logger = LoggerFactory.getLogger(CrawlResultat::class.java)
-
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
     Type(CrawlResultat.IkkjeStarta::class, name = "ikkje_starta"),
@@ -95,31 +93,36 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
       else -> crawlResultat
     }
 
-private fun onStatusCompleted(newStatus: CrawlStatus.Completed, crawlResultat: CrawlResultat) =
-    if (newStatus.output.isEmpty()) {
-      CrawlResultat.Feila(
-          "Crawling av ${crawlResultat.loeysing.url} feilet. Output fra crawleren var en tom liste.",
-          crawlResultat.loeysing,
-          Instant.now())
-    } else {
-      val urlList = newStatus.output.map { runCatching { URI(it.url).toURL() } }
-      urlList.forEach {
-        if (it.isFailure)
-            logger.info(
-                "Crawlresultatet for løysing ${crawlResultat.loeysing.id} inneholder en ugyldig url: ${it.exceptionOrNull()?.message}")
-      }
-      val (validUrls, invalidUrls) = urlList.partition { it.isSuccess }
-
-      if (invalidUrls.isNotEmpty()) {
-        logger.warn("${invalidUrls.size} ugyldige urler oppdaget i oppdatering av status")
-      }
-      CrawlResultat.Ferdig(
-          validUrls.size,
-          statusUrl =
-              if (crawlResultat is CrawlResultat.Starta) crawlResultat.statusUrl
-              else (crawlResultat as CrawlResultat.IkkjeStarta).statusUrl,
-          crawlResultat.loeysing,
-          Instant.now(),
-          validUrls.map { it.getOrThrow() },
-      )
+private fun onStatusCompleted(
+    newStatus: CrawlStatus.Completed,
+    crawlResultat: CrawlResultat
+): CrawlResultat {
+  val logger: Logger = LoggerFactory.getLogger(CrawlResultat::class.java)
+  return if (newStatus.output.isEmpty()) {
+    CrawlResultat.Feila(
+        "Crawling av ${crawlResultat.loeysing.url} feilet. Output fra crawleren var en tom liste.",
+        crawlResultat.loeysing,
+        Instant.now())
+  } else {
+    val urlList = newStatus.output.map { runCatching { URI(it.url).toURL() } }
+    urlList.forEach {
+      if (it.isFailure)
+          logger.info(
+              "Crawlresultatet for løysing ${crawlResultat.loeysing.id} inneholder en ugyldig url: ${it.exceptionOrNull()?.message}")
     }
+    val (validUrls, invalidUrls) = urlList.partition { it.isSuccess }
+
+    if (invalidUrls.isNotEmpty()) {
+      logger.warn("${invalidUrls.size} ugyldige urler oppdaget i oppdatering av status")
+    }
+    CrawlResultat.Ferdig(
+        validUrls.size,
+        statusUrl =
+            if (crawlResultat is CrawlResultat.Starta) crawlResultat.statusUrl
+            else (crawlResultat as CrawlResultat.IkkjeStarta).statusUrl,
+        crawlResultat.loeysing,
+        Instant.now(),
+        validUrls.map { it.getOrThrow() },
+    )
+  }
+}

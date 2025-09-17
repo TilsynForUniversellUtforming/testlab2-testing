@@ -5,14 +5,13 @@ import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.krav.KravWcag2x
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelService
+import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 
@@ -25,74 +24,38 @@ class ResultatService(
     val automatiskResultatService: AutomatiskResultatService,
     val manueltResultatService: ManueltResultatService,
     val testregelService: TestregelService,
-    val kravregisterClient: KravregisterClient
+    val kravregisterClient: KravregisterClient,
 ) {
 
-  fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
-    return automatiskResultatService.getResultatForMaaling(maalingId, loeysingId)
-  }
+  val logger = LoggerFactory.getLogger(ResultatService::class.java)
 
-  fun getResulatForManuellKontroll(
-      kontrollId: Int,
-      loeysingId: Int,
-      kravId: Int
-  ): List<TestresultatDetaljert> {
-    return manueltResultatService.getResulatForManuellKontroll(kontrollId, loeysingId, kravId)
-  }
-
-  fun getResultatList(type: Kontrolltype?): List<Resultat> {
-    return when (type) {
-      Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat()
-      Kontrolltype.InngaaendeKontroll,
-      Kontrolltype.Tilsyn,
-      Kontrolltype.Uttalesak,
-      Kontrolltype.Statusmaaling -> getManuellKontrollResultat()
-      else -> getKontrollResultat()
-    }
-  }
-
-  private fun getAutomatiskKontrollResultat(): List<Resultat> {
-    return automatiskResultatService
-        .getKontrollResultatAlleMaalingar()
-        .groupBy { it.id }
-        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
-  }
-
-  private fun getAutomatiskKontrollResultat(kontrollId: Int): List<Resultat> {
-    return automatiskResultatService
-        .getKontrollResultat(kontrollId)
-        .groupBy { it.id }
-        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
-  }
-
-  private fun getManuellKontrollResultat(kontrollId: Int): List<Resultat> {
-    return manueltResultatService
-        .getKontrollResultat(kontrollId)
-        .groupBy { it.id }
-        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
-  }
-
-  private fun getManuellKontrollResultat(): List<Resultat> {
-    return manueltResultatService
-        .getKontrollResultatAlleTestgrunnlag()
+  private fun getKontrollResultatCommon(
+      fetchResults: () -> List<ResultatLoeysingDTO>,
+  ): List<Resultat> {
+    return fetchResults()
         .groupBy { it.id }
         .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
   }
 
   private fun getKontrollResultat(): List<Resultat> {
-    return resultatDAO
-        .getAllResultat()
-        .groupBy { it.id }
-        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
+    return getKontrollResultatCommon { resultatDAO.getAllResultat() }
         .map { it.copy(loeysingar = limitResultatList(it.loeysingar)) }
   }
 
   @Cacheable("resultatKontroll")
   fun getKontrollResultat(kontrollId: Int): List<Resultat> {
-    return resultatDAO
-        .getResultatKontroll(kontrollId)
-        .groupBy { it.id }
-        .map { (id, result) -> resultatgruppertPrKontroll(id, result) }
+    return getKontrollResultatCommon { resultatDAO.getResultatKontroll(kontrollId) }
+  }
+
+  fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
+    return automatiskResultatService.getResultatForMaaling(maalingId, loeysingId)
+  }
+
+  fun getResultatList(type: Kontrolltype?): List<Resultat> {
+    if (type != null) {
+      return getKontrollResultatCommon { getResultatService(type).getAlleResultat() }
+    }
+    return getKontrollResultat()
   }
 
   @Cacheable("resultatKontroll")
@@ -102,24 +65,16 @@ class ResultatService(
   }
 
   private fun resultatForKontrollType(kontrolltype: Kontrolltype, kontrollId: Int): List<Resultat> {
-    val resultat =
-        when (kontrolltype) {
-          Kontrolltype.Statusmaaling,
-          Kontrolltype.ForenklaKontroll -> getAutomatiskKontrollResultat(kontrollId)
-          Kontrolltype.InngaaendeKontroll,
-          Kontrolltype.Tilsyn,
-          Kontrolltype.Uttalesak, -> getManuellKontrollResultat(kontrollId)
-        }
-    return resultat
+    return getKontrollResultatCommon {
+      getResultatService(kontrolltype).getKontrollResultat(kontrollId)
+    }
   }
 
   private fun resultatgruppertPrKontroll(
       kontrollId: Int,
-      result: List<ResultatLoeysingDTO>
+      result: List<ResultatLoeysingDTO>,
   ): Resultat {
-
     val resultatLoeysingar = loeysingResultatList(result)
-
     val publisert = erKontrollPublisert(result)
 
     return Resultat(
@@ -146,7 +101,7 @@ class ResultatService(
   private fun resultatForLoeysingarPrTestgrunnlag(
       result: List<ResultatLoeysingDTO>,
       testgrunnlagId: Int,
-      kontrolltype: Kontrolltype
+      kontrolltype: Kontrolltype,
   ): List<LoeysingResultat> {
     val loeysingar = getLoeysingMap(mapResultatToLoeysingId(result)).getOrThrow()
     val statusLoeysingar = progresjonPrLoeysing(testgrunnlagId, kontrolltype, loeysingar)
@@ -189,13 +144,7 @@ class ResultatService(
   }
 
   fun getBrukararForTest(kontrollId: Int, kontrolltype: Kontrolltype): List<String> {
-    return when (kontrolltype) {
-      Kontrolltype.ForenklaKontroll,
-      Kontrolltype.Statusmaaling -> automatiskResultatService.getBrukararForTest(kontrollId)
-      Kontrolltype.InngaaendeKontroll,
-      Kontrolltype.Tilsyn,
-      Kontrolltype.Uttalesak -> manueltResultatService.getBrukararForTest(kontrollId)
-    }
+    return getResultService(kontrollId).getBrukararForTest(kontrollId)
   }
 
   private fun limitResultatList(resultLoeysingar: List<LoeysingResultat>): List<LoeysingResultat> {
@@ -224,30 +173,10 @@ class ResultatService(
   private fun progresjonPrLoeysing(
       testgrunnlagId: Int,
       kontrolltype: Kontrolltype,
-      loeysingar: LoysingList
+      loeysingar: LoysingList,
   ): Map<Int, Int> {
-    if (kontrolltype == Kontrolltype.ForenklaKontroll) {
-      return loeysingar.loeysingar.keys.associateWith { 100 }
-    }
-
-    val resultatPrTestgrunnlag = manueltResultatService.getResultatPrTestgrunnlag(testgrunnlagId)
-    val progresjon =
-        resultatPrTestgrunnlag
-            .groupBy { it.loeysingId }
-            .entries
-            .map { (loeysingId, result) -> Pair(loeysingId, percentageFerdig(result)) }
-            .associateBy({ it.first }, { it.second })
-
-    return progresjon
+    return getResultatService(kontrolltype).progresjonPrLoeysing(testgrunnlagId, loeysingar)
   }
-
-  private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =
-      (result
-              .map { it.status }
-              .count { it == ResultatManuellKontrollBase.Status.Ferdig }
-              .toDouble() / result.size)
-          .times(100)
-          .toInt()
 
   private fun getLoeysingMap(listLoysingId: List<Int>): Result<LoysingList> {
     return loeysingsRegisterClient.getManyExpanded(listLoysingId).mapCatching { loeysingList ->
@@ -257,7 +186,7 @@ class ResultatService(
 
   fun getKontrollLoeysingResultat(
       kontrollId: Int,
-      loeysingId: Int
+      loeysingId: Int,
   ): List<ResultatOversiktLoeysing> {
 
     return resultatDAO
@@ -267,7 +196,7 @@ class ResultatService(
 
   fun getKontrollLoeysingResultatIkkjeRetest(
       kontrollId: Int,
-      loeysingId: Int
+      loeysingId: Int,
   ): List<ResultatOversiktLoeysing> {
     return resultatDAO
         .getResultatKontrollLoeysing(kontrollId, loeysingId)
@@ -315,20 +244,13 @@ class ResultatService(
   fun getResultatListKontroll(
       kontrollId: Int,
       loeysingId: Int,
-      testregelId: Int
+      testregelId: Int,
   ): List<TestresultatDetaljert> {
-    val typeKontroll =
-        kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().kontrolltype
-    return when (typeKontroll) {
-      Kontrolltype.ForenklaKontroll ->
-          automatiskResultatService.getResultatForAutomatiskKontroll(
-              kontrollId, loeysingId, testregelId)
-      Kontrolltype.InngaaendeKontroll,
-      Kontrolltype.Tilsyn,
-      Kontrolltype.Uttalesak,
-      Kontrolltype.Statusmaaling ->
-          getResulatForManuellKontroll(kontrollId, loeysingId, testregelId)
-    }
+    return getResultService(kontrollId).getResultatForKontroll(kontrollId, loeysingId, testregelId)
+  }
+
+  private fun getTypeKontroll(kontrollId: Int): Kontrolltype {
+    return kontrollDAO.getKontrollType(kontrollId)
   }
 
   fun getResultatPrTema(
@@ -336,7 +258,7 @@ class ResultatService(
       kontrolltype: Kontrolltype?,
       loeysingId: Int?,
       startDato: LocalDate?,
-      sluttDato: LocalDate?
+      sluttDato: LocalDate?,
   ): List<ResultatTema> =
       resultatDAO
           .getResultatPrTema(kontrollId, kontrolltype, loeysingId, startDato, sluttDato)
@@ -354,7 +276,7 @@ class ResultatService(
       kontrollType: Kontrolltype?,
       loeysingId: Int?,
       fraDato: LocalDate?,
-      tilDato: LocalDate?
+      tilDato: LocalDate?,
   ): List<ResultatKrav> {
     return resultatDAO
         .getResultatPrKrav(kontrollId, kontrollType, loeysingId, fraDato, tilDato)
@@ -397,29 +319,60 @@ class ResultatService(
 
   private fun List<ResultatLoeysingDTO>.toResultatOversiktLoeysing():
       List<ResultatOversiktLoeysing> {
-
-    val loeysingar = this.map { it.loeysingId }.let { getLoeysingMap(it).getOrThrow() }
-
+    val loeysingar = getLoeysingar()
     return this.map { resultat -> mapTestregel(resultat) }
         .groupBy { it.testregelId }
         .map { (testregelId, result) ->
-          ResultatOversiktLoeysing(
-                  result.first().loeysingId,
-                  loeysingar.getNamn(result.first().loeysingId),
-                  result.first().typeKontroll,
-                  result.first().namn,
-                  result.map { it.testar }.flatten().distinct(),
-                  result
-                      .filter { !erIkkjeForekomst(it.talElementBrot, it.talElementSamsvar) }
-                      .map { it.score }
-                      .average(),
-                  testregelId,
-                  result.first().testregeltTittel,
-                  talTestaElement(result),
-                  result.sumOf { it.talElementBrot },
-                  result.sumOf { it.talElementSamsvar })
-              .let { handleIkkjeForekomst(it) }
+          handleIkkjeForekomst(mapResultatOversiktLoeysing(result, loeysingar, testregelId))
         }
+  }
+
+  private fun mapResultatOversiktLoeysing(
+      result: List<ResultatLoeysing>,
+      loeysingar: LoysingList,
+      testregelId: Int,
+  ) =
+      ResultatOversiktLoeysing(
+          result.first().loeysingId,
+          loeysingar.getNamn(result.first().loeysingId),
+          result.first().typeKontroll,
+          result.first().namn,
+          result.map { it.testar }.flatten().distinct(),
+          result
+              .filter { !erIkkjeForekomst(it.talElementBrot, it.talElementSamsvar) }
+              .map { it.score }
+              .average(),
+          testregelId,
+          result.first().testregeltTittel,
+          talTestaElement(result),
+          result.sumOf { it.talElementBrot },
+          result.sumOf { it.talElementSamsvar })
+
+  fun getBrotForRapportLoeysing(
+      kontrollId: Int,
+      loeysingId: Int,
+  ): List<TestresultatDetaljert> {
+    return getResultService(kontrollId)
+        .getResultatBrotForKontroll(kontrollId, loeysingId)
+        .sortedBy { it.suksesskriterium.first() }
+  }
+
+  private fun getResultService(kontrollId: Int): KontrollResultatService {
+    return getResultatService(getTypeKontroll(kontrollId))
+  }
+
+  private fun getResultatService(kontrolltype: Kontrolltype): KontrollResultatService {
+    return when (kontrolltype) {
+      Kontrolltype.ForenklaKontroll,
+      Kontrolltype.Statusmaaling -> automatiskResultatService
+      Kontrolltype.InngaaendeKontroll,
+      Kontrolltype.Tilsyn,
+      Kontrolltype.Uttalesak -> manueltResultatService
+    }
+  }
+
+  private fun List<ResultatLoeysingDTO>.getLoeysingar(): LoysingList {
+    return this.map { it.loeysingId }.let { getLoeysingMap(it).getOrThrow() }
   }
 
   private fun talTestaElement(result: List<ResultatLoeysing>) =

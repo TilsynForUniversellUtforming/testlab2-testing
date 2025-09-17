@@ -32,7 +32,6 @@ import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelInit
 import no.uutilsynet.testlab2testing.testregel.TestregelService
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -47,11 +46,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
         arrayOf("spring.datasource.url: jdbc:tc:postgresql:16-alpine:///ResultatServiceTest"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ResultatServiceTest(
-    @Autowired val resultatService: ResultatService,
     @Autowired val aggregeringDAO: AggregeringDAO,
     @Autowired val maalingDao: MaalingDAO,
-    @Autowired val kontrollDAO: KontrollDAO,
-    @Autowired val utvalDAO: UtvalDAO
+    @Autowired val utvalDAO: UtvalDAO,
+    @Autowired val resultatService: ResultatService,
 ) {
 
   private var kontrollId: Int by Delegates.notNull()
@@ -61,18 +59,12 @@ class ResultatServiceTest(
   private var aggregertResultat: AggregeringPerTestregelDTO by Delegates.notNull()
 
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
-  @MockitoBean lateinit var testgrunnlagDao: TestgrunnlagDAO
+  @MockitoBean lateinit var testgrunnlagDAO: TestgrunnlagDAO
   @MockitoBean lateinit var testResultatDAO: TestResultatDAO
   @MockitoBean lateinit var sideutvalDAO: SideutvalDAO
   @MockitoBean lateinit var kravregisterClient: KravregisterClient
   @MockitoSpyBean lateinit var testregelService: TestregelService
-
-  @AfterAll
-  fun cleanup() {
-    utvalDAO.deleteUtval(utvalId)
-    kontrollDAO.deleteKontroll(kontrollId)
-    maalingDao.deleteMaaling(maalingId)
-  }
+  @MockitoSpyBean lateinit var kontrollDAO: KontrollDAO
 
   @Test
   fun getTestresultatMaaling() {
@@ -98,6 +90,10 @@ class ResultatServiceTest(
     assertEquals(resultatKontroll.id, kontrollId)
     assertEquals(resultatKontroll.loeysingar.size, 1)
     assertEquals(resultatKontroll.loeysingar[0].score, 0.5)
+
+    utvalDAO.deleteUtval(utvalId)
+    kontrollDAO.deleteKontroll(kontrollId)
+    maalingDao.deleteMaaling(maalingId)
   }
 
   fun createTestMaaling(): Int {
@@ -248,17 +244,18 @@ class ResultatServiceTest(
 
     val resultatliste = listOf(resultat1, resultat2)
 
-    Mockito.`when`(testgrunnlagDao.getTestgrunnlagForKontroll(1)).thenReturn(testgrunnlagList)
+    Mockito.`when`(testgrunnlagDAO.getTestgrunnlagForKontroll(1)).thenReturn(testgrunnlagList)
 
     Mockito.`when`(testResultatDAO.getManyResults(1)).thenReturn(Result.success(resultatliste))
 
     Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1))).thenReturn(sideUtvalList)
 
-    Mockito.`when`(testregelService.getTestregelForKrav(1)).thenReturn(listOf(testregel))
+    Mockito.doReturn(listOf(testregel)).`when`(testregelService).getTestregelForKrav(1)
     Mockito.`when`(testregelService.getTestregel(1)).thenReturn(testregel)
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
+    Mockito.doReturn(Kontrolltype.InngaaendeKontroll).`when`(kontrollDAO).getKontrollType(1)
 
-    val resultat = resultatService.getResulatForManuellKontroll(1, 1, 1)
+    val resultat = resultatService.getResultatListKontroll(1, 1, 1)
     assertNotNull(resultat)
 
     assertTrue(resultat.isNotEmpty())

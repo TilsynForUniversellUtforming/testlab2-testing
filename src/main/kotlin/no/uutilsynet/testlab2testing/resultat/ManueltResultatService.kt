@@ -9,6 +9,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeServic
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagList
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
@@ -27,40 +28,56 @@ class ManueltResultatService(
     val bildeService: BildeService,
 ) : KontrollResultatService(resultatDAO, kravregisterClient, testregelService) {
 
-  fun getResulatForManuellKontroll(
+  override fun getResultatForKontroll(
       kontrollId: Int,
       loeysingId: Int,
-      testregelId: Int
+      testregelId: Int,
   ): List<TestresultatDetaljert> {
-    val testresultat = getTestresultatForKontroll(kontrollId, loeysingId)
-
-    val sideutvalIdUrlMap: Map<Int, URL> = getSideutvalMap(testresultat)
-
-    return testresultat
-        .map { resultatManuellKontrollTotestresultatDetaljert(it, sideutvalIdUrlMap) }
-        .filter { filterByTestregel(it.testregelId, listOf(testregelId)) }
-        .filter { it.elementResultat != null }
+    return getFilteredAndMappedResults(kontrollId, loeysingId) {
+      filterByTestregel(it.testregelId, listOf(testregelId)) && it.elementResultat != null
+    }
   }
 
-  private fun getTestresultatForKontroll(
+  override fun getResultatForKontroll(
       kontrollId: Int,
-      loeysingId: Int
+      loeysingId: Int,
+  ): List<TestresultatDetaljert> {
+    return getFilteredAndMappedResults(kontrollId, loeysingId) { true }
+  }
+
+  fun getFilteredAndMappedResults(
+      kontrollId: Int,
+      loeysingId: Int,
+      filter: (ResultatManuellKontroll) -> Boolean
+  ): List<TestresultatDetaljert> {
+    val testresultat = getTestresultatForKontroll(kontrollId, loeysingId)
+    val sideutvalIdUrlMap = getSideutvalMap(testresultat)
+    return testresultat.filter(filter).map {
+      resultatManuellKontrollTotestresultatDetaljert(it, sideutvalIdUrlMap)
+    }
+  }
+
+  fun getTestresultatForKontroll(
+      kontrollId: Int,
+      loeysingId: Int,
   ): List<ResultatManuellKontroll> {
     val testgrunnlag = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest
-    val testresultat =
-        getResultatPrTestgrunnlag(testgrunnlag.id).filter { it.loeysingId == loeysingId }
-    return testresultat
+    return getResultatPrTestgrunnlag(testgrunnlag.id).filter { it.loeysingId == loeysingId }
   }
 
   fun getResultatPrTestgrunnlag(testgrunnlagId: Int) =
       testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
 
+  private fun getSideutvalMap(testresultat: List<ResultatManuellKontroll>): Map<Int, URL> {
+    val sideutvalIds = testresultat.map { it.sideutvalId }.distinct()
+    return sideutvalDAO.getSideutvalUrlMapKontroll(sideutvalIds)
+  }
+
   private fun resultatManuellKontrollTotestresultatDetaljert(
       it: ResultatManuellKontroll,
-      sideutvalIdUrlMap: Map<Int, URL>
+      sideutvalIdUrlMap: Map<Int, URL>,
   ): TestresultatDetaljert {
     val testregel: Testregel = getTesteregelFromId(it.testregelId)
-    // it.testregel er databaseId ikkje feltet testregelId i db
     return TestresultatDetaljert(
         it.id,
         it.loeysingId,
@@ -79,34 +96,44 @@ class ManueltResultatService(
         getBildeForTestresultat(it))
   }
 
-  private fun getBildeForTestresultat(it: ResultatManuellKontroll) =
-      bildeService.listBildeForTestresultat(it.id).getOrNull()
-
   private fun getUrlFromSideutval(
       sideutvalIdUrlMap: Map<Int, URL>,
-      it: ResultatManuellKontroll
+      it: ResultatManuellKontroll,
   ): URL {
-    val url = sideutvalIdUrlMap[it.sideutvalId]
-    requireNotNull(url) { "Ugyldig testresultat url manglar" }
-    return url
+    return sideutvalIdUrlMap[it.sideutvalId]
+        ?: throw IllegalArgumentException("Ugyldig testresultat url manglar")
   }
 
-  private fun getSideutvalMap(testresultat: List<ResultatManuellKontroll>): Map<Int, URL> {
-    val sideutvalIds = getSideutvalIds(testresultat)
-    val sideutvalIdUrlMap: Map<Int, URL> = sideutvalDAO.getSideutvalUrlMapKontroll(sideutvalIds)
-    return sideutvalIdUrlMap
-  }
-
-  private fun getSideutvalIds(testresultat: List<ResultatManuellKontroll>) =
-      testresultat.map { it.sideutvalId }.distinct()
+  private fun getBildeForTestresultat(it: ResultatManuellKontroll) =
+      bildeService.listBildeForTestresultat(it.id).getOrNull()
 
   private fun testVartUtfoertToLocalTime(testVartUtfoert: Instant?): LocalDateTime? {
     return testVartUtfoert?.atZone(Constants.ZONEID_OSLO)?.toLocalDateTime()
   }
 
-  fun getKontrollResultatAlleTestgrunnlag(): List<ResultatLoeysingDTO> {
+  override fun getAlleResultat(): List<ResultatLoeysingDTO> {
     return resultatDAO.getTestresultatTestgrunnlag()
   }
+
+  override fun progresjonPrLoeysing(
+      testgrunnlagId: Int,
+      loeysingar: ResultatService.LoysingList,
+  ): Map<Int, Int> {
+
+    return getResultatPrTestgrunnlag(testgrunnlagId)
+        .groupBy { it.loeysingId }
+        .entries
+        .map { (loeysingId, result) -> Pair(loeysingId, percentageFerdig(result)) }
+        .associateBy({ it.first }, { it.second })
+  }
+
+  private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =
+      (result
+              .map { it.status }
+              .count { it == ResultatManuellKontrollBase.Status.Ferdig }
+              .toDouble() / result.size)
+          .times(100)
+          .toInt()
 
   override fun getKontrollResultat(kontrollId: Int): List<ResultatLoeysingDTO> {
     val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
