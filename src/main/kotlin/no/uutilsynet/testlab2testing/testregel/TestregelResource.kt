@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.testregel
 
-import java.net.URI
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHandling
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
 import no.uutilsynet.testlab2testing.common.validateNamn
@@ -12,6 +11,7 @@ import no.uutilsynet.testlab2testing.testregel.import.TestregelImportService
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.net.URI
 
 @RestController
 @RequestMapping("v1/testreglar")
@@ -161,4 +161,38 @@ class TestregelResource(
           kravTilSamsvar = testregel.kravTilSamsvar)
     }
   }
+
+    @GetMapping("aggregates/{id}")
+    fun getTestregelAggregate(@PathVariable id: Int): ResponseEntity<TestregelAggregate> {
+        return runCatching {
+            val testregel = testregelService.getTestregel(id)
+            val tema = testregel.tema?.let { testregelService.getTemaForTestregel().firstOrNull { t -> t.id == it } }
+            val testobjekt = testregel.testobjekt?.let { testregelService.getTestobjekt().firstOrNull { to -> to.id == it } }
+            val innhaldstypeTesting = testregel.innhaldstypeTesting?.let { testregelService.getInnhaldstypeForTesting().firstOrNull { it.id == testregel.innhaldstypeTesting} }
+            val krav = kravregisterClient.getWcagKrav(testregel.kravId)
+
+            ResponseEntity.ok(
+                TestregelAggregate(
+                    id = testregel.id,
+                    namn = testregel.namn,
+                    tema = tema,
+                    testobjekt = testobjekt,
+                    innhaldstypeTesting = innhaldstypeTesting,
+                    krav = krav,
+                    modus = testregel.modus,
+                    testregelSchema = testregel.testregelSchema,
+                    testregelId = testregel.testregelId,
+                    versjon = testregel.versjon,
+                    status = testregel.status,
+                    datoSistEndra = testregel.datoSistEndra,
+                    type = testregel.type,
+                    spraak = testregel.spraak,
+                    kravTilSamsvar = testregel.kravTilSamsvar
+                )
+            )
+        }.getOrElse {
+            logger.error("Feila ved henting av testreglar", it)
+            ResponseEntity.notFound().build()
+        }
+    }
 }
