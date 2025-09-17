@@ -33,7 +33,7 @@ class LoeysingsRegisterClient(
             "loeysingsregisteret returnerte ikkje ein location da vi oppretta ei ny løysing")
   }
 
-  @Cacheable("loeysingar", unless = "#result==null")
+  @Cacheable("loeysingar", unless = "!#result.isSuccess")
   fun getMany(idList: List<Int>): Result<List<Loeysing>> = getMany(idList, Instant.now())
 
   fun getMany(idList: List<Int>, tidspunkt: Instant): Result<List<Loeysing>> {

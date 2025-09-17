@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
+import io.micrometer.observation.annotation.Observed
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
@@ -206,6 +207,9 @@ class EksternResultatService(
         .getOrThrow()
   }
 
+    @Observed(
+        name = "ekstern_get_resultat_for_rapport",
+        contextualName = "EksternResultatService.getResultatForRapport")
   fun getResultatForRapport(rapportId: String): List<TestEkstern> {
 
     return eksternResultatDAO.getTestsForRapportIds(rapportId).toTestEksternList()
