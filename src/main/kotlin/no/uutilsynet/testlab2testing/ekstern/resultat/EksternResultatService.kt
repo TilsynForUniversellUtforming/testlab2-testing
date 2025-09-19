@@ -44,7 +44,7 @@ class EksternResultatService(
 
   fun toTestListEkstern(test: TestListElementDB): List<TestEkstern> {
     return getKontrollResult(test).loeysingar.map { loeysingResult ->
-      test.toListElement(loeysingResult.loeysingNamn, loeysingResult.score)
+      test.toListElement(loeysingResult, loeysingResult.score)
     }
   }
 
@@ -212,7 +212,7 @@ class EksternResultatService(
         contextualName = "EksternResultatService.getResultatForRapport")
   fun getResultatForRapport(rapportId: String): List<TestEkstern> {
 
-    return eksternResultatDAO.getTestsForRapportIds(rapportId).toTestEksternList()
+    return eksternResultatDAO.getTestsForRapportIds(rapportId).toTestEksternList().sortedBy { it.organisasjonsnamn }
   }
 
   fun eksporterRapportForLoeysing(rapportId: String, loeysingId: Int): List<TestresultatDetaljert> {
