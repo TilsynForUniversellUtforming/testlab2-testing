@@ -63,11 +63,6 @@ management:
             probability: '0.0'
         enabled: false
 
-    endpoints:
-        web:
-            exposure:
-                include: health,info,metrics,trace
-
     observations:
         annotations:
             enabled: true
