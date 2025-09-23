@@ -22,6 +22,8 @@ server:
     error:
         include-stacktrace: never
 spring:
+    application:
+        name: "testlab2-testing"
     config:
         import: optional:classpath:./dev.yml
     datasource:
@@ -53,4 +55,26 @@ springdoc:
 
 github:
     token: ''
+
+
+management:
+    tracing:
+        sampling:
+            probability: '0.0'
+        enabled: false
+
+    observations:
+        annotations:
+            enabled: true
+    otlp:
+        tracing:
+            endpoint: http://localhost:4318/v1/traces
+
+#otel:
+#    exporter:
+#        otlp:
+#            traces:
+#                endpoint: http://localhost:4317
+
+
 

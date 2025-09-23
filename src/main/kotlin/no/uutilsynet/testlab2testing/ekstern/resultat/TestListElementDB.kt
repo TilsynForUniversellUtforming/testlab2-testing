@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import java.time.Instant
 import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2testing.resultat.LoeysingResultat
 
 data class TestListElementDB(
     val eksternTestgrunnlagId: String,
@@ -13,13 +14,14 @@ data class TestListElementDB(
 )
 
 fun TestListElementDB.toListElement(
-    loeysingNamn: String,
+    loeysing: LoeysingResultat,
     score: Double,
 ): TestEkstern =
     TestEkstern(
         rapportId = this.eksternTestgrunnlagId,
         loeysingId = this.loeysingId,
-        loeysingNamn = loeysingNamn,
+        loeysingNamn = loeysing.loeysingNamn,
+        organisasjonsnamn = loeysing.verksemdNamn,
         score = score,
         kontrollType = this.kontrollType,
         kontrollNamn = this.kontrollNamn,

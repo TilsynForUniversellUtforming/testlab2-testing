@@ -86,6 +86,7 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
             "1",
             1,
             "Loeysingsnamn",
+            "organisasjonsnamn",
             0.5,
             Kontrolltype.ForenklaKontroll,
             "Forenkla kontroll",

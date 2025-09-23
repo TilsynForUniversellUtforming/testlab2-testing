@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
+import io.micrometer.observation.annotation.Observed
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
@@ -43,7 +44,7 @@ class EksternResultatService(
 
   fun toTestListEkstern(test: TestListElementDB): List<TestEkstern> {
     return getKontrollResult(test).loeysingar.map { loeysingResult ->
-      test.toListElement(loeysingResult.loeysingNamn, loeysingResult.score)
+      test.toListElement(loeysingResult, loeysingResult.score)
     }
   }
 
@@ -206,9 +207,14 @@ class EksternResultatService(
         .getOrThrow()
   }
 
+  @Observed(
+      name = "ekstern_get_resultat_for_rapport",
+      contextualName = "EksternResultatService.getResultatForRapport")
   fun getResultatForRapport(rapportId: String): List<TestEkstern> {
 
-    return eksternResultatDAO.getTestsForRapportIds(rapportId).toTestEksternList()
+    return eksternResultatDAO.getTestsForRapportIds(rapportId).toTestEksternList().sortedBy {
+      it.organisasjonsnamn
+    }
   }
 
   fun eksporterRapportForLoeysing(rapportId: String, loeysingId: Int): List<TestresultatDetaljert> {

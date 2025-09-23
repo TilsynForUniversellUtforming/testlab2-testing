@@ -1,8 +1,6 @@
 package no.uutilsynet.testlab2testing.loeysing
 
-import java.net.URL
-import java.time.Instant
-import java.time.format.DateTimeFormatter.ISO_INSTANT
+import io.micrometer.observation.annotation.Observed
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -11,6 +9,9 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
+import java.net.URL
+import java.time.Instant
+import java.time.format.DateTimeFormatter.ISO_INSTANT
 
 @ConfigurationProperties(prefix = "loeysingsregister")
 data class LoeysingsRegisterProperties(val host: String)
@@ -79,22 +80,27 @@ class LoeysingsRegisterClient(
   }
 
   @Cacheable("loeysingarExpanded")
+  @Observed(
+      name = "LoeysingsRegisterClient.getManyExpanded",
+      contextualName = "LoeysingsRegisterClient.getManyExpanded")
   fun getManyExpanded(idList: List<Int>): Result<List<Loeysing.Expanded>> {
+    logger.info("Getting expanded loeysing for ids: ${idList.size}")
+    val unique = idList.toSet().toList()
+
     return runCatching {
       val uri =
           UriComponentsBuilder.fromUriString(properties.host)
               .pathSegment("v1", "loeysing", "expanded")
+              .queryParam("ids", unique.joinToString(","))
               .build()
               .toUri()
-      restTemplate
-          .postForObject(
-              uri,
-              mapOf(
-                  "ids" to idList.joinToString(","), "atTime" to ISO_INSTANT.format(Instant.now())),
-              Array<Loeysing.Expanded>::class.java)
-          ?.toList()
-          ?: throw RuntimeException(
-              "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}")
+      val response =
+          restTemplate.getForObject(uri, Array<Loeysing.Expanded>::class.java)?.toList()?.toList()
+              ?: throw RuntimeException(
+                  "loeysingsregisteret returnerte null for id-ane ${unique.joinToString(",")}")
+
+      logger.info("Loeysing size " + response.size)
+      response
     }
   }
 

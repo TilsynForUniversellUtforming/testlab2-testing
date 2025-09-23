@@ -9,6 +9,7 @@ data class TestEkstern(
     val rapportId: String,
     val loeysingId: Int,
     val loeysingNamn: String,
+    val organisasjonsnamn: String,
     val score: Double,
     val kontrollType: Kontrolltype,
     val kontrollNamn: String,

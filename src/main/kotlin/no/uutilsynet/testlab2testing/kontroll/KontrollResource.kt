@@ -26,7 +26,7 @@ class KontrollResource(
     val maalingService: MaalingService,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val testgrunnlagService: TestgrunnlagService,
-    val testregelService: TestregelService
+    val testregelService: TestregelService,
 ) {
   private val logger: Logger = LoggerFactory.getLogger(KontrollResource::class.java)
 

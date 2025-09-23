@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import io.micrometer.observation.annotation.Observed
 import java.sql.ResultSet
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
@@ -148,6 +149,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         }
   }
 
+  @Observed(name = "getAllResultat", contextualName = "ResultatDAO.getAllResultat")
   fun getAllResultat(): List<ResultatLoeysingDTO> {
     return jdbcTemplate.query(resultatQuery) { rs, _ -> resultatLoeysingRowmapper(rs) }
   }
