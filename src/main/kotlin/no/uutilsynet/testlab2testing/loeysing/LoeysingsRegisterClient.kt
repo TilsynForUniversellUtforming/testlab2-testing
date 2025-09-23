@@ -1,6 +1,9 @@
 package no.uutilsynet.testlab2testing.loeysing
 
 import io.micrometer.observation.annotation.Observed
+import java.net.URL
+import java.time.Instant
+import java.time.format.DateTimeFormatter.ISO_INSTANT
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -9,18 +12,15 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
-import java.net.URL
-import java.time.Instant
-import java.time.format.DateTimeFormatter.ISO_INSTANT
 
 @ConfigurationProperties(prefix = "loeysingsregister")
 data class LoeysingsRegisterProperties(val host: String)
 
 @Component
-class LoeysingsRegisterClient (
+class LoeysingsRegisterClient(
     val restTemplate: RestTemplate,
     val properties: LoeysingsRegisterProperties
-): LoeysingRegisterAPI {
+) {
   val logger: Logger = LoggerFactory.getLogger(LoeysingsRegisterClient::class.java)
 
   @CacheEvict(key = "#result.id", cacheNames = ["loeysing", "loeysingar"])
@@ -82,26 +82,25 @@ class LoeysingsRegisterClient (
   @Cacheable("loeysingarExpanded")
   @Observed(
       name = "LoeysingsRegisterClient.getManyExpanded",
-      contextualName = "LoeysingsRegisterClient.getManyExpanded"
-  )
+      contextualName = "LoeysingsRegisterClient.getManyExpanded")
   fun getManyExpanded(idList: List<Int>): Result<List<Loeysing.Expanded>> {
-      logger.info("Getting expanded loeysing for ids: ${idList.size}")
-      val unique = idList.toSet().toList()
+    logger.info("Getting expanded loeysing for ids: ${idList.size}")
+    val unique = idList.toSet().toList()
 
-      return runCatching {
+    return runCatching {
       val uri =
           UriComponentsBuilder.fromUriString(properties.host)
               .pathSegment("v1", "loeysing", "expanded")
               .queryParam("ids", unique.joinToString(","))
               .build()
               .toUri()
-        val response = restTemplate.getForObject(uri, Array<Loeysing.Expanded>::class.java)?.toList()
-          ?.toList()
-          ?: throw RuntimeException(
-              "loeysingsregisteret returnerte null for id-ane ${unique.joinToString(",")}")
+      val response =
+          restTemplate.getForObject(uri, Array<Loeysing.Expanded>::class.java)?.toList()?.toList()
+              ?: throw RuntimeException(
+                  "loeysingsregisteret returnerte null for id-ane ${unique.joinToString(",")}")
 
-        logger.info("Loeysing size " +  response.size)
-        response
+      logger.info("Loeysing size " + response.size)
+      response
     }
   }
 

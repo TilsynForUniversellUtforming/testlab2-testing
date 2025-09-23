@@ -148,7 +148,8 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           throw it
         }
   }
-@Observed(name = "getAllResultat", contextualName = "ResultatDAO.getAllResultat")
+
+  @Observed(name = "getAllResultat", contextualName = "ResultatDAO.getAllResultat")
   fun getAllResultat(): List<ResultatLoeysingDTO> {
     return jdbcTemplate.query(resultatQuery) { rs, _ -> resultatLoeysingRowmapper(rs) }
   }

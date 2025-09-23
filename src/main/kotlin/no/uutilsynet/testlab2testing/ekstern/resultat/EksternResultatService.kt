@@ -207,12 +207,14 @@ class EksternResultatService(
         .getOrThrow()
   }
 
-    @Observed(
-        name = "ekstern_get_resultat_for_rapport",
-        contextualName = "EksternResultatService.getResultatForRapport")
+  @Observed(
+      name = "ekstern_get_resultat_for_rapport",
+      contextualName = "EksternResultatService.getResultatForRapport")
   fun getResultatForRapport(rapportId: String): List<TestEkstern> {
 
-    return eksternResultatDAO.getTestsForRapportIds(rapportId).toTestEksternList().sortedBy { it.organisasjonsnamn }
+    return eksternResultatDAO.getTestsForRapportIds(rapportId).toTestEksternList().sortedBy {
+      it.organisasjonsnamn
+    }
   }
 
   fun eksporterRapportForLoeysing(rapportId: String, loeysingId: Int): List<TestresultatDetaljert> {
