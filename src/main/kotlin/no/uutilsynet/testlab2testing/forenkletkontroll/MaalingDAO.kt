@@ -233,7 +233,7 @@ class MaalingDAO(
             id,
             navn,
             datoStart,
-            getLoeysingarForMaaling(),
+            getLoeysingarForMaaling(id, datoStart),
             getTestregelList(),
             CrawlParameters(maxLenker, talLenker))
       }
@@ -254,10 +254,10 @@ class MaalingDAO(
 
   private fun MaalingDTO.getTestkoeyingarForMaaling() =
       testkoeyringDAO.getTestKoeyringarForMaaling(
-          id, crawlResultatMapForMaaling(id, getLoeysingarForMaaling()))
+          id, crawlResultatMapForMaaling(id, getLoeysingarForMaaling(id, datoStart)))
 
   private fun MaalingDTO.getCrawlResultatForMaaling() =
-      crawlResultatForMaaling(id, getLoeysingarForMaaling())
+      crawlResultatForMaaling(id, getLoeysingarForMaaling(id, datoStart))
 
   private fun MaalingDTO.getTestregelList(): List<TestregelBase> {
     val testregelList =
@@ -267,7 +267,7 @@ class MaalingDAO(
     return testregelList
   }
 
-  private fun MaalingDTO.getLoeysingarForMaaling(): List<Loeysing> {
+  fun getLoeysingarForMaaling(id: Int, datoStart: Instant): List<Loeysing> {
     val query =
         """select idloeysing from "testlab2_testing"."maalingloeysing" where idmaaling = :id"""
     val loeysingIdList: List<Int> =
@@ -399,7 +399,7 @@ class MaalingDAO(
             rs.getInt("id")
           })
 
-    fun getTestrelIdForMaaling(maalingId: Int): List<Int> {
+  fun getTestrelIdForMaaling(maalingId: Int): List<Int> {
     return jdbcTemplate.queryForList(
         """select testregel_id from "testlab2_testing"."maaling_testregel" where maaling_id = :maalingId""",
         mapOf("maalingId" to maalingId),

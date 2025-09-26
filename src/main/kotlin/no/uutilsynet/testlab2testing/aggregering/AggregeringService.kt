@@ -1,13 +1,12 @@
 package no.uutilsynet.testlab2testing.aggregering
 
-import java.net.URI
-import java.net.URL
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
@@ -16,16 +15,22 @@ import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.net.URI
+import java.net.URL
+import java.time.Instant
+
+private const val AGGREGERING_URL_ER_NULL = "Aggregering url er null"
 
 @Service
 class AggregeringService(
     val autoTesterClient: AutoTesterClient,
-    val loeysingsRegisterClient: LoeysingsRegisterClient,
     val kravregisterClient: KravregisterClient,
     val aggregeringDAO: AggregeringDAO,
     val testResultatDAO: TestResultatDAO,
     val sideutvalDAO: SideutvalDAO,
-    val testregelService: TestregelService
+    val testregelService: TestregelService,
+    val maalingDAO: MaalingDAO,
+    private val testgrunnlagService: TestgrunnlagService
 ) {
 
   private val logger = LoggerFactory.getLogger(AggregeringService::class.java)
@@ -79,7 +84,7 @@ class AggregeringService(
                 .map { aggregertResultatSide -> aggregerteResultatSideTODTO(aggregertResultatSide) }
                 .forEach { aggregeringDAO.createAggregeringSide(it) }
           }
-              ?: throw RuntimeException("Aggregering url er null")
+              ?: throw RuntimeException(AGGREGERING_URL_ER_NULL)
         }
         .onFailure {
           logger.error(
@@ -106,7 +111,7 @@ class AggregeringService(
                 .map { aggregertResultatSuksesskritieriumToDTO(it) }
                 .forEach { aggregeringDAO.createAggregertResultatSuksesskriterium(it) }
           }
-              ?: throw RuntimeException("Aggregering url er null")
+              ?: throw RuntimeException(AGGREGERING_URL_ER_NULL)
         }
         .onFailure {
           logger.error(
@@ -115,6 +120,41 @@ class AggregeringService(
           throw it
         }
   }
+
+    fun <T, D> saveAggregertResultat(
+        testKoeyring: TestKoeyring.Ferdig,
+        urlExtractor: (AutoTesterClient.AutoTesterLenker?) -> URI?,
+        resultType: AutoTesterClient.ResultatUrls,
+        filterType: Class<T>,
+        dtoMapper: (T) -> D,
+        daoSaver: (D) -> Unit,
+        logName: String
+    ) {
+        logger.info("Lagrer aggregert resultat for $logName for testkoeyring ${testKoeyring.loeysing.namn}")
+        val aggregeringUrl = urlExtractor(testKoeyring.lenker)
+        if (aggregeringUrl == null) throw RuntimeException(AGGREGERING_URL_ER_NULL)
+        runCatching {
+            autoTesterClient
+                .fetchResultatAggregering(aggregeringUrl, resultType)
+                .filterIsInstance(filterType)
+                .map(dtoMapper)
+                .forEach(daoSaver)
+        }.onFailure {
+            logger.error("Kunne ikkje lagre aggregert resultat for $logName for testkoeyring ${testKoeyring.loeysing.namn}", it)
+            throw it
+        }
+    }
+
+    fun saveAggregertResultatTestregelAutomatiskGeneric(testKoeyring: TestKoeyring.Ferdig) =
+        saveAggregertResultat(
+            testKoeyring,
+            { it?.urlAggregeringTR?.toURI() },
+            AutoTesterClient.ResultatUrls.urlAggreggeringTR,
+            AggregertResultatTestregel::class.java,
+            ::aggregertResultatTestregelToDTO,
+            aggregeringDAO::createAggregertResultatTestregel,
+            "testregel"
+        )
 
   fun aggregertResultatTestregelToDTO(
       aggregertResultatTestregel: AggregertResultatTestregel
@@ -174,7 +214,8 @@ class AggregeringService(
   }
 
   fun dtoToAggregertResultatTestregel(
-      aggregeringPerTestregelDTO: AggregeringPerTestregelDTO
+      aggregeringPerTestregelDTO: AggregeringPerTestregelDTO,
+      loeysingList: List<Loeysing>
   ): AggregertResultatTestregelAPI {
 
     val id = aggregeringPerTestregelDTO.maalingId ?: aggregeringPerTestregelDTO.testgrunnlagId
@@ -183,7 +224,7 @@ class AggregeringService(
 
     return AggregertResultatTestregelAPI(
         id,
-        getLoeysing(aggregeringPerTestregelDTO.loeysingId),
+        getLoeysing(aggregeringPerTestregelDTO.loeysingId, loeysingList),
         testregel.testregelId,
         getSuksesskriterium(aggregeringPerTestregelDTO.suksesskriterium),
         aggregeringPerTestregelDTO.talElementSamsvar,
@@ -198,11 +239,12 @@ class AggregeringService(
   }
 
   fun dtoToAggregertResultatSide(
-      aggregeringPerSideDTO: AggregeringPerSideDTO
+      aggregeringPerSideDTO: AggregeringPerSideDTO,
+      loeysingList: List<Loeysing>
   ): AggregertResultatSide {
     return AggregertResultatSide(
         aggregeringPerSideDTO.maalingId ?: aggregeringPerSideDTO.testgrunnlagId,
-        getLoeysing(aggregeringPerSideDTO.loeysingId),
+        getLoeysing(aggregeringPerSideDTO.loeysingId, loeysingList),
         aggregeringPerSideDTO.sideUrl,
         aggregeringPerSideDTO.sideNivaa,
         aggregeringPerSideDTO.gjennomsnittligBruddProsentTR,
@@ -213,12 +255,13 @@ class AggregeringService(
   }
 
   fun dtoTOAggregertResultatSuksesskriterium(
-      aggregeringPerSuksesskriteriumDTO: AggregeringPerSuksesskriteriumDTO
+      aggregeringPerSuksesskriteriumDTO: AggregeringPerSuksesskriteriumDTO,
+      loeysingList: List<Loeysing>
   ): AggregertResultatSuksesskriterium {
     return AggregertResultatSuksesskriterium(
         aggregeringPerSuksesskriteriumDTO.maalingId
             ?: aggregeringPerSuksesskriteriumDTO.testgrunnlagId,
-        getLoeysing(aggregeringPerSuksesskriteriumDTO.loeysingId),
+        getLoeysing(aggregeringPerSuksesskriteriumDTO.loeysingId, loeysingList),
         getSuksesskriterium(aggregeringPerSuksesskriteriumDTO.suksesskriteriumId),
         aggregeringPerSuksesskriteriumDTO.talSiderSamsvar,
         aggregeringPerSuksesskriteriumDTO.talSiderBrot,
@@ -228,8 +271,9 @@ class AggregeringService(
   private fun getSuksesskriterium(suksesskriteriumId: Int) =
       kravregisterClient.getSuksesskriteriumFromKrav(suksesskriteriumId)
 
-  private fun getLoeysing(loeysingId: Int): Loeysing =
-      loeysingsRegisterClient.getLoeysingFromId(loeysingId)
+  private fun getLoeysing(loeysingId: Int, loeysingList: List<Loeysing>): Loeysing =
+      loeysingList.firstOrNull { it.id == loeysingId }
+          ?: throw NoSuchElementException("Fant ikkje loeysing med id $loeysingId")
 
   fun getTestregel(testregelId: Int): Testregel {
     return testregelService.getTestregel(testregelId)
@@ -241,12 +285,14 @@ class AggregeringService(
   ): List<AggregertResultatTestregelAPI> {
     logger.info("Henter aggregert resultat for testregel med id ${maalingId?:testgrunnlagId}")
     if (maalingId != null) {
+      val loeysingList = getLoeysingarForMaaling(maalingId)
       return aggregeringDAO.getAggregertResultatTestregelForMaaling(maalingId).map {
-        dtoToAggregertResultatTestregel(it)
+        dtoToAggregertResultatTestregel(it, loeysingList)
       }
     } else if (testgrunnlagId != null) {
+      val loeysingList = getLoeysingarForTestgrunnlag(testgrunnlagId)
       return aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId).map {
-        dtoToAggregertResultatTestregel(it)
+        dtoToAggregertResultatTestregel(it, loeysingList)
       }
     }
     return emptyList()
@@ -257,30 +303,41 @@ class AggregeringService(
       testgrunnlagId: Int? = null
   ): List<AggregertResultatSide> {
     logger.info("Henter aggregering for resultat for side med id ${maalingId?:testgrunnlagId}")
+
     if (maalingId != null) {
+      val loeysingList = getLoeysingarForMaaling(maalingId)
       return aggregeringDAO.getAggregertResultatSideForMaaling(maalingId).map {
-        dtoToAggregertResultatSide(it)
+        dtoToAggregertResultatSide(it, loeysingList)
       }
     } else if (testgrunnlagId != null) {
+      val loeysingList = getLoeysingarForTestgrunnlag(testgrunnlagId)
       return aggregeringDAO.getAggregertResultatSideForTestgrunnlag(testgrunnlagId).map {
-        dtoToAggregertResultatSide(it)
+        dtoToAggregertResultatSide(it, loeysingList)
       }
     }
     return emptyList()
   }
+
+  private fun getLoeysingarForTestgrunnlag(testgrunnlagId: Int) =
+      testgrunnlagService.getLoeysingForTestgrunnlag(testgrunnlagId)
+
+  private fun getLoeysingarForMaaling(maalingId: Int) =
+      maalingDAO.getLoeysingarForMaaling(maalingId, Instant.now())
 
   fun getAggregertResultatSuksesskriterium(
       maalingId: Int? = null,
       testgrunnlagId: Int? = null
   ): List<AggregertResultatSuksesskriterium> {
     if (maalingId != null) {
+      val loeysingList = getLoeysingarForMaaling(maalingId)
       return aggregeringDAO.getAggregertResultatSuksesskriteriumForMaaling(maalingId).map {
-        dtoTOAggregertResultatSuksesskriterium(it)
+        dtoTOAggregertResultatSuksesskriterium(it, loeysingList)
       }
     } else if (testgrunnlagId != null) {
+      val loeysingList = getLoeysingarForTestgrunnlag(testgrunnlagId)
       return aggregeringDAO
           .getAggregertResultatSuksesskriteriumForTestgrunnlag(testgrunnlagId)
-          .map { dtoTOAggregertResultatSuksesskriterium(it) }
+          .map { dtoTOAggregertResultatSuksesskriterium(it, loeysingList) }
     }
     return emptyList()
   }
@@ -293,8 +350,9 @@ class AggregeringService(
       testgrunnlagId: Int
   ): List<AggregertResultatTestregelAPI> {
     logger.info("Henter aggregert resultat for testgrunnlag med id $testgrunnlagId")
+    val loeysingList = getLoeysingarForTestgrunnlag(testgrunnlagId)
     return aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId).map {
-      dtoToAggregertResultatTestregel(it)
+      dtoToAggregertResultatTestregel(it, loeysingList)
     }
   }
 

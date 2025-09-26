@@ -44,8 +44,13 @@ class CrawlerClientTest {
 
     val loeysingList =
         listOf(
-            Loeysing(1, "uutilsynet", URI("https://www.uutilsynet.no").toURL(), "123456785"),
-            Loeysing(2, "digdir", URI("https://www.digdir.no").toURL(), "123456785"))
+            Loeysing(
+                1,
+                "uutilsynet",
+                URI("https://www.uutilsynet.no").toURL(),
+                "123456785",
+                "uutilsynet"),
+            Loeysing(2, "digdir", URI("https://www.digdir.no").toURL(), "123456785", "digdir"))
 
     val testregelList =
         listOf(
