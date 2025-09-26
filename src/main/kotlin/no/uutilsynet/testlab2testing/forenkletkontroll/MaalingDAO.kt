@@ -1,10 +1,5 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import java.net.URI
-import java.net.URL
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.*
@@ -29,8 +24,8 @@ import no.uutilsynet.testlab2testing.loeysing.UtvalId
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
-import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
+import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDAO
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelBase
@@ -46,6 +41,12 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.time.Instant
+
+private const val NOT_FINISHED_CRAWLING =
+    "Det er løysingar som ikkje er ferdige med crawling, kan ikkje hente testkoeyringar før alle er ferdige"
 
 @Component
 class MaalingDAO(
@@ -53,12 +54,14 @@ class MaalingDAO(
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val sideutvalDAO: SideutvalDAO,
     val brukarService: BrukarService,
-    val cacheManager: CacheManager
+    val cacheManager: CacheManager,
+    val testkoeyringDAO: TestkoeyringDAO
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
 
   private val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
+
 
   data class MaalingDTO(
       val id: Int,
@@ -248,7 +251,8 @@ class MaalingDAO(
       }
       testing,
       testing_ferdig -> {
-        val testKoeyringar = getTestKoeyringarForMaaling(id, loeysingList)
+          val crawlresultatMap = crawlResultatMapForMaaling(id,loeysingList)
+        val testKoeyringar = testkoeyringDAO.getTestKoeyringarForMaaling(id, crawlresultatMap)
         if (status == testing) {
           Testing(id, navn, datoStart, testKoeyringar)
         } else {
@@ -292,47 +296,7 @@ class MaalingDAO(
         }
   }
 
-  private fun getTestKoeyringarForMaaling(
-      maalingId: Int,
-      loeysingList: List<Loeysing>
-  ): List<TestKoeyring> {
-    val crawlResultat = crawlResultatForMaaling(maalingId, loeysingList)
-    return jdbcTemplate.query<TestKoeyring>(
-        """
-              select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, t.lenker_testa, url_fullt_resultat, url_brot,url_agg_tr,url_agg_sk,url_agg_side,url_agg_side_tr,url_agg_loeysing, brukar_id
-              from "testlab2_testing"."testkoeyring" t
-              where maaling_id = :maaling_id
-            """
-            .trimIndent(),
-        mapOf("maaling_id" to maalingId),
-        fun(rs: ResultSet, _: Int): TestKoeyring {
-          val status = rs.getString("status")
-          val loeysingId = rs.getInt("loeysing_id")
-          val crawlResultatForLoeysing = getCrawlresultatForLoeysing(crawlResultat, loeysingId)
-          val brukar = getBrukarFromResultSet(rs)
-          if (crawlResultatForLoeysing !is CrawlResultat.Ferdig) {
-            throw RuntimeException(
-                "crawlresultat for loeysing med id = $loeysingId er ikkje ferdig")
-          }
-
-          val sistOppdatert = rs.getTimestamp("sist_oppdatert").toInstant()
-          return when (status) {
-            "ikkje_starta" -> {
-              ikkjeStarta(crawlResultatForLoeysing, sistOppdatert, rs, brukar)
-            }
-            "starta" -> {
-              starta(crawlResultatForLoeysing, sistOppdatert, rs, brukar)
-            }
-            "feila" -> feila(crawlResultatForLoeysing, sistOppdatert, rs, brukar)
-            "ferdig" -> {
-              ferdig(rs, crawlResultatForLoeysing, sistOppdatert, brukar)
-            }
-            else -> throw RuntimeException("ukjent status $status")
-          }
-        })
-  }
-
-  fun getTestarTestkoeyringarForMaaling(maalingId: Int): List<Brukar> {
+    fun getTestarTestkoeyringarForMaaling(maalingId: Int): List<Brukar> {
     val query =
         """
             select b.id, brukarnamn, namn from testkoeyring tk join brukar b on tk.brukar_id = b.id where maaling_id = :maalingId
@@ -348,114 +312,7 @@ class MaalingDAO(
         })
   }
 
-  private fun ferdig(
-      rs: ResultSet,
-      crawlResultatForLoeysing: CrawlResultat.Ferdig,
-      sistOppdatert: Instant,
-      brukar: Brukar?
-  ): TestKoeyring.Ferdig {
-    val urlFulltResultat = rs.getString("url_fullt_resultat")
-    val urlBrot = rs.getString("url_brot")
-    val urlAggTR = rs.getString("url_agg_tr")
-    val urlAggSK = rs.getString("url_agg_sk")
-    val urlAggSide = rs.getString("url_agg_side")
-    val urlAggSideTR = rs.getString("url_agg_side_tr")
-    val urlAggLoeysing = rs.getString("url_agg_loeysing")
-
-    val lenker =
-        autoTesterLenker(
-            urlFulltResultat, urlBrot, urlAggTR, urlAggSK, urlAggSide, urlAggSideTR, urlAggLoeysing)
-    return TestKoeyring.Ferdig(
-        crawlResultatForLoeysing.loeysing,
-        sistOppdatert,
-        URI(rs.getString("status_url")).toURL(),
-        lenker,
-        brukar,
-        10)
-  }
-
-  private fun autoTesterLenker(
-      urlFulltResultat: String?,
-      urlBrot: String?,
-      urlAggTR: String?,
-      urlAggSK: String?,
-      urlAggSide: String?,
-      urlAggSideTR: String?,
-      urlAggLoeysing: String?
-  ): AutoTesterClient.AutoTesterLenker? {
-
-    val lenker =
-        if (urlFulltResultat != null)
-            AutoTesterClient.AutoTesterLenker(
-                verifiedAutotestlenker(urlFulltResultat),
-                verifiedAutotestlenker(urlBrot),
-                verifiedAutotestlenker(urlAggTR),
-                verifiedAutotestlenker(urlAggSK),
-                verifiedAutotestlenker(urlAggSide),
-                verifiedAutotestlenker(urlAggSideTR),
-                verifiedAutotestlenker(urlAggLoeysing))
-        else null
-    return lenker
-  }
-
-  private fun verifiedAutotestlenker(autotesterLenke: String?): URL {
-    if (autotesterLenke == null) {
-      throw RuntimeException("autotestlenke er null")
-    }
-    return URI(autotesterLenke).toURL()
-  }
-
-  private fun feila(
-      crawlResultatForLoeysing: CrawlResultat.Ferdig,
-      sistOppdatert: Instant,
-      rs: ResultSet,
-      brukar: Brukar?
-  ) =
-      TestKoeyring.Feila(
-          crawlResultatForLoeysing.loeysing, sistOppdatert, rs.getString("feilmelding"), brukar)
-
-  private fun starta(
-      crawlResultatForLoeysing: CrawlResultat.Ferdig,
-      sistOppdatert: Instant,
-      rs: ResultSet,
-      brukar: Brukar?
-  ) =
-      TestKoeyring.Starta(
-          crawlResultatForLoeysing.loeysing,
-          sistOppdatert,
-          URI(rs.getString("status_url")).toURL(),
-          Framgang(rs.getInt("lenker_testa"), crawlResultatForLoeysing.antallNettsider),
-          brukar,
-          crawlResultatForLoeysing.antallNettsider)
-
-  private fun ikkjeStarta(
-      crawlResultatForLoeysing: CrawlResultat.Ferdig,
-      sistOppdatert: Instant,
-      rs: ResultSet,
-      brukar: Brukar?
-  ) =
-      TestKoeyring.IkkjeStarta(
-          crawlResultatForLoeysing.loeysing,
-          sistOppdatert,
-          URI(rs.getString("status_url")).toURL(),
-          brukar,
-          crawlResultatForLoeysing.antallNettsider)
-
-  private fun getBrukarFromResultSet(rs: ResultSet) =
-      brukarService.getBrukarById(rs.getInt("brukar_id"))
-
-  private fun getCrawlresultatForLoeysing(
-      crawlResultat: List<CrawlResultat>,
-      loeysingId: Int
-  ): CrawlResultat {
-    val crawlResultatForLoeysing =
-        crawlResultat.find { it.loeysing.id == loeysingId }
-            ?: throw RuntimeException(
-                "finner ikkje crawlresultat for loeysing med id = $loeysingId")
-    return crawlResultatForLoeysing
-  }
-
-  private fun crawlResultatForMaaling(maalingId: Int, loeysingList: List<Loeysing>) =
+    private fun crawlResultatForMaaling(maalingId: Int, loeysingList: List<Loeysing>) =
       sideutvalDAO.getCrawlResultatForMaaling(maalingId, loeysingList)
 
   @Transactional
@@ -705,4 +562,18 @@ class MaalingDAO(
           Int::class.java)
     }
   }
+
+    private fun crawlResultatMapForMaaling(maalingId: Int, loeysingList: List<Loeysing>) : Map<Int, CrawlResultat.Ferdig> {
+        val crawlresultat = sideutvalDAO.getCrawlResultatForMaaling(maalingId, loeysingList)
+        require(crawlresultat.all { it is CrawlResultat.Ferdig }) {
+            NOT_FINISHED_CRAWLING
+        }
+        val ferdigCrawresultat = crawlresultat.filterIsInstance<CrawlResultat.Ferdig>()
+        return crawlResultatMap(ferdigCrawresultat)
+    }
+
+
+    private fun crawlResultatMap(crawlResultat: List<CrawlResultat.Ferdig>) : Map<Int, CrawlResultat.Ferdig> {
+        return crawlResultat.associateBy { it.loeysing.id }
+    }
 }
