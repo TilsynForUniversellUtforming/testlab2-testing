@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import org.slf4j.LoggerFactory
@@ -15,7 +15,7 @@ class EksternResultatPubliseringService(
     @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val eksternResultatDAO: EksternResultatDAO,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
-    @Autowired val maalingDAO: MaalingDAO,
+    @Autowired val maalingService: MaalingService,
     @Autowired val cacheManager: CacheManager
 ) {
   private val logger = LoggerFactory.getLogger(EksternResultatPubliseringService::class.java)
@@ -109,9 +109,7 @@ class EksternResultatPubliseringService(
       loeysingId: Int,
       rapportId: String?
   ): Result<Boolean> {
-    val maalingId =
-        maalingDAO.getMaalingIdFromKontrollId(kontrollId)
-            ?: throw IllegalStateException("Fann ingen maaling for kontroll med id $kontrollId")
+    val maalingId = maalingService.getMaalingForKontroll(kontrollId)
     return eksternResultatDAO.publiserMaalingResultat(maalingId, loeysingId, rapportId)
   }
 
@@ -134,9 +132,7 @@ class EksternResultatPubliseringService(
   }
 
   private fun avpubliserResultatForMaaling(kontrollId: Int, loeysingId: Int): Result<Boolean> {
-    val maalingId =
-        maalingDAO.getMaalingIdFromKontrollId(kontrollId)
-            ?: throw IllegalStateException("Fann ingen maaling for kontroll med id $kontrollId")
+    val maalingId = maalingService.getMaalingForKontroll(kontrollId)
     return eksternResultatDAO.avpubliserResultatMaaling(maalingId, loeysingId)
   }
 

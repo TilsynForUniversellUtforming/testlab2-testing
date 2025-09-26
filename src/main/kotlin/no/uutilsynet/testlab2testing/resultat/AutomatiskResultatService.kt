@@ -1,20 +1,20 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestResultat
+import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.springframework.stereotype.Service
 
 @Service
 class AutomatiskResultatService(
-    val maalingDAO: MaalingDAO,
     val maalingService: MaalingService,
+    val testkoeyringDAO: TestkoeyringDAO,
     resultatDAO: ResultatDAO,
     testregelService: TestregelService,
-    kravregisterClient: KravregisterClient
+    kravregisterClient: KravregisterClient,
 ) : KontrollResultatService(resultatDAO, kravregisterClient, testregelService) {
 
   override fun getResultatForKontroll(
@@ -31,7 +31,7 @@ class AutomatiskResultatService(
       kontrollId: Int,
       loeysingId: Int
   ): List<TestresultatDetaljert> {
-    val maalingId = getMaalingForKontroll(kontrollId)
+    val maalingId = maalingService.getMaalingForKontroll(kontrollId)
     return getResultatForMaaling(maalingId, loeysingId)
   }
 
@@ -41,13 +41,6 @@ class AutomatiskResultatService(
           it as TestResultat
         }
     return testresultat
-  }
-
-  private fun getMaalingForKontroll(kontrollId: Int): Int {
-    val maalingId =
-        maalingDAO.getMaalingIdFromKontrollId(kontrollId)
-            ?: throw RuntimeException("Fant ikkje maalingId for kontrollId $kontrollId")
-    return maalingId
   }
 
   fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
@@ -96,14 +89,12 @@ class AutomatiskResultatService(
   }
 
   override fun getKontrollResultat(kontrollId: Int): List<ResultatLoeysingDTO> {
-    val maalingId = maalingDAO.getMaalingIdFromKontrollId(kontrollId)
+    val maalingId = maalingService.getMaalingForKontroll(kontrollId)
     return getKontrollResultatMaaling(maalingId)
   }
 
   override fun getBrukararForTest(kontrollId: Int): List<String> {
-    val maalingId =
-        maalingDAO.getMaalingIdFromKontrollId(kontrollId)
-            ?: throw RuntimeException("Fant ikkje maalingId for kontrollId $kontrollId")
-    return maalingDAO.getTestarTestkoeyringarForMaaling(maalingId).map { it.namn }.distinct()
+    val maalingId = maalingService.getMaalingForKontroll(kontrollId)
+    return testkoeyringDAO.getTestarTestkoeyringar(maalingId).map { it.namn }.distinct()
   }
 }
