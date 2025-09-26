@@ -3,7 +3,6 @@ package no.uutilsynet.testlab2testing.ekstern.resultat
 import io.micrometer.observation.annotation.Observed
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
@@ -27,7 +26,6 @@ class EksternResultatService(
     @Autowired val resultatService: ResultatService,
     @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
-    @Autowired val maalingDAO: MaalingDAO,
     @Autowired val kravregisterClient: KravregisterClient,
     @Autowired val testregelService: TestregelService,
     @Autowired val logMessages: LogMessages
