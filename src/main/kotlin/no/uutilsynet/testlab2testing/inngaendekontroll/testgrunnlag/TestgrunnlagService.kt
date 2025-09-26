@@ -5,6 +5,8 @@ import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service
 class TestgrunnlagService(
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val testResultatDAO: TestResultatDAO,
+    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
 ) {
   val logger: Logger = LoggerFactory.getLogger(TestgrunnlagService::class.java)
 
@@ -151,5 +154,12 @@ class TestgrunnlagService(
         type = this.type,
         sideutval = this.sideutval,
         testregelIdList = this.testregelIdList.map { it.id })
+  }
+
+  fun getLoeysingForTestgrunnlag(testgrunnlagId: Int): List<Loeysing> {
+    val loeysingIdList =
+        testgrunnlagDAO.getSideutvalForTestgrunnlag(testgrunnlagId).map { it.loeysingId }
+    val loeysingList = loeysingsRegisterClient.getMany(loeysingIdList, Instant.now()).getOrThrow()
+    return loeysingList
   }
 }

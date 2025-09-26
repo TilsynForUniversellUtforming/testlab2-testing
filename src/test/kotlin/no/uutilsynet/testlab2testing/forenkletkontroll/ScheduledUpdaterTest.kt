@@ -26,6 +26,14 @@ class ScheduledUpdaterTest {
   private val autoTesterClient = Mockito.mock(AutoTesterClient::class.java)
   private val aggregeringService = Mockito.mock(AggregeringService::class.java)
 
+  val testLoeysing =
+      Loeysing(
+          namn = "UUTilsynet",
+          url = URI("https://www.uutilsynet.no").toURL(),
+          id = 1,
+          orgnummer = "000000000",
+          verksemdNamn = "UUTilsynet")
+
   @Test
   @DisplayName(
       "når oppdatering av status feiler mer enn 12 ganger, så skal crawlresultatet settes som 'feilet'")
@@ -33,12 +41,7 @@ class ScheduledUpdaterTest {
     val crawlResultat =
         CrawlResultat.Starta(
             statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
-            loeysing =
-                Loeysing(
-                    namn = "UUTilsynet",
-                    url = URI("https://www.uutilsynet.no").toURL(),
-                    id = 1,
-                    orgnummer = "000000000"),
+            loeysing = testLoeysing,
             sistOppdatert = Instant.now(),
             framgang = Framgang(0, 0))
 
@@ -61,12 +64,7 @@ class ScheduledUpdaterTest {
         CrawlResultat.Ferdig(
             antallNettsider = 1,
             statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
-            loeysing =
-                Loeysing(
-                    namn = "UUTilsynet",
-                    url = URI("https://www.uutilsynet.no").toURL(),
-                    id = 1,
-                    orgnummer = "000000000"),
+            loeysing = testLoeysing,
             sistOppdatert = Instant.now())
     val testKoeyring =
         TestKoeyring.Starta(
@@ -99,12 +97,7 @@ class ScheduledUpdaterTest {
     val crawlResultatIkkjeStarta =
         CrawlResultat.IkkjeStarta(
             statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
-            loeysing =
-                Loeysing(
-                    namn = "UUTilsynet",
-                    url = uutilsynetLoeysing.url,
-                    id = 1,
-                    orgnummer = "000000000"),
+            loeysing = testLoeysing,
             sistOppdatert = Instant.now())
 
     `when`(crawlerClient.getStatus(crawlResultatIkkjeStarta, 1))
@@ -147,12 +140,7 @@ class ScheduledUpdaterTest {
             CrawlResultat.Ferdig(
                 antallNettsider = 1,
                 statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
-                loeysing =
-                    Loeysing(
-                        namn = "UUTilsynet",
-                        url = URI("https://www.uutilsynet.no").toURL(),
-                        id = 1,
-                        orgnummer = "000000000"),
+                testLoeysing,
                 sistOppdatert = Instant.now()))
     val maaling =
         Maaling.Crawling(
@@ -174,12 +162,7 @@ class ScheduledUpdaterTest {
         CrawlResultat.Ferdig(
             antallNettsider = 1,
             statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
-            loeysing =
-                Loeysing(
-                    namn = "UUTilsynet",
-                    url = URI("https://www.uutilsynet.no").toURL(),
-                    id = 1,
-                    orgnummer = "000000000"),
+            loeysing = testLoeysing,
             sistOppdatert = Instant.now())
 
     val testKoeyring =

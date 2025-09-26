@@ -38,6 +38,8 @@ private val TEST_URL = URI("http://localhost:8080/").toURL()
 
 private const val TEST_ORGNR = "123456789"
 
+private const val TEST_ORG = "Test AS"
+
 @SpringBootTest(
     properties = ["spring.datasource.url: jdbc:tc:postgresql:16-alpine:///AggregeringServiceTest"])
 class AggregeringServiceTest(
@@ -71,7 +73,7 @@ class AggregeringServiceTest(
     val aggregeringTestregel = createTestMaaling()
     val maalingId = aggregeringTestregel.maalingId
 
-    val testLoeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR)
+    val testLoeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR, TEST_ORG)
 
     val testKoeyring: TestKoeyring.Ferdig = setupTestKoeyring(testLoeysing)
 
@@ -149,7 +151,7 @@ class AggregeringServiceTest(
     val aggregeringTestregel =
         AggregertResultatTestregel(
             maalingId = maalingId,
-            loeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR),
+            loeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR, TEST_ORG),
             testregelId = testregelNoekkel,
             suksesskriterium = "1.1.1",
             fleireSuksesskriterium = listOf("1.1.1", "1.1.1"),
@@ -168,7 +170,7 @@ class AggregeringServiceTest(
 
   @Test
   fun updateEqualsDeleteAndInsert() {
-    val testLoeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR)
+    val testLoeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR, TEST_ORG)
 
     Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1)).thenReturn(testLoeysing)
 

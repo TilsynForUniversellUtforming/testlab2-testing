@@ -16,8 +16,10 @@ import no.uutilsynet.testlab2testing.testregel.Testregel
 
 object TestConstants {
   val uutilsynetLoeysing =
-      Loeysing(1, "UUTilsynet", URI("https://www.uutilsynet.no/").toURL(), "991825827")
-  val digdirLoeysing = Loeysing(2, "Digdir", URI("https://www.digdir.no/").toURL(), "991825827")
+      Loeysing(
+          1, "UUTilsynet", URI("https://www.uutilsynet.no/").toURL(), "991825827", "UUTilsynet")
+  val digdirLoeysing =
+      Loeysing(2, "Digdir", URI("https://www.digdir.no/").toURL(), "991825827", "Digdir")
   val loeysingList = listOf(uutilsynetLoeysing, digdirLoeysing)
 
   val maalingTestName = "test_skal_slettes"

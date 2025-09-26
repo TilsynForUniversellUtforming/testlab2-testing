@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
+import java.time.Instant
 import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.common.validateIdList
@@ -23,7 +24,6 @@ import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import java.time.Instant
 
 @Service
 class MaalingService(
@@ -296,5 +296,9 @@ class MaalingService(
   fun getMaalingForKontroll(kontrollId: Int): Int {
     return maalingDAO.getMaalingIdFromKontrollId(kontrollId)
         ?: throw NoSuchElementException("Fant ikkje måling for kontrollId $kontrollId")
+  }
+
+  fun getLoeysingarForMaaling(maalingId: Int): List<Loeysing> {
+    return maalingDAO.getLoeysingarForMaaling(maalingId, Instant.now())
   }
 }

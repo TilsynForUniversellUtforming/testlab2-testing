@@ -37,23 +37,12 @@ class LoeysingsRegisterClient(
   @Cacheable("loeysingar", unless = "#result==null")
   fun getMany(idList: List<Int>): Result<List<Loeysing>> = getMany(idList, Instant.now())
 
-  fun getMany(idList: List<Int>, tidspunkt: Instant): Result<List<Loeysing>> {
-    return runCatching {
-      if (idList.isEmpty()) {
-        emptyList()
-      } else {
-        val uri =
-            UriComponentsBuilder.fromUriString(properties.host)
-                .pathSegment("v1", "loeysing")
-                .queryParam("ids", idList.joinToString(","))
-                .queryParam("atTime", ISO_INSTANT.format(tidspunkt))
-                .build()
-                .toUri()
-        restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
-            ?: throw RuntimeException(
-                "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}")
-      }
-    }
+  @Cacheable("loeysingar", unless = "#result==null")
+  fun getMany(idList: List<Int>, tidspunkt: Instant = Instant.now()): Result<List<Loeysing>> {
+    return getManyExpanded(idList, tidspunkt)
+        .getOrThrow()
+        .map { loeysing -> loeysing.toLoeysing() }
+        .let { Result.success(it) }
   }
 
   fun search(search: String): Result<List<Loeysing>> {
@@ -83,8 +72,11 @@ class LoeysingsRegisterClient(
   @Observed(
       name = "LoeysingsRegisterClient.getManyExpanded",
       contextualName = "LoeysingsRegisterClient.getManyExpanded")
-  fun getManyExpanded(idList: List<Int>): Result<List<Loeysing.Expanded>> {
-    logger.info("Getting expanded loeysing for ids: ${idList.size}")
+  fun getManyExpanded(
+      idList: List<Int>,
+      tidspunkt: Instant = Instant.now()
+  ): Result<List<Loeysing.Expanded>> {
+    logger.debug("Getting expanded loeysing for ids: {} at {}", idList.size, tidspunkt)
     val unique = idList.toSet().toList()
 
     return runCatching {
@@ -92,14 +84,14 @@ class LoeysingsRegisterClient(
           UriComponentsBuilder.fromUriString(properties.host)
               .pathSegment("v1", "loeysing", "expanded")
               .queryParam("ids", unique.joinToString(","))
+              .queryParam("atTime", Instant.now())
               .build()
               .toUri()
       val response =
-          restTemplate.getForObject(uri, Array<Loeysing.Expanded>::class.java)?.toList()?.toList()
+          restTemplate.getForObject(uri, Array<Loeysing.Expanded>::class.java)?.toList()
               ?: throw RuntimeException(
                   "loeysingsregisteret returnerte null for id-ane ${unique.joinToString(",")}")
 
-      logger.info("Loeysing size " + response.size)
       response
     }
   }
@@ -133,5 +125,10 @@ class LoeysingsRegisterClient(
       restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
           ?: throw RuntimeException("loeysingsregisteret returnerte null for verksemdsøk $search")
     }
+  }
+
+  fun Loeysing.Expanded.toLoeysing(): Loeysing {
+    requireNotNull(verksemd) { "Loeysing $id manglar verksemd $this" }
+    return Loeysing(id, namn, url, verksemd.organisasjonsnummer, verksemd.namn)
   }
 }
