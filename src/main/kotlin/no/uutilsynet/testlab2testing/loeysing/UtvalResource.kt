@@ -57,7 +57,7 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
           Triple(namn, url, orgnummer)
         }
 
-    val loeysingar: List<Loeysing> =
+    val loeysingar: List<Loeysing.Simple> =
         loeysingList.map { (namn, url, orgnummer) ->
           val sammeOrgnummer = loeysingsRegisterClient.search(orgnummer).getOrThrow()
           val foundLoeysing = sammeOrgnummer.find { sameURL(it.url, url) }
@@ -65,7 +65,7 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
             logger
                 .atInfo()
                 .log("lagrar ei ny løysing som vi ikkje fann i databasen: $namn, $url, $orgnummer")
-            val loeysing = loeysingsRegisterClient.saveLoeysing(namn, url, orgnummer).getOrThrow()
+            val loeysing = loeysingsRegisterClient.saveLoeysing(namn, url, orgnummer)
             loeysing
           } else {
             foundLoeysing

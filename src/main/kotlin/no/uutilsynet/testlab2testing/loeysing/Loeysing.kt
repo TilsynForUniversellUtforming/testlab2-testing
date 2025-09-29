@@ -12,4 +12,6 @@ data class Loeysing(
   data class External(val namn: String, val url: String, val orgnummer: String)
 
   data class Expanded(val id: Int, val namn: String, val url: URL, val verksemd: Verksemd?)
+
+  data class Simple(val id: Int, val namn: String, val url:URL, val orgnummer: String, val verksemdId: Int)
 }

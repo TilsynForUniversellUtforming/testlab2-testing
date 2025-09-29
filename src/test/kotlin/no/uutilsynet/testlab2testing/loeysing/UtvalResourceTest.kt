@@ -30,10 +30,8 @@ class UtvalResourceTest(
   fun beforeAll() {
     loeysingsRegisterClient
         .saveLoeysing("UUTilsynet", URI("https://www.uutilsynet.no/").toURL(), "991825827")
-        .getOrThrow()
     loeysingsRegisterClient
         .saveLoeysing("Digdir", URI("https://www.digdir.no/").toURL(), "991825827")
-        .getOrThrow()
   }
 
   @AfterAll

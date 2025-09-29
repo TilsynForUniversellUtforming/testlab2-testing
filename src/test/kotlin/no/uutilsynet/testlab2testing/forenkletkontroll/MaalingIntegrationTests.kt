@@ -56,7 +56,7 @@ class MaalingIntegrationTests(
   @BeforeAll
   fun beforeAll() {
     loeysingList.forEach {
-      loeysingsRegisterClient.saveLoeysing(it.namn, it.url, it.orgnummer).getOrThrow()
+      loeysingsRegisterClient.saveLoeysing(it.namn, it.url, it.orgnummer)
     }
   }
 
@@ -235,7 +235,7 @@ class MaalingIntegrationTests(
   @DisplayName("Skal kunne endre måling")
   fun updateMaaling() {
     loeysingList.forEach {
-      loeysingsRegisterClient.saveLoeysing(it.namn, it.url, it.orgnummer).getOrThrow()
+      loeysingsRegisterClient.saveLoeysing(it.namn, it.url, it.orgnummer)
     }
     val maaling =
         maalingDAO
