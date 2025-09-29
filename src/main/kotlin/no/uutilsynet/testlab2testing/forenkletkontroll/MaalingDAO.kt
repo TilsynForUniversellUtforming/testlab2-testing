@@ -276,6 +276,10 @@ class MaalingDAO(
     return loeysingList
   }
 
+  fun getLoeysingarForMaaling(id: Int): List<Loeysing> {
+    return getLoeysingarForMaaling(id, Instant.now())
+  }
+
   fun getCrawlParameters(maalingId: Int): CrawlParameters {
     val query =
         """select m.max_lenker, m.tal_lenker from testlab2_testing."maalingv1" m where m.id = :id"""

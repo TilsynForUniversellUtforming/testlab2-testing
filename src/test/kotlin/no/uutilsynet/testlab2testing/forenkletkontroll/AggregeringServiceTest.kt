@@ -9,6 +9,7 @@ import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.common.TestlabLocale
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
@@ -27,10 +28,12 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Offset
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 
@@ -41,12 +44,13 @@ private const val TEST_ORGNR = "123456789"
 private const val TEST_ORG = "Test AS"
 
 @SpringBootTest(
-    properties = ["spring.datasource.url: jdbc:tc:postgresql:16-alpine:///AggregeringServiceTest"])
+    properties = ["spring.datasource.url = jdbc:tc:postgresql:16-alpine:///AggregeringServiceTest"])
 class AggregeringServiceTest(
     @Autowired val aggregeringService: AggregeringService,
     @Autowired val testUtils: TestUtils
 ) {
 
+  @MockitoSpyBean lateinit var testgrunnlagService: TestgrunnlagService
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
   @MockitoBean lateinit var kravregisterClient: KravregisterClient
@@ -55,7 +59,7 @@ class AggregeringServiceTest(
 
   @MockitoBean lateinit var sideutvalDAO: SideutvalDAO
 
-  @Autowired lateinit var maalingDao: MaalingDAO
+  @MockitoSpyBean lateinit var maalingDao: MaalingDAO
 
   @Autowired lateinit var testregelService: TestregelService
 
@@ -71,7 +75,7 @@ class AggregeringServiceTest(
   fun saveAggregeringTestregel() {
 
     val aggregeringTestregel = createTestMaaling()
-    val maalingId = aggregeringTestregel.maalingId
+    val maalingId = aggregeringTestregel.maalingId as Int
 
     val testLoeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR, TEST_ORG)
 
@@ -86,16 +90,17 @@ class AggregeringServiceTest(
 
     Mockito.`when`(kravregisterClient.getKravIdFromSuksesskritterium("1.1.1")).thenReturn(1)
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
+    Mockito.doReturn(listOf(testLoeysing)).`when`(maalingDao).getLoeysingarForMaaling(maalingId)
 
     aggregeringService.saveAggregertResultatTestregelAutomatisk(testKoeyring)
 
     val retrievedAggregering =
-        maalingId?.let { aggregeringService.getAggregertResultatTestregel(it) }
+        maalingId.let { aggregeringService.getAggregertResultatTestregel(it) }
 
     assertThat(retrievedAggregering).isNotEmpty
-    assert(retrievedAggregering?.get(0)?.maalingId == maalingId)
-    assert(retrievedAggregering?.get(0)?.testregelId == aggregeringTestregel.testregelId)
-    assert(retrievedAggregering?.get(0)?.suksesskriterium == aggregeringTestregel.suksesskriterium)
+    assert(retrievedAggregering[0].maalingId == maalingId)
+    assert(retrievedAggregering[0].testregelId == aggregeringTestregel.testregelId)
+    assert(retrievedAggregering[0].suksesskriterium == aggregeringTestregel.suksesskriterium)
   }
 
   private fun setupTestKoeyring(testLoeysing: Loeysing): TestKoeyring.Ferdig {
@@ -178,6 +183,11 @@ class AggregeringServiceTest(
 
     Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1)))
         .thenReturn(mapOf(1 to URI("https://www.example.com").toURL()))
+
+    Mockito.doReturn(listOf(testLoeysing)).`when`(maalingDao).getLoeysingarForMaaling(anyInt())
+    Mockito.doReturn(listOf(testLoeysing))
+        .`when`(testgrunnlagService)
+        .getLoeysingForTestgrunnlag(anyInt())
 
     val testregelId = testUtils.createTestregel()
     val kontroll =
