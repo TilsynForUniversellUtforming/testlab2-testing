@@ -1,9 +1,6 @@
 package no.uutilsynet.testlab2testing.loeysing
 
 import io.micrometer.observation.annotation.Observed
-import java.net.URL
-import java.time.Instant
-import java.time.format.DateTimeFormatter.ISO_INSTANT
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -12,6 +9,9 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
+import java.net.URL
+import java.time.Instant
+import java.time.format.DateTimeFormatter.ISO_INSTANT
 
 @ConfigurationProperties(prefix = "loeysingsregister")
 data class LoeysingsRegisterProperties(val host: String)
@@ -94,6 +94,10 @@ class LoeysingsRegisterClient(
 
       response
     }
+  }
+
+  fun getManyExpanded(id: List<Int>): Result<List<Loeysing.Expanded>> {
+    return getManyExpanded(id, Instant.now())
   }
 
   fun searchVerksemd(search: String): Result<List<Verksemd>> {
