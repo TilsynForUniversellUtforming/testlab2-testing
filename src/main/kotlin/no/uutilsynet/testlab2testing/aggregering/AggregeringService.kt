@@ -42,85 +42,6 @@ class AggregeringService(
     saveAggregertResultatSuksesskriteriumAutomatisk(testKoeyring)
   }
 
-  fun saveAggregertResultatTestregelAutomatisk(testKoeyring: TestKoeyring.Ferdig) {
-    logger.info(
-        "Lagrer aggregert resultat for testregel for testkoeyring ${testKoeyring.loeysing.namn}}")
-    val aggregeringUrl: URI? = testKoeyring.lenker?.urlAggregeringTR?.toURI()
-    runCatching {
-          aggregeringUrl?.let {
-            val aggregertResultatTestregel: List<AggregertResultatTestregel> =
-                autoTesterClient
-                    .fetchResultatAggregering(
-                        aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggreggeringTR)
-                    .filterIsInstance<AggregertResultatTestregel>()
-
-            aggregertResultatTestregel
-                .map { aggregertResultatTestregelToDTO(it) }
-                .forEach { aggregeringDAO.createAggregertResultatTestregel(it) }
-          }
-        }
-        .onFailure {
-          logger.error(
-              "Kunne ikkje lagre aggregert resultat for testregel for testkoeyring ${testKoeyring.loeysing.namn}",
-              it)
-          throw it
-        }
-  }
-
-  fun saveAggregeringSideAutomatisk(testKoeyring: TestKoeyring.Ferdig) {
-    logger.info(
-        "Lagrer aggregert resultat for side for testkoeyring ${testKoeyring.loeysing.namn}}")
-    val aggregeringUrl: URI? = testKoeyring.lenker?.urlAggregeringSide?.toURI()
-
-    runCatching {
-          aggregeringUrl?.let {
-            val aggregeringSide: List<AggregertResultatSide> =
-                autoTesterClient
-                    .fetchResultatAggregering(
-                        aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggregeringSide)
-                    .filterIsInstance<AggregertResultatSide>()
-
-            aggregeringSide
-                .map { aggregertResultatSide -> aggregerteResultatSideTODTO(aggregertResultatSide) }
-                .forEach { aggregeringDAO.createAggregeringSide(it) }
-          }
-              ?: throw RuntimeException(AGGREGERING_URL_ER_NULL)
-        }
-        .onFailure {
-          logger.error(
-              "Kunne ikkje lagre aggregert resultat for side for testkoeyring ${testKoeyring.loeysing.namn}",
-              it)
-          throw it
-        }
-  }
-
-  fun saveAggregertResultatSuksesskriteriumAutomatisk(testKoeyring: TestKoeyring.Ferdig) {
-    logger.info(
-        "Lagrer aggregert resultat for suksesskriterium for testkoeyring ${testKoeyring.loeysing.namn}}")
-    val aggregeringUrl: URI? = testKoeyring.lenker?.urlAggregeringSK?.toURI()
-
-    runCatching {
-          aggregeringUrl?.let {
-            val aggregertResultatSuksesskriterium: List<AggregertResultatSuksesskriterium> =
-                autoTesterClient
-                    .fetchResultatAggregering(
-                        aggregeringUrl, AutoTesterClient.ResultatUrls.urlAggregeringSK)
-                    .filterIsInstance<AggregertResultatSuksesskriterium>()
-
-            aggregertResultatSuksesskriterium
-                .map { aggregertResultatSuksesskritieriumToDTO(it) }
-                .forEach { aggregeringDAO.createAggregertResultatSuksesskriterium(it) }
-          }
-              ?: throw RuntimeException(AGGREGERING_URL_ER_NULL)
-        }
-        .onFailure {
-          logger.error(
-              "Kunne ikkje lagre aggregert resultat for suksesskriterium for testkoeyring ${testKoeyring.loeysing.namn}",
-              it)
-          throw it
-        }
-  }
-
     fun <T, D> saveAggregertResultat(
         testKoeyring: TestKoeyring.Ferdig,
         urlExtractor: (AutoTesterClient.AutoTesterLenker?) -> URI?,
@@ -131,8 +52,7 @@ class AggregeringService(
         logName: String
     ) {
         logger.info("Lagrer aggregert resultat for $logName for testkoeyring ${testKoeyring.loeysing.namn}")
-        val aggregeringUrl = urlExtractor(testKoeyring.lenker)
-        if (aggregeringUrl == null) throw RuntimeException(AGGREGERING_URL_ER_NULL)
+        val aggregeringUrl = urlExtractor(testKoeyring.lenker) ?: throw RuntimeException(AGGREGERING_URL_ER_NULL)
         runCatching {
             autoTesterClient
                 .fetchResultatAggregering(aggregeringUrl, resultType)
@@ -145,7 +65,7 @@ class AggregeringService(
         }
     }
 
-    fun saveAggregertResultatTestregelAutomatiskGeneric(testKoeyring: TestKoeyring.Ferdig) =
+    fun saveAggregertResultatTestregelAutomatisk(testKoeyring: TestKoeyring.Ferdig) =
         saveAggregertResultat(
             testKoeyring,
             { it?.urlAggregeringTR?.toURI() },
@@ -155,6 +75,29 @@ class AggregeringService(
             aggregeringDAO::createAggregertResultatTestregel,
             "testregel"
         )
+
+    fun saveAggregertResultatSuksesskriteriumAutomatisk(testKoeyring: TestKoeyring.Ferdig) =
+        saveAggregertResultat(
+            testKoeyring,
+            { it?.urlAggregeringSK?.toURI() },
+            AutoTesterClient.ResultatUrls.urlAggregeringSK,
+            AggregertResultatSuksesskriterium::class.java,
+            ::aggregertResultatSuksesskritieriumToDTO,
+            aggregeringDAO::createAggregertResultatSuksesskriterium,
+            "suksesskriterium"
+        )
+
+    fun saveAggregeringSideAutomatisk(testKoeyring: TestKoeyring.Ferdig) =
+        saveAggregertResultat(
+            testKoeyring,
+            { it?.urlAggregeringSide?.toURI() },
+            AutoTesterClient.ResultatUrls.urlAggregeringSide,
+            AggregertResultatSide::class.java,
+            ::aggregerteResultatSideTODTO,
+            aggregeringDAO::createAggregeringSide,
+            "side"
+        )
+
 
   fun aggregertResultatTestregelToDTO(
       aggregertResultatTestregel: AggregertResultatTestregel
