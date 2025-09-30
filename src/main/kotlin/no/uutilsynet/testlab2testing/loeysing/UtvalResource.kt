@@ -57,7 +57,7 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
           Triple(namn, url, orgnummer)
         }
 
-    val loeysingar: List<Loeysing.Simple> =
+    val loeysingar: List<Loeysing> =
         loeysingList.map { (namn, url, orgnummer) ->
           val sammeOrgnummer = loeysingsRegisterClient.search(orgnummer).getOrThrow()
           val foundLoeysing = sammeOrgnummer.find { sameURL(it.url, url) }

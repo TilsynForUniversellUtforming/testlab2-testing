@@ -7,7 +7,7 @@ data class Loeysing(
     val namn: String,
     val url: URL,
     val orgnummer: String,
-    val verksemdNamn: String
+    val verksemdNamn: String?
 ) {
   data class External(val namn: String, val url: String, val orgnummer: String)
 

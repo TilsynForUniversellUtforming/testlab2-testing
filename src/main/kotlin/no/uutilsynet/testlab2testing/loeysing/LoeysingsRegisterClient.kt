@@ -26,7 +26,7 @@ class LoeysingsRegisterClient(
   val logger: Logger = LoggerFactory.getLogger(LoeysingsRegisterClient::class.java)
 
   @CacheEvict(key = "#result.id", cacheNames = ["loeysing", "loeysingar"])
-  fun saveLoeysing(namn: String, url: URL, orgnummer: String): Loeysing.Simple = runCatching {
+  fun saveLoeysing(namn: String, url: URL, orgnummer: String): Loeysing = runCatching {
       val location = restTemplate.postForLocation(
           "${properties.host}/v1/loeysing",
           mapOf("namn" to namn, "url" to url.toString(), "orgnummer" to orgnummer)
@@ -34,14 +34,14 @@ class LoeysingsRegisterClient(
 
       val loeysing = restTemplate.getForObject(location, Loeysing.Simple::class.java)
           ?: throw RuntimeException(LOEYSINGSREGISTER_NEW_NOT_FOUND)
-      loeysing
+      loeysing.toLoeysing()
   }.getOrThrow()
 
   @Cacheable("loeysingar", unless = "#result==null")
   fun getMany(idList: List<Int>): Result<List<Loeysing>> = getMany(idList, Instant.now())
 
   @Cacheable("loeysingar", unless = "#result==null")
-  fun getMany(idList: List<Int>, tidspunkt: Instant): Result<List<Loeysing>> {
+  fun getManyWithVerksemd(idList: List<Int>, tidspunkt: Instant): Result<List<Loeysing>> {
       logger.info("Getting loeysing for ids: {} at {}", idList.size, tidspunkt)
     return getManyExpanded(idList, tidspunkt)
         .getOrThrow()
@@ -49,7 +49,28 @@ class LoeysingsRegisterClient(
         .let { Result.success(it) }
   }
 
-  fun search(search: String): Result<List<Loeysing.Simple>> {
+    @Cacheable("loeysingar", unless = "#result==null")
+    fun getMany(idList: List<Int>, tidspunkt: Instant): Result<List<Loeysing>> {
+        return runCatching {
+            if (idList.isEmpty()) {
+                emptyList()
+            } else {
+                val uri =
+                    UriComponentsBuilder.fromUriString(properties.host)
+                        .pathSegment("v1", "loeysing")
+                        .queryParam("ids", idList.joinToString(","))
+                        .queryParam("atTime", ISO_INSTANT.format(tidspunkt))
+                        .build()
+                        .toUri()
+                restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
+                    ?: throw RuntimeException(
+                        "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}"
+                    )
+            }
+        }
+    }
+
+  fun search(search: String): Result<List<Loeysing>> {
     return runCatching {
       val uri =
           UriComponentsBuilder.fromUriString(properties.host)
@@ -57,7 +78,7 @@ class LoeysingsRegisterClient(
               .queryParam("search", search)
               .build()
               .toUriString()
-      restTemplate.getForObject(uri, Array<Loeysing.Simple>::class.java)?.toList()
+      restTemplate.getForObject(uri, Array<Loeysing.Simple>::class.java)?.map { it.toLoeysing() }
           ?: throw RuntimeException("loeysingsregisteret returnerte null for søk $search")
     }
   }
@@ -139,4 +160,8 @@ class LoeysingsRegisterClient(
     requireNotNull(verksemd) { "Loeysing $id manglar verksemd $this" }
     return Loeysing(id, namn, url, verksemd.organisasjonsnummer, verksemd.namn)
   }
+
+    fun Loeysing.Simple.toLoeysing() : Loeysing {
+        return Loeysing(id, namn, url, orgnummer, null)
+    }
 }
