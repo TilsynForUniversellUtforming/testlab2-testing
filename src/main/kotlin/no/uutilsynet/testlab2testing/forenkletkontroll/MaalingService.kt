@@ -47,7 +47,6 @@ class MaalingService(
 
     val localDateNorway = Instant.now(clockProvider.clock)
 
-      logger.info("Local date norway: {} clock: {}", localDateNorway, clockProvider.clock)
     val maalingId =
         maalingDAO.createMaaling(navn, localDateNorway, emptyList(), emptyList(), crawlParameters)
     maalingDAO.updateKontrollId(
@@ -66,7 +65,6 @@ class MaalingService(
 
 
     val localDateNorway = Instant.now(clockProvider.clock)
-      logger.info("Local date norway: {} clock: {}", localDateNorway, clockProvider.clock)
 
     if (utvalId != null) {
       val utval = getUtval(utvalId)

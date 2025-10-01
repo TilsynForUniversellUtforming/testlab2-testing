@@ -55,8 +55,8 @@ class MaalingIntegrationTests(
   val loeysingsIdList = loeysingList.map { it.id }
   val singleLoeysing = listOf(loeysingList[0])
 
-  @BeforeAll
-  fun beforeAll() {
+  @BeforeEach
+  fun beforeEach() {
       doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(loeysingList.map { it.id })
       doReturn(loeysingList)
           .`when`(loeysingsRegisterClient)
