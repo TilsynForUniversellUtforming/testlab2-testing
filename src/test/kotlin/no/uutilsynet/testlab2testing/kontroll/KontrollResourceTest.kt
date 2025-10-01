@@ -70,7 +70,7 @@ class KontrollResourceTest(@Autowired val testregelService: TestregelService) {
         .post("/kontroller")
         .then()
         .statusCode(equalTo(201))
-        .header("Location", startsWith("http://localhost:$port/kontroller/"))
+        .header("Location", org.hamcrest.CoreMatchers.startsWith("http://localhost:$port/kontroller/"))
   }
 
   @Test
