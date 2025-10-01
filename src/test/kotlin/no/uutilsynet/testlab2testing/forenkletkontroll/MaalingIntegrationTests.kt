@@ -1,9 +1,6 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import java.net.URI
-import java.net.URL
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import jakarta.validation.ClockProvider
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
@@ -18,20 +15,12 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.greaterThan
-import org.hamcrest.Matchers.instanceOf
-import org.hamcrest.Matchers.matchesPattern
-import org.hamcrest.Matchers.notNullValue
-import org.hamcrest.Matchers.oneOf
+import org.hamcrest.Matchers.*
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.*
+import org.mockito.Mockito
+import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -41,6 +30,14 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
+import java.net.URI
+import java.net.URL
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
+
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -49,15 +46,26 @@ class MaalingIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val maalingDAO: MaalingDAO,
     @Autowired val utvalDAO: UtvalDAO,
-    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
-  val utvalTestName = "testutval"
+  @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+  @MockitoBean lateinit var clockProvider: ClockProvider
 
-  @BeforeAll
-  fun beforeAll() {
-    loeysingList.forEach {
-      loeysingsRegisterClient.saveLoeysing(it.namn, it.url, it.orgnummer).getOrThrow()
-    }
+
+  val utvalTestName = "testutval"
+  val loeysingsIdList = loeysingList.map { it.id }
+  val singleLoeysing = listOf(loeysingList[0])
+
+  @BeforeEach
+  fun beforeEach() {
+      doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(loeysingList.map { it.id })
+      doReturn(loeysingList)
+          .`when`(loeysingsRegisterClient)
+          .getMany(loeysingList.map { it.id }, maalingDateStart)
+      doReturn(singleLoeysing)
+          .`when`(loeysingsRegisterClient)
+          .getMany(singleLoeysing.map { it.id }, maalingDateStart)
+      doReturn(singleLoeysing).`when`(loeysingsRegisterClient).getMany(singleLoeysing.map { it.id })
+      doReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault())).`when`(clockProvider).clock
   }
 
   @AfterAll
@@ -79,9 +87,7 @@ class MaalingIntegrationTests(
   @Test
   @DisplayName("vi kan opprette en ny måling basert på et utvalg")
   fun postNewMaalingWithUtvalg() {
-    val loeysingIdList = listOf(1)
-    val utvalId = utvalDAO.createUtval(utvalTestName, loeysingIdList).getOrThrow()
-
+    val utvalId = utvalDAO.createUtval(utvalTestName, loeysingList.map { it.id }).getOrThrow()
     val requestBody =
         mapOf(
             "navn" to maalingTestName,
@@ -112,8 +118,10 @@ class MaalingIntegrationTests(
   @DisplayName(
       "når vi har opprettet en måling basert på et utvalg, så skal utvalgs-ID lagres på målingen")
   fun saveUtvalId() {
-    val loeysingIdList = listOf(1)
-    val utvalId = utvalDAO.createUtval(utvalTestName, loeysingIdList)
+    doReturn(loeysingList)
+        .`when`(loeysingsRegisterClient)
+        .getMany(loeysingList.map { it.id }, maalingDateStart)
+    val utvalId = utvalDAO.createUtval(utvalTestName, loeysingsIdList)
     val requestBody =
         mapOf(
             "navn" to maalingTestName,
@@ -129,7 +137,8 @@ class MaalingIntegrationTests(
         maalingDAO.jdbcTemplate
             .query("select utval_id from maalingv1 where id = :id", mapOf("id" to maalingId)) {
                 rs,
-                _ ->
+                _,
+              ->
               rs.getInt("utval_id")
             }
             .first()
@@ -148,13 +157,22 @@ class MaalingIntegrationTests(
   @Nested
   @DisplayName("gitt at det finnes en måling i databasen")
   inner class DatabaseHasAtLeastOneMaaling(@Autowired val restTemplate: TestRestTemplate) {
-    private var location: URI = restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
+    private var location: URI = getLocation()
+
+    private fun getLocation(): URI {
+      doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(loeysingList.map { it.id })
+      doReturn(loeysingList)
+          .`when`(loeysingsRegisterClient)
+          .getMany(loeysingList.map { it.id }, maalingDateStart)
+        Mockito.`when`(clockProvider.clock).thenReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault()))
+      return restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
+    }
 
     @Test
     @DisplayName("så skal vi klare å hente den ut")
     fun getMaaling() {
-      val (id, navn, loeysingListFromApi) =
-          restTemplate.getForObject(location, MaalingDTO::class.java)
+
+      val (id, navn, loeysingListFromApi) = restTemplate.getForObject(location, MaalingDTO::class.java)
 
       assertThat(id, instanceOf(Int::class.java))
       assertThat(navn, equalTo(maalingTestName))
@@ -234,20 +252,20 @@ class MaalingIntegrationTests(
   @Test
   @DisplayName("Skal kunne endre måling")
   fun updateMaaling() {
-    loeysingList.forEach {
-      loeysingsRegisterClient.saveLoeysing(it.namn, it.url, it.orgnummer).getOrThrow()
-    }
     val maaling =
         maalingDAO
             .createMaaling(
                 "TestMåling",
-                Instant.now(),
-                loeysingList.map { it.id },
+                maalingDateStart,
+                loeysingsIdList,
                 testRegelList.map { it.id },
                 CrawlParameters())
             .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
 
     val updatedLoeysingList = listOf(maaling.loeysingList[0])
+    doReturn(updatedLoeysingList)
+        .`when`(loeysingsRegisterClient)
+        .getMany(updatedLoeysingList.map { it.id })
     restTemplate.exchange(
         "/v1/maalinger",
         HttpMethod.PUT,
@@ -305,6 +323,7 @@ class MaalingIntegrationTests(
   @Nested
   @DisplayName("gitt at det finnes en måling som har status 'kvalitetssikring'")
   inner class StatusKvalitetssikring {
+
     @Test
     @DisplayName("så har alle crawlresultatene et tidspunkt det ble oppdatert på")
     fun hasTidspunkt() {
@@ -335,6 +354,7 @@ class MaalingIntegrationTests(
     @DisplayName("så får man hentet nettsidene som er crawlet")
     @Test
     fun hasHasCorrectNumberOfNettsider() {
+
       val (key, _) = createMaaling()
 
       val urlListType = object : ParameterizedTypeReference<List<URL>>() {}
@@ -367,12 +387,15 @@ class MaalingIntegrationTests(
     }
 
     private fun createMaaling(): Pair<Int, Instant> {
+      doReturn(singleLoeysing)
+          .`when`(loeysingsRegisterClient)
+          .getMany(singleLoeysing.map { it.id }, maalingDateStart)
       val crawlParameters = CrawlParameters()
       val id =
           maalingDAO.createMaaling(
               maalingTestName,
-              Instant.now(),
-              listOf(1),
+              maalingDateStart,
+              singleLoeysing.map { it.id },
               testRegelList.map { it.id },
               crawlParameters)
       val planlagtMaaling = maalingDAO.getMaaling(id) as Maaling.Planlegging
@@ -400,7 +423,7 @@ data class MaalingDTO(
     val loeysingList: List<Loeysing>?, // hvis status er 'planlegging'
     val crawlResultat: List<CrawlResultatFerdigDTO>?, // hvis status er 'crawling'
     val status: String,
-    val aksjoner: List<Aksjon>
+    val aksjoner: List<Aksjon>,
 )
 
 data class CrawlResultatFerdigDTO(

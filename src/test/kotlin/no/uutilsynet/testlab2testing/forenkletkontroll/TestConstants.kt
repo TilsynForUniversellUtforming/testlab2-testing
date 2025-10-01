@@ -8,6 +8,7 @@ import no.uutilsynet.testlab2.constants.TestregelStatus
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.loeysing.Verksemd
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
@@ -15,9 +16,32 @@ import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.Testregel
 
 object TestConstants {
-  val uutilsynetLoeysing =
-      Loeysing(1, "UUTilsynet", URI("https://www.uutilsynet.no/").toURL(), "991825827")
-  val digdirLoeysing = Loeysing(2, "Digdir", URI("https://www.digdir.no/").toURL(), "991825827")
+
+  val uutilsynetVerksemd =
+      Verksemd(
+          id = 1,
+          namn = "UUTilsynet",
+          organisasjonsnummer = "991825827",
+      )
+
+  val digdirVerksemd =
+      Verksemd(
+          id = 2,
+          namn = "Digdir",
+          organisasjonsnummer = "991825827",
+      )
+
+  val uutilsynetLoeysingExpanded =
+      Loeysing.Expanded(
+          1, "UUTilsynet", URI("https://www.uutilsynet.no/").toURL(), uutilsynetVerksemd)
+
+  val uutilsynetLoeysing = uutilsynetLoeysingExpanded.toLoeysing()
+
+  // create test Verksemd for UUTilsynet
+  val digdirLoeysingExpanded =
+      Loeysing.Expanded(2, "Digdir", URI("https://www.digdir.no/").toURL(), digdirVerksemd)
+
+  val digdirLoeysing = digdirLoeysingExpanded.toLoeysing()
   val loeysingList = listOf(uutilsynetLoeysing, digdirLoeysing)
 
   val maalingTestName = "test_skal_slettes"
@@ -93,4 +117,8 @@ object TestConstants {
           crawlResultat2.antallNettsider)
 
   val testKoeyringList = listOf(testKoeyring, testKoeyring2)
+}
+
+fun Loeysing.Expanded.toLoeysing(): Loeysing {
+  return Loeysing(id, namn, url, verksemd!!.organisasjonsnummer, verksemd!!.namn)
 }

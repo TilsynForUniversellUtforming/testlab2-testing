@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
+import jakarta.validation.ClockProvider
 import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.common.validateIdList
@@ -32,7 +33,8 @@ class MaalingService(
     val utvalDAO: UtvalDAO,
     val aggregeringService: AggregeringService,
     val autoTesterClient: AutoTesterClient,
-    val testregelService: TestregelService
+    val testregelService: TestregelService,
+    val clockProvider: ClockProvider
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingService::class.java)
@@ -43,7 +45,8 @@ class MaalingService(
     val crawlParameters = dto.crawlParameters ?: CrawlParameters()
     crawlParameters.validateParameters()
 
-    val localDateNorway = Instant.now()
+    val localDateNorway = Instant.now(clockProvider.clock)
+
     val maalingId =
         maalingDAO.createMaaling(navn, localDateNorway, emptyList(), emptyList(), crawlParameters)
     maalingDAO.updateKontrollId(
@@ -60,7 +63,8 @@ class MaalingService(
     val crawlParameters = dto.crawlParameters ?: CrawlParameters()
     crawlParameters.validateParameters()
 
-    val localDateNorway = Instant.now()
+
+    val localDateNorway = Instant.now(clockProvider.clock)
 
     if (utvalId != null) {
       val utval = getUtval(utvalId)
@@ -296,5 +300,9 @@ class MaalingService(
   fun getMaalingForKontroll(kontrollId: Int): Int {
     return maalingDAO.getMaalingIdFromKontrollId(kontrollId)
         ?: throw NoSuchElementException("Fant ikkje måling for kontrollId $kontrollId")
+  }
+
+  fun getLoeysingarForMaaling(maalingId: Int): List<Loeysing> {
+    return maalingDAO.getLoeysingarForMaaling(maalingId, Instant.now(clockProvider.clock))
   }
 }

@@ -1,7 +1,5 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import java.sql.Timestamp
-import java.time.Instant
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.*
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.createMaalingParams
@@ -40,6 +38,8 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.sql.Timestamp
+import java.time.Instant
 
 private const val NOT_FINISHED_CRAWLING =
     "Det er løysingar som ikkje er ferdige med crawling, kan ikkje hente testkoeyringar før alle er ferdige"
@@ -233,7 +233,7 @@ class MaalingDAO(
             id,
             navn,
             datoStart,
-            getLoeysingarForMaaling(),
+            getLoeysingarForMaaling(id, datoStart),
             getTestregelList(),
             CrawlParameters(maxLenker, talLenker))
       }
@@ -254,10 +254,10 @@ class MaalingDAO(
 
   private fun MaalingDTO.getTestkoeyingarForMaaling() =
       testkoeyringDAO.getTestKoeyringarForMaaling(
-          id, crawlResultatMapForMaaling(id, getLoeysingarForMaaling()))
+          id, crawlResultatMapForMaaling(id, getLoeysingarForMaaling(id, datoStart)))
 
   private fun MaalingDTO.getCrawlResultatForMaaling() =
-      crawlResultatForMaaling(id, getLoeysingarForMaaling())
+      crawlResultatForMaaling(id, getLoeysingarForMaaling(id, datoStart))
 
   private fun MaalingDTO.getTestregelList(): List<TestregelBase> {
     val testregelList =
@@ -267,13 +267,17 @@ class MaalingDAO(
     return testregelList
   }
 
-  private fun MaalingDTO.getLoeysingarForMaaling(): List<Loeysing> {
+  fun getLoeysingarForMaaling(id: Int, datoStart: Instant): List<Loeysing> {
     val query =
         """select idloeysing from "testlab2_testing"."maalingloeysing" where idmaaling = :id"""
     val loeysingIdList: List<Int> =
         jdbcTemplate.queryForList(query, mapOf("id" to id), Int::class.java)
     val loeysingList = loeysingsRegisterClient.getMany(loeysingIdList, datoStart).getOrThrow()
     return loeysingList
+  }
+
+  fun getLoeysingarForMaaling(id: Int): List<Loeysing> {
+    return getLoeysingarForMaaling(id, Instant.now())
   }
 
   fun getCrawlParameters(maalingId: Int): CrawlParameters {
@@ -399,7 +403,7 @@ class MaalingDAO(
             rs.getInt("id")
           })
 
-    fun getTestrelIdForMaaling(maalingId: Int): List<Int> {
+  fun getTestrelIdForMaaling(maalingId: Int): List<Int> {
     return jdbcTemplate.queryForList(
         """select testregel_id from "testlab2_testing"."maaling_testregel" where maaling_id = :maalingId""",
         mapOf("maalingId" to maalingId),

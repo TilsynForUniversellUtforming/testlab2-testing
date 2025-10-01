@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import java.net.URI
-import java.net.URL
-import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
@@ -10,6 +7,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDate
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingTestName
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testRegelList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetLoeysing
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
@@ -19,24 +17,32 @@ import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
+import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+import java.net.URI
+import java.net.URL
+import java.time.Instant
 
 @DisplayName("Tester for MaalingDAO")
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MaalingDAOTest(
     @Autowired val maalingDAO: MaalingDAO,
-    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
-    @Autowired val sideutvalDAO: SideutvalDAO
+    @Autowired val sideutvalDAO: SideutvalDAO,
 ) {
 
-  @BeforeAll
-  fun beforeAll() {
-    loeysingList.forEach { loeysingsRegisterClient.saveLoeysing(it.namn, it.url, it.orgnummer) }
-  }
+  @MockitoSpyBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
   val deleteTheseIds: MutableSet<Int> = mutableSetOf()
+
+    @BeforeAll
+    fun setup() {
+      doReturn(loeysingList)
+          .`when`(loeysingsRegisterClient)
+          .getMany(loeysingList.map { it.id }, maalingDateStart)
+    }
 
   @AfterAll
   fun cleanup() {
@@ -54,24 +60,24 @@ class MaalingDAOTest(
   @Test
   fun getMaalingMedSlettaLoeysing() {
     val loeysing =
-        loeysingsRegisterClient
-            .saveLoeysing(
-                "Løysing som skal bli sletta",
-                URI("https://www.snartsletta.no/").toURL(),
-                "123456785")
-            .getOrThrow()
+        Loeysing(
+            1,
+            "Løysing som skal bli sletta",
+            URI("https://www.snartsletta.no/").toURL(),
+            "123456785",
+            "Verksemd til sletting")
+
+    doReturn(listOf(loeysing)).`when`(loeysingsRegisterClient).getMany(listOf(1), maalingDateStart)
 
     val maalingId =
         maalingDAO
             .createMaaling(
                 "måling med sletta løysing",
-                Instant.now(),
+                maalingDateStart,
                 listOf(loeysing.id),
                 testRegelList.map(Testregel::id),
                 CrawlParameters())
             .also { id -> deleteTheseIds.add(id) }
-
-    loeysingsRegisterClient.delete(loeysing.id).getOrThrow()
 
     val maaling = maalingDAO.getMaaling(maalingId) as Maaling.Planlegging
 
@@ -165,6 +171,9 @@ class MaalingDAOTest(
     maalingDAO.updateMaaling(
         maaling.copy(
             navn = maalingTestName, crawlParameters = crawlParameters, loeysingList = loeysingList))
+    doReturn(loeysingList)
+        .`when`(loeysingsRegisterClient)
+        .getMany(loeysingList.map { it.id }, maalingDateStart)
     val updatedMaaling = maalingDAO.getMaaling(maaling.id) as Maaling.Planlegging
 
     assertThat(updatedMaaling.navn).isEqualTo(maalingNavn)
@@ -346,7 +355,7 @@ class MaalingDAOTest(
       maalingDAO
           .createMaaling(
               name,
-              Instant.now(),
+              maalingDateStart,
               loeysingList.map { it.id },
               testRegelList.map { it.id },
               CrawlParameters())

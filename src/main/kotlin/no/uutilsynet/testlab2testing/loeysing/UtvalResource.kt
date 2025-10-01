@@ -65,7 +65,7 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
             logger
                 .atInfo()
                 .log("lagrar ei ny løysing som vi ikkje fann i databasen: $namn, $url, $orgnummer")
-            val loeysing = loeysingsRegisterClient.saveLoeysing(namn, url, orgnummer).getOrThrow()
+            val loeysing = loeysingsRegisterClient.saveLoeysing(namn, url, orgnummer)
             loeysing
           } else {
             foundLoeysing

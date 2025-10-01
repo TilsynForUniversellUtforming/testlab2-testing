@@ -190,7 +190,8 @@ class AutoTesterClientTest {
             "id": 2429,
             "url": "https://www.jarlsberg-ikt.no/",
             "orgnummer": "919431016",
-            "namn": "JARLSBERG IKT - INTERKOMMUNALT SAMARBEID"
+            "namn": "JARLSBERG IKT - INTERKOMMUNALT SAMARBEID",
+            "verksemdNamn": "JARLSBERG IKT - INTERKOMMUNALT SAMARBEID"
         },
             "maalingId": 280,
             "suksesskriterium": "2.5.3",

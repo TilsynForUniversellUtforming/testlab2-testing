@@ -27,7 +27,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
   }
 
-  private fun getSideutvalForTestgrunnlag(testgrunnlagId: Int): List<Sideutval> {
+  fun getSideutvalForTestgrunnlag(testgrunnlagId: Int): List<Sideutval> {
     return jdbcTemplate
         .query(
             """

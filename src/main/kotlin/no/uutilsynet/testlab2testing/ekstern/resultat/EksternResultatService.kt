@@ -5,7 +5,6 @@ import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Verksemd
@@ -26,7 +25,6 @@ class EksternResultatService(
     @Autowired val resultatService: ResultatService,
     @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
-    @Autowired val kravregisterClient: KravregisterClient,
     @Autowired val testregelService: TestregelService,
     @Autowired val logMessages: LogMessages
 ) {
