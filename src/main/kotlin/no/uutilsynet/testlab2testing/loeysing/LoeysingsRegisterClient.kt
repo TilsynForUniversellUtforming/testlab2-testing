@@ -162,10 +162,17 @@ class LoeysingsRegisterClient(
     }
   }
 
-  fun Loeysing.Expanded.toLoeysing(): Loeysing {
-    requireNotNull(verksemd) { "Loeysing $id manglar verksemd $this" }
-    return Loeysing(id, namn, url, verksemd.organisasjonsnummer, verksemd.namn)
-  }
+    fun Loeysing.Expanded.toLoeysing(): Loeysing {
+        if(verksemd == null) {
+            logger.warn("Loeysing $id manglar verksemd")
+            val simple = getManyWithoutVerksemd(listOf(id), Instant.now(clockProvider.clock)).getOrThrow().firstOrNull()
+            simple?.let { return Loeysing(id, namn, url, simple.orgnummer, null) }
+        }
+        else {
+            return Loeysing(id, namn, url, verksemd.organisasjonsnummer, verksemd.namn)
+        }
+        throw RuntimeException("Klarte ikkje hente loeysing med id $id")
+    }
 
   fun Loeysing.Simple.toLoeysing(): Loeysing {
     return Loeysing(id, namn, url, orgnummer, null)
