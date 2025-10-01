@@ -10,6 +10,7 @@ import java.util.*
 import no.uutilsynet.testlab2testing.loeysing.UtvalResource.NyttUtval
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
+import org.mockito.Mockito.anyString
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -17,7 +18,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import java.time.Clock
 import java.time.ZoneId
 
@@ -26,10 +26,9 @@ import java.time.ZoneId
 @ActiveProfiles("test")
 class UtvalResourceTest(
     @Autowired val restTemplate: TestRestTemplate,
-    @Autowired val utvalResource: UtvalResource,
     @Autowired val utvalDAO: UtvalDAO,
 ) {
-    @MockitoSpyBean
+    @MockitoBean
     lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
     @MockitoBean
     lateinit var clockProvider: ClockProvider
@@ -40,12 +39,13 @@ class UtvalResourceTest(
     var port: Int = 0
 
     @BeforeEach
-    fun beforeEach() {
+    fun setup() {
         doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(loeysingList.map { it.id })
         doReturn(loeysingList[0]).`when`(loeysingsRegisterClient)
             .saveLoeysing(loeysingar[0].namn, URI(loeysingar[0].url).toURL(), loeysingar[0].orgnummer)
         doReturn(loeysingList[1]).`when`(loeysingsRegisterClient)
             .saveLoeysing(loeysingar[1].namn, URI(loeysingar[1].url).toURL(), loeysingar[1].orgnummer)
+        doReturn(Result.success(loeysingList)).`when`(loeysingsRegisterClient).search(anyString())
         doReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault())).`when`(clockProvider).clock
 
     }
@@ -53,12 +53,6 @@ class UtvalResourceTest(
     @AfterAll
     fun tearDown() {
         utvalDAO.jdbcTemplate.update("delete from utval where namn = :namn", mapOf("namn" to uuid))
-        loeysingsRegisterClient
-            .search(uuid)
-            .mapCatching { loeysingar ->
-                loeysingar.forEach { loeysingsRegisterClient.delete(it.id).getOrThrow() }
-            }
-            .getOrThrow()
     }
 
     private val loeysingar =
@@ -115,7 +109,7 @@ class UtvalResourceTest(
         doReturn(randomLoeysingNew).`when`(loeysingsRegisterClient)
             .saveLoeysing(randomLoeysing.namn, URI(randomLoeysing.url).toURL(), randomLoeysing.orgnummer)
         doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(listOf(randomLoeysingNew.id), maalingDateStart)
-        doReturn(newList).`when`(loeysingsRegisterClient).getMany(newList.map { it.id }, maalingDateStart)
+        doReturn(newList).`when`(loeysingsRegisterClient).getMany(newList.map { it.id })
 
         val loeysingList = listOf(uutilsynet, digdir, randomLoeysing)
         val location =
