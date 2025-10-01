@@ -1,9 +1,7 @@
 package no.uutilsynet.testlab2testing.loeysing
 
 import io.micrometer.observation.annotation.Observed
-import java.net.URL
-import java.time.Instant
-import java.time.format.DateTimeFormatter.ISO_INSTANT
+import jakarta.validation.ClockProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -12,6 +10,9 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
+import java.net.URL
+import java.time.Instant
+import java.time.format.DateTimeFormatter.ISO_INSTANT
 
 @ConfigurationProperties(prefix = "loeysingsregister")
 data class LoeysingsRegisterProperties(val host: String)
@@ -23,10 +24,11 @@ private const val LOEYSINGSREGISTER_NEW_NOT_FOUND =
 class LoeysingsRegisterClient(
     val restTemplate: RestTemplate,
     val properties: LoeysingsRegisterProperties,
+    val clockProvider: ClockProvider
 ) {
   val logger: Logger = LoggerFactory.getLogger(LoeysingsRegisterClient::class.java)
 
-  @CacheEvict(key = "#result.id", cacheNames = ["loeysing", "loeysingar"])
+  @CacheEvict(key = "#result.id", cacheNames = ["loeysing", "loeysingar"], condition = "#result!=null")
   fun saveLoeysing(namn: String, url: URL, orgnummer: String): Loeysing =
       runCatching {
             val location =
@@ -43,7 +45,7 @@ class LoeysingsRegisterClient(
           .getOrThrow()
 
   @Cacheable("loeysingar", unless = "#result==null")
-  fun getMany(idList: List<Int>): Result<List<Loeysing>> = getMany(idList, Instant.now())
+  fun getMany(idList: List<Int>): Result<List<Loeysing>> = getMany(idList, Instant.now(clockProvider.clock))
 
   @Cacheable("loeysingar", unless = "#result==null")
   fun getMany(idList: List<Int>, tidspunkt: Instant): Result<List<Loeysing>> {
@@ -103,7 +105,7 @@ class LoeysingsRegisterClient(
       contextualName = "LoeysingsRegisterClient.getManyExpanded")
   fun getManyExpanded(
       idList: List<Int>,
-      tidspunkt: Instant = Instant.now(),
+      tidspunkt: Instant = Instant.now(clockProvider.clock),
   ): Result<List<Loeysing.Expanded>> {
     logger.debug("Getting expanded loeysing for ids: {} at {}", idList.size, tidspunkt)
     val unique = idList.toSet().toList()
@@ -113,7 +115,7 @@ class LoeysingsRegisterClient(
           UriComponentsBuilder.fromUriString(properties.host)
               .pathSegment("v1", "loeysing", "expanded")
               .queryParam("ids", unique.joinToString(","))
-              .queryParam("atTime", Instant.now())
+              .queryParam("atTime", Instant.now(clockProvider.clock))
               .build()
               .toUri()
       val response =
@@ -126,7 +128,7 @@ class LoeysingsRegisterClient(
   }
 
   fun getManyExpanded(id: List<Int>): Result<List<Loeysing.Expanded>> {
-    return getManyExpanded(id, Instant.now())
+    return getManyExpanded(id, Instant.now(clockProvider.clock))
   }
 
   fun searchVerksemd(search: String): Result<List<Verksemd>> {
@@ -135,7 +137,7 @@ class LoeysingsRegisterClient(
           UriComponentsBuilder.fromUriString(properties.host)
               .pathSegment("v1", "verksemd", "list")
               .queryParam("search", search)
-              .queryParam("atTime", ISO_INSTANT.format(Instant.now()))
+              .queryParam("atTime", ISO_INSTANT.format(Instant.now(clockProvider.clock)))
               .build()
               .toUriString()
 
@@ -152,7 +154,7 @@ class LoeysingsRegisterClient(
           UriComponentsBuilder.fromUriString(properties.host)
               .pathSegment("v1", "loeysing", "verksemd")
               .queryParam("search", search)
-              .queryParam("atTime", ISO_INSTANT.format(Instant.now()))
+              .queryParam("atTime", ISO_INSTANT.format(Instant.now(clockProvider.clock)))
               .build()
               .toUriString()
       restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()

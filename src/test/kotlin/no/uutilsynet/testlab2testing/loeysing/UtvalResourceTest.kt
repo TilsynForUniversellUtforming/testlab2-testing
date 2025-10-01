@@ -2,16 +2,24 @@ package no.uutilsynet.testlab2testing.loeysing
 
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
+import jakarta.validation.ClockProvider
+import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
+import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import java.net.URI
 import java.util.*
 import no.uutilsynet.testlab2testing.loeysing.UtvalResource.NyttUtval
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
+import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+import java.time.Clock
+import java.time.ZoneId
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -20,18 +28,21 @@ class UtvalResourceTest(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val utvalResource: UtvalResource,
     @Autowired val utvalDAO: UtvalDAO,
-    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient
 ) {
+  @MockitoSpyBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+    @MockitoBean
+    lateinit var clockProvider: ClockProvider
   val uuid = UUID.randomUUID().toString()
 
   @LocalServerPort var port: Int = 0
 
   @BeforeAll
   fun beforeAll() {
-    loeysingsRegisterClient
-        .saveLoeysing("UUTilsynet", URI("https://www.uutilsynet.no/").toURL(), "991825827")
-    loeysingsRegisterClient
-        .saveLoeysing("Digdir", URI("https://www.digdir.no/").toURL(), "991825827")
+      doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(loeysingList.map { it.id })
+      doReturn(loeysingList[0]).`when`(loeysingsRegisterClient).saveLoeysing(loeysingar[0].namn, URI(loeysingar[0].url).toURL(), loeysingar[0].orgnummer)
+      doReturn(loeysingList[1]).`when`(loeysingsRegisterClient).saveLoeysing(loeysingar[1].namn, URI(loeysingar[1].url).toURL(), loeysingar[1].orgnummer)
+      doReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault())).`when`(clockProvider).clock
+
   }
 
   @AfterAll
@@ -90,6 +101,12 @@ class UtvalResourceTest(
     val uutilsynet = Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827")
     val digdir = Loeysing.External("Digdir", "https://www.digdir.no", "991825827")
     val randomLoeysing = Loeysing.External(uuid, "https://www.$uuid.com", "000000000")
+    val randomLoeysingNew = Loeysing(3, randomLoeysing.namn, URI(randomLoeysing.url).toURL(), randomLoeysing.orgnummer, uuid)
+    val newList = loeysingList + randomLoeysingNew
+
+    doReturn(randomLoeysingNew).`when`(loeysingsRegisterClient).saveLoeysing(randomLoeysing.namn, URI(randomLoeysing.url).toURL(), randomLoeysing.orgnummer)
+    doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(listOf(randomLoeysingNew.id), maalingDateStart)
+    doReturn(newList).`when`(loeysingsRegisterClient).getMany(newList.map { it.id }, maalingDateStart)
 
     val loeysingList = listOf(uutilsynet, digdir, randomLoeysing)
     val location =

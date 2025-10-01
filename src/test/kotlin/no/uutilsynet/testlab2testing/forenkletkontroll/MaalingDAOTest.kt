@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import java.net.URI
-import java.net.URL
-import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
@@ -20,12 +17,13 @@ import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.anyList
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+import java.net.URI
+import java.net.URL
+import java.time.Instant
 
 @DisplayName("Tester for MaalingDAO")
 @SpringBootTest
@@ -38,6 +36,13 @@ class MaalingDAOTest(
   @MockitoSpyBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
   val deleteTheseIds: MutableSet<Int> = mutableSetOf()
+
+    @BeforeAll
+    fun setup() {
+      doReturn(loeysingList)
+          .`when`(loeysingsRegisterClient)
+          .getMany(loeysingList.map { it.id }, maalingDateStart)
+    }
 
   @AfterAll
   fun cleanup() {
@@ -83,9 +88,6 @@ class MaalingDAOTest(
       "når vi henter en måling fra databasen som har status 'kvalitetssikring', så skal crawlresultatene inneholde en liste med nettsider")
   @Test
   fun getMaaling() {
-    doReturn(loeysingList)
-        .`when`(loeysingsRegisterClient)
-        .getMany(loeysingList.map { it.id }, maalingDateStart)
     val id = saveMaalingWithStatusKvalitetssikring()
 
     val maalingFromDatabase = maalingDAO.getMaaling(id) as Maaling.Kvalitetssikring
@@ -101,9 +103,6 @@ class MaalingDAOTest(
       "når vi lagrer ei måling med status `crawling`, og crawlresultatene ikkje er ferdige, så skal framgangen også lagrast")
   @Test
   fun lagreCrawlResultatMedFramgang() {
-    doReturn(loeysingList)
-        .`when`(loeysingsRegisterClient)
-        .getMany(loeysingList.map { it.id }, maalingDateStart)
     val id = saveMaalingWithStatusCrawling()
     val maaling = maalingDAO.getMaaling(id) as Maaling.Crawling
     maaling.crawlResultat.forEach {
@@ -117,9 +116,6 @@ class MaalingDAOTest(
       "når vi lagrer ei måling med status `testing`, så skal alle testkøyringene også lagrast")
   @Test
   fun lagreTestkoeyringar() {
-    doReturn(loeysingList)
-        .`when`(loeysingsRegisterClient)
-        .getMany(loeysingList.map { it.id }, maalingDateStart)
     val id = saveMaalingWithStatusTesting()
     val maaling = maalingDAO.getMaaling(id) as Maaling.Testing
     assertThat(maaling.testKoeyringar).isNotEmpty
@@ -129,9 +125,6 @@ class MaalingDAOTest(
       "Måling med med status `testing` og testkøyring med status `starta` skal ha framgang med antall sider lik antall sider crawlet")
   @Test
   fun lagreTestkoeyringarStarta() {
-    doReturn(loeysingList)
-        .`when`(loeysingsRegisterClient)
-        .getMany(loeysingList.map { it.id }, maalingDateStart)
     val id = saveMaalingWithStatusTestingStarta()
     val maaling = maalingDAO.getMaaling(id) as Maaling.Testing
     assertThat(maaling.testKoeyringar).isNotEmpty
@@ -145,7 +138,6 @@ class MaalingDAOTest(
       "når vi har lagra målingar med status 'crawling' og 'testing', så skal vi kunne finne dei når vi søker på status")
   @Test
   fun getMaalingByStatus() {
-    doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(anyList(), any())
     val idCrawling = saveMaalingWithStatusCrawling()
     val idTesting = saveMaalingWithStatusTesting()
     val maalingar =
@@ -157,9 +149,6 @@ class MaalingDAOTest(
       "når vi lagrer ei måling med status `testing_ferdig` og med lenker til testresultatene, så skal lenkene også lagres")
   @Test
   fun lagreLenker() {
-    doReturn(loeysingList)
-        .`when`(loeysingsRegisterClient)
-        .getMany(loeysingList.map { it.id }, maalingDateStart)
     val id = saveMaalingWithStatusTestingFerdig()
 
     val maalingFromDatabase = maalingDAO.getMaaling(id) as Maaling.TestingFerdig
@@ -173,9 +162,6 @@ class MaalingDAOTest(
   @DisplayName("Skal kunne oppdatere måling i Planlegging")
   @Test
   fun updateMaalingPlanlegging() {
-    doReturn(loeysingList)
-        .`when`(loeysingsRegisterClient)
-        .getMany(loeysingList.map { it.id }, maalingDateStart)
     val maalingNavnOriginal = "TestMåling"
     val maalingNavn = maalingTestName
     val crawlParameters = CrawlParameters(10, 10)
@@ -198,9 +184,6 @@ class MaalingDAOTest(
   @DisplayName("Skal kunne oppdatere måling i annen status")
   @Test
   fun updateMaalingOtherStatus() {
-    doReturn(loeysingList)
-        .`when`(loeysingsRegisterClient)
-        .getMany(loeysingList.map { it.id }, maalingDateStart)
     val maalingNavnOriginal = "TestMåling"
     val maalingNavn = maalingTestName
 
@@ -217,9 +200,6 @@ class MaalingDAOTest(
   @DisplayName("Skal kunne slette måling")
   @Test
   fun deleteMaaling() {
-    doReturn(loeysingList)
-        .`when`(loeysingsRegisterClient)
-        .getMany(loeysingList.map { it.id }, maalingDateStart)
     val maaling = createTestMaaling()
     val deletedRows = maalingDAO.deleteMaaling(maaling.id)
     assertThat(deletedRows).isEqualTo(1)
@@ -234,9 +214,6 @@ class MaalingDAOTest(
   @DisplayName("Skal kunne hente crawlresultat med riktig antall nettsider for måling")
   @Test
   fun getCrawlResultatForMaaling() {
-    doReturn(loeysingList)
-        .`when`(loeysingsRegisterClient)
-        .getMany(loeysingList.map { it.id }, maalingDateStart)
     val maaling = createTestMaaling()
     val digdirUrls = digdirLoeysing.url.toUrlListWithPages(5)
     val uutilsynetUrls = uutilsynetLoeysing.url.toUrlListWithPages(50)
@@ -278,9 +255,6 @@ class MaalingDAOTest(
   @DisplayName("Skal ikke ikke oppdatere CrawlResultat.Ferdig mer enn en gang")
   @Test
   fun shouldNotInsertFinishedCrawlResultTwice() {
-    doReturn(loeysingList)
-        .`when`(loeysingsRegisterClient)
-        .getMany(loeysingList.map { it.id }, maalingDateStart)
     val maaling = createTestMaaling()
 
     val crawling =
@@ -315,9 +289,6 @@ class MaalingDAOTest(
       "Skal kunne oppdatere CrawlResultat med andre statuser enn CrawlResultat.Ferdig mer enn en gang")
   @Test
   fun shouldInsertNonFinishedCrawlResultTwice() {
-    doReturn(loeysingList)
-        .`when`(loeysingsRegisterClient)
-        .getMany(loeysingList.map { it.id }, maalingDateStart)
     val maaling = createTestMaaling()
 
     val crawling =
