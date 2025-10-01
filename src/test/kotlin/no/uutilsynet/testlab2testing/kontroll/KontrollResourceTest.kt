@@ -47,6 +47,7 @@ class KontrollResourceTest(@Autowired val testregelService: TestregelService) {
             .`when`(loeysingsRegisterClient)
             .getMany(listOf( loeysingList[0].id), maalingDateStart)
         doReturn(listOf(loeysingList[0])).`when`(loeysingsRegisterClient).getMany(listOf(loeysingList[0].id))
+        doReturn(Result.success(listOf(loeysingList[0]))).`when`(loeysingsRegisterClient).search(anyString())
 
     }
 
