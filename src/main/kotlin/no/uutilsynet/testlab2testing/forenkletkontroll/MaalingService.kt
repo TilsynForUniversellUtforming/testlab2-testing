@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import java.time.Instant
+import jakarta.validation.ClockProvider
 import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.common.validateIdList
@@ -24,6 +24,7 @@ import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import java.time.Instant
 
 @Service
 class MaalingService(
@@ -32,7 +33,8 @@ class MaalingService(
     val utvalDAO: UtvalDAO,
     val aggregeringService: AggregeringService,
     val autoTesterClient: AutoTesterClient,
-    val testregelService: TestregelService
+    val testregelService: TestregelService,
+    val clockProvider: ClockProvider
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingService::class.java)
@@ -43,7 +45,9 @@ class MaalingService(
     val crawlParameters = dto.crawlParameters ?: CrawlParameters()
     crawlParameters.validateParameters()
 
-    val localDateNorway = Instant.now()
+    val localDateNorway = Instant.now(clockProvider.clock)
+
+      logger.info("Local date norway: {} clock: {}", localDateNorway, clockProvider.clock)
     val maalingId =
         maalingDAO.createMaaling(navn, localDateNorway, emptyList(), emptyList(), crawlParameters)
     maalingDAO.updateKontrollId(
@@ -60,7 +64,9 @@ class MaalingService(
     val crawlParameters = dto.crawlParameters ?: CrawlParameters()
     crawlParameters.validateParameters()
 
-    val localDateNorway = Instant.now()
+
+    val localDateNorway = Instant.now(clockProvider.clock)
+      logger.info("Local date norway: {} clock: {}", localDateNorway, clockProvider.clock)
 
     if (utvalId != null) {
       val utval = getUtval(utvalId)
@@ -299,6 +305,6 @@ class MaalingService(
   }
 
   fun getLoeysingarForMaaling(maalingId: Int): List<Loeysing> {
-    return maalingDAO.getLoeysingarForMaaling(maalingId, Instant.now())
+    return maalingDAO.getLoeysingarForMaaling(maalingId, Instant.now(clockProvider.clock))
   }
 }

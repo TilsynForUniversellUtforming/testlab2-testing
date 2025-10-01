@@ -1,6 +1,9 @@
 package no.uutilsynet.testlab2testing.loeysing
 
 import io.micrometer.observation.annotation.Observed
+import java.net.URL
+import java.time.Instant
+import java.time.format.DateTimeFormatter.ISO_INSTANT
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -9,66 +12,67 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
-import java.net.URL
-import java.time.Instant
-import java.time.format.DateTimeFormatter.ISO_INSTANT
 
 @ConfigurationProperties(prefix = "loeysingsregister")
 data class LoeysingsRegisterProperties(val host: String)
 
-private const val LOEYSINGSREGISTER_NEW_NOT_FOUND = "loeysingsregisteret returnerte ikkje ein location da vi oppretta ei ny løysing"
+private const val LOEYSINGSREGISTER_NEW_NOT_FOUND =
+    "loeysingsregisteret returnerte ikkje ein location da vi oppretta ei ny løysing"
 
 @Component
 class LoeysingsRegisterClient(
     val restTemplate: RestTemplate,
-    val properties: LoeysingsRegisterProperties
+    val properties: LoeysingsRegisterProperties,
 ) {
   val logger: Logger = LoggerFactory.getLogger(LoeysingsRegisterClient::class.java)
 
   @CacheEvict(key = "#result.id", cacheNames = ["loeysing", "loeysingar"])
-  fun saveLoeysing(namn: String, url: URL, orgnummer: String): Loeysing = runCatching {
-      val location = restTemplate.postForLocation(
-          "${properties.host}/v1/loeysing",
-          mapOf("namn" to namn, "url" to url.toString(), "orgnummer" to orgnummer)
-      ) ?: throw RuntimeException(LOEYSINGSREGISTER_NEW_NOT_FOUND)
+  fun saveLoeysing(namn: String, url: URL, orgnummer: String): Loeysing =
+      runCatching {
+            val location =
+                restTemplate.postForLocation(
+                    "${properties.host}/v1/loeysing",
+                    mapOf("namn" to namn, "url" to url.toString(), "orgnummer" to orgnummer))
+                    ?: throw RuntimeException(LOEYSINGSREGISTER_NEW_NOT_FOUND)
 
-      val loeysing = restTemplate.getForObject(location, Loeysing.Simple::class.java)
-          ?: throw RuntimeException(LOEYSINGSREGISTER_NEW_NOT_FOUND)
-      loeysing.toLoeysing()
-  }.getOrThrow()
+            val loeysing =
+                restTemplate.getForObject(location, Loeysing.Simple::class.java)
+                    ?: throw RuntimeException(LOEYSINGSREGISTER_NEW_NOT_FOUND)
+            loeysing.toLoeysing()
+          }
+          .getOrThrow()
 
   @Cacheable("loeysingar", unless = "#result==null")
   fun getMany(idList: List<Int>): Result<List<Loeysing>> = getMany(idList, Instant.now())
 
   @Cacheable("loeysingar", unless = "#result==null")
-  fun getManyWithVerksemd(idList: List<Int>, tidspunkt: Instant): Result<List<Loeysing>> {
-      logger.info("Getting loeysing for ids: {} at {}", idList.size, tidspunkt)
+  fun getMany(idList: List<Int>, tidspunkt: Instant): Result<List<Loeysing>> {
+    logger.info("Getting loeysing for ids: {} at {}", idList.size, tidspunkt)
     return getManyExpanded(idList, tidspunkt)
         .getOrThrow()
         .map { loeysing -> loeysing.toLoeysing() }
         .let { Result.success(it) }
   }
 
-    @Cacheable("loeysingar", unless = "#result==null")
-    fun getMany(idList: List<Int>, tidspunkt: Instant): Result<List<Loeysing>> {
-        return runCatching {
-            if (idList.isEmpty()) {
-                emptyList()
-            } else {
-                val uri =
-                    UriComponentsBuilder.fromUriString(properties.host)
-                        .pathSegment("v1", "loeysing")
-                        .queryParam("ids", idList.joinToString(","))
-                        .queryParam("atTime", ISO_INSTANT.format(tidspunkt))
-                        .build()
-                        .toUri()
-                restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
-                    ?: throw RuntimeException(
-                        "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}"
-                    )
-            }
-        }
+  @Cacheable("loeysingar", unless = "#result==null")
+  fun getManyWithoutVerksemd(idList: List<Int>, tidspunkt: Instant): Result<List<Loeysing>> {
+    return runCatching {
+      if (idList.isEmpty()) {
+        emptyList()
+      } else {
+        val uri =
+            UriComponentsBuilder.fromUriString(properties.host)
+                .pathSegment("v1", "loeysing")
+                .queryParam("ids", idList.joinToString(","))
+                .queryParam("atTime", ISO_INSTANT.format(tidspunkt))
+                .build()
+                .toUri()
+        restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
+            ?: throw RuntimeException(
+                "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}")
+      }
     }
+  }
 
   fun search(search: String): Result<List<Loeysing>> {
     return runCatching {
@@ -99,7 +103,7 @@ class LoeysingsRegisterClient(
       contextualName = "LoeysingsRegisterClient.getManyExpanded")
   fun getManyExpanded(
       idList: List<Int>,
-      tidspunkt: Instant = Instant.now()
+      tidspunkt: Instant = Instant.now(),
   ): Result<List<Loeysing.Expanded>> {
     logger.debug("Getting expanded loeysing for ids: {} at {}", idList.size, tidspunkt)
     val unique = idList.toSet().toList()
@@ -161,7 +165,7 @@ class LoeysingsRegisterClient(
     return Loeysing(id, namn, url, verksemd.organisasjonsnummer, verksemd.namn)
   }
 
-    fun Loeysing.Simple.toLoeysing() : Loeysing {
-        return Loeysing(id, namn, url, orgnummer, null)
-    }
+  fun Loeysing.Simple.toLoeysing(): Loeysing {
+    return Loeysing(id, namn, url, orgnummer, null)
+  }
 }

@@ -268,7 +268,6 @@ class MaalingDAO(
   }
 
   fun getLoeysingarForMaaling(id: Int, datoStart: Instant): List<Loeysing> {
-      logger.info("Get loeysingar for maaling $id at $datoStart")
     val query =
         """select idloeysing from "testlab2_testing"."maalingloeysing" where idmaaling = :id"""
     val loeysingIdList: List<Int> =
