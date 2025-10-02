@@ -363,8 +363,8 @@ class ResultatService(
 
   private fun getResultatService(kontrolltype: Kontrolltype): KontrollResultatService {
     return when (kontrolltype) {
-      Kontrolltype.ForenklaKontroll,
-      Kontrolltype.Statusmaaling -> automatiskResultatService
+      Kontrolltype.ForenklaKontroll -> automatiskResultatService
+      Kontrolltype.Statusmaaling,
       Kontrolltype.InngaaendeKontroll,
       Kontrolltype.Tilsyn,
       Kontrolltype.Uttalesak -> manueltResultatService
