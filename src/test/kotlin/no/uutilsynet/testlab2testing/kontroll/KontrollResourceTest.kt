@@ -7,6 +7,9 @@ import io.restassured.parsing.Parser
 import io.restassured.path.json.JsonPath
 import io.restassured.path.json.JsonPath.from
 import jakarta.validation.ClockProvider
+import java.net.URI
+import java.time.Clock
+import java.time.ZoneId
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestStatus
@@ -27,29 +30,27 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import java.net.URI
-import java.time.Clock
-import java.time.ZoneId
 
 @DisplayName("KontrollResource")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class KontrollResourceTest(@Autowired val testregelService: TestregelService) {
   @LocalServerPort var port: Int = 0
-    @MockitoBean
-    lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
-    @MockitoBean
-    lateinit var clockProvider: ClockProvider
+  @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+  @MockitoBean lateinit var clockProvider: ClockProvider
 
-    @BeforeEach
-    fun beforeEach() {
-        doReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault())).`when`(clockProvider).clock
-        doReturn(listOf(loeysingList[0]))
-            .`when`(loeysingsRegisterClient)
-            .getMany(listOf( loeysingList[0].id), maalingDateStart)
-        doReturn(listOf(loeysingList[0])).`when`(loeysingsRegisterClient).getMany(listOf(loeysingList[0].id))
-        doReturn(Result.success(listOf(loeysingList[0]))).`when`(loeysingsRegisterClient).search(anyString())
-
-    }
+  @BeforeEach
+  fun beforeEach() {
+    doReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault())).`when`(clockProvider).clock
+    doReturn(listOf(loeysingList[0]))
+        .`when`(loeysingsRegisterClient)
+        .getMany(listOf(loeysingList[0].id), maalingDateStart)
+    doReturn(listOf(loeysingList[0]))
+        .`when`(loeysingsRegisterClient)
+        .getMany(listOf(loeysingList[0].id))
+    doReturn(Result.success(listOf(loeysingList[0])))
+        .`when`(loeysingsRegisterClient)
+        .search(anyString())
+  }
 
   val kontrollInitBody =
       mapOf(
@@ -71,7 +72,8 @@ class KontrollResourceTest(@Autowired val testregelService: TestregelService) {
         .post("/kontroller")
         .then()
         .statusCode(equalTo(201))
-        .header("Location", org.hamcrest.CoreMatchers.startsWith("http://localhost:$port/kontroller/"))
+        .header(
+            "Location", org.hamcrest.CoreMatchers.startsWith("http://localhost:$port/kontroller/"))
   }
 
   @Test

@@ -18,7 +18,7 @@ class MaalingCrawlingService(
       statusDTO: MaalingResource.StatusDTO,
       maaling: Maaling.Kvalitetssikring
   ): ResponseEntity<Any> {
-    val loeysingIdList = maalingService.getValidatedLoeysingList(statusDTO)
+    val loeysingIdList = maalingService.getValidatedLoeysingList(statusDTO, maaling.id)
     val crawlParameters = maalingDAO.getCrawlParameters(maaling.id)
     val updated = restartCrawling(maaling, loeysingIdList, crawlParameters)
     maalingDAO.save(updated).getOrThrow()

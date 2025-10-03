@@ -1,6 +1,12 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import jakarta.validation.ClockProvider
+import java.net.URI
+import java.net.URL
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
@@ -31,13 +37,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import java.net.URI
-import java.net.URL
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
-
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -50,22 +49,21 @@ class MaalingIntegrationTests(
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
   @MockitoBean lateinit var clockProvider: ClockProvider
 
-
   val utvalTestName = "testutval"
   val loeysingsIdList = loeysingList.map { it.id }
   val singleLoeysing = listOf(loeysingList[0])
 
   @BeforeEach
   fun beforeEach() {
-      doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(loeysingList.map { it.id })
-      doReturn(loeysingList)
-          .`when`(loeysingsRegisterClient)
-          .getMany(loeysingList.map { it.id }, maalingDateStart)
-      doReturn(singleLoeysing)
-          .`when`(loeysingsRegisterClient)
-          .getMany(singleLoeysing.map { it.id }, maalingDateStart)
-      doReturn(singleLoeysing).`when`(loeysingsRegisterClient).getMany(singleLoeysing.map { it.id })
-      doReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault())).`when`(clockProvider).clock
+    doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(loeysingList.map { it.id })
+    doReturn(loeysingList)
+        .`when`(loeysingsRegisterClient)
+        .getMany(loeysingList.map { it.id }, maalingDateStart)
+    doReturn(singleLoeysing)
+        .`when`(loeysingsRegisterClient)
+        .getMany(singleLoeysing.map { it.id }, maalingDateStart)
+    doReturn(singleLoeysing).`when`(loeysingsRegisterClient).getMany(singleLoeysing.map { it.id })
+    doReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault())).`when`(clockProvider).clock
   }
 
   @AfterAll
@@ -164,7 +162,8 @@ class MaalingIntegrationTests(
       doReturn(loeysingList)
           .`when`(loeysingsRegisterClient)
           .getMany(loeysingList.map { it.id }, maalingDateStart)
-        Mockito.`when`(clockProvider.clock).thenReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault()))
+      Mockito.`when`(clockProvider.clock)
+          .thenReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault()))
       return restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
     }
 
@@ -172,7 +171,8 @@ class MaalingIntegrationTests(
     @DisplayName("så skal vi klare å hente den ut")
     fun getMaaling() {
 
-      val (id, navn, loeysingListFromApi) = restTemplate.getForObject(location, MaalingDTO::class.java)
+      val (id, navn, loeysingListFromApi) =
+          restTemplate.getForObject(location, MaalingDTO::class.java)
 
       assertThat(id, instanceOf(Int::class.java))
       assertThat(navn, equalTo(maalingTestName))
