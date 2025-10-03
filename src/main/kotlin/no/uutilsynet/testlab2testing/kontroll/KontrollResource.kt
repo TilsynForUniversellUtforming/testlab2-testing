@@ -153,7 +153,7 @@ class KontrollResource(
   }
 
   private fun getLoeysingarlistFromUtval(utval: KontrollDAO.KontrollDB.Utval?): List<Loeysing> {
-    utval ?: return emptyList()
+    if (utval == null || utval.loeysingar.isEmpty()) return emptyList()
     val idList = utval.loeysingar.map { it.id }
     return loeysingsRegisterClient.getMany(idList).getOrThrow()
   }
