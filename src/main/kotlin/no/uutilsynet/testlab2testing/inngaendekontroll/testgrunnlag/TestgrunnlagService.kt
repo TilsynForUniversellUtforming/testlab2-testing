@@ -159,7 +159,17 @@ class TestgrunnlagService(
   fun getLoeysingForTestgrunnlag(testgrunnlagId: Int): List<Loeysing> {
     val loeysingIdList =
         testgrunnlagDAO.getSideutvalForTestgrunnlag(testgrunnlagId).map { it.loeysingId }
-    val loeysingList = loeysingsRegisterClient.getMany(loeysingIdList, Instant.now()).getOrThrow()
+    val loeysingList =
+        loeysingsRegisterClient
+            .getMany(loeysingIdList, Instant.now())
+            .fold(
+                onSuccess = { it },
+                onFailure = {
+                  logger.error(
+                      "Feil ved henting av løysingar $loeysingIdList for testgrunnlag $testgrunnlagId",
+                      it)
+                  throw it
+                })
     return loeysingList
   }
 }
