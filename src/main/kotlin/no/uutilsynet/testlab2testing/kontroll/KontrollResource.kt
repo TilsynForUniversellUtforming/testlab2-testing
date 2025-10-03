@@ -47,8 +47,7 @@ class KontrollResource(
         .getKontroller()
         .mapCatching { kontrollRows ->
           kontrollRows.map { kontrollDB ->
-            val virksomheter =
-                getLoeysingarlistFromUtval(kontrollDB.utval).map { it.orgnummer }.distinct()
+            val virksomheter = getVirksomheterForKontroll(kontrollDB)
 
             KontrollListItem(
                 kontrollDB.id,
@@ -65,6 +64,18 @@ class KontrollResource(
           logger.error("Feilet da jeg skulle hente alle kontroller", it)
           throw RuntimeException(it)
         }
+  }
+
+  private fun getVirksomheterForKontroll(kontrollDB: KontrollDAO.KontrollDB): List<String> {
+    runCatching { getLoeysingarlistFromUtval(kontrollDB.utval).map { it.orgnummer }.distinct() }
+        .fold(
+            onSuccess = {
+              return it
+            },
+            onFailure = {
+              logger.error("Feil ved henting av virksomheter for kontroll ${kontrollDB.id}", it)
+              throw it
+            })
   }
 
   @PostMapping
@@ -111,17 +122,24 @@ class KontrollResource(
         kontrollDB.saksbehandler,
         Sakstype.valueOf(kontrollDB.sakstype),
         kontrollDB.arkivreferanse,
-        kontrollDbUtvalToUtval(kontrollDB.utval),
+        kontrollDbUtvalToUtval(kontrollDB),
         kontollTestreglarToTestreglar(kontrollDB.testreglar),
         kontrollDB.sideutval)
   }
 
-  private fun kontrollDbUtvalToUtval(utval: KontrollDAO.KontrollDB.Utval?): Utval? {
-    if (utval != null) {
-      val loeysingar = getLoeysingarlistFromUtval(utval)
-      return Utval(utval.id, utval.namn, loeysingar, utval.oppretta)
-    }
-    return null
+  private fun kontrollDbUtvalToUtval(kontroll: KontrollDAO.KontrollDB): Utval? {
+    return runCatching {
+          kontroll.utval?.let { utval ->
+            val loeysingar = getLoeysingarlistFromUtval(utval)
+            Utval(utval.id, utval.namn, loeysingar, utval.oppretta)
+          }
+        }
+        .fold(
+            onSuccess = { it },
+            onFailure = {
+              logger.error("Feil ved henting av løysingar for utval for kontroll ${kontroll.id}")
+              throw it
+            })
   }
 
   private fun kontollTestreglarToTestreglar(

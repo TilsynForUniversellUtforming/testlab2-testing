@@ -33,7 +33,7 @@ class MaalingTestingService(
   ): ResponseEntity<Any> {
     return coroutineScope {
       logger.info("Restarter testing for måling ${maaling.id}")
-      val loeysingIdList = maalingService.getValidatedLoeysingList(statusDTO)
+      val loeysingIdList = maalingService.getValidatedLoeysingList(statusDTO, maaling.id)
       val testreglar = testreglarForMaaling(maaling.id)
 
       val (retestList, rest) =

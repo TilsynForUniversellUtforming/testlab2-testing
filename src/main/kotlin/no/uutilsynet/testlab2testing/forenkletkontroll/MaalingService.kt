@@ -63,7 +63,6 @@ class MaalingService(
     val crawlParameters = dto.crawlParameters ?: CrawlParameters()
     crawlParameters.validateParameters()
 
-
     val localDateNorway = Instant.now(clockProvider.clock)
 
     if (utvalId != null) {
@@ -121,9 +120,9 @@ class MaalingService(
   private fun validateLoeyingsIdList(dto: MaalingResource.NyMaalingDTO): List<Int>? {
     val loeysingIdList =
         dto.loeysingIdList?.let {
-          val loeysingar = loeysingsRegisterClient.getMany(it).getOrThrow()
-          validateIdList(dto.loeysingIdList, loeysingar.map { it.id }, "loeysingIdList")
-              .getOrThrow()
+          val loeysingar =
+              loeysingsRegisterClient.getMany(it).getOrThrow().map { loeysing -> loeysing.id }
+          validateIdList(dto.loeysingIdList, loeysingar, "loeysingIdList").getOrThrow()
         }
     return loeysingIdList
   }
@@ -170,12 +169,22 @@ class MaalingService(
   }
 
   private fun EditMaalingDTO.getLoeysingForMaaling(maaling: Maaling): List<Loeysing> {
-    val loeysingList =
-        this.loeysingIdList?.let { idList -> loeysingsRegisterClient.getMany(idList) }?.getOrThrow()
-            ?: emptyList<Loeysing>().also {
-              logger.warn("Måling ${maaling.id} har ikkje løysingar")
-            }
-    return loeysingList
+    return this.loeysingIdList?.let { idList -> getLoeysingarForMaaling(idList, maaling.id) }
+        ?: emptyList<Loeysing>().also { logger.warn("Måling ${maaling.id} har ikkje løysingar") }
+  }
+
+  private fun getLoeysingarForMaaling(
+      idList: List<Int>,
+      maalingId: Int,
+  ): List<Loeysing> {
+    return loeysingsRegisterClient
+        .getMany(idList)
+        .fold(
+            onSuccess = { it },
+            onFailure = {
+              logger.error("Feil ved henting av løysingar for måling $maalingId")
+              throw it
+            })
   }
 
   fun reimportAggregeringar(maalingId: Int, loeysingId: Int?) {
@@ -265,17 +274,17 @@ class MaalingService(
         }
   }
 
-  fun getValidatedLoeysingList(statusDTO: MaalingResource.StatusDTO): List<Int> {
-    val validIds = getValidIds(statusDTO)
+  fun getValidatedLoeysingList(statusDTO: MaalingResource.StatusDTO, id: Int): List<Int> {
+    val validIds = getValidIds(statusDTO, id)
     val loeysingIdList =
         validateIdList(statusDTO.loeysingIdList, validIds, "loeysingIdList").getOrThrow()
     return loeysingIdList
   }
 
-  private fun getValidIds(statusDTO: MaalingResource.StatusDTO): List<Int> {
+  private fun getValidIds(statusDTO: MaalingResource.StatusDTO, maalingId: Int): List<Int> {
     val validIds =
         if (statusDTO.loeysingIdList?.isNotEmpty() == true) {
-          loeysingsRegisterClient.getMany(statusDTO.loeysingIdList).getOrThrow().map { it.id }
+          getLoeysingarForMaaling(statusDTO.loeysingIdList, maalingId).map { it.id }
         } else {
           emptyList()
         }
@@ -300,9 +309,5 @@ class MaalingService(
   fun getMaalingForKontroll(kontrollId: Int): Int {
     return maalingDAO.getMaalingIdFromKontrollId(kontrollId)
         ?: throw NoSuchElementException("Fant ikkje måling for kontrollId $kontrollId")
-  }
-
-  fun getLoeysingarForMaaling(maalingId: Int): List<Loeysing> {
-    return maalingDAO.getLoeysingarForMaaling(maalingId, Instant.now(clockProvider.clock))
   }
 }

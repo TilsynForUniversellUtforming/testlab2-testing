@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
+import java.net.URI
+import java.net.URL
+import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
@@ -21,9 +24,6 @@ import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
-import java.net.URI
-import java.net.URL
-import java.time.Instant
 
 @DisplayName("Tester for MaalingDAO")
 @SpringBootTest
@@ -37,12 +37,12 @@ class MaalingDAOTest(
 
   val deleteTheseIds: MutableSet<Int> = mutableSetOf()
 
-    @BeforeAll
-    fun setup() {
-      doReturn(loeysingList)
-          .`when`(loeysingsRegisterClient)
-          .getMany(loeysingList.map { it.id }, maalingDateStart)
-    }
+  @BeforeAll
+  fun setup() {
+    doReturn(loeysingList)
+        .`when`(loeysingsRegisterClient)
+        .getMany(loeysingList.map { it.id }, maalingDateStart)
+  }
 
   @AfterAll
   fun cleanup() {

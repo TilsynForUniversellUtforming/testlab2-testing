@@ -272,7 +272,15 @@ class MaalingDAO(
         """select idloeysing from "testlab2_testing"."maalingloeysing" where idmaaling = :id"""
     val loeysingIdList: List<Int> =
         jdbcTemplate.queryForList(query, mapOf("id" to id), Int::class.java)
-    val loeysingList = loeysingsRegisterClient.getMany(loeysingIdList, datoStart).getOrThrow()
+    val loeysingList =
+        loeysingsRegisterClient
+            .getMany(loeysingIdList, datoStart)
+            .fold(
+                onSuccess = { it },
+                onFailure = {
+                  logger.error("Feil ved henting av løysingar $loeysingIdList for maaling $id", it)
+                  throw it
+                })
     return loeysingList
   }
 
