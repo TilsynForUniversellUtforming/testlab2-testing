@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import jakarta.validation.ClockProvider
+import java.time.Instant
 import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.common.validateIdList
@@ -14,9 +15,7 @@ import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters.Companion.validateParameters
-import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
-import no.uutilsynet.testlab2testing.testing.automatisk.AutotesterTestresultat
-import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
+import no.uutilsynet.testlab2testing.testing.automatisk.*
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelService
@@ -24,7 +23,6 @@ import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import java.time.Instant
 
 @Service
 class MaalingService(
@@ -34,7 +32,8 @@ class MaalingService(
     val aggregeringService: AggregeringService,
     val autoTesterClient: AutoTesterClient,
     val testregelService: TestregelService,
-    val clockProvider: ClockProvider
+    val testkoeyringDAO: TestkoeyringDAO,
+    val clockProvider: ClockProvider,
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingService::class.java)
@@ -206,16 +205,15 @@ class MaalingService(
     return true
   }
 
-  fun getFerdigeTestkoeyringar(maalingId: Int): List<TestKoeyring.Ferdig> =
-      runCatching {
-            val maaling = maalingDAO.getMaaling(maalingId)
-            require(maaling is Maaling.TestingFerdig) { "Måling er ikkje ferdig testa" }
-            maaling.testKoeyringar.filterIsInstance<TestKoeyring.Ferdig>()
-          }
-          .getOrThrow()
+  fun getFerdigeTestkoeyringar(maalingId: Int): List<TestkoeyringDTO.Ferdig> {
+    return testkoeyringDAO
+        .getTestkoeyringarForMaaling(maalingId)
+        .filterIsInstance<TestkoeyringDTO.Ferdig>()
+  }
 
-  suspend fun mapTestkoeyringToTestresultatBrot(ferdigeTestKoeyringar: List<TestKoeyring.Ferdig>) =
-      autoTesterClient.fetchResultat(ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlBrot)
+  suspend fun mapTestkoeyringToTestresultatBrot(
+      ferdigeTestKoeyringar: List<TestkoeyringDTO.Ferdig>
+  ) = autoTesterClient.fetchResultat(ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlBrot)
 
   fun getTestresultatMaalingLoeysing(
       maalingId: Int,
@@ -230,7 +228,7 @@ class MaalingService(
 
   fun getFilteredAndFerdigTestkoeyringar(maalingId: Int, loeysingId: Int?) =
       getFerdigeTestkoeyringar(maalingId).filter {
-        loeysingId == null || it.loeysing.id == loeysingId
+        loeysingId == null || it.loeysingId == loeysingId
       }
 
   fun hentEllerGenererAggregeringPrSide(maalingId: Int): ResponseEntity<Any> {

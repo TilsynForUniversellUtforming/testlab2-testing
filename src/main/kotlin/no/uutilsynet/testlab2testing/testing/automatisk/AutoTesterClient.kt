@@ -13,6 +13,7 @@ import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSuksesskriteri
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testregel.Testregel
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.http.HttpStatusCode
@@ -30,7 +31,7 @@ class AutoTesterClient(
     val autoTesterProperties: AutoTesterProperties
 ) {
 
-  val logger = LoggerFactory.getLogger(AutoTesterClient::class.java)
+  val logger: Logger = LoggerFactory.getLogger(AutoTesterClient::class.java)
 
   fun startTesting(
       maalingId: Int,
@@ -88,9 +89,9 @@ class AutoTesterClient(
       restTemplate.getForObject(uri, AutoTesterStatus::class.java)
 
   suspend fun fetchResultat(
-      testKoeyringar: List<TestKoeyring.Ferdig>,
+      testKoeyringar: List<TestkoeyringDTO.Ferdig>,
       resultatType: ResultatUrls,
-  ): Map<TestKoeyring.Ferdig, Result<List<AutotesterTestresultat>>> = coroutineScope {
+  ): Map<TestkoeyringDTO, Result<List<AutotesterTestresultat>>> = coroutineScope {
     val deferreds =
         testKoeyringar.map { testKoeyring ->
           async { testKoeyring to fetchResultat(testKoeyring, resultatType) }
@@ -99,10 +100,10 @@ class AutoTesterClient(
   }
 
   private fun fetchResultat(
-      testKoeyring: TestKoeyring.Ferdig,
+      testKoeyring: TestkoeyringDTO.Ferdig,
       resultatType: ResultatUrls
   ): Result<List<AutotesterTestresultat>> =
-      testKoeyring.lenker?.let { lenker ->
+      testKoeyring.lenker.let { lenker ->
         runCatching {
           when (resultatType) {
             ResultatUrls.urlAggreggeringTR ->
@@ -120,7 +121,6 @@ class AutoTesterClient(
           }
         }
       }
-          ?: throw IllegalStateException("manglar lenker til testresultat")
 
   private fun fetchResultatDetaljert(uri: URI): List<TestResultat> {
     return restTemplate
@@ -128,13 +128,13 @@ class AutoTesterClient(
         ?.flatten()
         ?.toList()
         ?: throw RuntimeException(
-            "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
+            "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra $uri")
   }
 
   fun fetchResultatAggregering(uri: URI, resultatType: ResultatUrls): List<AutotesterTestresultat> {
     return restTemplate.getForObject(uri, getAggregationClass(resultatType))?.toList()
         ?: throw RuntimeException(
-            "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra ${uri}")
+            "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra $uri")
   }
 
   private fun getAggregationClass(
@@ -174,7 +174,7 @@ class AutoTesterClient(
       JsonSubTypes.Type(value = AutoTesterStatus.Other::class, name = "ContinuedAsNew"),
       JsonSubTypes.Type(value = AutoTesterStatus.Other::class, name = "Suspended"))
   sealed class AutoTesterStatus {
-    object Pending : AutoTesterStatus()
+    data object Pending : AutoTesterStatus()
 
     data class Running(val customStatus: CustomStatus?) : AutoTesterStatus()
 
@@ -182,7 +182,7 @@ class AutoTesterClient(
 
     data class Failed(val output: String) : AutoTesterStatus()
 
-    object Terminated : AutoTesterStatus()
+    data object Terminated : AutoTesterStatus()
 
     data class Other(val output: String?) : AutoTesterStatus()
   }

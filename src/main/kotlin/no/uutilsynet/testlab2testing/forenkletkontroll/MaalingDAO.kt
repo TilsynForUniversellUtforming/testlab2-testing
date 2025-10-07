@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
+import java.sql.Timestamp
+import java.time.Instant
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.*
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.createMaalingParams
@@ -38,8 +40,6 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import java.sql.Timestamp
-import java.time.Instant
 
 private const val NOT_FINISHED_CRAWLING =
     "Det er løysingar som ikkje er ferdige med crawling, kan ikkje hente testkoeyringar før alle er ferdige"
