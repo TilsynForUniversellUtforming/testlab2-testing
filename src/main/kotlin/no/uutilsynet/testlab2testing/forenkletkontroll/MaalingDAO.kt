@@ -1,7 +1,5 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import java.sql.Timestamp
-import java.time.Instant
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.*
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.createMaalingParams
@@ -40,6 +38,8 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.sql.Timestamp
+import java.time.Instant
 
 private const val NOT_FINISHED_CRAWLING =
     "Det er løysingar som ikkje er ferdige med crawling, kan ikkje hente testkoeyringar før alle er ferdige"
@@ -254,7 +254,7 @@ class MaalingDAO(
 
   private fun MaalingDTO.getTestkoeyingarForMaaling() =
       testkoeyringDAO.getTestKoeyringarForMaaling(
-          id, crawlResultatMapForMaaling(id, getLoeysingarForMaaling(id, datoStart)))
+          id, loeysingsMetadataForMaaling(id, getLoeysingarForMaaling(id, datoStart)))
 
   private fun MaalingDTO.getCrawlResultatForMaaling() =
       crawlResultatForMaaling(id, getLoeysingarForMaaling(id, datoStart))
@@ -427,19 +427,17 @@ class MaalingDAO(
     }
   }
 
-  private fun crawlResultatMapForMaaling(
+  private fun loeysingsMetadataForMaaling(
       maalingId: Int,
       loeysingList: List<Loeysing>
-  ): Map<Int, CrawlResultat.Ferdig> {
-    val crawlresultat = sideutvalDAO.getCrawlResultatForMaaling(maalingId, loeysingList)
-    require(crawlresultat.all { it is CrawlResultat.Ferdig }) { NOT_FINISHED_CRAWLING }
-    val ferdigCrawresultat = crawlresultat.filterIsInstance<CrawlResultat.Ferdig>()
-    return crawlResultatMap(ferdigCrawresultat)
+  ): Map<Int, LoeysingMetadata> {
+    return sideutvalDAO
+        .getCrawlResultatForMaaling(maalingId, loeysingList)
+        .filterIsInstance<CrawlResultat.Ferdig>()
+        .associate {
+          it.loeysing.id to LoeysingMetadata(it.loeysing.id, it.loeysing, it.antallNettsider)
+        }
   }
 
-  private fun crawlResultatMap(
-      crawlResultat: List<CrawlResultat.Ferdig>
-  ): Map<Int, CrawlResultat.Ferdig> {
-    return crawlResultat.associateBy { it.loeysing.id }
-  }
+  data class LoeysingMetadata(val id: Int, val loeysing: Loeysing, val antallNettsider: Int)
 }

@@ -1,18 +1,18 @@
 package no.uutilsynet.testlab2testing.testing.automatisk
 
-import no.uutilsynet.testlab2testing.brukar.Brukar
-import no.uutilsynet.testlab2testing.brukar.BrukarService
-import no.uutilsynet.testlab2testing.forenkletkontroll.Framgang
-import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 import java.net.URI
 import java.net.URL
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
+import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.brukar.BrukarService
+import no.uutilsynet.testlab2testing.forenkletkontroll.Framgang
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
 @Component
 class TestkoeyringDAO(
@@ -22,7 +22,7 @@ class TestkoeyringDAO(
 
   fun getTestKoeyringarForMaaling(
       maalingId: Int,
-      crawlResultatMap: Map<Int, CrawlResultat.Ferdig>
+      loeysingmetadataMap: Map<Int, MaalingDAO.LoeysingMetadata>
   ): List<TestKoeyring> {
     return jdbcTemplate.query<TestKoeyring>(
         """
@@ -37,7 +37,7 @@ class TestkoeyringDAO(
           val loeysingId = rs.getInt("loeysing_id")
           val brukar = getBrukarFromResultSet(rs)
           val crawlResultatForLoeysing =
-              crawlResultatMap[loeysingId]
+              loeysingmetadataMap[loeysingId]
                   ?: throw RuntimeException(
                       "Finner ikkje crawlresultat for loeysing med id = $loeysingId")
 
