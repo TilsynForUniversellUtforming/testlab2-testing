@@ -15,7 +15,8 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return jdbcTemplate.query(
         """select r.id_ekstern, coalesce(tg.kontroll_id, m.kontrollid) as kontroll_id , r.loeysing_id, 
             coalesce(k1.kontrolltype, k2.kontrolltype) as kontrolltype, 
-            coalesce(k1.tittel, k2.tittel) as kontrollnamn,r.publisert
+            coalesce(k1.tittel, k2.tittel) as kontrollnamn,r.publisert,
+            coalesce(tg.dato_oppretta,m.dato_start) as utfoert
             from testlab2_testing.rapport r
             left join testlab2_testing.testgrunnlag tg on r.testgrunnlag_id=tg.id
             left join testlab2_testing.maalingv1 m on r.maaling_id=m.id
@@ -31,7 +32,8 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               rs.getInt("loeysing_id"),
               Kontrolltype.valueOf(rs.getString("kontrolltype")),
               rs.getString("kontrollnamn"),
-              rs.getTimestamp("publisert").toInstant())
+              rs.getTimestamp("publisert").toInstant(),
+              rs.getTimestamp("utfoert").toInstant())
         }
   }
 
@@ -39,7 +41,8 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return jdbcTemplate.query(
         """select r.id_ekstern, coalesce(tg.kontroll_id, m.kontrollid) as kontroll_id , r.loeysing_id, 
             coalesce(k1.kontrolltype, k2.kontrolltype) as kontrolltype, 
-            coalesce(k1.tittel, k2.tittel) as kontrollnamn,r.publisert
+            coalesce(k1.tittel, k2.tittel) as kontrollnamn,r.publisert,
+            coalesce(tg.dato_oppretta,m.dato_start) as utfoert
             from testlab2_testing.rapport r
             left join testlab2_testing.testgrunnlag tg on r.testgrunnlag_id=tg.id
             left join testlab2_testing.maalingv1 m on r.maaling_id=m.id
@@ -55,7 +58,8 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               rs.getInt("loeysing_id"),
               Kontrolltype.valueOf(rs.getString("kontrolltype")),
               rs.getString("kontrollnamn"),
-              rs.getTimestamp("publisert").toInstant())
+              rs.getTimestamp("publisert").toInstant(),
+              rs.getTimestamp("utfoert").toInstant())
         }
   }
 

@@ -12,6 +12,8 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
 
   private val logger = LoggerFactory.getLogger(KravregisterClient::class.java)
 
+  private var kravregisterCache = mutableListOf<KravWcag2x>()
+
   @Cacheable("kravFromSuksesskriterium", unless = "#result==null")
   fun getKrav(suksesskriterium: String): KravWcag2x {
     logger.info(
@@ -25,14 +27,13 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
 
   @Cacheable("kravFromId", unless = "#result==null")
   fun getWcagKrav(kravId: Int): KravWcag2x {
-    return restTemplate.getForObject(
-        "${properties.host}/v1/krav/wcag2krav/$kravId", KravWcag2x::class.java)
-        ?: throw RuntimeException("Kravregisteret returnerte null for kravId $kravId")
+      return getKravregisterCache().associateBy { it.id }[kravId]  ?: throw RuntimeException("Kravregisteret returnerte null for kravId $kravId")
   }
 
   @Cacheable("suksesskriteriumFromId", unless = "#result==null")
   fun getKravIdFromSuksesskritterium(suksesskriterium: String): Int {
-    return getKrav(suksesskriterium).id
+    return getKravregisterCache().associateBy{it.suksesskriterium}[suksesskriterium]?.id
+        ?: throw RuntimeException("Kravregisteret returnerte null for suksesskriterium $suksesskriterium")
   }
 
   @Cacheable("suksesskriteriumFromKrav", unless = "#result == null")
@@ -50,6 +51,13 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
             object : ParameterizedTypeReference<List<KravWcag2x>>() {})
         .body
         ?: throw RuntimeException("Kravregisteret returnerte null for liste av krav")
+  }
+
+  fun getKravregisterCache(): List<KravWcag2x> {
+    if (kravregisterCache.isEmpty()) {
+      kravregisterCache = listKrav().toMutableList()
+    }
+    return kravregisterCache
   }
 }
 

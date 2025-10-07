@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
-import java.time.Instant
 import no.uutilsynet.testlab2.constants.Kontrolltype
+import java.time.Instant
 
 data class VerksemdEkstern(val namn: String, val organisasjonsnummer: String)
 
@@ -13,7 +13,7 @@ data class TestEkstern(
     val score: Double,
     val kontrollType: Kontrolltype,
     val kontrollNamn: String,
-    val publisert: Instant?
+    val utfoert: Instant
 )
 
 data class TestListElementEkstern(val verksemd: VerksemdEkstern, val testList: List<TestEkstern>)

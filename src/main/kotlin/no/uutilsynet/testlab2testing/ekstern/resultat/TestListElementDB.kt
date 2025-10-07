@@ -1,8 +1,8 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
-import java.time.Instant
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.resultat.LoeysingResultat
+import java.time.Instant
 
 data class TestListElementDB(
     val eksternTestgrunnlagId: String,
@@ -10,7 +10,8 @@ data class TestListElementDB(
     val loeysingId: Int,
     val kontrollType: Kontrolltype,
     val kontrollNamn: String,
-    val publisert: Instant
+    val publisert: Instant,
+    val utfoert: Instant,
 )
 
 fun TestListElementDB.toListElement(
@@ -25,4 +26,4 @@ fun TestListElementDB.toListElement(
         score = score,
         kontrollType = this.kontrollType,
         kontrollNamn = this.kontrollNamn,
-        publisert = this.publisert)
+        utfoert = this.utfoert)
