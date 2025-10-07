@@ -1,8 +1,8 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
-import java.time.Instant
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.resultat.LoeysingResultat
+import java.time.Instant
 
 data class TestListElementDB(
     val eksternTestgrunnlagId: String,

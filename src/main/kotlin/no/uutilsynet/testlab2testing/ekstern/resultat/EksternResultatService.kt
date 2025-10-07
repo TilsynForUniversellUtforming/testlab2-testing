@@ -12,7 +12,7 @@ import no.uutilsynet.testlab2testing.resultat.LoeysingResultat
 import no.uutilsynet.testlab2testing.resultat.Resultat
 import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing
 import no.uutilsynet.testlab2testing.resultat.ResultatService
-import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.TestregelKrav
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -172,17 +172,17 @@ class EksternResultatService(
 
   private fun testresultatToDetaljertEkstern(
       kontrollLoeysing: KontrollIdLoeysingId,
-      testregel: Testregel
+      testregel: TestregelKrav
   ) =
       getResultatPrTestregel(kontrollLoeysing, testregel)
           .filter { it.elementResultat == TestresultatUtfall.brot }
           .map { it.toTestresultatDetaljertEkstern(testregel) }
 
-  private fun getTestregelFromTestregelId(testregelId: Int): Testregel {
-    return testregelService.getTestregel(testregelId)
+  private fun getTestregelFromTestregelId(testregelId: Int): TestregelKrav {
+    return testregelService.getTestregelKrav(testregelId)
   }
 
-  private fun getResultatPrTestregel(kontrollLoeysing: KontrollIdLoeysingId, testregel: Testregel) =
+  private fun getResultatPrTestregel(kontrollLoeysing: KontrollIdLoeysingId, testregel: TestregelKrav) =
       resultatService.getResultatListKontroll(
           kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, testregel.id)
 
