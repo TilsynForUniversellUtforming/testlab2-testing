@@ -79,7 +79,13 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
 
     val testListElementDB =
         TestListElementDB(
-            "1", 1, 1, Kontrolltype.ForenklaKontroll, "Forenkla kontroll", Instant.now())
+            "1",
+            1,
+            1,
+            Kontrolltype.ForenklaKontroll,
+            "Forenkla kontroll",
+            Instant.now(),
+            Instant.now())
 
     val expected =
         TestEkstern(

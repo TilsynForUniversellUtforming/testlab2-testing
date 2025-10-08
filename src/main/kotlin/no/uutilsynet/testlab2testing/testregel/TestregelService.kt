@@ -75,4 +75,14 @@ class TestregelService(val testregelDAO: TestregelDAO, val kravregisterClient: K
   fun deleteTestregel(testregelId: Int): Int {
     return testregelDAO.deleteTestregel(testregelId)
   }
+
+  fun getTestregelKrav(testregelId: Int): TestregelKrav {
+    val testregel =
+        testregelDAO.getTestregel(testregelId)
+            ?: throw IllegalArgumentException("Fant ikkje testregel med id $testregelId")
+
+    val krav = kravregisterClient.getWcagKrav(testregel.kravId)
+
+    return TestregelKrav(testregel, krav)
+  }
 }

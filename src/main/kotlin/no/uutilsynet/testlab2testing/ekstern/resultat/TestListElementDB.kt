@@ -10,7 +10,8 @@ data class TestListElementDB(
     val loeysingId: Int,
     val kontrollType: Kontrolltype,
     val kontrollNamn: String,
-    val publisert: Instant
+    val publisert: Instant,
+    val utfoert: Instant,
 )
 
 fun TestListElementDB.toListElement(
@@ -25,4 +26,4 @@ fun TestListElementDB.toListElement(
         score = score,
         kontrollType = this.kontrollType,
         kontrollNamn = this.kontrollNamn,
-        publisert = this.publisert)
+        utfoert = this.utfoert)

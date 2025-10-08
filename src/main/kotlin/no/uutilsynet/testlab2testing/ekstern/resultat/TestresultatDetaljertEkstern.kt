@@ -1,30 +1,30 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
-import java.net.URL
-import java.time.LocalDateTime
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import org.springframework.web.util.UriComponentsBuilder
+import java.net.URL
+import java.time.LocalDateTime
 
 data class TestresultatDetaljertEkstern(
     val testregelNoekkel: String,
     val side: URL,
-    val suksesskriterium: List<String>,
+    val suksesskriterium: String,
     val testregelTittel: String,
     val testVartUtfoert: LocalDateTime?,
     val elementUtfall: String?,
     val elementResultat: TestresultatUtfall?,
     val elementOmtale: TestresultatDetaljert.ElementOmtale?,
-    val bilder: List<Bilde>?
+    val bilder: List<Bilde>?,
 )
 
 fun TestresultatDetaljert.toTestresultatDetaljertEkstern(testregel: Testregel) =
     TestresultatDetaljertEkstern(
         testregelNoekkel = this.testregelNoekkel,
         side = this.side,
-        suksesskriterium = this.suksesskriterium,
+        suksesskriterium = this.suksesskriterium.first(),
         testregelTittel = testregel.namn,
         testVartUtfoert = this.testVartUtfoert,
         elementUtfall = this.elementUtfall,
