@@ -8,8 +8,8 @@ import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.forenkletkontroll.Framgang
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -22,7 +22,7 @@ class TestkoeyringDAO(
 
   fun getTestKoeyringarForMaaling(
       maalingId: Int,
-      crawlResultatMap: Map<Int, CrawlResultat.Ferdig>
+      loeysingmetadataMap: Map<Int, MaalingDAO.LoeysingMetadata>
   ): List<TestKoeyring> {
     return jdbcTemplate.query<TestKoeyring>(
         """
@@ -37,7 +37,7 @@ class TestkoeyringDAO(
           val loeysingId = rs.getInt("loeysing_id")
           val brukar = getBrukarFromResultSet(rs)
           val crawlResultatForLoeysing =
-              crawlResultatMap[loeysingId]
+              loeysingmetadataMap[loeysingId]
                   ?: throw RuntimeException(
                       "Finner ikkje crawlresultat for loeysing med id = $loeysingId")
 
@@ -73,6 +73,94 @@ class TestkoeyringDAO(
         })
   }
 
+  fun getTestkoeyringarForMaaling(maalingId: Int): List<TestkoeyringDTO> {
+    return jdbcTemplate.query<TestkoeyringDTO>(
+        """
+              select t.id, maaling_id, loeysing_id, status, status_url, sist_oppdatert, feilmelding, t.lenker_testa, url_fullt_resultat, url_brot,url_agg_tr,url_agg_sk,url_agg_side,url_agg_side_tr,url_agg_loeysing, brukar_id
+              from "testlab2_testing"."testkoeyring" t
+              where maaling_id = :maaling_id
+            """
+            .trimIndent(),
+        mapOf("maaling_id" to maalingId),
+        fun(rs: ResultSet, _: Int): TestkoeyringDTO {
+          return initalizeTestkoeyringDTO(rs)
+        })
+  }
+
+  fun initalizeTestkoeyringDTO(rs: ResultSet): TestkoeyringDTO {
+    val status = TestkoeyringStatus.valueOf(rs.getString("status"))
+    return when (status) {
+      TestkoeyringStatus.ferdig -> initTestkoeyringDTOFerdig(rs)
+      TestkoeyringStatus.feila -> initTestkoeyringDTOFeila(rs)
+      TestkoeyringStatus.starta -> initTestkoeyringDTOStarta(rs)
+      TestkoeyringStatus.ikkje_starta -> initTestkoeyringDTOIkkjeStarta(rs)
+    }
+  }
+
+  fun initTestkoeyringDTOFerdig(rs: ResultSet): TestkoeyringDTO.Ferdig {
+    return TestkoeyringDTO.Ferdig(
+        rs.getInt("maaling_id"),
+        rs.getInt("loeysing_id"),
+        rs.getInt("brukar_id"),
+        rs.getInt("lenker_testa"),
+        rs.getTimestamp("sist_oppdatert").toInstant(),
+        resultsetToURL(rs, "status_url"),
+        setAutotestlenker(rs),
+    )
+  }
+
+  fun initTestkoeyringDTOStarta(rs: ResultSet): TestkoeyringDTO.Starta {
+    return TestkoeyringDTO.Starta(
+        rs.getInt("maaling_id"),
+        rs.getInt("loeysing_id"),
+        rs.getInt("brukar_id"),
+        rs.getInt("lenker_testa"),
+        rs.getTimestamp("sist_oppdatert").toInstant(),
+        resultsetToURL(rs, "status_url"))
+  }
+
+  fun initTestkoeyringDTOFeila(rs: ResultSet): TestkoeyringDTO.Feila {
+    return TestkoeyringDTO.Feila(
+        rs.getInt("maaling_id"),
+        rs.getInt("loeysing_id"),
+        rs.getInt("brukar_id"),
+        rs.getInt("lenker_testa"),
+        rs.getTimestamp("sist_oppdatert").toInstant(),
+        rs.getString("feilmelding"))
+  }
+
+  fun initTestkoeyringDTOIkkjeStarta(rs: ResultSet): TestkoeyringDTO.IkkjeStarta {
+    return TestkoeyringDTO.IkkjeStarta(
+        rs.getInt("maaling_id"),
+        rs.getInt("loeysing_id"),
+        rs.getInt("brukar_id"),
+        rs.getInt("lenker_testa"),
+        rs.getTimestamp("sist_oppdatert").toInstant(),
+        resultsetToURL(rs, "status_url"))
+  }
+
+  fun setAutotestlenker(rs: ResultSet): AutoTesterClient.AutoTesterLenker {
+    return AutoTesterClient.AutoTesterLenker(
+        resultsetToURLNotNull(rs, "url_fullt_resultat"),
+        resultsetToURLNotNull(rs, "url_brot"),
+        resultsetToURLNotNull(rs, "url_agg_tr"),
+        resultsetToURLNotNull(rs, "url_agg_sk"),
+        resultsetToURLNotNull(rs, "url_agg_side"),
+        resultsetToURLNotNull(rs, "url_agg_side_tr"),
+        resultsetToURLNotNull(rs, "url_agg_loeysing"))
+  }
+
+  fun resultsetToURL(rs: ResultSet, columnName: String): URL? {
+    val urlString = rs.getString(columnName)
+    return if (urlString != null) URI(urlString).toURL() else null
+  }
+
+  fun resultsetToURLNotNull(rs: ResultSet, columnName: String): URL {
+    val urlString = rs.getString(columnName)
+    requireNotNull(urlString)
+    return URI(urlString).toURL()
+  }
+
   @Transactional
   fun saveTestKoeyring(testKoeyring: TestKoeyring, maalingId: Int) {
     deleteExistingTestkoeyring(maalingId, testKoeyring.loeysing.id)
@@ -103,8 +191,8 @@ class TestkoeyringDAO(
   private fun saveTestKoeyringFerdig(maalingId: Int, testKoeyring: TestKoeyring.Ferdig) {
     jdbcTemplate.update(
         """
-                  insert into "testlab2_testing"."testkoeyring"(maaling_id, loeysing_id, status, status_url, sist_oppdatert, url_fullt_resultat, url_brot, url_agg_tr, url_agg_sk,url_agg_side, url_agg_side_tr, url_agg_loeysing,brukar_id)
-                  values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :url_fullt_resultat, :url_brot, :url_agg_tr, :url_agg_sk, :url_agg_side,:url_agg_side_tr,:url_agg_loeysing,:brukar_id)
+                  insert into "testlab2_testing"."testkoeyring"(maaling_id, loeysing_id, status, status_url, sist_oppdatert, url_fullt_resultat, url_brot, url_agg_tr, url_agg_sk,url_agg_side, url_agg_side_tr, url_agg_loeysing,brukar_id,lenker_testa)
+                  values (:maaling_id, :loeysing_id, :status, :status_url, :sist_oppdatert, :url_fullt_resultat, :url_brot, :url_agg_tr, :url_agg_sk, :url_agg_side,:url_agg_side_tr,:url_agg_loeysing,:brukar_id,:lenker_testa)
                 """
             .trimIndent(),
         mapOf(
@@ -120,7 +208,8 @@ class TestkoeyringDAO(
             "url_agg_side" to testKoeyring.lenker?.urlAggregeringSide?.toString(),
             "url_agg_side_tr" to testKoeyring.lenker?.urlAggregeringSideTR?.toString(),
             "url_agg_loeysing" to testKoeyring.lenker?.urlAggregeringLoeysing?.toString(),
-            "brukar_id" to getBrukar(testKoeyring.brukar)))
+            "brukar_id" to getBrukar(testKoeyring.brukar),
+            "lenker_testa" to testKoeyring.antallNettsider))
   }
 
   fun saveNyTestKoeyring(maalingId: Int, testKoeyring: TestKoeyring) {

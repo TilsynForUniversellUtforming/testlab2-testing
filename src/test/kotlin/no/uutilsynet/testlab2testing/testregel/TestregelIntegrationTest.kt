@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.testregel
 
+import java.net.URI
 import no.uutilsynet.testlab2.constants.KravStatus
 import no.uutilsynet.testlab2.constants.WcagPrinsipp
 import no.uutilsynet.testlab2.constants.WcagRetninglinje
@@ -23,9 +24,10 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import java.net.URI
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
 class TestregelIntegrationTests(

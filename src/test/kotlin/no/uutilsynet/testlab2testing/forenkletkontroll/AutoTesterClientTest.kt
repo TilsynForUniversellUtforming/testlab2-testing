@@ -12,6 +12,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testRegelLi
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterProperties
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
+import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDTO
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers
 import org.junit.jupiter.api.DisplayName
@@ -219,13 +220,14 @@ class AutoTesterClientTest {
             URI("https://aggregeringLoeysing.resultat").toURL(),
         )
     val testKoeyring =
-        TestKoeyring.Ferdig(
-            TestConstants.digdirLoeysing,
+        TestkoeyringDTO.Ferdig(
+            TestConstants.digdirLoeysing.id,
+            TestConstants.digdirLoeysing.id,
+            1,
+            10,
             Instant.now(),
             URI(statusURL).toURL(),
-            lenker = lenker,
-            Brukar("test", "testar"),
-            10)
+            lenker = lenker)
 
     server
         .expect(

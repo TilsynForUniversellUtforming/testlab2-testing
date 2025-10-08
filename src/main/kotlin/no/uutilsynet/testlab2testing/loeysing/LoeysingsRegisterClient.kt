@@ -2,6 +2,9 @@ package no.uutilsynet.testlab2testing.loeysing
 
 import io.micrometer.observation.annotation.Observed
 import jakarta.validation.ClockProvider
+import java.net.URL
+import java.time.Instant
+import java.time.format.DateTimeFormatter.ISO_INSTANT
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -10,9 +13,6 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
-import java.net.URL
-import java.time.Instant
-import java.time.format.DateTimeFormatter.ISO_INSTANT
 
 @ConfigurationProperties(prefix = "loeysingsregister")
 data class LoeysingsRegisterProperties(val host: String)
@@ -28,7 +28,8 @@ class LoeysingsRegisterClient(
 ) {
   val logger: Logger = LoggerFactory.getLogger(LoeysingsRegisterClient::class.java)
 
-  @CacheEvict(key = "#result.id", cacheNames = ["loeysing", "loeysingar"], condition = "#result!=null")
+  @CacheEvict(
+      key = "#result.id", cacheNames = ["loeysing", "loeysingar"], condition = "#result!=null")
   fun saveLoeysing(namn: String, url: URL, orgnummer: String): Loeysing =
       runCatching {
             val location =
@@ -45,7 +46,8 @@ class LoeysingsRegisterClient(
           .getOrThrow()
 
   @Cacheable("loeysingar", unless = "#result==null")
-  fun getMany(idList: List<Int>): Result<List<Loeysing>> = getMany(idList, Instant.now(clockProvider.clock))
+  fun getMany(idList: List<Int>): Result<List<Loeysing>> =
+      getMany(idList, Instant.now(clockProvider.clock))
 
   @Cacheable("loeysingar", unless = "#result==null")
   fun getMany(idList: List<Int>, tidspunkt: Instant): Result<List<Loeysing>> {
@@ -162,17 +164,21 @@ class LoeysingsRegisterClient(
     }
   }
 
-    fun Loeysing.Expanded.toLoeysing(): Loeysing {
-        if(verksemd == null) {
-            logger.warn("Loeysing $id manglar verksemd")
-            val simple = getManyWithoutVerksemd(listOf(id), Instant.now(clockProvider.clock)).getOrThrow().firstOrNull()
-            simple?.let { return Loeysing(id, namn, url, simple.orgnummer, null) }
-        }
-        else {
-            return Loeysing(id, namn, url, verksemd.organisasjonsnummer, verksemd.namn)
-        }
-        throw RuntimeException("Klarte ikkje hente loeysing med id $id")
+  fun Loeysing.Expanded.toLoeysing(): Loeysing {
+    if (verksemd == null) {
+      logger.warn("Loeysing $id manglar verksemd")
+      val simple =
+          getManyWithoutVerksemd(listOf(id), Instant.now(clockProvider.clock))
+              .getOrThrow()
+              .firstOrNull()
+      simple?.let {
+        return Loeysing(id, namn, url, simple.orgnummer, null)
+      }
+    } else {
+      return Loeysing(id, namn, url, verksemd.organisasjonsnummer, verksemd.namn)
     }
+    throw RuntimeException("Klarte ikkje hente loeysing med id $id")
+  }
 
   fun Loeysing.Simple.toLoeysing(): Loeysing {
     return Loeysing(id, namn, url, orgnummer, null)
