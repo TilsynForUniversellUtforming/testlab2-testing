@@ -27,13 +27,15 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
 
   @Cacheable("kravFromId", unless = "#result==null")
   fun getWcagKrav(kravId: Int): KravWcag2x {
-      return getKravregisterCache().associateBy { it.id }[kravId]  ?: throw RuntimeException("Kravregisteret returnerte null for kravId $kravId")
+    return getKravregisterCache().associateBy { it.id }[kravId]
+        ?: throw RuntimeException("Kravregisteret returnerte null for kravId $kravId")
   }
 
   @Cacheable("suksesskriteriumFromId", unless = "#result==null")
   fun getKravIdFromSuksesskritterium(suksesskriterium: String): Int {
-    return getKravregisterCache().associateBy{it.suksesskriterium}[suksesskriterium]?.id
-        ?: throw RuntimeException("Kravregisteret returnerte null for suksesskriterium $suksesskriterium")
+    return getKravregisterCache().associateBy { it.suksesskriterium }[suksesskriterium]?.id
+        ?: throw RuntimeException(
+            "Kravregisteret returnerte null for suksesskriterium $suksesskriterium")
   }
 
   @Cacheable("suksesskriteriumFromKrav", unless = "#result == null")

@@ -77,8 +77,9 @@ class TestregelService(val testregelDAO: TestregelDAO, val kravregisterClient: K
   }
 
   fun getTestregelKrav(testregelId: Int): TestregelKrav {
-    val testregel = testregelDAO.getTestregel(testregelId)
-      ?: throw IllegalArgumentException("Fant ikkje testregel med id $testregelId")
+    val testregel =
+        testregelDAO.getTestregel(testregelId)
+            ?: throw IllegalArgumentException("Fant ikkje testregel med id $testregelId")
 
     val krav = kravregisterClient.getWcagKrav(testregel.kravId)
 

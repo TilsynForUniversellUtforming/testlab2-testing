@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
+import java.time.Instant
+import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.resultat.LoeysingResultat
@@ -13,8 +15,6 @@ import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import java.time.Instant
-import java.time.LocalDate
 
 @SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -79,7 +79,13 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
 
     val testListElementDB =
         TestListElementDB(
-            "1", 1, 1, Kontrolltype.ForenklaKontroll, "Forenkla kontroll", Instant.now(),Instant.now())
+            "1",
+            1,
+            1,
+            Kontrolltype.ForenklaKontroll,
+            "Forenkla kontroll",
+            Instant.now(),
+            Instant.now())
 
     val expected =
         TestEkstern(
