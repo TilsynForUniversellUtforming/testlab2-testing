@@ -131,6 +131,7 @@ class ResultatService(
                   loeysingId,
                   loeysingar.getNamn(loeysingId),
                   loeysingar.getVerksemdNamn(loeysingId),
+                  loeysingar.getOrgnr(loeysingId),
                   calculateScore(resultLoeysing),
                   resultLoeysing.first().testType,
                   talTestaElementDTO(resultLoeysing),
@@ -302,6 +303,12 @@ class ResultatService(
       if (loeysing?.verksemd == null) return ""
       return loeysing.verksemd.namn
     }
+
+      fun getOrgnr(loeysingId: Int): String {
+          val loeysing = loeysingar[loeysingId]
+          if (loeysing?.verksemd == null) return ""
+          return loeysing.verksemd.organisasjonsnummer
+      }
   }
 
   fun ResultatKravBase.toResultatKrav(): ResultatKrav {

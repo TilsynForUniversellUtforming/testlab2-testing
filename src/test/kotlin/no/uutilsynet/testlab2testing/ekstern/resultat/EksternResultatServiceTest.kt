@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.ekstern.resultat
 import java.time.Instant
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.resultat.LoeysingResultat
 import no.uutilsynet.testlab2testing.resultat.Resultat
@@ -45,6 +46,7 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
                 1,
                 "Loeysingsnamn",
                 "testverksemd",
+                TestConstants.digdirLoeysing.orgnummer,
                 0.5,
                 TestgrunnlagType.OPPRINNELEG_TEST,
                 4,
@@ -56,6 +58,7 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
                 2,
                 "Loeysingsnamn2",
                 "testverksemd",
+                TestConstants.digdirLoeysing.orgnummer,
                 0.5,
                 TestgrunnlagType.OPPRINNELEG_TEST,
                 4,
@@ -93,6 +96,7 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
             1,
             "Loeysingsnamn",
             "organisasjonsnamn",
+            TestConstants.digdirLoeysing.orgnummer,
             0.5,
             Kontrolltype.ForenklaKontroll,
             "Forenkla kontroll",
