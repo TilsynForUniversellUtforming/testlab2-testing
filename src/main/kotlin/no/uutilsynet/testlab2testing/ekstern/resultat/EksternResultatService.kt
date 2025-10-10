@@ -88,7 +88,7 @@ class EksternResultatService(
   }
 
   private fun List<Loeysing>.toListElementForLoeysingar(): List<TestListElementDB> {
-    val testList = this.map { it.id }.let { eksternResultatDAO.getTestsForLoeysingIds(it) }
+    val testList = getTestarForLoeysing(this.map { it.id })
 
     if (testList.isEmpty()) {
       logger.warn(logMessages.teststNotFoundForOrgnr(this.first().orgnummer))
@@ -97,6 +97,16 @@ class EksternResultatService(
 
     return testList
   }
+
+    fun getTestarForLoeysing(loeysingIds:List<Int>): List<TestListElementDB> {
+        return eksternResultatDAO.getTestsForLoeysingIds(loeysingIds)
+    }
+
+    fun getTestEksternForRapportLoeysing(rapportId: String, loeysingId: Int): TestEkstern {
+        val kontroll = getKontrollLoeysing(rapportId, loeysingId).getOrThrow()
+        val testList = getTestarForLoeysing(listOf(loeysingId)).filter { it.kontrollId == kontroll.kontrollId }
+        return testList.toTestEksternList().first()
+    }
 
   private fun getLoysingarForOrgnr(orgnr: String): List<Loeysing> {
     val loeysingList = loeysingsRegisterClient.searchLoeysingByVerksemd(orgnr).getOrThrow()
