@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URI
-import java.time.LocalDate
+import io.micrometer.observation.annotation.Observed
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregelAPI
@@ -9,6 +8,8 @@ import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.net.URI
+import java.time.LocalDate
 
 @RestController
 @RequestMapping("/resultat")
@@ -71,6 +72,7 @@ class ResultatResource(
     return ResponseEntity.ok(resultatService.getKontrollLoeysingResultat(kontrollId, loeysingId))
   }
 
+  @Observed(name = "ResultatResource.getResultatListKontroll")
   @GetMapping("/kontroll/{kontrollId}/loeysing/{loeysingId}/krav/{kravId}")
   fun getResultatListKontroll(
       @PathVariable kontrollId: Int,

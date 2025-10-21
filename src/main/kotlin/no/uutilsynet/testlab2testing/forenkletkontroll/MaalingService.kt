@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
+import io.micrometer.observation.annotation.Observed
 import jakarta.validation.ClockProvider
 import java.time.Instant
 import kotlinx.coroutines.runBlocking
@@ -215,6 +216,7 @@ class MaalingService(
       ferdigeTestKoeyringar: List<TestkoeyringDTO.Ferdig>
   ) = autoTesterClient.fetchResultat(ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlBrot)
 
+    @Observed(name= "MaalingService.getTestresultatMaalingLoeysing")
   fun getTestresultatMaalingLoeysing(
       maalingId: Int,
       loeysingId: Int?
@@ -225,6 +227,8 @@ class MaalingService(
           .map { it.values.flatten() }
     }
   }
+
+    @Observed(name= "MaalingService.getFilteredAndFerdigTestkoeyringar")
 
   fun getFilteredAndFerdigTestkoeyringar(maalingId: Int, loeysingId: Int?) =
       getFerdigeTestkoeyringar(maalingId).filter {
@@ -304,6 +308,7 @@ class MaalingService(
     return maalingDAO.getMaalingList().filter { maalingIds.contains(it.id) }
   }
 
+    @Observed(name= "MaalingService.getMaalingForKontroll")
   fun getMaalingForKontroll(kontrollId: Int): Int {
     return maalingDAO.getMaalingIdFromKontrollId(kontrollId)
         ?: throw NoSuchElementException("Fant ikkje måling for kontrollId $kontrollId")

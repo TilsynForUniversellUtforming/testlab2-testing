@@ -2,8 +2,7 @@ package no.uutilsynet.testlab2testing.testing.automatisk
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import java.net.URI
-import java.net.URL
+import io.micrometer.observation.annotation.Observed
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -21,6 +20,8 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestTemplate
+import java.net.URI
+import java.net.URL
 
 @ConfigurationProperties(prefix = "autotester")
 data class AutoTesterProperties(val url: String, val code: String)
@@ -88,6 +89,7 @@ class AutoTesterClient(
   private fun fetchAutoTesterStatus(uri: URI) =
       restTemplate.getForObject(uri, AutoTesterStatus::class.java)
 
+    @Observed(name = "AutoTesterClient.fetchResultat")
   suspend fun fetchResultat(
       testKoeyringar: List<TestkoeyringDTO.Ferdig>,
       resultatType: ResultatUrls,

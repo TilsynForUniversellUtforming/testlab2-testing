@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import io.micrometer.observation.annotation.Observed
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
@@ -17,6 +18,7 @@ class AutomatiskResultatService(
     kravregisterClient: KravregisterClient,
 ) : KontrollResultatService(resultatDAO, kravregisterClient, testregelService) {
 
+  @Observed(name= "AutomatiskResultatService.getResultatForKontroll")
   override fun getResultatForKontroll(
       kontrollId: Int,
       loeysingId: Int,
@@ -43,6 +45,7 @@ class AutomatiskResultatService(
     return testresultat
   }
 
+    @Observed(name= "AutomatiskResultatService.getResultatForMaaling")
   fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
     return getAutotesterTestresultat(maalingId, loeysingId).map {
       testresultatDetaljertMaaling(it, maalingId)
