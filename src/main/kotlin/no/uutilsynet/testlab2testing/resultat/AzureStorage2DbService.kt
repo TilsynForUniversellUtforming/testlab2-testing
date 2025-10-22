@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
+import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalCache
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.AutotesterTestresultat
@@ -12,7 +13,6 @@ import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.net.URL
 import java.time.ZoneId
 
 @Service
@@ -108,24 +108,5 @@ class AzureStorage2DbService(
             )
         }
     }
-
-}
-
-
-class SideutvalCache(sideutvalDAO: SideutvalDAO, maalingId:Int ) {
-
-    private val cacheKey: MutableMap<String, Int> = mutableMapOf()
-
-    init {
-
-        sideutvalDAO.getSideutvalForMaaling(maalingId).getOrThrow().forEach {
-            cacheKey[it.url.toString()] = it.id
-        }
-    }
-
-    fun getSideutvalId(url: URL): Int {
-        return cacheKey[url.toString()] ?: throw NoSuchElementException("No side url found for url: $url")
-    }
-
 
 }

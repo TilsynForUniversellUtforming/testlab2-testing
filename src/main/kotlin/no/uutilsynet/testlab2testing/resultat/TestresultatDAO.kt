@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import io.micrometer.observation.annotation.Observed
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
@@ -103,6 +104,13 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         val sql = "DELETE FROM testresultatv2 WHERE id = :id"
         val params = MapSqlParameterSource().addValue("id", id)
         return jdbcTemplate.update(sql, params)
+    }
+
+    @Observed(name = "List<TestresultatDB> listBy maalingId and loeysingId brot")
+    fun listBy(maalingId: Int, loeysingId: Int?): List<TestresultatDB> {
+        val sql = "SELECT * FROM testresultatv2 WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and element_resultat= 'brot'"
+        val params = MapSqlParameterSource().addValue("maalingId", maalingId,).addValue("loeysingId", loeysingId)
+        return jdbcTemplate.query(sql, params, rowMapper)
     }
 
 

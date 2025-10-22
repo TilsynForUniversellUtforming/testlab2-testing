@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.sideutval.crawling
 
+import io.micrometer.observation.annotation.Observed
 import no.uutilsynet.testlab2testing.forenkletkontroll.Framgang
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import org.slf4j.Logger
@@ -299,6 +300,7 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .toMap()
     }
 
+    @Observed(name = "SideutvalDAO.getSideutvalForMaaling")
     fun getSideutvalForMaaling(maalingId: Int): Result<List<Sideutval.Automatisk>> {
         return kotlin.runCatching {
             jdbcTemplate.query(
