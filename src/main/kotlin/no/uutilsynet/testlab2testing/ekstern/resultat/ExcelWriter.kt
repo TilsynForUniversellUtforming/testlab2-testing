@@ -7,8 +7,6 @@ import org.apache.poi.xssf.streaming.SXSSFSheet
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.springframework.stereotype.Service
 import java.io.ByteArrayOutputStream
-import java.time.LocalDate
-import java.time.ZoneId
 
 
 @Service
@@ -23,11 +21,11 @@ class ExcelWriter {
         val workbook = SXSSFWorkbook()
         val style = createHeaderStyle(workbook)
         val workSheet = workbook.createSheet()
-        writeHeaders(workSheet,style)
 
-        testresults.forEachIndexed { index, testresult ->
-            writeDataRow(workSheet, testresult, kontrollInfo,index + 1)
-        }
+
+        writeMetadata(workSheet, kontrollInfo)
+
+        writeResults(workSheet, style, testresults)
 
         val xmlProps: POIXMLProperties = workbook.xssfWorkbook.properties
         val coreProps = xmlProps.coreProperties
@@ -39,19 +37,48 @@ class ExcelWriter {
         return outputStream
     }
 
+    private fun writeMetadata(workSheet: Sheet, kontrollInfo: TestEkstern) {
+        writeMetadataRow(workSheet, "Verksemd", kontrollInfo.organisasjonsnamn, 0)
+        writeMetadataRow(workSheet, "IKT-Løysing", kontrollInfo.loeysingNamn, 1)
+        writeMetadataRow(workSheet, "Dato for kontroll", kontrollInfo.utfoert.toString(), 2)
+        writeMetadataRow(workSheet, "Type kontroll", kontrollInfo.kontrollType.toString(), 3)
+    }
+
+    private fun writeMetadataRow(
+        workSheet: Sheet,
+        label: String,
+        value: String,
+        rowIndex: Int,
+    ) {
+        val style =  createMetadataHeaderStyle((workSheet as SXSSFSheet).workbook as SXSSFWorkbook)
+        val virksomhetRow = workSheet.createRow(rowIndex)
+        writeHeaderCell(workSheet, virksomhetRow, style, 0, label)
+        virksomhetRow.createCell(1).setCellValue(value)
+    }
+
+
+    private fun writeResults(
+        workSheet: SXSSFSheet,
+        style: CellStyle,
+        testresults: List<TestresultatDetaljert>,
+    ) {
+        writeHeaders(workSheet, style)
+
+        testresults.forEachIndexed { index, testresult ->
+            writeDataRow(workSheet, testresult, index + 7)
+        }
+    }
+
     fun writeHeaders(workSheet: Sheet, style: CellStyle) {
         (workSheet as SXSSFSheet).trackAllColumnsForAutoSizing()
 
-        val headerRow = workSheet.createRow(0)
-        writeHeaderCell(workSheet,headerRow, style,0, "Element")
-        writeHeaderCell(workSheet, headerRow, style, 1, "Utfall")
-        writeHeaderCell(workSheet, headerRow, style, 2, "Suksesskriterium")
-        writeHeaderCell(workSheet, headerRow, style, 3, "Testregel")
-        writeHeaderCell(workSheet, headerRow, style, 4, "Side")
-        writeHeaderCell(workSheet, headerRow, style, 5, "Verksemd")
-        writeHeaderCell(workSheet, headerRow, style, 6, "IKT-Løysing")
-        writeHeaderCell(workSheet, headerRow, style, 7, "Dato for kontroll")
-        writeHeaderCell(workSheet, headerRow, style, 8, "Type kontroll")
+        val headerRow = workSheet.createRow(6)
+        writeHeaderCell(workSheet, headerRow, style, 0, "Side",true)
+        writeHeaderCell(workSheet, headerRow, style, 1, "Suksesskriterium", true)
+        writeHeaderCell(workSheet, headerRow, style, 2, "Testregel", true)
+        writeHeaderCell(workSheet, headerRow, style, 3, "Utfall", true)
+        writeHeaderCell(workSheet,headerRow, style,4, "Element", true)
+
     }
 
     private fun createHeaderStyle(workbook: SXSSFWorkbook): CellStyle {
@@ -66,29 +93,35 @@ class ExcelWriter {
         return style
     }
 
-    private fun writeHeaderCell(workSheet: Sheet, headerRow: Row, style: CellStyle, columnIndex: Int, cellValue: String) {
+    private fun createMetadataHeaderStyle(workbook: SXSSFWorkbook): CellStyle {
+        val font: Font = workbook.createFont()
+        font.bold = true // Make text bold
+
+        val style: CellStyle = workbook.createCellStyle()
+        style.shrinkToFit
+        style.setFont(font)
+        return style
+    }
+
+    private fun writeHeaderCell(workSheet: Sheet, headerRow: Row, style: CellStyle, columnIndex: Int, cellValue: String,track:Boolean = false) {
         val cell = headerRow.createCell(columnIndex)
         cell.setCellValue(cellValue)
         cell.cellStyle = style
-        workSheet.autoSizeColumn(columnIndex)
+        if (track)  workSheet.autoSizeColumn(columnIndex)
+
     }
 
     fun writeDataRow(
         workSheet: Sheet,
         testresultat: TestresultatDetaljert,
-        kontrollInfo: TestEkstern,
         rowNr: Int,
     ) {
         val dataRow = workSheet.createRow(rowNr)
-        dataRow.createCell(0).setCellValue(getElement(testresultat))
-        dataRow.createCell(1).setCellValue(testresultat.elementUtfall)
-        dataRow.createCell(2).setCellValue(testresultat.suksesskriterium.joinToString(", "))
-        dataRow.createCell(3).setCellValue(testresultat.testregelNoekkel)
-        dataRow.createCell(4).setCellValue(testresultat.side.toString())
-        dataRow.createCell(5).setCellValue(kontrollInfo.organisasjonsnamn)
-        dataRow.createCell(6).setCellValue(kontrollInfo.loeysingNamn)
-        dataRow.createCell(7).setCellValue(LocalDate.ofInstant(kontrollInfo.utfoert, ZoneId.systemDefault()).toString())
-        dataRow.createCell(8).setCellValue(kontrollInfo.kontrollType.name)
+        dataRow.createCell(0).setCellValue(testresultat.side.toString())
+        dataRow.createCell(1).setCellValue(testresultat.suksesskriterium[0])
+        dataRow.createCell(2).setCellValue(testresultat.testregelNoekkel)
+        dataRow.createCell(3).setCellValue(testresultat.elementUtfall)
+        dataRow.createCell(4).setCellValue(getElement(testresultat))
         autoSizeColumns(workSheet)
 
 
