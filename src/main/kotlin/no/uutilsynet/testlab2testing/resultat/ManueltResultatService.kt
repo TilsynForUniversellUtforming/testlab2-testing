@@ -22,10 +22,10 @@ class ManueltResultatService(
     resultatDAO: ResultatDAO,
     kravregisterClient: KravregisterClient,
     testregelService: TestregelService,
-    val testgrunnlagDAO: TestgrunnlagDAO,
-    val testResultatDAO: TestResultatDAO,
-    val sideutvalDAO: SideutvalDAO,
-    val bildeService: BildeService,
+    private val testgrunnlagDAO: TestgrunnlagDAO,
+    private val testResultatDAO: TestResultatDAO,
+    private val sideutvalDAO: SideutvalDAO,
+    private val bildeService: BildeService,
 ) : KontrollResultatService(resultatDAO, kravregisterClient, testregelService) {
 
   override fun getResultatForKontroll(
