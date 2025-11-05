@@ -8,17 +8,13 @@ import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 
 sealed class KontrollResultatService(
-    val resultatDAO: ResultatDAO,
-    val kravregisterClient: KravregisterClient,
-    val testregelService: TestregelService
+    protected val resultatDAO: ResultatDAO,
+    protected val kravregisterClient: KravregisterClient,
+    protected val testregelService: TestregelService,
 ) {
 
   protected fun filterByTestregel(testregelId: Int, testregelIdsForKrav: List<Int>): Boolean {
     return testregelIdsForKrav.contains(testregelId)
-  }
-
-  protected fun getTestregelIdFromSchema(testregelKey: String): Testregel {
-    return testregelService.getTestregelByTestregelId(testregelKey)
   }
 
   protected fun getTesteregelFromId(testregelId: Int): Testregel {
@@ -29,7 +25,7 @@ sealed class KontrollResultatService(
     return listOf(kravregisterClient.getSuksesskriteriumFromKrav(kravId))
   }
 
-  protected fun List<TestresultatDetaljert>.filterBrot(): List<TestresultatDetaljert> {
+  private fun List<TestresultatDetaljert>.filterBrot(): List<TestresultatDetaljert> {
     return this.filter { it.elementResultat == TestresultatUtfall.brot }
   }
 

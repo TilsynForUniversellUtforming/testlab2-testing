@@ -5,16 +5,19 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestResultat
 import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDAO
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
+import no.uutilsynet.testlab2testing.testregel.TestregelKrav
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.springframework.stereotype.Service
 
 @Service
 class AutomatiskResultatService(
-    val maalingService: MaalingService,
-    val testkoeyringDAO: TestkoeyringDAO,
+    private val maalingService: MaalingService,
+    private val testkoeyringDAO: TestkoeyringDAO,
     resultatDAO: ResultatDAO,
     testregelService: TestregelService,
     kravregisterClient: KravregisterClient,
+    private val testregelCache: TestregelCache,
 ) : KontrollResultatService(resultatDAO, kravregisterClient, testregelService) {
 
   override fun getResultatForKontroll(
@@ -61,7 +64,7 @@ class AutomatiskResultatService(
         testregel.testregelId,
         maalingId,
         it.side,
-        it.suksesskriterium,
+        listOf(testregel.kravId.suksesskriterium),
         it.testVartUtfoert,
         it.elementUtfall,
         it.elementResultat,
@@ -96,5 +99,11 @@ class AutomatiskResultatService(
   override fun getBrukararForTest(kontrollId: Int): List<String> {
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)
     return testkoeyringDAO.getTestarTestkoeyringar(maalingId).map { it.namn }.distinct()
+  }
+
+  private fun getTestregelIdFromSchema(testregelKey: String): TestregelKrav {
+    testregelCache.getTestregelByKey(testregelKey).let { testregel ->
+      return testregel
+    }
   }
 }
