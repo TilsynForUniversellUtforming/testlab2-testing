@@ -14,6 +14,7 @@ import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.ZoneId
+import java.util.stream.Collectors
 
 @Service
 class AzureStorage2DbService(
@@ -28,7 +29,7 @@ class AzureStorage2DbService(
     val logger = LoggerFactory.getLogger(AzureStorage2DbService::class.java)
 
 
-    fun getTestresultatFraAzureStorage(maalingId: Int, loeysingId: Int, resulttatType: AutoTesterClient.ResultatUrls = AutoTesterClient.ResultatUrls.urlFulltResultat): Result<List<AutotesterTestresultat>> {
+    fun getTestresultatFraAzureStorage(maalingId: Int, loeysingId: Int, resulttatType: AutoTesterClient.ResultatUrls = AutoTesterClient.ResultatUrls.urlBrot): Result<List<AutotesterTestresultat>> {
         val testkoeyringMaalingLoeysing = maalingService.getFilteredAndFerdigTestkoeyringar(maalingId, loeysingId)
 
         logger.debug("Get testresultat from Azure Storage for maalingId: $maalingId, loeysingId: $loeysingId, size: ${testkoeyringMaalingLoeysing.size}")
@@ -43,9 +44,9 @@ class AzureStorage2DbService(
 
         val result = getTestresultatFraAzureStorage(maalingId, loeysingId).getOrThrow().map {
             it as TestResultat
-        }.map {
+        }.parallelStream().map {  it ->
             mapAutotesterResultatToDbFormat(it, maalingId, sideutvalCache)
-        }
+        }.collect(Collectors.toList())
 
 
 
@@ -56,24 +57,30 @@ class AzureStorage2DbService(
     fun createTestresultatDB(maalingId: Int, loeysingId: Int): Result<List<Int>> {
         return runCatching {
             val testresultatList = getTestresultat(maalingId, loeysingId)
-            testresultatList.map {
-                logger.debug("Creating testresultat in DB for maalingId: $maalingId, testregelId: ${it.testregelId}, sideutvalId: ${it.sideutvalId}")
-                testresultatDAO.create(it) }
+            testresultatList.parallelStream().map { it ->
+                 /*if (index % 500 == 0) {*/
+                     logger.debug("Creating testresultat in DB for loeysingId: $loeysingId,  testregelId: ${it.testregelId}, sideutvalId: ${it.sideutvalId}")
+                 /*}*/
+                testresultatDAO.create(it) }.collect(Collectors.toList())
         }
     }
 
     fun mapAutotesterResultatToDbFormat(
-        testresultat:TestResultat,
+        testresultat: TestResultat,
         maalingId: Int,
-        sideutvalCache: SideutvalCache
+        sideutvalCache: SideutvalCache,
     ): TestresultatDBBase {
 
-        logger.debug(
-            "Mapping autotester resultat to DB format for maalingId: {}, testregelId: {}, side: {}",
-            maalingId,
-            testresultat.testregelId,
-            testresultat.side
-        )
+        /*if (index % 500 == 0) {*/
+
+            logger.debug(
+                "Mapping autotester resultat to DB format for loeysing: {}, testregelId: {}, side: {}",
+                testresultat.loeysingId,
+                testresultat.testregelId,
+                testresultat.side
+            )
+
+        /*}*/
 
         return if (testresultat.elementResultat == TestresultatUtfall.brot) {
 
@@ -89,7 +96,7 @@ class AzureStorage2DbService(
                 elementOmtalePointer = testresultat.elementOmtale?.pointer ?: "",
                 elmentOmtaleHtml = testresultat.elementOmtale?.htmlCode ?: "",
                 elementOmtaleDescription = testresultat.elementOmtale?.description ?: "",
-                brukarId = brukarService.getUserId() ?: 0
+                brukarId =  0
             )
         } else {
             TestresultatDBBase(

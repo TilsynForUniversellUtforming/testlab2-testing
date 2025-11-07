@@ -182,9 +182,11 @@ class EksternResultatService(
 
   private fun testresultatToDetaljertEkstern(
       kontrollLoeysing: KontrollIdLoeysingId,
-      testregel: Testregel
+      testregel: Testregel,
+      limit: Int,
+      offset: Int
   ) =
-      getResultatPrTestregel(kontrollLoeysing, testregel)
+      getResultatPrTestregel(kontrollLoeysing, testregel,limit,offset)
           .filter { it.elementResultat == TestresultatUtfall.brot }
           .map { it.toTestresultatDetaljertEkstern(testregel) }
 
@@ -192,9 +194,14 @@ class EksternResultatService(
     return testregelService.getTestregel(testregelId)
   }
 
-  private fun getResultatPrTestregel(kontrollLoeysing: KontrollIdLoeysingId, testregel: Testregel) =
+  private fun getResultatPrTestregel(
+      kontrollLoeysing: KontrollIdLoeysingId,
+      testregel: Testregel,
+      limit: Int,
+      offset: Int
+  ) =
       resultatService.getResultatListKontroll(
-          kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, testregel.id)
+          kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, testregel.id,limit,offset)
 
   private fun getKontrollIdLoeysingIdsForRapportId(rapportId: String): List<KontrollIdLoeysingId> {
     return eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId)).getOrThrow()
@@ -203,12 +210,14 @@ class EksternResultatService(
   fun getResultatListKontrollAsEksterntResultat(
       rapportId: String,
       loeysingId: Int,
-      testregelId: Int
+      testregelId: Int,
+      limit: Int,
+      offset: Int
   ): List<TestresultatDetaljertEkstern> {
     return getKontrollLoeysing(rapportId, loeysingId)
         .mapCatching {
           val testregel = getTestregelFromTestregelId(testregelId)
-          testresultatToDetaljertEkstern(it, testregel)
+          testresultatToDetaljertEkstern(it, testregel,limit,offset)
         }
         .getOrThrow()
   }

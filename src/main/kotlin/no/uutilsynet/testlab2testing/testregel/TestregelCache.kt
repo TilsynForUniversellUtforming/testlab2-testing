@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.testregel
 
-import io.micrometer.observation.annotation.Observed
 import org.springframework.stereotype.Service
 
 @Service
@@ -21,7 +20,7 @@ class TestregelCache(testregelService: TestregelService) {
         return cacheKey[testregelKey] ?: throw NoSuchElementException("Test regel not found: $testregelKey")
     }
 
-    @Observed(name = "testregelcache.getbyid")
+    /*@Observed(name = "testregelcache.getbyid")*/
     fun getTestregelById(testregelId: Int): TestregelKrav {
         return cacheIds[testregelId] ?: throw NoSuchElementException("Test regel not found for id: $testregelId")
     }

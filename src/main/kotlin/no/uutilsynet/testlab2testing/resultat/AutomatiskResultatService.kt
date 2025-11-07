@@ -11,6 +11,7 @@ import no.uutilsynet.testlab2testing.testing.automatisk.TestResultat
 import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.TestregelService
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
@@ -34,11 +35,11 @@ class AutomatiskResultatService(
   override fun getResultatForKontroll(
       kontrollId: Int,
       loeysingId: Int,
-      testregelId: Int
+      testregelId: Int,
+      limit: Int,
+      offset: Int
   ): List<TestresultatDetaljert> {
-    return getResultatForKontroll(kontrollId, loeysingId).filter {
-      filterByTestregel(it.testregelId, listOf(testregelId))
-    }
+    return getDetaljertResultatForKontroll(kontrollId,loeysingId,testregelId,limit,offset)
   }
 
   override fun getResultatForKontroll(
@@ -48,6 +49,28 @@ class AutomatiskResultatService(
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)
     return getAutomatiskTestresultatMaaling(maalingId, loeysingId)
   }
+
+    fun getDetaljertResultatForKontroll(
+        kontrollId: Int,
+        loeysingId: Int,
+        testregelId: Int,
+        limit: Int,
+        offset: Int
+    ): List<TestresultatDetaljert> {
+      val maalingId = maalingService.getMaalingForKontroll(kontrollId)
+      return getAutomatiskTestresultatMaaling(maalingId, loeysingId,testregelId,limit,offset)
+    }
+
+    private fun getAutomatiskTestresultatMaaling(
+        maalingId: Int,
+        loeysingId: Int,
+        testregelId: Int,
+        limit: Int,
+        offset: Int
+    ): List<TestresultatDetaljert> {
+        val resultat = testresultatDAO.listBy(maalingId = maalingId, loeysingId = loeysingId,testregelId,limit,offset)
+        return testresultatDBConverter.mapTestresults(resultat,maalingId)
+    }
 
     @Observed(name = "AutomatiskResultatService.getAutomatiskTestresultatMaaling")
     fun getAutomatiskTestresultatMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
@@ -129,7 +152,7 @@ class TestresultatDBConverter(
                                 val sideutvalDAO: SideutvalDAO,
                                 val brukarService: BrukarService,){
 
-    val logger = LoggerFactory.getLogger(TestresultatDBConverter::class.java)
+    val logger: Logger = LoggerFactory.getLogger(TestresultatDBConverter::class.java)
 
 
 

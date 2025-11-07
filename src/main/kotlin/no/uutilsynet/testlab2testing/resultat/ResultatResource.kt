@@ -77,9 +77,11 @@ class ResultatResource(
   fun getResultatListKontroll(
       @PathVariable kontrollId: Int,
       @PathVariable loeysingId: Int,
-      @PathVariable kravId: Int
+      @PathVariable kravId: Int,
+      @RequestParam limit: Int,
+      @RequestParam offset: Int
   ): List<TestresultatDetaljert> {
-    return resultatService.getResultatListKontroll(kontrollId, loeysingId, kravId)
+    return resultatService.getResultatListKontroll(kontrollId, loeysingId, kravId, limit, offset)
   }
 
   @GetMapping("/tema")

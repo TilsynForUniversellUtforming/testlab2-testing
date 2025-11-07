@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
+import io.micrometer.observation.annotation.Observed
 import jakarta.servlet.http.HttpServletResponse
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
@@ -99,17 +100,20 @@ class EksternResultatResource(
                 onFailure = { ErrorHandlingUtil.handleErrors(it) })
     }
 
+    @Observed(name = "EksternResultatResource.getDetaljertResultat")
     @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/testregel/{testregelId}")
     fun getDetaljertResultat(
         @PathVariable rapportId: String,
         @PathVariable loeysingId: Int,
         @PathVariable testregelId: Int,
+        @RequestParam limit:Int=20,
+        @RequestParam offset:Int=0
     ): ResponseEntity<out Any> {
 
         return kotlin
             .runCatching {
                 eksternResultatService.getResultatListKontrollAsEksterntResultat(
-                    rapportId, loeysingId, testregelId
+                    rapportId, loeysingId, testregelId, limit, offset
                 )
             }
             .fold(
