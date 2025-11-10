@@ -116,7 +116,12 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     @Observed(name = "List<TestresultatDB> listBy maalingId and loeysingId brot")
     fun listBy(maalingId: Int, loeysingId: Int?,testregelId:Int,limit:Int=20,offset:Int=0): List<TestresultatDB> {
         val sql = "SELECT * FROM testresultatv2 WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id=:testregelId and element_resultat= 'brot' limit :limit offset :offset"
-        val params = MapSqlParameterSource().addValue("maalingId", maalingId,).addValue("loeysingId", loeysingId).addValue("testregelId", testregelId)
+        val params = MapSqlParameterSource()
+            .addValue("maalingId", maalingId,)
+            .addValue("loeysingId", loeysingId)
+            .addValue("testregelId", testregelId)
+            .addValue("limit", limit)
+            .addValue("offset", offset)
         return jdbcTemplate.query(sql, params, rowMapper)
     }
 

@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import io.micrometer.observation.annotation.Observed
-import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
@@ -17,6 +16,7 @@ import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.stream.Collectors
 
 @Service
 class EksternResultatService(
@@ -187,8 +187,9 @@ class EksternResultatService(
       offset: Int
   ) =
       getResultatPrTestregel(kontrollLoeysing, testregel,limit,offset)
-          .filter { it.elementResultat == TestresultatUtfall.brot }
+          .parallelStream()
           .map { it.toTestresultatDetaljertEkstern(testregel) }
+          .collect(Collectors.toList())
 
   private fun getTestregelFromTestregelId(testregelId: Int): Testregel {
     return testregelService.getTestregel(testregelId)
