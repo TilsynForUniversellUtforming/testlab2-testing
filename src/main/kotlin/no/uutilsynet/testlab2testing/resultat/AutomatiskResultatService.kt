@@ -69,13 +69,13 @@ class AutomatiskResultatService(
         offset: Int
     ): List<TestresultatDetaljert> {
         val resultat = testresultatDAO.listBy(maalingId = maalingId, loeysingId = loeysingId,testregelId,limit,offset)
-        return testresultatDBConverter.mapTestresults(resultat,maalingId)
+        return testresultatDBConverter.mapTestresults(resultat,maalingId,loeysingId)
     }
 
     @Observed(name = "AutomatiskResultatService.getAutomatiskTestresultatMaaling")
-    fun getAutomatiskTestresultatMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
+    fun getAutomatiskTestresultatMaaling(maalingId: Int, loeysingId: Int): List<TestresultatDetaljert> {
         val resultat = testresultatDAO.listBy(maalingId = maalingId, loeysingId = loeysingId)
-        return testresultatDBConverter.mapTestresults(resultat,maalingId)
+        return testresultatDBConverter.mapTestresults(resultat, maalingId, loeysingId)
 
     }
 
@@ -157,8 +157,8 @@ class TestresultatDBConverter(
 
 
     @Observed(name = "AutomatiskResultatService.mapTestresults")
-    fun mapTestresults(list: List<TestresultatDB> , maalingId: Int): List<TestresultatDetaljert> {
-        val sideutvalCache = sideutvalDAO.getSideutvalForMaaling(maalingId).getOrThrow().associateBy { it.id }
+    fun mapTestresults(list: List<TestresultatDB>, maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
+        val sideutvalCache = sideutvalDAO.getSideutvalForMaalingLoeysing(maalingId,loeysingId).getOrThrow().associateBy { it.id }
         return list.parallelStream().map {  it.toTestresultatDetaljert(sideutvalCache) }.collect(Collectors.toList())
     }
 

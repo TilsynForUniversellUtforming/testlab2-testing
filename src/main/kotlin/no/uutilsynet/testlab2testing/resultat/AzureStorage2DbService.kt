@@ -40,11 +40,11 @@ class AzureStorage2DbService(
     }
 
     fun getTestresultat(maalingId: Int, loeysingId: Int): List<TestresultatDBBase> {
-        val sideutvalCache = SideutvalCache(sideutvalDAO, maalingId)
+        val sideutvalCache = SideutvalCache(sideutvalDAO, maalingId,loeysingId)
 
         val result = getTestresultatFraAzureStorage(maalingId, loeysingId).getOrThrow().map {
             it as TestResultat
-        }.parallelStream().map {  it ->
+        }.parallelStream().map {
             mapAutotesterResultatToDbFormat(it, maalingId, sideutvalCache)
         }.collect(Collectors.toList())
 

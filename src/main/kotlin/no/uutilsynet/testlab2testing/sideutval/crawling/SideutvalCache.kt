@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory
 import java.net.URL
 
 @Observed(name = "SideutvalCache")
-class SideutvalCache(sideutvalDAO: SideutvalDAO, maalingId:Int ) {
+class SideutvalCache(sideutvalDAO: SideutvalDAO, maalingId:Int, loeysingId:Int ) {
 
     val logger = LoggerFactory.getLogger(SideutvalCache::class.java)
 
@@ -15,7 +15,7 @@ class SideutvalCache(sideutvalDAO: SideutvalDAO, maalingId:Int ) {
 
     init {
         logger.debug("Init SideutvalCache for maalingId: $maalingId")
-        sideutvalDAO.getSideutvalForMaaling(maalingId).getOrThrow().forEach {
+        sideutvalDAO.getSideutvalForMaalingLoeysing(maalingId, loeysingId).getOrThrow().forEach {
             cacheKey[it.url.toString()] = it.id
             cacheId[it.id] = it.url
         }

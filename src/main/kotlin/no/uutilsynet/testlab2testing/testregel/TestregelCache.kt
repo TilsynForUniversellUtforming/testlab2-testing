@@ -17,12 +17,12 @@ class TestregelCache(testregelService: TestregelService) {
 
     /*@Observed(name = "testregelcache.getBykey")*/
     fun getTestregelByKey(testregelKey: String): TestregelKrav {
-        return cacheKey[testregelKey] ?: throw NoSuchElementException("Test regel not found: $testregelKey")
+        return cacheKey[testregelKey] ?: throw NoSuchElementException("Testregel not found: $testregelKey")
     }
 
     /*@Observed(name = "testregelcache.getbyid")*/
     fun getTestregelById(testregelId: Int): TestregelKrav {
-        return cacheIds[testregelId] ?: throw NoSuchElementException("Test regel not found for id: $testregelId")
+        return cacheIds[testregelId] ?: throw NoSuchElementException("Testregel not found for id: $testregelId")
     }
 
   }

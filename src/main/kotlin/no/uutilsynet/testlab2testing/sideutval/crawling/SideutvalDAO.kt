@@ -301,7 +301,7 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
 
     @Observed(name = "SideutvalDAO.getSideutvalForMaaling")
-    fun getSideutvalForMaaling(maalingId: Int): Result<List<Sideutval.Automatisk>> {
+    fun getSideutvalForMaalingLoeysing(maalingId: Int, loeysingId: Int?): Result<List<Sideutval.Automatisk>> {
         return kotlin.runCatching {
             jdbcTemplate.query(
                 """
@@ -309,7 +309,8 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     from crawl_side cs
     join crawlresultat cr on cr.id = cs.crawlresultat_id
     where cr.maaling_id = :maalingId
-  """.trimIndent(), mapOf("maalingId" to maalingId), DataClassRowMapper.newInstance(Sideutval.Automatisk::class.java)
+    and cr.loeysingid = :loeysingId
+  """.trimIndent(), mapOf("maalingId" to maalingId, "loeysingId" to loeysingId), DataClassRowMapper.newInstance(Sideutval.Automatisk::class.java)
             ).toList()
         }
 
