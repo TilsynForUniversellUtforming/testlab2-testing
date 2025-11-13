@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import io.micrometer.observation.annotation.Observed
+import java.util.stream.Collectors
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.model.*
 import no.uutilsynet.testlab2testing.ekstern.resultat.paginering.TestresultatEksternAssembler
@@ -19,7 +20,6 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.web.PagedResourcesAssembler
 import org.springframework.hateoas.CollectionModel
 import org.springframework.stereotype.Service
-import java.util.stream.Collectors
 
 @Service
 class EksternResultatService(
@@ -234,17 +234,18 @@ class EksternResultatService(
       size: Int,
       pageNumber: Int
   ): CollectionModel<TestresultatDetaljertEkstern> {
-    val pageRequest = PageRequest.of(pageNumber , size)
+    val pageRequest = PageRequest.of(pageNumber, size)
     val results =
-        getResultatListKontrollAsEksterntResultat(rapportId, loeysingId, testregelId, size, pageNumber)
+        getResultatListKontrollAsEksterntResultat(
+            rapportId, loeysingId, testregelId, size, pageNumber)
 
-    val total = eksternResultatDAO.getTalBrotForKontrollLoeysingTestregel(
-        rapportId,
-        loeysingId,
-        testregelId).getOrThrow()
+    val total =
+        eksternResultatDAO
+            .getTalBrotForKontrollLoeysingTestregel(rapportId, loeysingId, testregelId)
+            .getOrThrow()
 
-      val page = PageImpl(results, pageRequest, total.toLong())
-      return pagedResourcesAssembler.toModel(page,testresultatEksternAssembler)
+    val page = PageImpl(results, pageRequest, total.toLong())
+    return pagedResourcesAssembler.toModel(page, testresultatEksternAssembler)
   }
 
   @Observed(

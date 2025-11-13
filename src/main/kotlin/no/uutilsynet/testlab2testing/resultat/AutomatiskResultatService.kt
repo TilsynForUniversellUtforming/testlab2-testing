@@ -67,11 +67,11 @@ class AutomatiskResultatService(
       size: Int,
       pageNumber: Int
   ): List<TestresultatDetaljert> {
-      print("size: $size, pageNumber: $pageNumber")
+    print("size: $size, pageNumber: $pageNumber")
 
-      val resultat =
+    val resultat =
         testresultatDAO.listBy(
-            maalingId = maalingId, loeysingId = loeysingId, testregelId, size, (pageNumber)*size)
+            maalingId = maalingId, loeysingId = loeysingId, testregelId, size, (pageNumber) * size)
     return testresultatDBConverter.mapTestresults(resultat, maalingId, loeysingId)
   }
 

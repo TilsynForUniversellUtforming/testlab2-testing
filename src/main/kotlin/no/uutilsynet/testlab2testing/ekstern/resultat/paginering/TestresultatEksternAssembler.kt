@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 @Component
 class TestresultatEksternAssembler :
     RepresentationModelAssembler<TestresultatDetaljertEkstern, TestresultatDetaljertEkstern> {
-    override fun toModel(entity: TestresultatDetaljertEkstern): TestresultatDetaljertEkstern {
-        return entity
-    }
+  override fun toModel(entity: TestresultatDetaljertEkstern): TestresultatDetaljertEkstern {
+    return entity
+  }
 }
