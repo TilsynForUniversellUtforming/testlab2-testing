@@ -187,10 +187,10 @@ class EksternResultatService(
   private fun testresultatToDetaljertEkstern(
       kontrollLoeysing: KontrollIdLoeysingId,
       testregel: Testregel,
-      limit: Int,
-      offset: Int
+      size: Int,
+      pageNumber: Int
   ) =
-      getResultatPrTestregel(kontrollLoeysing, testregel, limit, offset)
+      getResultatPrTestregel(kontrollLoeysing, testregel, size, pageNumber)
           .parallelStream()
           .map { it.toTestresultatDetaljertEkstern(testregel) }
           .collect(Collectors.toList())
@@ -202,11 +202,11 @@ class EksternResultatService(
   private fun getResultatPrTestregel(
       kontrollLoeysing: KontrollIdLoeysingId,
       testregel: Testregel,
-      limit: Int,
-      offset: Int
+      size: Int,
+      pageNumber: Int
   ) =
       resultatService.getResultatListKontroll(
-          kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, testregel.id, limit, offset)
+          kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, testregel.id, size, pageNumber)
 
   private fun getKontrollIdLoeysingIdsForRapportId(rapportId: String): List<KontrollIdLoeysingId> {
     return eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId)).getOrThrow()
@@ -216,13 +216,13 @@ class EksternResultatService(
       rapportId: String,
       loeysingId: Int,
       testregelId: Int,
-      limit: Int,
-      offset: Int
+      size: Int,
+      pageNumber: Int
   ): List<TestresultatDetaljertEkstern> {
     return getKontrollLoeysing(rapportId, loeysingId)
         .mapCatching {
           val testregel = getTestregelFromTestregelId(testregelId)
-          testresultatToDetaljertEkstern(it, testregel, limit, offset)
+          testresultatToDetaljertEkstern(it, testregel, size, pageNumber)
         }
         .getOrThrow()
   }
@@ -231,14 +231,19 @@ class EksternResultatService(
       rapportId: String,
       loeysingId: Int,
       testregelId: Int,
-      limit: Int,
-      offset: Int
+      size: Int,
+      pageNumber: Int
   ): CollectionModel<TestresultatDetaljertEkstern> {
-    val pageRequest = PageRequest.of(offset / limit, limit)
+    val pageRequest = PageRequest.of(pageNumber , size)
     val results =
-        getResultatListKontrollAsEksterntResultat(rapportId, loeysingId, testregelId, limit, offset)
+        getResultatListKontrollAsEksterntResultat(rapportId, loeysingId, testregelId, size, pageNumber)
 
-      val page = PageImpl(results, pageRequest, results.size.toLong())
+    val total = eksternResultatDAO.getTalBrotForKontrollLoeysingTestregel(
+        rapportId,
+        loeysingId,
+        testregelId).getOrThrow()
+
+      val page = PageImpl(results, pageRequest, total.toLong())
       return pagedResourcesAssembler.toModel(page,testresultatEksternAssembler)
   }
 

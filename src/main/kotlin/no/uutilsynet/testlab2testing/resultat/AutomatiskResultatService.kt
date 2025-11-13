@@ -35,10 +35,10 @@ class AutomatiskResultatService(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
-      limit: Int,
-      offset: Int
+      size: Int,
+      pageNumber: Int
   ): List<TestresultatDetaljert> {
-    return getDetaljertResultatForKontroll(kontrollId, loeysingId, testregelId, limit, offset)
+    return getDetaljertResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
   }
 
   override fun getResultatForKontroll(
@@ -53,23 +53,25 @@ class AutomatiskResultatService(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
-      limit: Int,
-      offset: Int
+      size: Int,
+      pageNumber: Int
   ): List<TestresultatDetaljert> {
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)
-    return getAutomatiskTestresultatMaaling(maalingId, loeysingId, testregelId, limit, offset)
+    return getAutomatiskTestresultatMaaling(maalingId, loeysingId, testregelId, size, pageNumber)
   }
 
   private fun getAutomatiskTestresultatMaaling(
       maalingId: Int,
       loeysingId: Int,
       testregelId: Int,
-      limit: Int,
-      offset: Int
+      size: Int,
+      pageNumber: Int
   ): List<TestresultatDetaljert> {
-    val resultat =
+      print("size: $size, pageNumber: $pageNumber")
+
+      val resultat =
         testresultatDAO.listBy(
-            maalingId = maalingId, loeysingId = loeysingId, testregelId, limit, offset)
+            maalingId = maalingId, loeysingId = loeysingId, testregelId, size, (pageNumber)*size)
     return testresultatDBConverter.mapTestresults(resultat, maalingId, loeysingId)
   }
 

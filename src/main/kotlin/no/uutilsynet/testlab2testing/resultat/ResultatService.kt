@@ -248,11 +248,11 @@ class ResultatService(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
-      limit: Int = 20,
-      offset: Int = 0,
+      size: Int = 20,
+      pageNumber: Int = 0,
   ): List<TestresultatDetaljert> {
     return getResultService(kontrollId)
-        .getResultatForKontroll(kontrollId, loeysingId, testregelId, limit, offset)
+        .getResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
   }
 
   private fun getTypeKontroll(kontrollId: Int): Kontrolltype {

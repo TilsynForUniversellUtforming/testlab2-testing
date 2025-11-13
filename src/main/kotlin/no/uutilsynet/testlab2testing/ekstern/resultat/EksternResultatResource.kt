@@ -107,14 +107,14 @@ class EksternResultatResource(
       @PathVariable rapportId: String,
       @PathVariable loeysingId: Int,
       @PathVariable testregelId: Int,
-      @RequestParam limit: Int = 20,
-      @RequestParam offset: Int = 0
+      @RequestParam size: Int = 20,
+      @RequestParam page: Int = 0
   ): ResponseEntity<out Any> {
 
     return kotlin
         .runCatching {
           eksternResultatService.getDetaljerResultatPaged(
-              rapportId, loeysingId, testregelId, limit, offset)
+              rapportId, loeysingId, testregelId, size, page)
         }
         .fold(
             onSuccess = { results -> ResponseEntity.ok(results) },

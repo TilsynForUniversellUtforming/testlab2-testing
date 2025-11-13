@@ -45,8 +45,8 @@ sealed class KontrollResultatService(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
-      limit: Int,
-      offset: Int,
+      size: Int,
+      pageNumber: Int,
   ): List<TestresultatDetaljert>
 
   abstract fun getAlleResultat(): List<ResultatLoeysingDTO>
