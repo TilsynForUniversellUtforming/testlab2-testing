@@ -2,8 +2,8 @@ package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import io.micrometer.observation.annotation.Observed
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
-import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
+import no.uutilsynet.testlab2testing.ekstern.resultat.model.*
+import no.uutilsynet.testlab2testing.ekstern.resultat.paginering.TestresultatEksternAssembler
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Verksemd
@@ -14,19 +14,22 @@ import no.uutilsynet.testlab2testing.resultat.ResultatService
 import no.uutilsynet.testlab2testing.testregel.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.web.PagedResourcesAssembler
+import org.springframework.hateoas.CollectionModel
 import org.springframework.stereotype.Service
 import java.util.stream.Collectors
 
 @Service
 class EksternResultatService(
-    @Autowired val eksternResultatDAO: EksternResultatDAO,
-    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
-    @Autowired val resultatService: ResultatService,
-    @Autowired val kontrollDAO: KontrollDAO,
-    @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
-    @Autowired val testregelService: TestregelService,
-    @Autowired val logMessages: LogMessages
+    private val eksternResultatDAO: EksternResultatDAO,
+    private val loeysingsRegisterClient: LoeysingsRegisterClient,
+    private val resultatService: ResultatService,
+    private val testregelService: TestregelService,
+    private val logMessages: LogMessages,
+    private val testresultatEksternAssembler: TestresultatEksternAssembler,
+    private val pagedResourcesAssembler: PagedResourcesAssembler<TestresultatDetaljertEkstern>
 ) {
 
   private val logger = LoggerFactory.getLogger(EksternResultatService::class.java)
@@ -98,15 +101,16 @@ class EksternResultatService(
     return testList
   }
 
-    fun getTestarForLoeysing(loeysingIds:List<Int>): List<TestListElementDB> {
-        return eksternResultatDAO.getTestsForLoeysingIds(loeysingIds)
-    }
+  fun getTestarForLoeysing(loeysingIds: List<Int>): List<TestListElementDB> {
+    return eksternResultatDAO.getTestsForLoeysingIds(loeysingIds)
+  }
 
-    fun getTestEksternForRapportLoeysing(rapportId: String, loeysingId: Int): TestEkstern {
-        val kontroll = getKontrollLoeysing(rapportId, loeysingId).getOrThrow()
-        val testList = getTestarForLoeysing(listOf(loeysingId)).filter { it.kontrollId == kontroll.kontrollId }
-        return testList.toTestEksternList().first()
-    }
+  fun getTestEksternForRapportLoeysing(rapportId: String, loeysingId: Int): TestEkstern {
+    val kontroll = getKontrollLoeysing(rapportId, loeysingId).getOrThrow()
+    val testList =
+        getTestarForLoeysing(listOf(loeysingId)).filter { it.kontrollId == kontroll.kontrollId }
+    return testList.toTestEksternList().first()
+  }
 
   private fun getLoysingarForOrgnr(orgnr: String): List<Loeysing> {
     val loeysingList = loeysingsRegisterClient.searchLoeysingByVerksemd(orgnr).getOrThrow()
@@ -186,7 +190,7 @@ class EksternResultatService(
       limit: Int,
       offset: Int
   ) =
-      getResultatPrTestregel(kontrollLoeysing, testregel,limit,offset)
+      getResultatPrTestregel(kontrollLoeysing, testregel, limit, offset)
           .parallelStream()
           .map { it.toTestresultatDetaljertEkstern(testregel) }
           .collect(Collectors.toList())
@@ -202,7 +206,7 @@ class EksternResultatService(
       offset: Int
   ) =
       resultatService.getResultatListKontroll(
-          kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, testregel.id,limit,offset)
+          kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, testregel.id, limit, offset)
 
   private fun getKontrollIdLoeysingIdsForRapportId(rapportId: String): List<KontrollIdLoeysingId> {
     return eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId)).getOrThrow()
@@ -218,9 +222,24 @@ class EksternResultatService(
     return getKontrollLoeysing(rapportId, loeysingId)
         .mapCatching {
           val testregel = getTestregelFromTestregelId(testregelId)
-          testresultatToDetaljertEkstern(it, testregel,limit,offset)
+          testresultatToDetaljertEkstern(it, testregel, limit, offset)
         }
         .getOrThrow()
+  }
+
+  fun getDetaljerResultatPaged(
+      rapportId: String,
+      loeysingId: Int,
+      testregelId: Int,
+      limit: Int,
+      offset: Int
+  ): CollectionModel<TestresultatDetaljertEkstern> {
+    val pageRequest = PageRequest.of(offset / limit, limit)
+    val results =
+        getResultatListKontrollAsEksterntResultat(rapportId, loeysingId, testregelId, limit, offset)
+
+      val page = PageImpl(results, pageRequest, results.size.toLong())
+      return pagedResourcesAssembler.toModel(page,testresultatEksternAssembler)
   }
 
   @Observed(

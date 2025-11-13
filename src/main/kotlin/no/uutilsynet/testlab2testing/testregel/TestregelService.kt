@@ -84,8 +84,9 @@ class TestregelService(val testregelDAO: TestregelDAO, val kravregisterClient: K
     val kravMap = kravregisterClient.listKrav().associateBy { it.id }
 
     return testregler.map { testregel ->
-      val krav = kravMap[testregel.kravId]?:
-          throw IllegalArgumentException("Fant ikkje krav med id ${testregel.kravId}")
+      val krav =
+          kravMap[testregel.kravId]
+              ?: throw IllegalArgumentException("Fant ikkje krav med id ${testregel.kravId}")
       TestregelKrav(testregel, krav)
     }
   }

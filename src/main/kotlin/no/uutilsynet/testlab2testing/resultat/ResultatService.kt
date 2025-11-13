@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import io.micrometer.observation.annotation.Observed
+import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
@@ -14,7 +15,6 @@ import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
-import java.time.LocalDate
 
 @Component
 class ResultatService(
@@ -248,10 +248,11 @@ class ResultatService(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
-      limit: Int=20,
-      offset: Int=0,
+      limit: Int = 20,
+      offset: Int = 0,
   ): List<TestresultatDetaljert> {
-    return getResultService(kontrollId).getResultatForKontroll(kontrollId, loeysingId, testregelId,limit,offset)
+    return getResultService(kontrollId)
+        .getResultatForKontroll(kontrollId, loeysingId, testregelId, limit, offset)
   }
 
   private fun getTypeKontroll(kontrollId: Int): Kontrolltype {

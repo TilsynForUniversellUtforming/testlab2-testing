@@ -1,6 +1,9 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import io.micrometer.observation.annotation.Observed
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.stream.Collectors
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
@@ -15,9 +18,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.util.stream.Collectors
 
 @Service
 class AutomatiskResultatService(
@@ -28,10 +28,9 @@ class AutomatiskResultatService(
     kravregisterClient: KravregisterClient,
     val testresultatDBConverter: TestresultatDBConverter,
     val testresultatDAO: TestresultatDAO
-
 ) : KontrollResultatService(resultatDAO, kravregisterClient, testregelService) {
 
-  @Observed(name= "AutomatiskResultatService.getResultatForKontroll")
+  @Observed(name = "AutomatiskResultatService.getResultatForKontroll")
   override fun getResultatForKontroll(
       kontrollId: Int,
       loeysingId: Int,
@@ -39,7 +38,7 @@ class AutomatiskResultatService(
       limit: Int,
       offset: Int
   ): List<TestresultatDetaljert> {
-    return getDetaljertResultatForKontroll(kontrollId,loeysingId,testregelId,limit,offset)
+    return getDetaljertResultatForKontroll(kontrollId, loeysingId, testregelId, limit, offset)
   }
 
   override fun getResultatForKontroll(
@@ -50,34 +49,38 @@ class AutomatiskResultatService(
     return getAutomatiskTestresultatMaaling(maalingId, loeysingId)
   }
 
-    fun getDetaljertResultatForKontroll(
-        kontrollId: Int,
-        loeysingId: Int,
-        testregelId: Int,
-        limit: Int,
-        offset: Int
-    ): List<TestresultatDetaljert> {
-      val maalingId = maalingService.getMaalingForKontroll(kontrollId)
-      return getAutomatiskTestresultatMaaling(maalingId, loeysingId,testregelId,limit,offset)
-    }
+  fun getDetaljertResultatForKontroll(
+      kontrollId: Int,
+      loeysingId: Int,
+      testregelId: Int,
+      limit: Int,
+      offset: Int
+  ): List<TestresultatDetaljert> {
+    val maalingId = maalingService.getMaalingForKontroll(kontrollId)
+    return getAutomatiskTestresultatMaaling(maalingId, loeysingId, testregelId, limit, offset)
+  }
 
-    private fun getAutomatiskTestresultatMaaling(
-        maalingId: Int,
-        loeysingId: Int,
-        testregelId: Int,
-        limit: Int,
-        offset: Int
-    ): List<TestresultatDetaljert> {
-        val resultat = testresultatDAO.listBy(maalingId = maalingId, loeysingId = loeysingId,testregelId,limit,offset)
-        return testresultatDBConverter.mapTestresults(resultat,maalingId,loeysingId)
-    }
+  private fun getAutomatiskTestresultatMaaling(
+      maalingId: Int,
+      loeysingId: Int,
+      testregelId: Int,
+      limit: Int,
+      offset: Int
+  ): List<TestresultatDetaljert> {
+    val resultat =
+        testresultatDAO.listBy(
+            maalingId = maalingId, loeysingId = loeysingId, testregelId, limit, offset)
+    return testresultatDBConverter.mapTestresults(resultat, maalingId, loeysingId)
+  }
 
-    @Observed(name = "AutomatiskResultatService.getAutomatiskTestresultatMaaling")
-    fun getAutomatiskTestresultatMaaling(maalingId: Int, loeysingId: Int): List<TestresultatDetaljert> {
-        val resultat = testresultatDAO.listBy(maalingId = maalingId, loeysingId = loeysingId)
-        return testresultatDBConverter.mapTestresults(resultat, maalingId, loeysingId)
-
-    }
+  @Observed(name = "AutomatiskResultatService.getAutomatiskTestresultatMaaling")
+  fun getAutomatiskTestresultatMaaling(
+      maalingId: Int,
+      loeysingId: Int
+  ): List<TestresultatDetaljert> {
+    val resultat = testresultatDAO.listBy(maalingId = maalingId, loeysingId = loeysingId)
+    return testresultatDBConverter.mapTestresults(resultat, maalingId, loeysingId)
+  }
 
   private fun getAutotesterTestresultat(maalingId: Int, loeysingId: Int?): List<TestResultat> {
     val testresultat: List<TestResultat> =
@@ -87,14 +90,12 @@ class AutomatiskResultatService(
     return testresultat
   }
 
-  @Observed(name= "AutomatiskResultatService.getResultatForMaaling")
+  @Observed(name = "AutomatiskResultatService.getResultatForMaaling")
   fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
     return getAutotesterTestresultat(maalingId, loeysingId).map {
       testresultatDetaljertMaaling(it, maalingId)
     }
   }
-
-
 
   private fun testresultatDetaljertMaaling(
       it: TestResultat,
@@ -149,42 +150,51 @@ class AutomatiskResultatService(
 @Component
 class TestresultatDBConverter(
     val testregelCache: TestregelCache,
-                                val sideutvalDAO: SideutvalDAO,
-                                val brukarService: BrukarService,){
+    val sideutvalDAO: SideutvalDAO,
+    val brukarService: BrukarService,
+) {
 
-    val logger: Logger = LoggerFactory.getLogger(TestresultatDBConverter::class.java)
+  val logger: Logger = LoggerFactory.getLogger(TestresultatDBConverter::class.java)
 
+  @Observed(name = "AutomatiskResultatService.mapTestresults")
+  fun mapTestresults(
+      list: List<TestresultatDB>,
+      maalingId: Int,
+      loeysingId: Int?
+  ): List<TestresultatDetaljert> {
+    val sideutvalCache =
+        sideutvalDAO
+            .getSideutvalForMaalingLoeysing(maalingId, loeysingId)
+            .getOrThrow()
+            .associateBy { it.id }
+    return list
+        .parallelStream()
+        .map { it.toTestresultatDetaljert(sideutvalCache) }
+        .collect(Collectors.toList())
+  }
 
-
-    @Observed(name = "AutomatiskResultatService.mapTestresults")
-    fun mapTestresults(list: List<TestresultatDB>, maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
-        val sideutvalCache = sideutvalDAO.getSideutvalForMaalingLoeysing(maalingId,loeysingId).getOrThrow().associateBy { it.id }
-        return list.parallelStream().map {  it.toTestresultatDetaljert(sideutvalCache) }.collect(Collectors.toList())
-    }
-
-    private fun TestresultatDB.toTestresultatDetaljert(sideutvalCache: Map<Int,Sideutval.Automatisk>): TestresultatDetaljert {
-        val testregel = testregelCache.getTestregelById(testregelId)
-        val elementOmtale = TestresultatDetaljert.ElementOmtale(
-            this.elmentOmtaleHtml,
-            this.elementOmtalePointer,
-            this.elementOmtaleDescription
-        )
-        return TestresultatDetaljert(
-            this.id,
-            this.loeysingId,
-            testregelId,
-            testregel.testregelId,
-            this.maalingId ?: this.testgrunnlagId ?: 0,
-            sideutvalCache[this.sideutvalId]?.url ?: throw IllegalStateException("Sideutval not found for id ${this.sideutvalId}"),
-            listOf(testregel.kravId.suksesskriterium),
-            LocalDateTime.ofInstant(this.testUtfoert, ZoneId.systemDefault()),
-            this.elementUtfall,
-            this.elementResultat,
-            elementOmtale,
-           null,
-            null,
-            null
-        )
-    }
-
+  private fun TestresultatDB.toTestresultatDetaljert(
+      sideutvalCache: Map<Int, Sideutval.Automatisk>
+  ): TestresultatDetaljert {
+    val testregel = testregelCache.getTestregelById(testregelId)
+    val elementOmtale =
+        TestresultatDetaljert.ElementOmtale(
+            this.elmentOmtaleHtml, this.elementOmtalePointer, this.elementOmtaleDescription)
+    return TestresultatDetaljert(
+        this.id,
+        this.loeysingId,
+        testregelId,
+        testregel.testregelId,
+        this.maalingId ?: this.testgrunnlagId ?: 0,
+        sideutvalCache[this.sideutvalId]?.url
+            ?: throw IllegalStateException("Sideutval not found for id ${this.sideutvalId}"),
+        listOf(testregel.kravId.suksesskriterium),
+        LocalDateTime.ofInstant(this.testUtfoert, ZoneId.systemDefault()),
+        this.elementUtfall,
+        this.elementResultat,
+        elementOmtale,
+        null,
+        null,
+        null)
+  }
 }

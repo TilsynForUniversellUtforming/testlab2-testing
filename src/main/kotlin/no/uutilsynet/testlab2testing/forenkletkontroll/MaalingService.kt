@@ -216,7 +216,7 @@ class MaalingService(
       ferdigeTestKoeyringar: List<TestkoeyringDTO.Ferdig>
   ) = autoTesterClient.fetchResultat(ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlBrot)
 
-    @Observed(name= "MaalingService.getTestresultatMaalingLoeysing")
+  @Observed(name = "MaalingService.getTestresultatMaalingLoeysing")
   fun getTestresultatMaalingLoeysing(
       maalingId: Int,
       loeysingId: Int?
@@ -228,8 +228,7 @@ class MaalingService(
     }
   }
 
-    @Observed(name= "MaalingService.getFilteredAndFerdigTestkoeyringar")
-
+  @Observed(name = "MaalingService.getFilteredAndFerdigTestkoeyringar")
   fun getFilteredAndFerdigTestkoeyringar(maalingId: Int, loeysingId: Int?) =
       getFerdigeTestkoeyringar(maalingId).filter {
         loeysingId == null || it.loeysingId == loeysingId
@@ -308,7 +307,7 @@ class MaalingService(
     return maalingDAO.getMaalingList().filter { maalingIds.contains(it.id) }
   }
 
-    @Observed(name= "MaalingService.getMaalingForKontroll")
+  @Observed(name = "MaalingService.getMaalingForKontroll")
   fun getMaalingForKontroll(kontrollId: Int): Int {
     return maalingDAO.getMaalingIdFromKontrollId(kontrollId)
         ?: throw NoSuchElementException("Fant ikkje måling for kontrollId $kontrollId")

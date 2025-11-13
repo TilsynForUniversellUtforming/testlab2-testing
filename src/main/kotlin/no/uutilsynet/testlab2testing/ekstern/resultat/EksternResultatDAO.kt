@@ -1,6 +1,8 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2testing.ekstern.resultat.model.KontrollIdLoeysingId
+import no.uutilsynet.testlab2testing.ekstern.resultat.model.TestListElementDB
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate

@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import java.time.Instant
+import no.uutilsynet.testlab2.constants.TestresultatUtfall
 
 data class TestresultatDB(
     val id: Int,
@@ -14,8 +14,8 @@ data class TestresultatDB(
     val elementUtfall: String,
     val elementResultat: TestresultatUtfall,
     val elementOmtalePointer: String,
-    val elmentOmtaleHtml:String,
-    val elementOmtaleDescription:String,
+    val elmentOmtaleHtml: String,
+    val elementOmtaleDescription: String,
     val brukarId: Int,
 )
 
@@ -29,6 +29,7 @@ data class TestresultatDBBase(
     val elementUtfall: String,
     val elementResultat: TestresultatUtfall,
     val elementOmtalePointer: String,
-    val elmentOmtaleHtml:String,
-    val elementOmtaleDescription:String,
-    val brukarId: Int,)
+    val elmentOmtaleHtml: String,
+    val elementOmtaleDescription: String,
+    val brukarId: Int,
+)
