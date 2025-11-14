@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import io.micrometer.observation.annotation.Observed
 import java.net.URI
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
@@ -71,13 +72,16 @@ class ResultatResource(
     return ResponseEntity.ok(resultatService.getKontrollLoeysingResultat(kontrollId, loeysingId))
   }
 
+  @Observed(name = "ResultatResource.getResultatListKontroll")
   @GetMapping("/kontroll/{kontrollId}/loeysing/{loeysingId}/krav/{kravId}")
   fun getResultatListKontroll(
       @PathVariable kontrollId: Int,
       @PathVariable loeysingId: Int,
-      @PathVariable kravId: Int
+      @PathVariable kravId: Int,
+      @RequestParam limit: Int,
+      @RequestParam offset: Int
   ): List<TestresultatDetaljert> {
-    return resultatService.getResultatListKontroll(kontrollId, loeysingId, kravId)
+    return resultatService.getResultatListKontroll(kontrollId, loeysingId, kravId, limit, offset)
   }
 
   @GetMapping("/tema")

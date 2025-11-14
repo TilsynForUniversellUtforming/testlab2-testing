@@ -60,8 +60,8 @@ github:
 management:
     tracing:
         sampling:
-            probability: '0.0'
-        enabled: false
+            probability: '1.0'
+        enabled: true
 
     observations:
         annotations:

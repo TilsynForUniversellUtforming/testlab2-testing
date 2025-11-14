@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import io.micrometer.observation.annotation.Observed
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
@@ -242,12 +243,16 @@ class ResultatService(
     return testregelService.getKravWcag2x(result.testregelId)
   }
 
+  @Observed(name = "resultatservice.getresultatforkontrollloeysingtestregel")
   fun getResultatListKontroll(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
+      size: Int = 20,
+      pageNumber: Int = 0,
   ): List<TestresultatDetaljert> {
-    return getResultService(kontrollId).getResultatForKontroll(kontrollId, loeysingId, testregelId)
+    return getResultService(kontrollId)
+        .getResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
   }
 
   private fun getTypeKontroll(kontrollId: Int): Kontrolltype {

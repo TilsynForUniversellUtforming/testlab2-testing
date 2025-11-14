@@ -108,7 +108,7 @@ class AzureStorage2DbService(
           elementOmtalePointer = testresultat.elementOmtale?.pointer ?: "",
           elmentOmtaleHtml = testresultat.elementOmtale?.htmlCode ?: "",
           elementOmtaleDescription = testresultat.elementOmtale?.description ?: "",
-          brukarId = 1)
+          brukarId = 0)
     } else {
       TestresultatDBBase(
           null,
