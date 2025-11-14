@@ -32,6 +32,8 @@ class ManueltResultatService(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
+      limit: Int,
+      pageNumber: Int
   ): List<TestresultatDetaljert> {
     return getFilteredAndMappedResults(kontrollId, loeysingId) {
       filterByTestregel(it.testregelId, listOf(testregelId)) && it.elementResultat != null

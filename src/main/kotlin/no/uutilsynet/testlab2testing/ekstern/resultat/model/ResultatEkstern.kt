@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.ekstern.resultat
+package no.uutilsynet.testlab2testing.ekstern.resultat.model
 
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.resultat.ResultatKrav

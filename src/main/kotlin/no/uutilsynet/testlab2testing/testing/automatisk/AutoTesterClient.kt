@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.testing.automatisk
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import io.micrometer.observation.annotation.Observed
 import java.net.URI
 import java.net.URL
 import kotlinx.coroutines.async
@@ -88,6 +89,7 @@ class AutoTesterClient(
   private fun fetchAutoTesterStatus(uri: URI) =
       restTemplate.getForObject(uri, AutoTesterStatus::class.java)
 
+  @Observed(name = "AutoTesterClient.fetchResultat")
   suspend fun fetchResultat(
       testKoeyringar: List<TestkoeyringDTO.Ferdig>,
       resultatType: ResultatUrls,

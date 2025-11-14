@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.sideutval.crawling
 
+import io.micrometer.observation.annotation.Observed
 import java.net.URI
 import java.net.URL
 import java.sql.ResultSet
@@ -8,6 +9,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.Framgang
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
@@ -111,7 +113,7 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   private fun saveCrawlresultatIkkjeStarta(
       crawlResultat: CrawlResultat.IkkjeStarta,
-      maalingId: Int
+      maalingId: Int,
   ) {
     jdbcTemplate.update(
         """
@@ -171,7 +173,7 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getCrawlResultatForMaaling(
       maalingId: Int,
-      loeysingList: List<Loeysing>
+      loeysingList: List<Loeysing>,
   ): List<CrawlResultat> {
     val loeysingar = loeysingList.associateBy { it.id }
     return jdbcTemplate.query(
@@ -267,5 +269,45 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           rs.getInt("sideutval_id") to URI(rs.getString("url")).toURL()
         }
         .toMap()
+  }
+
+  @Observed(name = "SideutvalDAO.getSideutvalForMaaling")
+  fun getSideutvalForMaalingLoeysing(
+      maalingId: Int,
+      loeysingId: Int?
+  ): Result<List<Sideutval.Automatisk>> {
+    return kotlin.runCatching {
+      jdbcTemplate
+          .query(
+              """
+    select cs.id, cs.crawlresultat_id, cs.url
+    from crawl_side cs
+    join crawlresultat cr on cr.id = cs.crawlresultat_id
+    where cr.maaling_id = :maalingId
+    and cr.loeysingid = :loeysingId
+  """
+                  .trimIndent(),
+              mapOf("maalingId" to maalingId, "loeysingId" to loeysingId),
+              DataClassRowMapper.newInstance(Sideutval.Automatisk::class.java))
+          .toList()
+    }
+  }
+
+  fun getSideutvalIdsForMaalingAndUrl(maalingId: Int, url: URL): Result<Int> {
+    return kotlin.runCatching {
+      jdbcTemplate
+          .queryForList(
+              """
+                select cs.id
+                from crawl_side cs
+                join crawlresultat cr on cr.id = cs.crawlresultat_id
+                where cr.maaling_id = :maalingId
+                and cs.url = :url
+              """
+                  .trimIndent(),
+              mapOf("maalingId" to maalingId, "url" to url.toString()),
+              Int::class.java)
+          .single()
+    }
   }
 }
