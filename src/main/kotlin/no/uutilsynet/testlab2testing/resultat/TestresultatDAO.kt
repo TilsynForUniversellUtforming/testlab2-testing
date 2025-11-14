@@ -132,7 +132,6 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       limit: Int = 20,
       offset: Int = 0
   ): List<TestresultatDB> {
-    print("limit: $limit, offset: $offset")
     val sql =
         "SELECT * FROM testresultatv2 WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id=:testregelId and element_resultat= 'brot' limit :limit offset :offset"
     val params =

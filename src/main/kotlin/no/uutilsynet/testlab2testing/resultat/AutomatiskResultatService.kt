@@ -4,7 +4,6 @@ import io.micrometer.observation.annotation.Observed
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.stream.Collectors
-import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.krav.KravregisterClient
@@ -27,7 +26,8 @@ class AutomatiskResultatService(
     testregelService: TestregelService,
     kravregisterClient: KravregisterClient,
     val testresultatDBConverter: TestresultatDBConverter,
-    val testresultatDAO: TestresultatDAO
+    val testresultatDAO: TestresultatDAO,
+    val testregelCache: TestregelCache,
 ) : KontrollResultatService(resultatDAO, kravregisterClient, testregelService) {
 
   @Observed(name = "AutomatiskResultatService.getResultatForKontroll")
@@ -67,8 +67,6 @@ class AutomatiskResultatService(
       size: Int,
       pageNumber: Int
   ): List<TestresultatDetaljert> {
-    print("size: $size, pageNumber: $pageNumber")
-
     val resultat =
         testresultatDAO.listBy(
             maalingId = maalingId, loeysingId = loeysingId, testregelId, size, (pageNumber) * size)
@@ -103,7 +101,7 @@ class AutomatiskResultatService(
       it: TestResultat,
       maalingId: Int
   ): TestresultatDetaljert {
-    val testregel = getTestregelIdFromSchema(it.testregelId)
+    val testregel = testregelCache.getTestregelByKey(it.testregelId)
     return TestresultatDetaljert(
         null,
         it.loeysingId,
@@ -153,7 +151,6 @@ class AutomatiskResultatService(
 class TestresultatDBConverter(
     val testregelCache: TestregelCache,
     val sideutvalDAO: SideutvalDAO,
-    val brukarService: BrukarService,
 ) {
 
   val logger: Logger = LoggerFactory.getLogger(TestresultatDBConverter::class.java)
