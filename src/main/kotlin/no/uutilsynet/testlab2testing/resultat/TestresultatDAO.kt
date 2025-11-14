@@ -18,23 +18,23 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         maalingId = rs.getInt("maaling_id"),
         testregelId = rs.getInt("testregel_id"),
         loeysingId = rs.getInt("loeysing_id"),
-        sideutvalId = rs.getInt("sideutval_id"),
-        testUtfoert = rs.getTimestamp("test_utfoert").toInstant(),
+        sideutvalId = rs.getInt("crawl_side_id"),
+        testUtfoert = rs.getTimestamp("test_vart_utfoert").toInstant(),
         elementUtfall = rs.getString("element_utfall"),
         elementResultat = TestresultatUtfall.valueOf(rs.getString("element_resultat")),
         elementOmtalePointer = rs.getString("element_omtale_pointer"),
-        elmentOmtaleHtml = rs.getString("elment_omtale_html"),
-        elementOmtaleDescription = rs.getString("element_omtale_description"),
-        brukarId = rs.getInt("brukarid"))
+        elmentOmtaleHtml = rs.getString("element_omtale_html"),
+        elementOmtaleDescription = rs.getString("element_omtale"),
+        brukarId = rs.getInt("brukar_id"))
   }
 
   fun create(testresultat: TestresultatDBBase): Int {
     val sql =
         """
-            INSERT INTO testresultatv2 (
+            INSERT INTO testresultat (
             testgrunnlag_id, maaling_id,
-                testregel_id, loeysing_id, sideutval_id, test_utfoert, element_utfall, element_resultat,
-                element_omtale_pointer, elment_omtale_html, element_omtale_description, brukarid
+                testregel_id, loeysing_id, crawl_side_id, test_vart_utfoert, element_utfall, element_resultat,
+                element_omtale_pointer, element_omtale_html, element_omtale, brukar_id
             ) VALUES (
             :testgrunnlagId, :maalingId,
                 :testregelId, :loeysingId, :sideutvalId, :testUtfoert, :elementUtfall, :elementResultat,
@@ -61,7 +61,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun read(id: Int): TestresultatDB? {
-    val sql = "SELECT * FROM testresultatv2 WHERE id = :id"
+    val sql = "SELECT * FROM testresultat WHERE id = :id"
     val params = MapSqlParameterSource().addValue("id", id)
     return jdbcTemplate.query(sql, params, rowMapper).firstOrNull()
   }
@@ -69,20 +69,20 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun update(testresultat: TestresultatDB): Int {
     val sql =
         """
-            UPDATE testresultatv2
+            UPDATE testresultat
             SET
              testgrunnlag_id = :testgrunnlagId,
              maaling_id = :maalingId,
              testregel_id = :testregelId,
                 loeysing_id = :loeysingId,
                 sideutval_id = :sideutvalId,
-                test_utfoert = :testUtfoert,
+                test_vart_utfoert = :testUtfoert,
                 element_utfall = :elementUtfall,
                 element_resultat = :elementResultat,
                 element_omtale_pointer = :elementOmtalePointer,
-                elment_omtale_html = :elmentOmtaleHtml,
-                element_omtale_description = :elementOmtaleDescription,
-                brukarid = :brukarid
+                element_omtale_html = :elmentOmtaleHtml,
+                element_omtale = :elementOmtaleDescription,
+                brukar_id = :brukarid
             WHERE id = :id
         """
             .trimIndent()
@@ -113,7 +113,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Observed(name = "List<TestresultatDB> listBy maalingId and loeysingId brot")
   fun listBy(maalingId: Int, loeysingId: Int?): List<TestresultatDB> {
     val sql =
-        "SELECT * FROM testresultatv2 WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and element_resultat= 'brot'"
+        "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and element_resultat= 'brot'"
     val params =
         MapSqlParameterSource()
             .addValue(
@@ -133,7 +133,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       offset: Int = 0
   ): List<TestresultatDB> {
     val sql =
-        "SELECT * FROM testresultatv2 WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id=:testregelId and element_resultat= 'brot' limit :limit offset :offset"
+        "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id=:testregelId and element_resultat= 'brot' limit :limit offset :offset"
     val params =
         MapSqlParameterSource()
             .addValue(
@@ -146,4 +146,17 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .addValue("offset", offset)
     return jdbcTemplate.query(sql, params, rowMapper)
   }
+
+    fun hasResultInDB(maalingId: Int, loeysingId: Int): Boolean {
+        val sql = "SELECT COUNT(*) FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId"
+        val params =
+            MapSqlParameterSource()
+                .addValue(
+                    "maalingId",
+                    maalingId,
+                )
+                .addValue("loeysingId", loeysingId)
+        val count = jdbcTemplate.queryForObject(sql, params, Int::class.java) ?: 0
+        return count > 0
+    }
 }
