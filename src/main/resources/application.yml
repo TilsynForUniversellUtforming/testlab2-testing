@@ -65,7 +65,7 @@ management:
 
     observations:
         annotations:
-            enabled: true
+            enabled: false
     otlp:
         tracing:
             endpoint: http://localhost:4318/v1/traces
