@@ -38,7 +38,14 @@ class AutomatiskResultatService(
       size: Int,
       pageNumber: Int
   ): List<TestresultatDetaljert> {
-    return getDetaljertResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
+      val maalingId = maalingService.getMaalingForKontroll(kontrollId)
+      return if(testresultatDAO.hasResultInDB(maalingId, loeysingId)){
+          getDetaljertResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
+      } else {
+          getResultatForKontroll(kontrollId, loeysingId).filter {
+              filterByTestregel(it.testregelId, listOf(testregelId))
+          }
+      }
   }
 
   override fun getResultatForKontroll(
@@ -46,7 +53,11 @@ class AutomatiskResultatService(
       loeysingId: Int
   ): List<TestresultatDetaljert> {
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)
-    return getAutomatiskTestresultatMaaling(maalingId, loeysingId)
+      return if(testresultatDAO.hasResultInDB(maalingId, loeysingId)){
+          getAutomatiskTestresultatMaaling(maalingId, loeysingId)
+      } else {
+          getResultatForMaaling(maalingId, loeysingId)
+      }
   }
 
   fun getDetaljertResultatForKontroll(
