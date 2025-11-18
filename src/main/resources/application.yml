@@ -61,11 +61,11 @@ management:
     tracing:
         sampling:
             probability: '1.0'
-        enabled: true
+        enabled: false
 
     observations:
         annotations:
-            enabled: false
+            enabled: true
     otlp:
         tracing:
             endpoint: http://localhost:4318/v1/traces
