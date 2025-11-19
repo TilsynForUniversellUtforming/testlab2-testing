@@ -240,7 +240,7 @@ class EksternResultatService(
             rapportId, loeysingId, testregelId, size, pageNumber)
 
     val total =
-        eksternResultatDAO
+        resultatService
             .getTalBrotForKontrollLoeysingTestregel(rapportId, loeysingId, testregelId)
             .getOrThrow()
 

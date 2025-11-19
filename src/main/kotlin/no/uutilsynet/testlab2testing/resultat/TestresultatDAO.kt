@@ -105,7 +105,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun delete(id: Int): Int {
-    val sql = "DELETE FROM testresultatv2 WHERE id = :id"
+    val sql = "DELETE FROM testresultat WHERE id = :id"
     val params = MapSqlParameterSource().addValue("id", id)
     return jdbcTemplate.update(sql, params)
   }
@@ -158,5 +158,22 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 .addValue("loeysingId", loeysingId)
         val count = jdbcTemplate.queryForObject(sql, params, Int::class.java) ?: 0
         return count > 0
+    }
+
+    fun getTalBrotForKontrollLoeysingTestregel(
+        rapportId: String,
+        loeysingId: Int,
+        testregelId: Int
+    ): Result<Int> {
+        return runCatching {
+            jdbcTemplate.queryForObject(
+                """select count(*) from testresultat tr
+                    join testregel tg on tg.id=tr.testregel_id
+                    join rapport r on r.maaling_id=tr.maaling_id and r.loeysing_id=tr.loeysing_id
+                    where r.id_ekstern=:rapportId and r.loeysing_id=:loeysingId and tg.id=:testregelId and tr.element_resultat = 'brot'"""
+                    .trimIndent(),
+                mapOf("rapportId" to rapportId, "loeysingId" to loeysingId, "testregelId" to testregelId),
+                Int::class.java) as Int
+        }
     }
 }

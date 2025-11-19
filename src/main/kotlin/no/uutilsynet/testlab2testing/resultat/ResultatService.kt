@@ -26,6 +26,7 @@ class ResultatService(
     val manueltResultatService: ManueltResultatService,
     val testregelService: TestregelService,
     val kravregisterClient: KravregisterClient,
+    val testresultatDAO: TestresultatDAO
 ) {
 
   val logger = LoggerFactory.getLogger(ResultatService::class.java)
@@ -389,4 +390,8 @@ class ResultatService(
 
   private fun talTestaElement(result: List<ResultatLoeysing>) =
       result.sumOf { it.talElementBrot } + result.sumOf { it.talElementSamsvar }
+
+    fun getTalBrotForKontrollLoeysingTestregel(rapportId: String, loeysingId: Int, testregelId: Int): Result<Int> {
+        return testresultatDAO.getTalBrotForKontrollLoeysingTestregel(rapportId, loeysingId, testregelId)
+    }
 }
