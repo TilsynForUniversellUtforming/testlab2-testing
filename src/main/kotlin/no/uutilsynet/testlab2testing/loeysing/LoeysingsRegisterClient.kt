@@ -113,19 +113,23 @@ class LoeysingsRegisterClient(
     val unique = idList.toSet().toList()
 
     return runCatching {
-      val uri =
-          UriComponentsBuilder.fromUriString(properties.host)
-              .pathSegment("v1", "loeysing", "expanded")
-              .queryParam("ids", unique.joinToString(","))
-              .queryParam("atTime", Instant.now(clockProvider.clock))
-              .build()
-              .toUri()
-      val response =
-          restTemplate.getForObject(uri, Array<Loeysing.Expanded>::class.java)?.toList()
-              ?: throw RuntimeException(
-                  "loeysingsregisteret returnerte null for id-ane ${unique.joinToString(",")}")
+        if (idList.isEmpty()) {emptyList()}
+        else {
+            val uri =
+                UriComponentsBuilder.fromUriString(properties.host)
+                    .pathSegment("v1", "loeysing", "expanded")
+                    .queryParam("ids", unique.joinToString(","))
+                    .queryParam("atTime", Instant.now(clockProvider.clock))
+                    .build()
+                    .toUri()
+            val response =
+                restTemplate.getForObject(uri, Array<Loeysing.Expanded>::class.java)?.toList()
+                    ?: throw RuntimeException(
+                        "loeysingsregisteret returnerte null for id-ane ${unique.joinToString(",")}"
+                    )
 
-      response
+            response
+        }
     }
   }
 
