@@ -143,12 +143,25 @@ class MaalingService(
     val navn = validateNamn(this.navn).getOrThrow()
     this.crawlParameters?.validateParameters()
 
-    val maaling = maalingDAO.getMaaling(this.id)
-    return when (maaling) {
-      is Maaling.Planlegging -> {
-        val loeysingList = getLoeysingForMaaling(maaling)
 
-        val testregelList = getTestreglarForMaaling(maaling)
+      return when (val maaling = maalingDAO.getMaaling(this.id)) {
+      is Maaling.Planlegging -> {
+          val loeysingList =
+              this.loeysingIdList
+                  ?.let { idList ->
+                      loeysingsRegisterClient.getMany(idList) }
+                  ?.getOrThrow()
+                  ?: emptyList<Loeysing>().also {
+                      logger.warn("Måling ${maaling.id} har ikkje løysingar")
+                  }
+
+          val testregelList =
+              this.testregelIdList?.let { idList ->
+                  testregelService.getTestregelList().filter { idList.contains(it.id) }
+              }
+                  ?: emptyList<Testregel>().also {
+                      logger.warn("Måling ${maaling.id} har ikkje testreglar")
+                  }
 
         maaling.copy(
             navn = navn,
@@ -163,17 +176,7 @@ class MaalingService(
     }
   }
 
-  private fun EditMaalingDTO.getTestreglarForMaaling(maaling: Maaling): List<Testregel> {
-    return this.testregelIdList?.let { idList -> testregelService.getTestregeListFromIds(idList) }
-        ?: emptyList<Testregel>().also { logger.warn("Måling ${maaling.id} har ikkje testreglar") }
-  }
-
-  private fun EditMaalingDTO.getLoeysingForMaaling(maaling: Maaling): List<Loeysing> {
-    return this.loeysingIdList?.let { idList -> getLoeysingarForMaaling(idList, maaling.id) }
-        ?: emptyList<Loeysing>().also { logger.warn("Måling ${maaling.id} har ikkje løysingar") }
-  }
-
-  private fun getLoeysingarForMaaling(
+    private fun getLoeysingarForMaaling(
       idList: List<Int>,
       maalingId: Int,
   ): List<Loeysing> {
