@@ -6,7 +6,7 @@ import kotlinx.coroutines.*
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
-import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.springframework.stereotype.Service
 
 @Service

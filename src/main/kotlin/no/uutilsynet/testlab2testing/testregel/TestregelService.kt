@@ -1,12 +1,18 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import io.micrometer.observation.annotation.Observed
-import no.uutilsynet.testlab2testing.krav.KravWcag2x
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
+import no.uutilsynet.testlab2testing.testregel.model.Tema
+import no.uutilsynet.testlab2testing.testregel.model.Testobjekt
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
+import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import org.springframework.stereotype.Service
 
 @Service
-class TestregelService(val testregelDAO: TestregelDAO, val kravregisterClient: KravregisterClient) {
+class TestregelService(private val testregelDAO: TestregelDAO, private val kravregisterClient: KravregisterClient) {
 
   fun getKravWcag2x(testregelId: Int): KravWcag2x {
     val krav = getTestregel(testregelId).kravId.let { kravregisterClient.getWcagKrav(it) }
@@ -87,17 +93,10 @@ class TestregelService(val testregelDAO: TestregelDAO, val kravregisterClient: K
       val krav =
           kravMap[testregel.kravId]
               ?: throw IllegalArgumentException("Fant ikkje krav med id ${testregel.kravId}")
-      TestregelKrav(testregel, krav)
+        TestregelKrav(testregel, krav)
     }
   }
 
-  fun getTestregelKrav(testregelId: Int): TestregelKrav {
-    val testregel =
-        testregelDAO.getTestregel(testregelId)
-            ?: throw IllegalArgumentException("Fant ikkje testregel med id $testregelId")
-
-    val krav = kravregisterClient.getWcagKrav(testregel.kravId)
-
-    return TestregelKrav(testregel, krav)
-  }
+    fun getTestregelList(testregelIdList: List<Int>): List<Testregel> {
+    return testregelDAO.getMany(testregelIdList)}
 }

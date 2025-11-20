@@ -7,8 +7,8 @@ import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
-import no.uutilsynet.testlab2testing.krav.KravWcag2x
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelService

@@ -5,7 +5,7 @@ import no.uutilsynet.testlab2.constants.TestregelInnholdstype
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestregelStatus
 import no.uutilsynet.testlab2testing.common.TestlabLocale
-import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName

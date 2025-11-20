@@ -6,9 +6,9 @@ import java.time.ZoneId
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component

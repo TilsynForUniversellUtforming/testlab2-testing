@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.testregel
+package no.uutilsynet.testlab2testing.testregel.model
 
 import no.uutilsynet.testlab2.constants.TestregelInnholdstype
 import no.uutilsynet.testlab2.constants.TestregelModus

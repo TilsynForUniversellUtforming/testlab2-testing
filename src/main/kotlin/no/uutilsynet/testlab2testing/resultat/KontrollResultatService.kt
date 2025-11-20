@@ -2,9 +2,9 @@ package no.uutilsynet.testlab2testing.resultat
 
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.resultat.ResultatService.LoysingList
-import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 
 sealed class KontrollResultatService(

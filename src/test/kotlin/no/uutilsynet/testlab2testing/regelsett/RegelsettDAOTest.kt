@@ -17,7 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
+class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO, @Autowired val regelsettService: RegelsettService) {
 
   @AfterAll
   fun cleanup() {
@@ -29,7 +29,7 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
   @DisplayName("Skal kunne opprette et regelsett")
   fun createRegelsett() {
     val id = assertDoesNotThrow { createTestRegelsett() }
-    val regelsett = regelsettDAO.getRegelsettResponse(id)
+    val regelsett = regelsettService.getRegelsettResponse(id)
     assertThat(regelsett).isNotNull
   }
 
@@ -37,7 +37,7 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
   @DisplayName("Skal kunne hente regelsett")
   fun getRegelsett() {
     val id = createTestRegelsett()
-    val regelsett = regelsettDAO.getRegelsett(id)
+    val regelsett = regelsettService.getRegelsett(id)
     val expected =
         Regelsett(id, regelsettName, regelsettModus, regelsettStandard, regelsettTestregelList)
 
@@ -75,7 +75,7 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
   @DisplayName("Skal kunne hente liste med aktive regelsett")
   fun getRegelsettListWithTestreglar() {
     val (id1, id2) = Pair(createTestRegelsett(), createTestRegelsett())
-    val regelsettList = regelsettDAO.getRegelsettTestreglarList(false)
+    val regelsettList = regelsettService.getRegelsettTestreglarList(false)
 
     assertThat(regelsettList).isNotEmpty
 
@@ -109,7 +109,7 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
   fun updateRegelsettName() {
     val nameBefore = "${regelsettName}_1"
     val id = createTestRegelsett(namn = nameBefore)
-    val regelsettBefore = regelsettDAO.getRegelsett(id)
+    val regelsettBefore = regelsettService.getRegelsett(id)
 
     val expectedBefore =
         Regelsett(id, nameBefore, regelsettModus, regelsettStandard, regelsettTestregelList)
@@ -127,7 +127,7 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
 
     val expectedAfter =
         Regelsett(id, regelsettName, regelsettModus, regelsettStandard, regelsettTestregelList)
-    val regelsettAfter = regelsettDAO.getRegelsett(id)
+    val regelsettAfter = regelsettService.getRegelsett(id)
 
     compareRegelsett(regelsettAfter, expectedAfter)
   }
@@ -137,7 +137,7 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
   fun updateRegelsettStandard() {
     val standardBefore = true
     val id = createTestRegelsett(standard = standardBefore)
-    val regelsettBefore = regelsettDAO.getRegelsett(id)
+    val regelsettBefore = regelsettService.getRegelsett(id)
 
     val expectedBefore =
         Regelsett(id, regelsettName, regelsettModus, standardBefore, regelsettTestregelList)
@@ -155,7 +155,7 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
 
     val expectedAfter =
         Regelsett(id, regelsettName, regelsettModus, regelsettStandard, regelsettTestregelList)
-    val regelsettAfter = regelsettDAO.getRegelsett(id)
+    val regelsettAfter = regelsettService.getRegelsett(id)
 
     compareRegelsett(regelsettAfter, expectedAfter)
   }
@@ -165,7 +165,7 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
   fun updateRegelsettTestregel() {
     val testregelListBefore = listOf(regelsettTestregelList[0])
     val id = createTestRegelsett(testregelIdList = testregelListBefore.map { it.id })
-    val regelsettBefore = regelsettDAO.getRegelsett(id)
+    val regelsettBefore = regelsettService.getRegelsett(id)
 
     val expectedBefore =
         Regelsett(id, regelsettName, regelsettModus, regelsettStandard, testregelListBefore)
@@ -183,7 +183,7 @@ class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO) {
 
     val expectedAfter =
         Regelsett(id, regelsettName, regelsettModus, regelsettStandard, regelsettTestregelList)
-    val regelsettAfter = regelsettDAO.getRegelsett(id)
+    val regelsettAfter = regelsettService.getRegelsett(id)
 
     compareRegelsett(regelsettAfter, expectedAfter)
   }

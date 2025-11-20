@@ -147,6 +147,28 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return jdbcTemplate.query(sql, params, rowMapper)
   }
 
+    fun listBy(
+        maalingId: Int,
+        loeysingId: Int?,
+        testregelIds: List<Int>,
+        limit: Int = 20,
+        offset: Int = 0
+    ): List<TestresultatDB> {
+        val sql =
+            "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id in (:testregelIds) and element_resultat= 'brot' limit :limit offset :offset"
+        val params =
+            MapSqlParameterSource()
+                .addValue(
+                    "maalingId",
+                    maalingId,
+                )
+                .addValue("loeysingId", loeysingId)
+                .addValue("testregelIds", testregelIds)
+                .addValue("limit", limit)
+                .addValue("offset", offset)
+        return jdbcTemplate.query(sql, params, rowMapper)
+    }
+
     fun hasResultInDB(maalingId: Int, loeysingId: Int): Boolean {
         val sql = "SELECT COUNT(*) FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId"
         val params =

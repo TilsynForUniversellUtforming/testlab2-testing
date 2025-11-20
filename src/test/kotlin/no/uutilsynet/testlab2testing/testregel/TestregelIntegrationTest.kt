@@ -5,13 +5,15 @@ import no.uutilsynet.testlab2.constants.KravStatus
 import no.uutilsynet.testlab2.constants.WcagPrinsipp
 import no.uutilsynet.testlab2.constants.WcagRetninglinje
 import no.uutilsynet.testlab2.constants.WcagSamsvarsnivaa
-import no.uutilsynet.testlab2testing.krav.KravWcag2x
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.TestConstants.modus
 import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelCreateRequestBody
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaAutomatisk
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.TestregelBase
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.*
 import org.mockito.Mockito

@@ -18,7 +18,7 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterProperties
 import no.uutilsynet.testlab2testing.testing.automatisk.AutotestingService
-import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.assertj.core.api.Assertions
 import org.hamcrest.CoreMatchers

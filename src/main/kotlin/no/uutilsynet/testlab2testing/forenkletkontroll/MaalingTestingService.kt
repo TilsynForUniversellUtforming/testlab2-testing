@@ -8,8 +8,8 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.testing.automatisk.AutotestingService
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.validateTestregel
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity

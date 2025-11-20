@@ -13,8 +13,8 @@ import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.resultat.OpprettTestgrunnlag
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.testregel.TestConstants
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelInit
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.springframework.stereotype.Service
 

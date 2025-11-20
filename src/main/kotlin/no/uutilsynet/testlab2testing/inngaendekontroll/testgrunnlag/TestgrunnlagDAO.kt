@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
-import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper

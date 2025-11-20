@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.testregel
 
+import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import org.springframework.stereotype.Service
 
 @Service

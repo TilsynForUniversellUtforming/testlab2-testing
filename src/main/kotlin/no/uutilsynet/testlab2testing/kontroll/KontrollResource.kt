@@ -11,7 +11,7 @@ import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
-import no.uutilsynet.testlab2testing.testregel.InnhaldstypeTesting
+import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

@@ -17,8 +17,8 @@ import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters.Companion.validateParameters
 import no.uutilsynet.testlab2testing.testing.automatisk.*
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory

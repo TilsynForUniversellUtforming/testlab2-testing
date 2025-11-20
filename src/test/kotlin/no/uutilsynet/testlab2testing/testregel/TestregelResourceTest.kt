@@ -3,10 +3,13 @@ package no.uutilsynet.testlab2testing.testregel
 import java.time.Instant
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.common.TestlabLocale
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
-import no.uutilsynet.testlab2testing.krav.KravWcag2x
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.import.TestregelImportService
+import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
+import no.uutilsynet.testlab2testing.testregel.model.Tema
+import no.uutilsynet.testlab2testing.testregel.model.Testobjekt
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -18,12 +21,11 @@ class TestregelResourceTest {
 
   private val kravregisterClient = mock<KravregisterClient>()
   private val testregelImportService = mock<TestregelImportService>()
-  private val maalingService = mock<MaalingService>()
-  private val testregelService = mock<TestregelService>()
+    private val testregelService = mock<TestregelService>()
 
   private val resource =
       TestregelResource(
-          kravregisterClient, testregelImportService, maalingService, testregelService)
+          kravregisterClient, testregelImportService,  testregelService)
 
   @Test
   fun `getTestregelAggregates returns correct aggregates`() {
@@ -43,7 +45,8 @@ class TestregelResourceTest {
             kravTilSamsvar = "svar",
             tema = 2,
             testobjekt = 3,
-            innhaldstypeTesting = 4)
+            innhaldstypeTesting = 4
+        )
     val tema = Tema(id = 2, tema = "Tema")
     val testobjekt = Testobjekt(id = 3, testobjekt = "Objekt")
     val innhaldstype = InnhaldstypeTesting(id = 4, innhaldstype = "Innhald")
