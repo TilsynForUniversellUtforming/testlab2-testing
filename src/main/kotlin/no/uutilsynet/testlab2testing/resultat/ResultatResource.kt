@@ -4,9 +4,9 @@ import io.micrometer.observation.annotation.Observed
 import java.net.URI
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2testing.aggregering.AggregeringService
-import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregelAPI
-import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatTestregelAPI
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*

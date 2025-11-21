@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.aggregering
+package no.uutilsynet.testlab2testing.testresultat.aggregering
 
 data class TalUtfall(
     val talBrot: Int,

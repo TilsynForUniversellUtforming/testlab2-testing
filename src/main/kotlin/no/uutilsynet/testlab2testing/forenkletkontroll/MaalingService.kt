@@ -4,10 +4,10 @@ import io.micrometer.observation.annotation.Observed
 import jakarta.validation.ClockProvider
 import java.time.Instant
 import kotlinx.coroutines.runBlocking
-import no.uutilsynet.testlab2testing.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateNamn
-import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
+import no.uutilsynet.testlab2testing.forenkletkontroll.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.loeysing.Loeysing

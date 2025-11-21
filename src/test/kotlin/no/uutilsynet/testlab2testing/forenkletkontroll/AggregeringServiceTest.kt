@@ -4,8 +4,8 @@ import java.net.URI
 import java.time.Instant
 import kotlin.random.Random
 import no.uutilsynet.testlab2.constants.*
-import no.uutilsynet.testlab2testing.aggregering.AggregeringService
-import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.net.URI
 import java.time.Instant
-import no.uutilsynet.testlab2testing.dto.EditMaalingDTO
+import no.uutilsynet.testlab2testing.forenkletkontroll.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.loeysing.Loeysing

@@ -2,7 +2,7 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
 import java.time.Instant
-import no.uutilsynet.testlab2testing.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.forenkletkontroll.ScheduledUpdater.Companion.updateCrawlingStatus
 import no.uutilsynet.testlab2testing.forenkletkontroll.ScheduledUpdater.Companion.updateTestingStatus

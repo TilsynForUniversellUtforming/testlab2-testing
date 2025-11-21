@@ -4,8 +4,8 @@ import java.net.URI
 import java.time.Instant
 import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.*
-import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
-import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelDB
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.common.TestlabLocale
@@ -57,7 +57,7 @@ class ResultatServiceTest(
   private var utvalId: Int by Delegates.notNull()
   private var maalingId: Int by Delegates.notNull()
   private var testregelId: Int by Delegates.notNull()
-  private var aggregertResultat: AggregeringPerTestregelDTO by Delegates.notNull()
+  private var aggregertResultat: AggregeringPerTestregelDB by Delegates.notNull()
 
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
   @MockitoBean lateinit var testgrunnlagDAO: TestgrunnlagDAO
@@ -106,7 +106,7 @@ class ResultatServiceTest(
             "Testmaaling_resultat", Instant.now(), listOf(1), listOf(testregelId), crawlParameters)
 
     aggregertResultat =
-        AggregeringPerTestregelDTO(
+        AggregeringPerTestregelDB(
             maalingId, 1, testregelId, 1, arrayListOf(1, 2), 1, 2, 1, 1, 1, 1, 1, 0.5, 0.5, null)
 
     aggregeringDAO.createAggregertResultatTestregel(aggregertResultat)
