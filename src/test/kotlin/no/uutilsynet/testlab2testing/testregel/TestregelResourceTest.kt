@@ -3,6 +3,9 @@ package no.uutilsynet.testlab2testing.testregel
 import java.time.Instant
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.common.TestlabLocale
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
+import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.testregel.import.TestregelImportService
 import no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
@@ -22,11 +25,13 @@ class TestregelResourceTest {
   private val kravregisterClient = mock<KravregisterClient>()
   private val testregelImportService = mock<TestregelImportService>()
   private val testregelService = mock<TestregelService>()
-  private val testregelClient = mock<TestregelClient>()
+  private val testgrunnlagService = mock<TestgrunnlagService>()
+  private val maalingService = mock<MaalingService>()
+  private val kontrollDAO = mock<KontrollDAO>()
 
   private val resource =
       TestregelResource(
-          kravregisterClient, testregelImportService, testregelService, testregelClient)
+          kravregisterClient, testregelImportService, testregelService, maalingService, kontrollDAO, testgrunnlagService )
 
   @Test
   fun `getTestregelAggregates returns correct aggregates`() {
