@@ -8,7 +8,6 @@ import no.uutilsynet.testlab2testing.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestUtils
-import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
@@ -20,11 +19,8 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
-import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
-import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Offset
 import org.junit.jupiter.api.Test
@@ -47,7 +43,7 @@ private const val TEST_ORG = "Test AS"
     properties = ["spring.datasource.url = jdbc:tc:postgresql:16-alpine:///AggregeringServiceTest"])
 class AggregeringServiceTest(
     @Autowired val aggregeringService: AggregeringService,
-    @Autowired val testUtils: TestUtils
+    @Autowired val testUtils: TestUtils,
 ) {
 
   @MockitoSpyBean lateinit var testgrunnlagService: TestgrunnlagService
@@ -63,7 +59,7 @@ class AggregeringServiceTest(
 
   @Autowired lateinit var testregelService: TestregelService
 
-  val testreglerSomSkalSlettes: MutableList<Int> = mutableListOf()
+    val testreglerSomSkalSlettes: MutableList<Int> = mutableListOf()
 
   companion object {
     @Container
@@ -81,6 +77,8 @@ class AggregeringServiceTest(
 
     val testKoeyring: TestKoeyring.Ferdig = setupTestKoeyring(testLoeysing)
 
+      testUtils.testregelKravObject()
+
     Mockito.`when`(
             autoTesterClient.fetchResultatAggregering(
                 TEST_URL.toURI(), AutoTesterClient.ResultatUrls.urlAggreggeringTR))
@@ -90,6 +88,7 @@ class AggregeringServiceTest(
 
     Mockito.`when`(kravregisterClient.getKravIdFromSuksesskritterium("1.1.1")).thenReturn(1)
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
+    Mockito.`when`(kravregisterClient.listKrav()).thenReturn(listOf(testUtils.kravWcag2xObject()))
     Mockito.doReturn(listOf(testLoeysing)).`when`(maalingDao).getLoeysingarForMaaling(maalingId)
 
     aggregeringService.saveAggregertResultatTestregelAutomatisk(testKoeyring)
@@ -125,25 +124,11 @@ class AggregeringServiceTest(
 
   fun createTestMaaling(): AggregertResultatTestregel {
     val crawlParameters = CrawlParameters(10, 10)
-    val testregelNoekkel = RandomStringUtils.secure().nextAlphabetic(5)
 
-    val testregel =
-        TestregelInit(
-            testregelId = testregelNoekkel,
-            namn = name,
-            kravId = 1,
-            status = TestregelStatus.publisert,
-            type = TestregelInnholdstype.nett,
-            modus = TestregelModus.automatisk,
-            spraak = TestlabLocale.nb,
-            testregelSchema = testregelNoekkel,
-            innhaldstypeTesting = 1,
-            tema = 1,
-            testobjekt = 1,
-            kravTilSamsvar = "")
+    val testregelInit = testUtils.testregelInitObject()
 
     val testregelId =
-        testregelService.createTestregel(testregel).also { testreglerSomSkalSlettes.add(it) }
+        testregelService.createTestregel(testregelInit).also { testreglerSomSkalSlettes.add(it) }
 
     val maalingId =
         maalingDao.createMaaling(
@@ -157,7 +142,7 @@ class AggregeringServiceTest(
         AggregertResultatTestregel(
             maalingId = maalingId,
             loeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR, TEST_ORG),
-            testregelId = testregelNoekkel,
+            testregelId = testregelInit.testregelId,
             suksesskriterium = "1.1.1",
             fleireSuksesskriterium = listOf("1.1.1", "1.1.1"),
             talElementSamsvar = 1,

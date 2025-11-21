@@ -20,7 +20,7 @@ class TestregelService(
       testregelDAO.getTestregel(testregelId)
           ?: throw IllegalArgumentException("Fant ikkje testregel med id $testregelId")
 
-  fun getTestregelListFromIds(testregelIdList: List<Int>): List<Testregel> {
+    fun getTestregelListFromIds(testregelIdList: List<Int>): List<Testregel> {
     return testregelDAO.getMany(testregelIdList)
   }
 

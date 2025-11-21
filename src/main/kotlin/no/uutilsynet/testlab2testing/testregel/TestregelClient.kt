@@ -14,7 +14,7 @@ class TestregelClient(
   fun getTestregelByKey(testregelKey: String): TestregelKrav =
       testregelCache.getTestregelByKey(testregelKey)
 
-    fun getTestregelListFromIds(testregelIdList: List<Int>): List<Testregel> {
+  fun getTestregelListFromIds(testregelIdList: List<Int>): List<Testregel> {
     return testregelService.getTestregelListFromIds(testregelIdList)
   }
 

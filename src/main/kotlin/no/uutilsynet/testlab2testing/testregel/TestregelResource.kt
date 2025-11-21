@@ -81,34 +81,33 @@ class TestregelResource(
   @DeleteMapping("{testregelId}")
   fun deleteTestregel(@PathVariable("testregelId") testregelId: Int): ResponseEntity<out Any> =
       executeWithErrorHandling {
-          checkTestregelUsage(testregelId)
-              .fold(
-                    onSuccess = { testregelService.deleteTestregel(testregelId) },
-                    onFailure = { throw it }
-              )
+        checkTestregelUsage(testregelId)
+            .fold(
+                onSuccess = { testregelService.deleteTestregel(testregelId) },
+                onFailure = { throw it })
       }
 
-    fun checkTestregelUsage(testregelId: Int): Result<Boolean> {
-        return runCatching {
-            // Sjekk om testregelen er i bruk i noen kontroller
-            val kontrollerMedTestregel = kontrollDAO.hasKontrollerTestregel(testregelId)
-            check(!kontrollerMedTestregel) {
-                "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i kontroller."
-            }
+  fun checkTestregelUsage(testregelId: Int): Result<Boolean> {
+    return runCatching {
+      // Sjekk om testregelen er i bruk i noen kontroller
+      val kontrollerMedTestregel = kontrollDAO.hasKontrollerTestregel(testregelId)
+      check(!kontrollerMedTestregel) {
+        "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i kontroller."
+      }
 
-            // Sjekk om testregelen er i bruk i noe testgrunnlag
-            val testgrunnlagMedTestregel = testgrunnlagService.hasTestgrunnlagTestregel(testregelId)
-            check(!testgrunnlagMedTestregel) {
-                "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i testgrunnlag."
-            }
+      // Sjekk om testregelen er i bruk i noe testgrunnlag
+      val testgrunnlagMedTestregel = testgrunnlagService.hasTestgrunnlagTestregel(testregelId)
+      check(!testgrunnlagMedTestregel) {
+        "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i testgrunnlag."
+      }
 
-            val maalingMedTestregel = maalingService.hasMaalingTestregel(testregelId)
-            check(!maalingMedTestregel) {
-                "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i maaling."
-            }
-            true
-        }
+      val maalingMedTestregel = maalingService.hasMaalingTestregel(testregelId)
+      check(!maalingMedTestregel) {
+        "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i maaling."
+      }
+      true
     }
+  }
 
   @GetMapping("innhaldstypeForTesting")
   fun getInnhaldstypeForTesting(): ResponseEntity<out Any> =

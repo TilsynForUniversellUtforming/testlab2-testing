@@ -136,9 +136,29 @@ class TestUtils(
   }
 
   fun testregelKravObject(): TestregelKrav {
+
+    return TestregelKrav(
+        id = 1,
+        namn = "Test",
+        krav = kravWcag2xObject(),
+        modus = TestregelModus.automatisk,
+        testregelSchema = "schema",
+        testregelId = "1.1.1",
+        versjon = 1,
+        status = TestregelStatus.publisert,
+        datoSistEndra = Instant.now(),
+        type = TestregelInnholdstype.nett,
+        spraak = TestlabLocale.nb,
+        kravTilSamsvar = "svar",
+        tema = 2,
+        testobjekt = 3,
+        innhaldstypeTesting = 4)
+  }
+
+  fun kravWcag2xObject(): no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x {
     val krav =
         no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x(
-            id = 5,
+            id = 1,
             tittel = "Nett-1.1.1a Ikke-lenkede bilder har tekstalternativ ",
             status = KravStatus.gjeldande,
             innhald = "Nett-1.1.1a Ikke-lenkede bilder har tekstalternativ",
@@ -152,21 +172,23 @@ class TestUtils(
             retningslinje = WcagRetninglinje.tekst_alternativ,
             kommentarBrudd = "Har ikkje tekstalternativ",
         )
-    return TestregelKrav(
-        id = 1,
-        namn = "Test",
-        krav = krav,
-        modus = TestregelModus.manuell,
-        testregelSchema = "schema",
+    return krav
+  }
+
+  fun testregelInitObject(): TestregelInit {
+    return TestregelInit(
         testregelId = "1.1.1",
-        versjon = 1,
+        namn = "Testregel Navn",
+        kravId = 1,
         status = TestregelStatus.publisert,
-        datoSistEndra = Instant.now(),
         type = TestregelInnholdstype.nett,
+        modus = TestregelModus.automatisk,
         spraak = TestlabLocale.nb,
-        kravTilSamsvar = "svar",
+        testregelSchema = "1.1.1",
+        innhaldstypeTesting = 1,
         tema = 2,
         testobjekt = 3,
-        innhaldstypeTesting = 4)
+        kravTilSamsvar = "svar",
+    )
   }
 }

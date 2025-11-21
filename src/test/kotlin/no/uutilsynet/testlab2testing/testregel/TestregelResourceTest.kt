@@ -31,7 +31,12 @@ class TestregelResourceTest {
 
   private val resource =
       TestregelResource(
-          kravregisterClient, testregelImportService, testregelService, maalingService, kontrollDAO, testgrunnlagService )
+          kravregisterClient,
+          testregelImportService,
+          testregelService,
+          maalingService,
+          kontrollDAO,
+          testgrunnlagService)
 
   @Test
   fun `getTestregelAggregates returns correct aggregates`() {
