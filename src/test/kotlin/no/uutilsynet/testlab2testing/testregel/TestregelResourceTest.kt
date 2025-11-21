@@ -4,9 +4,15 @@ import java.time.Instant
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
-import no.uutilsynet.testlab2testing.krav.KravWcag2x
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
+import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.testregel.import.TestregelImportService
+import no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
+import no.uutilsynet.testlab2testing.testregel.model.Tema
+import no.uutilsynet.testlab2testing.testregel.model.Testobjekt
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -18,12 +24,19 @@ class TestregelResourceTest {
 
   private val kravregisterClient = mock<KravregisterClient>()
   private val testregelImportService = mock<TestregelImportService>()
-  private val maalingService = mock<MaalingService>()
   private val testregelService = mock<TestregelService>()
+  private val testgrunnlagService = mock<TestgrunnlagService>()
+  private val maalingService = mock<MaalingService>()
+  private val kontrollDAO = mock<KontrollDAO>()
 
   private val resource =
       TestregelResource(
-          kravregisterClient, testregelImportService, maalingService, testregelService)
+          kravregisterClient,
+          testregelImportService,
+          testregelService,
+          maalingService,
+          kontrollDAO,
+          testgrunnlagService)
 
   @Test
   fun `getTestregelAggregates returns correct aggregates`() {

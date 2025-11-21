@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.testregel
+package no.uutilsynet.testlab2testing.testregel.model
 
 open class InnhaldstypeTesting(open val id: Int, open val innhaldstype: String)
 

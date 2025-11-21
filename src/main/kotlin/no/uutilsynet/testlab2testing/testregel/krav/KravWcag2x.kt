@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.krav
+package no.uutilsynet.testlab2testing.testregel.krav
 
 import no.uutilsynet.testlab2.constants.KravStatus
 import no.uutilsynet.testlab2.constants.WcagPrinsipp

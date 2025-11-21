@@ -7,13 +7,13 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -27,9 +27,9 @@ class AggregeringService(
     val aggregeringDAO: AggregeringDAO,
     val testResultatDAO: TestResultatDAO,
     val sideutvalDAO: SideutvalDAO,
-    val testregelService: TestregelService,
     val maalingDAO: MaalingDAO,
-    private val testgrunnlagService: TestgrunnlagService
+    private val testgrunnlagService: TestgrunnlagService,
+    private val testregelClient: TestregelClient
 ) {
 
   private val logger = LoggerFactory.getLogger(AggregeringService::class.java)
@@ -103,13 +103,13 @@ class AggregeringService(
       aggregertResultatTestregel: AggregertResultatTestregel
   ): AggregeringPerTestregelDTO {
 
-    val testregel = testregelService.getTestregelFromSchema(aggregertResultatTestregel.testregelId)
+    val testregel = testregelClient.getTestregelByKey(aggregertResultatTestregel.testregelId)
 
     return AggregeringPerTestregelDTO(
         aggregertResultatTestregel.maalingId,
         aggregertResultatTestregel.loeysing.id,
         testregel.id,
-        testregel.kravId,
+        testregel.krav.id,
         aggregertResultatTestregel.fleireSuksesskriterium.map {
           kravregisterClient.getKravIdFromSuksesskritterium(it)
         },
@@ -218,8 +218,8 @@ class AggregeringService(
       loeysingList.firstOrNull { it.id == loeysingId }
           ?: throw NoSuchElementException("Fant ikkje loeysing med id $loeysingId")
 
-  fun getTestregel(testregelId: Int): Testregel {
-    return testregelService.getTestregel(testregelId)
+  fun getTestregel(testregelId: Int): TestregelKrav {
+    return testregelClient.getTestregelById(testregelId)
   }
 
   fun getAggregertResultatTestregel(
@@ -578,7 +578,7 @@ class AggregeringService(
   }
 
   fun getKravIdFraTestregel(id: Int): Int {
-    return getTestregel(id).kravId
+    return getTestregel(id).krav.id
   }
 
   fun calculateUtfall(utfall: List<TestresultatUtfall?>): TestresultatUtfall {

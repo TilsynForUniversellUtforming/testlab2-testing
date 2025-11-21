@@ -5,10 +5,16 @@ import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHan
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
-import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
+import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.testregel.import.TestregelImportService
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.toTestregelBase
+import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.validateTestregel
+import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
+import no.uutilsynet.testlab2testing.testregel.model.TestregelBase
+import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -16,10 +22,12 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("v1/testreglar")
 class TestregelResource(
-    val kravregisterClient: KravregisterClient,
-    val testregelImportService: TestregelImportService,
-    val maalingService: MaalingService,
-    val testregelService: TestregelService
+    private val kravregisterClient: KravregisterClient,
+    private val testregelImportService: TestregelImportService,
+    private val testregelService: TestregelService,
+    private val maalingService: MaalingService,
+    private val kontrollDAO: KontrollDAO,
+    private val testgrunnlagService: TestgrunnlagService
 ) {
 
   val logger = LoggerFactory.getLogger(TestregelResource::class.java)
@@ -36,27 +44,17 @@ class TestregelResource(
 
   @GetMapping
   fun getTestregelList(
-      @RequestParam(required = false) maalingId: Int?,
       @RequestParam(required = false) includeMetadata: Boolean = false
   ): ResponseEntity<List<TestregelBase>> =
       runCatching {
-            val testregelList =
-                if (maalingId != null) {
-                  logger.debug("Henter testreglar for måling $maalingId")
-                  maalingService.getTestreglarForMaaling(maalingId).getOrThrow()
-                } else {
-                  testregelService.getTestregelList()
-                }
+            val testregelList = testregelService.getTestregelList()
             ResponseEntity.ok(
                 testregelList.let {
                   if (includeMetadata) it else it.map { tr -> tr.toTestregelBase() }
                 })
           }
           .getOrElse {
-            val errorMessage =
-                if (maalingId != null) "Feila ved henting av testreglar for måling $maalingId"
-                else "Feila ved henting av testreglar"
-            logger.error(errorMessage, it)
+            logger.error("Feila ved henting av testreglar", it)
             ResponseEntity.internalServerError().build()
           }
 
@@ -83,17 +81,33 @@ class TestregelResource(
   @DeleteMapping("{testregelId}")
   fun deleteTestregel(@PathVariable("testregelId") testregelId: Int): ResponseEntity<out Any> =
       executeWithErrorHandling {
-        val maalingTestregelUsageList = maalingService.getMaalingForTestregel(testregelId)
-        if (maalingTestregelUsageList.isNotEmpty()) {
-          val testregel = testregelService.getTestregel(testregelId)
-
-          val maalingList = maalingService.getMaalingList(maalingTestregelUsageList).map { it.navn }
-
-          throw IllegalArgumentException(
-              "Testregel $testregel er i bruk i følgjande målingar: ${maalingList.joinToString(", ")}")
-        }
-        testregelService.deleteTestregel(testregelId)
+        checkTestregelUsage(testregelId)
+            .fold(
+                onSuccess = { testregelService.deleteTestregel(testregelId) },
+                onFailure = { throw it })
       }
+
+  fun checkTestregelUsage(testregelId: Int): Result<Boolean> {
+    return runCatching {
+      // Sjekk om testregelen er i bruk i noen kontroller
+      val kontrollerMedTestregel = kontrollDAO.hasKontrollerTestregel(testregelId)
+      check(!kontrollerMedTestregel) {
+        "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i kontroller."
+      }
+
+      // Sjekk om testregelen er i bruk i noe testgrunnlag
+      val testgrunnlagMedTestregel = testgrunnlagService.hasTestgrunnlagTestregel(testregelId)
+      check(!testgrunnlagMedTestregel) {
+        "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i testgrunnlag."
+      }
+
+      val maalingMedTestregel = maalingService.hasMaalingTestregel(testregelId)
+      check(!maalingMedTestregel) {
+        "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i maaling."
+      }
+      true
+    }
+  }
 
   @GetMapping("innhaldstypeForTesting")
   fun getInnhaldstypeForTesting(): ResponseEntity<out Any> =

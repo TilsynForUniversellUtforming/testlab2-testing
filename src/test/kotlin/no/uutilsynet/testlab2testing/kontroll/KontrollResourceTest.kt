@@ -19,13 +19,14 @@ import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.loeysing.UtvalResource
 import no.uutilsynet.testlab2testing.regelsett.Regelsett
 import no.uutilsynet.testlab2testing.regelsett.RegelsettCreate
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import org.assertj.core.api.Assertions.assertThat
-import org.hamcrest.CoreMatchers.*
+import org.hamcrest.CoreMatchers.equalTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.*
+import org.mockito.Mockito.anyString
+import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -33,7 +34,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 
 @DisplayName("KontrollResource")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class KontrollResourceTest(@Autowired val testregelService: TestregelService) {
+class KontrollResourceTest(@Autowired val testregelClient: TestregelClient) {
   @LocalServerPort var port: Int = 0
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
   @MockitoBean lateinit var clockProvider: ClockProvider
@@ -238,7 +239,7 @@ class KontrollResourceTest(@Autowired val testregelService: TestregelService) {
             .header("Location")
     val opprettetKontroll = get(location).`as`(Kontroll::class.java)
 
-    val testregel = testregelService.getTestregelList().first()
+    val testregel = testregelClient.getTestregelList().first()
 
     /* Create regelsett */
     val nyttRegelsett =
@@ -301,7 +302,7 @@ class KontrollResourceTest(@Autowired val testregelService: TestregelService) {
             .header("Location")
     val opprettetKontroll = get(location).`as`(Kontroll::class.java)
 
-    val testregel = testregelService.getTestregelList().first()
+    val testregel = testregelClient.getTestregelList().first()
 
     val updateBody =
         mapOf(

@@ -17,9 +17,9 @@ import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters.Companion.validateParameters
 import no.uutilsynet.testlab2testing.testing.automatisk.*
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -32,7 +32,7 @@ class MaalingService(
     val utvalDAO: UtvalDAO,
     val aggregeringService: AggregeringService,
     val autoTesterClient: AutoTesterClient,
-    val testregelService: TestregelService,
+    val testreglClient: TestregelClient,
     val testkoeyringDAO: TestkoeyringDAO,
     val clockProvider: ClockProvider,
 ) {
@@ -106,7 +106,7 @@ class MaalingService(
 
   private fun validatedTestregelList(testregelIdList: List<Int>): List<Int> {
     return validateIdList(
-            testregelIdList, testregelService.getTestregelList().map { it.id }, "testregelIdList")
+            testregelIdList, testreglClient.getTestregelList().map { it.id }, "testregelIdList")
         .getOrThrow()
   }
 
@@ -143,25 +143,23 @@ class MaalingService(
     val navn = validateNamn(this.navn).getOrThrow()
     this.crawlParameters?.validateParameters()
 
-
-      return when (val maaling = maalingDAO.getMaaling(this.id)) {
+    return when (val maaling = maalingDAO.getMaaling(this.id)) {
       is Maaling.Planlegging -> {
-          val loeysingList =
-              this.loeysingIdList
-                  ?.let { idList ->
-                      loeysingsRegisterClient.getMany(idList) }
-                  ?.getOrThrow()
-                  ?: emptyList<Loeysing>().also {
-                      logger.warn("Måling ${maaling.id} har ikkje løysingar")
-                  }
+        val loeysingList =
+            this.loeysingIdList
+                ?.let { idList -> loeysingsRegisterClient.getMany(idList) }
+                ?.getOrThrow()
+                ?: emptyList<Loeysing>().also {
+                  logger.warn("Måling ${maaling.id} har ikkje løysingar")
+                }
 
-          val testregelList =
-              this.testregelIdList?.let { idList ->
-                  testregelService.getTestregelList().filter { idList.contains(it.id) }
-              }
-                  ?: emptyList<Testregel>().also {
-                      logger.warn("Måling ${maaling.id} har ikkje testreglar")
-                  }
+        val testregelList =
+            this.testregelIdList?.let { idList ->
+              testreglClient.getTestregelList().filter { idList.contains(it.id) }
+            }
+                ?: emptyList<Testregel>().also {
+                  logger.warn("Måling ${maaling.id} har ikkje testreglar")
+                }
 
         maaling.copy(
             navn = navn,
@@ -176,7 +174,7 @@ class MaalingService(
     }
   }
 
-    private fun getLoeysingarForMaaling(
+  private fun getLoeysingarForMaaling(
       idList: List<Int>,
       maalingId: Int,
   ): List<Loeysing> {
@@ -298,7 +296,7 @@ class MaalingService(
   fun getTestreglarForMaaling(maalingId: Int): Result<List<Testregel>> {
     return runCatching {
       val testregelIds = maalingDAO.getTestrelIdForMaaling(maalingId)
-      testregelService.getTestregeListFromIds(testregelIds)
+      testreglClient.getTestregelListFromIds(testregelIds)
     }
   }
 
@@ -314,5 +312,9 @@ class MaalingService(
   fun getMaalingForKontroll(kontrollId: Int): Int {
     return maalingDAO.getMaalingIdFromKontrollId(kontrollId)
         ?: throw NoSuchElementException("Fant ikkje måling for kontrollId $kontrollId")
+  }
+
+  fun hasMaalingTestregel(testregelId: Int): Boolean {
+    return maalingDAO.hasMaalingTestregel(testregelId)
   }
 }

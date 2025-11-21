@@ -1,12 +1,10 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll
+package no.uutilsynet.testlab2testing.aggregering
 
 import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
-import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.resultat.OpprettTestgrunnlag
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,8 +55,8 @@ class AggregeringDAOTest(
 
     val henta = aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
 
-    assertThat(henta[0].testregelGjennomsnittlegSideBrotProsent).isNull()
-    assertThat(henta[0].testregelGjennomsnittlegSideSamsvarProsent).isNull()
+    Assertions.assertThat(henta[0].testregelGjennomsnittlegSideBrotProsent).isNull()
+    Assertions.assertThat(henta[0].testregelGjennomsnittlegSideSamsvarProsent).isNull()
 
     aggregeringDAO.deleteAggregertResultatTestregel(henta[0])
   }

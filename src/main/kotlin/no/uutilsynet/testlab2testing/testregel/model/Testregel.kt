@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.testregel
+package no.uutilsynet.testlab2testing.testregel.model
 
 import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestregelInnholdstype
@@ -7,7 +7,8 @@ import no.uutilsynet.testlab2.constants.TestregelStatus
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateTestregelId
-import no.uutilsynet.testlab2testing.krav.KravWcag2x
+import no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x
+import no.uutilsynet.testlab2testing.testregel.validateSchema
 
 data class Testregel(
     override val id: Int,
@@ -65,7 +66,7 @@ data class TestregelKrav(
     val testregelId: String,
     val versjon: Int,
     val namn: String,
-    val kravId: KravWcag2x,
+    val krav: KravWcag2x,
     val status: TestregelStatus,
     val datoSistEndra: Instant = Instant.now(),
     val type: TestregelInnholdstype,

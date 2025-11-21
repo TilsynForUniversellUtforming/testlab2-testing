@@ -1,9 +1,13 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.net.URI
+import java.time.Instant
+import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
 import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
@@ -17,7 +21,6 @@ import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
@@ -25,9 +28,10 @@ import no.uutilsynet.testlab2testing.loeysing.Verksemd
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestConstants
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelInit
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -36,10 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
-import java.net.URI
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import kotlin.properties.Delegates
 
 @SpringBootTest(
     properties =
@@ -50,6 +50,7 @@ class ResultatServiceTest(
     @Autowired val maalingDao: MaalingDAO,
     @Autowired val utvalDAO: UtvalDAO,
     @Autowired val resultatService: ResultatService,
+    @Autowired val testUtils: TestUtils
 ) {
 
   private var kontrollId: Int by Delegates.notNull()
@@ -64,6 +65,7 @@ class ResultatServiceTest(
   @MockitoBean lateinit var sideutvalDAO: SideutvalDAO
   @MockitoBean lateinit var kravregisterClient: KravregisterClient
   @MockitoSpyBean lateinit var testregelService: TestregelService
+  @MockitoBean lateinit var testregelClient: TestregelClient
   @MockitoSpyBean lateinit var kontrollDAO: KontrollDAO
 
   @Test
@@ -189,23 +191,7 @@ class ResultatServiceTest(
             TestgrunnlagType.OPPRINNELEG_TEST,
             Instant.now())
     val testgrunnlagList = TestgrunnlagList(testgrunnlagKontroll, emptyList())
-    val testregel =
-        Testregel(
-            1,
-            "QW-ACT-R1",
-            1,
-            "QW-ACT-R1 HTML Page has a title",
-            1,
-            TestregelStatus.publisert,
-            Instant.now().truncatedTo(ChronoUnit.MINUTES),
-            TestregelInnholdstype.nett,
-            TestregelModus.automatisk,
-            TestlabLocale.nb,
-            1,
-            1,
-            "HTML Page has a title",
-            "QW-ACT-R1",
-            1)
+    val testregel = testUtils.testregelKravObject()
 
     val resultat1 =
         ResultatManuellKontroll(
@@ -250,9 +236,9 @@ class ResultatServiceTest(
 
     Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1))).thenReturn(sideUtvalList)
 
-    Mockito.doReturn(listOf(testregel)).`when`(testregelService).getTestregelForKrav(1)
-    Mockito.`when`(testregelService.getTestregel(1)).thenReturn(testregel)
+    Mockito.`when`(testregelClient.getTestregelById(testregel.id)).thenReturn(testregel)
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
+    Mockito.`when`(kravregisterClient.listKrav()).thenReturn(listOf(testUtils.kravWcag2xObject()))
     Mockito.doReturn(Kontrolltype.InngaaendeKontroll).`when`(kontrollDAO).getKontrollType(1)
 
     val resultat = resultatService.getResultatListKontroll(1, 1, 1)

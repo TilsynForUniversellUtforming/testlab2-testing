@@ -11,6 +11,11 @@ import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getT
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelListByIdSql
 import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
+import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
+import no.uutilsynet.testlab2testing.testregel.model.Tema
+import no.uutilsynet.testlab2testing.testregel.model.Testobjekt
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.dao.support.DataAccessUtils

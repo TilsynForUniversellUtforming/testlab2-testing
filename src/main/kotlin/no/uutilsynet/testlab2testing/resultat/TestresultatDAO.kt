@@ -147,33 +147,56 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return jdbcTemplate.query(sql, params, rowMapper)
   }
 
-    fun hasResultInDB(maalingId: Int, loeysingId: Int): Boolean {
-        val sql = "SELECT COUNT(*) FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId"
-        val params =
-            MapSqlParameterSource()
-                .addValue(
-                    "maalingId",
-                    maalingId,
-                )
-                .addValue("loeysingId", loeysingId)
-        val count = jdbcTemplate.queryForObject(sql, params, Int::class.java) ?: 0
-        return count > 0
-    }
+  fun listBy(
+      maalingId: Int,
+      loeysingId: Int?,
+      testregelIds: List<Int>,
+      limit: Int = 20,
+      offset: Int = 0
+  ): List<TestresultatDB> {
+    val sql =
+        "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id in (:testregelIds) and element_resultat= 'brot' limit :limit offset :offset"
+    val params =
+        MapSqlParameterSource()
+            .addValue(
+                "maalingId",
+                maalingId,
+            )
+            .addValue("loeysingId", loeysingId)
+            .addValue("testregelIds", testregelIds)
+            .addValue("limit", limit)
+            .addValue("offset", offset)
+    return jdbcTemplate.query(sql, params, rowMapper)
+  }
 
-    fun getTalBrotForKontrollLoeysingTestregel(
-        rapportId: String,
-        loeysingId: Int,
-        testregelId: Int
-    ): Result<Int> {
-        return runCatching {
-            jdbcTemplate.queryForObject(
-                """select count(*) from testresultat tr
+  fun hasResultInDB(maalingId: Int, loeysingId: Int): Boolean {
+    val sql =
+        "SELECT COUNT(*) FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId"
+    val params =
+        MapSqlParameterSource()
+            .addValue(
+                "maalingId",
+                maalingId,
+            )
+            .addValue("loeysingId", loeysingId)
+    val count = jdbcTemplate.queryForObject(sql, params, Int::class.java) ?: 0
+    return count > 0
+  }
+
+  fun getTalBrotForKontrollLoeysingTestregel(
+      rapportId: String,
+      loeysingId: Int,
+      testregelId: Int
+  ): Result<Int> {
+    return runCatching {
+      jdbcTemplate.queryForObject(
+          """select count(*) from testresultat tr
                     join testregel tg on tg.id=tr.testregel_id
                     join rapport r on r.maaling_id=tr.maaling_id and r.loeysing_id=tr.loeysing_id
                     where r.id_ekstern=:rapportId and r.loeysing_id=:loeysingId and tg.id=:testregelId and tr.element_resultat = 'brot'"""
-                    .trimIndent(),
-                mapOf("rapportId" to rapportId, "loeysingId" to loeysingId, "testregelId" to testregelId),
-                Int::class.java) as Int
-        }
+              .trimIndent(),
+          mapOf("rapportId" to rapportId, "loeysingId" to loeysingId, "testregelId" to testregelId),
+          Int::class.java) as Int
     }
+  }
 }

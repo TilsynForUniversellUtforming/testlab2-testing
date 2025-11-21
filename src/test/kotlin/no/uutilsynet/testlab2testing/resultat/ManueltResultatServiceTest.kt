@@ -11,9 +11,9 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -30,13 +30,13 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
   private val bildeService = mock(BildeService::class.java)
   private val resultatDAO = mock(ResultatDAO::class.java)
   private val kravregisterClient = mock(KravregisterClient::class.java)
-  private val testregelService = mock(TestregelService::class.java)
+  private val testregelCache = mock(TestregelCache::class.java)
 
   private val manueltResultatService =
       ManueltResultatService(
           resultatDAO,
           kravregisterClient,
-          testregelService,
+          testregelCache,
           testgrunnlagDAO,
           testResultatDAO,
           sideutvalDAO,
@@ -64,14 +64,14 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
 
     val testgrunnlagList = mock(TestgrunnlagKontroll::class.java)
 
-    val testregel = testUtils.testregelObject()
+    val testregel = testUtils.testregelKravObject()
 
     `when`(testgrunnlagDAO.getTestgrunnlagForKontroll(1))
         .thenReturn(TestgrunnlagList(testgrunnlagList, listOf(testgrunnlagList)))
     `when`(testResultatDAO.getManyResults(anyInt())).thenReturn(Result.success(mockResult))
     `when`(sideutvalDAO.getSideutvalUrlMapKontroll(anyList()))
         .thenReturn(mapOf(1 to URI("https://test.com").toURL()))
-    `when`(testregelService.getTestregel(anyInt())).thenReturn(testregel)
+    `when`(testregelCache.getTestregelById(anyInt())).thenReturn(testregel)
 
     val result = manueltResultatService.getFilteredAndMappedResults(1, 1) { it.testregelId == 1 }
 

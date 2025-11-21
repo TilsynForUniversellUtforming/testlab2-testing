@@ -11,28 +11,28 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import org.springframework.stereotype.Service
 
 @Service
 class ManueltResultatService(
     resultatDAO: ResultatDAO,
     kravregisterClient: KravregisterClient,
-    testregelService: TestregelService,
+    testregelCache: TestregelCache,
     private val testgrunnlagDAO: TestgrunnlagDAO,
     private val testResultatDAO: TestResultatDAO,
     private val sideutvalDAO: SideutvalDAO,
     private val bildeService: BildeService,
-) : KontrollResultatService(resultatDAO, kravregisterClient, testregelService) {
+) : KontrollResultatService(resultatDAO, kravregisterClient, testregelCache) {
 
   override fun getResultatForKontroll(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
-      limit: Int,
+      size: Int,
       pageNumber: Int
   ): List<TestresultatDetaljert> {
     return getFilteredAndMappedResults(kontrollId, loeysingId) {
@@ -79,7 +79,7 @@ class ManueltResultatService(
       it: ResultatManuellKontroll,
       sideutvalIdUrlMap: Map<Int, URL>,
   ): TestresultatDetaljert {
-    val testregel: Testregel = getTesteregelFromId(it.testregelId)
+    val testregel: TestregelKrav = getTesteregelFromId(it.testregelId)
     return TestresultatDetaljert(
         it.id,
         it.loeysingId,
@@ -87,7 +87,7 @@ class ManueltResultatService(
         testregel.testregelId,
         it.testgrunnlagId,
         getUrlFromSideutval(sideutvalIdUrlMap, it),
-        getSuksesskriteriumFromTestregel(testregel.kravId),
+        listOf(testregel.krav.suksesskriterium),
         testVartUtfoertToLocalTime(it.testVartUtfoert),
         it.elementUtfall,
         it.elementResultat,

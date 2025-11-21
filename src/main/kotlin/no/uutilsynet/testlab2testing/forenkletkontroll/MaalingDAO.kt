@@ -10,7 +10,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.insertMaalingLoeysingQuery
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.insertMaalingTestregelQuery
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.maalingRowmapper
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.maalingTestregelSql
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.maalingTestregelQuery
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByDateSql
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByIdSql
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByStatus
@@ -25,9 +25,9 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDAO
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
-import no.uutilsynet.testlab2testing.testregel.TestregelBase
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
+import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.toTestregelBase
+import no.uutilsynet.testlab2testing.testregel.model.TestregelBase
 import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.CacheEvict
@@ -41,21 +41,17 @@ import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
-private const val NOT_FINISHED_CRAWLING =
-    "Det er løysingar som ikkje er ferdige med crawling, kan ikkje hente testkoeyringar før alle er ferdige"
-
 @Component
 class MaalingDAO(
     val jdbcTemplate: NamedParameterJdbcTemplate,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val sideutvalDAO: SideutvalDAO,
     val cacheManager: CacheManager,
-    val testkoeyringDAO: TestkoeyringDAO
+    val testkoeyringDAO: TestkoeyringDAO,
+    val testregelClient: TestregelClient
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
-
-  private val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
 
   data class MaalingDTO(
       val id: Int,
@@ -112,14 +108,10 @@ class MaalingDAO(
     val insertMaalingLoeysingQuery =
         """insert into "testlab2_testing"."maalingloeysing" (idMaaling, idLoeysing) values (:idMaaling, :idLoeysing)"""
 
-    val maalingTestregelSql =
+    val maalingTestregelQuery =
         """
-      select tr.id,tr.testregel_id,tr.versjon,tr.namn, tr.krav_id, tr.status, tr.dato_sist_endra,tr.type , tr.modus ,tr.spraak,tr.tema,tr.testobjekt,tr.krav_til_samsvar,tr.testregel_schema, tr.innhaldstype_testing
-      from "testlab2_testing"."maalingv1" m
-        join "testlab2_testing"."maaling_testregel" mt on m.id = mt.maaling_id
-        join "testlab2_testing"."testregel" tr on mt.testregel_id = tr.id
-      where m.id = :id
-    """
+         select testregel_id from testlab2_testing.maaling_testregel where maaling_id = :id
+     """
             .trimIndent()
 
     fun updateMaalingParams(maaling: Maaling): Map<String, Any> {
@@ -260,11 +252,12 @@ class MaalingDAO(
       crawlResultatForMaaling(id, getLoeysingarForMaaling(id, datoStart))
 
   private fun MaalingDTO.getTestregelList(): List<TestregelBase> {
-    val testregelList =
-        jdbcTemplate.query(maalingTestregelSql, mapOf("id" to id), testregelRowMapper).map {
-          it.toTestregelBase()
-        }
-    return testregelList
+    val testregelIds =
+        jdbcTemplate
+            .queryForList(maalingTestregelQuery, mapOf("id" to id), Int::class.java)
+            .toList()
+
+    return testregelClient.getTestregelListFromIds(testregelIds).map { it.toTestregelBase() }
   }
 
   fun getLoeysingarForMaaling(id: Int, datoStart: Instant): List<Loeysing> {
@@ -437,6 +430,19 @@ class MaalingDAO(
         .associate {
           it.loeysing.id to LoeysingMetadata(it.loeysing.id, it.loeysing, it.antallNettsider)
         }
+  }
+
+  fun hasMaalingTestregel(testregelId: Int): Boolean {
+    val sql =
+        "SELECT COUNT(*) FROM testlab2_testing.maaling_testregel WHERE testregel_id = :testregelId"
+    val params =
+        MapSqlParameterSource()
+            .addValue(
+                "testregelId",
+                testregelId,
+            )
+    val count = jdbcTemplate.queryForObject(sql, params, Int::class.java) ?: 0
+    return count > 0
   }
 
   data class LoeysingMetadata(val id: Int, val loeysing: Loeysing, val antallNettsider: Int)

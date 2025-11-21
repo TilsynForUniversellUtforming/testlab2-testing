@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
-import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
@@ -257,5 +257,22 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           })
           ?: throw NoSuchElementException("Testgrunnlag for kontroll finns ikkje")
     }
+  }
+
+  fun hasTestgrunnlagTestregel(testregelId: Int): Boolean {
+    val resultat =
+        jdbcTemplate
+            .query(
+                """
+        select 1 from "testlab2_testing"."testgrunnlag_testregel_kontroll" ttk
+        where ttk.testregel_id = :testregelId
+      """
+                    .trimIndent(),
+                mapOf("testregelId" to testregelId)) { rs, _ ->
+                  rs.getInt(1)
+                }
+            .toList()
+
+    return resultat.isNotEmpty()
   }
 }

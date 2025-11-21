@@ -1,30 +1,26 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import io.micrometer.observation.annotation.Observed
-import no.uutilsynet.testlab2testing.krav.KravWcag2x
-import no.uutilsynet.testlab2testing.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
+import no.uutilsynet.testlab2testing.testregel.model.Tema
+import no.uutilsynet.testlab2testing.testregel.model.Testobjekt
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
+import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import org.springframework.stereotype.Service
 
 @Service
-class TestregelService(val testregelDAO: TestregelDAO, val kravregisterClient: KravregisterClient) {
-
-  fun getKravWcag2x(testregelId: Int): KravWcag2x {
-    val krav = getTestregel(testregelId).kravId.let { kravregisterClient.getWcagKrav(it) }
-    return krav
-  }
+class TestregelService(
+    private val testregelDAO: TestregelDAO,
+    private val kravregisterClient: KravregisterClient
+) {
 
   fun getTestregel(testregelId: Int): Testregel =
       testregelDAO.getTestregel(testregelId)
           ?: throw IllegalArgumentException("Fant ikkje testregel med id $testregelId")
 
-  fun getTestregelFromSchema(testregelKey: String): Testregel {
-    testregelDAO.getTestregelByTestregelId(testregelKey).let { testregel ->
-      return testregel
-          ?: throw RuntimeException("Fant ikke testregel med testregelId $testregelKey")
-    }
-  }
-
-  fun getTestregeListFromIds(testregelIdList: List<Int>): List<Testregel> {
+    fun getTestregelListFromIds(testregelIdList: List<Int>): List<Testregel> {
     return testregelDAO.getMany(testregelIdList)
   }
 
@@ -44,22 +40,8 @@ class TestregelService(val testregelDAO: TestregelDAO, val kravregisterClient: K
     return testregelDAO.createTestregel(testregelInit)
   }
 
-  fun getMany(testregelIdList: List<Int>): List<Testregel> {
-    return testregelDAO.getMany(testregelIdList)
-  }
-
-  @Observed(name = "testregelservice.gettestregelbytestregelid")
-  fun getTestregelByTestregelId(testregelKey: String): Testregel {
-    return testregelDAO.getTestregelByTestregelId(testregelKey)
-        ?: throw RuntimeException("Fant ikkje testregel for testregelId $testregelKey")
-  }
-
   fun getTemaForTestregel(): List<Tema> {
     return testregelDAO.getTemaForTestregel()
-  }
-
-  fun getTestregelForKrav(kravId: Int): List<Testregel> {
-    return testregelDAO.getTestregelForKrav(kravId)
   }
 
   fun getInnhaldstypeForTesting(): List<InnhaldstypeTesting> {
@@ -89,15 +71,5 @@ class TestregelService(val testregelDAO: TestregelDAO, val kravregisterClient: K
               ?: throw IllegalArgumentException("Fant ikkje krav med id ${testregel.kravId}")
       TestregelKrav(testregel, krav)
     }
-  }
-
-  fun getTestregelKrav(testregelId: Int): TestregelKrav {
-    val testregel =
-        testregelDAO.getTestregel(testregelId)
-            ?: throw IllegalArgumentException("Fant ikkje testregel med id $testregelId")
-
-    val krav = kravregisterClient.getWcagKrav(testregel.kravId)
-
-    return TestregelKrav(testregel, krav)
   }
 }

@@ -9,7 +9,8 @@ import no.uutilsynet.testlab2testing.testregel.TestConstants.name
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaAutomatisk
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaManuell
 import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
-import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.validateTestregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.validateTestregel
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested

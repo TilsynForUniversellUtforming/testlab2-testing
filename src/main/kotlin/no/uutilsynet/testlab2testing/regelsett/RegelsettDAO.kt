@@ -1,7 +1,5 @@
 package no.uutilsynet.testlab2testing.regelsett
 
-import no.uutilsynet.testlab2testing.testregel.Testregel
-import no.uutilsynet.testlab2testing.testregel.Testregel.Companion.toTestregelBase
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.dao.support.DataAccessUtils
@@ -13,38 +11,7 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
-  private val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
-
-  fun RegelsettBase.toRegelsett(): Regelsett {
-    val testregelList =
-        jdbcTemplate
-            .query(
-                """
-        select tr.id, tr.testregel_id,tr.versjon,tr.namn, tr.krav_id, tr.status, tr.dato_sist_endra,tr.type , tr.modus ,tr.spraak,tr.tema,tr.testobjekt,tr.krav_til_samsvar,tr.testregel_schema,tr.innhaldstype_testing
-        from regelsett_testregel rt
-          join testregel tr on tr.id = rt.testregel_id
-        where rt.regelsett_id = :regelsett_id
-        order by tr.id
-      """
-                    .trimIndent(),
-                mapOf("regelsett_id" to this.id),
-                testregelRowMapper)
-            .toList()
-
-    return Regelsett(
-        this.id, this.namn, this.modus, this.standard, testregelList.map { it.toTestregelBase() })
-  }
-
-  fun toRegelsettResponse(regelsett: Regelsett): RegelsettResponse {
-    return RegelsettResponse(
-        regelsett.id, regelsett.namn, regelsett.modus, regelsett.standard, regelsett.testregelList)
-  }
-
-  fun getRegelsettResponse(int: Int): RegelsettResponse? {
-    return getRegelsett(int)?.let { toRegelsettResponse(it) }
-  }
-
-  fun getRegelsett(id: Int): Regelsett? {
+  fun getRegelsett(id: Int): RegelsettBase? {
     val regelsettDTO =
         DataAccessUtils.singleResult(
             jdbcTemplate.query(
@@ -52,7 +19,7 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 mapOf("id" to id),
                 DataClassRowMapper.newInstance(RegelsettBase::class.java)))
 
-    return regelsettDTO?.toRegelsett()
+    return regelsettDTO
   }
 
   @Cacheable("regelsettlistbase", unless = "#result.isEmpty()")
@@ -63,13 +30,6 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         "select id, namn, modus, standard from regelsett where $activeSql",
         DataClassRowMapper.newInstance(RegelsettBase::class.java))
   }
-
-  fun getRegelsettTestreglarList(includeInactive: Boolean): List<Regelsett> =
-      getRegelsettBaseList(includeInactive).map { it.toRegelsett() }
-
-  @Cacheable("regelsettlist", unless = "#result.isEmpty()")
-  fun getRegelsettResponseList(includeInactive: Boolean): List<RegelsettResponse> =
-      getRegelsettTestreglarList(includeInactive).map { toRegelsettResponse(it) }
 
   @Transactional
   @CacheEvict(cacheNames = ["regelsett", "regelsettlist", "regelsettlistbase"], allEntries = true)
@@ -126,4 +86,11 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @CacheEvict(cacheNames = ["regelsett", "regelsettlist", "regelsettlistbase"], allEntries = true)
   fun deleteRegelsett(id: Int) =
       jdbcTemplate.update("update regelsett set aktiv = false where id = :id", mapOf("id" to id))
+
+  fun getTestregelIdListForRegelsett(id: Int): List<Int> {
+    return jdbcTemplate.queryForList(
+        "select testregel_id from regelsett_testregel where regelsett_id = :id",
+        mapOf("id" to id),
+        Int::class.java)
+  }
 }

@@ -13,7 +13,7 @@ import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSideTestregel
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatSuksesskriterium
 import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.testregel.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
