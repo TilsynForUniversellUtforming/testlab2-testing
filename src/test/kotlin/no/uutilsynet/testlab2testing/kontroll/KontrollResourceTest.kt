@@ -7,6 +7,9 @@ import io.restassured.parsing.Parser
 import io.restassured.path.json.JsonPath
 import io.restassured.path.json.JsonPath.from
 import jakarta.validation.ClockProvider
+import java.net.URI
+import java.time.Clock
+import java.time.ZoneId
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestStatus
@@ -28,9 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import java.net.URI
-import java.time.Clock
-import java.time.ZoneId
 
 @DisplayName("KontrollResource")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

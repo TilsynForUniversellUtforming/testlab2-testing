@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.testregel
 
+import java.net.URI
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHandling
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
 import no.uutilsynet.testlab2testing.common.validateNamn
@@ -14,7 +15,6 @@ import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.net.URI
 
 @RestController
 @RequestMapping("v1/testreglar")
@@ -42,8 +42,7 @@ class TestregelResource(
       @RequestParam(required = false) includeMetadata: Boolean = false
   ): ResponseEntity<List<TestregelBase>> =
       runCatching {
-            val testregelList =
-                  testregelService.getTestregelList()
+            val testregelList = testregelService.getTestregelList()
             ResponseEntity.ok(
                 testregelList.let {
                   if (includeMetadata) it else it.map { tr -> tr.toTestregelBase() }
@@ -77,7 +76,7 @@ class TestregelResource(
   @DeleteMapping("{testregelId}")
   fun deleteTestregel(@PathVariable("testregelId") testregelId: Int): ResponseEntity<out Any> =
       executeWithErrorHandling {
-          testregelClient.deleteTestregel(testregelId)
+        testregelClient.deleteTestregel(testregelId)
       }
 
   @GetMapping("innhaldstypeForTesting")
@@ -126,24 +125,24 @@ class TestregelResource(
     val kravList = kravregisterClient.listKrav()
 
     return testregelBaseList.map { testregel ->
-        TestregelAggregate(
-            id = testregel.id,
-            namn = testregel.namn,
-            tema = temaList.firstOrNull { it.id == testregel.tema },
-            testobjekt = testobjektList.firstOrNull { it.id == testregel.testobjekt },
-            innhaldstypeTesting =
-                innhaldstypeTestingList.find { it.id == testregel.innhaldstypeTesting },
-            krav = kravList.firstOrNull { it.id == testregel.kravId }
-                ?: throw IllegalArgumentException("Krav med id ${testregel.kravId} finns ikkje"),
-            modus = testregel.modus,
-            testregelSchema = testregel.testregelSchema,
-            testregelId = testregel.testregelId,
-            versjon = testregel.versjon,
-            status = testregel.status,
-            datoSistEndra = testregel.datoSistEndra,
-            type = testregel.type,
-            spraak = testregel.spraak,
-            kravTilSamsvar = testregel.kravTilSamsvar)
+      TestregelAggregate(
+          id = testregel.id,
+          namn = testregel.namn,
+          tema = temaList.firstOrNull { it.id == testregel.tema },
+          testobjekt = testobjektList.firstOrNull { it.id == testregel.testobjekt },
+          innhaldstypeTesting =
+              innhaldstypeTestingList.find { it.id == testregel.innhaldstypeTesting },
+          krav = kravList.firstOrNull { it.id == testregel.kravId }
+                  ?: throw IllegalArgumentException("Krav med id ${testregel.kravId} finns ikkje"),
+          modus = testregel.modus,
+          testregelSchema = testregel.testregelSchema,
+          testregelId = testregel.testregelId,
+          versjon = testregel.versjon,
+          status = testregel.status,
+          datoSistEndra = testregel.datoSistEndra,
+          type = testregel.type,
+          spraak = testregel.spraak,
+          kravTilSamsvar = testregel.kravTilSamsvar)
     }
   }
 
@@ -183,9 +182,7 @@ class TestregelResource(
                   datoSistEndra = testregel.datoSistEndra,
                   type = testregel.type,
                   spraak = testregel.spraak,
-                  kravTilSamsvar = testregel.kravTilSamsvar
-              )
-          )
+                  kravTilSamsvar = testregel.kravTilSamsvar))
         }
         .getOrElse {
           logger.error("Feila ved henting av testreglar", it)

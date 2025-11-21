@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
+import java.sql.Timestamp
+import java.time.Instant
 import no.uutilsynet.testlab2testing.forenkletkontroll.Maaling.*
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.crawlParametersRowmapper
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.createMaalingParams
@@ -38,8 +40,6 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import java.sql.Timestamp
-import java.time.Instant
 
 @Component
 class MaalingDAO(
@@ -53,7 +53,7 @@ class MaalingDAO(
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
 
-    data class MaalingDTO(
+  data class MaalingDTO(
       val id: Int,
       val navn: String,
       val datoStart: Instant,
@@ -108,10 +108,11 @@ class MaalingDAO(
     val insertMaalingLoeysingQuery =
         """insert into "testlab2_testing"."maalingloeysing" (idMaaling, idLoeysing) values (:idMaaling, :idLoeysing)"""
 
-      val maalingTestregelQuery =
-         """
+    val maalingTestregelQuery =
+        """
          select testregel_id from testlab2_testing.maaling_testregel where maaling_id = :id
-     """.trimIndent()
+     """
+            .trimIndent()
 
     fun updateMaalingParams(maaling: Maaling): Map<String, Any> {
       val status =
@@ -251,11 +252,12 @@ class MaalingDAO(
       crawlResultatForMaaling(id, getLoeysingarForMaaling(id, datoStart))
 
   private fun MaalingDTO.getTestregelList(): List<TestregelBase> {
-      val testregelIds = jdbcTemplate.queryForList(
-          maalingTestregelQuery, mapOf("id" to id), Int::class.java).toList()
+    val testregelIds =
+        jdbcTemplate
+            .queryForList(maalingTestregelQuery, mapOf("id" to id), Int::class.java)
+            .toList()
 
-
-      return testregelClient.getTestregelListFromIds(testregelIds).map { it.toTestregelBase() }
+    return testregelClient.getTestregelListFromIds(testregelIds).map { it.toTestregelBase() }
   }
 
   fun getLoeysingarForMaaling(id: Int, datoStart: Instant): List<Loeysing> {
@@ -430,18 +432,18 @@ class MaalingDAO(
         }
   }
 
-    fun hasMaalingTestregel(testregelId: Int): Boolean {
-        val sql =
-            "SELECT COUNT(*) FROM testlab2_testing.maaling_testregel WHERE testregel_id = :testregelId"
-        val params =
-            MapSqlParameterSource()
-                .addValue(
-                    "testregelId",
-                    testregelId,
-                )
-        val count = jdbcTemplate.queryForObject(sql, params, Int::class.java) ?: 0
-        return count > 0
-    }
+  fun hasMaalingTestregel(testregelId: Int): Boolean {
+    val sql =
+        "SELECT COUNT(*) FROM testlab2_testing.maaling_testregel WHERE testregel_id = :testregelId"
+    val params =
+        MapSqlParameterSource()
+            .addValue(
+                "testregelId",
+                testregelId,
+            )
+    val count = jdbcTemplate.queryForObject(sql, params, Int::class.java) ?: 0
+    return count > 0
+  }
 
-    data class LoeysingMetadata(val id: Int, val loeysing: Loeysing, val antallNettsider: Int)
+  data class LoeysingMetadata(val id: Int, val loeysing: Loeysing, val antallNettsider: Int)
 }

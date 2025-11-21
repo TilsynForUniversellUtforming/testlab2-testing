@@ -3,9 +3,9 @@ package no.uutilsynet.testlab2testing.testregel
 import java.time.Instant
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.common.TestlabLocale
+import no.uutilsynet.testlab2testing.testregel.import.TestregelImportService
 import no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.testregel.import.TestregelImportService
 import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
 import no.uutilsynet.testlab2testing.testregel.model.Tema
 import no.uutilsynet.testlab2testing.testregel.model.Testobjekt
@@ -21,11 +21,12 @@ class TestregelResourceTest {
 
   private val kravregisterClient = mock<KravregisterClient>()
   private val testregelImportService = mock<TestregelImportService>()
-    private val testregelService = mock<TestregelService>()
+  private val testregelService = mock<TestregelService>()
+  private val testregelClient = mock<TestregelClient>()
 
   private val resource =
       TestregelResource(
-          kravregisterClient, testregelImportService,  testregelService)
+          kravregisterClient, testregelImportService, testregelService, testregelClient)
 
   @Test
   fun `getTestregelAggregates returns correct aggregates`() {
@@ -45,8 +46,7 @@ class TestregelResourceTest {
             kravTilSamsvar = "svar",
             tema = 2,
             testobjekt = 3,
-            innhaldstypeTesting = 4
-        )
+            innhaldstypeTesting = 4)
     val tema = Tema(id = 2, tema = "Tema")
     val testobjekt = Testobjekt(id = 3, testobjekt = "Objekt")
     val innhaldstype = InnhaldstypeTesting(id = 4, innhaldstype = "Innhald")

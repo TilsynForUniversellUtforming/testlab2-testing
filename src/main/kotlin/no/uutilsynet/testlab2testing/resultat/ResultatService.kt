@@ -7,10 +7,10 @@ import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
-import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
@@ -217,9 +217,7 @@ class ResultatService(
   }
 
   private fun mapTestregel(result: ResultatLoeysingDTO): ResultatLoeysing {
-      val testregel = testregelClient.getTestregelById(result.testregelId)
-
-
+    val testregel = testregelClient.getTestregelById(result.testregelId)
 
     return ResultatLoeysing(
         id = result.id,
@@ -239,7 +237,7 @@ class ResultatService(
         kravTittel = testregel.krav.tittel)
   }
 
-    @Observed(name = "resultatservice.getresultatforkontrollloeysingtestregel")
+  @Observed(name = "resultatservice.getresultatforkontrollloeysingtestregel")
   fun getResultatListKontroll(
       kontrollId: Int,
       loeysingId: Int,
@@ -386,7 +384,12 @@ class ResultatService(
   private fun talTestaElement(result: List<ResultatLoeysing>) =
       result.sumOf { it.talElementBrot } + result.sumOf { it.talElementSamsvar }
 
-    fun getTalBrotForKontrollLoeysingTestregel(rapportId: String, loeysingId: Int, testregelId: Int): Result<Int> {
-        return testresultatDAO.getTalBrotForKontrollLoeysingTestregel(rapportId, loeysingId, testregelId)
-    }
+  fun getTalBrotForKontrollLoeysingTestregel(
+      rapportId: String,
+      loeysingId: Int,
+      testregelId: Int
+  ): Result<Int> {
+    return testresultatDAO.getTalBrotForKontrollLoeysingTestregel(
+        rapportId, loeysingId, testregelId)
+  }
 }

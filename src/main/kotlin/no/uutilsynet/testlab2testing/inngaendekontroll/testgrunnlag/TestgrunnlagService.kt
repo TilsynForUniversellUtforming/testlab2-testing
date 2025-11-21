@@ -173,7 +173,7 @@ class TestgrunnlagService(
     return loeysingList
   }
 
-    fun hasTestgrunnlagTestregel(testregelId: Int): Boolean {
-        return testgrunnlagDAO.hasTestgrunnlagTestregel(testregelId)
-    }
+  fun hasTestgrunnlagTestregel(testregelId: Int): Boolean {
+    return testgrunnlagDAO.hasTestgrunnlagTestregel(testregelId)
+  }
 }

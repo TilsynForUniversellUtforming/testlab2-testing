@@ -11,13 +11,16 @@ import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import org.springframework.stereotype.Service
 
 @Service
-class TestregelService(private val testregelDAO: TestregelDAO, private val kravregisterClient: KravregisterClient) {
+class TestregelService(
+    private val testregelDAO: TestregelDAO,
+    private val kravregisterClient: KravregisterClient
+) {
 
-    fun getTestregel(testregelId: Int): Testregel =
+  fun getTestregel(testregelId: Int): Testregel =
       testregelDAO.getTestregel(testregelId)
           ?: throw IllegalArgumentException("Fant ikkje testregel med id $testregelId")
 
-    fun getTestregelListFromIds(testregelIdList: List<Int>): List<Testregel> {
+  fun getTestregelListFromIds(testregelIdList: List<Int>): List<Testregel> {
     return testregelDAO.getMany(testregelIdList)
   }
 
@@ -37,12 +40,11 @@ class TestregelService(private val testregelDAO: TestregelDAO, private val kravr
     return testregelDAO.createTestregel(testregelInit)
   }
 
-
-    fun getTemaForTestregel(): List<Tema> {
+  fun getTemaForTestregel(): List<Tema> {
     return testregelDAO.getTemaForTestregel()
   }
 
-    fun getInnhaldstypeForTesting(): List<InnhaldstypeTesting> {
+  fun getInnhaldstypeForTesting(): List<InnhaldstypeTesting> {
     return testregelDAO.getInnhaldstypeForTesting()
   }
 
@@ -67,7 +69,7 @@ class TestregelService(private val testregelDAO: TestregelDAO, private val kravr
       val krav =
           kravMap[testregel.kravId]
               ?: throw IllegalArgumentException("Fant ikkje krav med id ${testregel.kravId}")
-        TestregelKrav(testregel, krav)
+      TestregelKrav(testregel, krav)
     }
   }
 }

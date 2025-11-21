@@ -17,7 +17,10 @@ import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RegelsettDAOTest(@Autowired val regelsettDAO: RegelsettDAO, @Autowired val regelsettService: RegelsettService) {
+class RegelsettDAOTest(
+    @Autowired val regelsettDAO: RegelsettDAO,
+    @Autowired val regelsettService: RegelsettService
+) {
 
   @AfterAll
   fun cleanup() {

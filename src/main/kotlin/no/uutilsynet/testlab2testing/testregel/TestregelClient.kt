@@ -15,37 +15,39 @@ class TestregelClient(
     private val kontrollDAO: KontrollDAO,
     private val testgrunnlagService: TestgrunnlagService
 ) {
-    fun getTestregelById(testregelId: Int) =
-        testregelCache.getTestregelById(testregelId)
+  fun getTestregelById(testregelId: Int) = testregelCache.getTestregelById(testregelId)
 
-    fun getTestregelByKey(testregelKey: String): TestregelKrav =
-        testregelCache.getTestregelByKey(testregelKey)
+  fun getTestregelByKey(testregelKey: String): TestregelKrav =
+      testregelCache.getTestregelByKey(testregelKey)
 
-    fun deleteTestregel(testregelId: Int): Int {
-        // Sjekk om testregelen er i bruk i noen kontroller
-        val kontrollerMedTestregel = kontrollDAO.hasKontrollerTestregel(testregelId)
-        check(!kontrollerMedTestregel) { "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i kontroller." }
-
-        // Sjekk om testregelen er i bruk i noe testgrunnlag
-        val testgrunnlagMedTestregel = testgrunnlagService.hasTestgrunnlagTestregel(testregelId)
-        check(!testgrunnlagMedTestregel) { "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i testgrunnlag." }
-
-        val maalingMedTestregel = maalingService.hasMaalingTestregel(testregelId)
-        check(!maalingMedTestregel) { "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i maaling." }
-
-
-        return testregelService.deleteTestregel(testregelId)
+  fun deleteTestregel(testregelId: Int): Int {
+    // Sjekk om testregelen er i bruk i noen kontroller
+    val kontrollerMedTestregel = kontrollDAO.hasKontrollerTestregel(testregelId)
+    check(!kontrollerMedTestregel) {
+      "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i kontroller."
     }
 
-    fun getTestregelListFromIds(testregelIdList: List<Int>): List<Testregel> {
-        return testregelService.getTestregelListFromIds(testregelIdList)
+    // Sjekk om testregelen er i bruk i noe testgrunnlag
+    val testgrunnlagMedTestregel = testgrunnlagService.hasTestgrunnlagTestregel(testregelId)
+    check(!testgrunnlagMedTestregel) {
+      "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i testgrunnlag."
     }
 
-    fun getTestregelList(): List<Testregel> {
-        return testregelService.getTestregelList()
+    val maalingMedTestregel = maalingService.hasMaalingTestregel(testregelId)
+    check(!maalingMedTestregel) {
+      "Kan ikkje slette testregel med id $testregelId fordi den er i bruk i maaling."
     }
 
-    fun getInnhaldstypeForTesting() =
-        testregelService.getInnhaldstypeForTesting()
+    return testregelService.deleteTestregel(testregelId)
+  }
 
+  fun getTestregelListFromIds(testregelIdList: List<Int>): List<Testregel> {
+    return testregelService.getTestregelListFromIds(testregelIdList)
+  }
+
+  fun getTestregelList(): List<Testregel> {
+    return testregelService.getTestregelList()
+  }
+
+  fun getInnhaldstypeForTesting() = testregelService.getInnhaldstypeForTesting()
 }

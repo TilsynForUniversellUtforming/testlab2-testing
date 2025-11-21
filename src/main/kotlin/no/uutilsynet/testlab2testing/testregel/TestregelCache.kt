@@ -10,26 +10,26 @@ class TestregelCache(private val testregelService: TestregelService) {
 
   /*@Observed(name = "testregelcache.getBykey")*/
   fun getTestregelByKey(testregelKey: String): TestregelKrav {
-      if(cacheIds.isEmpty()){
-          init()
-      }
+    if (cacheIds.isEmpty()) {
+      init()
+    }
     return cacheKey[testregelKey]
         ?: throw NoSuchElementException("Testregel not found: $testregelKey")
   }
 
   /*@Observed(name = "testregelcache.getbyid")*/
   fun getTestregelById(testregelId: Int): TestregelKrav {
-      if(cacheIds.isEmpty()){
-          init()
-      }
+    if (cacheIds.isEmpty()) {
+      init()
+    }
     return cacheIds[testregelId]
         ?: throw NoSuchElementException("Testregel not found for id: $testregelId")
   }
 
-    fun init() {
-        testregelService.getTestregelKravList().forEach { testregel ->
-            cacheKey[testregel.testregelId] = testregel
-            cacheIds[testregel.id] = testregel
-        }
+  fun init() {
+    testregelService.getTestregelKravList().forEach { testregel ->
+      cacheKey[testregel.testregelId] = testregel
+      cacheIds[testregel.id] = testregel
     }
+  }
 }

@@ -57,8 +57,7 @@ data class Testregel(
             namn = this.namn,
             kravId = this.kravId,
             modus = this.modus,
-            type = this.type
-        )
+            type = this.type)
   }
 }
 

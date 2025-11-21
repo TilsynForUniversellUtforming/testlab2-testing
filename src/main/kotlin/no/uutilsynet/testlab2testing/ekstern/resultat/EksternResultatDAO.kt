@@ -229,6 +229,4 @@ class EksternResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           .firstOrNull()
     }
   }
-
-
 }

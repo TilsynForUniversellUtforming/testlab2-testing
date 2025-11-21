@@ -10,8 +10,8 @@ import no.uutilsynet.testlab2.constants.TestregelInnholdstype
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestregelStatus
 import no.uutilsynet.testlab2testing.common.TestlabLocale
-import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.*
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
 import org.slf4j.LoggerFactory
@@ -197,8 +197,7 @@ class TestregelImportService(
         testobjekt = 1,
         kravTilSamsvar = testregelMeta.kravTilSamsvar,
         testregelSchema = githubSource,
-        innhaldstypeTesting = 1
-    )
+        innhaldstypeTesting = 1)
   }
 
   fun extractKrav(testregelId: String): String {

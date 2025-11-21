@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.net.URI
+import java.time.Instant
+import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
@@ -18,7 +21,6 @@ import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
-import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
@@ -27,8 +29,9 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
-import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
 import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -37,9 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
-import java.net.URI
-import java.time.Instant
-import kotlin.properties.Delegates
 
 @SpringBootTest(
     properties =
@@ -65,7 +65,7 @@ class ResultatServiceTest(
   @MockitoBean lateinit var sideutvalDAO: SideutvalDAO
   @MockitoBean lateinit var kravregisterClient: KravregisterClient
   @MockitoSpyBean lateinit var testregelService: TestregelService
-    @MockitoSpyBean lateinit var testregelClient: TestregelClient
+  @MockitoSpyBean lateinit var testregelClient: TestregelClient
   @MockitoSpyBean lateinit var kontrollDAO: KontrollDAO
 
   @Test
@@ -191,7 +191,7 @@ class ResultatServiceTest(
             TestgrunnlagType.OPPRINNELEG_TEST,
             Instant.now())
     val testgrunnlagList = TestgrunnlagList(testgrunnlagKontroll, emptyList())
-    val testregel =  testUtils.testregelKravObject()
+    val testregel = testUtils.testregelKravObject()
 
     val resultat1 =
         ResultatManuellKontroll(

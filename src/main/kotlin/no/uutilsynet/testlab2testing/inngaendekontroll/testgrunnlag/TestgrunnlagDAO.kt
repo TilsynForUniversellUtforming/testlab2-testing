@@ -259,7 +259,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
   }
 
-    fun hasTestgrunnlagTestregel(testregelId: Int): Boolean {
+  fun hasTestgrunnlagTestregel(testregelId: Int): Boolean {
     val resultat =
         jdbcTemplate
             .query(
@@ -273,6 +273,6 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 }
             .toList()
 
-        return resultat.isNotEmpty()
-    }
+    return resultat.isNotEmpty()
+  }
 }

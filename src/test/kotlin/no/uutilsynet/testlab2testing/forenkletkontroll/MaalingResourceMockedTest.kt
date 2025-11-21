@@ -19,7 +19,6 @@ import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterProperties
 import no.uutilsynet.testlab2testing.testing.automatisk.AutotestingService
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.assertj.core.api.Assertions
 import org.hamcrest.CoreMatchers
 import org.junit.jupiter.api.BeforeEach
@@ -56,8 +55,6 @@ class MaalingResourceMockedTest {
 
   @MockitoBean private lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
 
-  @MockitoBean private lateinit var testregelService: TestregelService
-
   @MockitoBean private lateinit var sideutvalDAO: SideutvalDAO
 
   @MockitoBean private lateinit var brukarService: BrukarService
@@ -75,13 +72,7 @@ class MaalingResourceMockedTest {
   fun setup() {
     MockitoAnnotations.openMocks(this)
 
-    maalingTestingService =
-        MaalingTestingService(
-            autotesterService,
-            maalingDAO,
-            loeysingsRegisterClient,
-            maalingService,
-            testregelService)
+    maalingTestingService = MaalingTestingService(autotesterService, maalingDAO, maalingService)
     maalingResource =
         MaalingResource(
             maalingDAO,

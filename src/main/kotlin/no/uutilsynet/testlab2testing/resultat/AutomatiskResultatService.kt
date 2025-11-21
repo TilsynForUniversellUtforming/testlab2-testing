@@ -1,6 +1,9 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import io.micrometer.observation.annotation.Observed
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.stream.Collectors
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.sideutval.crawling.Sideutval
@@ -13,9 +16,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.util.stream.Collectors
 
 @Service
 class AutomatiskResultatService(
@@ -36,14 +36,14 @@ class AutomatiskResultatService(
       size: Int,
       pageNumber: Int
   ): List<TestresultatDetaljert> {
-      val maalingId = maalingService.getMaalingForKontroll(kontrollId)
-      return if(testresultatDAO.hasResultInDB(maalingId, loeysingId)){
-          getDetaljertResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
-      } else {
-          getResultatForKontroll(kontrollId, loeysingId).filter {
-              filterByTestregel(it.testregelId, listOf(testregelId))
-          }
+    val maalingId = maalingService.getMaalingForKontroll(kontrollId)
+    return if (testresultatDAO.hasResultInDB(maalingId, loeysingId)) {
+      getDetaljertResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
+    } else {
+      getResultatForKontroll(kontrollId, loeysingId).filter {
+        filterByTestregel(it.testregelId, listOf(testregelId))
       }
+    }
   }
 
   override fun getResultatForKontroll(
@@ -51,11 +51,11 @@ class AutomatiskResultatService(
       loeysingId: Int
   ): List<TestresultatDetaljert> {
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)
-      return if(testresultatDAO.hasResultInDB(maalingId, loeysingId)){
-          getAutomatiskTestresultatMaaling(maalingId, loeysingId)
-      } else {
-          getResultatForMaaling(maalingId, loeysingId)
-      }
+    return if (testresultatDAO.hasResultInDB(maalingId, loeysingId)) {
+      getAutomatiskTestresultatMaaling(maalingId, loeysingId)
+    } else {
+      getResultatForMaaling(maalingId, loeysingId)
+    }
   }
 
   fun getDetaljertResultatForKontroll(

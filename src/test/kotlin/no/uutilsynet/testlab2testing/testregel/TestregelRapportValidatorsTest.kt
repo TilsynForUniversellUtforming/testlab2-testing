@@ -25,22 +25,21 @@ class TestregelValidatorsTest {
   fun validForenklet() {
     assertDoesNotThrow {
       Testregel(
-          1,
-          name,
-          1,
-          name,
-          testregelTestKravId,
-          TestregelStatus.publisert,
-          Instant.now(),
-          TestregelInnholdstype.nett,
-          TestregelModus.automatisk,
-          TestlabLocale.nb,
-          1,
-          1,
-          "",
-          testregelSchemaAutomatisk,
-          1
-      )
+              1,
+              name,
+              1,
+              name,
+              testregelTestKravId,
+              TestregelStatus.publisert,
+              Instant.now(),
+              TestregelInnholdstype.nett,
+              TestregelModus.automatisk,
+              TestlabLocale.nb,
+              1,
+              1,
+              "",
+              testregelSchemaAutomatisk,
+              1)
           .validateTestregel()
     }
   }
@@ -50,22 +49,21 @@ class TestregelValidatorsTest {
   fun validManuell() {
     assertDoesNotThrow {
       Testregel(
-          1,
-          name,
-          1,
-          name,
-          testregelTestKravId,
-          TestregelStatus.publisert,
-          Instant.now(),
-          TestregelInnholdstype.nett,
-          TestregelModus.manuell,
-          TestlabLocale.nb,
-          1,
-          1,
-          "",
-          testregelSchemaManuell,
-          1
-      )
+              1,
+              name,
+              1,
+              name,
+              testregelTestKravId,
+              TestregelStatus.publisert,
+              Instant.now(),
+              TestregelInnholdstype.nett,
+              TestregelModus.manuell,
+              TestlabLocale.nb,
+              1,
+              1,
+              "",
+              testregelSchemaManuell,
+              1)
           .validateTestregel()
     }
   }
@@ -93,8 +91,7 @@ class TestregelValidatorsTest {
               1,
               "",
               testregelSchemaAutomatisk,
-              1
-          )
+              1)
       assertTrue(testregel.validateTestregel().isFailure)
     }
 
@@ -117,8 +114,7 @@ class TestregelValidatorsTest {
               1,
               "",
               "",
-              1
-          )
+              1)
       assertTrue(testregel.validateTestregel().isFailure)
     }
 
@@ -141,8 +137,7 @@ class TestregelValidatorsTest {
               1,
               "",
               "",
-              1
-          )
+              1)
       assertTrue(testregel.validateTestregel().isFailure)
     }
   }

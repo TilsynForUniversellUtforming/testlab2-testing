@@ -83,8 +83,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
             innhaldstypeTesting = 1,
             tema = 1,
             testobjekt = 1,
-            kravTilSamsvar = ""
-        )
+            kravTilSamsvar = "")
     val id = createTestregel(testregelInit)
 
     val oldTestregel = testregelDAO.getTestregel(id)
@@ -121,8 +120,7 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
             innhaldstypeTesting = 1,
             tema = 1,
             testobjekt = 1,
-            kravTilSamsvar = ""
-        )
+            kravTilSamsvar = "")
     val id = createTestregel(testregelInit)
 
     val oldTestregel = testregelDAO.getTestregel(id)
@@ -163,7 +161,6 @@ class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
               innhaldstypeTesting = 1,
               tema = 1,
               testobjekt = 1,
-              kravTilSamsvar = ""
-          )
+              kravTilSamsvar = "")
   ) = testregelDAO.createTestregel(testregelInit).also { deleteThese.add(it) }
 }

@@ -12,7 +12,11 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("v1/regelsett")
-class RegelsettResource(private val regelsettDAO: RegelsettDAO, private val testregelService: TestregelService, private val regelsettService: RegelsettService) {
+class RegelsettResource(
+    private val regelsettDAO: RegelsettDAO,
+    private val testregelService: TestregelService,
+    private val regelsettService: RegelsettService
+) {
 
   val logger = LoggerFactory.getLogger(RegelsettResource::class.java)
 
@@ -78,7 +82,7 @@ Returnerer ei liste med regelsett, eller ei tom liste om ingen finst. Ein kan sp
       if (includeTestreglar) {
         regelsettService.getRegelsettTestreglarList(includeInactive)
       } else {
-          regelsettDAO.getRegelsettBaseList(includeInactive)
+        regelsettDAO.getRegelsettBaseList(includeInactive)
       }
 
   @Operation(

@@ -21,7 +21,7 @@ sealed class KontrollResultatService(
     return testregelCache.getTestregelById(testregelId)
   }
 
-    private fun List<TestresultatDetaljert>.filterBrot(): List<TestresultatDetaljert> {
+  private fun List<TestresultatDetaljert>.filterBrot(): List<TestresultatDetaljert> {
     return this.filter { it.elementResultat == TestresultatUtfall.brot }
   }
 

@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
-    fun getRegelsett(id: Int): RegelsettBase? {
+  fun getRegelsett(id: Int): RegelsettBase? {
     val regelsettDTO =
         DataAccessUtils.singleResult(
             jdbcTemplate.query(
@@ -31,7 +31,7 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         DataClassRowMapper.newInstance(RegelsettBase::class.java))
   }
 
-    @Transactional
+  @Transactional
   @CacheEvict(cacheNames = ["regelsett", "regelsettlist", "regelsettlistbase"], allEntries = true)
   fun createRegelsett(regelsett: RegelsettCreate): Int {
     val id =
@@ -87,10 +87,10 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun deleteRegelsett(id: Int) =
       jdbcTemplate.update("update regelsett set aktiv = false where id = :id", mapOf("id" to id))
 
-    fun getTestregelIdListForRegelsett(id: Int): List<Int> {
+  fun getTestregelIdListForRegelsett(id: Int): List<Int> {
     return jdbcTemplate.queryForList(
         "select testregel_id from regelsett_testregel where regelsett_id = :id",
         mapOf("id" to id),
         Int::class.java)
-    }
+  }
 }

@@ -434,13 +434,11 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             """select kontrolltype from "testlab2_testing"."kontroll" where id = :kontrollId""",
             mapOf("kontrollId" to kontrollId),
             String::class.java)
-        ?.let {
-          Kontrolltype.valueOf(it)
-        }
+        ?.let { Kontrolltype.valueOf(it) }
         ?: throw IllegalArgumentException("Fant ikkje kontroll med id $kontrollId")
   }
 
-    fun hasKontrollerTestregel(testregelId: Int) : Boolean {
+  fun hasKontrollerTestregel(testregelId: Int): Boolean {
     val count =
         jdbcTemplate.queryForObject(
             """select count(*) from "testlab2_testing"."kontroll_testreglar" where testregel_id = :testregelId""",
@@ -448,6 +446,6 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             Int::class.java)
             ?: 0
 
-        return count > 0
-    }
+    return count > 0
+  }
 }
