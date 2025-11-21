@@ -7,11 +7,10 @@ import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
-import no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
@@ -24,9 +23,9 @@ class ResultatService(
     val eksternResultatDAO: EksternResultatDAO,
     val automatiskResultatService: AutomatiskResultatService,
     val manueltResultatService: ManueltResultatService,
-    val testregelService: TestregelService,
     val kravregisterClient: KravregisterClient,
-    val testresultatDAO: TestresultatDAO
+    val testresultatDAO: TestresultatDAO,
+    val testregelClient: TestregelClient
 ) {
 
   val logger = LoggerFactory.getLogger(ResultatService::class.java)
@@ -107,7 +106,7 @@ class ResultatService(
   ): List<LoeysingResultat> {
     val loeysingar = getLoeysingMap(mapResultatToLoeysingId(result)).getOrThrow()
     val statusLoeysingar = progresjonPrLoeysing(testgrunnlagId, kontrolltype, loeysingar)
-    val resultatLoeysingar = resultatPrLoeysing(result, loeysingar, statusLoeysingar, kontrolltype)
+    val resultatLoeysingar = resultatPrLoeysing(result, loeysingar, statusLoeysingar)
     return resultatLoeysingar
   }
 
@@ -121,9 +120,8 @@ class ResultatService(
       result: List<ResultatLoeysingDTO>,
       loeysingar: LoysingList,
       statusLoeysingar: Map<Int, Int>,
-      kontrolltype: Kontrolltype,
   ): List<LoeysingResultat> {
-    val testarar = getBrukararForTest(result.first().id, kontrolltype)
+    val testarar = getBrukararForTest(result.first().id)
 
     val resultLoeysingar =
         result
@@ -146,7 +144,7 @@ class ResultatService(
     return resultLoeysingar
   }
 
-  fun getBrukararForTest(kontrollId: Int, kontrolltype: Kontrolltype): List<String> {
+  fun getBrukararForTest(kontrollId: Int): List<String> {
     return getResultService(kontrollId).getBrukararForTest(kontrollId)
   }
 
@@ -219,8 +217,9 @@ class ResultatService(
   }
 
   private fun mapTestregel(result: ResultatLoeysingDTO): ResultatLoeysing {
-    val krav = getKravWcag2x(result)
-    val testregel = testregelService.getTestregel(result.testregelId)
+      val testregel = testregelClient.getTestregelById(result.testregelId)
+
+
 
     return ResultatLoeysing(
         id = result.id,
@@ -236,15 +235,11 @@ class ResultatService(
         talElementBrot = result.talElementBrot,
         testregelId = result.testregelId,
         testregeltTittel = testregel.namn,
-        kravId = krav.id,
-        kravTittel = krav.tittel)
+        kravId = testregel.krav.id,
+        kravTittel = testregel.krav.tittel)
   }
 
-  private fun getKravWcag2x(result: ResultatLoeysingDTO): KravWcag2x {
-    return testregelService.getKravWcag2x(result.testregelId)
-  }
-
-  @Observed(name = "resultatservice.getresultatforkontrollloeysingtestregel")
+    @Observed(name = "resultatservice.getresultatforkontrollloeysingtestregel")
   fun getResultatListKontroll(
       kontrollId: Int,
       loeysingId: Int,

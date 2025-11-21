@@ -11,8 +11,8 @@ import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
-import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -26,7 +26,7 @@ class KontrollResource(
     val maalingService: MaalingService,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val testgrunnlagService: TestgrunnlagService,
-    val testregelService: TestregelService,
+    val testregelClient: TestregelClient,
 ) {
   private val logger: Logger = LoggerFactory.getLogger(KontrollResource::class.java)
 
@@ -146,7 +146,7 @@ class KontrollResource(
       testreglar: KontrollDAO.KontrollDB.Testreglar?
   ): Testreglar? {
     if (testreglar != null) {
-      val testregelList = testregelService.getMany(testreglar.testregelIdList)
+      val testregelList = testregelClient.getTestregelListFromIds(testreglar.testregelIdList)
       return Testreglar(testreglar.regelsettId, testregelList)
     }
     return null
@@ -270,7 +270,7 @@ class KontrollResource(
   fun testingMetadata(@PathVariable kontrollId: Int): KontrollTestingMetadata {
     val kontroll = getKontrollAsResult(kontrollId).getOrThrow()
     val sideutvaltypar = kontrollDAO.getSideutvalType()
-    val innholdtypeTestingList = testregelService.getInnhaldstypeForTesting()
+    val innholdtypeTestingList = testregelClient.getInnhaldstypeForTesting()
 
     val innholdstypeTesting = innhaldstypeTestingForKontroll(kontroll, innholdtypeTestingList)
 

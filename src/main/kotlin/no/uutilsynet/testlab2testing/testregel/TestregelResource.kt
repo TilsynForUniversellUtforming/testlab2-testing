@@ -21,7 +21,8 @@ import java.net.URI
 class TestregelResource(
     val kravregisterClient: KravregisterClient,
     val testregelImportService: TestregelImportService,
-    val testregelService: TestregelService
+    val testregelService: TestregelService,
+    val testregelClient: TestregelClient
 ) {
 
   val logger = LoggerFactory.getLogger(TestregelResource::class.java)
@@ -76,7 +77,7 @@ class TestregelResource(
   @DeleteMapping("{testregelId}")
   fun deleteTestregel(@PathVariable("testregelId") testregelId: Int): ResponseEntity<out Any> =
       executeWithErrorHandling {
-        testregelService.deleteTestregel(testregelId)
+          testregelClient.deleteTestregel(testregelId)
       }
 
   @GetMapping("innhaldstypeForTesting")

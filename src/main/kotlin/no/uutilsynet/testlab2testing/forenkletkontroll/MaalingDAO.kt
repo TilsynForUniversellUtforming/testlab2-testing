@@ -23,8 +23,7 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelService
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.toTestregelBase
 import no.uutilsynet.testlab2testing.testregel.model.TestregelBase
 import org.slf4j.LoggerFactory
@@ -42,9 +41,6 @@ import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
 import java.time.Instant
 
-private const val NOT_FINISHED_CRAWLING =
-    "Det er løysingar som ikkje er ferdige med crawling, kan ikkje hente testkoeyringar før alle er ferdige"
-
 @Component
 class MaalingDAO(
     val jdbcTemplate: NamedParameterJdbcTemplate,
@@ -52,14 +48,12 @@ class MaalingDAO(
     val sideutvalDAO: SideutvalDAO,
     val cacheManager: CacheManager,
     val testkoeyringDAO: TestkoeyringDAO,
-    val testregelService: TestregelService
+    val testregelClient: TestregelClient
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
 
-  private val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
-
-  data class MaalingDTO(
+    data class MaalingDTO(
       val id: Int,
       val navn: String,
       val datoStart: Instant,
@@ -260,7 +254,8 @@ class MaalingDAO(
       val testregelIds = jdbcTemplate.queryForList(
           maalingTestregelQuery, mapOf("id" to id), Int::class.java).toList()
 
-      return testregelService.getTestregelList(testregelIds).map { it.toTestregelBase() }
+
+      return testregelClient.getTestregelListFromIds(testregelIds).map { it.toTestregelBase() }
   }
 
   fun getLoeysingarForMaaling(id: Int, datoStart: Instant): List<Loeysing> {
@@ -435,5 +430,18 @@ class MaalingDAO(
         }
   }
 
-  data class LoeysingMetadata(val id: Int, val loeysing: Loeysing, val antallNettsider: Int)
+    fun hasMaalingTestregel(testregelId: Int): Boolean {
+        val sql =
+            "SELECT COUNT(*) FROM testlab2_testing.maaling_testregel WHERE testregel_id = :testregelId"
+        val params =
+            MapSqlParameterSource()
+                .addValue(
+                    "testregelId",
+                    testregelId,
+                )
+        val count = jdbcTemplate.queryForObject(sql, params, Int::class.java) ?: 0
+        return count > 0
+    }
+
+    data class LoeysingMetadata(val id: Int, val loeysing: Loeysing, val antallNettsider: Int)
 }

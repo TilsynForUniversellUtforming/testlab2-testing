@@ -2,30 +2,26 @@ package no.uutilsynet.testlab2testing.resultat
 
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.resultat.ResultatService.LoysingList
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 
 sealed class KontrollResultatService(
     protected val resultatDAO: ResultatDAO,
     protected val kravregisterClient: KravregisterClient,
-    protected val testregelService: TestregelService,
+    protected val testregelCache: TestregelCache
 ) {
 
   protected fun filterByTestregel(testregelId: Int, testregelIdsForKrav: List<Int>): Boolean {
     return testregelIdsForKrav.contains(testregelId)
   }
 
-  protected fun getTesteregelFromId(testregelId: Int): Testregel {
-    return testregelService.getTestregel(testregelId)
+  protected fun getTesteregelFromId(testregelId: Int): TestregelKrav {
+    return testregelCache.getTestregelById(testregelId)
   }
 
-  protected fun getSuksesskriteriumFromTestregel(kravId: Int): List<String> {
-    return listOf(kravregisterClient.getSuksesskriteriumFromKrav(kravId))
-  }
-
-  private fun List<TestresultatDetaljert>.filterBrot(): List<TestresultatDetaljert> {
+    private fun List<TestresultatDetaljert>.filterBrot(): List<TestresultatDetaljert> {
     return this.filter { it.elementResultat == TestresultatUtfall.brot }
   }
 

@@ -258,4 +258,21 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           ?: throw NoSuchElementException("Testgrunnlag for kontroll finns ikkje")
     }
   }
+
+    fun hasTestgrunnlagTestregel(testregelId: Int): Boolean {
+    val resultat =
+        jdbcTemplate
+            .query(
+                """
+        select 1 from "testlab2_testing"."testgrunnlag_testregel_kontroll" ttk
+        where ttk.testregel_id = :testregelId
+      """
+                    .trimIndent(),
+                mapOf("testregelId" to testregelId)) { rs, _ ->
+                  rs.getInt(1)
+                }
+            .toList()
+
+        return resultat.isNotEmpty()
+    }
 }

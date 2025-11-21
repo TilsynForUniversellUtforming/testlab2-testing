@@ -67,7 +67,7 @@ data class TestregelKrav(
     val testregelId: String,
     val versjon: Int,
     val namn: String,
-    val kravId: KravWcag2x,
+    val krav: KravWcag2x,
     val status: TestregelStatus,
     val datoSistEndra: Instant = Instant.now(),
     val type: TestregelInnholdstype,

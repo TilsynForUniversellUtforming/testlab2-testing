@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URL
-import java.time.Instant
-import java.time.LocalDateTime
 import no.uutilsynet.testlab2testing.common.Constants
 import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
@@ -11,22 +8,25 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
-import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
+import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import org.springframework.stereotype.Service
+import java.net.URL
+import java.time.Instant
+import java.time.LocalDateTime
 
 @Service
 class ManueltResultatService(
     resultatDAO: ResultatDAO,
     kravregisterClient: KravregisterClient,
-    testregelService: TestregelService,
+    testregelCache: TestregelCache,
     private val testgrunnlagDAO: TestgrunnlagDAO,
     private val testResultatDAO: TestResultatDAO,
     private val sideutvalDAO: SideutvalDAO,
     private val bildeService: BildeService,
-) : KontrollResultatService(resultatDAO, kravregisterClient, testregelService) {
+) : KontrollResultatService(resultatDAO, kravregisterClient, testregelCache) {
 
   override fun getResultatForKontroll(
       kontrollId: Int,
@@ -79,7 +79,7 @@ class ManueltResultatService(
       it: ResultatManuellKontroll,
       sideutvalIdUrlMap: Map<Int, URL>,
   ): TestresultatDetaljert {
-    val testregel: Testregel = getTesteregelFromId(it.testregelId)
+    val testregel: TestregelKrav = getTesteregelFromId(it.testregelId)
     return TestresultatDetaljert(
         it.id,
         it.loeysingId,
@@ -87,7 +87,7 @@ class ManueltResultatService(
         testregel.testregelId,
         it.testgrunnlagId,
         getUrlFromSideutval(sideutvalIdUrlMap, it),
-        getSuksesskriteriumFromTestregel(testregel.kravId),
+        listOf(testregel.krav.suksesskriterium),
         testVartUtfoertToLocalTime(it.testVartUtfoert),
         it.elementUtfall,
         it.elementResultat,
