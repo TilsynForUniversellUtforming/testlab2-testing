@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.resultat
+package no.uutilsynet.testlab2testing.testresultat
 
 import io.micrometer.observation.annotation.Observed
 import java.sql.ResultSet
@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
+import java.sql.Timestamp
 
 @Component
 class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -50,7 +51,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .addValue("testregelId", testresultat.testregelId)
             .addValue("loeysingId", testresultat.loeysingId)
             .addValue("sideutvalId", testresultat.sideutvalId)
-            .addValue("testUtfoert", java.sql.Timestamp.from(testresultat.testUtfoert))
+            .addValue("testUtfoert", Timestamp.from(testresultat.testUtfoert))
             .addValue("elementUtfall", testresultat.elementUtfall)
             .addValue("elementResultat", testresultat.elementResultat.name)
             .addValue("elementOmtalePointer", testresultat.elementOmtalePointer)
@@ -94,7 +95,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .addValue("testregelId", testresultat.testregelId)
             .addValue("loeysingId", testresultat.loeysingId)
             .addValue("sideutvalId", testresultat.sideutvalId)
-            .addValue("testUtfoert", java.sql.Timestamp.from(testresultat.testUtfoert))
+            .addValue("testUtfoert", Timestamp.from(testresultat.testUtfoert))
             .addValue("elementUtfall", testresultat.elementUtfall)
             .addValue("elementResultat", testresultat.elementResultat.name)
             .addValue("elementOmtalePointer", testresultat.elementOmtalePointer)

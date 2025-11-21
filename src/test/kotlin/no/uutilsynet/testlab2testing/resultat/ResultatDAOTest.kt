@@ -2,8 +2,8 @@ package no.uutilsynet.testlab2testing.resultat
 
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2testing.aggregering.AggregeringDAO
-import no.uutilsynet.testlab2testing.aggregering.AggregeringPerTestregelDTO
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelDB
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
@@ -203,7 +203,7 @@ class ResultatDAOTest(
 
     return loeysungIds.map {
       val aggregeringTestregel =
-          AggregeringPerTestregelDTO(
+          AggregeringPerTestregelDB(
               maalingId,
               it,
               testregelId,

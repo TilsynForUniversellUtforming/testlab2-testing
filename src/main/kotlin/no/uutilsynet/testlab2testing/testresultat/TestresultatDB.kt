@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.resultat
+package no.uutilsynet.testlab2testing.testresultat
 
 import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall

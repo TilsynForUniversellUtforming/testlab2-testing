@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.resultat
+package no.uutilsynet.testlab2testing.resultat.import
 
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import org.springframework.web.bind.annotation.GetMapping

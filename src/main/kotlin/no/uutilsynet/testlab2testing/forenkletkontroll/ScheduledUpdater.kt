@@ -2,7 +2,7 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit
-import no.uutilsynet.testlab2testing.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlStatus
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlerClient
