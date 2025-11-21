@@ -65,7 +65,7 @@ class ResultatServiceTest(
   @MockitoBean lateinit var sideutvalDAO: SideutvalDAO
   @MockitoBean lateinit var kravregisterClient: KravregisterClient
   @MockitoSpyBean lateinit var testregelService: TestregelService
-  @MockitoSpyBean lateinit var testregelClient: TestregelClient
+  @MockitoBean lateinit var testregelClient: TestregelClient
   @MockitoSpyBean lateinit var kontrollDAO: KontrollDAO
 
   @Test
@@ -236,7 +236,7 @@ class ResultatServiceTest(
 
     Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1))).thenReturn(sideUtvalList)
 
-    Mockito.`when`(testregelClient.getTestregelById(1)).thenReturn(testregel)
+    Mockito.`when`(testregelClient.getTestregelById(testregel.id)).thenReturn(testregel)
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
     Mockito.`when`(kravregisterClient.listKrav()).thenReturn(listOf(testUtils.kravWcag2xObject()))
     Mockito.doReturn(Kontrolltype.InngaaendeKontroll).`when`(kontrollDAO).getKontrollType(1)
