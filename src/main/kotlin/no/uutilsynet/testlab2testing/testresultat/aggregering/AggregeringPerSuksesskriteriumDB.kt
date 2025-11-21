@@ -1,6 +1,6 @@
-package no.uutilsynet.testlab2testing.aggregering
+package no.uutilsynet.testlab2testing.testresultat.aggregering
 
-data class AggregeringPerSuksesskriteriumDTO(
+data class AggregeringPerSuksesskriteriumDB(
     val maalingId: Int?,
     val loeysingId: Int,
     val suksesskriteriumId: Int,

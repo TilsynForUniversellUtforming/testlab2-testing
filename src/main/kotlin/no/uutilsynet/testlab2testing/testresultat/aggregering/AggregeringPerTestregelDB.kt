@@ -1,6 +1,6 @@
-package no.uutilsynet.testlab2testing.aggregering
+package no.uutilsynet.testlab2testing.testresultat.aggregering
 
-data class AggregeringPerTestregelDTO(
+data class AggregeringPerTestregelDB(
     val maalingId: Int?,
     val loeysingId: Int,
     val testregelId: Int,

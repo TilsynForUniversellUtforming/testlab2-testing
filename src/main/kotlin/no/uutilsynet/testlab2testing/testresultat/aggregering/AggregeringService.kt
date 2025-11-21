@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.aggregering
+package no.uutilsynet.testlab2testing.testresultat.aggregering
 
 import java.net.URI
 import java.net.URL
@@ -101,11 +101,11 @@ class AggregeringService(
 
   fun aggregertResultatTestregelToDTO(
       aggregertResultatTestregel: AggregertResultatTestregel
-  ): AggregeringPerTestregelDTO {
+  ): AggregeringPerTestregelDB {
 
     val testregel = testregelClient.getTestregelByKey(aggregertResultatTestregel.testregelId)
 
-    return AggregeringPerTestregelDTO(
+    return AggregeringPerTestregelDB(
         aggregertResultatTestregel.maalingId,
         aggregertResultatTestregel.loeysing.id,
         testregel.id,
@@ -127,8 +127,8 @@ class AggregeringService(
 
   fun aggregerteResultatSideTODTO(
       aggregertResultatSide: AggregertResultatSide
-  ): AggregeringPerSideDTO {
-    return AggregeringPerSideDTO(
+  ): AggregeringPerSideDB {
+    return AggregeringPerSideDB(
         aggregertResultatSide.maalingId,
         aggregertResultatSide.loeysing.id,
         aggregertResultatSide.sideUrl,
@@ -143,9 +143,9 @@ class AggregeringService(
 
   fun aggregertResultatSuksesskritieriumToDTO(
       aggregertResultatSuksesskriterium: AggregertResultatSuksesskriterium
-  ): AggregeringPerSuksesskriteriumDTO {
+  ): AggregeringPerSuksesskriteriumDB {
 
-    return AggregeringPerSuksesskriteriumDTO(
+    return AggregeringPerSuksesskriteriumDB(
         aggregertResultatSuksesskriterium.maalingId,
         aggregertResultatSuksesskriterium.loeysing.id,
         kravregisterClient.getKravIdFromSuksesskritterium(
@@ -157,58 +157,58 @@ class AggregeringService(
   }
 
   fun dtoToAggregertResultatTestregel(
-      aggregeringPerTestregelDTO: AggregeringPerTestregelDTO,
+      aggregeringPerTestregelDB: AggregeringPerTestregelDB,
       loeysingList: List<Loeysing>
   ): AggregertResultatTestregelAPI {
 
-    val id = aggregeringPerTestregelDTO.maalingId ?: aggregeringPerTestregelDTO.testgrunnlagId
+    val id = aggregeringPerTestregelDB.maalingId ?: aggregeringPerTestregelDB.testgrunnlagId
 
-    val testregel = getTestregel(aggregeringPerTestregelDTO.testregelId)
+    val testregel = getTestregel(aggregeringPerTestregelDB.testregelId)
 
     return AggregertResultatTestregelAPI(
         id,
-        getLoeysing(aggregeringPerTestregelDTO.loeysingId, loeysingList),
+        getLoeysing(aggregeringPerTestregelDB.loeysingId, loeysingList),
         testregel.testregelId,
-        getSuksesskriterium(aggregeringPerTestregelDTO.suksesskriterium),
-        aggregeringPerTestregelDTO.talElementSamsvar,
-        aggregeringPerTestregelDTO.talElementBrot,
-        aggregeringPerTestregelDTO.talElementVarsel,
-        aggregeringPerTestregelDTO.talElementIkkjeForekomst,
-        aggregeringPerTestregelDTO.talSiderSamsvar,
-        aggregeringPerTestregelDTO.talSiderBrot,
-        aggregeringPerTestregelDTO.talSiderIkkjeForekomst,
-        aggregeringPerTestregelDTO.testregelGjennomsnittlegSideSamsvarProsent,
-        aggregeringPerTestregelDTO.testregelGjennomsnittlegSideBrotProsent)
+        getSuksesskriterium(aggregeringPerTestregelDB.suksesskriterium),
+        aggregeringPerTestregelDB.talElementSamsvar,
+        aggregeringPerTestregelDB.talElementBrot,
+        aggregeringPerTestregelDB.talElementVarsel,
+        aggregeringPerTestregelDB.talElementIkkjeForekomst,
+        aggregeringPerTestregelDB.talSiderSamsvar,
+        aggregeringPerTestregelDB.talSiderBrot,
+        aggregeringPerTestregelDB.talSiderIkkjeForekomst,
+        aggregeringPerTestregelDB.testregelGjennomsnittlegSideSamsvarProsent,
+        aggregeringPerTestregelDB.testregelGjennomsnittlegSideBrotProsent)
   }
 
   fun dtoToAggregertResultatSide(
-      aggregeringPerSideDTO: AggregeringPerSideDTO,
+      aggregeringPerSideDB: AggregeringPerSideDB,
       loeysingList: List<Loeysing>
   ): AggregertResultatSide {
     return AggregertResultatSide(
-        aggregeringPerSideDTO.maalingId ?: aggregeringPerSideDTO.testgrunnlagId,
-        getLoeysing(aggregeringPerSideDTO.loeysingId, loeysingList),
-        aggregeringPerSideDTO.sideUrl,
-        aggregeringPerSideDTO.sideNivaa,
-        aggregeringPerSideDTO.gjennomsnittligBruddProsentTR,
-        aggregeringPerSideDTO.talElementSamsvar,
-        aggregeringPerSideDTO.talElementBrot,
-        aggregeringPerSideDTO.talElementVarsel,
-        aggregeringPerSideDTO.talElementIkkjeForekomst)
+        aggregeringPerSideDB.maalingId ?: aggregeringPerSideDB.testgrunnlagId,
+        getLoeysing(aggregeringPerSideDB.loeysingId, loeysingList),
+        aggregeringPerSideDB.sideUrl,
+        aggregeringPerSideDB.sideNivaa,
+        aggregeringPerSideDB.gjennomsnittligBruddProsentTR,
+        aggregeringPerSideDB.talElementSamsvar,
+        aggregeringPerSideDB.talElementBrot,
+        aggregeringPerSideDB.talElementVarsel,
+        aggregeringPerSideDB.talElementIkkjeForekomst)
   }
 
   fun dtoTOAggregertResultatSuksesskriterium(
-      aggregeringPerSuksesskriteriumDTO: AggregeringPerSuksesskriteriumDTO,
+      aggregeringPerSuksesskriteriumDB: AggregeringPerSuksesskriteriumDB,
       loeysingList: List<Loeysing>
   ): AggregertResultatSuksesskriterium {
     return AggregertResultatSuksesskriterium(
-        aggregeringPerSuksesskriteriumDTO.maalingId
-            ?: aggregeringPerSuksesskriteriumDTO.testgrunnlagId,
-        getLoeysing(aggregeringPerSuksesskriteriumDTO.loeysingId, loeysingList),
-        getSuksesskriterium(aggregeringPerSuksesskriteriumDTO.suksesskriteriumId),
-        aggregeringPerSuksesskriteriumDTO.talSiderSamsvar,
-        aggregeringPerSuksesskriteriumDTO.talSiderBrot,
-        aggregeringPerSuksesskriteriumDTO.talSiderIkkjeForekomst)
+        aggregeringPerSuksesskriteriumDB.maalingId
+            ?: aggregeringPerSuksesskriteriumDB.testgrunnlagId,
+        getLoeysing(aggregeringPerSuksesskriteriumDB.loeysingId, loeysingList),
+        getSuksesskriterium(aggregeringPerSuksesskriteriumDB.suksesskriteriumId),
+        aggregeringPerSuksesskriteriumDB.talSiderSamsvar,
+        aggregeringPerSuksesskriteriumDB.talSiderBrot,
+        aggregeringPerSuksesskriteriumDB.talSiderIkkjeForekomst)
   }
 
   private fun getSuksesskriterium(suksesskriteriumId: Int) =
@@ -378,7 +378,7 @@ class AggregeringService(
 
   private fun createAggregeringPerTestregelDTO(
       testresultatForSak: List<ResultatManuellKontroll>
-  ): List<AggregeringPerTestregelDTO> {
+  ): List<AggregeringPerTestregelDB> {
 
     return testresultatForSak
         .groupBy { it.loeysingId }
@@ -389,7 +389,7 @@ class AggregeringService(
 
   private fun aggregeringPerTestregelDTOPrLoeysing(
       it: List<ResultatManuellKontroll>
-  ): List<AggregeringPerTestregelDTO> {
+  ): List<AggregeringPerTestregelDB> {
     val testresultatForLoeysingPerTestregel =
         it.groupBy { it.testregelId }.entries.map { aggregeringPerTestregelDTO(it) }
     return testresultatForLoeysingPerTestregel
@@ -397,7 +397,7 @@ class AggregeringService(
 
   private fun aggregeringPerTestregelDTO(
       it: Map.Entry<Int, List<ResultatManuellKontroll>>
-  ): AggregeringPerTestregelDTO {
+  ): AggregeringPerTestregelDB {
     val testresultat = it.value
     val talElementUtfall = countElementUtfall(testresultat)
 
@@ -407,7 +407,7 @@ class AggregeringService(
 
     val gjennomsnittTestresultat = calculateTestregelGjennomsnitt(testresultat)
 
-    return AggregeringPerTestregelDTO(
+    return AggregeringPerTestregelDB(
         null,
         testresultat.first().loeysingId,
         it.key,
@@ -496,7 +496,7 @@ class AggregeringService(
 
   private fun createAggregeringPerSuksesskriteriumDTO(
       testresultatForSak: List<ResultatManuellKontroll>
-  ): List<AggregeringPerSuksesskriteriumDTO> {
+  ): List<AggregeringPerSuksesskriteriumDB> {
     return testresultatForSak
         .groupBy { it.kravId() }
         .entries
@@ -504,7 +504,7 @@ class AggregeringService(
           val testresultat = it.value
           val (talSiderBrot, talSiderSamsvar, talSiderIkkjeForekomst) =
               countSideUtfall(testresultat)
-          AggregeringPerSuksesskriteriumDTO(
+          AggregeringPerSuksesskriteriumDB(
               null,
               testresultat.first().loeysingId,
               testresultat.first().kravId(),
@@ -517,7 +517,7 @@ class AggregeringService(
 
   private fun createAggregeringPerSideDTO(
       testresultatList: List<ResultatManuellKontroll>
-  ): List<AggregeringPerSideDTO> {
+  ): List<AggregeringPerSideDB> {
     val testresultatMap = testresultatList.groupBy { it.sideutvalId }
 
     val sideutvalIdUrlMap: Map<Int, URL> =
@@ -536,7 +536,7 @@ class AggregeringService(
           requireNotNull(entry.key)
           val testresultat = entry.value
 
-          AggregeringPerSideDTO(
+          AggregeringPerSideDB(
               null,
               testresultat.first().loeysingId,
               entry.key!!,
