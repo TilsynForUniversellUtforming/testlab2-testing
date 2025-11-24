@@ -11,6 +11,7 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.testing.automatisk.TestResultat
+import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
@@ -23,7 +24,8 @@ class AzureStorage2DbService(
     private val maalingService: MaalingService,
     private val sideutvalDAO: SideutvalDAO,
     private val brukarService: BrukarService,
-    private val testregelCache: TestregelCache
+    private val testregelCache: TestregelCache,
+    private val testkoeyringDAO: TestkoeyringDAO
 ) {
 
   val logger = LoggerFactory.getLogger(AzureStorage2DbService::class.java)
@@ -46,15 +48,24 @@ class AzureStorage2DbService(
     }
   }
 
+    fun getBrukarForTestKoeyring(maalingId: Int, loeysingId: Int): Int? {
+
+      val brukarId = testkoeyringDAO.getBrukarIdForTestkoeyring(maalingId, loeysingId)
+        return brukarId ?: 1
+
+  }
+
   fun getTestresultat(maalingId: Int, loeysingId: Int): List<TestresultatDBBase> {
     val sideutvalCache = SideutvalCache(sideutvalDAO, maalingId, loeysingId)
+
+      val brukarId = getBrukarForTestKoeyring(maalingId, loeysingId)
 
     val result =
         getTestresultatFraAzureStorage(maalingId, loeysingId)
             .getOrThrow()
             .map { it as TestResultat }
             .parallelStream()
-            .map { mapAutotesterResultatToDbFormat(it, maalingId, sideutvalCache) }
+            .map { mapAutotesterResultatToDbFormat(it, maalingId, sideutvalCache, brukarId) }
             .collect(Collectors.toList())
 
     logger.debug(
@@ -82,6 +93,7 @@ class AzureStorage2DbService(
       testresultat: TestResultat,
       maalingId: Int,
       sideutvalCache: SideutvalCache,
+      brukarId: Int?
   ): TestresultatDBBase {
 
     /*if (index % 500 == 0) {*/
@@ -108,7 +120,7 @@ class AzureStorage2DbService(
           elementOmtalePointer = testresultat.elementOmtale?.pointer ?: "",
           elmentOmtaleHtml = testresultat.elementOmtale?.htmlCode ?: "",
           elementOmtaleDescription = testresultat.elementOmtale?.description ?: "",
-          brukarId = 0)
+          brukarId = brukarId ?: 1)
     } else {
       TestresultatDBBase(
           null,
