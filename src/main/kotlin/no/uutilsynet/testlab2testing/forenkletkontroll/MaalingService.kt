@@ -210,6 +210,8 @@ class MaalingService(
   fun getFerdigeTestkoeyringar(maalingId: Int): List<TestkoeyringDTO.Ferdig> {
     return testkoeyringDAO
         .getTestkoeyringarForMaaling(maalingId)
+        .map { println(it)
+        it}
         .filterIsInstance<TestkoeyringDTO.Ferdig>()
   }
 
@@ -223,7 +225,8 @@ class MaalingService(
       loeysingId: Int?
   ): Result<List<AutotesterTestresultat>> {
     return runBlocking {
-      mapTestkoeyringToTestresultatBrot(getFilteredAndFerdigTestkoeyringar(maalingId, loeysingId))
+      mapTestkoeyringToTestresultatBrot(
+          getFilteredAndFerdigTestkoeyringar(maalingId, loeysingId))
           .toSingleResult()
           .map { it.values.flatten() }
     }
@@ -231,7 +234,10 @@ class MaalingService(
 
   @Observed(name = "MaalingService.getFilteredAndFerdigTestkoeyringar")
   fun getFilteredAndFerdigTestkoeyringar(maalingId: Int, loeysingId: Int?) =
-      getFerdigeTestkoeyringar(maalingId).filter {
+      getFerdigeTestkoeyringar(maalingId)
+          .map { println("Testkoeyring for $loeysingId")
+          it }
+          .filter {
         loeysingId == null || it.loeysingId == loeysingId
       }
 

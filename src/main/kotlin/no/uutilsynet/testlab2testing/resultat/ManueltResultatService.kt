@@ -13,6 +13,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManu
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import org.springframework.stereotype.Service
@@ -26,7 +27,8 @@ class ManueltResultatService(
     private val testResultatDAO: TestResultatDAO,
     private val sideutvalDAO: SideutvalDAO,
     private val bildeService: BildeService,
-) : KontrollResultatService(resultatDAO, kravregisterClient, testregelCache) {
+    testregelService: TestregelService,
+) : KontrollResultatService(resultatDAO, kravregisterClient, testregelCache, testregelService) {
 
   override fun getResultatForKontroll(
       kontrollId: Int,
@@ -129,7 +131,20 @@ class ManueltResultatService(
         .associateBy({ it.first }, { it.second })
   }
 
-  private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =
+    override fun getTestresulatDetaljertForKrav(
+        kontrollId: Int,
+        loeysingId: Int,
+        kravId: Int,
+        size: Int,
+        pageNumber: Int
+    ): List<TestresultatDetaljert> {
+        val testreglar = getTestreglarForKrav(kravId).map { it.id }
+        return getFilteredAndMappedResults(kontrollId, loeysingId) {
+            filterByTestregel(it.testregelId, testreglar) && it.elementResultat != null
+        }
+    }
+
+    private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =
       (result
               .map { it.status }
               .count { it == ResultatManuellKontrollBase.Status.Ferdig }

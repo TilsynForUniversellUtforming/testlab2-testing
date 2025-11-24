@@ -72,4 +72,8 @@ class TestregelService(
       TestregelKrav(testregel, krav)
     }
   }
+
+    fun getTestreglarForKrav(kravId: Int): List<Testregel> {
+        return testregelDAO.getTestregelForKrav(kravId)
+    }
 }

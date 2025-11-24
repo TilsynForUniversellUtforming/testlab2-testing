@@ -34,7 +34,11 @@ fun TestresultatDetaljert.toTestresultatDetaljertEkstern(
         testVartUtfoert = this.testVartUtfoert,
         elementUtfall = this.elementUtfall,
         elementResultat = this.elementResultat,
-        elementOmtale = this.elementOmtale,
+        elementOmtale = this.elementOmtale?.copy(
+            htmlCode = null,
+            pointer = elementOmtale.pointer,
+            description = this.elementOmtale.description
+        ),
         bilder = this.bilder?.map { it.toEksternPath() },
     )
 

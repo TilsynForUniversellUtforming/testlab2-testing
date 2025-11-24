@@ -4,13 +4,16 @@ import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.resultat.ResultatService.LoysingList
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
+import no.uutilsynet.testlab2testing.testregel.TestregelService
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 
 sealed class KontrollResultatService(
     protected val resultatDAO: ResultatDAO,
     protected val kravregisterClient: KravregisterClient,
-    protected val testregelCache: TestregelCache
+    protected val testregelCache: TestregelCache,
+    protected val testregelService: TestregelService
 ) {
 
   protected fun filterByTestregel(testregelId: Int, testregelIdsForKrav: List<Int>): Boolean {
@@ -51,4 +54,16 @@ sealed class KontrollResultatService(
   fun getResultatBrotForKontroll(kontrollId: Int, loeysingId: Int): List<TestresultatDetaljert> {
     return getResultatForKontroll(kontrollId, loeysingId).filterBrot()
   }
+
+   abstract fun getTestresulatDetaljertForKrav(
+        kontrollId: Int,
+        loeysingId: Int,
+        kravId: Int,
+        size: Int,
+        pageNumber: Int
+    ): List<TestresultatDetaljert>
+
+   protected fun getTestreglarForKrav(kravId: Int): List<Testregel> {
+       return testregelService.getTestreglarForKrav(kravId)
+   }
 }

@@ -1,9 +1,7 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import io.micrometer.observation.annotation.Observed
-import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
@@ -11,11 +9,12 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.testregel.TestregelService
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
+import java.time.LocalDate
 
 @Component
 class ResultatService(
@@ -251,6 +250,18 @@ class ResultatService(
         .getResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
   }
 
+    @Observed(name = "resultatservice.getresultatforkontrollloeysingtestregel")
+    fun getTestresultatDetaljerForKrav(
+        kontrollId: Int,
+        loeysingId: Int,
+        kravId: Int,
+        size: Int = 20,
+        pageNumber: Int = 0,
+    ): List<TestresultatDetaljert> {
+        return getResultService(kontrollId)
+            .getTestresulatDetaljertForKrav(kontrollId, loeysingId, kravId, size, pageNumber)
+    }
+
   private fun getTypeKontroll(kontrollId: Int): Kontrolltype {
     return kontrollDAO.getKontrollType(kontrollId)
   }
@@ -394,4 +405,8 @@ class ResultatService(
     return testresultatDAO.getTalBrotForKontrollLoeysingTestregel(
         rapportId, loeysingId, testregelId)
   }
+
+    fun getTalBrotForKontrollLoeysingKrav(rapportId: String, loeysingId: Int, kravId: Int) {
+        //Todo
+    }
 }

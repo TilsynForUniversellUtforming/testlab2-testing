@@ -27,9 +27,10 @@ class AutomatiskResultatService(
     resultatDAO: ResultatDAO,
     kravregisterClient: KravregisterClient,
     testregelCache: TestregelCache,
+    testregelService: TestregelService,
     val testresultatDBConverter: TestresultatDBConverter,
     val testresultatDAO: TestresultatDAO,
-) : KontrollResultatService(resultatDAO, kravregisterClient, testregelCache) {
+) : KontrollResultatService(resultatDAO, kravregisterClient, testregelCache, testregelService) {
 
   @Observed(name = "AutomatiskResultatService.getResultatForKontroll")
   override fun getResultatForKontroll(
@@ -43,7 +44,7 @@ class AutomatiskResultatService(
       return if(testresultatDAO.hasResultInDB(maalingId, loeysingId)){
           getDetaljertResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
       } else {
-          getResultatForMaaling(kontrollId, loeysingId).filter {
+          getResultatForMaaling(maalingId, loeysingId).filter {
               filterByTestregel(it.testregelId, listOf(testregelId))
           }
       }
@@ -148,7 +149,27 @@ class AutomatiskResultatService(
     return loeysingar.loeysingar.keys.associateWith { 100 }
   }
 
-  override fun getKontrollResultat(kontrollId: Int): List<ResultatLoeysingDTO> {
+    override fun getTestresulatDetaljertForKrav(
+        kontrollId: Int,
+        loeysingId: Int,
+        kravId: Int,
+        size: Int,
+        pageNumber: Int
+    ): List<TestresultatDetaljert> {
+        val testreglar = getTestreglarForKrav(kravId).map { it.id }
+        val maalingId = maalingService.getMaalingForKontroll(kontrollId)
+        val resultat = testresultatDAO.listBy(maalingId, loeysingId, testreglar, size, pageNumber)
+
+        return if(testresultatDAO.hasResultInDB(maalingId, loeysingId)){
+            return testresultatDBConverter.mapTestresults(resultat, maalingId, loeysingId)
+        } else {
+            getResultatForMaaling(maalingId, loeysingId).filter {
+                filterByTestregel(it.testregelId, testreglar)
+            }
+        }
+    }
+
+    override fun getKontrollResultat(kontrollId: Int): List<ResultatLoeysingDTO> {
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)
     return getKontrollResultatMaaling(maalingId)
   }
