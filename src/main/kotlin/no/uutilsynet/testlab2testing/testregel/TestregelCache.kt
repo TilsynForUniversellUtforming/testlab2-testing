@@ -16,8 +16,6 @@ class TestregelCache(private val testregelService: TestregelService) {
     if (cacheIds.isEmpty()) {
       init()
     }
-    println("Cache " + cacheKey)
-    logger.info("Cache " + cacheKey)
 
     return cacheKey[testregelKey]
         ?: throw NoSuchElementException("Testregel not found: $testregelKey")
