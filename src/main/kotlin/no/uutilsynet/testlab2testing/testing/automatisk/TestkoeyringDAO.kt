@@ -257,6 +257,7 @@ class TestkoeyringDAO(
         """
             select b.id, brukarnamn, namn from testkoeyring tk join brukar b on tk.brukar_id = b.id where maaling_id = :maalingId
             
+
         """
             .trimIndent()
     return jdbcTemplate.query(
@@ -362,4 +363,17 @@ class TestkoeyringDAO(
     requireNotNull(autotesterLenke) { "autotestlenke er null" }
     return URI(autotesterLenke).toURL()
   }
+
+    fun getBrukarIdForTestkoeyring(maalingId: Int, loeysingId: Int) : Int?{
+        val query =
+            """
+            select brukar_id from testkoeyring where maaling_id = :maalingId and loeysing_id = :loeysingId
+        """
+                .trimIndent()
+        return jdbcTemplate.queryForObject(
+            query,
+            mapOf("maalingId" to maalingId, "loeysingId" to loeysingId),
+            Int::class.java)
+
+    }
 }
