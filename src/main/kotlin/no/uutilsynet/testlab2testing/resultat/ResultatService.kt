@@ -387,6 +387,19 @@ class ResultatService(
         }
     }
 
+    private inline fun <reified T> handleIkkjeForekomstGeneric(
+        item: T,
+        talElementBrot: Int,
+        talElementSamsvar: Int,
+        copyWithNullScore: (T) -> T
+    ): T {
+        return if (talElementBrot == 0 && talElementSamsvar == 0) {
+            copyWithNullScore(item)
+        } else {
+            item
+        }
+    }
+
   private fun List<ResultatLoeysingDTO>.getLoeysingar(): LoysingList {
     return this.map { it.loeysingId }.let { getLoeysingMap(it).getOrThrow() }
   }
