@@ -1,10 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URL
-import java.time.Instant
-import java.time.LocalDateTime
 import no.uutilsynet.testlab2testing.common.Constants
-import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagList
@@ -12,23 +8,26 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManu
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelCache
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.stereotype.Service
+import java.net.URL
+import java.time.Instant
+import java.time.LocalDateTime
 
 @Service
 class ManueltResultatService(
     resultatDAO: ResultatDAO,
     kravregisterClient: KravregisterClient,
-    testregelCache: TestregelCache,
     private val testgrunnlagDAO: TestgrunnlagDAO,
     private val testResultatDAO: TestResultatDAO,
     private val sideutvalDAO: SideutvalDAO,
     private val bildeService: BildeService,
-    testregelService: TestregelService,
-) : KontrollResultatService(resultatDAO, kravregisterClient, testregelCache, testregelService) {
+    testresultatDAO: no.uutilsynet.testlab2testing.testresultat.TestresultatDAO,
+    testregelClient: TestregelClient,
+    ) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelClient =testregelClient ) {
 
   override fun getResultatForKontroll(
       kontrollId: Int,
@@ -142,6 +141,22 @@ class ManueltResultatService(
         return getFilteredAndMappedResults(kontrollId, loeysingId) {
             filterByTestregel(it.testregelId, testreglar) && it.elementResultat != null
         }
+    }
+
+    override fun getTalBrotForKontrollLoeysingTestregel(
+        kontrollId: Int,
+        loeysingId: Int,
+        testregelId: Int
+    ): Result<Int> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getTalBrotForKontrollLoeysingKrav(
+        kontrollId: Int,
+        loeysingId: Int,
+        kravId: Int
+    ): Result<Int> {
+        TODO("Not yet implemented")
     }
 
     private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =

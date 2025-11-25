@@ -1,19 +1,19 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
-import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.resultat.ResultatService.LoysingList
-import no.uutilsynet.testlab2testing.testregel.TestregelCache
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 
 sealed class KontrollResultatService(
     protected val resultatDAO: ResultatDAO,
     protected val kravregisterClient: KravregisterClient,
-    protected val testregelCache: TestregelCache,
-    protected val testregelService: TestregelService
+    protected val testresultatDAO: TestresultatDAO,
+    protected val testregelClient: TestregelClient,
 ) {
 
   protected fun filterByTestregel(testregelId: Int, testregelIdsForKrav: List<Int>): Boolean {
@@ -21,7 +21,7 @@ sealed class KontrollResultatService(
   }
 
   protected fun getTesteregelFromId(testregelId: Int): TestregelKrav {
-    return testregelCache.getTestregelById(testregelId)
+    return testregelClient.getTestregelById(testregelId)
   }
 
   private fun List<TestresultatDetaljert>.filterBrot(): List<TestresultatDetaljert> {
@@ -64,6 +64,15 @@ sealed class KontrollResultatService(
     ): List<TestresultatDetaljert>
 
    protected fun getTestreglarForKrav(kravId: Int): List<Testregel> {
-       return testregelService.getTestreglarForKrav(kravId)
+       return testregelClient.getTestregelByKravId(kravId)
    }
+
+    abstract fun getTalBrotForKontrollLoeysingTestregel(
+        kontrollId: Int,
+        loeysingId: Int,
+        testregelId: Int,
+    ): Result<Int>
+
+    abstract fun getTalBrotForKontrollLoeysingKrav(kontrollId:Int, loeysingId: Int, kravId: Int) : Result<Int>
+
 }

@@ -13,7 +13,9 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManu
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -31,16 +33,17 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
   private val resultatDAO = mock(ResultatDAO::class.java)
   private val kravregisterClient = mock(KravregisterClient::class.java)
   private val testregelCache = mock(TestregelCache::class.java)
+    private val testregelClient = mock(TestregelClient::class.java)
+    private val testResultatDAOTestresultat = mock(TestresultatDAO::class.java)
 
   private val manueltResultatService =
       ManueltResultatService(
           resultatDAO,
           kravregisterClient,
-          testregelCache,
           testgrunnlagDAO,
           testResultatDAO,
           sideutvalDAO,
-          bildeService)
+          bildeService, testResultatDAOTestresultat,testregelClient)
 
   @Test
   fun `test getFilteredAndMappedResults with valid filter`() {

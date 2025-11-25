@@ -9,7 +9,6 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
@@ -18,18 +17,17 @@ import java.time.LocalDate
 
 @Component
 class ResultatService(
-    val resultatDAO: ResultatDAO,
-    val loeysingsRegisterClient: LoeysingsRegisterClient,
-    val kontrollDAO: KontrollDAO,
-    val eksternResultatDAO: EksternResultatDAO,
-    val automatiskResultatService: AutomatiskResultatService,
-    val manueltResultatService: ManueltResultatService,
-    val kravregisterClient: KravregisterClient,
-    val testresultatDAO: TestresultatDAO,
-    val testregelClient: TestregelClient
+    private val resultatDAO: ResultatDAO,
+    private val loeysingsRegisterClient: LoeysingsRegisterClient,
+    private val kontrollDAO: KontrollDAO,
+    private val eksternResultatDAO: EksternResultatDAO,
+    private val automatiskResultatService: AutomatiskResultatService,
+    private val manueltResultatService: ManueltResultatService,
+    private val kravregisterClient: KravregisterClient,
+    private val testregelClient: TestregelClient
 ) {
 
-  val logger = LoggerFactory.getLogger(ResultatService::class.java)
+    val logger = LoggerFactory.getLogger(ResultatService::class.java)
 
   private fun getKontrollResultatCommon(
       fetchResults: () -> List<ResultatLoeysingDTO>,
@@ -211,10 +209,11 @@ class ResultatService(
   }
 
   private fun handleIkkjeForekomst(resultat: ResultatOversiktLoeysing): ResultatOversiktLoeysing {
-    if (erIkkjeForekomst(resultat.talElementBrot, resultat.talElementSamsvar)) {
-      return resultat.copy(score = null)
-    }
-    return resultat
+      return handleIkkjeForekomstGeneric(
+          resultat,
+          resultat.talElementBrot,
+          resultat.talElementSamsvar
+      ) { it.copy(score = null) }
   }
 
   private fun mapTestregel(result: ResultatLoeysingDTO): ResultatLoeysing {
@@ -250,8 +249,7 @@ class ResultatService(
         .getResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
   }
 
-    @Observed(name = "resultatservice.getresultatforkontrollloeysingtestregel")
-    fun getTestresultatDetaljerForKrav(
+    fun getTestresultatDetaljertForKrav(
         kontrollId: Int,
         loeysingId: Int,
         kravId: Int,
@@ -275,16 +273,13 @@ class ResultatService(
   ): List<ResultatTema> =
       resultatDAO
           .getResultatPrTema(kontrollId, kontrolltype, loeysingId, startDato, sluttDato)
-          .map { handleIkkjeForekomstTema(it) }
+          .map { handleIkkjeForekomstGeneric(
+              it,
+              it.talElementBrot,
+              it.talElementSamsvar
+          ) { it.copy(score = null) } }
 
-  private fun handleIkkjeForekomstTema(it: ResultatTema) =
-      if (erIkkjeForekomst(it.talElementBrot, it.talElementSamsvar)) {
-        it.copy(score = null)
-      } else {
-        it
-      }
-
-  fun getResultatPrKrav(
+    fun getResultatPrKrav(
       kontrollId: Int?,
       kontrollType: Kontrolltype?,
       loeysingId: Int?,
@@ -294,17 +289,14 @@ class ResultatService(
     return resultatDAO
         .getResultatPrKrav(kontrollId, kontrollType, loeysingId, fraDato, tilDato)
         .map { it.toResultatKrav() }
-        .map { handleIkkjeForekomstKrav(it) }
+        .map { handleIkkjeForekomstGeneric(
+            it,
+            it.talElementBrot,
+            it.talElementSamsvar
+        ) { it.copy(score = null) } }
   }
 
-  private fun handleIkkjeForekomstKrav(it: ResultatKrav) =
-      if (erIkkjeForekomst(it.talElementBrot, it.talElementSamsvar)) {
-        it.copy(score = null)
-      } else {
-        it
-      }
-
-  class LoysingList(val loeysingar: Map<Int, Loeysing.Expanded>) {
+    class LoysingList(val loeysingar: Map<Int, Loeysing.Expanded>) {
     fun getNamn(loeysingId: Int): String {
       val loeysing = loeysingar[loeysingId]
       return loeysing?.namn ?: ""
@@ -323,7 +315,7 @@ class ResultatService(
     }
   }
 
-  fun ResultatKravBase.toResultatKrav(): ResultatKrav {
+  private fun ResultatKravBase.toResultatKrav(): ResultatKrav {
     return ResultatKrav(
         suksesskriterium = getKravTittel(),
         score = score,
@@ -390,6 +382,19 @@ class ResultatService(
     }
   }
 
+    private inline fun <reified T> handleIkkjeForekomstGeneric(
+        item: T,
+        talElementBrot: Int,
+        talElementSamsvar: Int,
+        copyWithNullScore: (T) -> T
+    ): T {
+        return if (talElementBrot == 0 && talElementSamsvar == 0) {
+            copyWithNullScore(item)
+        } else {
+            item
+        }
+    }
+
   private fun List<ResultatLoeysingDTO>.getLoeysingar(): LoysingList {
     return this.map { it.loeysingId }.let { getLoeysingMap(it).getOrThrow() }
   }
@@ -398,15 +403,14 @@ class ResultatService(
       result.sumOf { it.talElementBrot } + result.sumOf { it.talElementSamsvar }
 
   fun getTalBrotForKontrollLoeysingTestregel(
-      rapportId: String,
+      kontrollId: Int,
       loeysingId: Int,
       testregelId: Int
   ): Result<Int> {
-    return testresultatDAO.getTalBrotForKontrollLoeysingTestregel(
-        rapportId, loeysingId, testregelId)
+      return  getResultService(kontrollId).getTalBrotForKontrollLoeysingTestregel(kontrollId, loeysingId, testregelId)
   }
 
-    fun getTalBrotForKontrollLoeysingKrav(rapportId: String, loeysingId: Int, kravId: Int) {
-        //Todo
+    fun getTalBrotForKontrollLoeysingKrav(kontrollId: Int, loeysingId: Int, kravId: Int) : Result<Int> {
+        return  getResultService(kontrollId).getTalBrotForKontrollLoeysingKrav(kontrollId, loeysingId, kravId)
     }
 }

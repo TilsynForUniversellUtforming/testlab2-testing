@@ -100,6 +100,21 @@ class EksternResultatResource(
             onFailure = { ErrorHandlingUtil.handleErrors(it) })
   }
 
+    @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/krav/{kravId}")
+    fun getResultatPrKrav(
+        @PathVariable rapportId: String,
+        @PathVariable loeysingId: Int,
+        @PathVariable kravId: Int,
+        @RequestParam size: Int = 20,
+        @RequestParam page: Int = 0
+    ): ResponseEntity<out Any> {
+        return runCatching {eksternResultatService
+            .getRapporPrKravPagedResources(rapportId, loeysingId, kravId, size, page)}
+            .fold(
+                onSuccess = { resultatKrav -> ResponseEntity.ok(resultatKrav) },
+                onFailure = { ErrorHandlingUtil.handleErrors(it) })
+    }
+
   @Observed(name = "EksternResultatResource.getDetaljertResultat")
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/testregel/{testregelId}")
   fun getDetaljertResultat(

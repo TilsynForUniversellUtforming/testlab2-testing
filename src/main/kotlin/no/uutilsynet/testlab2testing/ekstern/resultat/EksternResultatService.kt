@@ -212,7 +212,7 @@ class EksternResultatService(
     return eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId)).getOrThrow()
   }
 
-  fun getResultatListKontrollAsEksterntResultat(
+  private fun getResultatListKontrollAsEksterntResultat(
       rapportId: String,
       loeysingId: Int,
       testregelId: Int,
@@ -241,7 +241,7 @@ class EksternResultatService(
 
     val total =
         resultatService
-            .getTalBrotForKontrollLoeysingTestregel(rapportId, loeysingId, testregelId)
+            .getTalBrotForKontrollLoeysingTestregel(getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId, loeysingId, testregelId)
             .getOrThrow()
 
     val page = PageImpl(results, pageRequest, total.toLong())
@@ -263,4 +263,53 @@ class EksternResultatService(
         .mapCatching { resultatService.getBrotForRapportLoeysing(it.kontrollId, loeysingId) }
         .getOrThrow()
   }
+
+    fun getRapportPrKrav(
+        rapportId: String,
+        loeysingId: Int,
+        kravId: Int,
+        size: Int,
+        pageNumber: Int
+    ): List<TestresultatDetaljertEkstern> {
+        return resultatService.getTestresultatDetaljertForKrav(
+            getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId,
+            loeysingId,
+            kravId,
+            size,
+            pageNumber
+        )
+            .map {
+                it.toTestresultatDetaljertEkstern(getTestregelFromTestregelId(it.testregelId))
+            }
+    }
+
+    fun getRapporPrKravPagedResources(
+        rapportId: String,
+        loeysingId: Int,
+        kravId: Int,
+        size: Int,
+        pageNumber: Int
+    ): CollectionModel<TestresultatDetaljertEkstern> {
+        val pageRequest = PageRequest.of(pageNumber, size)
+        val results =
+            getRapportPrKrav(
+                rapportId,
+                loeysingId,
+                kravId,
+                size,
+                pageNumber
+            )
+
+        val total =
+            resultatService
+                .getTalBrotForKontrollLoeysingKrav(
+                    getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId,
+                    loeysingId,
+                    kravId
+                )
+                .getOrThrow()
+
+        val page = PageImpl(results, pageRequest, total.toLong())
+        return pagedResourcesAssembler.toModel(page, testresultatEksternAssembler)
+    }
 }
