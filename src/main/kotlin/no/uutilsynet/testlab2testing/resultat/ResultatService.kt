@@ -236,7 +236,7 @@ class ResultatService(
   }
 
   @Observed(name = "resultatservice.getresultatforkontrollloeysingtestregel")
-  fun getResultatListKontroll(
+  fun getTestresultatDetaljerPrTestregel(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
@@ -247,7 +247,7 @@ class ResultatService(
         .getResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
   }
 
-    fun getTestresultatDetaljertForKrav(
+    fun getTestresultatDetaljertPrKrav(
         kontrollId: Int,
         loeysingId: Int,
         kravId: Int,
@@ -273,7 +273,7 @@ class ResultatService(
               it.talElementSamsvar
           ) { it.copy(score = null) } }
 
-    fun getResultatPrKrav(
+    fun getTestresultatDetaljertPrKrav(
       kontrollId: Int?,
       kontrollType: Kontrolltype?,
       loeysingId: Int?,

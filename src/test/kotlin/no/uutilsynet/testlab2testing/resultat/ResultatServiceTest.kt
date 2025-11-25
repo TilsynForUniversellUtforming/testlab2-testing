@@ -241,7 +241,7 @@ class ResultatServiceTest(
     Mockito.`when`(kravregisterClient.listKrav()).thenReturn(listOf(testUtils.kravWcag2xObject()))
     Mockito.doReturn(Kontrolltype.InngaaendeKontroll).`when`(kontrollDAO).getKontrollType(1)
 
-    val resultat = resultatService.getResultatListKontroll(1, 1, 1)
+    val resultat = resultatService.getTestresultatDetaljerPrTestregel(1, 1, 1)
     assertNotNull(resultat)
 
     assertTrue(resultat.isNotEmpty())
