@@ -4,7 +4,6 @@ import io.micrometer.observation.annotation.Observed
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
-import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
@@ -19,12 +18,11 @@ import java.time.LocalDate
 class ResultatService(
     private val resultatDAO: ResultatDAO,
     private val loeysingsRegisterClient: LoeysingsRegisterClient,
-    private val kontrollDAO: KontrollDAO,
     private val eksternResultatDAO: EksternResultatDAO,
     private val automatiskResultatService: AutomatiskResultatService,
-    private val manueltResultatService: ManueltResultatService,
     private val kravregisterClient: KravregisterClient,
-    private val testregelClient: TestregelClient
+    private val testregelClient: TestregelClient,
+    private val kontrollResultatServiceFactory: KontrollResultatServiceFactory
 ) {
 
     val logger = LoggerFactory.getLogger(ResultatService::class.java)
@@ -260,11 +258,7 @@ class ResultatService(
             .getTestresulatDetaljertForKrav(kontrollId, loeysingId, kravId, size, pageNumber)
     }
 
-  private fun getTypeKontroll(kontrollId: Int): Kontrolltype {
-    return kontrollDAO.getKontrollType(kontrollId)
-  }
-
-  fun getResultatPrTema(
+    fun getResultatPrTema(
       kontrollId: Int?,
       kontrolltype: Kontrolltype?,
       loeysingId: Int?,
@@ -369,17 +363,11 @@ class ResultatService(
   }
 
   private fun getResultService(kontrollId: Int): KontrollResultatService {
-    return getResultatService(getTypeKontroll(kontrollId))
+      return kontrollResultatServiceFactory.getResultatService(kontrollId)
   }
 
-  private fun getResultatService(kontrolltype: Kontrolltype): KontrollResultatService {
-    return when (kontrolltype) {
-      Kontrolltype.ForenklaKontroll -> automatiskResultatService
-      Kontrolltype.Statusmaaling,
-      Kontrolltype.InngaaendeKontroll,
-      Kontrolltype.Tilsyn,
-      Kontrolltype.Uttalesak -> manueltResultatService
-    }
+  private fun getResultatService(kontrollType: Kontrolltype): KontrollResultatService {
+      return kontrollResultatServiceFactory.getResultatService(kontrollType)
   }
 
     private inline fun <reified T> handleIkkjeForekomstGeneric(
