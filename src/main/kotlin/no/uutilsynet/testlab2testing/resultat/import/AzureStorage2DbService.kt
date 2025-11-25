@@ -123,20 +123,6 @@ class AzureStorage2DbService(
           elmentOmtaleHtml = testresultat.elementOmtale?.htmlCode,
           elementOmtaleDescription = testresultat.elementOmtale?.description,
           brukarId = brukarId ?: 1)
-        TestresultatDBBase(
-            null,
-            maalingId = maalingId,
-            loeysingId = testresultat.loeysingId,
-            testregelId = testregelCache.getTestregelByKey(testresultat.testregelId).id,
-            sideutvalId = sideutvalCache.getSideutvalId(testresultat.side),
-            testUtfoert = testresultat.testVartUtfoert.atZone(ZoneId.systemDefault()).toInstant(),
-            elementUtfall = testresultat.elementUtfall,
-            elementResultat = testresultat.elementResultat,
-            elementOmtalePointer = testresultat.elementOmtale?.pointer ?: "",
-            elmentOmtaleHtml = testresultat.elementOmtale?.htmlCode ?: "",
-            elementOmtaleDescription = testresultat.elementOmtale?.description ?: "",
-            brukarId = 0
-        )
     } else {
         TestresultatDBBase(
             null,
