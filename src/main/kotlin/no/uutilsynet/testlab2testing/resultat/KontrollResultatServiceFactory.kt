@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class KontrollResultatServiceFactory(
-    private val automatiskResultatService: AutomatiskResultatService, 
-    private val manueltResultatService: ManueltResultatService, 
+    private val automatiskResultatService: AutomatiskResultatService,
+    private val manueltResultatService: ManueltResultatService,
     private val kontrollDAO: KontrollDAO
 ) {
 
