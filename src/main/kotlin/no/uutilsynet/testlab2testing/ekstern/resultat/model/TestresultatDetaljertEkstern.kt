@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat.model
 
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
-import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert

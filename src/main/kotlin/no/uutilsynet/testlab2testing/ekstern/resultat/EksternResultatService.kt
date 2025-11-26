@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import io.micrometer.observation.annotation.Observed
-import java.util.stream.Collectors
 import no.uutilsynet.testlab2testing.ekstern.resultat.model.*
 import no.uutilsynet.testlab2testing.ekstern.resultat.paginering.TestresultatEksternAssembler
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
