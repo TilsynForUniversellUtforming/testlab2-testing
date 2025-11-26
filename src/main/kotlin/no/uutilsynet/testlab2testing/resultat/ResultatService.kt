@@ -311,6 +311,7 @@ class ResultatService(
 
   private fun ResultatKravBase.toResultatKrav(): ResultatKrav {
     return ResultatKrav(
+        kravId = kravId,
         suksesskriterium = getKravTittel(),
         score = score,
         talTestaElement = talElementBrot + talElementSamsvar,

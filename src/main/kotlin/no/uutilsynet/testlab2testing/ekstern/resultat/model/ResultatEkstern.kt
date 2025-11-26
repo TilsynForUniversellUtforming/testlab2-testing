@@ -52,6 +52,7 @@ fun ResultatTema.toResultatTemaEkstern() =
     )
 
 data class ResultatKravEkstern(
+    val kravId: Int,
     val suksesskriterium: String,
     val score: Double?,
     val talTestaElement: Int,
@@ -63,6 +64,7 @@ data class ResultatKravEkstern(
 
 fun ResultatKrav.toResultatKravEkstern() =
     ResultatKravEkstern(
+        kravId = this.kravId,
         suksesskriterium = this.suksesskriterium,
         score = this.score,
         talTestaElement = this.talTestaElement,
