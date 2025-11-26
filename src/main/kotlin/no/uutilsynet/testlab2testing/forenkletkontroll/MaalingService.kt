@@ -210,8 +210,6 @@ class MaalingService(
   fun getFerdigeTestkoeyringar(maalingId: Int): List<TestkoeyringDTO.Ferdig> {
     return testkoeyringDAO
         .getTestkoeyringarForMaaling(maalingId)
-        .map { println(it)
-        it}
         .filterIsInstance<TestkoeyringDTO.Ferdig>()
   }
 
@@ -235,8 +233,6 @@ class MaalingService(
   @Observed(name = "MaalingService.getFilteredAndFerdigTestkoeyringar")
   fun getFilteredAndFerdigTestkoeyringar(maalingId: Int, loeysingId: Int?) =
       getFerdigeTestkoeyringar(maalingId)
-          .map { println("Testkoeyring for $loeysingId")
-          it }
           .filter {
         loeysingId == null || it.loeysingId == loeysingId
       }

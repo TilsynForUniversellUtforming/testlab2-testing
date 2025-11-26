@@ -36,6 +36,7 @@ class AutomatiskResultatService(
           getResultatForMaaling(maalingId, loeysingId).filter {
               filterByTestregel(it.testregelId, listOf(testregelId))
           }
+              .subList(pageNumber, size)
       }
   }
 
