@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import io.micrometer.observation.annotation.Observed
-import java.util.stream.Collectors
 import no.uutilsynet.testlab2testing.ekstern.resultat.model.*
 import no.uutilsynet.testlab2testing.ekstern.resultat.paginering.TestresultatEksternAssembler
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
@@ -12,7 +11,7 @@ import no.uutilsynet.testlab2testing.resultat.Resultat
 import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing
 import no.uutilsynet.testlab2testing.resultat.ResultatService
 import no.uutilsynet.testlab2testing.testregel.TestregelService
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageImpl
@@ -20,6 +19,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.web.PagedResourcesAssembler
 import org.springframework.hateoas.CollectionModel
 import org.springframework.stereotype.Service
+import java.util.stream.Collectors
 
 @Service
 class EksternResultatService(
@@ -186,7 +186,7 @@ class EksternResultatService(
 
   private fun testresultatToDetaljertEkstern(
       kontrollLoeysing: KontrollIdLoeysingId,
-      testregel: Testregel,
+      testregel: TestregelKrav,
       size: Int,
       pageNumber: Int
   ) =
@@ -195,13 +195,13 @@ class EksternResultatService(
           .map { it.toTestresultatDetaljertEkstern(testregel) }
           .collect(Collectors.toList())
 
-  private fun getTestregelFromTestregelId(testregelId: Int): Testregel {
-    return testregelService.getTestregel(testregelId)
+  private fun getTestregelFromTestregelId(testregelId: Int): TestregelKrav {
+    return testregelService.getTestregelKrav(testregelId)
   }
 
   private fun getResultatPrTestregel(
       kontrollLoeysing: KontrollIdLoeysingId,
-      testregel: Testregel,
+      testregel: TestregelKrav,
       size: Int,
       pageNumber: Int
   ) =
