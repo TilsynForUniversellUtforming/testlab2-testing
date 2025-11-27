@@ -9,6 +9,7 @@ import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.stereotype.Service
+import kotlin.math.min
 
 @Service
 class AutomatiskResultatService(
@@ -33,10 +34,10 @@ class AutomatiskResultatService(
       return if(testresultatDAO.hasResultInDB(maalingId, loeysingId)){
           getDetaljertResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
       } else {
-          getResultatForMaaling(maalingId, loeysingId).filter {
+          val resultat = getResultatForMaaling(maalingId, loeysingId).filter {
               filterByTestregel(it.testregelId, listOf(testregelId))
           }
-              .subList(pageNumber, size)
+              resultat.subList(pageNumber * size, min((pageNumber + 1) * size, resultat.size))
       }
   }
 

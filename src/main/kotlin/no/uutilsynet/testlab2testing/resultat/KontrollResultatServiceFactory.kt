@@ -5,7 +5,11 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import org.springframework.stereotype.Service
 
 @Service
-class KontrollResultatServiceFactory(private val automatiskResultatService: AutomatiskResultatService,private val manueltResultatService: ManueltResultatService,private val kontrollDAO: KontrollDAO) {
+class KontrollResultatServiceFactory(
+    private val automatiskResultatService: AutomatiskResultatService, 
+    private val manueltResultatService: ManueltResultatService, 
+    private val kontrollDAO: KontrollDAO
+) {
 
     fun getResultatService(kontrollId: Int): KontrollResultatService {
         return getResultatService(getTypeKontroll(kontrollId))

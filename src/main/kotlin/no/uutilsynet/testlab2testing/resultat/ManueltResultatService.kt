@@ -27,7 +27,7 @@ class ManueltResultatService(
     private val bildeService: BildeService,
     testresultatDAO: no.uutilsynet.testlab2testing.testresultat.TestresultatDAO,
     testregelClient: TestregelClient,
-    ) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelClient =testregelClient ) {
+    ) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelClient ) {
 
   override fun getResultatForKontroll(
       kontrollId: Int,
@@ -148,7 +148,8 @@ class ManueltResultatService(
         loeysingId: Int,
         testregelId: Int
     ): Result<Int> {
-        TODO("Not yet implemented")
+        val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
+        return testresultatDAO.getTalBrotForKontrollLoeysingTestregel(loeysingId, testregelId, testgrunnlagId,null)
     }
 
     override fun getTalBrotForKontrollLoeysingKrav(
@@ -156,7 +157,9 @@ class ManueltResultatService(
         loeysingId: Int,
         kravId: Int
     ): Result<Int> {
-        TODO("Not yet implemented")
+        val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
+        val testregelIds = getTestreglarForKrav(kravId).map { it.id }
+        return testresultatDAO.getTalBrotForKontrollLoeysingKrav(loeysingId, testregelIds, testgrunnlagId, null)
     }
 
     private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =
