@@ -13,6 +13,7 @@ import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.stereotype.Service
+import kotlin.math.min
 
 @Service
 class AutomatiskResultatService(
