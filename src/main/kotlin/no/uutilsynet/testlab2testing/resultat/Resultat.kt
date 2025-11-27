@@ -87,6 +87,7 @@ data class ResultatTema(
 )
 
 data class ResultatKrav(
+    val kravId: Int,
     val suksesskriterium: String,
     val score: Double?,
     val talTestaElement: Int,

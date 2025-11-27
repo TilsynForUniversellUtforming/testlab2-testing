@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
 import no.uutilsynet.testlab2testing.ekstern.resultat.model.TestListElementEkstern
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.InputStreamResource
@@ -58,8 +59,7 @@ class EksternResultatResource(
 
   @GetMapping("rapport/{rapportId}")
   fun getResultatRapport(@PathVariable rapportId: String): ResponseEntity<out Any> {
-    return kotlin
-        .runCatching { eksternResultatService.getResultatForRapport(rapportId) }
+    return runCatching { eksternResultatService.getResultatForRapport(rapportId) }
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
             onFailure = { ErrorHandlingUtil.handleErrors(it) })
@@ -70,8 +70,7 @@ class EksternResultatResource(
       @PathVariable rapportId: String,
       @PathVariable loeysingId: Int,
   ): ResponseEntity<out Any> {
-    return kotlin
-        .runCatching { eksternResultatService.getRapportForLoeysing(rapportId, loeysingId) }
+    return runCatching { eksternResultatService.getRapportForLoeysing(rapportId, loeysingId) }
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
             onFailure = { ErrorHandlingUtil.handleErrors(it) })
@@ -101,6 +100,21 @@ class EksternResultatResource(
             onFailure = { ErrorHandlingUtil.handleErrors(it) })
   }
 
+    @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/krav/{kravId}")
+    fun getResultatPrKrav(
+        @PathVariable rapportId: String,
+        @PathVariable loeysingId: Int,
+        @PathVariable kravId: Int,
+        @RequestParam size: Int = 20,
+        @RequestParam page: Int = 0
+    ): ResponseEntity<out Any> {
+        return runCatching {eksternResultatService
+            .getRapporPrKravPagedResources(rapportId, loeysingId, kravId, size, page)}
+            .fold(
+                onSuccess = { resultatKrav -> ResponseEntity.ok(resultatKrav) },
+                onFailure = { ErrorHandlingUtil.handleErrors(it) })
+    }
+
   @Observed(name = "EksternResultatResource.getDetaljertResultat")
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/testregel/{testregelId}")
   fun getDetaljertResultat(
@@ -111,11 +125,10 @@ class EksternResultatResource(
       @RequestParam page: Int = 0
   ): ResponseEntity<out Any> {
 
-    return kotlin
-        .runCatching {
-          eksternResultatService.getDetaljerResultatPaged(
-              rapportId, loeysingId, testregelId, size, page)
-        }
+    return runCatching {
+      eksternResultatService.getDetaljerResultatPaged(
+          rapportId, loeysingId, testregelId, size, page)
+    }
         .fold(
             onSuccess = { results -> ResponseEntity.ok(results) },
             onFailure = { ErrorHandlingUtil.handleErrors(it) })
@@ -151,7 +164,7 @@ class EksternResultatResource(
       @PathVariable loeysingId: Int,
       response: HttpServletResponse,
   ) {
-    val testresults = eksternResultatService.eksporterRapportForLoeysing(rapportId, loeysingId)
+    val testresults: List<TestresultatDetaljert> = eksternResultatService.eksporterRapportForLoeysing(rapportId, loeysingId)
 
     val fileName = "export.csv"
 

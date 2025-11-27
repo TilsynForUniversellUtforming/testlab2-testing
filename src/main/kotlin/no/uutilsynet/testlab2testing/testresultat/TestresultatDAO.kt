@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.resultat
+package no.uutilsynet.testlab2testing.testresultat
 
 import io.micrometer.observation.annotation.Observed
 import java.sql.ResultSet
@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
+import java.sql.Timestamp
 
 @Component
 class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -50,7 +51,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .addValue("testregelId", testresultat.testregelId)
             .addValue("loeysingId", testresultat.loeysingId)
             .addValue("sideutvalId", testresultat.sideutvalId)
-            .addValue("testUtfoert", java.sql.Timestamp.from(testresultat.testUtfoert))
+            .addValue("testUtfoert", Timestamp.from(testresultat.testUtfoert))
             .addValue("elementUtfall", testresultat.elementUtfall)
             .addValue("elementResultat", testresultat.elementResultat.name)
             .addValue("elementOmtalePointer", testresultat.elementOmtalePointer)
@@ -94,7 +95,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .addValue("testregelId", testresultat.testregelId)
             .addValue("loeysingId", testresultat.loeysingId)
             .addValue("sideutvalId", testresultat.sideutvalId)
-            .addValue("testUtfoert", java.sql.Timestamp.from(testresultat.testUtfoert))
+            .addValue("testUtfoert", Timestamp.from(testresultat.testUtfoert))
             .addValue("elementUtfall", testresultat.elementUtfall)
             .addValue("elementResultat", testresultat.elementResultat.name)
             .addValue("elementOmtalePointer", testresultat.elementOmtalePointer)
@@ -184,19 +185,38 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   fun getTalBrotForKontrollLoeysingTestregel(
-      rapportId: String,
       loeysingId: Int,
-      testregelId: Int
+      testregelId: Int,
+      testgrunnlagId: Int?,
+      maalingId: Int?,
   ): Result<Int> {
     return runCatching {
       jdbcTemplate.queryForObject(
-          """select count(*) from testresultat tr
-                    join testregel tg on tg.id=tr.testregel_id
-                    join rapport r on r.maaling_id=tr.maaling_id and r.loeysing_id=tr.loeysing_id
-                    where r.id_ekstern=:rapportId and r.loeysing_id=:loeysingId and tg.id=:testregelId and tr.element_resultat = 'brot'"""
+          """select count(*) from testlab2_testing.testresultat tr
+                where tr.loeysing_id=:loeysingId
+                and tr.testregel_id=:testregelId
+                and tr.element_resultat = 'brot'
+                and (:testgrunnlagId::int is null or testgrunnlag_id=:testgrunnlagId)
+                and(:maalingId::int is null or maaling_id=:maalingId)"""
               .trimIndent(),
-          mapOf("rapportId" to rapportId, "loeysingId" to loeysingId, "testregelId" to testregelId),
+          mapOf("maalingId" to maalingId, "testgrunnlagId" to testgrunnlagId,"loeysingId" to loeysingId, "testregelId" to testregelId),
           Int::class.java) as Int
     }
   }
+
+    fun getTalBrotForKontrollLoeysingKrav(loeysingId: Int, testregelIds: List<Int>,  testgrunnlagId: Int?,
+                                          maalingId: Int?) : Result<Int> {
+        return runCatching {
+            jdbcTemplate.queryForObject(
+                """select count(*) from testlab2_testing.testresultat tr
+                where tr.loeysing_id=:loeysingId
+                and tr.testregel_id in (:testregelIds)
+                and tr.element_resultat = 'brot'
+                and (:testgrunnlagId::int is null or testgrunnlag_id=:testgrunnlagId)
+                and(:maalingId::int is null or maaling_id=:maalingId)"""
+                    .trimIndent(),
+                mapOf("maalingId" to maalingId, "testgrunnlagId" to testgrunnlagId,"loeysingId" to loeysingId, "testregelIds" to testregelIds),
+                Int::class.java) as Int
+        }
+    }
 }

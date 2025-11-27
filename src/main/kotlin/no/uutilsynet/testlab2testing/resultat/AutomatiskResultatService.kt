@@ -1,32 +1,26 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import io.micrometer.observation.annotation.Observed
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.util.stream.Collectors
-import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
-import no.uutilsynet.testlab2testing.sideutval.crawling.Sideutval
-import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.TestResultat
 import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelCache
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.stereotype.Service
+import kotlin.math.min
 
 @Service
 class AutomatiskResultatService(
-    val maalingService: MaalingService,
-    val testkoeyringDAO: TestkoeyringDAO,
+    private val maalingService: MaalingService,
+    private val testkoeyringDAO: TestkoeyringDAO,
     resultatDAO: ResultatDAO,
     kravregisterClient: KravregisterClient,
-    testregelCache: TestregelCache,
-    val testresultatDBConverter: TestresultatDBConverter,
-    val testresultatDAO: TestresultatDAO,
-) : KontrollResultatService(resultatDAO, kravregisterClient, testregelCache) {
+    testregelClient: TestregelClient,
+    testresultatDAO: TestresultatDAO,
+    private val testresultatDBConverter: TestresultatDBConverter,
+) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelClient) {
 
   @Observed(name = "AutomatiskResultatService.getResultatForKontroll")
   override fun getResultatForKontroll(
@@ -36,14 +30,15 @@ class AutomatiskResultatService(
       size: Int,
       pageNumber: Int
   ): List<TestresultatDetaljert> {
-    val maalingId = maalingService.getMaalingForKontroll(kontrollId)
-    return if (testresultatDAO.hasResultInDB(maalingId, loeysingId)) {
-      getDetaljertResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
-    } else {
-      getResultatForKontroll(kontrollId, loeysingId).filter {
-        filterByTestregel(it.testregelId, listOf(testregelId))
+      val maalingId = maalingService.getMaalingForKontroll(kontrollId)
+      return if(testresultatDAO.hasResultInDB(maalingId, loeysingId)){
+          getDetaljertResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
+      } else {
+          val resultat = getResultatForMaaling(maalingId, loeysingId).filter {
+              filterByTestregel(it.testregelId, listOf(testregelId))
+          }
+              resultat.subList(pageNumber * size, min((pageNumber + 1) * size, resultat.size))
       }
-    }
   }
 
   override fun getResultatForKontroll(
@@ -110,7 +105,7 @@ class AutomatiskResultatService(
       it: TestResultat,
       maalingId: Int
   ): TestresultatDetaljert {
-    val testregel = testregelCache.getTestregelByKey(it.testregelId)
+    val testregel = testregelClient.getTestregelByKey(it.testregelId)
     return TestresultatDetaljert(
         null,
         it.loeysingId,
@@ -145,7 +140,27 @@ class AutomatiskResultatService(
     return loeysingar.loeysingar.keys.associateWith { 100 }
   }
 
-  override fun getKontrollResultat(kontrollId: Int): List<ResultatLoeysingDTO> {
+    override fun getTestresulatDetaljertForKrav(
+        kontrollId: Int,
+        loeysingId: Int,
+        kravId: Int,
+        size: Int,
+        pageNumber: Int
+    ): List<TestresultatDetaljert> {
+        val testreglar = getTestreglarForKrav(kravId).map { it.id }
+        val maalingId = maalingService.getMaalingForKontroll(kontrollId)
+        val resultat = testresultatDAO.listBy(maalingId, loeysingId, testreglar, size, pageNumber)
+
+        return if(testresultatDAO.hasResultInDB(maalingId, loeysingId)){
+            return testresultatDBConverter.mapTestresults(resultat, maalingId, loeysingId)
+        } else {
+            getResultatForMaaling(maalingId, loeysingId).filter {
+                filterByTestregel(it.testregelId, testreglar)
+            }
+        }
+    }
+
+    override fun getKontrollResultat(kontrollId: Int): List<ResultatLoeysingDTO> {
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)
     return getKontrollResultatMaaling(maalingId)
   }
@@ -154,55 +169,29 @@ class AutomatiskResultatService(
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)
     return testkoeyringDAO.getTestarTestkoeyringar(maalingId).map { it.namn }.distinct()
   }
-}
 
-@Component
-class TestresultatDBConverter(
-    val testregelCache: TestregelCache,
-    val sideutvalDAO: SideutvalDAO,
-) {
 
-  val logger: Logger = LoggerFactory.getLogger(TestresultatDBConverter::class.java)
+    override fun getTalBrotForKontrollLoeysingTestregel(
+        kontrollId: Int,
+        loeysingId: Int,
+        testregelId: Int
+    ): Result<Int> {
+   return runCatching {
+       val maalingId = maalingService.getMaalingForKontroll(kontrollId)
+       if (testresultatDAO.hasResultInDB(maalingId, loeysingId)) {
+           testresultatDAO.getTalBrotForKontrollLoeysingTestregel(loeysingId, testregelId, null, maalingId).getOrThrow()
+       } else {
+           getResultatForMaaling(maalingId, loeysingId).count { filterByTestregel(it.testregelId, listOf(testregelId)) }
+       }
+   }
 
-  @Observed(name = "AutomatiskResultatService.mapTestresults")
-  fun mapTestresults(
-      list: List<TestresultatDB>,
-      maalingId: Int,
-      loeysingId: Int?
-  ): List<TestresultatDetaljert> {
-    val sideutvalCache =
-        sideutvalDAO
-            .getSideutvalForMaalingLoeysing(maalingId, loeysingId)
-            .getOrThrow()
-            .associateBy { it.id }
-    return list
-        .parallelStream()
-        .map { it.toTestresultatDetaljert(sideutvalCache) }
-        .collect(Collectors.toList())
-  }
+    }
 
-  private fun TestresultatDB.toTestresultatDetaljert(
-      sideutvalCache: Map<Int, Sideutval.Automatisk>
-  ): TestresultatDetaljert {
-    val testregel = testregelCache.getTestregelById(testregelId)
-    val elementOmtale =
-        TestresultatDetaljert.ElementOmtale(
-            this.elmentOmtaleHtml, this.elementOmtalePointer, this.elementOmtaleDescription)
-    return TestresultatDetaljert(
-        this.id,
-        this.loeysingId,
-        testregelId,
-        testregel.testregelId,
-        this.maalingId ?: this.testgrunnlagId ?: 0,
-        sideutvalCache[this.sideutvalId]?.url
-            ?: throw IllegalStateException("Sideutval not found for id ${this.sideutvalId}"),
-        listOf(testregel.krav.suksesskriterium),
-        LocalDateTime.ofInstant(this.testUtfoert, ZoneId.systemDefault()),
-        this.elementUtfall,
-        this.elementResultat,
-        elementOmtale,
-        null,
-        null,
-        null)
-  }
+    override fun getTalBrotForKontrollLoeysingKrav(kontrollId: Int,
+                                                   loeysingId: Int,
+                                                   kravId: Int) : Result<Int> {
+        val testregelIds = getTestreglarForKrav(kravId).map { it.id }
+        val maalingId = maalingService.getMaalingForKontroll(kontrollId)
+        return testresultatDAO.getTalBrotForKontrollLoeysingKrav(loeysingId, testregelIds, null, maalingId)
+    }
 }

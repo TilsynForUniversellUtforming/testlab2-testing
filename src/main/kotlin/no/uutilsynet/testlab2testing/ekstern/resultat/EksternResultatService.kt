@@ -1,8 +1,6 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import io.micrometer.observation.annotation.Observed
-import java.util.stream.Collectors
-import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.model.*
 import no.uutilsynet.testlab2testing.ekstern.resultat.paginering.TestresultatEksternAssembler
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
@@ -13,13 +11,15 @@ import no.uutilsynet.testlab2testing.resultat.Resultat
 import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing
 import no.uutilsynet.testlab2testing.resultat.ResultatService
 import no.uutilsynet.testlab2testing.testregel.TestregelService
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.web.PagedResourcesAssembler
 import org.springframework.hateoas.CollectionModel
 import org.springframework.stereotype.Service
+import java.util.stream.Collectors
 
 @Service
 class EksternResultatService(
@@ -181,12 +181,12 @@ class EksternResultatService(
           kontrollLoeysing.kontrollId, null, kontrollLoeysing.loeysingId, null, null)
 
   private fun getResultatKravList(kontrollLoeysing: KontrollIdLoeysingId) =
-      resultatService.getResultatPrKrav(
+      resultatService.getTestresultatDetaljertPrKrav(
           kontrollLoeysing.kontrollId, null, kontrollLoeysing.loeysingId, null, null)
 
   private fun testresultatToDetaljertEkstern(
       kontrollLoeysing: KontrollIdLoeysingId,
-      testregel: Testregel,
+      testregel: TestregelKrav,
       size: Int,
       pageNumber: Int
   ) =
@@ -195,24 +195,24 @@ class EksternResultatService(
           .map { it.toTestresultatDetaljertEkstern(testregel) }
           .collect(Collectors.toList())
 
-  private fun getTestregelFromTestregelId(testregelId: Int): Testregel {
-    return testregelService.getTestregel(testregelId)
+  private fun getTestregelFromTestregelId(testregelId: Int): TestregelKrav {
+    return testregelService.getTestregelKrav(testregelId)
   }
 
   private fun getResultatPrTestregel(
       kontrollLoeysing: KontrollIdLoeysingId,
-      testregel: Testregel,
+      testregel: TestregelKrav,
       size: Int,
       pageNumber: Int
   ) =
-      resultatService.getResultatListKontroll(
+      resultatService.getTestresultatDetaljerPrTestregel(
           kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, testregel.id, size, pageNumber)
 
   private fun getKontrollIdLoeysingIdsForRapportId(rapportId: String): List<KontrollIdLoeysingId> {
     return eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId)).getOrThrow()
   }
 
-  fun getResultatListKontrollAsEksterntResultat(
+  private fun getResultatListKontrollAsEksterntResultat(
       rapportId: String,
       loeysingId: Int,
       testregelId: Int,
@@ -241,7 +241,7 @@ class EksternResultatService(
 
     val total =
         resultatService
-            .getTalBrotForKontrollLoeysingTestregel(rapportId, loeysingId, testregelId)
+            .getTalBrotForKontrollLoeysingTestregel(getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId, loeysingId, testregelId)
             .getOrThrow()
 
     val page = PageImpl(results, pageRequest, total.toLong())
@@ -263,4 +263,53 @@ class EksternResultatService(
         .mapCatching { resultatService.getBrotForRapportLoeysing(it.kontrollId, loeysingId) }
         .getOrThrow()
   }
+
+    fun getRapportPrKrav(
+        rapportId: String,
+        loeysingId: Int,
+        kravId: Int,
+        size: Int,
+        pageNumber: Int
+    ): List<TestresultatDetaljertEkstern> {
+        return resultatService.getTestresultatDetaljertPrKrav(
+            getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId,
+            loeysingId,
+            kravId,
+            size,
+            pageNumber
+        )
+            .map {
+                it.toTestresultatDetaljertEkstern(getTestregelFromTestregelId(it.testregelId))
+            }
+    }
+
+    fun getRapporPrKravPagedResources(
+        rapportId: String,
+        loeysingId: Int,
+        kravId: Int,
+        size: Int,
+        pageNumber: Int
+    ): CollectionModel<TestresultatDetaljertEkstern> {
+        val pageRequest = PageRequest.of(pageNumber, size)
+        val results =
+            getRapportPrKrav(
+                rapportId,
+                loeysingId,
+                kravId,
+                size,
+                pageNumber
+            )
+
+        val total =
+            resultatService
+                .getTalBrotForKontrollLoeysingKrav(
+                    getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId,
+                    loeysingId,
+                    kravId
+                )
+                .getOrThrow()
+
+        val page = PageImpl(results, pageRequest, total.toLong())
+        return pagedResourcesAssembler.toModel(page, testresultatEksternAssembler)
+    }
 }

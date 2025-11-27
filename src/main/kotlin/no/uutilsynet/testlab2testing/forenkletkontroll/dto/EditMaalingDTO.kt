@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.dto
+package no.uutilsynet.testlab2testing.forenkletkontroll.dto
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters

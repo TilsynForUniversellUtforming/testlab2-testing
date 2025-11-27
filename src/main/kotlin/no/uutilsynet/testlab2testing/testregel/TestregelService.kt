@@ -72,4 +72,14 @@ class TestregelService(
       TestregelKrav(testregel, krav)
     }
   }
+
+    fun getTestreglarForKrav(kravId: Int): List<Testregel> {
+        return testregelDAO.getTestregelForKrav(kravId)
+    }
+
+    fun getTestregelKrav(testregelId: Int): TestregelKrav {
+        val  testregel = testregelDAO.getTestregel(testregelId)
+        val krav = kravregisterClient.getWcagKrav(testregel?.kravId ?: throw IllegalArgumentException("Fant ikkje krav med id ${testregelId}") )
+        return TestregelKrav(testregel, krav)
+    }
 }

@@ -4,9 +4,9 @@ import io.micrometer.observation.annotation.Observed
 import java.net.URI
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2testing.aggregering.AggregeringService
-import no.uutilsynet.testlab2testing.aggregering.AggregertResultatTestregelAPI
-import no.uutilsynet.testlab2testing.dto.TestresultatDetaljert
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatTestregelAPI
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -24,8 +24,7 @@ class ResultatResource(
   fun getResultatList(
       @RequestParam testgrunnlagId: Int?,
       @RequestParam maalingId: Int?,
-      @RequestParam loeysingId: Int?,
-      @RequestParam testregelNoekkel: String?
+      @RequestParam loeysingId: Int?
   ): List<TestresultatDetaljert> {
     logger.debug("Henter resultat for testgrunnlagId: $testgrunnlagId, maalingId: $maalingId")
 
@@ -81,7 +80,7 @@ class ResultatResource(
       @RequestParam limit: Int,
       @RequestParam offset: Int
   ): List<TestresultatDetaljert> {
-    return resultatService.getResultatListKontroll(kontrollId, loeysingId, kravId, limit, offset)
+    return resultatService.getTestresultatDetaljerPrTestregel(kontrollId, loeysingId, kravId, limit, offset)
   }
 
   @GetMapping("/tema")
@@ -103,6 +102,6 @@ class ResultatResource(
       @RequestParam fraDato: LocalDate?,
       @RequestParam tilDato: LocalDate?
   ): List<ResultatKrav> {
-    return resultatService.getResultatPrKrav(kontrollId, kontrollType, loeysingId, fraDato, tilDato)
+    return resultatService.getTestresultatDetaljertPrKrav(kontrollId, kontrollType, loeysingId, fraDato, tilDato)
   }
 }

@@ -1,7 +1,5 @@
-package no.uutilsynet.testlab2testing.resultat
+package no.uutilsynet.testlab2testing.resultat.import
 
-import java.time.ZoneId
-import java.util.stream.Collectors
 import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.BrukarService
@@ -13,9 +11,13 @@ import no.uutilsynet.testlab2testing.testing.automatisk.AutotesterTestresultat
 import no.uutilsynet.testlab2testing.testing.automatisk.TestResultat
 import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDBBase
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.ZoneId
+import java.util.stream.Collectors
 
 @Service
 class AzureStorage2DbService(
@@ -41,10 +43,10 @@ class AzureStorage2DbService(
     logger.debug(
         "Get testresultat from Azure Storage for maalingId: $maalingId, loeysingId: $loeysingId, size: ${testkoeyringMaalingLoeysing.size}")
     return runBlocking {
-      autoTesterClient
-          .fetchResultat(testkoeyringMaalingLoeysing, resulttatType)
-          .toSingleResult()
-          .map { it.values.flatten() }
+        autoTesterClient
+            .fetchResultat(testkoeyringMaalingLoeysing, resulttatType)
+            .toSingleResult()
+            .map { it.values.flatten() }
     }
   }
 
@@ -117,24 +119,25 @@ class AzureStorage2DbService(
           testUtfoert = testresultat.testVartUtfoert.atZone(ZoneId.systemDefault()).toInstant(),
           elementUtfall = testresultat.elementUtfall,
           elementResultat = testresultat.elementResultat,
-          elementOmtalePointer = testresultat.elementOmtale?.pointer ?: "",
-          elmentOmtaleHtml = testresultat.elementOmtale?.htmlCode ?: "",
-          elementOmtaleDescription = testresultat.elementOmtale?.description ?: "",
+          elementOmtalePointer = testresultat.elementOmtale?.pointer,
+          elmentOmtaleHtml = testresultat.elementOmtale?.htmlCode,
+          elementOmtaleDescription = testresultat.elementOmtale?.description,
           brukarId = brukarId ?: 1)
     } else {
-      TestresultatDBBase(
-          null,
-          maalingId = maalingId,
-          loeysingId = testresultat.loeysingId,
-          testregelId = testregelCache.getTestregelByKey(testresultat.testregelId).id,
-          sideutvalId = sideutvalCache.getSideutvalId(testresultat.side),
-          testUtfoert = testresultat.testVartUtfoert.atZone(ZoneId.systemDefault()).toInstant(),
-          elementUtfall = testresultat.elementUtfall,
-          elementResultat = testresultat.elementResultat,
-          elementOmtalePointer = "",
-          elmentOmtaleHtml = "",
-          elementOmtaleDescription = "",
-          brukarId = brukarService.getUserId() ?: 0)
+        TestresultatDBBase(
+            null,
+            maalingId = maalingId,
+            loeysingId = testresultat.loeysingId,
+            testregelId = testregelCache.getTestregelByKey(testresultat.testregelId).id,
+            sideutvalId = sideutvalCache.getSideutvalId(testresultat.side),
+            testUtfoert = testresultat.testVartUtfoert.atZone(ZoneId.systemDefault()).toInstant(),
+            elementUtfall = testresultat.elementUtfall,
+            elementResultat = testresultat.elementResultat,
+            elementOmtalePointer = null,
+            elmentOmtaleHtml = null,
+            elementOmtaleDescription = null,
+            brukarId = brukarService.getUserId() ?: 0
+        )
     }
   }
 }

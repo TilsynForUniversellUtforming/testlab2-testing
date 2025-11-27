@@ -1,6 +1,8 @@
 package no.uutilsynet.testlab2testing.aggregering
 
 import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelDB
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.resultat.OpprettTestgrunnlag
@@ -32,7 +34,7 @@ class AggregeringDAOTest(
     val testgrunnlagId = setUp()
 
     val testresultat =
-        AggregeringPerTestregelDTO(
+        AggregeringPerTestregelDB(
             maalingId = null,
             loeysingId = 1,
             testregelId = 1,
