@@ -154,9 +154,10 @@ class AutomatiskResultatService(
         return if(testresultatDAO.hasResultInDB(maalingId, loeysingId)){
             return testresultatDBConverter.mapTestresults(resultat, maalingId, loeysingId)
         } else {
-            getResultatForMaaling(maalingId, loeysingId).filter {
+            val resultat = getResultatForMaaling(maalingId, loeysingId).filter {
                 filterByTestregel(it.testregelId, testreglar)
             }
+            resultat.subList(pageNumber * size, min((pageNumber + 1) * size, resultat.size))
         }
     }
 
@@ -187,11 +188,21 @@ class AutomatiskResultatService(
 
     }
 
-    override fun getTalBrotForKontrollLoeysingKrav(kontrollId: Int,
-                                                   loeysingId: Int,
-                                                   kravId: Int) : Result<Int> {
+    override fun getTalBrotForKontrollLoeysingKrav(
+        kontrollId: Int, loeysingId: Int,
+        kravId: Int
+    ): Result<Int> {
         val testregelIds = getTestreglarForKrav(kravId).map { it.id }
         val maalingId = maalingService.getMaalingForKontroll(kontrollId)
-        return testresultatDAO.getTalBrotForKontrollLoeysingKrav(loeysingId, testregelIds, null, maalingId)
+
+        return runCatching {
+            if (testresultatDAO.hasResultInDB(maalingId, loeysingId)) {
+                testresultatDAO.getTalBrotForKontrollLoeysingKrav(loeysingId, testregelIds, null, maalingId)
+                    .getOrThrow()
+            } else {
+                getResultatForMaaling(maalingId, loeysingId).count { filterByTestregel(it.testregelId, testregelIds) }
+            }
+        }
+
     }
 }

@@ -237,7 +237,7 @@ class EksternResultatService(
     val pageRequest = PageRequest.of(pageNumber, size)
     val results =
         getResultatListKontrollAsEksterntResultat(
-            rapportId, loeysingId, testregelId, size, pageNumber)
+            rapportId, loeysingId, testregelId, size, pageNumber).sortedBy { it.side.toString() }
 
     val total =
         resultatService
@@ -283,7 +283,7 @@ class EksternResultatService(
             }
     }
 
-    fun getRapporPrKravPagedResources(
+    fun getRapportPrKravPagedResources(
         rapportId: String,
         loeysingId: Int,
         kravId: Int,
@@ -298,7 +298,7 @@ class EksternResultatService(
                 kravId,
                 size,
                 pageNumber
-            )
+            ).sortedWith(compareBy { ;it.side.toString(); it.testregelNoekkel})
 
         val total =
             resultatService
