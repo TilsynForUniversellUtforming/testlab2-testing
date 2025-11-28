@@ -9,9 +9,6 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.testregel.TestregelService
-import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
-import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
@@ -373,19 +370,6 @@ class ResultatService(
   private fun getResultatService(kontrollType: Kontrolltype): KontrollResultatService {
       return kontrollResultatServiceFactory.getResultatService(kontrollType)
   }
-
-    private inline fun <reified T> handleIkkjeForekomstGeneric(
-        item: T,
-        talElementBrot: Int,
-        talElementSamsvar: Int,
-        copyWithNullScore: (T) -> T
-    ): T {
-        return if (talElementBrot == 0 && talElementSamsvar == 0) {
-            copyWithNullScore(item)
-        } else {
-            item
-        }
-    }
 
     private inline fun <reified T> handleIkkjeForekomstGeneric(
         item: T,

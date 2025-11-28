@@ -13,8 +13,6 @@ import no.uutilsynet.testlab2testing.resultat.ResultatService
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
-import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
