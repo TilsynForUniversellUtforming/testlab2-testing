@@ -285,7 +285,7 @@ class EksternResultatService(
             }
     }
 
-    fun getRapporPrKravPagedResources(
+    fun getRapportPrKravPagedResources(
         rapportId: String,
         loeysingId: Int,
         kravId: Int,

@@ -109,7 +109,7 @@ class EksternResultatResource(
         @RequestParam page: Int = 0
     ): ResponseEntity<out Any> {
         return runCatching {eksternResultatService
-            .getRapporPrKravPagedResources(rapportId, loeysingId, kravId, size, page)}
+            .getRapportPrKravPagedResources(rapportId, loeysingId, kravId, size, page)}
             .fold(
                 onSuccess = { resultatKrav -> ResponseEntity.ok(resultatKrav) },
                 onFailure = { ErrorHandlingUtil.handleErrors(it) })
