@@ -134,8 +134,14 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       testregelId: Int,
       sortPaginationParams: SortPaginationParams
   ): List<TestresultatDB> {
-    val sql =
-        "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id=:testregelId and element_resultat= 'brot' order by :sortField :sortorder limit :limit offset :offset"
+      val sql =
+          "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id=:testregelId and element_resultat= 'brot' order by %s %s limit :limit offset :offset"
+
+      val formated = sql.format(
+          mapSortParamToDBField(sortPaginationParams.sortParam),
+          sortPaginationParams.sortOrder.name
+      )
+
     val params =
         MapSqlParameterSource()
             .addValue(
@@ -146,9 +152,9 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .addValue("testregelId", testregelId)
             .addValue("limit", sortPaginationParams.pageSize)
             .addValue("offset", sortPaginationParams.pageNumber * sortPaginationParams.pageSize)
-            .addValue("sortField", mapSortParamToDBField(sortPaginationParams.sortParam))
-            .addValue("sortOrder", sortPaginationParams.sortOrder.name)
-    return jdbcTemplate.query(sql, params, rowMapper)
+
+
+    return jdbcTemplate.query(formated, params, rowMapper)
   }
 
   fun listBy(
@@ -158,7 +164,13 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       sortPaginationParams: SortPaginationParams
   ): List<TestresultatDB> {
     val sql =
-        "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id in (:testregelIds) and element_resultat= 'brot' order by :sortField :sortorder limit :limit offset :offset"
+        "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id in (:testregelIds) and element_resultat= 'brot' order by %s %s limit :limit offset :offset"
+
+      val formated = sql.format(
+          mapSortParamToDBField(sortPaginationParams.sortParam),
+          sortPaginationParams.sortOrder.name
+      )
+
     val params =
         MapSqlParameterSource()
             .addValue(
@@ -169,9 +181,8 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .addValue("testregelIds", testregelIds)
             .addValue("limit", sortPaginationParams.pageSize)
             .addValue("offset", sortPaginationParams.pageNumber * sortPaginationParams.pageSize)
-            .addValue("sortField", mapSortParamToDBField(sortPaginationParams.sortParam))
-            .addValue("sortOrder", sortPaginationParams.sortOrder.name)
-    return jdbcTemplate.query(sql, params, rowMapper)
+
+    return jdbcTemplate.query(formated, params, rowMapper)
   }
 
   fun hasResultInDB(maalingId: Int, loeysingId: Int): Boolean {
