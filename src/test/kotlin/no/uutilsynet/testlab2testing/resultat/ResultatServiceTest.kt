@@ -4,9 +4,10 @@ import java.net.URI
 import java.time.Instant
 import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.*
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelDB
 import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.common.SortOrder
+import no.uutilsynet.testlab2testing.common.SortPaginationParams
+import no.uutilsynet.testlab2testing.common.SortParamTestregel
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
@@ -32,6 +33,8 @@ import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.TestregelService
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelDB
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -241,7 +244,14 @@ class ResultatServiceTest(
     Mockito.`when`(kravregisterClient.listKrav()).thenReturn(listOf(testUtils.kravWcag2xObject()))
     Mockito.doReturn(Kontrolltype.InngaaendeKontroll).`when`(kontrollDAO).getKontrollType(1)
 
-    val resultat = resultatService.getTestresultatDetaljerPrTestregel(1, 1, 1)
+    val sortPaginationParams =
+        SortPaginationParams(
+            sortParam = SortParamTestregel.side,
+            sortOrder = SortOrder.ASC,
+            pageNumber = 0,
+            pageSize = 20)
+
+    val resultat = resultatService.getTestresultatDetaljerPrTestregel(1, 1, 1, sortPaginationParams)
     assertNotNull(resultat)
 
     assertTrue(resultat.isNotEmpty())

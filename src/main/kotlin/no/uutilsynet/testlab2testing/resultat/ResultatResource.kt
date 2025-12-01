@@ -4,9 +4,12 @@ import io.micrometer.observation.annotation.Observed
 import java.net.URI
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2testing.common.SortOrder
+import no.uutilsynet.testlab2testing.common.SortPaginationParams
+import no.uutilsynet.testlab2testing.common.SortParamTestregel
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatTestregelAPI
-import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -72,15 +75,25 @@ class ResultatResource(
   }
 
   @Observed(name = "ResultatResource.getResultatListKontroll")
-  @GetMapping("/kontroll/{kontrollId}/loeysing/{loeysingId}/krav/{kravId}")
+  @GetMapping("/kontroll/{kontrollId}/loeysing/{loeysingId}/krav/{testregelId}")
   fun getResultatListKontroll(
       @PathVariable kontrollId: Int,
       @PathVariable loeysingId: Int,
-      @PathVariable kravId: Int,
-      @RequestParam limit: Int,
-      @RequestParam offset: Int
+      @PathVariable testregelId: Int,
+      @RequestParam size: Int = 20,
+      @RequestParam page: Int = 0,
+      @RequestParam sortParam: SortParamTestregel?,
+      @RequestParam sortOrder: SortOrder?,
   ): List<TestresultatDetaljert> {
-    return resultatService.getTestresultatDetaljerPrTestregel(kontrollId, loeysingId, kravId, limit, offset)
+
+    val sortPaginationParams =
+        SortPaginationParams(
+            sortParam = sortParam ?: SortParamTestregel.side,
+            sortOrder = sortOrder ?: SortOrder.ASC,
+            pageNumber = page,
+            pageSize = size)
+    return resultatService.getTestresultatDetaljerPrTestregel(
+        kontrollId, loeysingId, testregelId, sortPaginationParams)
   }
 
   @GetMapping("/tema")
@@ -102,6 +115,7 @@ class ResultatResource(
       @RequestParam fraDato: LocalDate?,
       @RequestParam tilDato: LocalDate?
   ): List<ResultatKrav> {
-    return resultatService.getTestresultatDetaljertPrKrav(kontrollId, kontrollType, loeysingId, fraDato, tilDato)
+    return resultatService.getTestresultatDetaljertPrKrav(
+        kontrollId, kontrollType, loeysingId, fraDato, tilDato)
   }
 }

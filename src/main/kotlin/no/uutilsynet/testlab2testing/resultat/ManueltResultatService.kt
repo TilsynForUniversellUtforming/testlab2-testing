@@ -1,6 +1,10 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.net.URL
+import java.time.Instant
+import java.time.LocalDateTime
 import no.uutilsynet.testlab2testing.common.Constants
+import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagList
@@ -13,9 +17,6 @@ import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.stereotype.Service
-import java.net.URL
-import java.time.Instant
-import java.time.LocalDateTime
 
 @Service
 class ManueltResultatService(
@@ -27,18 +28,19 @@ class ManueltResultatService(
     private val bildeService: BildeService,
     testresultatDAO: no.uutilsynet.testlab2testing.testresultat.TestresultatDAO,
     testregelClient: TestregelClient,
-    ) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelClient ) {
+) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelClient) {
 
   override fun getResultatForKontroll(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
-      size: Int,
-      pageNumber: Int
+      sortPaginationParams: SortPaginationParams
   ): List<TestresultatDetaljert> {
     return getFilteredAndMappedResults(kontrollId, loeysingId) {
-      filterByTestregel(it.testregelId, listOf(testregelId)) && it.elementResultat != null
-    }
+          filterByTestregel(it.testregelId, listOf(testregelId)) && it.elementResultat != null
+        }
+        .paginate(sortPaginationParams)
+        .sort(sortPaginationParams.sortOrder)
   }
 
   override fun getResultatForKontroll(
@@ -130,39 +132,42 @@ class ManueltResultatService(
         .associateBy({ it.first }, { it.second })
   }
 
-    override fun getTestresulatDetaljertForKrav(
-        kontrollId: Int,
-        loeysingId: Int,
-        kravId: Int,
-        size: Int,
-        pageNumber: Int
-    ): List<TestresultatDetaljert> {
-        val testreglar = getTestreglarForKrav(kravId).map { it.id }
-        return getFilteredAndMappedResults(kontrollId, loeysingId) {
-            filterByTestregel(it.testregelId, testreglar) && it.elementResultat != null
+  override fun getTestresulatDetaljertForKrav(
+      kontrollId: Int,
+      loeysingId: Int,
+      kravId: Int,
+      sortPaginationParams: SortPaginationParams
+  ): List<TestresultatDetaljert> {
+    val testreglar = getTestreglarForKrav(kravId).map { it.id }
+    return getFilteredAndMappedResults(kontrollId, loeysingId) {
+          filterByTestregel(it.testregelId, testreglar) && it.elementResultat != null
         }
-    }
+        .paginate(sortPaginationParams)
+        .sort(sortPaginationParams.sortOrder)
+  }
 
-    override fun getTalBrotForKontrollLoeysingTestregel(
-        kontrollId: Int,
-        loeysingId: Int,
-        testregelId: Int
-    ): Result<Int> {
-        val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
-        return testresultatDAO.getTalBrotForKontrollLoeysingTestregel(loeysingId, testregelId, testgrunnlagId,null)
-    }
+  override fun getTalBrotForKontrollLoeysingTestregel(
+      kontrollId: Int,
+      loeysingId: Int,
+      testregelId: Int
+  ): Result<Int> {
+    val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
+    return testresultatDAO.getTalBrotForKontrollLoeysingTestregel(
+        loeysingId, testregelId, testgrunnlagId, null)
+  }
 
-    override fun getTalBrotForKontrollLoeysingKrav(
-        kontrollId: Int,
-        loeysingId: Int,
-        kravId: Int
-    ): Result<Int> {
-        val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
-        val testregelIds = getTestreglarForKrav(kravId).map { it.id }
-        return testresultatDAO.getTalBrotForKontrollLoeysingKrav(loeysingId, testregelIds, testgrunnlagId, null)
-    }
+  override fun getTalBrotForKontrollLoeysingKrav(
+      kontrollId: Int,
+      loeysingId: Int,
+      kravId: Int
+  ): Result<Int> {
+    val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
+    val testregelIds = getTestreglarForKrav(kravId).map { it.id }
+    return testresultatDAO.getTalBrotForKontrollLoeysingKrav(
+        loeysingId, testregelIds, testgrunnlagId, null)
+  }
 
-    private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =
+  private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =
       (result
               .map { it.status }
               .count { it == ResultatManuellKontrollBase.Status.Ferdig }

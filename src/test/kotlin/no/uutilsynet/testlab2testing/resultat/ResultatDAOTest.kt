@@ -2,12 +2,12 @@ package no.uutilsynet.testlab2testing.resultat
 
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelDB
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelDB
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test

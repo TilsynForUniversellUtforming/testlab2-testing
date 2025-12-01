@@ -2,12 +2,14 @@ package no.uutilsynet.testlab2testing.testresultat
 
 import io.micrometer.observation.annotation.Observed
 import java.sql.ResultSet
+import java.sql.Timestamp
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
+import no.uutilsynet.testlab2testing.common.SortPaginationParams
+import no.uutilsynet.testlab2testing.common.SortParamTestregel
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
-import java.sql.Timestamp
 
 @Component
 class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -130,11 +132,10 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       maalingId: Int,
       loeysingId: Int?,
       testregelId: Int,
-      limit: Int = 20,
-      offset: Int = 0
+      sortPaginationParams: SortPaginationParams
   ): List<TestresultatDB> {
     val sql =
-        "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id=:testregelId and element_resultat= 'brot' limit :limit offset :offset"
+        "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id=:testregelId and element_resultat= 'brot' order by :sortField :sortorder limit :limit offset :offset"
     val params =
         MapSqlParameterSource()
             .addValue(
@@ -143,8 +144,10 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             )
             .addValue("loeysingId", loeysingId)
             .addValue("testregelId", testregelId)
-            .addValue("limit", limit)
-            .addValue("offset", offset)
+            .addValue("limit", sortPaginationParams.pageSize)
+            .addValue("offset", sortPaginationParams.pageNumber * sortPaginationParams.pageSize)
+            .addValue("sortField", mapSortParamToDBField(sortPaginationParams.sortParam))
+            .addValue("sortOrder", sortPaginationParams.sortOrder.name)
     return jdbcTemplate.query(sql, params, rowMapper)
   }
 
@@ -152,11 +155,10 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       maalingId: Int,
       loeysingId: Int?,
       testregelIds: List<Int>,
-      limit: Int = 20,
-      offset: Int = 0
+      sortPaginationParams: SortPaginationParams
   ): List<TestresultatDB> {
     val sql =
-        "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id in (:testregelIds) and element_resultat= 'brot' limit :limit offset :offset"
+        "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id in (:testregelIds) and element_resultat= 'brot' order by :sortField :sortorder limit :limit offset :offset"
     val params =
         MapSqlParameterSource()
             .addValue(
@@ -165,8 +167,10 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             )
             .addValue("loeysingId", loeysingId)
             .addValue("testregelIds", testregelIds)
-            .addValue("limit", limit)
-            .addValue("offset", offset)
+            .addValue("limit", sortPaginationParams.pageSize)
+            .addValue("offset", sortPaginationParams.pageNumber * sortPaginationParams.pageSize)
+            .addValue("sortField", mapSortParamToDBField(sortPaginationParams.sortParam))
+            .addValue("sortOrder", sortPaginationParams.sortOrder.name)
     return jdbcTemplate.query(sql, params, rowMapper)
   }
 
@@ -199,24 +203,45 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 and (:testgrunnlagId::int is null or testgrunnlag_id=:testgrunnlagId)
                 and(:maalingId::int is null or maaling_id=:maalingId)"""
               .trimIndent(),
-          mapOf("maalingId" to maalingId, "testgrunnlagId" to testgrunnlagId,"loeysingId" to loeysingId, "testregelId" to testregelId),
+          mapOf(
+              "maalingId" to maalingId,
+              "testgrunnlagId" to testgrunnlagId,
+              "loeysingId" to loeysingId,
+              "testregelId" to testregelId),
           Int::class.java) as Int
     }
   }
 
-    fun getTalBrotForKontrollLoeysingKrav(loeysingId: Int, testregelIds: List<Int>,  testgrunnlagId: Int?,
-                                          maalingId: Int?) : Result<Int> {
-        return runCatching {
-            jdbcTemplate.queryForObject(
-                """select count(*) from testlab2_testing.testresultat tr
+  fun getTalBrotForKontrollLoeysingKrav(
+      loeysingId: Int,
+      testregelIds: List<Int>,
+      testgrunnlagId: Int?,
+      maalingId: Int?
+  ): Result<Int> {
+    return runCatching {
+      jdbcTemplate.queryForObject(
+          """select count(*) from testlab2_testing.testresultat tr
                 where tr.loeysing_id=:loeysingId
                 and tr.testregel_id in (:testregelIds)
                 and tr.element_resultat = 'brot'
                 and (:testgrunnlagId::int is null or testgrunnlag_id=:testgrunnlagId)
                 and(:maalingId::int is null or maaling_id=:maalingId)"""
-                    .trimIndent(),
-                mapOf("maalingId" to maalingId, "testgrunnlagId" to testgrunnlagId,"loeysingId" to loeysingId, "testregelIds" to testregelIds),
-                Int::class.java) as Int
-        }
+              .trimIndent(),
+          mapOf(
+              "maalingId" to maalingId,
+              "testgrunnlagId" to testgrunnlagId,
+              "loeysingId" to loeysingId,
+              "testregelIds" to testregelIds),
+          Int::class.java) as Int
     }
+  }
+
+  fun mapSortParamToDBField(sortParam: SortParamTestregel): String {
+    return when (sortParam) {
+      SortParamTestregel.side -> "crawl_side_id"
+      SortParamTestregel.testregel -> "testregel_id"
+      SortParamTestregel.elementUtfall -> "element_utfall"
+      SortParamTestregel.elementPointer -> "element_omtale_pointer"
+    }
+  }
 }

@@ -24,7 +24,7 @@ class TestregelClient(
 
   fun getInnhaldstypeForTesting() = testregelService.getInnhaldstypeForTesting()
 
-    fun getTestregelByKravId(kravId: Int): List<Testregel> {
-        return testregelService.getTestreglarForKrav(kravId)
-    }
+  fun getTestregelByKravId(kravId: Int): List<Testregel> {
+    return testregelService.getTestreglarForKrav(kravId)
+  }
 }

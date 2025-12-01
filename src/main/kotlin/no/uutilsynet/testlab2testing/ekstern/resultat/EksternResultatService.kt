@@ -1,6 +1,8 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat
 
 import io.micrometer.observation.annotation.Observed
+import java.util.stream.Collectors
+import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.ekstern.resultat.model.*
 import no.uutilsynet.testlab2testing.ekstern.resultat.paginering.TestresultatEksternAssembler
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
@@ -19,7 +21,6 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.web.PagedResourcesAssembler
 import org.springframework.hateoas.CollectionModel
 import org.springframework.stereotype.Service
-import java.util.stream.Collectors
 
 @Service
 class EksternResultatService(
@@ -184,13 +185,12 @@ class EksternResultatService(
       resultatService.getTestresultatDetaljertPrKrav(
           kontrollLoeysing.kontrollId, null, kontrollLoeysing.loeysingId, null, null)
 
-  private fun testresultatToDetaljertEkstern(
+  private fun getTestresultatDetaljertEkstern(
       kontrollLoeysing: KontrollIdLoeysingId,
       testregel: TestregelKrav,
-      size: Int,
-      pageNumber: Int
+      sortPaginationParams: SortPaginationParams
   ) =
-      getResultatPrTestregel(kontrollLoeysing, testregel, size, pageNumber)
+      getResultatPrTestregel(kontrollLoeysing, testregel, sortPaginationParams)
           .parallelStream()
           .map { it.toTestresultatDetaljertEkstern(testregel) }
           .collect(Collectors.toList())
@@ -202,11 +202,13 @@ class EksternResultatService(
   private fun getResultatPrTestregel(
       kontrollLoeysing: KontrollIdLoeysingId,
       testregel: TestregelKrav,
-      size: Int,
-      pageNumber: Int
+      sortPaginationParams: SortPaginationParams
   ) =
       resultatService.getTestresultatDetaljerPrTestregel(
-          kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId, testregel.id, size, pageNumber)
+          kontrollLoeysing.kontrollId,
+          kontrollLoeysing.loeysingId,
+          testregel.id,
+          sortPaginationParams)
 
   private fun getKontrollIdLoeysingIdsForRapportId(rapportId: String): List<KontrollIdLoeysingId> {
     return eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId)).getOrThrow()
@@ -216,13 +218,12 @@ class EksternResultatService(
       rapportId: String,
       loeysingId: Int,
       testregelId: Int,
-      size: Int,
-      pageNumber: Int
+      sortPaginationParams: SortPaginationParams
   ): List<TestresultatDetaljertEkstern> {
     return getKontrollLoeysing(rapportId, loeysingId)
         .mapCatching {
           val testregel = getTestregelFromTestregelId(testregelId)
-          testresultatToDetaljertEkstern(it, testregel, size, pageNumber)
+          getTestresultatDetaljertEkstern(it, testregel, sortPaginationParams)
         }
         .getOrThrow()
   }
@@ -231,17 +232,19 @@ class EksternResultatService(
       rapportId: String,
       loeysingId: Int,
       testregelId: Int,
-      size: Int,
-      pageNumber: Int
+      sortPaginationParams: SortPaginationParams
   ): CollectionModel<TestresultatDetaljertEkstern> {
-    val pageRequest = PageRequest.of(pageNumber, size)
+    val pageRequest = PageRequest.of(sortPaginationParams.pageNumber, sortPaginationParams.pageSize)
     val results =
         getResultatListKontrollAsEksterntResultat(
-            rapportId, loeysingId, testregelId, size, pageNumber).sortedBy { it.side.toString() }
+            rapportId, loeysingId, testregelId, sortPaginationParams)
 
     val total =
         resultatService
-            .getTalBrotForKontrollLoeysingTestregel(getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId, loeysingId, testregelId)
+            .getTalBrotForKontrollLoeysingTestregel(
+                getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId,
+                loeysingId,
+                testregelId)
             .getOrThrow()
 
     val page = PageImpl(results, pageRequest, total.toLong())
@@ -264,52 +267,46 @@ class EksternResultatService(
         .getOrThrow()
   }
 
-    fun getRapportPrKrav(
-        rapportId: String,
-        loeysingId: Int,
-        kravId: Int,
-        size: Int,
-        pageNumber: Int
-    ): List<TestresultatDetaljertEkstern> {
-        return resultatService.getTestresultatDetaljertPrKrav(
+  fun getRapportPrKrav(
+      rapportId: String,
+      loeysingId: Int,
+      kravId: Int,
+      sortPaginationParams: SortPaginationParams
+  ): List<TestresultatDetaljertEkstern> {
+    return resultatService
+        .getTestresultatDetaljertPrKrav(
             getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId,
             loeysingId,
             kravId,
-            size,
-            pageNumber
+            sortPaginationParams,
         )
-            .map {
-                it.toTestresultatDetaljertEkstern(getTestregelFromTestregelId(it.testregelId))
-            }
-    }
+        .map { it.toTestresultatDetaljertEkstern(getTestregelFromTestregelId(it.testregelId)) }
+  }
 
-    fun getRapportPrKravPagedResources(
-        rapportId: String,
-        loeysingId: Int,
-        kravId: Int,
-        size: Int,
-        pageNumber: Int
-    ): CollectionModel<TestresultatDetaljertEkstern> {
-        val pageRequest = PageRequest.of(pageNumber, size)
-        val results =
-            getRapportPrKrav(
-                rapportId,
+  fun getRapportPrKravPagedResources(
+      rapportId: String,
+      loeysingId: Int,
+      kravId: Int,
+      sortPaginationParams: SortPaginationParams
+  ): CollectionModel<TestresultatDetaljertEkstern> {
+    val pageRequest = PageRequest.of(sortPaginationParams.pageNumber, sortPaginationParams.pageSize)
+    val results =
+        getRapportPrKrav(rapportId, loeysingId, kravId, sortPaginationParams)
+            .sortedWith(
+                compareBy {
+                  it.side.toString()
+                  it.testregelNoekkel
+                })
+
+    val total =
+        resultatService
+            .getTalBrotForKontrollLoeysingKrav(
+                getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId,
                 loeysingId,
-                kravId,
-                size,
-                pageNumber
-            ).sortedWith(compareBy { ;it.side.toString(); it.testregelNoekkel})
+                kravId)
+            .getOrThrow()
 
-        val total =
-            resultatService
-                .getTalBrotForKontrollLoeysingKrav(
-                    getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId,
-                    loeysingId,
-                    kravId
-                )
-                .getOrThrow()
-
-        val page = PageImpl(results, pageRequest, total.toLong())
-        return pagedResourcesAssembler.toModel(page, testresultatEksternAssembler)
-    }
+    val page = PageImpl(results, pageRequest, total.toLong())
+    return pagedResourcesAssembler.toModel(page, testresultatEksternAssembler)
+  }
 }

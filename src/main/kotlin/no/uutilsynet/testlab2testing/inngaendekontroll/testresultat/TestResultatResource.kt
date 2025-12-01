@@ -2,11 +2,11 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
 import org.springframework.http.ResponseEntity

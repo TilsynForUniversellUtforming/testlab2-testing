@@ -364,16 +364,13 @@ class TestkoeyringDAO(
     return URI(autotesterLenke).toURL()
   }
 
-    fun getBrukarIdForTestkoeyring(maalingId: Int, loeysingId: Int) : Int?{
-        val query =
-            """
+  fun getBrukarIdForTestkoeyring(maalingId: Int, loeysingId: Int): Int? {
+    val query =
+        """
             select brukar_id from testkoeyring where maaling_id = :maalingId and loeysing_id = :loeysingId
         """
-                .trimIndent()
-        return jdbcTemplate.queryForObject(
-            query,
-            mapOf("maalingId" to maalingId, "loeysingId" to loeysingId),
-            Int::class.java)
-
-    }
+            .trimIndent()
+    return jdbcTemplate.queryForObject(
+        query, mapOf("maalingId" to maalingId, "loeysingId" to loeysingId), Int::class.java)
+  }
 }

@@ -8,12 +8,12 @@ import java.net.URL
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatSide
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatSideTestregel
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatSuksesskriterium
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatTestregel
-import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties

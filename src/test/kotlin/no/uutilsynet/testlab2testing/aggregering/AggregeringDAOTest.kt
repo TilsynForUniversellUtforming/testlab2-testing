@@ -1,11 +1,11 @@
 package no.uutilsynet.testlab2testing.aggregering
 
 import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelDB
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.resultat.OpprettTestgrunnlag
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelDB
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
