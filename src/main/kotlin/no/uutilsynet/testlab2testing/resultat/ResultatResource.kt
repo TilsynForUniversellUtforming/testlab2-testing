@@ -89,7 +89,7 @@ class ResultatResource(
     val sortPaginationParams =
         SortPaginationParams(
             sortParam = sortParam ?: SortParamTestregel.side,
-            sortOrder = sortOrder ?: SortOrder.ASC,
+            sortOrder = sortOrder ?: SortOrder.asc,
             pageNumber = page,
             pageSize = size)
     return resultatService.getTestresultatDetaljerPrTestregel(

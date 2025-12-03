@@ -1,8 +1,8 @@
 package no.uutilsynet.testlab2testing.common
 
 enum class SortOrder {
-  ASC,
-  DESC
+  asc,
+  desc
 }
 
 enum class SortParamTestregel {

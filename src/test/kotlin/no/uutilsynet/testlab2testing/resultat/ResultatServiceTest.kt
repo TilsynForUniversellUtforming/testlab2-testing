@@ -247,7 +247,7 @@ class ResultatServiceTest(
     val sortPaginationParams =
         SortPaginationParams(
             sortParam = SortParamTestregel.side,
-            sortOrder = SortOrder.ASC,
+            sortOrder = SortOrder.asc,
             pageNumber = 0,
             pageSize = 20)
 

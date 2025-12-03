@@ -69,6 +69,8 @@ class AutomatiskResultatService(
       testregelId: Int,
       sortPaginationParams: SortPaginationParams
   ): List<TestresultatDetaljert> {
+      println("SortPaginationParams=$sortPaginationParams")
+
     val resultat =
         testresultatDAO.listBy(
             maalingId = maalingId, loeysingId = loeysingId, testregelId, sortPaginationParams)

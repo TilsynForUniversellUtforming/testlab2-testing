@@ -91,7 +91,7 @@ sealed class KontrollResultatService(
   protected fun List<TestresultatDetaljert>.sort(
       sortOrder: SortOrder
   ): List<TestresultatDetaljert> {
-    if (sortOrder == SortOrder.DESC) {
+    if (sortOrder == SortOrder.desc) {
       return this.reversed()
     }
     return this
