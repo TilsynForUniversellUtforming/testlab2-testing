@@ -217,6 +217,8 @@ class EksternResultatResource(
     val testresults = eksternResultatService.eksporterRapportForLoeysing(rapportId, loeysingId)
     val rapportInfo = eksternResultatService.getTestEksternForRapportLoeysing(rapportId, loeysingId)
 
+      logger.debug("Rapport $rapportInfo")
+
     val outputStream = excelWriter.writeResultsToSpreadsheet(testresults, rapportInfo)
 
     val headers = setHttpHeaders()
