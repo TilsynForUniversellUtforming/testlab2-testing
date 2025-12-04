@@ -10,6 +10,7 @@ data class TestresultatDB(
     val testregelId: Int,
     val loeysingId: Int,
     val sideutvalId: Int,
+    val side: String,
     val testUtfoert: Instant,
     val elementUtfall: String,
     val elementResultat: TestresultatUtfall,

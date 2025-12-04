@@ -25,6 +25,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             testregelId = rs.getInt("testregel_id"),
             loeysingId = rs.getInt("loeysing_id"),
             sideutvalId = rs.getInt("crawl_side_id"),
+            side = rs.getString("url"),
             testUtfoert = rs.getTimestamp("test_vart_utfoert").toInstant(),
             elementUtfall = rs.getString("element_utfall"),
             elementResultat = TestresultatUtfall.valueOf(rs.getString("element_resultat")),
@@ -143,7 +144,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         sortPaginationParams: SortPaginationParams
     ): List<TestresultatDB> {
         val sql =
-            "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id=:testregelId and element_resultat= 'brot' order by %s %s limit :limit offset :offset"
+            "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id=:testregelId and element_resultat= 'brot' order by %s %s limit :limit offset :offset"
 
         val formated = sql.format(
             mapSortParamToDBField(sortPaginationParams.sortParam),
@@ -178,7 +179,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         sortPaginationParams: SortPaginationParams
     ): List<TestresultatDB> {
         val sql =
-            "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id in (:testregelIds) and element_resultat= 'brot' order by %s %s limit :limit offset :offset"
+            "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id in (:testregelIds) and element_resultat= 'brot' order by %s %s limit :limit offset :offset"
 
         val formated = sql.format(
             mapSortParamToDBField(sortPaginationParams.sortParam),
@@ -267,7 +268,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     fun mapSortParamToDBField(sortParam: SortParamTestregel): String {
         return when (sortParam) {
-            SortParamTestregel.side -> "crawl_side_id"
+            SortParamTestregel.side -> "url"
             SortParamTestregel.testregel -> "testregel_id"
             SortParamTestregel.elementUtfall -> "element_utfall"
             SortParamTestregel.elementPointer -> "element_omtale_pointer"

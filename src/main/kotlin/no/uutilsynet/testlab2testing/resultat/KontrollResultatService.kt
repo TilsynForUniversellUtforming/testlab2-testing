@@ -1,9 +1,9 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import kotlin.math.min
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.common.SortOrder
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
+import no.uutilsynet.testlab2testing.common.SortParamTestregel
 import no.uutilsynet.testlab2testing.resultat.ResultatService.LoysingList
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
@@ -11,6 +11,8 @@ import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
+import kotlin.math.min
+
 
 sealed class KontrollResultatService(
     protected val resultatDAO: ResultatDAO,
@@ -88,14 +90,24 @@ sealed class KontrollResultatService(
     return this.subList(startIndex, endIndex)
   }
 
-  protected fun List<TestresultatDetaljert>.sort(
-      sortOrder: SortOrder
-  ): List<TestresultatDetaljert> {
-    if (sortOrder == SortOrder.desc) {
-      return this.reversed()
+    protected fun List<TestresultatDetaljert>.sort(
+        sortPaginationParams: SortPaginationParams
+    ): List<TestresultatDetaljert> {
+
+        val sorted = when (sortPaginationParams.sortParam) {
+            SortParamTestregel.side -> this.sortedBy { it.side.toString() }
+            SortParamTestregel.testregel -> this.sortedBy { it.testregelNoekkel }
+            SortParamTestregel.elementUtfall -> this.sortedBy { it.elementResultat?.name }
+            SortParamTestregel.elementPointer -> this.sortedBy { it.elementOmtale?.pointer }
+        }
+
+
+        return if (sortPaginationParams.sortOrder == SortOrder.desc) {
+            sorted.reversed()
+        } else {
+            sorted
+        }
     }
-    return this
-  }
 
   protected fun resultSubListEnd(
       sortPaginationParams: SortPaginationParams,

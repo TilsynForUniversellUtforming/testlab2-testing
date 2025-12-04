@@ -33,10 +33,11 @@ class AutomatiskResultatService(
     return if (testresultatDAO.hasResultInDB(maalingId, loeysingId)) {
       getDetaljertResultatForKontroll(kontrollId, loeysingId, testregelId, sortPaginationParams)
     } else {
+        println("SortPaginationParams=$sortPaginationParams")
       getResultatForMaaling(maalingId, loeysingId)
           .filter { filterByTestregel(it.testregelId, listOf(testregelId)) }
+          .sort(sortPaginationParams)
           .paginate(sortPaginationParams)
-          .sort(sortPaginationParams.sortOrder)
     }
   }
 
@@ -155,8 +156,8 @@ class AutomatiskResultatService(
     } else {
       getResultatForMaaling(maalingId, loeysingId)
           .filter { filterByTestregel(it.testregelId, testreglar) }
+          .sort(sortPaginationParams)
           .paginate(sortPaginationParams)
-          .sort(sortPaginationParams.sortOrder)
     }
   }
 

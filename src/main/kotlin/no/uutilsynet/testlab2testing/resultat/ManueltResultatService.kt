@@ -40,7 +40,7 @@ class ManueltResultatService(
           filterByTestregel(it.testregelId, listOf(testregelId)) && it.elementResultat != null
         }
         .paginate(sortPaginationParams)
-        .sort(sortPaginationParams.sortOrder)
+        .sort(sortPaginationParams)
   }
 
   override fun getResultatForKontroll(
@@ -143,7 +143,7 @@ class ManueltResultatService(
           filterByTestregel(it.testregelId, testreglar) && it.elementResultat != null
         }
         .paginate(sortPaginationParams)
-        .sort(sortPaginationParams.sortOrder)
+        .sort(sortPaginationParams)
   }
 
   override fun getTalBrotForKontrollLoeysingTestregel(

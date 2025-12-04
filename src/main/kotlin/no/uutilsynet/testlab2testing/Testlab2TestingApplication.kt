@@ -3,7 +3,6 @@ package no.uutilsynet.testlab2testing
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import jakarta.validation.ClockProvider
-import java.time.Clock
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
@@ -19,6 +18,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.filter.CommonsRequestLoggingFilter
+import java.time.Clock
 
 @SpringBootApplication(
     exclude = [SecurityAutoConfiguration::class, HibernateJpaAutoConfiguration::class])
