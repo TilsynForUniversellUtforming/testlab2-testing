@@ -9,10 +9,13 @@ import org.apache.poi.ooxml.POIXMLProperties
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.streaming.SXSSFSheet
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class ExcelWriter {
+
+    val logger = LoggerFactory.getLogger(ExcelWriter::class.java)
 
   fun writeResultsToSpreadsheet(
       testresults: List<TestresultatDetaljert>,
@@ -28,6 +31,8 @@ class ExcelWriter {
     testresults.forEachIndexed { index, testresult ->
       writeDataRow(workSheet, testresult, kontrollInfo, index + 1)
     }
+
+      logger.debug("Write etter streaming workbook with ${testresults.size} testresults")
 
     val xmlProps: POIXMLProperties = workbook.xssfWorkbook.properties
     val coreProps = xmlProps.coreProperties
