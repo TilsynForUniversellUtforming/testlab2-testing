@@ -4,7 +4,6 @@ import io.micrometer.observation.annotation.Observed
 import jakarta.validation.ClockProvider
 import java.time.Instant
 import kotlinx.coroutines.runBlocking
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.common.validateIdList
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.forenkletkontroll.dto.EditMaalingDTO
@@ -20,6 +19,7 @@ import no.uutilsynet.testlab2testing.testing.automatisk.*
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.toTestregelBase
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -223,8 +223,7 @@ class MaalingService(
       loeysingId: Int?
   ): Result<List<AutotesterTestresultat>> {
     return runBlocking {
-      mapTestkoeyringToTestresultatBrot(
-          getFilteredAndFerdigTestkoeyringar(maalingId, loeysingId))
+      mapTestkoeyringToTestresultatBrot(getFilteredAndFerdigTestkoeyringar(maalingId, loeysingId))
           .toSingleResult()
           .map { it.values.flatten() }
     }
@@ -232,8 +231,7 @@ class MaalingService(
 
   @Observed(name = "MaalingService.getFilteredAndFerdigTestkoeyringar")
   fun getFilteredAndFerdigTestkoeyringar(maalingId: Int, loeysingId: Int?) =
-      getFerdigeTestkoeyringar(maalingId)
-          .filter {
+      getFerdigeTestkoeyringar(maalingId).filter {
         loeysingId == null || it.loeysingId == loeysingId
       }
 

@@ -2,13 +2,13 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlStatus
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlerClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.updateStatus
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component

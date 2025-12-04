@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.resultat.import
 
+import java.time.ZoneId
+import java.util.stream.Collectors
 import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.BrukarService
@@ -16,8 +18,6 @@ import no.uutilsynet.testlab2testing.testresultat.TestresultatDBBase
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.ZoneId
-import java.util.stream.Collectors
 
 @Service
 class AzureStorage2DbService(
@@ -43,24 +43,23 @@ class AzureStorage2DbService(
     logger.debug(
         "Get testresultat from Azure Storage for maalingId: $maalingId, loeysingId: $loeysingId, size: ${testkoeyringMaalingLoeysing.size}")
     return runBlocking {
-        autoTesterClient
-            .fetchResultat(testkoeyringMaalingLoeysing, resulttatType)
-            .toSingleResult()
-            .map { it.values.flatten() }
+      autoTesterClient
+          .fetchResultat(testkoeyringMaalingLoeysing, resulttatType)
+          .toSingleResult()
+          .map { it.values.flatten() }
     }
   }
 
-    fun getBrukarForTestKoeyring(maalingId: Int, loeysingId: Int): Int? {
+  fun getBrukarForTestKoeyring(maalingId: Int, loeysingId: Int): Int? {
 
-      val brukarId = testkoeyringDAO.getBrukarIdForTestkoeyring(maalingId, loeysingId)
-        return brukarId ?: 1
-
+    val brukarId = testkoeyringDAO.getBrukarIdForTestkoeyring(maalingId, loeysingId)
+    return brukarId ?: 1
   }
 
   fun getTestresultat(maalingId: Int, loeysingId: Int): List<TestresultatDBBase> {
     val sideutvalCache = SideutvalCache(sideutvalDAO, maalingId, loeysingId)
 
-      val brukarId = getBrukarForTestKoeyring(maalingId, loeysingId)
+    val brukarId = getBrukarForTestKoeyring(maalingId, loeysingId)
 
     val result =
         getTestresultatFraAzureStorage(maalingId, loeysingId)
@@ -124,20 +123,19 @@ class AzureStorage2DbService(
           elementOmtaleDescription = testresultat.elementOmtale?.description,
           brukarId = brukarId ?: 1)
     } else {
-        TestresultatDBBase(
-            null,
-            maalingId = maalingId,
-            loeysingId = testresultat.loeysingId,
-            testregelId = testregelCache.getTestregelByKey(testresultat.testregelId).id,
-            sideutvalId = sideutvalCache.getSideutvalId(testresultat.side),
-            testUtfoert = testresultat.testVartUtfoert.atZone(ZoneId.systemDefault()).toInstant(),
-            elementUtfall = testresultat.elementUtfall,
-            elementResultat = testresultat.elementResultat,
-            elementOmtalePointer = null,
-            elmentOmtaleHtml = null,
-            elementOmtaleDescription = null,
-            brukarId = brukarService.getUserId() ?: 0
-        )
+      TestresultatDBBase(
+          null,
+          maalingId = maalingId,
+          loeysingId = testresultat.loeysingId,
+          testregelId = testregelCache.getTestregelByKey(testresultat.testregelId).id,
+          sideutvalId = sideutvalCache.getSideutvalId(testresultat.side),
+          testUtfoert = testresultat.testVartUtfoert.atZone(ZoneId.systemDefault()).toInstant(),
+          elementUtfall = testresultat.elementUtfall,
+          elementResultat = testresultat.elementResultat,
+          elementOmtalePointer = null,
+          elmentOmtaleHtml = null,
+          elementOmtaleDescription = null,
+          brukarId = brukarService.getUserId() ?: 0)
     }
   }
 }

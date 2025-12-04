@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.ekstern.resultat.model
 
+import java.net.URL
+import java.time.LocalDateTime
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
@@ -7,8 +9,6 @@ import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
 import org.springframework.web.util.UriComponentsBuilder
-import java.net.URL
-import java.time.LocalDateTime
 
 @Relation(collectionRelation = "testresultat")
 data class TestresultatDetaljertEkstern(
@@ -34,11 +34,11 @@ fun TestresultatDetaljert.toTestresultatDetaljertEkstern(
         testVartUtfoert = this.testVartUtfoert,
         elementUtfall = this.elementUtfall,
         elementResultat = this.elementResultat,
-        elementOmtale = this.elementOmtale?.copy(
-            htmlCode = null,
-            pointer = this.elementOmtale.pointer,
-            description = this.elementOmtale.description
-        ),
+        elementOmtale =
+            this.elementOmtale?.copy(
+                htmlCode = null,
+                pointer = this.elementOmtale.pointer,
+                description = this.elementOmtale.description),
         bilder = this.bilder?.map { it.toEksternPath() },
     )
 

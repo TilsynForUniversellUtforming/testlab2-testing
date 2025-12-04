@@ -2,19 +2,17 @@ package no.uutilsynet.testlab2testing.testresultat.aggregering
 
 import java.net.URI
 import java.sql.ResultSet
+import java.sql.Types
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.support.KeyHolder
 import org.springframework.stereotype.Component
-import java.sql.Types
 
 @Component
 class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
-  fun createAggregertResultatTestregel(
-      aggregertResultatTestregel: AggregeringPerTestregelDB
-  ): Int {
+  fun createAggregertResultatTestregel(aggregertResultatTestregel: AggregeringPerTestregelDB): Int {
 
     deleteAggregertResultatTestregel(aggregertResultatTestregel)
 
@@ -29,37 +27,24 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .addValue("maaling_id", aggregertResultatTestregel.maalingId, Types.INTEGER)
             .addValue("loeysing_id", aggregertResultatTestregel.loeysingId, Types.INTEGER)
             .addValue(
-                "suksesskriterium",
-                aggregertResultatTestregel.suksesskriterium,
-                Types.INTEGER)
+                "suksesskriterium", aggregertResultatTestregel.suksesskriterium, Types.INTEGER)
             .addValue(
                 "fleire_suksesskriterium",
                 aggregertResultatTestregel.fleireSuksesskriterium.map { it }.toTypedArray(),
                 Types.ARRAY)
+            .addValue("testregel_id", aggregertResultatTestregel.testregelId, Types.INTEGER)
             .addValue(
-                "testregel_id", aggregertResultatTestregel.testregelId, Types.INTEGER)
+                "tal_element_samsvar", aggregertResultatTestregel.talElementSamsvar, Types.INTEGER)
+            .addValue("tal_element_brot", aggregertResultatTestregel.talElementBrot, Types.INTEGER)
             .addValue(
-                "tal_element_samsvar",
-                aggregertResultatTestregel.talElementSamsvar,
-                Types.INTEGER)
-            .addValue(
-                "tal_element_brot",
-                aggregertResultatTestregel.talElementBrot,
-                Types.INTEGER)
-            .addValue(
-                "tal_element_varsel",
-                aggregertResultatTestregel.talElementVarsel,
-                Types.INTEGER)
+                "tal_element_varsel", aggregertResultatTestregel.talElementVarsel, Types.INTEGER)
             .addValue(
                 "tal_element_ikkje_forekomst",
                 aggregertResultatTestregel.talElementIkkjeForekomst,
                 Types.INTEGER)
             .addValue(
-                "tal_sider_samsvar",
-                aggregertResultatTestregel.talSiderSamsvar,
-                Types.INTEGER)
-            .addValue(
-                "tal_sider_brot", aggregertResultatTestregel.talSiderBrot, Types.INTEGER)
+                "tal_sider_samsvar", aggregertResultatTestregel.talSiderSamsvar, Types.INTEGER)
+            .addValue("tal_sider_brot", aggregertResultatTestregel.talSiderBrot, Types.INTEGER)
             .addValue(
                 "tal_sider_ikkje_forekomst",
                 aggregertResultatTestregel.talSiderIkkjeForekomst,
@@ -72,10 +57,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 "testregel_gjennomsnittleg_side_samsvar_prosent",
                 aggregertResultatTestregel.testregelGjennomsnittlegSideSamsvarProsent,
                 Types.FLOAT)
-            .addValue(
-                "testgrunnlag_id",
-                aggregertResultatTestregel.testgrunnlagId,
-                Types.INTEGER)
+            .addValue("testgrunnlag_id", aggregertResultatTestregel.testgrunnlagId, Types.INTEGER)
 
     jdbcTemplate.update(sql, parameterSource, keyHolder)
     return keyHolder.keys?.get("id") as Int

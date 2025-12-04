@@ -3,6 +3,9 @@ package no.uutilsynet.testlab2testing.ekstern.resultat
 import io.micrometer.observation.annotation.Observed
 import jakarta.servlet.http.HttpServletResponse
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
+import no.uutilsynet.testlab2testing.common.SortOrder
+import no.uutilsynet.testlab2testing.common.SortPaginationParams
+import no.uutilsynet.testlab2testing.common.SortParamTestregel
 import no.uutilsynet.testlab2testing.ekstern.resultat.model.TestListElementEkstern
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
@@ -100,20 +103,32 @@ class EksternResultatResource(
             onFailure = { ErrorHandlingUtil.handleErrors(it) })
   }
 
-    @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/krav/{kravId}")
-    fun getResultatPrKrav(
-        @PathVariable rapportId: String,
-        @PathVariable loeysingId: Int,
-        @PathVariable kravId: Int,
-        @RequestParam size: Int = 20,
-        @RequestParam page: Int = 0
-    ): ResponseEntity<out Any> {
-        return runCatching {eksternResultatService
-            .getRapportPrKravPagedResources(rapportId, loeysingId, kravId, size, page)}
-            .fold(
-                onSuccess = { resultatKrav -> ResponseEntity.ok(resultatKrav) },
-                onFailure = { ErrorHandlingUtil.handleErrors(it) })
-    }
+  @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/krav/{kravId}")
+  fun getResultatPrKrav(
+      @PathVariable rapportId: String,
+      @PathVariable loeysingId: Int,
+      @PathVariable kravId: Int,
+      @RequestParam size: Int = 20,
+      @RequestParam page: Int = 0,
+      @RequestParam sortParam: SortParamTestregel?,
+      @RequestParam sortOrder: SortOrder?,
+  ): ResponseEntity<out Any> {
+
+    val sortPaginationParams =
+        SortPaginationParams(
+            sortParam = sortParam ?: SortParamTestregel.side,
+            sortOrder = sortOrder ?: SortOrder.asc,
+            pageNumber = page,
+            pageSize = size)
+
+    return runCatching {
+          eksternResultatService.getRapportPrKravPagedResources(
+              rapportId, loeysingId, kravId, sortPaginationParams)
+        }
+        .fold(
+            onSuccess = { resultatKrav -> ResponseEntity.ok(resultatKrav) },
+            onFailure = { ErrorHandlingUtil.handleErrors(it) })
+  }
 
   @Observed(name = "EksternResultatResource.getDetaljertResultat")
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/testregel/{testregelId}")
@@ -122,13 +137,22 @@ class EksternResultatResource(
       @PathVariable loeysingId: Int,
       @PathVariable testregelId: Int,
       @RequestParam size: Int = 20,
-      @RequestParam page: Int = 0
+      @RequestParam page: Int = 0,
+      @RequestParam sortParam: SortParamTestregel?,
+      @RequestParam sortOrder: SortOrder?,
   ): ResponseEntity<out Any> {
 
+    val sortPaginationParams =
+        SortPaginationParams(
+            sortParam = sortParam ?: SortParamTestregel.side,
+            sortOrder = sortOrder ?: SortOrder.asc,
+            pageNumber = page,
+            pageSize = size)
+
     return runCatching {
-      eksternResultatService.getDetaljerResultatPaged(
-          rapportId, loeysingId, testregelId, size, page)
-    }
+          eksternResultatService.getDetaljerResultatPaged(
+              rapportId, loeysingId, testregelId, sortPaginationParams)
+        }
         .fold(
             onSuccess = { results -> ResponseEntity.ok(results) },
             onFailure = { ErrorHandlingUtil.handleErrors(it) })
@@ -164,7 +188,8 @@ class EksternResultatResource(
       @PathVariable loeysingId: Int,
       response: HttpServletResponse,
   ) {
-    val testresults: List<TestresultatDetaljert> = eksternResultatService.eksporterRapportForLoeysing(rapportId, loeysingId)
+    val testresults: List<TestresultatDetaljert> =
+        eksternResultatService.eksporterRapportForLoeysing(rapportId, loeysingId)
 
     val fileName = "export.csv"
 

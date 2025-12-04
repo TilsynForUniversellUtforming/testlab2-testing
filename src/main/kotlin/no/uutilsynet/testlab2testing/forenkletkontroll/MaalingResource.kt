@@ -12,8 +12,8 @@ import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
 import no.uutilsynet.testlab2testing.common.validateStatus
-import no.uutilsynet.testlab2testing.forenkletkontroll.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.firstMessage
+import no.uutilsynet.testlab2testing.forenkletkontroll.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.loeysing.UtvalId
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters.Companion.validateParameters

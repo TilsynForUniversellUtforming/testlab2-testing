@@ -1,6 +1,9 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
+import no.uutilsynet.testlab2testing.common.SortOrder
+import no.uutilsynet.testlab2testing.common.SortPaginationParams
+import no.uutilsynet.testlab2testing.common.SortParamTestregel
 import no.uutilsynet.testlab2testing.resultat.ResultatService.LoysingList
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
@@ -8,6 +11,8 @@ import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
+import kotlin.math.min
+
 
 sealed class KontrollResultatService(
     protected val resultatDAO: ResultatDAO,
@@ -40,8 +45,7 @@ sealed class KontrollResultatService(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
-      size: Int,
-      pageNumber: Int,
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDetaljert>
 
   abstract fun getAlleResultat(): List<ResultatLoeysingDTO>
@@ -55,24 +59,58 @@ sealed class KontrollResultatService(
     return getResultatForKontroll(kontrollId, loeysingId).filterBrot()
   }
 
-   abstract fun getTestresulatDetaljertForKrav(
-        kontrollId: Int,
-        loeysingId: Int,
-        kravId: Int,
-        size: Int,
-        pageNumber: Int
-    ): List<TestresultatDetaljert>
+  abstract fun getTestresulatDetaljertForKrav(
+      kontrollId: Int,
+      loeysingId: Int,
+      kravId: Int,
+      sortPaginationParams: SortPaginationParams
+  ): List<TestresultatDetaljert>
 
-   protected fun getTestreglarForKrav(kravId: Int): List<Testregel> {
-       return testregelClient.getTestregelByKravId(kravId)
-   }
+  protected fun getTestreglarForKrav(kravId: Int): List<Testregel> {
+    return testregelClient.getTestregelByKravId(kravId)
+  }
 
-    abstract fun getTalBrotForKontrollLoeysingTestregel(
-        kontrollId: Int,
-        loeysingId: Int,
-        testregelId: Int,
-    ): Result<Int>
+  abstract fun getTalBrotForKontrollLoeysingTestregel(
+      kontrollId: Int,
+      loeysingId: Int,
+      testregelId: Int,
+  ): Result<Int>
 
-    abstract fun getTalBrotForKontrollLoeysingKrav(kontrollId:Int, loeysingId: Int, kravId: Int) : Result<Int>
+  abstract fun getTalBrotForKontrollLoeysingKrav(
+      kontrollId: Int,
+      loeysingId: Int,
+      kravId: Int
+  ): Result<Int>
 
+  protected fun List<TestresultatDetaljert>.paginate(
+      sortPaginationParams: SortPaginationParams
+  ): List<TestresultatDetaljert> {
+    val startIndex = sortPaginationParams.pageNumber * sortPaginationParams.pageSize
+    val endIndex = resultSubListEnd(sortPaginationParams, this)
+    return this.subList(startIndex, endIndex)
+  }
+
+    protected fun List<TestresultatDetaljert>.sort(
+        sortPaginationParams: SortPaginationParams
+    ): List<TestresultatDetaljert> {
+
+        val sorted = when (sortPaginationParams.sortParam) {
+            SortParamTestregel.side -> this.sortedBy { it.side.toString() }
+            SortParamTestregel.testregel -> this.sortedBy { it.testregelNoekkel }
+            SortParamTestregel.elementUtfall -> this.sortedBy { it.elementResultat?.name }
+            SortParamTestregel.elementPointer -> this.sortedBy { it.elementOmtale?.pointer }
+        }
+
+
+        return if (sortPaginationParams.sortOrder == SortOrder.desc) {
+            sorted.reversed()
+        } else {
+            sorted
+        }
+    }
+
+  protected fun resultSubListEnd(
+      sortPaginationParams: SortPaginationParams,
+      resultat: List<TestresultatDetaljert>
+  ): Int = min((sortPaginationParams.pageNumber + 1) * sortPaginationParams.pageSize, resultat.size)
 }

@@ -1,7 +1,9 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import io.micrometer.observation.annotation.Observed
+import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
@@ -12,7 +14,6 @@ import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
-import java.time.LocalDate
 
 @Component
 class ResultatService(
@@ -25,7 +26,7 @@ class ResultatService(
     private val kontrollResultatServiceFactory: KontrollResultatServiceFactory
 ) {
 
-    val logger = LoggerFactory.getLogger(ResultatService::class.java)
+  val logger = LoggerFactory.getLogger(ResultatService::class.java)
 
   private fun getKontrollResultatCommon(
       fetchResults: () -> List<ResultatLoeysingDTO>,
@@ -207,11 +208,10 @@ class ResultatService(
   }
 
   private fun handleIkkjeForekomst(resultat: ResultatOversiktLoeysing): ResultatOversiktLoeysing {
-      return handleIkkjeForekomstGeneric(
-          resultat,
-          resultat.talElementBrot,
-          resultat.talElementSamsvar
-      ) { it.copy(score = null) }
+    return handleIkkjeForekomstGeneric(
+        resultat, resultat.talElementBrot, resultat.talElementSamsvar) {
+          it.copy(score = null)
+        }
   }
 
   private fun mapTestregel(result: ResultatLoeysingDTO): ResultatLoeysing {
@@ -240,25 +240,23 @@ class ResultatService(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
-      size: Int = 20,
-      pageNumber: Int = 0,
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDetaljert> {
     return getResultService(kontrollId)
-        .getResultatForKontroll(kontrollId, loeysingId, testregelId, size, pageNumber)
+        .getResultatForKontroll(kontrollId, loeysingId, testregelId, sortPaginationParams)
   }
 
-    fun getTestresultatDetaljertPrKrav(
-        kontrollId: Int,
-        loeysingId: Int,
-        kravId: Int,
-        size: Int = 20,
-        pageNumber: Int = 0,
-    ): List<TestresultatDetaljert> {
-        return getResultService(kontrollId)
-            .getTestresulatDetaljertForKrav(kontrollId, loeysingId, kravId, size, pageNumber)
-    }
+  fun getTestresultatDetaljertPrKrav(
+      kontrollId: Int,
+      loeysingId: Int,
+      kravId: Int,
+      sortPaginationParams: SortPaginationParams,
+  ): List<TestresultatDetaljert> {
+    return getResultService(kontrollId)
+        .getTestresulatDetaljertForKrav(kontrollId, loeysingId, kravId, sortPaginationParams)
+  }
 
-    fun getResultatPrTema(
+  fun getResultatPrTema(
       kontrollId: Int?,
       kontrolltype: Kontrolltype?,
       loeysingId: Int?,
@@ -267,13 +265,13 @@ class ResultatService(
   ): List<ResultatTema> =
       resultatDAO
           .getResultatPrTema(kontrollId, kontrolltype, loeysingId, startDato, sluttDato)
-          .map { handleIkkjeForekomstGeneric(
-              it,
-              it.talElementBrot,
-              it.talElementSamsvar
-          ) { it.copy(score = null) } }
+          .map {
+            handleIkkjeForekomstGeneric(it, it.talElementBrot, it.talElementSamsvar) {
+              it.copy(score = null)
+            }
+          }
 
-    fun getTestresultatDetaljertPrKrav(
+  fun getTestresultatDetaljertPrKrav(
       kontrollId: Int?,
       kontrollType: Kontrolltype?,
       loeysingId: Int?,
@@ -283,14 +281,14 @@ class ResultatService(
     return resultatDAO
         .getResultatPrKrav(kontrollId, kontrollType, loeysingId, fraDato, tilDato)
         .map { it.toResultatKrav() }
-        .map { handleIkkjeForekomstGeneric(
-            it,
-            it.talElementBrot,
-            it.talElementSamsvar
-        ) { it.copy(score = null) } }
+        .map {
+          handleIkkjeForekomstGeneric(it, it.talElementBrot, it.talElementSamsvar) {
+            it.copy(score = null)
+          }
+        }
   }
 
-    class LoysingList(val loeysingar: Map<Int, Loeysing.Expanded>) {
+  class LoysingList(val loeysingar: Map<Int, Loeysing.Expanded>) {
     fun getNamn(loeysingId: Int): String {
       val loeysing = loeysingar[loeysingId]
       return loeysing?.namn ?: ""
@@ -364,25 +362,25 @@ class ResultatService(
   }
 
   private fun getResultService(kontrollId: Int): KontrollResultatService {
-      return kontrollResultatServiceFactory.getResultatService(kontrollId)
+    return kontrollResultatServiceFactory.getResultatService(kontrollId)
   }
 
   private fun getResultatService(kontrollType: Kontrolltype): KontrollResultatService {
-      return kontrollResultatServiceFactory.getResultatService(kontrollType)
+    return kontrollResultatServiceFactory.getResultatService(kontrollType)
   }
 
-    private inline fun <reified T> handleIkkjeForekomstGeneric(
-        item: T,
-        talElementBrot: Int,
-        talElementSamsvar: Int,
-        copyWithNullScore: (T) -> T
-    ): T {
-        return if (talElementBrot == 0 && talElementSamsvar == 0) {
-            copyWithNullScore(item)
-        } else {
-            item
-        }
+  private inline fun <reified T> handleIkkjeForekomstGeneric(
+      item: T,
+      talElementBrot: Int,
+      talElementSamsvar: Int,
+      copyWithNullScore: (T) -> T
+  ): T {
+    return if (talElementBrot == 0 && talElementSamsvar == 0) {
+      copyWithNullScore(item)
+    } else {
+      item
     }
+  }
 
   private fun List<ResultatLoeysingDTO>.getLoeysingar(): LoysingList {
     return this.map { it.loeysingId }.let { getLoeysingMap(it).getOrThrow() }
@@ -396,10 +394,16 @@ class ResultatService(
       loeysingId: Int,
       testregelId: Int
   ): Result<Int> {
-      return  getResultService(kontrollId).getTalBrotForKontrollLoeysingTestregel(kontrollId, loeysingId, testregelId)
+    return getResultService(kontrollId)
+        .getTalBrotForKontrollLoeysingTestregel(kontrollId, loeysingId, testregelId)
   }
 
-    fun getTalBrotForKontrollLoeysingKrav(kontrollId: Int, loeysingId: Int, kravId: Int) : Result<Int> {
-        return  getResultService(kontrollId).getTalBrotForKontrollLoeysingKrav(kontrollId, loeysingId, kravId)
-    }
+  fun getTalBrotForKontrollLoeysingKrav(
+      kontrollId: Int,
+      loeysingId: Int,
+      kravId: Int
+  ): Result<Int> {
+    return getResultService(kontrollId)
+        .getTalBrotForKontrollLoeysingKrav(kontrollId, loeysingId, kravId)
+  }
 }

@@ -41,7 +41,9 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
           testgrunnlagDAO,
           testResultatDAO,
           sideutvalDAO,
-          bildeService, testResultatDAOTestresultat,testregelClient)
+          bildeService,
+          testResultatDAOTestresultat,
+          testregelClient)
 
   @Test
   fun `test getFilteredAndMappedResults with valid filter`() {

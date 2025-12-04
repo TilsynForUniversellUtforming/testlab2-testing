@@ -2,7 +2,6 @@ package no.uutilsynet.testlab2testing.forenkletkontroll
 
 import java.net.URI
 import java.time.Instant
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.forenkletkontroll.ScheduledUpdater.Companion.updateCrawlingStatus
 import no.uutilsynet.testlab2testing.forenkletkontroll.ScheduledUpdater.Companion.updateTestingStatus
@@ -14,6 +13,7 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlerClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlerOutput
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

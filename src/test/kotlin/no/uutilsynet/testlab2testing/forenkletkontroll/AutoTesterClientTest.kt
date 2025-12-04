@@ -5,7 +5,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import java.time.Instant
 import kotlinx.coroutines.runBlocking
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatTestregel
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.statusURL
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.testRegelList
@@ -13,6 +12,7 @@ import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterProperties
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDTO
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatTestregel
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers
 import org.junit.jupiter.api.DisplayName

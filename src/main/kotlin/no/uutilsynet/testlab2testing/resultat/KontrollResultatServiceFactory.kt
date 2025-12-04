@@ -11,22 +11,21 @@ class KontrollResultatServiceFactory(
     private val kontrollDAO: KontrollDAO
 ) {
 
-    fun getResultatService(kontrollId: Int): KontrollResultatService {
-        return getResultatService(getTypeKontroll(kontrollId))
-    }
+  fun getResultatService(kontrollId: Int): KontrollResultatService {
+    return getResultatService(getTypeKontroll(kontrollId))
+  }
 
-    fun getResultatService(kontrollType: Kontrolltype): KontrollResultatService {
-        return when (kontrollType) {
-            Kontrolltype.ForenklaKontroll -> automatiskResultatService
-            Kontrolltype.Statusmaaling,
-            Kontrolltype.InngaaendeKontroll,
-            Kontrolltype.Tilsyn,
-            Kontrolltype.Uttalesak -> manueltResultatService
-        }
+  fun getResultatService(kontrollType: Kontrolltype): KontrollResultatService {
+    return when (kontrollType) {
+      Kontrolltype.ForenklaKontroll -> automatiskResultatService
+      Kontrolltype.Statusmaaling,
+      Kontrolltype.InngaaendeKontroll,
+      Kontrolltype.Tilsyn,
+      Kontrolltype.Uttalesak -> manueltResultatService
     }
+  }
 
-    private fun getTypeKontroll(kontrollId: Int): Kontrolltype {
-        return kontrollDAO.getKontrollType(kontrollId)
-    }
-
+  private fun getTypeKontroll(kontrollId: Int): Kontrolltype {
+    return kontrollDAO.getKontrollType(kontrollId)
+  }
 }

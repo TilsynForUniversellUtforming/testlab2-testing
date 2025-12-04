@@ -3,8 +3,8 @@ package no.uutilsynet.testlab2testing.ekstern.resultat
 import java.io.ByteArrayOutputStream
 import java.time.LocalDate
 import java.time.ZoneId
-import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.ekstern.resultat.model.TestEkstern
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.apache.poi.ooxml.POIXMLProperties
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.streaming.SXSSFSheet
