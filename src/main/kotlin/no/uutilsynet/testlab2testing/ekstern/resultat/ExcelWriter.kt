@@ -35,8 +35,6 @@ class ExcelWriter {
 
       logger.debug("Write etter streaming workbook with ${testresults.size} testresults")
 
-      logger.debug("Write etter streaming workbook with ${testresults.size} testresults")
-
     val xmlProps: POIXMLProperties = workbook.xssfWorkbook.properties
     val coreProps = xmlProps.coreProperties
     coreProps.creator = "UU-tilsynet"

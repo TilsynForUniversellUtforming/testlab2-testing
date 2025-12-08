@@ -4,6 +4,7 @@ import no.uutilsynet.testlab2.constants.KravStatus
 import no.uutilsynet.testlab2.constants.WcagPrinsipp
 import no.uutilsynet.testlab2.constants.WcagRetninglinje
 import no.uutilsynet.testlab2.constants.WcagSamsvarsnivaa
+import java.net.URL
 
 data class KravWcag2x(
     val id: Int,
@@ -13,7 +14,7 @@ data class KravWcag2x(
     val gjeldAutomat: Boolean,
     val gjeldNettsider: Boolean,
     val gjeldApp: Boolean,
-    val urlRettleiing: String?,
+    val urlRettleiing: URL?,
     val prinsipp: WcagPrinsipp,
     val retningslinje: WcagRetninglinje,
     val suksesskriterium: String,

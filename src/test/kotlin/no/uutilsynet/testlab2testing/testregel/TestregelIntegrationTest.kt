@@ -51,7 +51,7 @@ class TestregelIntegrationTests(
                 false,
                 false,
                 false,
-                "https://www.uutilsynet.no/wcag-standarden/111-ikke-tekstlig-innhold-niva/87",
+                URI("https://www.uutilsynet.no/wcag-standarden/111-ikke-tekstlig-innhold-niva/87").toURL(),
                 WcagPrinsipp.robust,
                 WcagRetninglinje.leselig,
                 "1.1.1",
