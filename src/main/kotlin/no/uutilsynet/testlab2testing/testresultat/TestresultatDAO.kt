@@ -121,7 +121,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     @Observed(name = "List<TestresultatDB> listBy maalingId and loeysingId brot")
     fun listBy(maalingId: Int, loeysingId: Int?): List<TestresultatDB> {
         val sql =
-            "SELECT * FROM testresultat WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and element_resultat= 'brot'"
+            "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and element_resultat= 'brot'"
         val params =
             MapSqlParameterSource()
                 .addValue(

@@ -6,6 +6,7 @@ import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil
 import no.uutilsynet.testlab2testing.common.SortOrder
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.common.SortParamTestregel
+import no.uutilsynet.testlab2testing.ekstern.resultat.model.ResultatOversiktLoeysingEkstern
 import no.uutilsynet.testlab2testing.ekstern.resultat.model.TestListElementEkstern
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
@@ -235,4 +236,16 @@ class EksternResultatResource(
     headers.setContentDispositionFormData("attachment", "resultat.xlsx")
     return headers
   }
+
+    @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/alle")
+    fun  getAllRestults( @PathVariable rapportId: String,
+                         @PathVariable loeysingId: Int): ResponseEntity<List<ResultatOversiktLoeysingEkstern>?> {
+
+        val results = eksternResultatService.getRapportForLoeysing(rapportId, loeysingId)
+
+        println("Rapport ${results.size}")
+
+
+        return ResponseEntity.ok(results)
+    }
 }
