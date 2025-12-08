@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito
 import org.mockito.Mockito.mock
+import java.net.URI
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestregelResourceTest {
@@ -69,7 +70,7 @@ class TestregelResourceTest {
             gjeldAutomat = true,
             gjeldNettsider = true,
             gjeldApp = false,
-            urlRettleiing = "http://example.com",
+            urlRettleiing = URI("http://example.com").toURL(),
             prinsipp = WcagPrinsipp.robust,
             retningslinje = WcagRetninglinje.leselig,
             suksesskriterium = "Kriterium",

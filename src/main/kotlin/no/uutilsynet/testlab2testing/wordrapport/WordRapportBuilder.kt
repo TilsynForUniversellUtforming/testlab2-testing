@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.wordrapport
 
-import java.net.URI
 import java.time.LocalDate
 import java.time.ZoneId
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
@@ -89,7 +88,7 @@ class WordRapportBuilder(
         testregelNoekkel = this.testregelId,
         kravId = this.kravId,
         kravTittel = krav.tittel,
-        kravUrl = krav.urlRettleiing?.let { URI.create(it) })
+        kravUrl = krav.urlRettleiing)
   }
 
   fun finnSide(sideutvalId: Int): Pair<Int, Sideutval> {

@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.wordrapport
 
 import java.net.URI
+import java.net.URL
 
 data class WordRapport(
     val rapportNummer: String,
@@ -27,9 +28,8 @@ data class TestregelRapport(
     val testregelNoekkel: String,
     val kravId: Int,
     val kravTittel: String,
-    val kravUrl: URI?
+    val kravUrl: URL?
 )
 
 data class Side(val sideNr: Int, val sideTittel: String, val sideUrl: URI)
 
-data class SuksesskriteriumBrudd(val suksesskriterium: String, val lenke: URI)

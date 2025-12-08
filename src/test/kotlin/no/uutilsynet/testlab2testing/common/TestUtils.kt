@@ -165,7 +165,7 @@ class TestUtils(
             gjeldAutomat = false,
             gjeldApp = true,
             gjeldNettsider = true,
-            urlRettleiing = "www.example.com",
+            urlRettleiing = URI("www.example.com").toURL(),
             prinsipp = WcagPrinsipp.mulig_aa_oppfatte,
             suksesskriterium = "1.1.1",
             samsvarsnivaa = WcagSamsvarsnivaa.A,
