@@ -23,14 +23,15 @@ class ExcelWriter {
   ): ByteArrayOutputStream {
     val outputStream = ByteArrayOutputStream()
 
-    val workbook = SXSSFWorkbook()
-    val style = createHeaderStyle(workbook)
+    val workbook = SXSSFWorkbook(100000)
+      val style = createHeaderStyle(workbook)
     val workSheet = workbook.createSheet()
     writeHeaders(workSheet, style)
 
     testresults.forEachIndexed { index, testresult ->
       writeDataRow(workSheet, testresult, kontrollInfo, index + 1)
     }
+      autoSizeColumns(workSheet)
 
       logger.debug("Write etter streaming workbook with ${testresults.size} testresults")
 
@@ -85,24 +86,26 @@ class ExcelWriter {
   }
 
   fun writeDataRow(
-      workSheet: Sheet,
+      workSheet: SXSSFSheet,
       testresultat: TestresultatDetaljert,
       kontrollInfo: TestEkstern,
       rowNr: Int,
   ) {
-    val dataRow = workSheet.createRow(rowNr)
-    dataRow.createCell(0).setCellValue(getElement(testresultat))
-    dataRow.createCell(1).setCellValue(testresultat.elementUtfall)
-    dataRow.createCell(2).setCellValue(testresultat.suksesskriterium.joinToString(", "))
-    dataRow.createCell(3).setCellValue(testresultat.testregelNoekkel)
-    dataRow.createCell(4).setCellValue(testresultat.side.toString())
-    dataRow.createCell(5).setCellValue(kontrollInfo.organisasjonsnamn)
-    dataRow.createCell(6).setCellValue(kontrollInfo.loeysingNamn)
-    dataRow
-        .createCell(7)
-        .setCellValue(LocalDate.ofInstant(kontrollInfo.utfoert, ZoneId.systemDefault()).toString())
-    dataRow.createCell(8).setCellValue(kontrollInfo.kontrollType.name)
-    autoSizeColumns(workSheet)
+      val dataRow = workSheet.createRow(rowNr)
+      dataRow.createCell(0).setCellValue(getElement(testresultat))
+      dataRow.createCell(1).setCellValue(testresultat.elementUtfall)
+      dataRow.createCell(2).setCellValue(testresultat.suksesskriterium.joinToString(", "))
+      dataRow.createCell(3).setCellValue(testresultat.testregelNoekkel)
+      dataRow.createCell(4).setCellValue(testresultat.side.toString())
+      dataRow.createCell(5).setCellValue(kontrollInfo.organisasjonsnamn)
+      dataRow.createCell(6).setCellValue(kontrollInfo.loeysingNamn)
+      dataRow
+          .createCell(7)
+          .setCellValue(LocalDate.ofInstant(kontrollInfo.utfoert, ZoneId.systemDefault()).toString())
+      dataRow.createCell(8).setCellValue(kontrollInfo.kontrollType.name)
+      if (rowNr % 5000 == 0) {
+          logger.debug("Row $rowNr")
+        }
   }
 
   private fun autoSizeColumns(workSheet: Sheet) {
