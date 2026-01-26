@@ -12,7 +12,7 @@ import no.uutilsynet.testlab2testing.resultat.LoeysingResultat
 import no.uutilsynet.testlab2testing.resultat.Resultat
 import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing
 import no.uutilsynet.testlab2testing.resultat.ResultatService
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
@@ -27,7 +27,7 @@ class EksternResultatService(
     private val eksternResultatDAO: EksternResultatDAO,
     private val loeysingsRegisterClient: LoeysingsRegisterClient,
     private val resultatService: ResultatService,
-    private val testregelService: TestregelService,
+    private val testregelCache: TestregelCache,
     private val logMessages: LogMessages,
     private val testresultatEksternAssembler: TestresultatEksternAssembler,
     private val pagedResourcesAssembler: PagedResourcesAssembler<TestresultatDetaljertEkstern>
@@ -196,7 +196,7 @@ class EksternResultatService(
           .collect(Collectors.toList())
 
   private fun getTestregelFromTestregelId(testregelId: Int): TestregelKrav {
-    return testregelService.getTestregelKrav(testregelId)
+    return testregelCache.getTestregelById(testregelId)
   }
 
   private fun getResultatPrTestregel(

@@ -64,19 +64,8 @@ data class Testregel(
 data class TestregelKrav(
     val id: Int,
     val testregelId: String,
-    val versjon: Int,
     val namn: String,
     val krav: KravWcag2x,
-    val status: TestregelStatus,
-    val datoSistEndra: Instant = Instant.now(),
-    val type: TestregelInnholdstype,
-    val modus: TestregelModus,
-    val spraak: TestlabLocale,
-    val tema: Int?,
-    val testobjekt: Int?,
-    val kravTilSamsvar: String?,
-    val testregelSchema: String,
-    val innhaldstypeTesting: Int?,
 ) {
 
   constructor(
@@ -85,17 +74,6 @@ data class TestregelKrav(
   ) : this(
       testregel.id,
       testregel.testregelId,
-      testregel.versjon,
       testregel.namn,
-      krav,
-      testregel.status,
-      testregel.datoSistEndra,
-      testregel.type,
-      testregel.modus,
-      testregel.spraak,
-      testregel.tema,
-      testregel.testobjekt,
-      testregel.kravTilSamsvar,
-      testregel.testregelSchema,
-      testregel.innhaldstypeTesting)
+      krav)
 }

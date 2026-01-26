@@ -6,7 +6,8 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManu
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,7 +17,8 @@ import org.springframework.stereotype.Component
 class WordRapportBuilder(
     @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val kravregisterClient: KravregisterClient,
-    @Autowired val testregelService: TestregelService
+    @Autowired val testregelClient: TestregelClient,
+    @Autowired val testregelCache: TestregelCache
 ) {
 
   var rapportNummer: String? = null
@@ -64,7 +66,7 @@ class WordRapportBuilder(
 
   fun ResultatManuellKontroll.toAvvik(index: Int): Avvik {
 
-    val testregel = testregelService.getTestregel(this.testregelId)
+    val testregel = testregelClient.getTestregelById(this.testregelId).getOrThrow()
 
     val side = finnSide(this.sideutvalId)
     return Avvik(
@@ -77,7 +79,7 @@ class WordRapportBuilder(
         elementUtfall = this.elementUtfall,
         tema =
             testregel.let {
-              testregelService.getTemaForTestregel().first { tema -> tema.id == it.tema }.tema
+                testregelCache.getTemaById(it.tema).tema
             })
   }
 
@@ -94,4 +96,6 @@ class WordRapportBuilder(
   fun finnSide(sideutvalId: Int): Pair<Int, Sideutval> {
     return sider.filter { it.id == sideutvalId }.map { Pair(sider.indexOf(it), it) }.first()
   }
+
+
 }

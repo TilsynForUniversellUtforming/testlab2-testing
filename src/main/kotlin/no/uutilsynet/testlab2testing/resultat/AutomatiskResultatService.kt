@@ -5,7 +5,7 @@ import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.testing.automatisk.TestResultat
 import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelClient
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
@@ -17,10 +17,10 @@ class AutomatiskResultatService(
     private val testkoeyringDAO: TestkoeyringDAO,
     resultatDAO: ResultatDAO,
     kravregisterClient: KravregisterClient,
-    testregelClient: TestregelClient,
+    testregelCache: TestregelCache,
     testresultatDAO: TestresultatDAO,
     private val testresultatDBConverter: TestresultatDBConverter,
-) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelClient) {
+) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelCache) {
 
   @Observed(name = "AutomatiskResultatService.getResultatForKontroll")
   override fun getResultatForKontroll(
@@ -106,7 +106,7 @@ class AutomatiskResultatService(
       it: TestResultat,
       maalingId: Int
   ): TestresultatDetaljert {
-    val testregel = testregelClient.getTestregelByKey(it.testregelId)
+    val testregel = this@AutomatiskResultatService.testregelCache.getTestregelByKey(it.testregelId)
     return TestresultatDetaljert(
         null,
         it.loeysingId,

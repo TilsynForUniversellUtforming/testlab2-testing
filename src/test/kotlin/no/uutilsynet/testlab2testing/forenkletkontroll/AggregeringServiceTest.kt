@@ -17,7 +17,6 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
-import no.uutilsynet.testlab2testing.testregel.TestregelService
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatTestregel
@@ -57,9 +56,6 @@ class AggregeringServiceTest(
 
   @MockitoSpyBean lateinit var maalingDao: MaalingDAO
 
-  @Autowired lateinit var testregelService: TestregelService
-
-  val testreglerSomSkalSlettes: MutableList<Int> = mutableListOf()
 
   companion object {
     @Container
@@ -127,8 +123,7 @@ class AggregeringServiceTest(
 
     val testregelInit = testUtils.testregelInitObject()
 
-    val testregelId =
-        testregelService.createTestregel(testregelInit).also { testreglerSomSkalSlettes.add(it) }
+    val testregelId = testUtils.createTestregel()
 
     val maalingId =
         maalingDao.createMaaling(

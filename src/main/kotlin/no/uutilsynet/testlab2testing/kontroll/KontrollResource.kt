@@ -270,7 +270,7 @@ class KontrollResource(
   fun testingMetadata(@PathVariable kontrollId: Int): KontrollTestingMetadata {
     val kontroll = getKontrollAsResult(kontrollId).getOrThrow()
     val sideutvaltypar = kontrollDAO.getSideutvalType()
-    val innholdtypeTestingList = testregelClient.getInnhaldstypeForTesting()
+    val innholdtypeTestingList = testregelClient.getInnhaldstypeForTesting().getOrThrow()
 
     val innholdstypeTesting = innhaldstypeTestingForKontroll(kontroll, innholdtypeTestingList)
 

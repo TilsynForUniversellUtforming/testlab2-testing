@@ -12,44 +12,22 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.resultat.OpprettTestgrunnlag
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
-import no.uutilsynet.testlab2testing.testregel.TestConstants
-import no.uutilsynet.testlab2testing.testregel.TestregelService
 import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import org.springframework.stereotype.Service
+import kotlin.random.Random
 
 @Service
 class TestUtils(
     val kontrollDAO: KontrollDAO,
     val testgrunnlagDAO: TestgrunnlagDAO,
     val maalingDAO: MaalingDAO,
-    val testregelService: TestregelService
 ) {
 
   var testregelId: Int = 0
 
   fun createTestregel(): Int {
-
-    val temaId = testregelService.createTema("Bilder")
-
-    val innholdstypeTesting = testregelService.createInnhaldstypeForTesting("Tekst")
-
-    val testregelInit =
-        TestregelInit(
-            testregelId = "QW-ACT-R1",
-            namn = TestConstants.name,
-            kravId = TestConstants.testregelTestKravId,
-            status = TestregelStatus.publisert,
-            type = TestregelInnholdstype.nett,
-            modus = TestregelModus.automatisk,
-            spraak = TestlabLocale.nb,
-            testregelSchema = TestConstants.testregelSchemaAutomatisk,
-            innhaldstypeTesting = innholdstypeTesting,
-            tema = temaId,
-            testobjekt = 1,
-            kravTilSamsvar = "")
-
-    return testregelService.createTestregel(testregelInit)
+    return  Random.nextInt(0, 100)
   }
 
   fun createTestgrunnlag(
@@ -141,18 +119,7 @@ class TestUtils(
         id = 1,
         namn = "Test",
         krav = kravWcag2xObject(),
-        modus = TestregelModus.automatisk,
-        testregelSchema = "schema",
-        testregelId = "1.1.1",
-        versjon = 1,
-        status = TestregelStatus.publisert,
-        datoSistEndra = Instant.now(),
-        type = TestregelInnholdstype.nett,
-        spraak = TestlabLocale.nb,
-        kravTilSamsvar = "svar",
-        tema = 2,
-        testobjekt = 3,
-        innhaldstypeTesting = 4)
+        testregelId = "1.1.1")
   }
 
   fun kravWcag2xObject(): no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x {

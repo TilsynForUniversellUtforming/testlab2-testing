@@ -5,9 +5,8 @@ import no.uutilsynet.testlab2testing.common.SortOrder
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.common.SortParamTestregel
 import no.uutilsynet.testlab2testing.resultat.ResultatService.LoysingList
-import no.uutilsynet.testlab2testing.testregel.TestregelClient
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
@@ -18,7 +17,7 @@ sealed class KontrollResultatService(
     protected val resultatDAO: ResultatDAO,
     protected val kravregisterClient: KravregisterClient,
     protected val testresultatDAO: TestresultatDAO,
-    protected val testregelClient: TestregelClient,
+    protected val testregelCache: TestregelCache,
 ) {
 
   protected fun filterByTestregel(testregelId: Int, testregelIdsForKrav: List<Int>): Boolean {
@@ -26,7 +25,7 @@ sealed class KontrollResultatService(
   }
 
   protected fun getTesteregelFromId(testregelId: Int): TestregelKrav {
-    return testregelClient.getTestregelById(testregelId)
+    return testregelCache.getTestregelById(testregelId)
   }
 
   private fun List<TestresultatDetaljert>.filterBrot(): List<TestresultatDetaljert> {
@@ -66,8 +65,8 @@ sealed class KontrollResultatService(
       sortPaginationParams: SortPaginationParams
   ): List<TestresultatDetaljert>
 
-  protected fun getTestreglarForKrav(kravId: Int): List<Testregel> {
-    return testregelClient.getTestregelByKravId(kravId)
+  protected fun getTestreglarForKrav(kravId: Int): List<TestregelKrav> {
+    return testregelCache.getTestregelByKravId(kravId)
   }
 
   abstract fun getTalBrotForKontrollLoeysingTestregel(

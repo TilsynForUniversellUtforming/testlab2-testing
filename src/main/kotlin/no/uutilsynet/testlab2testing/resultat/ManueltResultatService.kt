@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URL
-import java.time.Instant
-import java.time.LocalDateTime
 import no.uutilsynet.testlab2testing.common.Constants
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
@@ -12,11 +9,14 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManu
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelClient
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.stereotype.Service
+import java.net.URL
+import java.time.Instant
+import java.time.LocalDateTime
 
 @Service
 class ManueltResultatService(
@@ -27,8 +27,8 @@ class ManueltResultatService(
     private val sideutvalDAO: SideutvalDAO,
     private val bildeService: BildeService,
     testresultatDAO: no.uutilsynet.testlab2testing.testresultat.TestresultatDAO,
-    testregelClient: TestregelClient,
-) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelClient) {
+    testregelCache: TestregelCache
+) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelCache) {
 
   override fun getResultatForKontroll(
       kontrollId: Int,

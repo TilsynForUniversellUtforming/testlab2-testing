@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import java.net.URI
 import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.handleErrors
 import no.uutilsynet.testlab2testing.common.validateNamn
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("v1/regelsett")
 class RegelsettResource(
     private val regelsettDAO: RegelsettDAO,
-    private val testregelService: TestregelService,
+    private val testregelClient: TestregelClient,
     private val regelsettService: RegelsettService
 ) {
 
@@ -42,7 +42,7 @@ class RegelsettResource(
       runCatching {
             val namn = validateNamn(regelsett.namn).getOrThrow()
 
-            val testregelList = testregelService.getTestregelList()
+            val testregelList = testregelClient.getTestregelList().getOrThrow()
             val testregelIdList =
                 validateRegelsettTestreglar(
                         regelsett.testregelIdList, regelsett.modus, testregelList)
@@ -117,7 +117,7 @@ Returnerer ei liste med regelsett, eller ei tom liste om ingen finst. Ein kan sp
   @PutMapping
   fun updateRegelsett(@RequestBody regelsett: RegelsettEdit): ResponseEntity<out Any> =
       runCatching {
-            val testregelList = testregelService.getTestregelList()
+            val testregelList = testregelClient.getTestregelList().getOrThrow()
 
             val namn = validateNamn(regelsett.namn)
             val testregelIdList =
