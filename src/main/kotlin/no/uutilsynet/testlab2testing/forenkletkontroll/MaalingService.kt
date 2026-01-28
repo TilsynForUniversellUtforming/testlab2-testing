@@ -147,11 +147,13 @@ class MaalingService(
 
     return when (val maaling = maalingDAO.getMaaling(this.id)) {
       is Maaling.Planlegging -> {
-        val loeysingList = getLoeysingarForMaaling(this.loeysingIdList, maaling.id)
+          val loeysingList =
+              getLoeysingarForMaaling(maaling)
 
-        val testregelList = getTestreglarForMaaling( this.testregelIdList,maaling.id)
+          val testregelList =
+              getTestreglarForMaaling(maaling,this.testregelIdList)
 
-        maaling.copy(
+          maaling.copy(
             navn = navn,
             loeysingList = loeysingList,
             testregelList = testregelList.map { it.toTestregelBase() },
@@ -301,6 +303,7 @@ class MaalingService(
       testreglClient.getTestregelListFromIds(testregelIds).getOrThrow()
     }
   }
+
 
   @Observed(name = "MaalingService.getMaalingForKontroll")
   fun getMaalingForKontroll(kontrollId: Int): Int {
