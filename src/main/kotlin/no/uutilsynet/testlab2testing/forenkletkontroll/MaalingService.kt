@@ -154,7 +154,7 @@ class MaalingService(
         val loeysingList = getLoeysingarForMaaling(this.loeysingIdList, maaling.id)
         val testregelList = getTestreglarForMaaling(this.testregelIdList, maaling.id)
 
-        maaling.copy(
+          maaling.copy(
             navn = navn,
             loeysingList = loeysingList,
             testregelList = testregelList.map { it.toTestregelBase() },
@@ -301,6 +301,7 @@ class MaalingService(
       testreglClient.getTestregelListFromIds(testregelIds).getOrThrow()
     }
   }
+
 
   @Observed(name = "MaalingService.getMaalingForKontroll")
   fun getMaalingForKontroll(kontrollId: Int): Int {
