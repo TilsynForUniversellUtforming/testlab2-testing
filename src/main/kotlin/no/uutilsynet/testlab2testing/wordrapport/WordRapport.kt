@@ -32,4 +32,3 @@ data class TestregelRapport(
 )
 
 data class Side(val sideNr: Int, val sideTittel: String, val sideUrl: URI)
-

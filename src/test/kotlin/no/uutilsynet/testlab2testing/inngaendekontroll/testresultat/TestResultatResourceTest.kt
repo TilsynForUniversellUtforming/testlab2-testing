@@ -41,7 +41,7 @@ class TestResultatResourceTest(
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired private val testUtils: TestUtils
 ) {
-    private var kontrollId: Int by Delegates.notNull()
+  private var kontrollId: Int by Delegates.notNull()
   private var utvalId: Int by Delegates.notNull()
   private var location: URI by Delegates.notNull()
   private var testgrunnlagId: Int by Delegates.notNull()

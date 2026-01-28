@@ -1,27 +1,27 @@
-//package no.uutilsynet.testlab2testing.testregel
+// package no.uutilsynet.testlab2testing.testregel
 //
-//import java.time.Instant
-//import no.uutilsynet.testlab2.constants.*
-//import no.uutilsynet.testlab2testing.common.TestlabLocale
-//import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
-//import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
-//import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
-//import no.uutilsynet.testlab2testing.testregel.import.TestregelImportService
-//import no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x
-//import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-//import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
-//import no.uutilsynet.testlab2testing.testregel.model.Tema
-//import no.uutilsynet.testlab2testing.testregel.model.Testobjekt
-//import no.uutilsynet.testlab2testing.testregel.model.Testregel
-//import org.junit.jupiter.api.Assertions.assertEquals
-//import org.junit.jupiter.api.Test
-//import org.junit.jupiter.api.TestInstance
-//import org.mockito.Mockito
-//import org.mockito.Mockito.mock
-//import java.net.URI
+// import java.time.Instant
+// import no.uutilsynet.testlab2.constants.*
+// import no.uutilsynet.testlab2testing.common.TestlabLocale
+// import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
+// import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
+// import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
+// import no.uutilsynet.testlab2testing.testregel.import.TestregelImportService
+// import no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x
+// import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+// import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
+// import no.uutilsynet.testlab2testing.testregel.model.Tema
+// import no.uutilsynet.testlab2testing.testregel.model.Testobjekt
+// import no.uutilsynet.testlab2testing.testregel.model.Testregel
+// import org.junit.jupiter.api.Assertions.assertEquals
+// import org.junit.jupiter.api.Test
+// import org.junit.jupiter.api.TestInstance
+// import org.mockito.Mockito
+// import org.mockito.Mockito.mock
+// import java.net.URI
 //
-//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-//class TestregelResourceTest {
+// @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+// class TestregelResourceTest {
 //
 //  private val kravregisterClient = mock<KravregisterClient>()
 //  private val testregelImportService = mock<TestregelImportService>()
@@ -94,4 +94,4 @@
 //    assertEquals(innhaldstype, aggregate.innhaldstypeTesting)
 //    assertEquals(krav, aggregate.krav)
 //  }
-//}
+// }

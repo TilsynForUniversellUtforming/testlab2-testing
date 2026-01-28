@@ -1,20 +1,20 @@
-//package no.uutilsynet.testlab2testing.testregel
+// package no.uutilsynet.testlab2testing.testregel
 //
-//import io.micrometer.observation.annotation.Observed
-//import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-//import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
-//import no.uutilsynet.testlab2testing.testregel.model.Tema
-//import no.uutilsynet.testlab2testing.testregel.model.Testobjekt
-//import no.uutilsynet.testlab2testing.testregel.model.Testregel
-//import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
-//import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
-//import org.springframework.stereotype.Service
+// import io.micrometer.observation.annotation.Observed
+// import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+// import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
+// import no.uutilsynet.testlab2testing.testregel.model.Tema
+// import no.uutilsynet.testlab2testing.testregel.model.Testobjekt
+// import no.uutilsynet.testlab2testing.testregel.model.Testregel
+// import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
+// import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+// import org.springframework.stereotype.Service
 //
-//@Service
-//class TestregelService(
+// @Service
+// class TestregelService(
 //    private val testregelDAO: TestregelDAO,
 //    private val kravregisterClient: KravregisterClient
-//) {
+// ) {
 //
 //  fun getTestregel(testregelId: Int): Testregel =
 //      testregelDAO.getTestregel(testregelId)
@@ -85,4 +85,4 @@
 //                ?: throw IllegalArgumentException("Fant ikkje krav med id ${testregelId}"))
 //    return TestregelKrav(testregel, krav)
 //  }
-//}
+// }

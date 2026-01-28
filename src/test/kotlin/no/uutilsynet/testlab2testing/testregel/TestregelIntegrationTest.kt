@@ -1,41 +1,41 @@
-//package no.uutilsynet.testlab2testing.testregel
+// package no.uutilsynet.testlab2testing.testregel
 //
-//import java.net.URI
-//import no.uutilsynet.testlab2.constants.KravStatus
-//import no.uutilsynet.testlab2.constants.WcagPrinsipp
-//import no.uutilsynet.testlab2.constants.WcagRetninglinje
-//import no.uutilsynet.testlab2.constants.WcagSamsvarsnivaa
-//import no.uutilsynet.testlab2testing.testregel.TestConstants.modus
-//import no.uutilsynet.testlab2testing.testregel.TestConstants.name
-//import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelCreateRequestBody
-//import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaAutomatisk
-//import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
-//import no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x
-//import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-//import no.uutilsynet.testlab2testing.testregel.model.Testregel
-//import no.uutilsynet.testlab2testing.testregel.model.TestregelBase
-//import org.assertj.core.api.Assertions
-//import org.junit.jupiter.api.*
-//import org.mockito.Mockito
-//import org.springframework.beans.factory.annotation.Autowired
-//import org.springframework.boot.test.context.SpringBootTest
-//import org.springframework.boot.test.web.client.TestRestTemplate
-//import org.springframework.core.ParameterizedTypeReference
-//import org.springframework.http.HttpEntity
-//import org.springframework.http.HttpMethod
-//import org.springframework.http.HttpStatus
-//import org.springframework.test.context.ActiveProfiles
-//import org.springframework.test.context.bean.override.mockito.MockitoBean
+// import java.net.URI
+// import no.uutilsynet.testlab2.constants.KravStatus
+// import no.uutilsynet.testlab2.constants.WcagPrinsipp
+// import no.uutilsynet.testlab2.constants.WcagRetninglinje
+// import no.uutilsynet.testlab2.constants.WcagSamsvarsnivaa
+// import no.uutilsynet.testlab2testing.testregel.TestConstants.modus
+// import no.uutilsynet.testlab2testing.testregel.TestConstants.name
+// import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelCreateRequestBody
+// import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaAutomatisk
+// import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
+// import no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x
+// import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+// import no.uutilsynet.testlab2testing.testregel.model.Testregel
+// import no.uutilsynet.testlab2testing.testregel.model.TestregelBase
+// import org.assertj.core.api.Assertions
+// import org.junit.jupiter.api.*
+// import org.mockito.Mockito
+// import org.springframework.beans.factory.annotation.Autowired
+// import org.springframework.boot.test.context.SpringBootTest
+// import org.springframework.boot.test.web.client.TestRestTemplate
+// import org.springframework.core.ParameterizedTypeReference
+// import org.springframework.http.HttpEntity
+// import org.springframework.http.HttpMethod
+// import org.springframework.http.HttpStatus
+// import org.springframework.test.context.ActiveProfiles
+// import org.springframework.test.context.bean.override.mockito.MockitoBean
 //
-//@SpringBootTest(
+// @SpringBootTest(
 //    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 //    properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
-//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-//@ActiveProfiles("test")
-//class TestregelIntegrationTests(
+// @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+// @ActiveProfiles("test")
+// class TestregelIntegrationTests(
 //    @Autowired val restTemplate: TestRestTemplate,
 //    @Autowired val testregelDAO: TestregelDAO,
-//) {
+// ) {
 //
 //  @MockitoBean private lateinit var kravregisterClient: KravregisterClient
 //
@@ -51,7 +51,8 @@
 //                false,
 //                false,
 //                false,
-//                URI("https://www.uutilsynet.no/wcag-standarden/111-ikke-tekstlig-innhold-niva/87").toURL(),
+//
+// URI("https://www.uutilsynet.no/wcag-standarden/111-ikke-tekstlig-innhold-niva/87").toURL(),
 //                WcagPrinsipp.robust,
 //                WcagRetninglinje.leselig,
 //                "1.1.1",
@@ -99,7 +100,8 @@
 //    Mockito.`when`(kravregisterClient.getWcagKrav(1)).thenThrow(RuntimeException())
 //
 //    val errorResponse =
-//        restTemplate.postForEntity("/v1/testreglar", testregelCreateRequestBody, String::class.java)
+//        restTemplate.postForEntity("/v1/testreglar", testregelCreateRequestBody,
+// String::class.java)
 //
 //    Assertions.assertThat(errorResponse.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
 //  }
@@ -174,4 +176,4 @@
 //      }
 //
 //  private fun idFromLocation(location: URI) = location.path.split("/").last().toInt()
-//}
+// }

@@ -17,28 +17,30 @@ class TestregelClient(
     private val kravregisterProperties: KravRegisterProperties
 ) {
 
-    val restClient = RestClient.create(restTemplate)
+  val restClient = RestClient.create(restTemplate)
 
-    private val logger = LoggerFactory.getLogger(TestregelClient::class.java)
+  private val logger = LoggerFactory.getLogger(TestregelClient::class.java)
 
-
-
-
-  fun getTestregelById(testregelId: Int): Result<Testregel>
-  {
-      return runCatching {
-          restClient.get().uri("${kravregisterProperties.host}/v1/testrelar/$testregelId")
+  fun getTestregelById(testregelId: Int): Result<Testregel> {
+    return runCatching {
+      restClient
+          .get()
+          .uri("${kravregisterProperties.host}/v1/testrelar/$testregelId")
           .retrieve()
-          .body(Testregel::class.java) ?: throw NoSuchElementException("Fant ikkje testregel med id $testregelId")
-      }
+          .body(Testregel::class.java)
+          ?: throw NoSuchElementException("Fant ikkje testregel med id $testregelId")
+    }
   }
 
   fun getTestregelByKey(testregelKey: String): Result<Testregel> {
-      return runCatching {
-          restClient.get().uri("${kravregisterProperties.host}/v1/testrelar/testregelKey/$testregelKey")
-              .retrieve()
-              .body(Testregel::class.java) ?: throw NoSuchElementException("Fant ikkje testregel med nøkkel $testregelKey")
-      }
+    return runCatching {
+      restClient
+          .get()
+          .uri("${kravregisterProperties.host}/v1/testrelar/testregelKey/$testregelKey")
+          .retrieve()
+          .body(Testregel::class.java)
+          ?: throw NoSuchElementException("Fant ikkje testregel med nøkkel $testregelKey")
+    }
   }
 
   fun getTestregelListFromIds(testregelIdList: List<Int>): List<Testregel> {
@@ -46,42 +48,50 @@ class TestregelClient(
   }
 
   fun getTestregelList(): Result<List<Testregel>> {
-      return runCatching {
-          restClient.get().uri("${kravregisterProperties.host}/v1/testrelar")
-              .retrieve()
-                .body(object : ParameterizedTypeReference<List<Testregel>>() {})
+    return runCatching {
+      restClient
+          .get()
+          .uri("${kravregisterProperties.host}/v1/testrelar")
+          .retrieve()
+          .body(object : ParameterizedTypeReference<List<Testregel>>() {})
           ?: throw NoSuchElementException("Fant ingen testreglar")
-      }
+    }
   }
 
-    fun getTestregelKravList(): Result<List<TestregelKrav>> {
-        return runCatching {
-            restClient.get().uri("${kravregisterProperties.host}/v1/testrelar/listTestregelKrav")
-                .retrieve()
-                .body(object : ParameterizedTypeReference<List<TestregelKrav>>() {})
-                ?: throw NoSuchElementException("Fant ingen testreglar")
-        }
+  fun getTestregelKravList(): Result<List<TestregelKrav>> {
+    return runCatching {
+      restClient
+          .get()
+          .uri("${kravregisterProperties.host}/v1/testrelar/listTestregelKrav")
+          .retrieve()
+          .body(object : ParameterizedTypeReference<List<TestregelKrav>>() {})
+          ?: throw NoSuchElementException("Fant ingen testreglar")
     }
+  }
 
-  fun getInnhaldstypeForTesting() : Result<List<InnhaldstypeTesting>> {
-      return runCatching {
-          restClient.get().uri("${kravregisterProperties.host}/v1/testrelar/innhaldstypeTesting")
-              .retrieve()
-              .body(object : ParameterizedTypeReference<List<InnhaldstypeTesting>>() {})
+  fun getInnhaldstypeForTesting(): Result<List<InnhaldstypeTesting>> {
+    return runCatching {
+      restClient
+          .get()
+          .uri("${kravregisterProperties.host}/v1/testrelar/innhaldstypeTesting")
+          .retrieve()
+          .body(object : ParameterizedTypeReference<List<InnhaldstypeTesting>>() {})
           ?: throw NoSuchElementException("Fant ingen innhaldstyper for testing")
-      }
+    }
   }
 
   fun getTestregelByKravId(kravId: Int): List<TestregelKrav> {
     return getTestregelKravList().getOrThrow().filter { it.krav.id == kravId }
   }
 
-    fun getTemaForTestregel() : Result<List<Tema>> {
-        return runCatching {
-            restClient.get().uri("${kravregisterProperties.host}/v1/testrelar/temaForTestreglar")
-                .retrieve()
-                .body(object : ParameterizedTypeReference<List<Tema>>() {})
-                ?: throw NoSuchElementException("Fant ingen innhaldstyper for testing")
-        }
+  fun getTemaForTestregel(): Result<List<Tema>> {
+    return runCatching {
+      restClient
+          .get()
+          .uri("${kravregisterProperties.host}/v1/testrelar/temaForTestreglar")
+          .retrieve()
+          .body(object : ParameterizedTypeReference<List<Tema>>() {})
+          ?: throw NoSuchElementException("Fant ingen innhaldstyper for testing")
     }
+  }
 }

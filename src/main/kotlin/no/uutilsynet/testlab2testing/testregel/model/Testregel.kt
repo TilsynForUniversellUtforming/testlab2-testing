@@ -71,9 +71,5 @@ data class TestregelKrav(
   constructor(
       testregel: Testregel,
       krav: KravWcag2x
-  ) : this(
-      testregel.id,
-      testregel.testregelId,
-      testregel.namn,
-      krav)
+  ) : this(testregel.id, testregel.testregelId, testregel.namn, krav)
 }

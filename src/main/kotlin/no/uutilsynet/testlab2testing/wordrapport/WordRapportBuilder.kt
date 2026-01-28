@@ -77,10 +77,7 @@ class WordRapportBuilder(
         elementOmtale = this.elementOmtale.toString(),
         elementResultat = this.elementResultat.toString(),
         elementUtfall = this.elementUtfall,
-        tema =
-            testregel.let {
-                testregelCache.getTemaById(it.tema).tema
-            })
+        tema = testregel.let { testregelCache.getTemaById(it.tema).tema })
   }
 
   fun Testregel.toTestregelRapport(): TestregelRapport {
@@ -96,6 +93,4 @@ class WordRapportBuilder(
   fun finnSide(sideutvalId: Int): Pair<Int, Sideutval> {
     return sider.filter { it.id == sideutvalId }.map { Pair(sider.indexOf(it), it) }.first()
   }
-
-
 }

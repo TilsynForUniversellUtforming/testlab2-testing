@@ -209,7 +209,7 @@ class KontrollResourceTest(@Autowired val testregelClient: TestregelClient) {
             "kontroll" to opprettetKontroll,
             "utvalId" to utval.id,
             "kontrollSteg" to KontrollSteg.Utval)
-    for (i in 1..3) {
+    (1..3).forEach { _ ->
       given()
           .port(port)
           .body(updateBody)
@@ -239,7 +239,7 @@ class KontrollResourceTest(@Autowired val testregelClient: TestregelClient) {
             .header("Location")
     val opprettetKontroll = get(location).`as`(Kontroll::class.java)
 
-    val testregel = testregelClient.getTestregelList().first()
+    val testregel = testregelClient.getTestregelList().getOrThrow().first()
 
     /* Create regelsett */
     val nyttRegelsett =
@@ -302,7 +302,7 @@ class KontrollResourceTest(@Autowired val testregelClient: TestregelClient) {
             .header("Location")
     val opprettetKontroll = get(location).`as`(Kontroll::class.java)
 
-    val testregel = testregelClient.getTestregelList().first()
+    val testregel = testregelClient.getTestregelList().getOrThrow().first()
 
     val updateBody =
         mapOf(

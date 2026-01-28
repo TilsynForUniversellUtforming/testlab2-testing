@@ -27,7 +27,7 @@ class TestgrunnlagDAOTest(
     @Autowired private val testUtils: TestUtils,
 ) {
 
-    private var kontrollId: Int by Delegates.notNull()
+  private var kontrollId: Int by Delegates.notNull()
   private var utvalId: Int by Delegates.notNull()
 
   var testKontroll: KontrollDAO.KontrollDB? = null

@@ -1,55 +1,68 @@
-//package no.uutilsynet.testlab2testing.testregel
+// package no.uutilsynet.testlab2testing.testregel
 //
-//import java.sql.Timestamp
-//import java.time.Instant
-//import java.time.temporal.ChronoUnit
-//import no.uutilsynet.testlab2.constants.TestregelModus
-//import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.deleteTestregelSql
-//import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelByTestregelId
-//import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelListByIdList
-//import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelListSql
-//import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelSql
-//import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelListByIdSql
-//import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
-//import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
-//import no.uutilsynet.testlab2testing.testregel.model.Tema
-//import no.uutilsynet.testlab2testing.testregel.model.Testobjekt
-//import no.uutilsynet.testlab2testing.testregel.model.Testregel
-//import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
-//import org.springframework.cache.annotation.CacheEvict
-//import org.springframework.cache.annotation.Cacheable
-//import org.springframework.dao.support.DataAccessUtils
-//import org.springframework.jdbc.core.DataClassRowMapper
-//import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-//import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-//import org.springframework.jdbc.support.GeneratedKeyHolder
-//import org.springframework.jdbc.support.KeyHolder
-//import org.springframework.stereotype.Component
-//import org.springframework.transaction.annotation.Transactional
+// import java.sql.Timestamp
+// import java.time.Instant
+// import java.time.temporal.ChronoUnit
+// import no.uutilsynet.testlab2.constants.TestregelModus
+// import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.deleteTestregelSql
+// import
+// no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelByTestregelId
+// import
+// no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelListByIdList
+// import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelListSql
+// import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.getTestregelSql
+// import
+// no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.maalingTestregelListByIdSql
+// import no.uutilsynet.testlab2testing.testregel.TestregelDAO.TestregelParams.testregelRowMapper
+// import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
+// import no.uutilsynet.testlab2testing.testregel.model.Tema
+// import no.uutilsynet.testlab2testing.testregel.model.Testobjekt
+// import no.uutilsynet.testlab2testing.testregel.model.Testregel
+// import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
+// import org.springframework.cache.annotation.CacheEvict
+// import org.springframework.cache.annotation.Cacheable
+// import org.springframework.dao.support.DataAccessUtils
+// import org.springframework.jdbc.core.DataClassRowMapper
+// import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+// import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+// import org.springframework.jdbc.support.GeneratedKeyHolder
+// import org.springframework.jdbc.support.KeyHolder
+// import org.springframework.stereotype.Component
+// import org.springframework.transaction.annotation.Transactional
 //
-//@Component
-//class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
+// @Component
+// class TestregelDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 //
 //  object TestregelParams {
 //
 //    val getTestregelListSql =
-//        """select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type , modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing  from "testlab2_testing"."testregel" order by id"""
+//        """select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type , modus
+// ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing  from
+// "testlab2_testing"."testregel" order by id"""
 //
 //    val getTestregelListByIdList =
-//        """select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type , modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing  from "testlab2_testing"."testregel" where id in (:ids) order by id"""
+//        """select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type , modus
+// ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing  from
+// "testlab2_testing"."testregel" where id in (:ids) order by id"""
 //
 //    val getTestregelSql =
-//        """select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type, modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing from "testlab2_testing"."testregel" where id = :id order by id"""
+//        """select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type, modus
+// ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing from
+// "testlab2_testing"."testregel" where id = :id order by id"""
 //
 //    val getTestregelByTestregelId =
-//        """select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type, modus ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing from "testlab2_testing"."testregel" where testregel_id = :testregelId and versjon=(select max(versjon) from testlab2_testing.testregel where testregel_id= :testregelId) order by id limit 1"""
+//        """select id, testregel_id,versjon,namn, krav_id, status, dato_sist_endra,type, modus
+// ,spraak,tema,testobjekt,krav_til_samsvar,testregel_schema, innhaldstype_testing from
+// "testlab2_testing"."testregel" where testregel_id = :testregelId and versjon=(select max(versjon)
+// from testlab2_testing.testregel where testregel_id= :testregelId) order by id limit 1"""
 //
 //    val testregelRowMapper = DataClassRowMapper.newInstance(Testregel::class.java)
 //
 //    val deleteTestregelSql = """delete from "testlab2_testing"."testregel" where id = :id"""
 //
 //    val maalingTestregelListByIdSql =
-//        """select maaling_id from "testlab2_testing"."maaling_testregel" where testregel_id = :testregel_id"""
+//        """select maaling_id from "testlab2_testing"."maaling_testregel" where testregel_id =
+// :testregel_id"""
 //  }
 //
 //  @Cacheable("testregel", unless = "#result==null")
@@ -159,8 +172,12 @@
 //      allEntries = true)
 //  fun updateTestregel(testregel: Testregel) =
 //      jdbcTemplate.update(
-//          """ update "testlab2_testing"."testregel" set namn = :namn, testregel_id = :testregel_id,krav_id = :krav_id, versjon = :versjon,status = :status, dato_sist_endra = :dato_sist_endra, type = :type, modus = :modus,
-//              spraak = :spaak, tema = :tema, testobjekt = :testobjekt, krav_til_samsvar = :krav_til_samsvar , testregel_schema = :testregel_schema, innhaldstype_testing = :innhaldstype_testing where id = :id""",
+//          """ update "testlab2_testing"."testregel" set namn = :namn, testregel_id =
+// :testregel_id,krav_id = :krav_id, versjon = :versjon,status = :status, dato_sist_endra =
+// :dato_sist_endra, type = :type, modus = :modus,
+//              spraak = :spaak, tema = :tema, testobjekt = :testobjekt, krav_til_samsvar =
+// :krav_til_samsvar , testregel_schema = :testregel_schema, innhaldstype_testing =
+// :innhaldstype_testing where id = :id""",
 //          mapOf(
 //              "id" to testregel.id,
 //              "testregel_id" to testregel.testregelId,
@@ -227,7 +244,8 @@
 //
 //  fun createInnholdstypeTesting(innholdstypeTesting: String): Int {
 //    return jdbcTemplate.update(
-//        """insert into "testlab2_testing"."innhaldstype_testing" (innhaldstype) values (:innhaldstype_testing)""",
+//        """insert into "testlab2_testing"."innhaldstype_testing" (innhaldstype) values
+// (:innhaldstype_testing)""",
 //        mapOf("innhaldstype_testing" to innholdstypeTesting))
 //  }
 //
@@ -242,4 +260,4 @@
 //
 //    return keyHolder.keys?.get("id") as Int
 //  }
-//}
+// }

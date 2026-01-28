@@ -263,9 +263,7 @@ class EksternResultatService(
 
   fun eksporterRapportForLoeysing(rapportId: String, loeysingId: Int): List<TestresultatDetaljert> {
     return getKontrollLoeysing(rapportId, loeysingId)
-        .mapCatching {
-            resultatService.getBrotForRapportLoeysing(it.kontrollId, loeysingId)
-        }
+        .mapCatching { resultatService.getBrotForRapportLoeysing(it.kontrollId, loeysingId) }
         .getOrThrow()
   }
 

@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.net.URL
+import java.time.Instant
+import java.time.LocalDateTime
 import no.uutilsynet.testlab2testing.common.Constants
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
@@ -14,9 +17,6 @@ import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.stereotype.Service
-import java.net.URL
-import java.time.Instant
-import java.time.LocalDateTime
 
 @Service
 class ManueltResultatService(

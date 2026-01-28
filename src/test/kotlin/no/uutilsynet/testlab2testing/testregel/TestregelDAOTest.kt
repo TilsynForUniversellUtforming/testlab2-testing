@@ -1,24 +1,24 @@
-//package no.uutilsynet.testlab2testing.testregel
+// package no.uutilsynet.testlab2testing.testregel
 //
-//import java.time.Instant
-//import no.uutilsynet.testlab2.constants.TestregelInnholdstype
-//import no.uutilsynet.testlab2.constants.TestregelModus
-//import no.uutilsynet.testlab2.constants.TestregelStatus
-//import no.uutilsynet.testlab2testing.common.TestlabLocale
-//import no.uutilsynet.testlab2testing.testregel.TestConstants.name
-//import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaAutomatisk
-//import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
-//import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
-//import org.assertj.core.api.Assertions
-//import org.junit.jupiter.api.*
-//import org.springframework.beans.factory.annotation.Autowired
-//import org.springframework.boot.test.context.SpringBootTest
-//import org.springframework.test.context.ActiveProfiles
+// import java.time.Instant
+// import no.uutilsynet.testlab2.constants.TestregelInnholdstype
+// import no.uutilsynet.testlab2.constants.TestregelModus
+// import no.uutilsynet.testlab2.constants.TestregelStatus
+// import no.uutilsynet.testlab2testing.common.TestlabLocale
+// import no.uutilsynet.testlab2testing.testregel.TestConstants.name
+// import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaAutomatisk
+// import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
+// import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
+// import org.assertj.core.api.Assertions
+// import org.junit.jupiter.api.*
+// import org.springframework.beans.factory.annotation.Autowired
+// import org.springframework.boot.test.context.SpringBootTest
+// import org.springframework.test.context.ActiveProfiles
 //
-//@SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
-//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-//@ActiveProfiles("test")
-//class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
+// @SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
+// @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+// @ActiveProfiles("test")
+// class TestregelDAOTest(@Autowired val testregelDAO: TestregelDAO) {
 //
 //  val deleteThese: MutableList<Int> = mutableListOf()
 //
@@ -94,7 +94,8 @@
 //
 //    oldTestregel
 //        ?.copy(
-//            kravId = testregelTestKravId, testregelSchema = testregelSchemaAutomatisk, namn = name)
+//            kravId = testregelTestKravId, testregelSchema = testregelSchemaAutomatisk, namn =
+// name)
 //        ?.let { testregelDAO.updateTestregel(it) }
 //
 //    val updatedTestregel = testregelDAO.getTestregel(id)
@@ -133,7 +134,8 @@
 //
 //    oldTestregel
 //        ?.copy(
-//            kravId = testregelTestKravId, testregelSchema = testregelSchemaAutomatisk, namn = name)
+//            kravId = testregelTestKravId, testregelSchema = testregelSchemaAutomatisk, namn =
+// name)
 //        ?.let { testregelDAO.updateTestregel(it) }
 //
 //    val updatedTestregel = testregelDAO.getTestregel(id)
@@ -163,4 +165,4 @@
 //              testobjekt = 1,
 //              kravTilSamsvar = "")
 //  ) = testregelDAO.createTestregel(testregelInit).also { deleteThese.add(it) }
-//}
+// }

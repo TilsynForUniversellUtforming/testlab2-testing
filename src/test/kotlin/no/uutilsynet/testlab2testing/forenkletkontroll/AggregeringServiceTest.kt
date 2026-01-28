@@ -56,7 +56,6 @@ class AggregeringServiceTest(
 
   @MockitoSpyBean lateinit var maalingDao: MaalingDAO
 
-
   companion object {
     @Container
     @JvmStatic

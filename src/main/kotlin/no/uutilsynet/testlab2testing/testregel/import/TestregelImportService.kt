@@ -1,37 +1,37 @@
-//package no.uutilsynet.testlab2testing.testregel.import
+// package no.uutilsynet.testlab2testing.testregel.import
 //
-//import GithubFolder
-//import TestregelMetadata
-//import com.fasterxml.jackson.databind.ObjectMapper
-//import java.nio.charset.Charset
-//import java.time.Instant
-//import java.util.*
-//import no.uutilsynet.testlab2.constants.TestregelInnholdstype
-//import no.uutilsynet.testlab2.constants.TestregelModus
-//import no.uutilsynet.testlab2.constants.TestregelStatus
-//import no.uutilsynet.testlab2testing.common.TestlabLocale
-//import no.uutilsynet.testlab2testing.testregel.*
-//import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-//import no.uutilsynet.testlab2testing.testregel.model.Testregel
-//import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
-//import org.slf4j.LoggerFactory
-//import org.springframework.boot.context.properties.ConfigurationProperties
-//import org.springframework.http.MediaType
-//import org.springframework.stereotype.Service
-//import org.springframework.web.client.RestClient
-//import org.springframework.web.client.RestTemplate
+// import GithubFolder
+// import TestregelMetadata
+// import com.fasterxml.jackson.databind.ObjectMapper
+// import java.nio.charset.Charset
+// import java.time.Instant
+// import java.util.*
+// import no.uutilsynet.testlab2.constants.TestregelInnholdstype
+// import no.uutilsynet.testlab2.constants.TestregelModus
+// import no.uutilsynet.testlab2.constants.TestregelStatus
+// import no.uutilsynet.testlab2testing.common.TestlabLocale
+// import no.uutilsynet.testlab2testing.testregel.*
+// import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+// import no.uutilsynet.testlab2testing.testregel.model.Testregel
+// import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
+// import org.slf4j.LoggerFactory
+// import org.springframework.boot.context.properties.ConfigurationProperties
+// import org.springframework.http.MediaType
+// import org.springframework.stereotype.Service
+// import org.springframework.web.client.RestClient
+// import org.springframework.web.client.RestTemplate
 //
 //// import kotlin.io.encoding.Base64
 //
-//private const val TESTREGLAR = "Testreglar"
+// private const val TESTREGLAR = "Testreglar"
 //
-//@Service
-//class TestregelImportService(
+// @Service
+// class TestregelImportService(
 //    val restTemplate: RestTemplate,
 //    val properties: GithubProperties,
 //    val kravregisterClient: KravregisterClient,
 //    val testregelDAO: TestregelDAO
-//) {
+// ) {
 //
 //  val logger = LoggerFactory.getLogger(TestregelImportService::class.java)
 //
@@ -201,7 +201,8 @@
 //  }
 //
 //  fun extractKrav(testregelId: String): String {
-//    return testregelId.removeSuffix("-2022").dropLast(1).removePrefix("nett-").removePrefix("app-")
+//    return
+// testregelId.removeSuffix("-2022").dropLast(1).removePrefix("nett-").removePrefix("app-")
 //  }
 //
 //  fun getTestreglarApp(testregelList: List<String>): List<String> {
@@ -285,11 +286,11 @@
 //          .sum()
 //    }
 //  }
-//}
+// }
 //
-//enum class TestregelType {
+// enum class TestregelType {
 //  App,
 //  Nett
-//}
+// }
 //
-//@ConfigurationProperties(prefix = "github") data class GithubProperties(val token: String)
+// @ConfigurationProperties(prefix = "github") data class GithubProperties(val token: String)

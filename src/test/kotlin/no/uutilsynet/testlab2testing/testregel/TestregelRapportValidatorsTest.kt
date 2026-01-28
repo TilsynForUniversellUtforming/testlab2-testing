@@ -1,25 +1,25 @@
-//package no.uutilsynet.testlab2testing.testregel
+// package no.uutilsynet.testlab2testing.testregel
 //
-//import java.time.Instant
-//import no.uutilsynet.testlab2.constants.TestregelInnholdstype
-//import no.uutilsynet.testlab2.constants.TestregelModus
-//import no.uutilsynet.testlab2.constants.TestregelStatus
-//import no.uutilsynet.testlab2testing.common.TestlabLocale
-//import no.uutilsynet.testlab2testing.testregel.TestConstants.name
-//import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaAutomatisk
-//import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaManuell
-//import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
-//import no.uutilsynet.testlab2testing.testregel.model.Testregel
-//import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.validateTestregel
-//import org.junit.jupiter.api.Assertions.assertTrue
-//import org.junit.jupiter.api.DisplayName
-//import org.junit.jupiter.api.Nested
-//import org.junit.jupiter.api.Test
-//import org.junit.jupiter.api.assertDoesNotThrow
-//import org.junit.jupiter.params.ParameterizedTest
-//import org.junit.jupiter.params.provider.MethodSource
+// import java.time.Instant
+// import no.uutilsynet.testlab2.constants.TestregelInnholdstype
+// import no.uutilsynet.testlab2.constants.TestregelModus
+// import no.uutilsynet.testlab2.constants.TestregelStatus
+// import no.uutilsynet.testlab2testing.common.TestlabLocale
+// import no.uutilsynet.testlab2testing.testregel.TestConstants.name
+// import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaAutomatisk
+// import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelSchemaManuell
+// import no.uutilsynet.testlab2testing.testregel.TestConstants.testregelTestKravId
+// import no.uutilsynet.testlab2testing.testregel.model.Testregel
+// import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.validateTestregel
+// import org.junit.jupiter.api.Assertions.assertTrue
+// import org.junit.jupiter.api.DisplayName
+// import org.junit.jupiter.api.Nested
+// import org.junit.jupiter.api.Test
+// import org.junit.jupiter.api.assertDoesNotThrow
+// import org.junit.jupiter.params.ParameterizedTest
+// import org.junit.jupiter.params.provider.MethodSource
 //
-//class TestregelValidatorsTest {
+// class TestregelValidatorsTest {
 //  @Test
 //  @DisplayName("Gyldig testregel for forenklet kontroll skal kunne valideres")
 //  fun validForenklet() {
@@ -144,7 +144,8 @@
 //
 //  @Test
 //  @DisplayName(
-//      "TestregelSchema for forenklet kontroll må være på act-regel format og være riktig formattert")
+//      "TestregelSchema for forenklet kontroll må være på act-regel format og være riktig
+// formattert")
 //  fun testregelSchemaActError() {
 //    val schema = validateSchema("qw-act-r12", TestregelModus.automatisk)
 //    assertTrue(schema.isFailure)
@@ -197,4 +198,4 @@
 //      assertTrue(schema.isFailure)
 //    }
 //  }
-//}
+// }

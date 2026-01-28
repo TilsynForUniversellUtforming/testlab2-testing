@@ -1,34 +1,34 @@
-//package no.uutilsynet.testlab2testing.testregel
+// package no.uutilsynet.testlab2testing.testregel
 //
-//import java.net.URI
-//import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHandling
-//import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
-//import no.uutilsynet.testlab2testing.common.validateNamn
-//import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
-//import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
-//import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
-//import no.uutilsynet.testlab2testing.testregel.import.TestregelImportService
-//import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-//import no.uutilsynet.testlab2testing.testregel.model.Testregel
-//import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.toTestregelBase
-//import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.validateTestregel
-//import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
-//import no.uutilsynet.testlab2testing.testregel.model.TestregelBase
-//import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
-//import org.slf4j.LoggerFactory
-//import org.springframework.http.ResponseEntity
-//import org.springframework.web.bind.annotation.*
+// import java.net.URI
+// import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.createWithErrorHandling
+// import no.uutilsynet.testlab2testing.common.ErrorHandlingUtil.executeWithErrorHandling
+// import no.uutilsynet.testlab2testing.common.validateNamn
+// import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
+// import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
+// import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
+// import no.uutilsynet.testlab2testing.testregel.import.TestregelImportService
+// import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
+// import no.uutilsynet.testlab2testing.testregel.model.Testregel
+// import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.toTestregelBase
+// import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.validateTestregel
+// import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
+// import no.uutilsynet.testlab2testing.testregel.model.TestregelBase
+// import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
+// import org.slf4j.LoggerFactory
+// import org.springframework.http.ResponseEntity
+// import org.springframework.web.bind.annotation.*
 //
-//@RestController
-//@RequestMapping("v1/testreglar")
-//class TestregelResource(
+// @RestController
+// @RequestMapping("v1/testreglar")
+// class TestregelResource(
 //    private val kravregisterClient: KravregisterClient,
 //    private val testregelImportService: TestregelImportService,
 //    private val testregelService: TestregelService,
 //    private val maalingService: MaalingService,
 //    private val kontrollDAO: KontrollDAO,
 //    private val testgrunnlagService: TestgrunnlagService
-//) {
+// ) {
 //
 //  val logger = LoggerFactory.getLogger(TestregelResource::class.java)
 //
@@ -163,7 +163,8 @@
 //          innhaldstypeTesting =
 //              innhaldstypeTestingList.find { it.id == testregel.innhaldstypeTesting },
 //          krav = kravList.firstOrNull { it.id == testregel.kravId }
-//                  ?: throw IllegalArgumentException("Krav med id ${testregel.kravId} finns ikkje"),
+//                  ?: throw IllegalArgumentException("Krav med id ${testregel.kravId} finns
+// ikkje"),
 //          modus = testregel.modus,
 //          testregelSchema = testregel.testregelSchema,
 //          testregelId = testregel.testregelId,
@@ -219,4 +220,4 @@
 //          ResponseEntity.notFound().build()
 //        }
 //  }
-//}
+// }
