@@ -41,7 +41,7 @@ class EksternResultatResource(
       val result = findTests(searchparam, orgnr)
       ResponseEntity.ok(result)
     } catch (e: NoSuchElementException) {
-        logger.warn(e.message)
+      logger.warn(e.message)
       ResponseEntity.notFound().build()
     } catch (e: IllegalArgumentException) {
       logger.warn(e.message)

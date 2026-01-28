@@ -253,11 +253,9 @@ class MaalingDAO(
 
   private fun MaalingDTO.getTestregelList(): List<TestregelBase> {
     val testregelIds =
-        jdbcTemplate
-            .queryForList(maalingTestregelQuery, mapOf("id" to id), Int::class.java)
-            .toList()
+        getTestrelIdForMaaling(id)
 
-    return testregelClient.getTestregelListFromIds(testregelIds).map { it.toTestregelBase() }
+    return testregelClient.getTestregelListFromIds(testregelIds).getOrThrow().map { it.toTestregelBase() }
   }
 
   fun getLoeysingarForMaaling(id: Int, datoStart: Instant): List<Loeysing> {

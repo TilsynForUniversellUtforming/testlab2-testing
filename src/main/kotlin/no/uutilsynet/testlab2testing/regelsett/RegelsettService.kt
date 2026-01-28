@@ -24,7 +24,7 @@ class RegelsettService(
 
   fun RegelsettBase.toRegelsett(): Regelsett {
     val testregelIds = regelsettDAO.getTestregelIdListForRegelsett(this.id)
-    val testregelList = testregelClient.getTestregelListFromIds(testregelIds)
+    val testregelList = testregelClient.getTestregelListFromIds(testregelIds).getOrThrow()
 
     return Regelsett(
         this.id, this.namn, this.modus, this.standard, testregelList.map { it.toTestregelBase() })

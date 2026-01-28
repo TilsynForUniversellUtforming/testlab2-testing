@@ -49,18 +49,14 @@ object TestConstants {
       Testregel(
           1,
           "QW-ACT-12",
-          1,
           TestConstants.name,
           TestConstants.testregelTestKravId,
           TestregelStatus.publisert,
-          Instant.now(),
           TestregelInnholdstype.nett,
           TestregelModus.automatisk,
-          TestlabLocale.nb,
           1,
           1,
           "QW-ACT-12",
-          TestConstants.testregelSchemaAutomatisk,
           1)
 
   val testRegelList = listOf(testregel)
@@ -120,5 +116,5 @@ object TestConstants {
 }
 
 fun Loeysing.Expanded.toLoeysing(): Loeysing {
-  return Loeysing(id, namn, url, verksemd!!.organisasjonsnummer, verksemd!!.namn)
+  return Loeysing(id, namn, url, verksemd!!.organisasjonsnummer, verksemd.namn)
 }

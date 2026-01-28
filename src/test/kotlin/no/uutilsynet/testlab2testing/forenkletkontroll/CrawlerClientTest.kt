@@ -57,17 +57,13 @@ class CrawlerClientTest {
             Testregel(
                 1,
                 TestConstants.testregelSchemaAutomatisk,
-                1,
                 TestConstants.name,
                 1,
                 TestregelStatus.publisert,
-                Instant.now(),
                 TestregelInnholdstype.nett,
                 TestregelModus.automatisk,
-                TestlabLocale.nb,
                 1,
                 1,
-                "Er rett",
                 "QW-ACT-12",
                 1))
     val maaling =

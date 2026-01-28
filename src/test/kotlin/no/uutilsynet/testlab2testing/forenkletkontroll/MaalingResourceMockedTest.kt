@@ -101,18 +101,14 @@ class MaalingResourceMockedTest {
                     Testregel(
                         1,
                         "QW",
-                        1,
                         "name",
                         1,
                         TestregelStatus.publisert,
-                        Instant.now(),
                         TestregelInnholdstype.nett,
                         TestregelModus.automatisk,
-                        TestlabLocale.nb,
                         1,
                         1,
                         "QW",
-                        "1.2.3",
                         1))))
 
     val result = maalingResource.putNewStatus(id, status)
@@ -136,17 +132,13 @@ class MaalingResourceMockedTest {
             Testregel(
                 1,
                 "QW-ACT-R12",
-                1,
                 "name",
                 1,
                 TestregelStatus.publisert,
-                Instant.now(),
                 TestregelInnholdstype.nett,
                 TestregelModus.automatisk,
-                TestlabLocale.nb,
                 1,
                 1,
-                "QW-ACT-R12",
                 "QW-ACT-R12",
                 1))
 

@@ -309,7 +309,7 @@ class MaalingService(
   fun getTestreglarForMaaling(maalingId: Int): Result<List<Testregel>> {
     return runCatching {
       val testregelIds = maalingDAO.getTestrelIdForMaaling(maalingId)
-      testreglClient.getTestregelListFromIds(testregelIds)
+      testreglClient.getTestregelListFromIds(testregelIds).getOrThrow()
     }
   }
 
