@@ -106,7 +106,7 @@ class MaalingService(
 
   private fun validatedTestregelList(testregelIdList: List<Int>): List<Int> {
     return validateIdList(
-            testregelIdList, testreglClient.getTestregelList().map { it.id }, "testregelIdList")
+            testregelIdList, testreglClient.getTestregelList().getOrThrow().map { it.id }, "testregelIdList")
         .getOrThrow()
   }
 
@@ -145,23 +145,13 @@ class MaalingService(
 
     return when (val maaling = maalingDAO.getMaaling(this.id)) {
       is Maaling.Planlegging -> {
-        val loeysingList =
-            this.loeysingIdList
-                ?.let { idList -> loeysingsRegisterClient.getMany(idList) }
-                ?.getOrThrow()
-                ?: emptyList<Loeysing>().also {
-                  logger.warn("Måling ${maaling.id} har ikkje løysingar")
-                }
+          val loeysingList =
+              getLoeysingarForMaaling(maaling)
 
-        val testregelList =
-            this.testregelIdList?.let { idList ->
-              testreglClient.getTestregelList().filter { idList.contains(it.id) }
-            }
-                ?: emptyList<Testregel>().also {
-                  logger.warn("Måling ${maaling.id} har ikkje testreglar")
-                }
+          val testregelList =
+              getTestreglarForMaaling(maaling,this.testregelIdList)
 
-        maaling.copy(
+          maaling.copy(
             navn = navn,
             loeysingList = loeysingList,
             testregelList = testregelList.map { it.toTestregelBase() },
@@ -174,7 +164,29 @@ class MaalingService(
     }
   }
 
-  private fun getLoeysingarForMaaling(
+    private fun EditMaalingDTO.getLoeysingarForMaaling(maaling: Maaling.Planlegging): List<Loeysing> {
+        val loeysingList =
+            this.loeysingIdList
+                ?.let { idList -> loeysingsRegisterClient.getMany(idList) }
+                ?.getOrThrow()
+                ?: emptyList<Loeysing>().also {
+                    logger.warn("Måling ${maaling.id} har ikkje løysingar")
+                }
+        return loeysingList
+    }
+
+    private fun getTestreglarForMaaling(maaling: Maaling.Planlegging, testregelIdList:List<Int>?): List<Testregel> {
+        val testregelList =
+            testregelIdList?.let { idList ->
+                testreglClient.getTestregelList().getOrThrow().filter { idList.contains(it.id) }
+            }
+                ?: emptyList<Testregel>().also {
+                    logger.warn("Måling ${maaling.id} har ikkje testreglar")
+                }
+        return testregelList
+    }
+
+    private fun getLoeysingarForMaaling(
       idList: List<Int>,
       maalingId: Int,
   ): List<Loeysing> {
@@ -300,21 +312,10 @@ class MaalingService(
     }
   }
 
-  fun getMaalingForTestregel(testregelId: Int): List<Int> {
-    return maalingDAO.getMaalingIdForTestregel(testregelId).getOrDefault(emptyList())
-  }
-
-  fun getMaalingList(maalingIds: List<Int>): List<MaalingListElement> {
-    return maalingDAO.getMaalingList().filter { maalingIds.contains(it.id) }
-  }
-
-  @Observed(name = "MaalingService.getMaalingForKontroll")
+    @Observed(name = "MaalingService.getMaalingForKontroll")
   fun getMaalingForKontroll(kontrollId: Int): Int {
     return maalingDAO.getMaalingIdFromKontrollId(kontrollId)
         ?: throw NoSuchElementException("Fant ikkje måling for kontrollId $kontrollId")
   }
 
-  fun hasMaalingTestregel(testregelId: Int): Boolean {
-    return maalingDAO.hasMaalingTestregel(testregelId)
-  }
 }
