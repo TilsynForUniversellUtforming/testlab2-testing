@@ -56,10 +56,4 @@ data class TestregelKrav(
     val testregelId: String,
     val namn: String,
     val krav: KravWcag2x,
-) {
-
-  constructor(
-      testregel: Testregel,
-      krav: KravWcag2x
-  ) : this(testregel.id, testregel.testregelId, testregel.namn, krav)
-}
+)
