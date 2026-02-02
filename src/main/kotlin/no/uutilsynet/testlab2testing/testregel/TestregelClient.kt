@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.testregel
 
+import java.net.URI
 import no.uutilsynet.testlab2testing.testregel.krav.KravRegisterProperties
 import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
 import no.uutilsynet.testlab2testing.testregel.model.Tema
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
-import java.net.URI
 
 @Service
 class TestregelClient(
@@ -20,17 +20,13 @@ class TestregelClient(
 ) {
 
   val restClient = RestClient.create(restTemplate)
-    val testreglarUrl = "${kravregisterProperties.host}/v1/testreglar"
+  val testreglarUrl = "${kravregisterProperties.host}/v1/testreglar"
 
   private val logger = LoggerFactory.getLogger(TestregelClient::class.java)
 
   fun getTestregelById(testregelId: Int): Result<Testregel> {
     return runCatching {
-        restClient
-          .get()
-          .uri("$testreglarUrl$/testregelId")
-          .retrieve()
-          .body(Testregel::class.java)
+      restClient.get().uri("$testreglarUrl$/testregelId").retrieve().body(Testregel::class.java)
           ?: throw NoSuchElementException("Fant ikkje testregel med id $testregelId")
     }
   }
@@ -46,28 +42,28 @@ class TestregelClient(
     }
   }
 
-    fun getTestregelListFromIds(testregelIdList: List<Int>): Result<List<Testregel>> {
-        val url = UriComponentsBuilder.fromUri(URI(testreglarUrl))
+  fun getTestregelListFromIds(testregelIdList: List<Int>): Result<List<Testregel>> {
+    val url =
+        UriComponentsBuilder.fromUri(URI(testreglarUrl))
             .queryParam("testregelIdList", testregelIdList.joinToString(","))
             .toUriString()
 
-        return runCatching {
-            restClient
-                .get()
-                .uri ( url)
-                .retrieve()
-                .body(object : ParameterizedTypeReference<List<Testregel>>() {})
-                ?: throw NoSuchElementException("Fant ingen testreglar for id-liste: ${testregelIdList.joinToString(",")}")
-        }
+    return runCatching {
+      restClient
+          .get()
+          .uri(url)
+          .retrieve()
+          .body(object : ParameterizedTypeReference<List<Testregel>>() {})
+          ?: throw NoSuchElementException(
+              "Fant ingen testreglar for id-liste: ${testregelIdList.joinToString(",")}")
     }
-
+  }
 
   fun getTestregelList(): Result<List<Testregel>> {
     return runCatching {
       restClient
           .get()
           .uri("$testreglarUrl")
-
           .retrieve()
           .body(object : ParameterizedTypeReference<List<Testregel>>() {})
           ?: throw NoSuchElementException("Fant ingen testreglar")

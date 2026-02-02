@@ -244,7 +244,8 @@ class EksternResultatResource(
       @PathVariable loeysingId: Int
   ): ResponseEntity<List<ResultatOversiktLoeysingEkstern>> {
 
-    val results: List<ResultatOversiktLoeysingEkstern> = eksternResultatService.getRapportForLoeysing(rapportId, loeysingId)
+    val results: List<ResultatOversiktLoeysingEkstern> =
+        eksternResultatService.getRapportForLoeysing(rapportId, loeysingId)
     return ResponseEntity.ok(results)
   }
 }
