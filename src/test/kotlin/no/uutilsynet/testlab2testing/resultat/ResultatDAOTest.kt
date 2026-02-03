@@ -41,7 +41,7 @@ class ResultatDAOTest(
 
   @BeforeAll
   fun setup() {
-    testregelId = testUtils.createTestregel()
+    testregelId = testUtils.createTestregel().id
     maalingIds = createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"))
 
     val testgrunnlagList =

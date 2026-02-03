@@ -305,16 +305,16 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun updateKontroll(
       kontroll: Kontroll,
       regelsettId: Int?,
-      loeysingIdList: List<Int>
+      testregeList: List<Int>
   ): Result<Unit> = runCatching {
     updateKontrollQuery(kontroll, regelsettId)
     deleteFromKontrollTestreglar(kontroll, regelsettId)
-    updateKontrollTestreglar(loeysingIdList, kontroll)
+    updateKontrollTestreglar(testregeList, kontroll)
   }
 
-  private fun updateKontrollTestreglar(loeysingIdList: List<Int>, kontroll: Kontroll) {
+  private fun updateKontrollTestreglar(testregelList: List<Int>, kontroll: Kontroll) {
     val updateBatchValuesTestreglar =
-        loeysingIdList.map { mapOf("kontrollId" to kontroll.id, "testregelId" to it) }
+        testregelList.map { mapOf("kontrollId" to kontroll.id, "testregelId" to it) }
 
     jdbcTemplate.batchUpdate(
         """insert into testlab2_testing."kontroll_testreglar" (kontroll_id, testregel_id) values (:kontrollId, :testregelId)""",

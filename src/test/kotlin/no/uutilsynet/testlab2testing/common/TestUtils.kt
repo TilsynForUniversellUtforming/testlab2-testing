@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.common
 
-import java.net.URI
-import java.time.Instant
-import kotlin.random.Random
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
@@ -16,6 +13,8 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import org.springframework.stereotype.Service
+import java.net.URI
+import java.time.Instant
 
 @Service
 class TestUtils(
@@ -26,8 +25,8 @@ class TestUtils(
 
   var testregelId: Int = 0
 
-  fun createTestregel(): Int {
-    return Random.nextInt(0, 100)
+  fun createTestregel(): TestregelKrav {
+    return testregelKravObject()
   }
 
   fun createTestgrunnlag(

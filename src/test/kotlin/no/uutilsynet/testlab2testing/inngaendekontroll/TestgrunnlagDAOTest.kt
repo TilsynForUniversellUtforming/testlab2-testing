@@ -134,7 +134,7 @@ class TestgrunnlagDAOTest(
     kontrollDAO.updateKontroll(kontroll, utvalId)
 
     /* Add testreglar */
-    val testregel = testUtils.createTestregel()
+    val testregel = testUtils.createTestregel().id
     kontrollDAO.updateKontroll(kontroll, null, listOf(testregel))
 
     /* Add sideutval */

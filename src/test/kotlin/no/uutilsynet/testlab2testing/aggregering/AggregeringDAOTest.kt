@@ -20,11 +20,13 @@ class AggregeringDAOTest(
 ) {
 
   fun setUp(): Int {
-    val testregelId = testUtils.createTestregel()
+    val testregelId = testUtils.createTestregel().id
     val testgrunnlag = OpprettTestgrunnlag("Testgrunnlag", TestgrunnlagType.OPPRINNELEG_TEST)
     val kontroll =
         testUtils.createKontroll(
             "Kontroll", Kontrolltype.InngaaendeKontroll, listOf(1), testregelId)
+
+      println("Kontroll oppretta med id: ${kontroll}")
 
     return testUtils.createTestgrunnlag(testgrunnlag, kontroll)
   }
