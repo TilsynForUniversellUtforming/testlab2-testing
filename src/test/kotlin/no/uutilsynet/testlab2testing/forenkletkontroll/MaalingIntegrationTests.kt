@@ -74,6 +74,8 @@ class MaalingIntegrationTests(
         doReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault())).`when`(clockProvider).clock
         doReturn(Result.success(listOf(testregel))).`when`(testregelClient)
             .getTestregelListFromIds(listOf(testregel.id))
+        doReturn(Result.success(listOf(testregel))).`when`(testregelClient)
+            .getTestregelList()
     }
 
     @AfterAll
@@ -181,6 +183,10 @@ class MaalingIntegrationTests(
                 .getMany(loeysingList.map { it.id }, maalingDateStart)
             Mockito.`when`(clockProvider.clock)
                 .thenReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault()))
+            doReturn(Result.success(listOf(testregel))).`when`(testregelClient)
+                .getTestregelListFromIds(listOf(testregel.id))
+            doReturn(Result.success(listOf(testregel))).`when`(testregelClient)
+                .getTestregelList()
             return restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
         }
 

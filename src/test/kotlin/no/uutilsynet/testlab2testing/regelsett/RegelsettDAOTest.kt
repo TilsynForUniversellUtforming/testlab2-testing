@@ -89,6 +89,8 @@ class RegelsettDAOTest(
         val (id1, id2) = Pair(createTestRegelsett(), createTestRegelsett())
         doReturn(Result.success(listOf(regelsettTestregelList[0]))).`when`(testregelClient)
             .getTestregelListFromIds(listOf(regelsettTestregelList[0].id))
+        doReturn(Result.success(regelsettTestregelList)).`when`(testregelClient)
+            .getTestregelList()
         val regelsettList = regelsettService.getRegelsettTestreglarList(false)
 
         assertThat(regelsettList).isNotEmpty
