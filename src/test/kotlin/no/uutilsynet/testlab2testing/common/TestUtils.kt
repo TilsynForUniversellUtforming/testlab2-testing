@@ -70,16 +70,15 @@ class TestUtils(
       testregelId: Int
   ): KontrollDAO.KontrollDB {
 
-    val (kontrollDAO, kontrollId, kontroll) = opprettKontroll(kontrollNamn, kontrolltype)
+    val (kontrollId, kontroll) = opprettKontroll(kontrollNamn, kontrolltype)
 
-    opprettUtvalg(kontrollDAO, kontroll, loeysingId)
+    opprettUtvalg(kontroll, loeysingId)
     kontrollDAO.updateKontroll(kontroll, null, listOf(testregelId))
 
     return kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
   }
 
   private fun opprettUtvalg(
-      kontrollDAO: KontrollDAO,
       kontroll: Kontroll,
       loeysingId: List<Int> = listOf(1)
   ) {
@@ -96,7 +95,7 @@ class TestUtils(
   private fun opprettKontroll(
       kontrollNamn: String,
       kontrolltype: Kontrolltype
-  ): Triple<KontrollDAO, Int, Kontroll> {
+  ): Pair<Int, Kontroll> {
     val opprettKontroll =
         KontrollResource.OpprettKontroll(
             kontrollNamn, "Ola Nordmann", Sakstype.Arkivsak, "1234", kontrolltype)
@@ -112,7 +111,7 @@ class TestUtils(
             opprettKontroll.sakstype,
             opprettKontroll.arkivreferanse,
         )
-    return Triple(kontrollDAO, kontrollId, kontroll)
+    return Pair(kontrollId, kontroll)
   }
 
   fun createTestMaaling(
