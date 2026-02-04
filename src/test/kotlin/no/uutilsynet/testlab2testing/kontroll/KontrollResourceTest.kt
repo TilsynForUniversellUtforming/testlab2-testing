@@ -7,6 +7,7 @@ import io.restassured.parsing.Parser
 import io.restassured.path.json.JsonPath
 import io.restassured.path.json.JsonPath.from
 import jakarta.validation.ClockProvider
+import no.uutilsynet.testlab2testing.common.TestUtils
 import java.net.URI
 import java.time.Clock
 import java.time.ZoneId
@@ -34,12 +35,17 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 
 @DisplayName("KontrollResource")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class KontrollResourceTest(@Autowired val testregelClient: TestregelClient) {
+class KontrollResourceTest(
+    @Autowired private val testUtils: TestUtils,
+) {
   @LocalServerPort var port: Int = 0
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
   @MockitoBean lateinit var clockProvider: ClockProvider
+  @MockitoBean lateinit var testregelClient: TestregelClient
+    val testregel = testUtils.createTestregel()
 
-  @BeforeEach
+
+    @BeforeEach
   fun beforeEach() {
     doReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault())).`when`(clockProvider).clock
     doReturn(listOf(loeysingList[0]))
@@ -51,6 +57,8 @@ class KontrollResourceTest(@Autowired val testregelClient: TestregelClient) {
     doReturn(Result.success(listOf(loeysingList[0])))
         .`when`(loeysingsRegisterClient)
         .search(anyString())
+      doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelListFromIds(listOf(testregel.id))
+
   }
 
   val kontrollInitBody =
@@ -223,6 +231,8 @@ class KontrollResourceTest(@Autowired val testregelClient: TestregelClient) {
   @Test
   @DisplayName("gitt vi har en kontroll, så skal vi kunne oppdatere testreglar med regelsett")
   fun updateKontrollWithTestreglarRegelsett() {
+      doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelList()
+
     RestAssured.defaultParser = Parser.JSON
     val body = kontrollInitBody
 
@@ -238,8 +248,6 @@ class KontrollResourceTest(@Autowired val testregelClient: TestregelClient) {
             .extract()
             .header("Location")
     val opprettetKontroll = get(location).`as`(Kontroll::class.java)
-
-    val testregel = testregelClient.getTestregelList().getOrThrow().first()
 
     /* Create regelsett */
     val nyttRegelsett =
@@ -286,7 +294,11 @@ class KontrollResourceTest(@Autowired val testregelClient: TestregelClient) {
   @Test
   @DisplayName("gitt vi har en kontroll, så skal vi kunne legge inn egenvalgte testregler")
   fun updateKontrollWithTestreglarManualSelection() {
-    RestAssured.defaultParser = Parser.JSON
+      doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelList()
+
+
+
+      RestAssured.defaultParser = Parser.JSON
     val body = kontrollInitBody
 
     /* Create default kontroll */
@@ -301,8 +313,6 @@ class KontrollResourceTest(@Autowired val testregelClient: TestregelClient) {
             .extract()
             .header("Location")
     val opprettetKontroll = get(location).`as`(Kontroll::class.java)
-
-    val testregel = testregelClient.getTestregelList().getOrThrow().first()
 
     val updateBody =
         mapOf(
@@ -326,7 +336,8 @@ class KontrollResourceTest(@Autowired val testregelClient: TestregelClient) {
   @Test
   @DisplayName("vi skal kunne hente ut en liste med alle kontroller")
   fun getKontrollerTest() {
-    RestAssured.defaultParser = Parser.JSON
+      doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelList()
+      RestAssured.defaultParser = Parser.JSON
     val kontroller =
         given()
             .port(port)

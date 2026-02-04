@@ -10,6 +10,7 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.resultat.OpprettTestgrunnlag
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import org.springframework.stereotype.Service
@@ -25,9 +26,25 @@ class TestUtils(
 
   var testregelId: Int = 0
 
-  fun createTestregel(): TestregelKrav {
+  fun createTestregelKrav(): TestregelKrav {
     return testregelKravObject()
   }
+
+    fun createTestregel(): Testregel {
+        return Testregel(
+            1,
+            testregelId = "1.1.1",
+            namn = "Testregel Navn",
+            kravId = 1,
+            status = TestregelStatus.publisert,
+            type = TestregelInnholdstype.nett,
+            modus = TestregelModus.automatisk,
+            testregelSchema = "1.1.1",
+            innhaldstypeTesting = 1,
+            tema = 2,
+            testobjekt = 3,
+        )
+    }
 
   fun createTestgrunnlag(
       opprettTestgrunnlag: OpprettTestgrunnlag,

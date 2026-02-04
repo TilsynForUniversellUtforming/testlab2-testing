@@ -141,7 +141,7 @@ class ResultatServiceTest(
 
     /* Add testreglar */
 
-    testregelId = testUtils.createTestregel().id
+    testregelId = testUtils.createTestregelKrav().id
     kontrollDAO.updateKontroll(kontroll, null, listOf(testregelId))
 
     /* Add sideutval */

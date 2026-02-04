@@ -131,7 +131,7 @@ class AggregeringServiceTest(
 
     val testregelInit = testUtils.testregelInitObject()
 
-    val testregelId = testUtils.createTestregel().id
+    val testregelId = testUtils.createTestregelKrav().id
 
     val maalingId =
         maalingDao.createMaaling(
@@ -176,7 +176,7 @@ class AggregeringServiceTest(
     Mockito.doReturn(listOf(testLoeysing))
         .`when`(testgrunnlagService)
         .getLoeysingForTestgrunnlag(anyInt())
-      val testregel = testUtils.createTestregel()
+      val testregel = testUtils.createTestregelKrav()
 
 
       Mockito.`when`(testregelCache.getTestregelByKey(anyString())).thenReturn(testregel)
