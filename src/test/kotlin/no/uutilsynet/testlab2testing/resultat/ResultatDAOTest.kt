@@ -11,6 +11,7 @@ import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Ignore
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
@@ -163,7 +164,7 @@ class ResultatDAOTest(
     assertThat(resultat.size).isEqualTo(4)
   }
 
-  @Ignore
+  @Disabled
   @Test
   fun getResultatPrTema() {
 
