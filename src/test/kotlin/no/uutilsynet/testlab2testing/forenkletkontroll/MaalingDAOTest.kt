@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
+import java.net.URI
+import java.net.URL
+import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.digdirLoeysing
@@ -23,9 +26,6 @@ import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import java.net.URI
-import java.net.URL
-import java.time.Instant
 
 @DisplayName("Tester for MaalingDAO")
 @SpringBootTest
@@ -49,7 +49,9 @@ class MaalingDAOTest(
         .`when`(loeysingsRegisterClient)
         .getMany(loeysingList.map { it.id }, maalingDateStart)
 
-      doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelListFromIds(listOf(testregel.id))
+    doReturn(Result.success(listOf(testregel)))
+        .`when`(testregelClient)
+        .getTestregelListFromIds(listOf(testregel.id))
   }
 
   @AfterAll

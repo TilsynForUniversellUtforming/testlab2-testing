@@ -166,7 +166,7 @@ class ResultatServiceTest(
             TestgrunnlagType.OPPRINNELEG_TEST,
             Instant.now())
     val testgrunnlagList = TestgrunnlagList(testgrunnlagKontroll, emptyList())
-    val testregel = testUtils.testregelKravObject()
+    val testregel = testUtils.createTestregelAggregate()
 
     val resultat1 =
         ResultatManuellKontroll(

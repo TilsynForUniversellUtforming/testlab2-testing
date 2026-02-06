@@ -13,7 +13,7 @@ import no.uutilsynet.testlab2testing.resultat.Resultat
 import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing
 import no.uutilsynet.testlab2testing.resultat.ResultatService
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
-import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageImpl
@@ -187,7 +187,7 @@ class EksternResultatService(
 
   private fun getTestresultatDetaljertEkstern(
       kontrollLoeysing: KontrollIdLoeysingId,
-      testregel: TestregelKrav,
+      testregel: TestregelAggregate,
       sortPaginationParams: SortPaginationParams
   ) =
       getResultatPrTestregel(kontrollLoeysing, testregel, sortPaginationParams)
@@ -195,13 +195,13 @@ class EksternResultatService(
           .map { it.toTestresultatDetaljertEkstern(testregel) }
           .collect(Collectors.toList())
 
-  private fun getTestregelFromTestregelId(testregelId: Int): TestregelKrav {
+  private fun getTestregelFromTestregelId(testregelId: Int): TestregelAggregate {
     return testregelCache.getTestregelById(testregelId)
   }
 
   private fun getResultatPrTestregel(
       kontrollLoeysing: KontrollIdLoeysingId,
-      testregel: TestregelKrav,
+      testregel: TestregelAggregate,
       sortPaginationParams: SortPaginationParams
   ) =
       resultatService.getTestresultatDetaljerPrTestregel(

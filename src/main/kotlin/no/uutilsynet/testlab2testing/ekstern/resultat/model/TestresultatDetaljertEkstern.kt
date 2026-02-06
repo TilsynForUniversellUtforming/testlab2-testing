@@ -4,7 +4,7 @@ import java.net.URL
 import java.time.LocalDateTime
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
-import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
@@ -25,7 +25,7 @@ data class TestresultatDetaljertEkstern(
 ) : RepresentationModel<TestresultatDetaljertEkstern>()
 
 fun TestresultatDetaljert.toTestresultatDetaljertEkstern(
-    testregel: TestregelKrav
+    testregel: TestregelAggregate
 ): TestresultatDetaljertEkstern =
     TestresultatDetaljertEkstern(
         testregelNoekkel = this.testregelNoekkel,

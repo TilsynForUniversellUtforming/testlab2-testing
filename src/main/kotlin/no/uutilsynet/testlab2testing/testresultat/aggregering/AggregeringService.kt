@@ -13,7 +13,7 @@ import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -218,7 +218,7 @@ class AggregeringService(
       loeysingList.firstOrNull { it.id == loeysingId }
           ?: throw NoSuchElementException("Fant ikkje loeysing med id $loeysingId")
 
-  fun getTestregel(testregelId: Int): TestregelKrav {
+  fun getTestregel(testregelId: Int): TestregelAggregate {
     return testregelCache.getTestregelById(testregelId)
   }
 

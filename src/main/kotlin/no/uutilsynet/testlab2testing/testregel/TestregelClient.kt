@@ -5,6 +5,7 @@ import no.uutilsynet.testlab2testing.testregel.krav.KravRegisterProperties
 import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
 import no.uutilsynet.testlab2testing.testregel.model.Tema
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
+
+private const val FANT_INGEN_TESTREGLAR = "Fant ingen testreglar"
 
 @Service
 class TestregelClient(
@@ -66,7 +69,18 @@ class TestregelClient(
           .uri("$testreglarUrl")
           .retrieve()
           .body(object : ParameterizedTypeReference<List<Testregel>>() {})
-          ?: throw NoSuchElementException("Fant ingen testreglar")
+          ?: throw NoSuchElementException(FANT_INGEN_TESTREGLAR)
+    }
+  }
+
+  fun getTestregelAggregateList(): Result<List<TestregelAggregate>> {
+    return runCatching {
+      restClient
+          .get()
+          .uri("$testreglarUrl/aggregates")
+          .retrieve()
+          .body(object : ParameterizedTypeReference<List<TestregelAggregate>>() {})
+          ?: throw NoSuchElementException(FANT_INGEN_TESTREGLAR)
     }
   }
 
@@ -77,7 +91,7 @@ class TestregelClient(
           .uri("$testreglarUrl/listTestregelKrav")
           .retrieve()
           .body(object : ParameterizedTypeReference<List<TestregelKrav>>() {})
-          ?: throw NoSuchElementException("Fant ingen testreglar")
+          ?: throw NoSuchElementException(FANT_INGEN_TESTREGLAR)
     }
   }
 

@@ -8,7 +8,7 @@ import no.uutilsynet.testlab2testing.common.SortParamTestregel
 import no.uutilsynet.testlab2testing.resultat.ResultatService.LoysingList
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 
@@ -23,7 +23,7 @@ sealed class KontrollResultatService(
     return testregelIdsForKrav.contains(testregelId)
   }
 
-  protected fun getTesteregelFromId(testregelId: Int): TestregelKrav {
+  protected fun getTesteregelFromId(testregelId: Int): TestregelAggregate {
     return testregelCache.getTestregelById(testregelId)
   }
 
@@ -64,7 +64,7 @@ sealed class KontrollResultatService(
       sortPaginationParams: SortPaginationParams
   ): List<TestresultatDetaljert>
 
-  protected fun getTestreglarForKrav(kravId: Int): List<TestregelKrav> {
+  protected fun getTestreglarForKrav(kravId: Int): List<TestregelAggregate> {
     return testregelCache.getTestregelByKravId(kravId)
   }
 

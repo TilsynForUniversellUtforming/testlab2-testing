@@ -26,7 +26,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///RegelsettTest-db"])
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///RegelsettTest-db"])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
 class RegelsettIntegrationTest(
@@ -34,19 +36,18 @@ class RegelsettIntegrationTest(
     @Autowired val regelsettDAO: RegelsettDAO,
 ) {
 
-    @MockitoBean
-    lateinit var testregelClient: TestregelClient
+  @MockitoBean lateinit var testregelClient: TestregelClient
 
   val regelsettBaseUri = "/v1/regelsett"
-    @BeforeEach
-    fun setup() {
-        doReturn(Result.success(regelsettTestregelList)).`when`(testregelClient)
-            .getTestregelListFromIds(regelsettTestregelIdList)
 
-        doReturn(Result.success(regelsettTestregelList)).`when`(testregelClient)
-            .getTestregelList()
-    }
+  @BeforeEach
+  fun setup() {
+    doReturn(Result.success(regelsettTestregelList))
+        .`when`(testregelClient)
+        .getTestregelListFromIds(regelsettTestregelIdList)
 
+    doReturn(Result.success(regelsettTestregelList)).`when`(testregelClient).getTestregelList()
+  }
 
   @AfterAll
   fun cleanup() {

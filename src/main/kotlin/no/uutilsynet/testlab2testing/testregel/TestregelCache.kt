@@ -1,20 +1,20 @@
 package no.uutilsynet.testlab2testing.testregel
 
 import no.uutilsynet.testlab2testing.testregel.model.Tema
-import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class TestregelCache(private val testregelClient: TestregelClient) {
-  private val cacheKey: MutableMap<String, TestregelKrav> = mutableMapOf()
-  private val cacheIds: MutableMap<Int, TestregelKrav> = mutableMapOf()
+  private val cacheKey: MutableMap<String, TestregelAggregate> = mutableMapOf()
+  private val cacheIds: MutableMap<Int, TestregelAggregate> = mutableMapOf()
   private val temaList: MutableMap<Int, Tema> = mutableMapOf()
 
   val logger = LoggerFactory.getLogger(this::class.java)
 
   /*@Observed(name = "testregelcache.getBykey")*/
-  fun getTestregelByKey(testregelKey: String): TestregelKrav {
+  fun getTestregelByKey(testregelKey: String): TestregelAggregate {
     if (cacheIds.isEmpty()) {
       init()
     }
@@ -24,7 +24,7 @@ class TestregelCache(private val testregelClient: TestregelClient) {
   }
 
   /*@Observed(name = "testregelcache.getbyid")*/
-  fun getTestregelById(testregelId: Int): TestregelKrav {
+  fun getTestregelById(testregelId: Int): TestregelAggregate {
     if (cacheIds.isEmpty()) {
       init()
     }
@@ -39,7 +39,7 @@ class TestregelCache(private val testregelClient: TestregelClient) {
     return temaList[temaId] ?: throw NoSuchElementException("Tema not found for id: $temaId")
   }
 
-  fun getTestregelByKravId(kravId: Int): List<TestregelKrav> {
+  fun getTestregelByKravId(kravId: Int): List<TestregelAggregate> {
     if (cacheIds.isEmpty()) {
       init()
     }
@@ -47,7 +47,7 @@ class TestregelCache(private val testregelClient: TestregelClient) {
   }
 
   fun init() {
-    testregelClient.getTestregelKravList().getOrThrow().forEach { testregel ->
+    testregelClient.getTestregelAggregateList().getOrThrow().forEach { testregel ->
       cacheKey[testregel.testregelId] = testregel
       cacheIds[testregel.id] = testregel
     }

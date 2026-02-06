@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.common
 
+import java.net.URI
+import java.time.Instant
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
@@ -10,12 +12,12 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.resultat.OpprettTestgrunnlag
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
+import no.uutilsynet.testlab2testing.testregel.model.Tema
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
 import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
 import org.springframework.stereotype.Service
-import java.net.URI
-import java.time.Instant
 
 @Service
 class TestUtils(
@@ -30,21 +32,32 @@ class TestUtils(
     return testregelKravObject()
   }
 
-    fun createTestregel(): Testregel {
-        return Testregel(
-            1,
-            testregelId = "1.1.1",
-            namn = "Testregel Navn",
-            kravId = 1,
-            status = TestregelStatus.publisert,
-            type = TestregelInnholdstype.nett,
-            modus = TestregelModus.automatisk,
-            testregelSchema = "1.1.1",
-            innhaldstypeTesting = 1,
-            tema = 2,
-            testobjekt = 3,
-        )
-    }
+  fun createTestregelAggregate(): TestregelAggregate {
+    return TestregelAggregate(
+        id = 1,
+        testregelId = "1.1.1",
+        namn = "Testregel Navn",
+        modus = TestregelModus.automatisk,
+        tema = Tema(id = 2, tema = "Bilder"),
+        krav = kravWcag2xObject(),
+    )
+  }
+
+  fun createTestregel(): Testregel {
+    return Testregel(
+        1,
+        testregelId = "1.1.1",
+        namn = "Testregel Navn",
+        kravId = 1,
+        status = TestregelStatus.publisert,
+        type = TestregelInnholdstype.nett,
+        modus = TestregelModus.automatisk,
+        testregelSchema = "1.1.1",
+        innhaldstypeTesting = 1,
+        tema = 2,
+        testobjekt = 3,
+    )
+  }
 
   fun createTestgrunnlag(
       opprettTestgrunnlag: OpprettTestgrunnlag,
@@ -78,10 +91,7 @@ class TestUtils(
     return kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
   }
 
-  private fun opprettUtvalg(
-      kontroll: Kontroll,
-      loeysingId: List<Int> = listOf(1)
-  ) {
+  private fun opprettUtvalg(kontroll: Kontroll, loeysingId: List<Int> = listOf(1)) {
 
     val sideUtval =
         loeysingId.map {

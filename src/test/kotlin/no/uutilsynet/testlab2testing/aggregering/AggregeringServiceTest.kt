@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.aggregering
 
+import java.net.URI
+import java.time.Instant
+import kotlin.random.Random
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
@@ -32,9 +35,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
-import java.net.URI
-import java.time.Instant
-import kotlin.random.Random
 
 private val TEST_URL = URI("http://localhost:8080/").toURL()
 
@@ -78,8 +78,7 @@ class AggregeringServiceTest(
 
     val testKoeyring: TestKoeyring.Ferdig = setupTestKoeyring(testLoeysing)
 
-    val testregel = testUtils.testregelKravObject()
-
+    val testregel = testUtils.createTestregelAggregate()
 
     Mockito.`when`(
             autoTesterClient.fetchResultatAggregering(
@@ -165,7 +164,7 @@ class AggregeringServiceTest(
   fun updateEqualsDeleteAndInsert() {
     val testLoeysing = Loeysing(1, "test", TEST_URL, TEST_ORGNR, TEST_ORG)
 
-      Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1)).thenReturn(testLoeysing)
+    Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1)).thenReturn(testLoeysing)
 
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
 
@@ -176,11 +175,10 @@ class AggregeringServiceTest(
     Mockito.doReturn(listOf(testLoeysing))
         .`when`(testgrunnlagService)
         .getLoeysingForTestgrunnlag(anyInt())
-      val testregel = testUtils.createTestregelKrav()
+    val testregel = testUtils.createTestregelAggregate()
 
-
-      Mockito.`when`(testregelCache.getTestregelByKey(anyString())).thenReturn(testregel)
-      Mockito.`when`(testregelCache.getTestregelById(anyInt())).thenReturn(testregel)
+    Mockito.`when`(testregelCache.getTestregelByKey(anyString())).thenReturn(testregel)
+    Mockito.`when`(testregelCache.getTestregelById(anyInt())).thenReturn(testregel)
 
     val kontroll =
         testUtils.createKontroll(

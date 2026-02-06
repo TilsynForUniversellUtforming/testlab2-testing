@@ -67,7 +67,7 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
 
     val testgrunnlagList = mock(TestgrunnlagKontroll::class.java)
 
-    val testregel = testUtils.testregelKravObject()
+    val testregel = testUtils.createTestregelAggregate()
 
     `when`(testgrunnlagDAO.getTestgrunnlagForKontroll(1))
         .thenReturn(TestgrunnlagList(testgrunnlagList, listOf(testgrunnlagList)))

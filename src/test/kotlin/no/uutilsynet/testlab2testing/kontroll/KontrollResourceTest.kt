@@ -7,10 +7,10 @@ import io.restassured.parsing.Parser
 import io.restassured.path.json.JsonPath
 import io.restassured.path.json.JsonPath.from
 import jakarta.validation.ClockProvider
-import no.uutilsynet.testlab2testing.common.TestUtils
 import java.net.URI
 import java.time.Clock
 import java.time.ZoneId
+import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestStatus
@@ -42,10 +42,9 @@ class KontrollResourceTest(
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
   @MockitoBean lateinit var clockProvider: ClockProvider
   @MockitoBean lateinit var testregelClient: TestregelClient
-    val testregel = testUtils.createTestregel()
+  val testregel = testUtils.createTestregel()
 
-
-    @BeforeEach
+  @BeforeEach
   fun beforeEach() {
     doReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault())).`when`(clockProvider).clock
     doReturn(listOf(loeysingList[0]))
@@ -57,8 +56,9 @@ class KontrollResourceTest(
     doReturn(Result.success(listOf(loeysingList[0])))
         .`when`(loeysingsRegisterClient)
         .search(anyString())
-      doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelListFromIds(listOf(testregel.id))
-
+    doReturn(Result.success(listOf(testregel)))
+        .`when`(testregelClient)
+        .getTestregelListFromIds(listOf(testregel.id))
   }
 
   val kontrollInitBody =
@@ -231,7 +231,7 @@ class KontrollResourceTest(
   @Test
   @DisplayName("gitt vi har en kontroll, så skal vi kunne oppdatere testreglar med regelsett")
   fun updateKontrollWithTestreglarRegelsett() {
-      doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelList()
+    doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelList()
 
     RestAssured.defaultParser = Parser.JSON
     val body = kontrollInitBody
@@ -294,11 +294,9 @@ class KontrollResourceTest(
   @Test
   @DisplayName("gitt vi har en kontroll, så skal vi kunne legge inn egenvalgte testregler")
   fun updateKontrollWithTestreglarManualSelection() {
-      doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelList()
+    doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelList()
 
-
-
-      RestAssured.defaultParser = Parser.JSON
+    RestAssured.defaultParser = Parser.JSON
     val body = kontrollInitBody
 
     /* Create default kontroll */
@@ -336,8 +334,8 @@ class KontrollResourceTest(
   @Test
   @DisplayName("vi skal kunne hente ut en liste med alle kontroller")
   fun getKontrollerTest() {
-      doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelList()
-      RestAssured.defaultParser = Parser.JSON
+    doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelList()
+    RestAssured.defaultParser = Parser.JSON
     val kontroller =
         given()
             .port(port)

@@ -14,7 +14,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultat
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.stereotype.Service
 
@@ -82,7 +82,7 @@ class ManueltResultatService(
       it: ResultatManuellKontroll,
       sideutvalIdUrlMap: Map<Int, URL>,
   ): TestresultatDetaljert {
-    val testregel: TestregelKrav = getTesteregelFromId(it.testregelId)
+    val testregel: TestregelAggregate = getTesteregelFromId(it.testregelId)
     return TestresultatDetaljert(
         it.id,
         it.loeysingId,

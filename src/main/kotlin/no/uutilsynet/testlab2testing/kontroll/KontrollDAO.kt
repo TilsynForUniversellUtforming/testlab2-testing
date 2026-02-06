@@ -302,15 +302,12 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   @Transactional
-  fun updateKontroll(
-      kontroll: Kontroll,
-      regelsettId: Int?,
-      testregeList: List<Int>
-  ): Result<Unit> = runCatching {
-    updateKontrollQuery(kontroll, regelsettId)
-    deleteFromKontrollTestreglar(kontroll, regelsettId)
-    updateKontrollTestreglar(testregeList, kontroll)
-  }
+  fun updateKontroll(kontroll: Kontroll, regelsettId: Int?, testregeList: List<Int>): Result<Unit> =
+      runCatching {
+        updateKontrollQuery(kontroll, regelsettId)
+        deleteFromKontrollTestreglar(kontroll, regelsettId)
+        updateKontrollTestreglar(testregeList, kontroll)
+      }
 
   private fun updateKontrollTestreglar(testregelList: List<Int>, kontroll: Kontroll) {
     val updateBatchValuesTestreglar =
