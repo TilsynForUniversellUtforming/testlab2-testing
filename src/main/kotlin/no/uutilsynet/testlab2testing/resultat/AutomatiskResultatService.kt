@@ -104,7 +104,7 @@ class AutomatiskResultatService(
       it: TestResultat,
       maalingId: Int
   ): TestresultatDetaljert {
-    val testregel = this@AutomatiskResultatService.testregelCache.getTestregelByKey(it.testregelId)
+    val testregel = testregelCache.getTestregelByKey(it.testregelId)
     return TestresultatDetaljert(
         null,
         it.loeysingId,
