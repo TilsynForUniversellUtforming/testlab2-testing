@@ -269,7 +269,8 @@ class ResultatService(
     return resultatDAO
         .getResultatKontrollLoeysing(kontrollId, loeysingId)
         .groupBy { it.testregelId }
-        .map { calculateResultatTema(it) }
+        .map {
+            calculateResultatTema(it) }
         .groupBy { it.temaNamn }
         .map {
             sumResulatTema(it)

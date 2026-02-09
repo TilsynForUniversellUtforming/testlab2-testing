@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URI
-import java.time.Instant
-import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.SortOrder
@@ -33,13 +30,18 @@ import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelDB
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito
+import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+import java.net.URI
+import java.time.Instant
+import kotlin.properties.Delegates
 
 @SpringBootTest(
     properties =
@@ -66,6 +68,19 @@ class ResultatServiceTest(
   @MockitoBean lateinit var kravregisterClient: KravregisterClient
   @MockitoBean lateinit var testregelCache: TestregelCache
   @MockitoSpyBean lateinit var kontrollDAO: KontrollDAO
+
+    val testregel = testUtils.createTestregelAggregate(1)
+    val testregel2 = testUtils.createTestregelAggregate(2)
+
+  @BeforeAll
+  fun setup() {
+
+
+      doReturn(testregel).`when`(testregelCache).getTestregelById(testregel.id)
+      doReturn(testregel2).`when`(testregelCache).getTestregelById(testregel2.id)
+
+      testUtils.createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"), listOf(testregel.id,testregel2.id))
+  }
 
   @Test
   fun getTestresultatMaaling() {
@@ -234,15 +249,9 @@ class ResultatServiceTest(
 
     @Test
     fun getResultatPrTema() {
-        val testregel = testUtils.createTestregelAggregate(1)
-        val testregel2 = testUtils.createTestregelAggregate(2)
 
-
-        Mockito.`when`(testregelCache.getTestregelById(testregel.id)).thenReturn(testregel)
-        Mockito.`when`(testregelCache.getTestregelById(testregel2.id)).thenReturn(testregel2)
-        testUtils.createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"), listOf(testregel.id,testregel2.id))
-
-
+        doReturn(testregel).`when`(testregelCache).getTestregelById(testregel.id)
+        doReturn(testregel2).`when`(testregelCache).getTestregelById(testregel2.id)
 
         val expected =
             ResultatTema(
@@ -264,17 +273,9 @@ class ResultatServiceTest(
 
     @Test
     fun getResultatPrKrav() {
-        val testregel = testUtils.createTestregelAggregate(1)
-        val testregel2 = testUtils.createTestregelAggregate(2)
 
-
-        Mockito.`when`(testregelCache.getTestregelById(testregel.id)).thenReturn(testregel)
-        Mockito.`when`(testregelCache.getTestregelById(testregel2.id)).thenReturn(testregel2)
-        testUtils.createTestMaalingar(
-            listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"),
-            listOf(testregel.id, testregel2.id)
-        )
-
+        doReturn(testregel).`when`(testregelCache).getTestregelById(testregel.id)
+        doReturn(testregel2).`when`(testregelCache).getTestregelById(testregel2.id)
 
         val expected =
             ResultatKrav(
