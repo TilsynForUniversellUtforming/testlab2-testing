@@ -5,9 +5,6 @@ import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
-import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelDB
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -27,11 +24,10 @@ import org.springframework.test.context.ActiveProfiles
 class ResultatDAOTest(
     @Autowired val resultatDAO: ResultatDAO,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
-    @Autowired val aggregeringDAO: AggregeringDAO,
-    @Autowired val testUtils: TestUtils
+    @Autowired val testUtils: TestUtils,
 ) {
 
-  private val testresultatIds = mutableMapOf<Int, Kontrolltype>()
+    private val testresultatIds = mutableMapOf<Int, Kontrolltype>()
   private val resultatPrKontroll = mutableMapOf<Int, Int>()
 
   private var testregelId: Int = 0
@@ -42,7 +38,9 @@ class ResultatDAOTest(
   @BeforeAll
   fun setup() {
     testregelId = testUtils.createTestregelKrav().id
-    maalingIds = createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"))
+    maalingIds = testUtils.createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"))
+
+
 
     val testgrunnlagList =
         listOf(
@@ -162,109 +160,19 @@ class ResultatDAOTest(
     assertThat(resultat.size).isEqualTo(4)
   }
 
-  @Test
-  fun getResultatPrTema() {
 
-    val expected =
-        ResultatTema(
-            "Bilder",
-            0.5,
-            36,
-            12,
-            24,
-            4,
-            4,
-        )
-
-    val resultat = resultatDAO.getResultatPrTema(null, null, null, null, null)
-
-    assertThat(resultat.size).isEqualTo(1)
-
-    assertThat(resultat[0]).isEqualTo(expected)
-  }
-
-  @Test
-  fun getResultatPrKrav() {
-    val expected = ResultatKravBase(1, 0.5, 12, 24, 4, 4)
-
-    val resultat = resultatDAO.getResultatPrKrav(null, null, null, null, null)
-
-    assertThat(resultat.size).isEqualTo(1)
-
-    assertThat(resultat[0]).isEqualTo(expected)
-  }
-
-  private fun createAggregertTestresultat(
-      maalingId: Int?,
-      testregelId: Int,
-      testgrunnlagId: Int?,
-      loeysungIds: List<Int> = listOf(1),
-  ): List<Int> {
-
-    return loeysungIds.map {
-      val aggregeringTestregel =
-          AggregeringPerTestregelDB(
-              maalingId,
-              it,
-              testregelId,
-              1,
-              listOf(1, 2),
-              6,
-              3,
-              1,
-              1,
-              1,
-              1,
-              0,
-              0.5,
-              0.5,
-              testgrunnlagId)
-      aggregeringDAO.createAggregertResultatTestregel(aggregeringTestregel)
-    }
-  }
-
-  fun createTestMaaling(
-      testregelIds: List<Int>,
-      kontroll: KontrollDAO.KontrollDB,
-      maalingNamn: String
-  ): Int {
-    val loeysingList = kontroll.sideutval.map { it.loeysingId }
-    val maalingId =
-        testUtils.createTestMaaling(
-            testregelIds, kontroll.sideutval.map { it.loeysingId }, maalingNamn, kontroll.id)
-
-    val resultatId = createAggregertTestresultat(maalingId, testregelIds[0], null, loeysingList)
-
-    resultatId.forEach({
-      testresultatIds[it] = Kontrolltype.ForenklaKontroll
-      resultatPrKontroll[kontroll.id] = resultatPrKontroll[kontroll.id]?.plus(1) ?: 1
-    })
-
-    return maalingId
-  }
-
-  fun createTestMaalingar(maalingNamn: List<String>): List<Int> {
-    return maalingNamn.map {
-      val kontroll =
-          testUtils.createKontroll(
-              "Forenkla kontroll 20204", Kontrolltype.ForenklaKontroll, listOf(1), testregelId)
-
-      createTestMaaling(listOf(testregelId), kontroll, it)
-    }
-  }
-
-  private fun createTestgrunnlagList(
+    private fun createTestgrunnlagList(
       testgrunnlagList: List<OpprettTestgrunnlag>,
       loeysingList: List<Int>
   ): List<Int> {
     val kontroll =
         testUtils.createKontroll(
-            "Inngåande kontroll", Kontrolltype.InngaaendeKontroll, loeysingList, testregelId)
+            "Inngåande kontroll", Kontrolltype.InngaaendeKontroll, loeysingList, listOf(testregelId))
 
     return testgrunnlagList
         .map { testUtils.createTestgrunnlag(it, kontroll) }
         .map {
-          val resultatId = createAggregertTestresultat(null, testregelId, it, loeysingList)
+          val resultatId = testUtils.createAggregertTestresultat(null, testregelId, it, loeysingList)
           resultatId.forEach({
             testresultatIds[it] = Kontrolltype.ForenklaKontroll
             resultatPrKontroll[kontroll.id] = resultatPrKontroll[kontroll.id]?.plus(1) ?: 1

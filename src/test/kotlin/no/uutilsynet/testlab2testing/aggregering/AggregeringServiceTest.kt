@@ -182,7 +182,7 @@ class AggregeringServiceTest(
 
     val kontroll =
         testUtils.createKontroll(
-            "Kontroll", Kontrolltype.InngaaendeKontroll, listOf(1), testregel.id)
+            "Kontroll", Kontrolltype.InngaaendeKontroll, listOf(1), listOf(testregel.id))
     val testgrunnlagbase = OpprettTestgrunnlag("Testgrunnlag", TestgrunnlagType.OPPRINNELEG_TEST)
     val testgrunnlagId = testUtils.createTestgrunnlag(testgrunnlagbase, kontroll)
 

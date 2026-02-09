@@ -182,7 +182,7 @@ class EksternResultatService(
           kontrollLoeysing.kontrollId, null, kontrollLoeysing.loeysingId, null, null)
 
   private fun getResultatKravList(kontrollLoeysing: KontrollIdLoeysingId) =
-      resultatService.getTestresultatDetaljertPrKrav(
+      resultatService.getResultatPrKrav(
           kontrollLoeysing.kontrollId, null, kontrollLoeysing.loeysingId, null, null)
 
   private fun getTestresultatDetaljertEkstern(
@@ -274,7 +274,7 @@ class EksternResultatService(
       sortPaginationParams: SortPaginationParams
   ): List<TestresultatDetaljertEkstern> {
     return resultatService
-        .getTestresultatDetaljertPrKrav(
+        .getResultatPrKrav(
             getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId,
             loeysingId,
             kravId,

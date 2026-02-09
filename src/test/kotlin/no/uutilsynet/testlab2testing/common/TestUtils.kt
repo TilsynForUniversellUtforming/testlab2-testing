@@ -1,7 +1,5 @@
 package no.uutilsynet.testlab2testing.common
 
-import java.net.URI
-import java.time.Instant
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
@@ -12,18 +10,19 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.resultat.OpprettTestgrunnlag
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
-import no.uutilsynet.testlab2testing.testregel.model.Tema
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
-import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
-import no.uutilsynet.testlab2testing.testregel.model.TestregelInit
-import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+import no.uutilsynet.testlab2testing.testregel.model.*
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelDB
 import org.springframework.stereotype.Service
+import java.net.URI
+import java.time.Instant
 
 @Service
 class TestUtils(
     val kontrollDAO: KontrollDAO,
     val testgrunnlagDAO: TestgrunnlagDAO,
     val maalingDAO: MaalingDAO,
+    val aggregeringDAO: AggregeringDAO,
 ) {
 
   var testregelId: Int = 0
@@ -32,9 +31,9 @@ class TestUtils(
     return testregelKravObject()
   }
 
-  fun createTestregelAggregate(): TestregelAggregate {
+  fun createTestregelAggregate(testregelId:Int=1): TestregelAggregate {
     return TestregelAggregate(
-        id = 1,
+        id = testregelId,
         testregelId = "1.1.1",
         namn = "Testregel Navn",
         modus = TestregelModus.automatisk,
@@ -80,13 +79,13 @@ class TestUtils(
       kontrollNamn: String,
       kontrolltype: Kontrolltype,
       loeysingId: List<Int>,
-      testregelId: Int
+      testregelIds: List<Int>
   ): KontrollDAO.KontrollDB {
 
     val (kontrollId, kontroll) = opprettKontroll(kontrollNamn, kontrolltype)
 
     opprettUtvalg(kontroll, loeysingId)
-    kontrollDAO.updateKontroll(kontroll, null, listOf(testregelId))
+    kontrollDAO.updateKontroll(kontroll, null, testregelIds)
 
     return kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
   }
@@ -179,4 +178,61 @@ class TestUtils(
         kravTilSamsvar = "svar",
     )
   }
+
+    fun createTestMaalingar(maalingNamn: List<String>, idTestregels: List<Int> = listOf(testregelId)): List<Int> {
+        return maalingNamn.map {
+            val kontroll =
+                createKontroll(
+                    "Forenkla kontroll 20204", Kontrolltype.ForenklaKontroll, listOf(1), idTestregels)
+
+            createTestMaaling(idTestregels, kontroll, it)
+        }
+    }
+
+    fun createTestMaaling(
+        testregelIds: List<Int>,
+        kontroll: KontrollDAO.KontrollDB,
+        maalingNamn: String
+    ): Int {
+        val loeysingList = kontroll.sideutval.map { it.loeysingId }
+        val maalingId =
+            createTestMaaling(
+                testregelIds, kontroll.sideutval.map { it.loeysingId }, maalingNamn, kontroll.id)
+
+       testregelIds.forEach {createAggregertTestresultat(maalingId, it, null, loeysingList)}
+
+
+
+        return maalingId
+    }
+
+    fun createAggregertTestresultat(
+        maalingId: Int?,
+        testregelId: Int,
+        testgrunnlagId: Int?,
+        loeysungIds: List<Int> = listOf(1),
+    ): List<Int> {
+
+        return loeysungIds.map {
+            val aggregeringTestregel =
+                AggregeringPerTestregelDB(
+                    maalingId,
+                    it,
+                    testregelId,
+                    1,
+                    listOf(1, 2),
+                    6,
+                    3,
+                    1,
+                    1,
+                    1,
+                    1,
+                    0,
+                    0.5,
+                    0.5,
+                    testgrunnlagId)
+
+            aggregeringDAO.createAggregertResultatTestregel(aggregeringTestregel)
+        }
+    }
 }

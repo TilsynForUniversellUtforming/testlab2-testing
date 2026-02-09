@@ -31,6 +31,7 @@ import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelDB
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -230,4 +231,67 @@ class ResultatServiceTest(
 
     assertTrue(resultat.size == 1)
   }
+
+    @Test
+    fun getResultatPrTema() {
+        val testregel = testUtils.createTestregelAggregate(1)
+        val testregel2 = testUtils.createTestregelAggregate(2)
+
+
+        Mockito.`when`(testregelCache.getTestregelById(testregel.id)).thenReturn(testregel)
+        Mockito.`when`(testregelCache.getTestregelById(testregel2.id)).thenReturn(testregel2)
+        testUtils.createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"), listOf(testregel.id,testregel2.id))
+
+
+
+        val expected =
+            ResultatTema(
+                "Bilder",
+                0.5,
+                18,
+                6,
+                12,
+                0,
+                0,
+            )
+
+        val resultat = resultatService.getResultatPrTema(1, null, 1, null, null)
+
+        assertThat(resultat.size).isEqualTo(1)
+
+        assertThat(resultat[0]).isEqualTo(expected)
+    }
+
+    @Test
+    fun getResultatPrKrav() {
+        val testregel = testUtils.createTestregelAggregate(1)
+        val testregel2 = testUtils.createTestregelAggregate(2)
+
+
+        Mockito.`when`(testregelCache.getTestregelById(testregel.id)).thenReturn(testregel)
+        Mockito.`when`(testregelCache.getTestregelById(testregel2.id)).thenReturn(testregel2)
+        testUtils.createTestMaalingar(
+            listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"),
+            listOf(testregel.id, testregel2.id)
+        )
+
+
+        val expected =
+            ResultatKrav(
+                kravId = 1,
+                suksesskriterium = "1.1.1",
+                score = 0.5,
+                talTestaElement = 18,
+                talElementBrot = 6,
+                talElementSamsvar = 12,
+                talElementVarsel = 0,
+                talElementIkkjeForekomst = 0
+            )
+
+        val resultat = resultatService.getResultatPrKrav(1, null, 1, null, null)
+
+        assertThat(resultat.size).isEqualTo(1)
+
+        assertThat(resultat[0]).isEqualTo(expected)
+    }
 }

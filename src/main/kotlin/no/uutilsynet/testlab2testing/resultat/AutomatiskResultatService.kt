@@ -33,7 +33,6 @@ class AutomatiskResultatService(
     return if (testresultatDAO.hasResultInDB(maalingId, loeysingId)) {
       getDetaljertResultatForKontroll(kontrollId, loeysingId, testregelId, sortPaginationParams)
     } else {
-      println("SortPaginationParams=$sortPaginationParams")
       getResultatForMaaling(maalingId, loeysingId)
           .filter { filterByTestregel(it.testregelId, listOf(testregelId)) }
           .sort(sortPaginationParams)
@@ -70,7 +69,6 @@ class AutomatiskResultatService(
       testregelId: Int,
       sortPaginationParams: SortPaginationParams
   ): List<TestresultatDetaljert> {
-    println("SortPaginationParams=$sortPaginationParams")
 
     val resultat =
         testresultatDAO.listBy(

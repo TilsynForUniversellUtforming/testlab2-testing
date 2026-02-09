@@ -24,9 +24,7 @@ class AggregeringDAOTest(
     val testgrunnlag = OpprettTestgrunnlag("Testgrunnlag", TestgrunnlagType.OPPRINNELEG_TEST)
     val kontroll =
         testUtils.createKontroll(
-            "Kontroll", Kontrolltype.InngaaendeKontroll, listOf(1), testregelId)
-
-    println("Kontroll oppretta med id: ${kontroll}")
+            "Kontroll", Kontrolltype.InngaaendeKontroll, listOf(1), listOf(testregelId))
 
     return testUtils.createTestgrunnlag(testgrunnlag, kontroll)
   }
