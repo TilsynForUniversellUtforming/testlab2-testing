@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URI
-import java.time.Instant
-import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.SortOrder
@@ -42,6 +39,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+import java.net.URI
+import java.time.Instant
+import kotlin.properties.Delegates
 
 @SpringBootTest(
     properties =
