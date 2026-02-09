@@ -147,9 +147,9 @@ class MaalingService(
 
     return when (val maaling = maalingDAO.getMaaling(this.id)) {
       is Maaling.Planlegging -> {
-        val loeysingList = getLoeysingarForMaaling(maaling)
+        val loeysingList = getLoeysingarForMaaling(this.loeysingIdList, maaling.id)
 
-        val testregelList = getTestreglarForMaaling(maaling, this.testregelIdList)
+        val testregelList = getTestreglarForMaaling( this.testregelIdList,maaling.id)
 
         maaling.copy(
             navn = navn,
@@ -164,41 +164,30 @@ class MaalingService(
     }
   }
 
-  private fun EditMaalingDTO.getLoeysingarForMaaling(maaling: Maaling.Planlegging): List<Loeysing> {
-    val loeysingList =
-        this.loeysingIdList?.let { idList -> loeysingsRegisterClient.getMany(idList) }?.getOrThrow()
-            ?: emptyList<Loeysing>().also {
-              logger.warn("Måling ${maaling.id} har ikkje løysingar")
-            }
-    return loeysingList
-  }
-
   private fun getTestreglarForMaaling(
-      maaling: Maaling.Planlegging,
-      testregelIdList: List<Int>?
+      testregelIdList: List<Int>?,
+      maalingId: Int
   ): List<Testregel> {
     val testregelList =
         testregelIdList?.let { idList ->
           testreglClient.getTestregelList().getOrThrow().filter { idList.contains(it.id) }
         }
             ?: emptyList<Testregel>().also {
-              logger.warn("Måling ${maaling.id} har ikkje testreglar")
+              logger.warn("Måling $maalingId har ikkje testreglar")
             }
     return testregelList
   }
 
   private fun getLoeysingarForMaaling(
-      idList: List<Int>,
+      idList: List<Int>?,
       maalingId: Int,
   ): List<Loeysing> {
-    return loeysingsRegisterClient
-        .getMany(idList)
-        .fold(
-            onSuccess = { it },
-            onFailure = {
-              logger.error("Feil ved henting av løysingar for måling $maalingId")
-              throw it
-            })
+      val loeysingList =
+          idList?.let { idList -> loeysingsRegisterClient.getMany(idList) }?.getOrThrow()
+              ?: emptyList<Loeysing>().also {
+                  logger.warn("Måling $maalingId har ikkje løysingar")
+              }
+      return loeysingList
   }
 
   fun reimportAggregeringar(maalingId: Int, loeysingId: Int?) {
