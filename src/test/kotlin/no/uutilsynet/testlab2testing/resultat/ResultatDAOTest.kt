@@ -27,7 +27,7 @@ class ResultatDAOTest(
     @Autowired val testUtils: TestUtils,
 ) {
 
-    private val testresultatIds = mutableMapOf<Int, Kontrolltype>()
+  private val testresultatIds = mutableMapOf<Int, Kontrolltype>()
   private val resultatPrKontroll = mutableMapOf<Int, Int>()
 
   private var testregelId: Int = 0
@@ -38,9 +38,8 @@ class ResultatDAOTest(
   @BeforeAll
   fun setup() {
     testregelId = testUtils.createTestregelKrav().id
-    maalingIds = testUtils.createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"))
-
-
+    maalingIds =
+        testUtils.createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"))
 
     val testgrunnlagList =
         listOf(
@@ -160,19 +159,22 @@ class ResultatDAOTest(
     assertThat(resultat.size).isEqualTo(4)
   }
 
-
-    private fun createTestgrunnlagList(
+  private fun createTestgrunnlagList(
       testgrunnlagList: List<OpprettTestgrunnlag>,
       loeysingList: List<Int>
   ): List<Int> {
     val kontroll =
         testUtils.createKontroll(
-            "Inngåande kontroll", Kontrolltype.InngaaendeKontroll, loeysingList, listOf(testregelId))
+            "Inngåande kontroll",
+            Kontrolltype.InngaaendeKontroll,
+            loeysingList,
+            listOf(testregelId))
 
     return testgrunnlagList
         .map { testUtils.createTestgrunnlag(it, kontroll) }
         .map {
-          val resultatId = testUtils.createAggregertTestresultat(null, testregelId, it, loeysingList)
+          val resultatId =
+              testUtils.createAggregertTestresultat(null, testregelId, it, loeysingList)
           resultatId.forEach({
             testresultatIds[it] = Kontrolltype.ForenklaKontroll
             resultatPrKontroll[kontroll.id] = resultatPrKontroll[kontroll.id]?.plus(1) ?: 1

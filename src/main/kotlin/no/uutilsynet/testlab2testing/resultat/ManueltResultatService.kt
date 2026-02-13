@@ -50,6 +50,14 @@ class ManueltResultatService(
     return getFilteredAndMappedResults(kontrollId, loeysingId) { true }
   }
 
+  override fun getResultatForKontroll(kontrollId: Int): List<TestresultatDetaljert> {
+    val testresultat = getTestresultatForKontroll(kontrollId)
+    val sideutvalIdUrlMap = getSideutvalMap(testresultat)
+    return testresultat.map {
+      resultatManuellKontrollTotestresultatDetaljert(it, sideutvalIdUrlMap)
+    }
+  }
+
   fun getFilteredAndMappedResults(
       kontrollId: Int,
       loeysingId: Int,
@@ -66,8 +74,12 @@ class ManueltResultatService(
       kontrollId: Int,
       loeysingId: Int,
   ): List<ResultatManuellKontroll> {
+    return getTestresultatForKontroll(kontrollId).filter { it.loeysingId == loeysingId }
+  }
+
+  fun getTestresultatForKontroll(kontrollId: Int): List<ResultatManuellKontroll> {
     val testgrunnlag = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest
-    return getResultatPrTestgrunnlag(testgrunnlag.id).filter { it.loeysingId == loeysingId }
+    return getResultatPrTestgrunnlag(testgrunnlag.id)
   }
 
   fun getResultatPrTestgrunnlag(testgrunnlagId: Int) =

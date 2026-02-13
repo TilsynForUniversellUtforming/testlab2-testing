@@ -259,10 +259,7 @@ class MaalingDAO(
   }
 
   fun getLoeysingarForMaaling(id: Int, datoStart: Instant): List<Loeysing> {
-    val query =
-        """select idloeysing from "testlab2_testing"."maalingloeysing" where idmaaling = :id"""
-    val loeysingIdList: List<Int> =
-        jdbcTemplate.queryForList(query, mapOf("id" to id), Int::class.java)
+    val loeysingIdList: List<Int> = getLoeysingIdsForMaaling(id)
     val loeysingList =
         loeysingsRegisterClient
             .getMany(loeysingIdList, datoStart)
@@ -273,6 +270,14 @@ class MaalingDAO(
                   throw it
                 })
     return loeysingList
+  }
+
+  fun getLoeysingIdsForMaaling(id: Int): List<Int> {
+    val query =
+        """select idloeysing from "testlab2_testing"."maalingloeysing" where idmaaling = :id"""
+    val loeysingIdList: List<Int> =
+        jdbcTemplate.queryForList(query, mapOf("id" to id), Int::class.java)
+    return loeysingIdList
   }
 
   fun getLoeysingarForMaaling(id: Int): List<Loeysing> {

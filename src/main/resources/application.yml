@@ -18,6 +18,8 @@ loeysingsregister:
     host: http://localhost:8000
 rapportVerktoey:
     host: http://localhost:8084
+resultat:
+    host: http://localhost:8085
 server:
     error:
         include-stacktrace: never
