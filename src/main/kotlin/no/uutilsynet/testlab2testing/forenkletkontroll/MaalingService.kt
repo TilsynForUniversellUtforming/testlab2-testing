@@ -147,13 +147,11 @@ class MaalingService(
 
     return when (val maaling = maalingDAO.getMaaling(this.id)) {
       is Maaling.Planlegging -> {
-          val loeysingList =
-              getLoeysingarForMaaling(maaling)
+        val loeysingList = getLoeysingarForMaaling(maaling.loeysingList.map { it.id }, maaling.id)
 
-          val testregelList =
-              getTestreglarForMaaling(maaling,this.testregelIdList)
+        val testregelList = getTestreglarForMaaling(maaling.testregelList.map { it.id }, maaling.id)
 
-          maaling.copy(
+        maaling.copy(
             navn = navn,
             loeysingList = loeysingList,
             testregelList = testregelList.map { it.toTestregelBase() },
@@ -174,9 +172,7 @@ class MaalingService(
         testregelIdList?.let { idList ->
           testreglClient.getTestregelList().getOrThrow().filter { idList.contains(it.id) }
         }
-            ?: emptyList<Testregel>().also {
-              logger.warn("Måling $maalingId har ikkje testreglar")
-            }
+            ?: emptyList<Testregel>().also { logger.warn("Måling $maalingId har ikkje testreglar") }
     return testregelList
   }
 
@@ -184,12 +180,10 @@ class MaalingService(
       idList: List<Int>?,
       maalingId: Int,
   ): List<Loeysing> {
-      val loeysingList =
-          idList?.let { idList -> loeysingsRegisterClient.getMany(idList) }?.getOrThrow()
-              ?: emptyList<Loeysing>().also {
-                  logger.warn("Måling $maalingId har ikkje løysingar")
-              }
-      return loeysingList
+    val loeysingList =
+        idList?.let { idList -> loeysingsRegisterClient.getMany(idList) }?.getOrThrow()
+            ?: emptyList<Loeysing>().also { logger.warn("Måling $maalingId har ikkje løysingar") }
+    return loeysingList
   }
 
   fun reimportAggregeringar(maalingId: Int, loeysingId: Int?) {
@@ -303,7 +297,6 @@ class MaalingService(
       testreglClient.getTestregelListFromIds(testregelIds).getOrThrow()
     }
   }
-
 
   @Observed(name = "MaalingService.getMaalingForKontroll")
   fun getMaalingForKontroll(kontrollId: Int): Int {
