@@ -10,7 +10,6 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.insertMaalingLoeysingQuery
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.insertMaalingTestregelQuery
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.maalingRowmapper
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.maalingTestregelQuery
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByDateSql
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByIdSql
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.selectMaalingByStatus
@@ -252,12 +251,11 @@ class MaalingDAO(
       crawlResultatForMaaling(id, getLoeysingarForMaaling(id, datoStart))
 
   private fun MaalingDTO.getTestregelList(): List<TestregelBase> {
-    val testregelIds =
-        jdbcTemplate
-            .queryForList(maalingTestregelQuery, mapOf("id" to id), Int::class.java)
-            .toList()
+    val testregelIds = getTestrelIdForMaaling(id)
 
-    return testregelClient.getTestregelListFromIds(testregelIds).map { it.toTestregelBase() }
+    return testregelClient.getTestregelListFromIds(testregelIds).getOrThrow().map {
+      it.toTestregelBase()
+    }
   }
 
   fun getLoeysingarForMaaling(id: Int, datoStart: Instant): List<Loeysing> {

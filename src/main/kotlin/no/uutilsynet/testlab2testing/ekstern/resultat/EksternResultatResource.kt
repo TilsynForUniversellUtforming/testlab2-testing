@@ -34,13 +34,14 @@ class EksternResultatResource(
   fun findTestForOrgNr(
       @RequestParam("orgnr") orgnr: String?,
       @RequestParam("searchparam") searchparam: String?,
-  ): ResponseEntity<Any?> {
+  ): ResponseEntity<Any> {
     logger.debug("Henter tester for orgnr $orgnr")
 
     return try {
       val result = findTests(searchparam, orgnr)
       ResponseEntity.ok(result)
     } catch (e: NoSuchElementException) {
+      logger.warn(e.message)
       ResponseEntity.notFound().build()
     } catch (e: IllegalArgumentException) {
       logger.warn(e.message)
@@ -218,7 +219,7 @@ class EksternResultatResource(
     val testresults = eksternResultatService.eksporterRapportForLoeysing(rapportId, loeysingId)
     val rapportInfo = eksternResultatService.getTestEksternForRapportLoeysing(rapportId, loeysingId)
 
-      logger.debug("Rapport $rapportInfo")
+    logger.debug("Rapport $rapportInfo")
 
     val outputStream = excelWriter.writeResultsToSpreadsheet(testresults, rapportInfo)
 
@@ -237,15 +238,14 @@ class EksternResultatResource(
     return headers
   }
 
-    @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/alle")
-    fun  getAllRestults( @PathVariable rapportId: String,
-                         @PathVariable loeysingId: Int): ResponseEntity<List<ResultatOversiktLoeysingEkstern>?> {
+  @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/alle")
+  fun getAllRestults(
+      @PathVariable rapportId: String,
+      @PathVariable loeysingId: Int
+  ): ResponseEntity<List<ResultatOversiktLoeysingEkstern>> {
 
-        val results = eksternResultatService.getRapportForLoeysing(rapportId, loeysingId)
-
-        println("Rapport ${results.size}")
-
-
-        return ResponseEntity.ok(results)
-    }
+    val results: List<ResultatOversiktLoeysingEkstern> =
+        eksternResultatService.getRapportForLoeysing(rapportId, loeysingId)
+    return ResponseEntity.ok(results)
+  }
 }

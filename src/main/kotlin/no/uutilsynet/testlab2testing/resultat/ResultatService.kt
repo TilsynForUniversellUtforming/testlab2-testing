@@ -8,7 +8,7 @@ import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.testregel.TestregelClient
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
@@ -22,7 +22,7 @@ class ResultatService(
     private val eksternResultatDAO: EksternResultatDAO,
     private val automatiskResultatService: AutomatiskResultatService,
     private val kravregisterClient: KravregisterClient,
-    private val testregelClient: TestregelClient,
+    private val testregelCache: TestregelCache,
     private val kontrollResultatServiceFactory: KontrollResultatServiceFactory
 ) {
 
@@ -215,7 +215,7 @@ class ResultatService(
   }
 
   private fun mapTestregel(result: ResultatLoeysingDTO): ResultatLoeysing {
-    val testregel = testregelClient.getTestregelById(result.testregelId)
+    val testregel = testregelCache.getTestregelById(result.testregelId)
 
     return ResultatLoeysing(
         id = result.id,
@@ -246,7 +246,7 @@ class ResultatService(
         .getResultatForKontroll(kontrollId, loeysingId, testregelId, sortPaginationParams)
   }
 
-  fun getTestresultatDetaljertPrKrav(
+  fun getResultatPrKrav(
       kontrollId: Int,
       loeysingId: Int,
       kravId: Int,
@@ -262,29 +262,105 @@ class ResultatService(
       loeysingId: Int?,
       startDato: LocalDate?,
       sluttDato: LocalDate?,
-  ): List<ResultatTema> =
-      resultatDAO
-          .getResultatPrTema(kontrollId, kontrolltype, loeysingId, startDato, sluttDato)
-          .map {
-            handleIkkjeForekomstGeneric(it, it.talElementBrot, it.talElementSamsvar) {
-              it.copy(score = null)
-            }
-          }
+  ): List<ResultatTema> {
+    require(kontrollId != null) { "kontrollId kan ikkje vere null" }
+    require(loeysingId != null) { "loeysingId kan ikkje vere null" }
 
-  fun getTestresultatDetaljertPrKrav(
+    return resultatDAO
+        .getResultatKontrollLoeysing(kontrollId, loeysingId)
+        .groupBy { it.testregelId }
+        .map {
+            calculateResultatTema(it) }
+        .groupBy { it.temaNamn }
+        .map {
+            sumResulatTema(it)
+        }
+  }
+
+    private fun sumResulatTema(entry: Map.Entry<String, List<ResultatTema>>): ResultatTema {
+        val items = entry.value
+        return ResultatTema(
+            temaNamn = entry.key,
+            score = items.mapNotNull { it.score }.average(),
+            talTestaElement = items.sumOf { it.talTestaElement },
+            talElementBrot = items.sumOf { it.talElementBrot },
+            talElementSamsvar = items.sumOf { it.talElementSamsvar },
+            talVarsel = 0,
+            talElementIkkjeForekomst = 0
+        )
+    }
+
+    private fun sumResulatKrav(entry: Map.Entry<Int, List<ResultatKrav>>): ResultatKrav {
+        val items = entry.value
+        return ResultatKrav(
+            kravId = entry.key,
+            suksesskriterium = items.first().suksesskriterium,
+            score = items.mapNotNull { it.score }.average(),
+            talTestaElement = items.sumOf { it.talTestaElement },
+            talElementBrot = items.sumOf { it.talElementBrot },
+            talElementSamsvar = items.sumOf { it.talElementSamsvar },
+            talElementVarsel = 0,
+            talElementIkkjeForekomst = 0
+        )
+    }
+
+  private fun calculateResultatTema(
+      entry: Map.Entry<Int, List<ResultatLoeysingDTO>>
+  ): ResultatTema {
+    val testregel = testregelCache.getTestregelById(entry.key)
+      val (score, talElementBrot, talElementSamsvar) = calculateScoreAndElements(entry.value)
+    return ResultatTema(
+        temaNamn = testregel.tema?.tema ?: "Utan tema",
+        score = score,
+        talTestaElement = talElementBrot + talElementSamsvar,
+        talElementBrot = talElementBrot,
+        talElementSamsvar = talElementSamsvar,
+        talVarsel = 0,
+        talElementIkkjeForekomst = 0)
+  }
+
+
+  private fun calculateResultatKrav(
+      entry: Map.Entry<Int, List<ResultatLoeysingDTO>>
+  ): ResultatKrav {
+    val testregel = testregelCache.getTestregelById(entry.key)
+      val (score, talElementBrot, talElementSamsvar) = calculateScoreAndElements(entry.value)
+    return ResultatKrav(
+        kravId = testregel.krav.id,
+        suksesskriterium = testregel.krav.suksesskriterium,
+        score = score,
+        talTestaElement = talElementBrot + talElementSamsvar,
+        talElementBrot = talElementBrot,
+        talElementSamsvar = talElementSamsvar,
+        talElementVarsel = 0,
+        talElementIkkjeForekomst = 0)
+  }
+
+
+    private fun calculateScoreAndElements(result: List<ResultatLoeysingDTO>): Triple<Double, Int, Int> {
+        val score = result.filter { filterIkkjeForekomst(it) }.map { it.score }.average()
+        val talElementBrot = result.sumOf { it.talElementBrot }
+        val talElementSamsvar = result.sumOf { it.talElementSamsvar }
+        return Triple(score, talElementBrot, talElementSamsvar)
+    }
+
+  fun getResultatPrKrav(
       kontrollId: Int?,
       kontrollType: Kontrolltype?,
       loeysingId: Int?,
       fraDato: LocalDate?,
       tilDato: LocalDate?,
   ): List<ResultatKrav> {
+    require(kontrollId != null) { "kontrollId kan ikkje vere null" }
+    require(loeysingId != null) { "loeysingId kan ikkje vere null" }
+
     return resultatDAO
-        .getResultatPrKrav(kontrollId, kontrollType, loeysingId, fraDato, tilDato)
-        .map { it.toResultatKrav() }
+        .getResultatKontrollLoeysing(kontrollId, loeysingId)
+        .groupBy { it.testregelId }
+        .map { calculateResultatKrav(it) }
+        .groupBy { it.kravId }
         .map {
-          handleIkkjeForekomstGeneric(it, it.talElementBrot, it.talElementSamsvar) {
-            it.copy(score = null)
-          }
+            sumResulatKrav(it)
         }
   }
 
@@ -306,20 +382,6 @@ class ResultatService(
       return loeysing.verksemd.organisasjonsnummer
     }
   }
-
-  private fun ResultatKravBase.toResultatKrav(): ResultatKrav {
-    return ResultatKrav(
-        kravId = kravId,
-        suksesskriterium = getKravTittel(),
-        score = score,
-        talTestaElement = talElementBrot + talElementSamsvar,
-        talElementBrot = talElementBrot,
-        talElementSamsvar = talElementSamsvar,
-        talElementVarsel = talElementVarsel,
-        talElementIkkjeForekomst = talElementIkkjeForekomst)
-  }
-
-  private fun ResultatKravBase.getKravTittel() = kravregisterClient.getWcagKrav(kravId).tittel
 
   private fun List<ResultatLoeysingDTO>.toResultatOversiktLoeysing():
       List<ResultatOversiktLoeysing> {

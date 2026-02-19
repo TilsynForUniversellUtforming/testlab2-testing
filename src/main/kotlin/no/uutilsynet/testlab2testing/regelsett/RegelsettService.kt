@@ -1,13 +1,13 @@
 package no.uutilsynet.testlab2testing.regelsett
 
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.toTestregelBase
 import org.springframework.stereotype.Service
 
 @Service
 class RegelsettService(
     private val regelsettDAO: RegelsettDAO,
-    private val testregelService: TestregelService
+    private val testregelClient: TestregelClient
 ) {
 
   fun getRegelsett(regelsettId: Int): Regelsett {
@@ -24,7 +24,7 @@ class RegelsettService(
 
   fun RegelsettBase.toRegelsett(): Regelsett {
     val testregelIds = regelsettDAO.getTestregelIdListForRegelsett(this.id)
-    val testregelList = testregelService.getTestregelListFromIds(testregelIds)
+    val testregelList = testregelClient.getTestregelListFromIds(testregelIds).getOrThrow()
 
     return Regelsett(
         this.id, this.namn, this.modus, this.standard, testregelList.map { it.toTestregelBase() })

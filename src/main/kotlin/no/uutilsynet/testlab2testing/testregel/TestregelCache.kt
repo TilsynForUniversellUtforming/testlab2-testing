@@ -1,18 +1,20 @@
 package no.uutilsynet.testlab2testing.testregel
 
-import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+import no.uutilsynet.testlab2testing.testregel.model.Tema
+import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class TestregelCache(private val testregelService: TestregelService) {
-  private val cacheKey: MutableMap<String, TestregelKrav> = mutableMapOf()
-  private val cacheIds: MutableMap<Int, TestregelKrav> = mutableMapOf()
+class TestregelCache(private val testregelClient: TestregelClient) {
+  private val cacheKey: MutableMap<String, TestregelAggregate> = mutableMapOf()
+  private val cacheIds: MutableMap<Int, TestregelAggregate> = mutableMapOf()
+  private val temaList: MutableMap<Int, Tema> = mutableMapOf()
 
   val logger = LoggerFactory.getLogger(this::class.java)
 
   /*@Observed(name = "testregelcache.getBykey")*/
-  fun getTestregelByKey(testregelKey: String): TestregelKrav {
+  fun getTestregelByKey(testregelKey: String): TestregelAggregate {
     if (cacheIds.isEmpty()) {
       init()
     }
@@ -22,7 +24,7 @@ class TestregelCache(private val testregelService: TestregelService) {
   }
 
   /*@Observed(name = "testregelcache.getbyid")*/
-  fun getTestregelById(testregelId: Int): TestregelKrav {
+  fun getTestregelById(testregelId: Int): TestregelAggregate {
     if (cacheIds.isEmpty()) {
       init()
     }
@@ -30,10 +32,26 @@ class TestregelCache(private val testregelService: TestregelService) {
         ?: throw NoSuchElementException("Testregel not found for id: $testregelId")
   }
 
+  fun getTemaById(temaId: Int?): Tema {
+    if (temaList.isEmpty()) {
+      init()
+    }
+    return temaList[temaId] ?: throw NoSuchElementException("Tema not found for id: $temaId")
+  }
+
+  fun getTestregelByKravId(kravId: Int): List<TestregelAggregate> {
+    if (cacheIds.isEmpty()) {
+      init()
+    }
+    return cacheIds.values.filter { it.krav.id == kravId }
+  }
+
   fun init() {
-    testregelService.getTestregelKravList().forEach { testregel ->
+    testregelClient.getTestregelAggregateList().getOrThrow().forEach { testregel ->
       cacheKey[testregel.testregelId] = testregel
       cacheIds[testregel.id] = testregel
     }
+
+    testregelClient.getTemaForTestregel().getOrThrow().forEach { tema -> temaList[tema.id] = tema }
   }
 }

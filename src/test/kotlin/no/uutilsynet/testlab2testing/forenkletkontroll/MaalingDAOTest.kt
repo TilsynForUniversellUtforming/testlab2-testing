@@ -4,6 +4,7 @@ import java.net.URI
 import java.net.URL
 import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.digdirLoeysing
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
@@ -17,13 +18,14 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 
 @DisplayName("Tester for MaalingDAO")
 @SpringBootTest
@@ -31,17 +33,25 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 class MaalingDAOTest(
     @Autowired val maalingDAO: MaalingDAO,
     @Autowired val sideutvalDAO: SideutvalDAO,
+    @Autowired val testUtils: TestUtils
 ) {
 
-  @MockitoSpyBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+  @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+  @MockitoBean lateinit var testregelClient: TestregelClient
+
+  val testregel = testUtils.createTestregel()
 
   val deleteTheseIds: MutableSet<Int> = mutableSetOf()
 
-  @BeforeAll
+  @BeforeEach
   fun setup() {
     doReturn(loeysingList)
         .`when`(loeysingsRegisterClient)
         .getMany(loeysingList.map { it.id }, maalingDateStart)
+
+    doReturn(Result.success(listOf(testregel)))
+        .`when`(testregelClient)
+        .getTestregelListFromIds(listOf(testregel.id))
   }
 
   @AfterAll

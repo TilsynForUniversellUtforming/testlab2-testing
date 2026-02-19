@@ -6,7 +6,6 @@ import no.uutilsynet.testlab2.constants.TestregelInnholdstype
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestregelStatus
 import no.uutilsynet.testlab2testing.brukar.Brukar
-import no.uutilsynet.testlab2testing.common.TestlabLocale
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.Verksemd
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
@@ -49,18 +48,14 @@ object TestConstants {
       Testregel(
           1,
           "QW-ACT-12",
-          1,
           TestConstants.name,
           TestConstants.testregelTestKravId,
           TestregelStatus.publisert,
-          Instant.now(),
           TestregelInnholdstype.nett,
           TestregelModus.automatisk,
-          TestlabLocale.nb,
           1,
           1,
           "QW-ACT-12",
-          TestConstants.testregelSchemaAutomatisk,
           1)
 
   val testRegelList = listOf(testregel)
@@ -120,5 +115,5 @@ object TestConstants {
 }
 
 fun Loeysing.Expanded.toLoeysing(): Loeysing {
-  return Loeysing(id, namn, url, verksemd!!.organisasjonsnummer, verksemd!!.namn)
+  return Loeysing(id, namn, url, verksemd!!.organisasjonsnummer, verksemd.namn)
 }

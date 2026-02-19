@@ -8,6 +8,7 @@ import no.uutilsynet.testlab2.constants.Sakstype
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
+import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
@@ -17,7 +18,6 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
@@ -36,10 +36,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 @ActiveProfiles("test")
 class TestResultatResourceTest(
     @Autowired val kontrollDAO: KontrollDAO,
-    @Autowired val testregelService: TestregelService,
     @Autowired val utvalDAO: UtvalDAO,
     @Autowired val restTemplate: TestRestTemplate,
-    @Autowired val testgrunnlagDAO: TestgrunnlagDAO
+    @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
+    @Autowired private val testUtils: TestUtils
 ) {
   private var kontrollId: Int by Delegates.notNull()
   private var utvalId: Int by Delegates.notNull()
@@ -87,8 +87,8 @@ class TestResultatResourceTest(
     kontrollDAO.updateKontroll(kontroll, utvalId)
 
     /* Add testreglar */
-    val testregel = testregelService.getTestregelList().first()
-    kontrollDAO.updateKontroll(kontroll, null, listOf(testregel.id))
+    val testregel = testUtils.createTestregelKrav().id
+    kontrollDAO.updateKontroll(kontroll, null, listOf(testregel))
 
     /* Add sideutval */
     kontrollDAO.updateKontroll(

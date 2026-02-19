@@ -5,11 +5,16 @@ import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettModus
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettName
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestCreateRequestBody
+import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestregelIdList
+import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestregelList
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -19,8 +24,11 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///RegelsettTest-db"])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
 class RegelsettIntegrationTest(
@@ -28,7 +36,18 @@ class RegelsettIntegrationTest(
     @Autowired val regelsettDAO: RegelsettDAO,
 ) {
 
+  @MockitoBean lateinit var testregelClient: TestregelClient
+
   val regelsettBaseUri = "/v1/regelsett"
+
+  @BeforeEach
+  fun setup() {
+    doReturn(Result.success(regelsettTestregelList))
+        .`when`(testregelClient)
+        .getTestregelListFromIds(regelsettTestregelIdList)
+
+    doReturn(Result.success(regelsettTestregelList)).`when`(testregelClient).getTestregelList()
+  }
 
   @AfterAll
   fun cleanup() {
@@ -246,7 +265,7 @@ class RegelsettIntegrationTest(
       namn: String = regelsettName,
       type: TestregelModus = regelsettModus,
       standard: Boolean = RegelsettTestConstants.regelsettStandard,
-      testregelIdList: List<Int> = RegelsettTestConstants.regelsettTestregelIdList,
+      testregelIdList: List<Int> = regelsettTestregelIdList,
   ): URI =
       restTemplate.postForLocation(
           regelsettBaseUri,

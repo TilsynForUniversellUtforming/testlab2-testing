@@ -1,11 +1,13 @@
-package no.uutilsynet.testlab2testing.forenkletkontroll
+package no.uutilsynet.testlab2testing.aggregering
 
 import java.net.URI
 import java.time.Instant
 import kotlin.random.Random
-import no.uutilsynet.testlab2.constants.*
+import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestUtils
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
@@ -17,7 +19,7 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
-import no.uutilsynet.testlab2testing.testregel.TestregelService
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatTestregel
@@ -25,6 +27,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Offset
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -57,9 +60,7 @@ class AggregeringServiceTest(
 
   @MockitoSpyBean lateinit var maalingDao: MaalingDAO
 
-  @Autowired lateinit var testregelService: TestregelService
-
-  val testreglerSomSkalSlettes: MutableList<Int> = mutableListOf()
+  @MockitoBean lateinit var testregelCache: TestregelCache
 
   companion object {
     @Container
@@ -77,7 +78,7 @@ class AggregeringServiceTest(
 
     val testKoeyring: TestKoeyring.Ferdig = setupTestKoeyring(testLoeysing)
 
-    testUtils.testregelKravObject()
+    val testregel = testUtils.createTestregelAggregate()
 
     Mockito.`when`(
             autoTesterClient.fetchResultatAggregering(
@@ -90,6 +91,8 @@ class AggregeringServiceTest(
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
     Mockito.`when`(kravregisterClient.listKrav()).thenReturn(listOf(testUtils.kravWcag2xObject()))
     Mockito.doReturn(listOf(testLoeysing)).`when`(maalingDao).getLoeysingarForMaaling(maalingId)
+    Mockito.`when`(testregelCache.getTestregelByKey(anyString())).thenReturn(testregel)
+    Mockito.`when`(testregelCache.getTestregelById(anyInt())).thenReturn(testregel)
 
     aggregeringService.saveAggregertResultatTestregelAutomatisk(testKoeyring)
 
@@ -127,8 +130,7 @@ class AggregeringServiceTest(
 
     val testregelInit = testUtils.testregelInitObject()
 
-    val testregelId =
-        testregelService.createTestregel(testregelInit).also { testreglerSomSkalSlettes.add(it) }
+    val testregelId = testUtils.createTestregelKrav().id
 
     val maalingId =
         maalingDao.createMaaling(
@@ -173,11 +175,14 @@ class AggregeringServiceTest(
     Mockito.doReturn(listOf(testLoeysing))
         .`when`(testgrunnlagService)
         .getLoeysingForTestgrunnlag(anyInt())
+    val testregel = testUtils.createTestregelAggregate()
 
-    val testregelId = testUtils.createTestregel()
+    Mockito.`when`(testregelCache.getTestregelByKey(anyString())).thenReturn(testregel)
+    Mockito.`when`(testregelCache.getTestregelById(anyInt())).thenReturn(testregel)
+
     val kontroll =
         testUtils.createKontroll(
-            "Kontroll", Kontrolltype.InngaaendeKontroll, listOf(1), testregelId)
+            "Kontroll", Kontrolltype.InngaaendeKontroll, listOf(1), listOf(testregel.id))
     val testgrunnlagbase = OpprettTestgrunnlag("Testgrunnlag", TestgrunnlagType.OPPRINNELEG_TEST)
     val testgrunnlagId = testUtils.createTestgrunnlag(testgrunnlagbase, kontroll)
 

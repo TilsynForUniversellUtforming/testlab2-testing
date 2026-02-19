@@ -6,21 +6,30 @@ import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettN
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettStandard
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestregelIdList
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestregelList
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.*
+import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 
-@SpringBootTest
+@SpringBootTest(
+    properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///RegelsettDAOTest-db"])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RegelsettDAOTest(
     @Autowired val regelsettDAO: RegelsettDAO,
     @Autowired val regelsettService: RegelsettService
 ) {
+
+  @MockitoBean lateinit var testregelClient: TestregelClient
+
+  @BeforeEach
+  fun setup() {
+    doReturn(Result.success(regelsettTestregelList))
+        .`when`(testregelClient)
+        .getTestregelListFromIds(regelsettTestregelList.map { it.id })
+  }
 
   @AfterAll
   fun cleanup() {
@@ -78,6 +87,10 @@ class RegelsettDAOTest(
   @DisplayName("Skal kunne hente liste med aktive regelsett")
   fun getRegelsettListWithTestreglar() {
     val (id1, id2) = Pair(createTestRegelsett(), createTestRegelsett())
+    doReturn(Result.success(listOf(regelsettTestregelList[0])))
+        .`when`(testregelClient)
+        .getTestregelListFromIds(listOf(regelsettTestregelList[0].id))
+    doReturn(Result.success(regelsettTestregelList)).`when`(testregelClient).getTestregelList()
     val regelsettList = regelsettService.getRegelsettTestreglarList(false)
 
     assertThat(regelsettList).isNotEmpty
@@ -86,6 +99,7 @@ class RegelsettDAOTest(
 
     val regelsettTestregelIdMap =
         regelsettList.associate { tr -> tr.id to tr.testregelList.map { it.id } }
+
     assertThat(regelsettTestregelIdMap[id1]).containsExactlyInAnyOrderElementsOf(testregelIdList)
     assertThat(regelsettTestregelIdMap[id2]).containsExactlyInAnyOrderElementsOf(testregelIdList)
 
@@ -167,6 +181,9 @@ class RegelsettDAOTest(
   @DisplayName("Skal kunne oppdatere testreglar i regelsett")
   fun updateRegelsettTestregel() {
     val testregelListBefore = listOf(regelsettTestregelList[0])
+    doReturn(Result.success(testregelListBefore))
+        .`when`(testregelClient)
+        .getTestregelListFromIds(testregelListBefore.map { it.id })
     val id = createTestRegelsett(testregelIdList = testregelListBefore.map { it.id })
     val regelsettBefore = regelsettService.getRegelsett(id)
 

@@ -11,9 +11,9 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
-import no.uutilsynet.testlab2testing.testregel.TestregelClient
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -29,7 +29,7 @@ class AggregeringService(
     val sideutvalDAO: SideutvalDAO,
     val maalingDAO: MaalingDAO,
     private val testgrunnlagService: TestgrunnlagService,
-    private val testregelClient: TestregelClient
+    private val testregelCache: TestregelCache
 ) {
 
   private val logger = LoggerFactory.getLogger(AggregeringService::class.java)
@@ -103,7 +103,7 @@ class AggregeringService(
       aggregertResultatTestregel: AggregertResultatTestregel
   ): AggregeringPerTestregelDB {
 
-    val testregel = testregelClient.getTestregelByKey(aggregertResultatTestregel.testregelId)
+    val testregel = testregelCache.getTestregelByKey(aggregertResultatTestregel.testregelId)
 
     return AggregeringPerTestregelDB(
         aggregertResultatTestregel.maalingId,
@@ -218,8 +218,8 @@ class AggregeringService(
       loeysingList.firstOrNull { it.id == loeysingId }
           ?: throw NoSuchElementException("Fant ikkje loeysing med id $loeysingId")
 
-  fun getTestregel(testregelId: Int): TestregelKrav {
-    return testregelClient.getTestregelById(testregelId)
+  fun getTestregel(testregelId: Int): TestregelAggregate {
+    return testregelCache.getTestregelById(testregelId)
   }
 
   fun getAggregertResultatTestregel(

@@ -146,7 +146,8 @@ class KontrollResource(
       testreglar: KontrollDAO.KontrollDB.Testreglar?
   ): Testreglar? {
     if (testreglar != null) {
-      val testregelList = testregelClient.getTestregelListFromIds(testreglar.testregelIdList)
+      val testregelList =
+          testregelClient.getTestregelListFromIds(testreglar.testregelIdList).getOrThrow()
       return Testreglar(testreglar.regelsettId, testregelList)
     }
     return null
@@ -270,7 +271,7 @@ class KontrollResource(
   fun testingMetadata(@PathVariable kontrollId: Int): KontrollTestingMetadata {
     val kontroll = getKontrollAsResult(kontrollId).getOrThrow()
     val sideutvaltypar = kontrollDAO.getSideutvalType()
-    val innholdtypeTestingList = testregelClient.getInnhaldstypeForTesting()
+    val innholdtypeTestingList = testregelClient.getInnhaldstypeForTesting().getOrThrow()
 
     val innholdstypeTesting = innhaldstypeTestingForKontroll(kontroll, innholdtypeTestingList)
 

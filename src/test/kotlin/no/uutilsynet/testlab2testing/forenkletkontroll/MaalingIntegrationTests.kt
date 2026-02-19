@@ -7,6 +7,7 @@ import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingRequestBody
@@ -19,6 +20,7 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
+import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import org.assertj.core.api.Assertions
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
@@ -45,13 +47,16 @@ class MaalingIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val maalingDAO: MaalingDAO,
     @Autowired val utvalDAO: UtvalDAO,
+    @Autowired val testUtils: TestUtils
 ) {
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+  @MockitoBean lateinit var testregelClient: TestregelClient
   @MockitoBean lateinit var clockProvider: ClockProvider
 
   val utvalTestName = "testutval"
   val loeysingsIdList = loeysingList.map { it.id }
   val singleLoeysing = listOf(loeysingList[0])
+  val testregel = testUtils.createTestregel()
 
   @BeforeEach
   fun beforeEach() {
@@ -64,6 +69,10 @@ class MaalingIntegrationTests(
         .getMany(singleLoeysing.map { it.id }, maalingDateStart)
     doReturn(singleLoeysing).`when`(loeysingsRegisterClient).getMany(singleLoeysing.map { it.id })
     doReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault())).`when`(clockProvider).clock
+    doReturn(Result.success(listOf(testregel)))
+        .`when`(testregelClient)
+        .getTestregelListFromIds(listOf(testregel.id))
+    doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelList()
   }
 
   @AfterAll
@@ -164,6 +173,10 @@ class MaalingIntegrationTests(
           .getMany(loeysingList.map { it.id }, maalingDateStart)
       Mockito.`when`(clockProvider.clock)
           .thenReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault()))
+      doReturn(Result.success(listOf(testregel)))
+          .`when`(testregelClient)
+          .getTestregelListFromIds(listOf(testregel.id))
+      doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelList()
       return restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
     }
 

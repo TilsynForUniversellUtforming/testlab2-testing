@@ -1,32 +1,30 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import kotlin.math.min
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.common.SortOrder
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.common.SortParamTestregel
 import no.uutilsynet.testlab2testing.resultat.ResultatService.LoysingList
-import no.uutilsynet.testlab2testing.testregel.TestregelClient
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
-import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
-import kotlin.math.min
-
 
 sealed class KontrollResultatService(
     protected val resultatDAO: ResultatDAO,
     protected val kravregisterClient: KravregisterClient,
     protected val testresultatDAO: TestresultatDAO,
-    protected val testregelClient: TestregelClient,
+    protected val testregelCache: TestregelCache,
 ) {
 
   protected fun filterByTestregel(testregelId: Int, testregelIdsForKrav: List<Int>): Boolean {
     return testregelIdsForKrav.contains(testregelId)
   }
 
-  protected fun getTesteregelFromId(testregelId: Int): TestregelKrav {
-    return testregelClient.getTestregelById(testregelId)
+  protected fun getTesteregelFromId(testregelId: Int): TestregelAggregate {
+    return testregelCache.getTestregelById(testregelId)
   }
 
   private fun List<TestresultatDetaljert>.filterBrot(): List<TestresultatDetaljert> {
@@ -66,8 +64,8 @@ sealed class KontrollResultatService(
       sortPaginationParams: SortPaginationParams
   ): List<TestresultatDetaljert>
 
-  protected fun getTestreglarForKrav(kravId: Int): List<Testregel> {
-    return testregelClient.getTestregelByKravId(kravId)
+  protected fun getTestreglarForKrav(kravId: Int): List<TestregelAggregate> {
+    return testregelCache.getTestregelByKravId(kravId)
   }
 
   abstract fun getTalBrotForKontrollLoeysingTestregel(
@@ -90,24 +88,24 @@ sealed class KontrollResultatService(
     return this.subList(startIndex, endIndex)
   }
 
-    protected fun List<TestresultatDetaljert>.sort(
-        sortPaginationParams: SortPaginationParams
-    ): List<TestresultatDetaljert> {
+  protected fun List<TestresultatDetaljert>.sort(
+      sortPaginationParams: SortPaginationParams
+  ): List<TestresultatDetaljert> {
 
-        val sorted = when (sortPaginationParams.sortParam) {
-            SortParamTestregel.side -> this.sortedBy { it.side.toString() }
-            SortParamTestregel.testregel -> this.sortedBy { it.testregelNoekkel }
-            SortParamTestregel.elementUtfall -> this.sortedBy { it.elementResultat?.name }
-            SortParamTestregel.elementPointer -> this.sortedBy { it.elementOmtale?.pointer }
+    val sorted =
+        when (sortPaginationParams.sortParam) {
+          SortParamTestregel.side -> this.sortedBy { it.side.toString() }
+          SortParamTestregel.testregel -> this.sortedBy { it.testregelNoekkel }
+          SortParamTestregel.elementUtfall -> this.sortedBy { it.elementResultat?.name }
+          SortParamTestregel.elementPointer -> this.sortedBy { it.elementOmtale?.pointer }
         }
 
-
-        return if (sortPaginationParams.sortOrder == SortOrder.desc) {
-            sorted.reversed()
-        } else {
-            sorted
-        }
+    return if (sortPaginationParams.sortOrder == SortOrder.desc) {
+      sorted.reversed()
+    } else {
+      sorted
     }
+  }
 
   protected fun resultSubListEnd(
       sortPaginationParams: SortPaginationParams,

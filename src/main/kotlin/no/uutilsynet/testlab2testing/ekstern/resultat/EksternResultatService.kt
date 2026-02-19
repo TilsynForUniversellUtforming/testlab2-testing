@@ -12,8 +12,8 @@ import no.uutilsynet.testlab2testing.resultat.LoeysingResultat
 import no.uutilsynet.testlab2testing.resultat.Resultat
 import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing
 import no.uutilsynet.testlab2testing.resultat.ResultatService
-import no.uutilsynet.testlab2testing.testregel.TestregelService
-import no.uutilsynet.testlab2testing.testregel.model.TestregelKrav
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
+import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageImpl
@@ -27,7 +27,7 @@ class EksternResultatService(
     private val eksternResultatDAO: EksternResultatDAO,
     private val loeysingsRegisterClient: LoeysingsRegisterClient,
     private val resultatService: ResultatService,
-    private val testregelService: TestregelService,
+    private val testregelCache: TestregelCache,
     private val logMessages: LogMessages,
     private val testresultatEksternAssembler: TestresultatEksternAssembler,
     private val pagedResourcesAssembler: PagedResourcesAssembler<TestresultatDetaljertEkstern>
@@ -182,12 +182,12 @@ class EksternResultatService(
           kontrollLoeysing.kontrollId, null, kontrollLoeysing.loeysingId, null, null)
 
   private fun getResultatKravList(kontrollLoeysing: KontrollIdLoeysingId) =
-      resultatService.getTestresultatDetaljertPrKrav(
+      resultatService.getResultatPrKrav(
           kontrollLoeysing.kontrollId, null, kontrollLoeysing.loeysingId, null, null)
 
   private fun getTestresultatDetaljertEkstern(
       kontrollLoeysing: KontrollIdLoeysingId,
-      testregel: TestregelKrav,
+      testregel: TestregelAggregate,
       sortPaginationParams: SortPaginationParams
   ) =
       getResultatPrTestregel(kontrollLoeysing, testregel, sortPaginationParams)
@@ -195,13 +195,13 @@ class EksternResultatService(
           .map { it.toTestresultatDetaljertEkstern(testregel) }
           .collect(Collectors.toList())
 
-  private fun getTestregelFromTestregelId(testregelId: Int): TestregelKrav {
-    return testregelService.getTestregelKrav(testregelId)
+  private fun getTestregelFromTestregelId(testregelId: Int): TestregelAggregate {
+    return testregelCache.getTestregelById(testregelId)
   }
 
   private fun getResultatPrTestregel(
       kontrollLoeysing: KontrollIdLoeysingId,
-      testregel: TestregelKrav,
+      testregel: TestregelAggregate,
       sortPaginationParams: SortPaginationParams
   ) =
       resultatService.getTestresultatDetaljerPrTestregel(
@@ -263,9 +263,7 @@ class EksternResultatService(
 
   fun eksporterRapportForLoeysing(rapportId: String, loeysingId: Int): List<TestresultatDetaljert> {
     return getKontrollLoeysing(rapportId, loeysingId)
-        .mapCatching {
-            resultatService.getBrotForRapportLoeysing(it.kontrollId, loeysingId)
-        }
+        .mapCatching { resultatService.getBrotForRapportLoeysing(it.kontrollId, loeysingId) }
         .getOrThrow()
   }
 
@@ -276,7 +274,7 @@ class EksternResultatService(
       sortPaginationParams: SortPaginationParams
   ): List<TestresultatDetaljertEkstern> {
     return resultatService
-        .getTestresultatDetaljertPrKrav(
+        .getResultatPrKrav(
             getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId,
             loeysingId,
             kravId,
