@@ -115,7 +115,6 @@ class ResultatResource(
       @RequestParam fraDato: LocalDate?,
       @RequestParam tilDato: LocalDate?
   ): List<ResultatKrav> {
-    return resultatService.getResultatPrKrav(
-        kontrollId, kontrollType, loeysingId, fraDato, tilDato)
+    return resultatService.getResultatPrKrav(kontrollId, kontrollType, loeysingId, fraDato, tilDato)
   }
 }

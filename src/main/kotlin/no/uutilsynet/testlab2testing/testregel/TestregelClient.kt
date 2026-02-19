@@ -36,7 +36,7 @@ class TestregelClient(
 
   fun getTestregelByKey(testregelKey: String): Result<Testregel> {
     return runCatching {
-      restClient
+        restClient
           .get()
           .uri("$testreglarUrl/testregelKey/$testregelKey")
           .retrieve()

@@ -275,4 +275,17 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     return resultat.isNotEmpty()
   }
+
+    fun getTestrunUuidForTestgrunnlag(testgrunnlagId: Int): Result<String> {
+        return runCatching {
+            DataAccessUtils.singleResult(
+                jdbcTemplate.query(
+                    "select uuid from testgrunnlag where id = :testgrunnlagId",
+                    mapOf("testgrunnlagId" to testgrunnlagId),
+                ) { rs, _ ->
+                    rs.getString("uuid")
+                })
+                ?: throw NoSuchElementException("Fant ikkje testrunUuid for testgrunnlagId: $testgrunnlagId")
+        }
+    }
 }
