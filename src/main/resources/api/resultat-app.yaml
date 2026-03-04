@@ -1,0 +1,2051 @@
+openapi: 3.1.0
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+  - url: http://localhost:8085
+    description: Generated server url
+paths:
+  /aggregert-per-suksesskriterium:
+    get:
+      tags:
+        - testresultat-aggregert-per-suksesskriterium-entity-controller
+      description: get-testresultataggregertpersuksesskriterium
+      operationId: getTestresultatAggregertPerSuksesskriteriumList
+      parameters:
+        - name: page
+          in: query
+          description: Zero-based page index (0..N)
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: The size of the page to be returned
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+        - name: sort
+          in: query
+          description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/PagedModelEntityModelTestresultatAggregertPerSuksesskriterium"
+            application/x-spring-data-compact+json:
+              schema:
+                $ref: "#/components/schemas/PagedModelEntityModelTestresultatAggregertPerSuksesskriterium"
+            text/uri-list:
+              schema:
+                type: string
+    post:
+      tags:
+        - testresultat-aggregert-per-suksesskriterium-entity-controller
+      description: create-testresultataggregertpersuksesskriterium
+      operationId: createTstresultatAggregertPerSuksesskriterium
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestresultatAggregertPerSuksesskriteriumRequestBody"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestresultatAggregertPerSuksesskriterium"
+  /aggregert-per-suksesskriterium/search/findByTestrunUuid:
+    get:
+      tags:
+        - testresultat-aggregert-per-suksesskriterium-search-controller
+      operationId: finByTestrunUuid
+      parameters:
+        - name: testrunUuid
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestresultatAggregertPerSuksesskriterium"
+        "404":
+          description: Not Found
+  /aggregert-per-suksesskriterium/search/findByTestrunUuidAndKravId:
+    get:
+      tags:
+        - testresultat-aggregert-per-suksesskriterium-search-controller
+      operationId: findByTestrunUuidAndKravId
+      parameters:
+        - name: testrunUuid
+          in: query
+          schema:
+            type: string
+        - name: kravId
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestresultatAggregertPerSuksesskriterium"
+        "404":
+          description: Not Found
+  /aggregert-per-suksesskriterium/search/findByTestrunUuidAndLoeysingId:
+    get:
+      tags:
+        - testresultat-aggregert-per-suksesskriterium-search-controller
+      operationId: findByTestrunUuidAndLoeysingId
+      parameters:
+        - name: testrunUuid
+          in: query
+          schema:
+            type: string
+        - name: loeysingId
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestresultatAggregertPerSuksesskriterium"
+        "404":
+          description: Not Found
+  /aggregert-per-suksesskriterium/search/findByTestrunUuidAndLoeysingIdAndKravId:
+    get:
+      tags:
+        - testresultat-aggregert-per-suksesskriterium-search-controller
+      operationId: findByTestrunUuidAndLoeysingIdAndKravId
+      parameters:
+        - name: testrunUuid
+          in: query
+          schema:
+            type: string
+        - name: loeysingId
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: kravId
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestresultatAggregertPerSuksesskriterium"
+        "404":
+          description: Not Found
+  /aggregert-per-suksesskriterium/{id}:
+    get:
+      tags:
+        - testresultat-aggregert-per-suksesskriterium-entity-controller
+      description: get-testresultataggregertpersuksesskriterium
+      operationId: getTestresultatAggregertPerSuksesskriterium
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestresultatAggregertPerSuksesskriterium"
+        "404":
+          description: Not Found
+    put:
+      tags:
+        - testresultat-aggregert-per-suksesskriterium-entity-controller
+      description: update-testresultataggregertpersuksesskriterium
+      operationId: updateTestresultatAggregertPerSuksesskriterium
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestresultatAggregertPerSuksesskriteriumRequestBody"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestresultatAggregertPerSuksesskriterium"
+        "201":
+          description: Created
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestresultatAggregertPerSuksesskriterium"
+        "204":
+          description: No Content
+    delete:
+      tags:
+        - testresultat-aggregert-per-suksesskriterium-entity-controller
+      description: delete-testresultataggregertpersuksesskriterium
+      operationId: deleteTestresultatAggregertPerSuksesskriterium
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+  /aggregert-per-testregel:
+    get:
+      tags:
+        - testresultat-aggregert-per-testregel-entity-controller
+      description: get-testresultataggregertpertestregel
+      operationId: getTestresultatAggregertPerTestregelList
+      parameters:
+        - name: page
+          in: query
+          description: Zero-based page index (0..N)
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: The size of the page to be returned
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+        - name: sort
+          in: query
+          description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/PagedModelEntityModelTestresultatAggregertPerTestregel"
+            application/x-spring-data-compact+json:
+              schema:
+                $ref: "#/components/schemas/PagedModelEntityModelTestresultatAggregertPerTestregel"
+            text/uri-list:
+              schema:
+                type: string
+    post:
+      tags:
+        - testresultat-aggregert-per-testregel-entity-controller
+      description: create-testresultataggregertpertestregel
+      operationId: createTestresultatAggregertPerTestregel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestresultatAggregertPerTestregelRequestBody"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestresultatAggregertPerTestregel"
+  /aggregert-per-testregel/search/findByTestrunUuid:
+    get:
+      tags:
+        - testresultat-aggregert-per-testregel-search-controller
+      operationId: findByTestrunUuid
+      parameters:
+        - name: testrunUuid
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestresultatAggregertPerTestregel"
+        "404":
+          description: Not Found
+  /aggregert-per-testregel/search/findByTestrunUuidAndLoeysingId:
+    get:
+      tags:
+        - testresultat-aggregert-per-testregel-search-controller
+      operationId: findByTestrunUuidAndLoeysingId
+      parameters:
+        - name: testrunUuid
+          in: query
+          schema:
+            type: string
+        - name: loeysingId
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestresultatAggregertPerTestregel"
+        "404":
+          description: Not Found
+  /aggregert-per-testregel/search/findByTestrunUuidAndLoeysingIdAndTestregelId:
+    get:
+      tags:
+        - testresultat-aggregert-per-testregel-search-controller
+      operationId: findTestresultatByTestrunUuidAndLoeysingIdAndTestregelId
+      parameters:
+        - name: testrunUuid
+          in: query
+          schema:
+            type: string
+        - name: loeysingId
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: testregelId
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestresultatAggregertPerTestregel"
+        "404":
+          description: Not Found
+  /aggregert-per-testregel/search/findByTestrunUuidAndTestregelId:
+    get:
+      tags:
+        - testresultat-aggregert-per-testregel-search-controller
+      operationId: findByTestrunUuidAndTestregelId
+      parameters:
+        - name: testrunUuid
+          in: query
+          schema:
+            type: string
+        - name: testregelId
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestresultatAggregertPerTestregel"
+        "404":
+          description: Not Found
+  /aggregert-per-testregel/{id}:
+    get:
+      tags:
+        - testresultat-aggregert-per-testregel-entity-controller
+      description: get-testresultataggregertpertestregel
+      operationId: getTestresultatAggregertPerTestregel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestresultatAggregertPerTestregel"
+        "404":
+          description: Not Found
+    put:
+      tags:
+        - testresultat-aggregert-per-testregel-entity-controller
+      description: update-testresultataggregertpertestregel
+      operationId: updateTestresultatAggregertPerTestregel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestresultatAggregertPerTestregelRequestBody"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestresultatAggregertPerTestregel"
+        "201":
+          description: Created
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestresultatAggregertPerTestregel"
+        "204":
+          description: No Content
+    delete:
+      tags:
+        - testresultat-aggregert-per-testregel-entity-controller
+      description: delete-testresultataggregertpertestregel
+      operationId: deleteTestresultatAggregertPerTestregel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+  /profile:
+    get:
+      tags:
+        - profile-controller
+      operationId: listAllFormsOfMetadata
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/RepresentationModelObject"
+  /profile/aggregert-per-suksesskriterium:
+    get:
+      tags:
+        - profile-controller
+      operationId: descriptor
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+            application/alps+json:
+              schema:
+                type: string
+            application/schema+json:
+              schema:
+                $ref: "#/components/schemas/JsonSchema"
+  /profile/aggregert-per-testregel:
+    get:
+      tags:
+        - profile-controller
+      operationId: descriptor_1
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+            application/alps+json:
+              schema:
+                type: string
+            application/schema+json:
+              schema:
+                $ref: "#/components/schemas/JsonSchema"
+  /profile/testgrunnlag:
+    get:
+      tags:
+        - profile-controller
+      operationId: descriptor_2
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+            application/alps+json:
+              schema:
+                type: string
+            application/schema+json:
+              schema:
+                $ref: "#/components/schemas/JsonSchema"
+  /profile/testresultat:
+    get:
+      tags:
+        - profile-controller
+      operationId: descriptor_3
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+            application/alps+json:
+              schema:
+                type: string
+            application/schema+json:
+              schema:
+                $ref: "#/components/schemas/JsonSchema"
+  /testgrunnlag:
+    get:
+      tags:
+        - testgrunnlag-entity-controller
+      description: get-testgrunnlag
+      operationId: getTestgrunnlagList
+      parameters:
+        - name: page
+          in: query
+          description: Zero-based page index (0..N)
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: The size of the page to be returned
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+        - name: sort
+          in: query
+          description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/PagedModelEntityModelTestgrunnlag"
+            application/x-spring-data-compact+json:
+              schema:
+                $ref: "#/components/schemas/PagedModelEntityModelTestgrunnlag"
+            text/uri-list:
+              schema:
+                type: string
+    post:
+      tags:
+        - testgrunnlag-entity-controller
+      description: create-testgrunnlag
+      operationId: createTestgrunnlag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestgrunnlagRequestBody"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestgrunnlag"
+  /testgrunnlag/search/findByKontrollId:
+    get:
+      tags:
+        - testgrunnlag-search-controller
+      operationId: findByKontrollId
+      parameters:
+        - name: kontrollId
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestgrunnlag"
+        "404":
+          description: Not Found
+  /testgrunnlag/{id}:
+    get:
+      tags:
+        - testgrunnlag-entity-controller
+      description: get-testgrunnlag
+      operationId: getTestgrunnlag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestgrunnlag"
+        "404":
+          description: Not Found
+    put:
+      tags:
+        - testgrunnlag-entity-controller
+      description: update-testgrunnlag
+      operationId: updateTestgrunnlag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestgrunnlagRequestBody"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestgrunnlag"
+        "201":
+          description: Created
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestgrunnlag"
+        "204":
+          description: No Content
+    delete:
+      tags:
+        - testgrunnlag-entity-controller
+      description: delete-testgrunnlag
+      operationId: deleteTestgrunnlag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+  /testgrunnlag/{id}/testresultat:
+    get:
+      tags:
+        - testgrunnlag-property-reference-controller
+      description: get-testresultat-by-testgrunnlag-Id
+      operationId: getTestresultatByTestgrunnlagId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelTestresultat"
+            text/uri-list:
+              schema:
+                type: string
+        "404":
+          description: Not Found
+    put:
+      tags:
+        - testgrunnlag-property-reference-controller
+      description: update-testresultat-by-testgrunnlag-Id
+      operationId: updateTestresultatByTestgrunnlagId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectionModelObject"
+          application/x-spring-data-compact+json:
+            schema:
+              $ref: "#/components/schemas/CollectionModelObject"
+          text/uri-list:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelTestresultat"
+        "201":
+          description: Created
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelTestresultat"
+        "204":
+          description: No Content
+    delete:
+      tags:
+        - testgrunnlag-property-reference-controller
+      description: delete-testresultat-by-testgrunnlag-Id
+      operationId: deleteTestresultatByTestgrunnlagId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+  /testgrunnlag/{id}/testresultat/{propertyId}:
+    get:
+      tags:
+        - testgrunnlag-property-reference-controller
+      description: get-testresultat-by-testgrunnlag-Id
+      operationId: getTestresultatByTestgrunnlagIdAndId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelTestresultat"
+        "404":
+          description: Not Found
+    delete:
+      tags:
+        - testgrunnlag-property-reference-controller
+      description: delete-testresultat-by-testgrunnlag-Id
+      operationId: deleteTestresultatByTestgrunnlagIdAndId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+  /testresultat:
+    get:
+      tags:
+        - testresultat-entity-controller
+      description: get-testresultat
+      operationId: getTestresultatList
+      parameters:
+        - name: page
+          in: query
+          description: Zero-based page index (0..N)
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: The size of the page to be returned
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+        - name: sort
+          in: query
+          description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/PagedModelEntityModelTestresultat"
+            application/x-spring-data-compact+json:
+              schema:
+                $ref: "#/components/schemas/PagedModelEntityModelTestresultat"
+            text/uri-list:
+              schema:
+                type: string
+    post:
+      tags:
+        - testresultat-entity-controller
+      description: create-testresultat
+      operationId: createTestresultat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestresultatRequestBody"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestresultat"
+  /testresultat/search/findByTestgrunnlagKontrollId:
+    get:
+      tags:
+        - testresultat-search-controller
+      operationId: findByTestgrunnlagKontrollId
+      parameters:
+        - name: testgrunnlagKontrollId
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestresultat"
+        "404":
+          description: Not Found
+  /testresultat/search/findByTestgrunnlagTestrunUuid:
+    get:
+      tags:
+        - testresultat-search-controller
+      operationId: findByTestgrunnlagTestrunUuid
+      parameters:
+        - name: testgrunnlagTestrunUuid
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestresultat"
+        "404":
+          description: Not Found
+  /testresultat/search/findByTestrunUuid:
+    get:
+      tags:
+        - testresultat-search-controller
+      operationId: findByTestrunUuid
+      parameters:
+        - name: testrunUuid
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestresultat"
+        "404":
+          description: Not Found
+  /testresultat/search/findByTestrunUuidAndLoeysingId:
+    get:
+      tags:
+        - testresultat-search-controller
+      operationId: findByTestrunUuidAndLoeysingId
+      parameters:
+        - name: testrunUuid
+          in: query
+          schema:
+            type: string
+        - name: loeysingId
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestresultat"
+        "404":
+          description: Not Found
+  /testresultat/search/findByTestrunUuidAndLoeysingIdAndTestregelId:
+    get:
+      tags:
+        - testresultat-search-controller
+      operationId: findByTestrunUuidAndLoeysingIdAndTestregelId
+      parameters:
+        - name: testrunUuid
+          in: query
+          schema:
+            type: string
+        - name: loeysingId
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: testregelId
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestresultat"
+        "404":
+          description: Not Found
+  /testresultat/search/findByTestrunUuidAndTestregelId:
+    get:
+      tags:
+        - testresultat-search-controller
+      operationId: findByTestrunUuidAndTestregelId
+      parameters:
+        - name: testrunUuid
+          in: query
+          schema:
+            type: string
+        - name: testregelId
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/CollectionModelEntityModelTestresultat"
+        "404":
+          description: Not Found
+  /testresultat/{id}:
+    get:
+      tags:
+        - testresultat-entity-controller
+      description: get-testresultat
+      operationId: getTestresultat
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestresultat"
+        "404":
+          description: Not Found
+    put:
+      tags:
+        - testresultat-entity-controller
+      description: update-testresultat
+      operationId: updateTestresultat
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestresultatRequestBody"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestresultat"
+        "201":
+          description: Created
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestresultat"
+        "204":
+          description: No Content
+    delete:
+      tags:
+        - testresultat-entity-controller
+      description: delete-testresultat
+      operationId: deleteTestresultat
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+  /testresultat/{id}/testgrunnlag:
+    get:
+      tags:
+        - testresultat-property-reference-controller
+      description: get-testgrunnlag-by-testresultat-Id
+      operationId: getTestgrunnlagByTestresultatId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestgrunnlag"
+            text/uri-list:
+              schema:
+                type: string
+        "404":
+          description: Not Found
+    put:
+      tags:
+        - testresultat-property-reference-controller
+      description: update-testgrunnlag-by-testresultat-Id
+      operationId: updateTestgrunnlagByTestresultatId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectionModelObject"
+          application/x-spring-data-compact+json:
+            schema:
+              $ref: "#/components/schemas/CollectionModelObject"
+          text/uri-list:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestgrunnlag"
+        "201":
+          description: Created
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestgrunnlag"
+        "204":
+          description: No Content
+    delete:
+      tags:
+        - testresultat-property-reference-controller
+      description: delete-testgrunnlag-by-testresultat-Id
+      operationId: deleteTestgrunnlagByTestresultat
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+  /testresultat/{id}/testgrunnlag/{propertyId}:
+    get:
+      tags:
+        - testresultat-property-reference-controller
+      description: get-testgrunnlag-by-testresultat-Id
+      operationId: getTestgrunnlagByTestresultatIdAndId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelTestgrunnlag"
+        "404":
+          description: Not Found
+    delete:
+      tags:
+        - testresultat-property-reference-controller
+      description: delete-testgrunnlag-by-testresultat-Id
+      operationId: deleteTestgrunnlagByTestresultatAndId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+  /import/deque/{kontrollId}:
+    put:
+      tags:
+        - deque-import-controller
+      operationId: importDequeKontrollId
+      parameters:
+        - name: kontrollId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AxeAuditor"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Testresultat"
+  /aggregation/testregel/testrun/{testrunUuid}:
+    get:
+      tags:
+        - aggregation-controller
+      operationId: getAggregeringPerTestregel
+      parameters:
+        - name: testrunUuid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TestresultatAggregertPerTestregel"
+    put:
+      tags:
+        - aggregation-controller
+      operationId: putAggregeringPerTestregel
+      parameters:
+        - name: testrunUuid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                type: integer
+                format: int32
+  /batch/testresultat:
+    post:
+      tags:
+        - resultat-batch-controller
+      operationId: putTestresultat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Testresultat"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: int64
+  /batch/aggregert-per-testregel:
+    post:
+      tags:
+        - resultat-batch-controller
+      operationId: putTestresultatAggregertPerTestregel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/TestresultatAggregertPerTestregel"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.hal+json:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: int64
+components:
+  schemas:
+    AbstractJsonSchemaPropertyObject:
+      type: object
+      properties:
+        title:
+          type: string
+        readOnly:
+          type: boolean
+    Item:
+      type: object
+      properties:
+        type:
+          type: string
+        properties:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/AbstractJsonSchemaPropertyObject"
+        requiredProperties:
+          type: array
+          items:
+            type: string
+    JsonSchema:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        properties:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/AbstractJsonSchemaPropertyObject"
+        requiredProperties:
+          type: array
+          items:
+            type: string
+        definitions:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Item"
+        type:
+          type: string
+        $schema:
+          type: string
+    RepresentationModelObject:
+      type: object
+      properties:
+        _links:
+          $ref: "#/components/schemas/Links"
+    EntityModelTestresultatAggregertPerSuksesskriterium:
+      type: object
+      properties:
+        testrunUuid:
+          type: string
+        loeysingId:
+          type: integer
+          format: int32
+        kravId:
+          type: integer
+          format: int32
+        talSiderSamsvar:
+          type: integer
+          format: int32
+        talSiderBrot:
+          type: integer
+          format: int32
+        talSiderIkkjeForekomst:
+          type: integer
+          format: int32
+        _links:
+          $ref: "#/components/schemas/Links"
+    PageMetadata:
+      type: object
+      properties:
+        size:
+          type: integer
+          format: int64
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int64
+        number:
+          type: integer
+          format: int64
+    PagedModelEntityModelTestresultatAggregertPerSuksesskriterium:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            TestresultatAggregertPerSuksesskriterium:
+              type: array
+              items:
+                $ref: "#/components/schemas/EntityModelTestresultatAggregertPerSuksesskriterium"
+        _links:
+          $ref: "#/components/schemas/Links"
+        page:
+          $ref: "#/components/schemas/PageMetadata"
+    CollectionModelEntityModelTestresultatAggregertPerSuksesskriterium:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            TestresultatAggregertPerSuksesskriterium:
+              type: array
+              items:
+                $ref: "#/components/schemas/EntityModelTestresultatAggregertPerSuksesskriterium"
+        _links:
+          $ref: "#/components/schemas/Links"
+    EntityModelTestresultatAggregertPerTestregel:
+      type: object
+      properties:
+        testrunUuid:
+          type: string
+        testregelId:
+          type: integer
+          format: int32
+        loeysingId:
+          type: integer
+          format: int32
+        testregelGjennomsnittlegSideBrotProsent:
+          type: number
+          format: double
+        testregelGjennomsnittlegSideSamsvarProsent:
+          type: number
+          format: double
+        talElementSamsvar:
+          type: integer
+          format: int32
+        talElementBrot:
+          type: integer
+          format: int32
+        talElementVarsel:
+          type: integer
+          format: int32
+        talElementIkkjeForekomst:
+          type: integer
+          format: int32
+        talSiderSamsvar:
+          type: integer
+          format: int32
+        talSiderBrot:
+          type: integer
+          format: int32
+        talSiderIkkjeForekomst:
+          type: integer
+          format: int32
+        _links:
+          $ref: "#/components/schemas/Links"
+    TestresultatAggregertPerTestregel:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        testrunUuid:
+          type: string
+        testregelId:
+          type: integer
+          format: int32
+        loeysingId:
+          type: integer
+          format: int32
+        testregelGjennomsnittlegSideBrotProsent:
+          type: number
+          format: double
+        testregelGjennomsnittlegSideSamsvarProsent:
+          type: number
+          format: double
+        talElementSamsvar:
+          type: integer
+          format: int32
+        talElementBrot:
+          type: integer
+          format: int32
+        talElementVarsel:
+          type: integer
+          format: int32
+        talElementIkkjeForekomst:
+          type: integer
+          format: int32
+        talSiderSamsvar:
+          type: integer
+          format: int32
+        talSiderBrot:
+          type: integer
+          format: int32
+        talSiderIkkjeForekomst:
+          type: integer
+          format: int32
+    PagedModelEntityModelTestresultatAggregertPerTestregel:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            TestresultatAggregertPerTestregel:
+              type: array
+              items:
+                $ref: "#/components/schemas/EntityModelTestresultatAggregertPerTestregel"
+        _links:
+          $ref: "#/components/schemas/Links"
+        page:
+          $ref: "#/components/schemas/PageMetadata"
+    CollectionModelEntityModelTestresultatAggregertPerTestregel:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            TestresultatAggregertPerTestregel:
+              type: array
+              items:
+                $ref: "#/components/schemas/EntityModelTestresultatAggregertPerTestregel"
+        _links:
+          $ref: "#/components/schemas/Links"
+    EntityModelTestgrunnlag:
+      type: object
+      properties:
+        testrunUuid:
+          type: string
+        type:
+          type: string
+          enum:
+            - OPPRINNELEG_TEST
+            - RETEST
+        datoOppretta:
+          type: string
+          format: date-time
+        kontrollId:
+          type: integer
+          format: int32
+        _links:
+          $ref: "#/components/schemas/Links"
+    Testgrunnlag:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        testrunUuid:
+          type: string
+        type:
+          type: string
+          enum:
+            - OPPRINNELEG_TEST
+            - RETEST
+        datoOppretta:
+          type: string
+          format: date-time
+        kontrollId:
+          type: integer
+          format: int32
+        testresultat:
+          type: array
+          items:
+            $ref: "#/components/schemas/Testresultat"
+          uniqueItems: true
+    Testresultat:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        testgrunnlag:
+          $ref: "#/components/schemas/Testgrunnlag"
+        loeysingId:
+          type: integer
+          format: int32
+        testregelId:
+          type: integer
+          format: int32
+        sideutvalId:
+          type: integer
+          format: int32
+        testUtfoert:
+          type: string
+          format: date-time
+        elementUtfall:
+          type: string
+        elementResultat:
+          type: string
+          enum:
+            - samsvar
+            - brot
+            - ikkjeForekomst
+            - varsel
+            - ikkjeTesta
+        elementOmtalePointer:
+          type: string
+        elementOmtaleHtml:
+          type: string
+        elementOmtaleDescription:
+          type: string
+        brukarId:
+          type: integer
+          format: int32
+        testrunUuid:
+          type: string
+    PagedModelEntityModelTestgrunnlag:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            testgrunnlag:
+              type: array
+              items:
+                $ref: "#/components/schemas/EntityModelTestgrunnlag"
+        _links:
+          $ref: "#/components/schemas/Links"
+        page:
+          $ref: "#/components/schemas/PageMetadata"
+    CollectionModelTestresultat:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            testresultat:
+              type: array
+              items:
+                $ref: "#/components/schemas/TestresultatResponse"
+        _links:
+          $ref: "#/components/schemas/Links"
+    CollectionModelObject:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            objects:
+              type: array
+              items: {}
+        _links:
+          $ref: "#/components/schemas/Links"
+    CollectionModelEntityModelTestgrunnlag:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            testgrunnlag:
+              type: array
+              items:
+                $ref: "#/components/schemas/EntityModelTestgrunnlag"
+        _links:
+          $ref: "#/components/schemas/Links"
+    EntityModelTestresultat:
+      type: object
+      properties:
+        loeysingId:
+          type: integer
+          format: int32
+        testregelId:
+          type: integer
+          format: int32
+        sideutvalId:
+          type: integer
+          format: int32
+        testUtfoert:
+          type: string
+          format: date-time
+        elementUtfall:
+          type: string
+        elementResultat:
+          type: string
+          enum:
+            - samsvar
+            - brot
+            - ikkjeForekomst
+            - varsel
+            - ikkjeTesta
+        elementOmtalePointer:
+          type: string
+        elementOmtaleHtml:
+          type: string
+        elementOmtaleDescription:
+          type: string
+        brukarId:
+          type: integer
+          format: int32
+        testrunUuid:
+          type: string
+        _links:
+          $ref: "#/components/schemas/Links"
+    PagedModelEntityModelTestresultat:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            testresultat:
+              type: array
+              items:
+                $ref: "#/components/schemas/EntityModelTestresultat"
+        _links:
+          $ref: "#/components/schemas/Links"
+        page:
+          $ref: "#/components/schemas/PageMetadata"
+    CollectionModelEntityModelTestresultat:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            testresultat:
+              type: array
+              items:
+                $ref: "#/components/schemas/EntityModelTestresultat"
+        _links:
+          $ref: "#/components/schemas/Links"
+    TestresultatAggregertPerSuksesskriteriumRequestBody:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        testrunUuid:
+          type: string
+        loeysingId:
+          type: integer
+          format: int32
+        kravId:
+          type: integer
+          format: int32
+        talSiderSamsvar:
+          type: integer
+          format: int32
+        talSiderBrot:
+          type: integer
+          format: int32
+        talSiderIkkjeForekomst:
+          type: integer
+          format: int32
+    TestresultatAggregertPerTestregelRequestBody:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        testrunUuid:
+          type: string
+        testregelId:
+          type: integer
+          format: int32
+        loeysingId:
+          type: integer
+          format: int32
+        testregelGjennomsnittlegSideBrotProsent:
+          type: number
+          format: double
+        testregelGjennomsnittlegSideSamsvarProsent:
+          type: number
+          format: double
+        talElementSamsvar:
+          type: integer
+          format: int32
+        talElementBrot:
+          type: integer
+          format: int32
+        talElementVarsel:
+          type: integer
+          format: int32
+        talElementIkkjeForekomst:
+          type: integer
+          format: int32
+        talSiderSamsvar:
+          type: integer
+          format: int32
+        talSiderBrot:
+          type: integer
+          format: int32
+        talSiderIkkjeForekomst:
+          type: integer
+          format: int32
+    TestgrunnlagRequestBody:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        testrunUuid:
+          type: string
+        type:
+          type: string
+          enum:
+            - OPPRINNELEG_TEST
+            - RETEST
+        datoOppretta:
+          type: string
+          format: date-time
+        kontrollId:
+          type: integer
+          format: int32
+        testresultat:
+          type: array
+          items:
+            type: string
+    TestresultatRequestBody:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        testgrunnlag:
+          type: string
+        loeysingId:
+          type: integer
+          format: int32
+        testregelId:
+          type: integer
+          format: int32
+        sideutvalId:
+          type: integer
+          format: int32
+        testUtfoert:
+          type: string
+          format: date-time
+        elementUtfall:
+          type: string
+        elementResultat:
+          type: string
+          enum:
+            - samsvar
+            - brot
+            - ikkjeForekomst
+            - varsel
+            - ikkjeTesta
+        elementOmtalePointer:
+          type: string
+        elementOmtaleHtml:
+          type: string
+        elementOmtaleDescription:
+          type: string
+        brukarId:
+          type: integer
+          format: int32
+        testrunUuid:
+          type: string
+    TestresultatResponse:
+      type: object
+      properties:
+        loeysingId:
+          type: integer
+          format: int32
+        testregelId:
+          type: integer
+          format: int32
+        sideutvalId:
+          type: integer
+          format: int32
+        testUtfoert:
+          type: string
+          format: date-time
+        elementUtfall:
+          type: string
+        elementResultat:
+          type: string
+          enum:
+            - samsvar
+            - brot
+            - ikkjeForekomst
+            - varsel
+            - ikkjeTesta
+        elementOmtalePointer:
+          type: string
+        elementOmtaleHtml:
+          type: string
+        elementOmtaleDescription:
+          type: string
+        brukarId:
+          type: integer
+          format: int32
+        testrunUuid:
+          type: string
+    AllIssue:
+      type: object
+      properties:
+        id:
+          type: string
+        issue_source:
+          type: string
+        issueId:
+          type: integer
+          format: int32
+        ruleId:
+          type: string
+        issue_rule:
+          type: string
+        description:
+          type: string
+        help:
+          type: string
+        helpUrl:
+          type: string
+        impact:
+          type: string
+        summary:
+          type: string
+        type:
+          type: string
+        method:
+          type: string
+        status:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+        unitName:
+          type: string
+        testUrl:
+          type: string
+        unitType:
+          type: string
+        groupname: {}
+        foundBy:
+          type: string
+        lastUpdatedBy:
+          type: string
+        checkpoint:
+          type: string
+        source:
+          type: array
+          items:
+            type: string
+        needsReview: {}
+        isExperimental:
+          type: boolean
+        isManual:
+          type: boolean
+        screenshotUrl:
+          type: array
+          items:
+            type: string
+        issueUrl:
+          type: string
+        rule:
+          type: string
+    AxeAuditor:
+      type: object
+      properties:
+        source:
+          $ref: "#/components/schemas/Source"
+        testDetails:
+          $ref: "#/components/schemas/TestDetails"
+        allIssues:
+          type: array
+          items:
+            $ref: "#/components/schemas/AllIssue"
+    Source:
+      type: object
+      properties:
+        productName:
+          type: string
+        productComponentName:
+          type: string
+        productVersion:
+          type: string
+    TestDetails:
+      type: object
+      properties:
+        testId:
+          type: string
+        engine:
+          type: string
+        bestPracticesEnabled:
+          type: boolean
+        experimentalEnabled:
+          type: boolean
+        product:
+          type: string
+        release:
+          type: string
+        platform:
+          type: string
+        environment:
+          type: string
+        digitalAssetType:
+          type: string
+        assistiveTechnology:
+          type: string
+        axeVersion:
+          type: string
+        testCaseName:
+          type: string
+        testRunName:
+          type: string
+        startDate:
+          type: string
+        endDate: {}
+        standard:
+          type: string
+    Link:
+      type: object
+      properties:
+        href:
+          type: string
+        hreflang:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+        deprecation:
+          type: string
+        profile:
+          type: string
+        name:
+          type: string
+        templated:
+          type: boolean
+    Links:
+      type: object
+      additionalProperties:
+        $ref: "#/components/schemas/Link"

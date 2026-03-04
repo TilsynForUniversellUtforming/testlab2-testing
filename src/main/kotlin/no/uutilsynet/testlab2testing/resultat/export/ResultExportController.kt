@@ -68,25 +68,26 @@ class ResultExportController(
             })
   }
 
-    @GetMapping("aggregering/testregel/{maalingId}")
-    fun getAggregeringForMaaling(
-        @PathVariable("maalingId") maalingId: Int
-    ): ResponseEntity<List<AggregeringPerTestregelExport>> {
-        val aggregering = resultatExportMapper.getAggregeringForMaaling(maalingId)
-        return ResponseEntity.ok().body(aggregering)
-    }
+  @GetMapping("aggregering/testregel/{maalingId}")
+  fun getAggregeringForMaaling(
+      @PathVariable("maalingId") maalingId: Int
+  ): ResponseEntity<List<AggregeringPerTestregelExport>> {
+    val aggregering = resultatExportMapper.getAggregeringForMaaling(maalingId)
+    return ResponseEntity.ok().body(aggregering)
+  }
 
-    @PostMapping("aggregering/testregel/{maalingId}")
-    fun exportAggregeringForMaaling(
-        @PathVariable("maalingId") maalingId: Int
-    ): ResponseEntity<List<Long>> {
-        val aggregering = resultatExportMapper.getAggregeringForMaaling(maalingId)
-        return resultatClient.putAggregeringPerTestregelList(aggregering)
-            .fold(
-                { idList -> ResponseEntity.ok().body(idList) },
-                { error ->
-                    logger.error(error.message)
-                    ResponseEntity.internalServerError().build()
-                })
-    }
+  @PostMapping("aggregering/testregel/{maalingId}")
+  fun exportAggregeringForMaaling(
+      @PathVariable("maalingId") maalingId: Int
+  ): ResponseEntity<List<Long>> {
+    val aggregering = resultatExportMapper.getAggregeringForMaaling(maalingId)
+    return resultatClient
+        .putAggregeringPerTestregelList(aggregering)
+        .fold(
+            { idList -> ResponseEntity.ok().body(idList) },
+            { error ->
+              logger.error(error.message)
+              ResponseEntity.internalServerError().build()
+            })
+  }
 }

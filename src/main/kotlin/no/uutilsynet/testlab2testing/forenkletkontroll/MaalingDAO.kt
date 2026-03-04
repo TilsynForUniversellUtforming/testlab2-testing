@@ -106,7 +106,7 @@ class MaalingDAO(
     const val insertMaalingLoeysingQuery =
         """insert into "testlab2_testing"."maalingloeysing" (idMaaling, idLoeysing) values (:idMaaling, :idLoeysing)"""
 
-      fun updateMaalingParams(maaling: Maaling): Map<String, Any> {
+    fun updateMaalingParams(maaling: Maaling): Map<String, Any> {
       val status =
           when (maaling) {
             is Maaling.Planlegging -> "planlegging"
@@ -213,26 +213,25 @@ class MaalingDAO(
   private fun MaalingDTO.toMaaling(): Maaling {
     return when (status) {
       MaalingStatus.planlegging -> {
-          Maaling.Planlegging(
-              id,
-              navn,
-              datoStart,
-              getLoeysingarForMaaling(id, datoStart),
-              getTestregelList(),
-              CrawlParameters(maxLenker, talLenker)
-          )
+        Maaling.Planlegging(
+            id,
+            navn,
+            datoStart,
+            getLoeysingarForMaaling(id, datoStart),
+            getTestregelList(),
+            CrawlParameters(maxLenker, talLenker))
       }
       MaalingStatus.crawling -> {
-          Maaling.Crawling(id, navn, datoStart, getCrawlResultatForMaaling())
+        Maaling.Crawling(id, navn, datoStart, getCrawlResultatForMaaling())
       }
       MaalingStatus.kvalitetssikring -> {
-          Maaling.Kvalitetssikring(id, navn, datoStart, getCrawlResultatForMaaling())
+        Maaling.Kvalitetssikring(id, navn, datoStart, getCrawlResultatForMaaling())
       }
       MaalingStatus.testing -> {
-          Maaling.Testing(id, navn, datoStart, getTestkoeyingarForMaaling())
+        Maaling.Testing(id, navn, datoStart, getTestkoeyingarForMaaling())
       }
       MaalingStatus.testing_ferdig -> {
-          Maaling.TestingFerdig(id, navn, datoStart, getTestkoeyingarForMaaling())
+        Maaling.TestingFerdig(id, navn, datoStart, getTestkoeyingarForMaaling())
       }
     }
   }
@@ -349,7 +348,8 @@ class MaalingDAO(
     val updateQuery =
         """update "testlab2_testing"."maalingv1" 
             set navn = :navn, status = :status, max_lenker = :max_lenker, tal_lenker = :tal_lenker 
-            where id = :id""".trimMargin()
+            where id = :id"""
+            .trimMargin()
 
     jdbcTemplate.update(
         updateQuery,
@@ -410,7 +410,7 @@ class MaalingDAO(
         Int::class.java)
   }
 
-    private fun loeysingsMetadataForMaaling(
+  private fun loeysingsMetadataForMaaling(
       maalingId: Int,
       loeysingList: List<Loeysing>
   ): Map<Int, LoeysingMetadata> {
@@ -422,18 +422,18 @@ class MaalingDAO(
         }
   }
 
-    fun getTestrunUuidForMaaling(maalingId: Int): Result<String> {
-        return runCatching {
-            DataAccessUtils.singleResult(
-                jdbcTemplate.query(
-                    "select uuid from maalingv1 where id = :maalingId",
-                    mapOf("maalingId" to maalingId),
-                ) { rs, _ ->
-                    rs.getString("uuid")
-                })
-                ?: throw NoSuchElementException("Fant ikkje testrunUuid for maalingId: $maalingId")
-        }
+  fun getTestrunUuidForMaaling(maalingId: Int): Result<String> {
+    return runCatching {
+      DataAccessUtils.singleResult(
+          jdbcTemplate.query(
+              "select uuid from maalingv1 where id = :maalingId",
+              mapOf("maalingId" to maalingId),
+          ) { rs, _ ->
+            rs.getString("uuid")
+          })
+          ?: throw NoSuchElementException("Fant ikkje testrunUuid for maalingId: $maalingId")
     }
+  }
 
   data class LoeysingMetadata(val id: Int, val loeysing: Loeysing, val antallNettsider: Int)
 }

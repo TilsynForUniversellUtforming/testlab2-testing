@@ -28,19 +28,21 @@ class ResultatClient(
               "Resultatregisteret returnerte null for liste av testresultatIder")
     }
   }
-    fun putAggregeringPerTestregelList(aggregering: List<AggregeringPerTestregelExport>) : Result<List<Long>>{
-        return runCatching {
-            restClient
-                .post()
-                .uri("${resultatRegisterProperties.host}/batch/aggregert-per-testregel")
-                .body(aggregering)
-                .retrieve()
-                .body(object : ParameterizedTypeReference<List<Long>>() {})
-                ?: throw NoSuchElementException(
-                    "Resultatregisteret returnerte null for liste av testresultatIder")
-        }
 
+  fun putAggregeringPerTestregelList(
+      aggregering: List<AggregeringPerTestregelExport>
+  ): Result<List<Long>> {
+    return runCatching {
+      restClient
+          .post()
+          .uri("${resultatRegisterProperties.host}/batch/aggregert-per-testregel")
+          .body(aggregering)
+          .retrieve()
+          .body(object : ParameterizedTypeReference<List<Long>>() {})
+          ?: throw NoSuchElementException(
+              "Resultatregisteret returnerte null for liste av testresultatIder")
     }
+  }
 }
 
 @ConfigurationProperties(prefix = "resultat")

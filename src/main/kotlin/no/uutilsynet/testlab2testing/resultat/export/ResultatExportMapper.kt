@@ -14,43 +14,43 @@ class ResultatExportMapper(
     val maalingDAO: MaalingDAO
 ) {
 
-    fun getAggregeringForTestgrunnlag(testgrunnlagId: Int): List<AggregeringPerTestregelExport> {
-        return aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
-        .map { it.toAggregeringPerTestregelExport(getTestrunIdForTestgrunnlag(testgrunnlagId)) }
+  fun getAggregeringForTestgrunnlag(testgrunnlagId: Int): List<AggregeringPerTestregelExport> {
+    return aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId).map {
+      it.toAggregeringPerTestregelExport(getTestrunIdForTestgrunnlag(testgrunnlagId))
     }
+  }
 
-    fun getAggregeringForMaaling(maalingId: Int): List<AggregeringPerTestregelExport> {
-        return aggregeringDAO.getAggregertResultatTestregelForMaaling(maalingId)
-            .map { it.toAggregeringPerTestregelExport(getTestrunIdforMaaling(maalingId)) }
+  fun getAggregeringForMaaling(maalingId: Int): List<AggregeringPerTestregelExport> {
+    return aggregeringDAO.getAggregertResultatTestregelForMaaling(maalingId).map {
+      it.toAggregeringPerTestregelExport(getTestrunIdforMaaling(maalingId))
     }
+  }
 
+  fun getTestrunIdForTestgrunnlag(testgrunnlagId: Int): String {
+    return testgrunnlagDAO.getTestrunUuidForTestgrunnlag(testgrunnlagId).getOrThrow()
+  }
 
-    fun getTestrunIdForTestgrunnlag(testgrunnlagId: Int): String {
-        return testgrunnlagDAO.getTestrunUuidForTestgrunnlag(testgrunnlagId).getOrThrow()
-    }
-
-    fun getTestrunIdforMaaling(maalingId: Int): String {
-        return maalingDAO.getTestrunUuidForMaaling(maalingId).getOrThrow()
-    }
+  fun getTestrunIdforMaaling(maalingId: Int): String {
+    return maalingDAO.getTestrunUuidForMaaling(maalingId).getOrThrow()
+  }
 }
 
 private fun AggregeringPerTestregelDB.toAggregeringPerTestregelExport(
     testrunUuid: String
 ): AggregeringPerTestregelExport {
-    return AggregeringPerTestregelExport(
-        testrunUuid = testrunUuid,
-        loeysingId = this.loeysingId,
-        testregelId = this.testregelId,
-        suksesskriterium = this.suksesskriterium,
-        fleireSuksesskriterium = this.fleireSuksesskriterium,
-        talElementSamsvar = this.talElementSamsvar,
-        talElementBrot = this.talElementBrot,
-        talElementVarsel = this.talElementVarsel,
-        talElementIkkjeForekomst = this.talElementIkkjeForekomst,
-        talSiderSamsvar = this.talSiderSamsvar,
-        talSiderBrot = this.talSiderBrot,
-        talSiderIkkjeForekomst = this.talSiderIkkjeForekomst,
-        testregelGjennomsnittlegSideSamsvarProsent = this.testregelGjennomsnittlegSideSamsvarProsent,
-        testregelGjennomsnittlegSideBrotProsent = this.testregelGjennomsnittlegSideBrotProsent
-    )
+  return AggregeringPerTestregelExport(
+      testrunUuid = testrunUuid,
+      loeysingId = this.loeysingId,
+      testregelId = this.testregelId,
+      suksesskriterium = this.suksesskriterium,
+      fleireSuksesskriterium = this.fleireSuksesskriterium,
+      talElementSamsvar = this.talElementSamsvar,
+      talElementBrot = this.talElementBrot,
+      talElementVarsel = this.talElementVarsel,
+      talElementIkkjeForekomst = this.talElementIkkjeForekomst,
+      talSiderSamsvar = this.talSiderSamsvar,
+      talSiderBrot = this.talSiderBrot,
+      talSiderIkkjeForekomst = this.talSiderIkkjeForekomst,
+      testregelGjennomsnittlegSideSamsvarProsent = this.testregelGjennomsnittlegSideSamsvarProsent,
+      testregelGjennomsnittlegSideBrotProsent = this.testregelGjennomsnittlegSideBrotProsent)
 }

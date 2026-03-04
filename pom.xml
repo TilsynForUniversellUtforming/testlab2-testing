@@ -91,11 +91,6 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.simpleflatmapper</groupId>
-            <artifactId>sfm-springjdbc</artifactId>
-            <version>9.0.2</version>
-        </dependency>
-        <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
             <version>2.16.0</version>
@@ -153,7 +148,7 @@
         <dependency>
             <groupId>no.uutilsynet.testlab2</groupId>
             <artifactId>testlab2-constants</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.0.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
@@ -317,6 +312,33 @@
                         <goals>
                             <goal>apply</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>7.20.0</version>
+                <executions>
+                    <execution>
+                        <id>generate-result-api</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/api/resultat-app.yaml</inputSpec>
+                            <generatorName>kotlin-spring</generatorName>
+                            <skipValidateSpec>true</skipValidateSpec>
+                            <configOptions>
+                                <library>spring-declarative-http-interface</library>
+                                <openApiNullable>false</openApiNullable>
+                                <useJakartaEe>false</useJakartaEe>
+                                <documentationProvider>none</documentationProvider>
+                                <annotationLibrary>none</annotationLibrary>
+                                <apiPackage>no.uutilsynet.testlab2testing.resultat.external.api</apiPackage>
+                                <modelPackage>no.uutilsynet.testlab2testing.resultat.external.model</modelPackage>
+                            </configOptions>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

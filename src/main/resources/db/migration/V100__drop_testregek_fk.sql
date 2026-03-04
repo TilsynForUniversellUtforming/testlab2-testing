@@ -1,0 +1,2 @@
+ALTER TABLE kontroll_testreglar
+DROP CONSTRAINT IF EXISTS kontroll_testreglar_testregel_id_fkey;

@@ -176,7 +176,7 @@ class LoeysingsRegisterClient(
               .getOrThrow()
               .firstOrNull()
       simple?.let {
-        return Loeysing(id, namn, url, simple.orgnummer, null)
+        return Loeysing(id, namn, url, simple.orgnummer, "Manglar verksemd")
       }
     } else {
       return Loeysing(id, namn, url, verksemd.organisasjonsnummer, verksemd.namn)
