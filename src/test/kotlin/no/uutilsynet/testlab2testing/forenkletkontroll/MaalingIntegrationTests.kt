@@ -140,6 +140,11 @@ class MaalingIntegrationTests(
     assertThat(location, notNullValue())
 
     val maalingId = location!!.path.split("/").last().toInt()
+
+
+      println("Request body: $requestBody" + "\nLocation: $location")
+
+      println("Maaling ID: $maalingId, Utval ID: ${utvalId.getOrThrow()}")
     val utvalIdFromDatabase =
         maalingDAO.jdbcTemplate
             .query("select utval_id from maalingv1 where id = :id", mapOf("id" to maalingId)) {

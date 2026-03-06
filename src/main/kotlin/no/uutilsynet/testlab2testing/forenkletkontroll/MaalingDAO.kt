@@ -129,28 +129,39 @@ class MaalingDAO(
       testregelIdList: List<Int>,
       crawlParameters: CrawlParameters
   ): Int {
-      return createMaaling(navn,datoStart,utval.loeysingar.map {it.id },testregelIdList,crawlParameters)
+      val keyHolder: KeyHolder = GeneratedKeyHolder()
+      jdbcTemplate.update(
+          createMaalingSql,
+          createMaalingParams(navn, datoStart, crawlParameters, utval.id),
+          keyHolder)
+
+      val idMaaling = keyHolder.keys?.get("id") as Int
+      val loeysingIdList = utval.loeysingar.map { it.id }
+      updateLoeysingarForMaaling(loeysingIdList, idMaaling)
+      updateTestreglarForMaaling(testregelIdList, idMaaling)
+
+      return idMaaling
   }
 
-  @Transactional
-  fun createMaaling(
-      navn: String,
-      datoStart: Instant,
-      loyesingIds: List<Int>,
-      testregelIdList: List<Int>,
-      crawlParameters: CrawlParameters
-  ): Int {
-    val keyHolder = GeneratedKeyHolder()
+    @Transactional
+    fun createMaaling(
+        navn: String,
+        datoStart: Instant,
+        loyesingIds: List<Int>,
+        testregelIdList: List<Int>,
+        crawlParameters: CrawlParameters
+    ): Int {
+        val keyHolder = GeneratedKeyHolder()
 
-    jdbcTemplate.update(
-        createMaalingSql, createMaalingParams(navn, datoStart, crawlParameters), keyHolder)
-    val idMaaling = keyHolder.keys?.get("id") as Int
+        jdbcTemplate.update(
+            createMaalingSql, createMaalingParams(navn, datoStart, crawlParameters), keyHolder)
+        val idMaaling = keyHolder.keys?.get("id") as Int
 
-    updateLoeysingarForMaaling(loyesingIds, idMaaling)
-    updateTestreglarForMaaling(testregelIdList, idMaaling)
+        updateLoeysingarForMaaling(loyesingIds, idMaaling)
+        updateTestreglarForMaaling(testregelIdList, idMaaling)
 
-    return idMaaling
-  }
+        return idMaaling
+    }
 
   private fun updateTestreglarForMaaling(testregelIdList: List<Int>, idMaaling: Int) {
     for (idTestregel: Int in testregelIdList) {
