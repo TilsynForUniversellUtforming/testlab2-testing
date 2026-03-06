@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.resultat
 
+import java.net.URI
+import java.time.Instant
+import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.SortOrder
@@ -39,9 +42,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
-import java.net.URI
-import java.time.Instant
-import kotlin.properties.Delegates
 
 @SpringBootTest(
     properties =
@@ -69,17 +69,18 @@ class ResultatServiceTest(
   @MockitoBean lateinit var testregelCache: TestregelCache
   @MockitoSpyBean lateinit var kontrollDAO: KontrollDAO
 
-    val testregel = testUtils.createTestregelAggregate(1)
-    val testregel2 = testUtils.createTestregelAggregate(2)
+  val testregel = testUtils.createTestregelAggregate(1)
+  val testregel2 = testUtils.createTestregelAggregate(2)
 
   @BeforeAll
   fun setup() {
 
+    doReturn(testregel).`when`(testregelCache).getTestregelById(testregel.id)
+    doReturn(testregel2).`when`(testregelCache).getTestregelById(testregel2.id)
 
-      doReturn(testregel).`when`(testregelCache).getTestregelById(testregel.id)
-      doReturn(testregel2).`when`(testregelCache).getTestregelById(testregel2.id)
-
-      testUtils.createTestMaalingar(listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"), listOf(testregel.id,testregel2.id))
+    testUtils.createTestMaalingar(
+        listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"),
+        listOf(testregel.id, testregel2.id))
   }
 
   @Test
@@ -247,52 +248,51 @@ class ResultatServiceTest(
     assertTrue(resultat.size == 1)
   }
 
-    @Test
-    fun getResultatPrTema() {
+  @Test
+  fun getResultatPrTema() {
 
-        doReturn(testregel).`when`(testregelCache).getTestregelById(testregel.id)
-        doReturn(testregel2).`when`(testregelCache).getTestregelById(testregel2.id)
+    doReturn(testregel).`when`(testregelCache).getTestregelById(testregel.id)
+    doReturn(testregel2).`when`(testregelCache).getTestregelById(testregel2.id)
 
-        val expected =
-            ResultatTema(
-                "Bilder",
-                0.5,
-                18,
-                6,
-                12,
-                0,
-                0,
-            )
+    val expected =
+        ResultatTema(
+            "Bilder",
+            0.5,
+            18,
+            6,
+            12,
+            0,
+            0,
+        )
 
-        val resultat = resultatService.getResultatPrTema(1, null, 1, null, null)
+    val resultat = resultatService.getResultatPrTema(1, null, 1, null, null)
 
-        assertThat(resultat.size).isEqualTo(1)
+    assertThat(resultat.size).isEqualTo(1)
 
-        assertThat(resultat[0]).isEqualTo(expected)
-    }
+    assertThat(resultat[0]).isEqualTo(expected)
+  }
 
-    @Test
-    fun getResultatPrKrav() {
+  @Test
+  fun getResultatPrKrav() {
 
-        doReturn(testregel).`when`(testregelCache).getTestregelById(testregel.id)
-        doReturn(testregel2).`when`(testregelCache).getTestregelById(testregel2.id)
+    doReturn(testregel).`when`(testregelCache).getTestregelById(testregel.id)
+    doReturn(testregel2).`when`(testregelCache).getTestregelById(testregel2.id)
 
-        val expected =
-            ResultatKrav(
-                kravId = 1,
-                suksesskriterium = "1.1.1",
-                score = 0.5,
-                talTestaElement = 18,
-                talElementBrot = 6,
-                talElementSamsvar = 12,
-                talElementVarsel = 0,
-                talElementIkkjeForekomst = 0
-            )
+    val expected =
+        ResultatKrav(
+            kravId = 1,
+            suksesskriterium = "1.1.1",
+            score = 0.5,
+            talTestaElement = 18,
+            talElementBrot = 6,
+            talElementSamsvar = 12,
+            talElementVarsel = 0,
+            talElementIkkjeForekomst = 0)
 
-        val resultat = resultatService.getResultatPrKrav(1, null, 1, null, null)
+    val resultat = resultatService.getResultatPrKrav(1, null, 1, null, null)
 
-        assertThat(resultat.size).isEqualTo(1)
+    assertThat(resultat.size).isEqualTo(1)
 
-        assertThat(resultat[0]).isEqualTo(expected)
-    }
+    assertThat(resultat[0]).isEqualTo(expected)
+  }
 }

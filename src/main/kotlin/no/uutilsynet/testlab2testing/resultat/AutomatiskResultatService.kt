@@ -52,6 +52,13 @@ class AutomatiskResultatService(
     }
   }
 
+  override fun getResultatForKontroll(kontrollId: Int): List<TestresultatDetaljert> {
+    return maalingService
+        .getMaalingForKontroll(kontrollId)
+        .let { testresultatDAO.listBy(maalingId = it) }
+        .let(testresultatDBConverter::mapTestresults)
+  }
+
   fun getDetaljertResultatForKontroll(
       kontrollId: Int,
       loeysingId: Int,
@@ -73,7 +80,7 @@ class AutomatiskResultatService(
     val resultat =
         testresultatDAO.listBy(
             maalingId = maalingId, loeysingId = loeysingId, testregelId, sortPaginationParams)
-    return testresultatDBConverter.mapTestresults(resultat, maalingId, loeysingId)
+    return testresultatDBConverter.mapTestresults(resultat)
   }
 
   @Observed(name = "AutomatiskResultatService.getAutomatiskTestresultatMaaling")
@@ -82,15 +89,13 @@ class AutomatiskResultatService(
       loeysingId: Int
   ): List<TestresultatDetaljert> {
     val resultat = testresultatDAO.listBy(maalingId = maalingId, loeysingId = loeysingId)
-    return testresultatDBConverter.mapTestresults(resultat, maalingId, loeysingId)
+    return testresultatDBConverter.mapTestresults(resultat)
   }
 
   private fun getAutotesterTestresultat(maalingId: Int, loeysingId: Int?): List<TestResultat> {
-    val testresultat: List<TestResultat> =
-        maalingService.getTestresultatMaalingLoeysing(maalingId, loeysingId).getOrThrow().map {
-          it as TestResultat
-        }
-    return testresultat
+    return maalingService.getTestresultatMaalingLoeysing(maalingId, loeysingId).getOrThrow().map {
+      it as TestResultat
+    }
   }
 
   @Observed(name = "AutomatiskResultatService.getResultatForMaaling")
@@ -150,7 +155,7 @@ class AutomatiskResultatService(
     val resultat = testresultatDAO.listBy(maalingId, loeysingId, testreglar, sortPaginationParams)
 
     return if (testresultatDAO.hasResultInDB(maalingId, loeysingId)) {
-      return testresultatDBConverter.mapTestresults(resultat, maalingId, loeysingId)
+      return testresultatDBConverter.mapTestresults(resultat)
     } else {
       getResultatForMaaling(maalingId, loeysingId)
           .filter { filterByTestregel(it.testregelId, testreglar) }

@@ -39,6 +39,8 @@ sealed class KontrollResultatService(
 
   abstract fun getResultatForKontroll(kontrollId: Int, loeysingId: Int): List<TestresultatDetaljert>
 
+  abstract fun getResultatForKontroll(kontrollId: Int): List<TestresultatDetaljert>
+
   abstract fun getResultatForKontroll(
       kontrollId: Int,
       loeysingId: Int,

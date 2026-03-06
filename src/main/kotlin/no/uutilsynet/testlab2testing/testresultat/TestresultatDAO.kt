@@ -6,6 +6,7 @@ import java.sql.Timestamp
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.common.SortParamTestregel
+import no.uutilsynet.testlab2testing.testresultat.model.TestresultatExport
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
@@ -118,7 +119,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   @Observed(name = "List<TestresultatDB> listBy maalingId and loeysingId brot")
-  fun listBy(maalingId: Int, loeysingId: Int?): List<TestresultatDB> {
+  fun listBy(maalingId: Int, loeysingId: Int): List<TestresultatDB> {
     val sql =
         "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and element_resultat= 'brot'"
     val params =
@@ -128,6 +129,25 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 maalingId,
             )
             .addValue("loeysingId", loeysingId)
+    return runCatching { jdbcTemplate.query(sql, params, rowMapper) }
+        .fold(
+            onSuccess = { it },
+            onFailure = {
+              logger.error(it.message)
+              emptyList()
+            })
+  }
+
+  @Observed(name = "List<TestresultatDB> listBy maalingId and loeysingId brot")
+  fun listBy(maalingId: Int): List<TestresultatDB> {
+    val sql =
+        "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id WHERE maaling_id = :maalingId"
+    val params =
+        MapSqlParameterSource()
+            .addValue(
+                "maalingId",
+                maalingId,
+            )
     return runCatching { jdbcTemplate.query(sql, params, rowMapper) }
         .fold(
             onSuccess = { it },
@@ -270,4 +290,49 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       SortParamTestregel.elementPointer -> "element_omtale_pointer"
     }
   }
+
+  /**
+   * Henter testresultat fra testresultat-tabellen og mapper til TestresultatDB, selv om kolonnene
+   * ikke nødvendigvis matcher direkte.
+   *
+   * @param sql SQL-spørring mot testresultat-tabellen
+   * @param params Parametre til spørringen
+   * @return Liste av TestresultatDB
+   */
+  fun getTestresultatByTestgrunnlagId(testgrunnlagId: Int): List<TestresultatExport> =
+      jdbcTemplate.query(
+          """SELECT * FROM testresultat t
+               join testlab2_testing.testgrunnlag tg on tg.id=t.testgrunnlag_id
+               WHERE testgrunnlag_id = :testgrunnlagId"""
+              .trimMargin(),
+          MapSqlParameterSource().addValue("testgrunnlagId", testgrunnlagId)) { rs, _ ->
+            mapResultSetToTestresultatDBBase(rs)
+          }
+
+  fun getTestresultatByMaalingId(maalingId: Int, loeysingId: Int): List<TestresultatExport> =
+      jdbcTemplate.query(
+          """SELECT * FROM testresultat t
+            join testlab2_testing.maalingv1 m on m.id=t.maaling_id 
+            WHERE maaling_id = :maalingId and loeysing_id = :loeysingId""",
+          MapSqlParameterSource()
+              .addValue("maalingId", maalingId)
+              .addValue("loeysingId", loeysingId)) { rs, _ ->
+            mapResultSetToTestresultatDBBase(rs)
+          }
+
+  private fun mapResultSetToTestresultatDBBase(rs: ResultSet): TestresultatExport =
+      TestresultatExport(
+          testrunUuid = rs.getString("uuid"),
+          testregelId = rs.getInt("testregel_id"),
+          loeysingId = rs.getInt("loeysing_id"),
+          sideutvalId = rs.getInt("crawl_side_id"),
+          testUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant()
+                  ?: java.time.Instant.now(),
+          elementUtfall = rs.getString("element_utfall") ?: "",
+          elementResultat = rs.getString("element_resultat")?.let { TestresultatUtfall.valueOf(it) }
+                  ?: TestresultatUtfall.ikkjeForekomst,
+          elementOmtalePointer = rs.getString("element_omtale_pointer") ?: "",
+          elementOmtaleHtml = rs.getString("element_omtale_html") ?: "",
+          elementOmtaleDescription = rs.getString("element_omtale") ?: "",
+          brukarId = rs.getInt("brukar_id"))
 }
