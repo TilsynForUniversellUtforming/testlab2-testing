@@ -51,26 +51,3 @@ data class TestresultatDBBase(
         brukarId = this.brukarId)
   }
 }
-
-// fun TestresultatDetaljert.toTestresultatDBBase(
-//    detaljert: TestresultatDetaljert,
-//    maalingId: Int? = null,
-//    sideutvalId: Int? = null
-// ): TestresultatDBBase {
-//    return TestresultatDBBase(
-//        testgrunnlagId = detaljert.testgrunnlagId,
-//        maalingId = maalingId,
-//        testregelId = detaljert.testregelId,
-//        loeysingId = detaljert.loeysingId,
-//        sideutvalId = sideutvalId,
-//        testUtfoert =
-// detaljert.testVartUtfoert?.atZone(java.time.ZoneId.systemDefault())?.toInstant()
-//            ?: java.time.Instant.EPOCH,
-//        elementUtfall = detaljert.elementUtfall ?: "",
-//        elementResultat = detaljert.elementResultat ?: TestresultatUtfall.IKKE_TESTET,
-//        elementOmtalePointer = detaljert.elementOmtale?.pointer,
-//        elmentOmtaleHtml = detaljert.elementOmtale?.htmlCode,
-//        elementOmtaleDescription = detaljert.elementOmtale?.description,
-//        brukarId = detaljert.brukarId?.id ?: -1
-//    )
-// }
