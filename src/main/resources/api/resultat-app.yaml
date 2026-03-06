@@ -1264,29 +1264,6 @@ components:
           type: array
           items:
             type: string
-    JsonSchema:
-      type: object
-      properties:
-        title:
-          type: string
-        description:
-          type: string
-        properties:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/AbstractJsonSchemaPropertyObject"
-        requiredProperties:
-          type: array
-          items:
-            type: string
-        definitions:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/Item"
-        type:
-          type: string
-        $schema:
-          type: string
     RepresentationModelObject:
       type: object
       properties:

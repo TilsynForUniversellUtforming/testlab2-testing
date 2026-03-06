@@ -329,6 +329,7 @@
                             <inputSpec>${project.basedir}/src/main/resources/api/resultat-app.yaml</inputSpec>
                             <generatorName>kotlin-spring</generatorName>
                             <skipValidateSpec>true</skipValidateSpec>
+                            <addCompileSourceRoot>true</addCompileSourceRoot>
                             <configOptions>
                                 <library>spring-declarative-http-interface</library>
                                 <openApiNullable>false</openApiNullable>
