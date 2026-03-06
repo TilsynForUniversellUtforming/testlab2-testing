@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.testresultat.model
 
-import jakarta.persistence.*
 import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 

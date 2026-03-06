@@ -183,7 +183,6 @@ class MaalingService(
       idList: List<Int>?,
       maalingId: Int,
   ): List<Loeysing> {
-
     val loeysingList =
         idList?.let { idList -> loeysingsRegisterClient.getMany(idList) }?.getOrThrow()
             ?: emptyList<Loeysing>().also { logger.warn("Måling $maalingId har ikkje løysingar") }

@@ -19,6 +19,7 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters.Companion.validateParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutotesterTestresultat
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -121,8 +122,8 @@ class MaalingResource(
       summary = "Hentar aggregert resultat for ei måling",
       description =
           "Aggregerar resultat frå alle testkøyringar for ei måling. " +
-                  "Resultatane kan aggregerast på testresultat, " +
-                  "suksesskriterium eller side. Dette velger du med parameteret `aggregeringstype`.",
+              "Resultatane kan aggregerast på testresultat, " +
+              "suksesskriterium eller side. Dette velger du med parameteret `aggregeringstype`.",
       parameters =
           [
               Parameter(
@@ -208,6 +209,18 @@ class MaalingResource(
   @GetMapping("aggregering/reimport")
   fun reimportAggregering(@RequestParam maalingId: Int, @RequestParam loeysingId: Int?) {
     maalingService.reimportAggregeringar(maalingId, loeysingId)
+  }
+
+  @GetMapping("{id}/testreglar")
+  fun getTestreglarForMaaling(@PathVariable id: Int): ResponseEntity<List<Testregel>> {
+    return maalingService
+        .getTestreglarForMaaling(id)
+        .fold(
+            { testreglar -> ResponseEntity.ok(testreglar) },
+            { error ->
+              logger.error("Feila da vi skulle hente testreglar for målinga $id", error)
+              ResponseEntity.internalServerError().body(emptyList())
+            })
   }
 
   private fun putNewStatusMaalingTestingFerdig(
