@@ -14,7 +14,7 @@ class ResultatAppClientConfig(
     clientBuilder: RestClient.Builder,
     resultatRegisterProperties: ResultatRegisterProperties
 ) {
-  val restClient = clientBuilder.baseUrl(resultatRegisterProperties.host).build();
+  val restClient = clientBuilder.baseUrl(resultatRegisterProperties.host).build()
 
   val proxyFactory: HttpServiceProxyFactory =
       HttpServiceProxyFactory.builder()
@@ -27,9 +27,8 @@ class ResultatAppClientConfig(
         TestresultatAggregertPerTestregelSearchControllerApi::class.java)
   }
 
-    @Bean
-    fun testresultatClient(): TestresultatSearchControllerApi {
-        return proxyFactory.createClient(
-            TestresultatSearchControllerApi::class.java)
-    }
+  @Bean
+  fun testresultatClient(): TestresultatSearchControllerApi {
+    return proxyFactory.createClient(TestresultatSearchControllerApi::class.java)
+  }
 }
