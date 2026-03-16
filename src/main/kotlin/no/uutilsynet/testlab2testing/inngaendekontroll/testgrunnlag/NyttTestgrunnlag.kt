@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
+import no.uutilsynet.testlab2.constants.TestgrunnlagType
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
 

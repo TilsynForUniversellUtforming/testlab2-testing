@@ -11,6 +11,8 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
+import no.uutilsynet.testlab2testing.resultat.repository.ResultatDAO
+import no.uutilsynet.testlab2testing.resultat.service.ManueltResultatService
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
@@ -43,7 +45,8 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
           sideutvalDAO,
           bildeService,
           testResultatDAOTestresultat,
-          testregelCache)
+          testregelCache
+      )
 
   @Test
   fun `test getFilteredAndMappedResults with valid filter`() {

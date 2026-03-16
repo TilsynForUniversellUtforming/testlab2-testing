@@ -1,11 +1,10 @@
-package no.uutilsynet.testlab2testing.resultat
+package no.uutilsynet.testlab2testing.resultat.service
 
-import kotlin.math.min
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
-import no.uutilsynet.testlab2testing.common.SortOrder
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
-import no.uutilsynet.testlab2testing.common.SortParamTestregel
-import no.uutilsynet.testlab2testing.resultat.ResultatService.LoysingList
+import no.uutilsynet.testlab2testing.resultat.ResultatPerTestregelDTO
+import no.uutilsynet.testlab2testing.resultat.common.LoysingList
+import no.uutilsynet.testlab2testing.resultat.repository.ResultatDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
@@ -31,7 +30,7 @@ sealed class KontrollResultatService(
     return this.filter { it.elementResultat == TestresultatUtfall.brot }
   }
 
-  open fun getKontrollResultat(kontrollId: Int): List<ResultatLoeysingDTO> {
+  open fun getKontrollResultat(kontrollId: Int): List<ResultatPerTestregelDTO> {
     throw NotImplementedError("Ikke implementert")
   }
 
@@ -48,7 +47,7 @@ sealed class KontrollResultatService(
       sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDetaljert>
 
-  abstract fun getAlleResultat(): List<ResultatLoeysingDTO>
+  abstract fun getAlleResultat(): List<ResultatPerTestregelDTO>
 
   abstract fun progresjonPrLoeysing(
       testgrunnlagId: Int,
@@ -81,36 +80,4 @@ sealed class KontrollResultatService(
       loeysingId: Int,
       kravId: Int
   ): Result<Int>
-
-  protected fun List<TestresultatDetaljert>.paginate(
-      sortPaginationParams: SortPaginationParams
-  ): List<TestresultatDetaljert> {
-    val startIndex = sortPaginationParams.pageNumber * sortPaginationParams.pageSize
-    val endIndex = resultSubListEnd(sortPaginationParams, this)
-    return this.subList(startIndex, endIndex)
-  }
-
-  protected fun List<TestresultatDetaljert>.sort(
-      sortPaginationParams: SortPaginationParams
-  ): List<TestresultatDetaljert> {
-
-    val sorted =
-        when (sortPaginationParams.sortParam) {
-          SortParamTestregel.side -> this.sortedBy { it.side.toString() }
-          SortParamTestregel.testregel -> this.sortedBy { it.testregelNoekkel }
-          SortParamTestregel.elementUtfall -> this.sortedBy { it.elementResultat?.name }
-          SortParamTestregel.elementPointer -> this.sortedBy { it.elementOmtale?.pointer }
-        }
-
-    return if (sortPaginationParams.sortOrder == SortOrder.desc) {
-      sorted.reversed()
-    } else {
-      sorted
-    }
-  }
-
-  protected fun resultSubListEnd(
-      sortPaginationParams: SortPaginationParams,
-      resultat: List<TestresultatDetaljert>
-  ): Int = min((sortPaginationParams.pageNumber + 1) * sortPaginationParams.pageSize, resultat.size)
 }

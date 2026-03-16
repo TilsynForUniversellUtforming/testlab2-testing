@@ -2,9 +2,10 @@ package no.uutilsynet.testlab2testing.resultat
 
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2.constants.TestgrunnlagType
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
+import no.uutilsynet.testlab2testing.resultat.repository.ResultatDAO
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -51,7 +52,7 @@ class ResultatDAOTest(
   @Test
   fun getTestresultatMaaling() {
 
-    val resultat: List<ResultatLoeysingDTO> = resultatDAO.getTestresultatMaaling()
+    val resultat: List<ResultatPerTestregelDTO> = resultatDAO.getTestresultatMaaling()
 
     assertThat(resultat.size).isEqualTo(2)
 
@@ -67,7 +68,7 @@ class ResultatDAOTest(
   fun testGetTestresultatMaalingWithParams() {
 
     val expected1 =
-        ResultatLoeysingDTO(
+        ResultatPerTestregelDTO(
             3,
             testgrunnlagId = maalingIds[0],
             "Forenkla kontroll 20204",

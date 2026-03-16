@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
+import no.uutilsynet.testlab2.constants.TestgrunnlagType
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
@@ -154,7 +155,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val mapSqlParameterSource = MapSqlParameterSource()
       mapSqlParameterSource.addValue("kontrollId", testgrunnlag.kontrollId)
       mapSqlParameterSource.addValue("namn", testgrunnlag.namn)
-      mapSqlParameterSource.addValue("type", testgrunnlag.type.name)
+      mapSqlParameterSource.addValue("type", testgrunnlag.type)
       mapSqlParameterSource.addValue("datoOppretta", Timestamp.from(Instant.now()))
 
       jdbcTemplate.update(

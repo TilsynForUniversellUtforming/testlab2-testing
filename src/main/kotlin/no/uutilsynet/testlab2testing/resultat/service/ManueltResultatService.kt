@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.resultat
+package no.uutilsynet.testlab2testing.resultat.service
 
 import java.net.URL
 import java.time.Instant
@@ -11,10 +11,16 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
+import no.uutilsynet.testlab2testing.resultat.ResultatPerTestregelDTO
+import no.uutilsynet.testlab2testing.resultat.common.LoysingList
+import no.uutilsynet.testlab2testing.resultat.repository.ResultatDAO
+import no.uutilsynet.testlab2testing.resultat.util.TestresultatDetaljertListUtils.paginate
+import no.uutilsynet.testlab2testing.resultat.util.TestresultatDetaljertListUtils.sort
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.stereotype.Service
 
@@ -26,7 +32,7 @@ class ManueltResultatService(
     private val testResultatDAO: TestResultatDAO,
     private val sideutvalDAO: SideutvalDAO,
     private val bildeService: BildeService,
-    testresultatDAO: no.uutilsynet.testlab2testing.testresultat.TestresultatDAO,
+    testresultatDAO: TestresultatDAO,
     testregelCache: TestregelCache
 ) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelCache) {
 
@@ -128,13 +134,13 @@ class ManueltResultatService(
     return testVartUtfoert?.atZone(Constants.ZONEID_OSLO)?.toLocalDateTime()
   }
 
-  override fun getAlleResultat(): List<ResultatLoeysingDTO> {
+  override fun getAlleResultat(): List<ResultatPerTestregelDTO> {
     return resultatDAO.getTestresultatTestgrunnlag()
   }
 
   override fun progresjonPrLoeysing(
       testgrunnlagId: Int,
-      loeysingar: ResultatService.LoysingList,
+      loeysingar: LoysingList,
   ): Map<Int, Int> {
 
     return getResultatPrTestgrunnlag(testgrunnlagId)
@@ -187,7 +193,7 @@ class ManueltResultatService(
           .times(100)
           .toInt()
 
-  override fun getKontrollResultat(kontrollId: Int): List<ResultatLoeysingDTO> {
+  override fun getKontrollResultat(kontrollId: Int): List<ResultatPerTestregelDTO> {
     val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
     val resultatTestgrunnlag = testgrunnlagId.let { resultatDAO.getTestresultatTestgrunnlag(it) }
 

@@ -1,8 +1,14 @@
-package no.uutilsynet.testlab2testing.resultat
+package no.uutilsynet.testlab2testing.resultat.service
 
 import io.micrometer.observation.annotation.Observed
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
+import no.uutilsynet.testlab2testing.resultat.ResultatPerTestregelDTO
+import no.uutilsynet.testlab2testing.resultat.TestresultatDBConverter
+import no.uutilsynet.testlab2testing.resultat.common.LoysingList
+import no.uutilsynet.testlab2testing.resultat.repository.ResultatDAO
+import no.uutilsynet.testlab2testing.resultat.util.TestresultatDetaljertListUtils.paginate
+import no.uutilsynet.testlab2testing.resultat.util.TestresultatDetaljertListUtils.sort
 import no.uutilsynet.testlab2testing.testing.automatisk.TestResultat
 import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
@@ -127,19 +133,19 @@ class AutomatiskResultatService(
         emptyList())
   }
 
-  private fun getKontrollResultatMaaling(maalingId: Int?): List<ResultatLoeysingDTO> {
+  private fun getKontrollResultatMaaling(maalingId: Int?): List<ResultatPerTestregelDTO> {
     val resultatMaaling =
         maalingId?.let { resultatDAO.getTestresultatMaaling(it) } ?: getAlleResultat()
     return resultatMaaling
   }
 
-  override fun getAlleResultat(): List<ResultatLoeysingDTO> {
+  override fun getAlleResultat(): List<ResultatPerTestregelDTO> {
     return resultatDAO.getTestresultatMaaling()
   }
 
   override fun progresjonPrLoeysing(
       testgrunnlagId: Int,
-      loeysingar: ResultatService.LoysingList,
+      loeysingar: LoysingList,
   ): Map<Int, Int> {
     return loeysingar.loeysingar.keys.associateWith { 100 }
   }
@@ -164,7 +170,7 @@ class AutomatiskResultatService(
     }
   }
 
-  override fun getKontrollResultat(kontrollId: Int): List<ResultatLoeysingDTO> {
+  override fun getKontrollResultat(kontrollId: Int): List<ResultatPerTestregelDTO> {
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)
     return getKontrollResultatMaaling(maalingId)
   }

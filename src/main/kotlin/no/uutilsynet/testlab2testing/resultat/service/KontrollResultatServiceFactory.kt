@@ -2,13 +2,16 @@ package no.uutilsynet.testlab2testing.resultat
 
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
+import no.uutilsynet.testlab2testing.resultat.service.AutomatiskResultatService
+import no.uutilsynet.testlab2testing.resultat.service.KontrollResultatService
+import no.uutilsynet.testlab2testing.resultat.service.ManueltResultatService
 import org.springframework.stereotype.Service
 
 @Service
 class KontrollResultatServiceFactory(
-    private val automatiskResultatService: AutomatiskResultatService,
-    private val manueltResultatService: ManueltResultatService,
-    private val kontrollDAO: KontrollDAO
+  private val automatiskResultatService: AutomatiskResultatService,
+  private val manueltResultatService: ManueltResultatService,
+  private val kontrollDAO: KontrollDAO
 ) {
 
   fun getResultatService(kontrollId: Int): KontrollResultatService {

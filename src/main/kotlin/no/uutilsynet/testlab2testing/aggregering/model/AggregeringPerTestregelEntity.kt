@@ -1,16 +1,19 @@
 package no.uutilsynet.testlab2testing.aggregering.model
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import java.util.UUID
 
 @Suppress("LongParameterList")
 @Entity(name = "aggregering_testregel")
 class AggregeringPerTestregelEntity(
     var maalingId: Int?,
     var testgrunnlagId: Int?,
-    var testrunUuid: String?,
+    @Column(columnDefinition = "testrun_uuid")
+    var testrunUuid: UUID?,
     val loeysingId: Int,
     val testregelId: Int,
     val suksesskriterium: Int,
