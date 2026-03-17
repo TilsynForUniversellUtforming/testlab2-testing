@@ -160,7 +160,8 @@ class ResultatService(
         resultatMeta: ResultatMetadata
     ): List<ResultatPerTestregelDTO> {
 
-        val aggregeringsData = aggregeringPerTestregelRepository.findByTestrunUuid(UUID.fromString(resultatMeta.testrunUuid))
+        val aggregeringsData = aggregeringPerTestregelRepository
+            .findByTestrunUuid(UUID.fromString(resultatMeta.testrunUuid))
 
         println("Aggregeringsdata for testrunUuid ${resultatMeta.testrunUuid}: $aggregeringsData")
         return aggregeringsData.map {
@@ -172,11 +173,11 @@ class ResultatService(
                 testType = resultatMeta.testgrunnlagType,
                 dato = resultatMeta.dato,
                 testar = listOf(),
-                loeysingId = 0,
-                score = 0.0,
-                talElementSamsvar = 0,
-                talElementBrot = 0,
-                testregelId = 0,
+                loeysingId = it.loeysingId,
+                score = it.testregelGjennomsnittlegSideSamsvarProsent?:0.0,
+                talElementSamsvar = it.talElementSamsvar,
+                talElementBrot = it.talElementBrot,
+                testregelId = it.testregelId,
             )
         }
     }
@@ -324,6 +325,9 @@ class ResultatService(
   // Extension function for unresolved reference
   private fun List<ResultatPerTestregelDTO>.toResultatOversiktLoeysing(): List<ResultatOversiktLoeysing> {
     val loeysingar = this.map { it.loeysingId }.let { getLoeysingMap(it).getOrThrow() }
+      val testreglar = this.map { it.testregelId }
+      println("Testregelar for resultat: $testreglar")
+
     return this.map { ResultatMapper.mapTestregel(it, testregelCache) }
         .groupBy { it.testregelId }
         .map { (testregelId, result) ->
