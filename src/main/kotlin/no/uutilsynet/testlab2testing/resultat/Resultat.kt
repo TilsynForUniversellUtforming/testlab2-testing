@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.resultat
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.TestgrunnlagType
+import java.util.UUID
 
 data class Resultat(
     val id: Int,
@@ -48,7 +49,7 @@ data class ResultatPerTestregel(
 
 data class ResultatPerTestregelDTO(
     val id: Int,
-    val testgrunnlagId: Int,
+    val testgrunnlagId: Int?,
     val namn: String,
     val typeKontroll: Kontrolltype,
     val testType: TestgrunnlagType,
@@ -59,6 +60,7 @@ data class ResultatPerTestregelDTO(
     val talElementSamsvar: Int,
     val talElementBrot: Int,
     val testregelId: Int,
+    val testgrunnlagUuid: UUID?
 )
 
 /** Uttrekk resultat per løysing */

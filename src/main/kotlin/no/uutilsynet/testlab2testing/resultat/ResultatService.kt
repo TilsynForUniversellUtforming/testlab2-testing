@@ -2,7 +2,7 @@ package no.uutilsynet.testlab2testing.resultat
 
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.TestgrunnlagType
-import no.uutilsynet.testlab2testing.aggregering.repository.AggregeringPerTestregelRepository
+import no.uutilsynet.testlab2testing.aggregering.model.AggregeringPerTestregelEntity
 import no.uutilsynet.testlab2testing.ekstern.resultat.EksternResultatDAO
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
@@ -13,11 +13,11 @@ import no.uutilsynet.testlab2testing.resultat.common.ResultatMapper
 import no.uutilsynet.testlab2testing.resultat.repository.ResultatDAO
 import no.uutilsynet.testlab2testing.resultat.service.AutomatiskResultatService
 import no.uutilsynet.testlab2testing.resultat.service.KontrollResultatService
+import no.uutilsynet.testlab2testing.resultat.service.KontrollResultatServiceFactory
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import java.time.LocalDate
-import java.util.UUID
 
 @Component
 class ResultatService(
@@ -27,7 +27,7 @@ class ResultatService(
     private val automatiskResultatService: AutomatiskResultatService,
     private val testregelCache: TestregelCache,
     private val kontrollResultatServiceFactory: KontrollResultatServiceFactory,
-    private val aggregeringPerTestregelRepository: AggregeringPerTestregelRepository
+    private val resultatMetadataService: ResultatMetadataService
 ) {
 
   val logger = LoggerFactory.getLogger(ResultatService::class.java)
@@ -45,7 +45,7 @@ class ResultatService(
 
   @Cacheable("resultatKontroll")
   fun getKontrollResultat(kontrollId: Int): List<Resultat> {
-    return getKontrollResultatCommon { resultatDAO.getResultatKontroll(kontrollId) }
+    return getKontrollResultatCommon { getResultsPerTestregel(kontrollId,null) }
   }
 
   fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
@@ -61,30 +61,23 @@ class ResultatService(
 
   @Cacheable("resultatKontroll")
   fun getKontrollResultatMedType(kontrollId: Int, kontrolltype: Kontrolltype): List<Resultat> {
-    val resultat = resultatForKontrollType(kontrolltype, kontrollId)
-    return resultat
+      return getKontrollResultatCommon {
+          getResultatService(kontrolltype).getKontrollResultat(kontrollId)
+      }
   }
 
-  private fun resultatForKontrollType(kontrolltype: Kontrolltype, kontrollId: Int): List<Resultat> {
-    return getKontrollResultatCommon {
-      getResultatService(kontrolltype).getKontrollResultat(kontrollId)
-    }
-  }
-
-  private fun resultatgruppertPrKontroll(
+    private fun resultatgruppertPrKontroll(
       kontrollId: Int,
       result: List<ResultatPerTestregelDTO>,
   ): Resultat {
-    val resultatLoeysingar = loeysingResultatList(result)
-
     return Resultat(
         kontrollId,
         result.first().namn,
         getKontrolltype(result),
-        resultatLoeysingar.first().testType,
+        result.first().testType,
         result.first().dato,
         erKontrollPublisert(result),
-        resultatLoeysingar)
+        loeysingResultatList(result))
   }
 
   private fun loeysingResultatList(result: List<ResultatPerTestregelDTO>): List<LoeysingResultat> {
@@ -144,27 +137,26 @@ class ResultatService(
 
     fun getKontrollLoeysingResultat(
         kontrollId: Int,
-        loeysingId: Int,
+        loeysingId: Int?,
     ): List<ResultatOversiktLoeysing> {
 
-        val resultatMetadata = resultatDAO.getResultatMetadata(kontrollId, loeysingId)
-        println("Resultatmeta " + resultatMetadata)
-        return resultatDAO.getResultatMetadata(kontrollId, loeysingId)
-            .flatMap { resultatMetaElement ->
-                mapResultatMetaToResultatPerTestregelDTO(resultatMetaElement)
-            }
+        return getResultsPerTestregel(kontrollId, loeysingId)
             .toResultatOversiktLoeysing()
     }
+
+    private fun getResultsPerTestregel(
+        kontrollId: Int,
+        loeysingId: Int?
+    ): List<ResultatPerTestregelDTO> = resultatMetadataService.hentResultatMetadata(kontrollId, loeysingId)
+        .flatMap { resultatMetaElement ->
+            mapResultatMetaToResultatPerTestregelDTO(resultatMetaElement)
+        }
 
     fun mapResultatMetaToResultatPerTestregelDTO(
         resultatMeta: ResultatMetadata
     ): List<ResultatPerTestregelDTO> {
-
-        val aggregeringsData = aggregeringPerTestregelRepository
-            .findByTestrunUuid(UUID.fromString(resultatMeta.testrunUuid))
-
-        println("Aggregeringsdata for testrunUuid ${resultatMeta.testrunUuid}: $aggregeringsData")
-        return aggregeringsData.map {
+        return getAggregatedData(resultatMeta)
+            .map {
             ResultatPerTestregelDTO(
                 id = resultatMeta.kontrollId,
                 testgrunnlagId = resultatMeta.testgrunnlagId,
@@ -178,16 +170,22 @@ class ResultatService(
                 talElementSamsvar = it.talElementSamsvar,
                 talElementBrot = it.talElementBrot,
                 testregelId = it.testregelId,
+                it.testrunUuid
             )
         }
     }
 
-  fun getKontrollLoeysingResultatIkkjeRetest(
+    private fun getAggregatedData(resultatMeta: ResultatMetadata): List<AggregeringPerTestregelEntity> {
+        return kontrollResultatServiceFactory
+            .getAggregatedResultatService(resultatMeta.kontrollId)
+            .getAggregatedDataPerTestregel(resultatMeta)
+    }
+
+    fun getKontrollLoeysingResultatIkkjeRetest(
       kontrollId: Int,
       loeysingId: Int,
   ): List<ResultatOversiktLoeysing> {
-    return resultatDAO
-        .getResultatKontrollLoeysing(kontrollId, loeysingId)
+    return getResultsPerTestregel(kontrollId, loeysingId)
         .filter { it.testType == TestgrunnlagType.OPPRINNELEG_TEST }
         .toResultatOversiktLoeysing()
   }
@@ -202,15 +200,14 @@ class ResultatService(
         require(kontrollId != null) { "kontrollId kan ikkje vere null" }
         require(loeysingId != null) { "loeysingId kan ikkje vere null" }
 
-        return resultatDAO
-            .getResultatKontrollLoeysing(kontrollId, loeysingId)
+        return getResultsPerTestregel(kontrollId, loeysingId)
             .groupBy { it.testregelId }
             .map { calculateResultatKrav(it) }
             .groupBy { it.kravId }
-            .map { sumResulatKrav(it) }
+            .map { sumResultatKrav(it) }
     }
 
-  private fun sumResulatKrav(entry: Map.Entry<Int, List<ResultatKrav>>): ResultatKrav {
+  private fun sumResultatKrav(entry: Map.Entry<Int, List<ResultatKrav>>): ResultatKrav {
     val items = entry.value
     return ResultatKrav(
         kravId = entry.key,
@@ -293,8 +290,8 @@ class ResultatService(
     require(kontrollId != null) { "kontrollId kan ikkje vere null" }
     require(loeysingId != null) { "loeysingId kan ikkje vere null" }
 
-    return resultatDAO
-        .getResultatKontrollLoeysing(kontrollId, loeysingId)
+
+    return getResultsPerTestregel(kontrollId, loeysingId)
         .groupBy { it.testregelId }
         .map { entry ->
           val testregel = testregelCache.getTestregelById(entry.key)
@@ -325,8 +322,6 @@ class ResultatService(
   // Extension function for unresolved reference
   private fun List<ResultatPerTestregelDTO>.toResultatOversiktLoeysing(): List<ResultatOversiktLoeysing> {
     val loeysingar = this.map { it.loeysingId }.let { getLoeysingMap(it).getOrThrow() }
-      val testreglar = this.map { it.testregelId }
-      println("Testregelar for resultat: $testreglar")
 
     return this.map { ResultatMapper.mapTestregel(it, testregelCache) }
         .groupBy { it.testregelId }

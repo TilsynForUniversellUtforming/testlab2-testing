@@ -80,7 +80,8 @@ class ResultatDAOTest(
             0.5,
             6,
             3,
-            testregelId)
+            testregelId,
+            null)
 
     val resultat = resultatDAO.getTestresultatMaaling(maalingIds[0])
 
@@ -137,27 +138,6 @@ class ResultatDAOTest(
 
     resultat.map { it.testType }.contains(TestgrunnlagType.OPPRINNELEG_TEST)
     resultat.map { it.testType }.contains(TestgrunnlagType.RETEST)
-  }
-
-  @Test
-  fun getResultatKontrollLoeysing() {
-
-    val existing = testgrunnlagDAO.getTestgrunnlag(testgrunnlagIds[0]).getOrThrow()
-
-    val resultat = resultatDAO.getResultatKontrollLoeysing(existing.kontrollId, 2)
-
-    assertThat(resultat.size).isEqualTo(2)
-    assertThat(resultat[0].loeysingId).isEqualTo(2)
-  }
-
-  @Test
-  fun getResultatKontroll() {
-
-    val existing = testgrunnlagDAO.getTestgrunnlag(testgrunnlagIds[0]).getOrThrow()
-
-    val resultat = resultatDAO.getResultatKontroll(existing.kontrollId)
-
-    assertThat(resultat.size).isEqualTo(4)
   }
 
   private fun createTestgrunnlagList(

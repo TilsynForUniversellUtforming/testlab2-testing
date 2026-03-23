@@ -12,9 +12,6 @@ import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 
 sealed class KontrollResultatService(
-    protected val resultatDAO: ResultatDAO,
-    protected val kravregisterClient: KravregisterClient,
-    protected val testresultatDAO: TestresultatDAO,
     protected val testregelCache: TestregelCache,
 ) {
 
@@ -30,9 +27,7 @@ sealed class KontrollResultatService(
     return this.filter { it.elementResultat == TestresultatUtfall.brot }
   }
 
-  open fun getKontrollResultat(kontrollId: Int): List<ResultatPerTestregelDTO> {
-    throw NotImplementedError("Ikke implementert")
-  }
+  abstract fun getKontrollResultat(kontrollId: Int): List<ResultatPerTestregelDTO>
 
   abstract fun getBrukararForTest(kontrollId: Int): List<String>
 

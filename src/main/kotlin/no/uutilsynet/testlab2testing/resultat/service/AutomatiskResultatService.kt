@@ -12,7 +12,6 @@ import no.uutilsynet.testlab2testing.resultat.util.TestresultatDetaljertListUtil
 import no.uutilsynet.testlab2testing.testing.automatisk.TestResultat
 import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
-import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.stereotype.Service
@@ -21,12 +20,11 @@ import org.springframework.stereotype.Service
 class AutomatiskResultatService(
     private val maalingService: MaalingService,
     private val testkoeyringDAO: TestkoeyringDAO,
-    resultatDAO: ResultatDAO,
-    kravregisterClient: KravregisterClient,
+    private val resultatDAO: ResultatDAO,
     testregelCache: TestregelCache,
-    testresultatDAO: TestresultatDAO,
+    private val testresultatDAO: TestresultatDAO,
     private val testresultatDBConverter: TestresultatDBConverter,
-) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelCache) {
+) : KontrollResultatService(testregelCache) {
 
   @Observed(name = "AutomatiskResultatService.getResultatForKontroll")
   override fun getResultatForKontroll(

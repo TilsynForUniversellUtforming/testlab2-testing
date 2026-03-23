@@ -39,7 +39,6 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
   private val manueltResultatService =
       ManueltResultatService(
           resultatDAO,
-          kravregisterClient,
           testgrunnlagDAO,
           testResultatDAO,
           sideutvalDAO,

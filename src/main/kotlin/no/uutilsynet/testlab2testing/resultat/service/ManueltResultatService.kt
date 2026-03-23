@@ -18,7 +18,6 @@ import no.uutilsynet.testlab2testing.resultat.util.TestresultatDetaljertListUtil
 import no.uutilsynet.testlab2testing.resultat.util.TestresultatDetaljertListUtils.sort
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
-import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
@@ -26,15 +25,14 @@ import org.springframework.stereotype.Service
 
 @Service
 class ManueltResultatService(
-    resultatDAO: ResultatDAO,
-    kravregisterClient: KravregisterClient,
+    private val resultatDAO: ResultatDAO,
     private val testgrunnlagDAO: TestgrunnlagDAO,
     private val testResultatDAO: TestResultatDAO,
     private val sideutvalDAO: SideutvalDAO,
     private val bildeService: BildeService,
-    testresultatDAO: TestresultatDAO,
+    private val testresultatDAO: TestresultatDAO,
     testregelCache: TestregelCache
-) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelCache) {
+) : KontrollResultatService(testregelCache) {
 
   override fun getResultatForKontroll(
       kontrollId: Int,

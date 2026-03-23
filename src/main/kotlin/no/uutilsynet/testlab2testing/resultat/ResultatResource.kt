@@ -1,15 +1,12 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import io.micrometer.observation.annotation.Observed
-import java.net.URI
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.common.SortOrder
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.common.SortParamTestregel
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatTestregelAPI
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -17,7 +14,6 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/resultat")
 class ResultatResource(
-    val aggregeringService: AggregeringService,
     val resultatService: ResultatService
 ) {
 
@@ -38,23 +34,7 @@ class ResultatResource(
     return emptyList()
   }
 
-  @PostMapping("/aggregert/{testgrunnlagId}")
-  fun createAggregertResultat(@PathVariable testgrunnlagId: Int): ResponseEntity<Any> =
-      aggregeringService
-          .saveAggregertResultat(testgrunnlagId)
-          .fold(
-              onSuccess = {
-                return ResponseEntity.created(URI.create("/resultat/aggregert/${testgrunnlagId}"))
-                    .build()
-              },
-              onFailure = {
-                logger.error("Feil ved oppretting av aggregert resultat", it)
-                ResponseEntity.internalServerError().build()
-              })
 
-  @GetMapping("/aggregert/{testgrunnlagId}")
-  fun getAggregertResultat(@PathVariable testgrunnlagId: Int): List<AggregertResultatTestregelAPI> =
-      aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
 
   @GetMapping("list")
   fun getListTest(type: Kontrolltype?): ResponseEntity<List<Resultat>> {
