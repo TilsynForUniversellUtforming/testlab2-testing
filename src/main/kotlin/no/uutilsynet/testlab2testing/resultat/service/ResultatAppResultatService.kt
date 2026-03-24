@@ -1,18 +1,32 @@
 package no.uutilsynet.testlab2testing.resultat.service
 
+import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
+import no.uutilsynet.testlab2testing.resultat.ResultatMetadataService
 import no.uutilsynet.testlab2testing.resultat.ResultatPerTestregelDTO
 import no.uutilsynet.testlab2testing.resultat.common.LoysingList
+import no.uutilsynet.testlab2testing.resultat.common.ResultatMapper.mapResultatMetaToResultatPerTestregelDTO
+import no.uutilsynet.testlab2testing.resultat.util.TestresultatDetaljertListUtils.paginate
+import no.uutilsynet.testlab2testing.resultat.util.TestresultatDetaljertListUtils.sort
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.stereotype.Service
 
 @Service
 class ResultatAppResultatService(
-    testregelCache: TestregelCache
+    testregelCache: TestregelCache,
+    private val resultatMetadataService: ResultatMetadataService,
+    private val externalAggregatedResultsService: ExternalAggregatedResultsService
+
 ) : KontrollResultatService(testregelCache) {
     override fun getKontrollResultat(kontrollId: Int): List<ResultatPerTestregelDTO> {
-        TODO("Not yet implemented")
+        return resultatMetadataService.hentResultatMetadata(kontrollId, null)
+            .flatMap { resultatMetaElement ->
+                mapResultatMetaToResultatPerTestregelDTO(
+                    resultatMetaElement,
+                    externalAggregatedResultsService.getAggregatedDataPerTestregel(resultatMetaElement)
+                )
+            }
     }
 
     // ...existing code...
@@ -24,11 +38,15 @@ class ResultatAppResultatService(
         kontrollId: Int,
         loeysingId: Int
     ): List<TestresultatDetaljert> {
-        TODO("Not yet implemented")
+        return getResultatForKontroll(kontrollId)
+            .filter { it.loeysingId == loeysingId }
     }
 
     override fun getResultatForKontroll(kontrollId: Int): List<TestresultatDetaljert> {
-        TODO("Not yet implemented")
+        return resultatMetadataService.hentResultatMetadata(kontrollId, null)
+            .flatMap { resultatMetaElement ->
+                externalAggregatedResultsService.getResultatDetaljert(resultatMetaElement)
+            }
     }
 
     override fun getResultatForKontroll(
@@ -37,7 +55,10 @@ class ResultatAppResultatService(
         testregelId: Int,
         sortPaginationParams: SortPaginationParams
     ): List<TestresultatDetaljert> {
-        TODO("Not yet implemented")
+        return getResultatForKontroll(kontrollId)
+            .filter { it.loeysingId == loeysingId && it.testregelId == testregelId }
+            .sort(sortPaginationParams)
+            .paginate(sortPaginationParams)
     }
 
     override fun getAlleResultat(): List<ResultatPerTestregelDTO> {
@@ -45,10 +66,10 @@ class ResultatAppResultatService(
     }
 
     override fun progresjonPrLoeysing(
-        testgrunnlagId: Int,
+        resultatData: ResultatPerTestregelDTO,
         loeysingar: LoysingList
     ): Map<Int, Int> {
-        TODO("Not yet implemented")
+        return loeysingar.loeysingar.keys.associateWith { 100 }
     }
 
     override fun getTestresulatDetaljertForKrav(
@@ -57,7 +78,11 @@ class ResultatAppResultatService(
         kravId: Int,
         sortPaginationParams: SortPaginationParams
     ): List<TestresultatDetaljert> {
-        TODO("Not yet implemented")
+        val testreglar = getTestreglarForKrav(kravId).map { it.id }
+        return getResultatForKontroll(kontrollId,loeysingId)
+        .filter { filterByTestregel(it.testregelId,testreglar) }
+            .sort(sortPaginationParams)
+            .paginate(sortPaginationParams)
     }
 
     override fun getTalBrotForKontrollLoeysingTestregel(
@@ -65,7 +90,12 @@ class ResultatAppResultatService(
         loeysingId: Int,
         testregelId: Int
     ): Result<Int> {
-        TODO("Not yet implemented")
+        return getResultatForKontroll(kontrollId).count {
+            it.loeysingId == loeysingId
+                    && it.testregelId == testregelId
+                    && it.elementResultat == TestresultatUtfall.brot
+        }
+            .let { Result.success(it) }
     }
 
     override fun getTalBrotForKontrollLoeysingKrav(
@@ -73,7 +103,10 @@ class ResultatAppResultatService(
         loeysingId: Int,
         kravId: Int
     ): Result<Int> {
-        TODO("Not yet implemented")
+        val testreglar = getTestreglarForKrav(kravId).map { it.id }
+        return getResultatForKontroll(kontrollId, loeysingId)
+            .count { filterByTestregel(it.testregelId, testreglar) }
+            .let { Result.success(it) }
     }
 }
 

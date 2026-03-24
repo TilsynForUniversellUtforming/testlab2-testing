@@ -75,7 +75,7 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
         .thenReturn(TestgrunnlagList(testgrunnlagList, listOf(testgrunnlagList)))
     `when`(testResultatDAO.getManyResults(anyInt())).thenReturn(Result.success(mockResult))
     `when`(sideutvalDAO.getSideutvalUrlMapKontroll(anyList()))
-        .thenReturn(mapOf(1 to URI("https://test.com").toURL()))
+        .thenReturn(mapOf(1 to "https://test.com"))
     `when`(testregelCache.getTestregelById(anyInt())).thenReturn(testregel)
 
     val result = manueltResultatService.getFilteredAndMappedResults(1, 1) { it.testregelId == 1 }

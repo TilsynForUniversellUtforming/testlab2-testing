@@ -12,7 +12,8 @@ class KontrollResultatServiceFactory(
   private val kontrollDAO: KontrollDAO,
   private val dbAggregatedResults: DBAggregatedResults,
   private val resutatAppResultatService: ResultatAppResultatService,
-  private val resultatMetadataService: ResultatMetadataService
+  private val resultatMetadataService: ResultatMetadataService,
+  private val externalAggregatedResultsService: ExternalAggregatedResultsService
 ) {
 
   fun getResultatService(kontrollId: Int): KontrollResultatService {
@@ -38,14 +39,13 @@ class KontrollResultatServiceFactory(
   }
 
   fun getAggregatedResultatService(kontrollId: Int): AggregatedResultsInterface {
-    return dbAggregatedResults
+    if(resultsInDB(kontrollId)) {
+      return dbAggregatedResults
+    }
+    return externalAggregatedResultsService
   }
 
   private fun getTypeKontroll(kontrollId: Int): Kontrolltype {
     return kontrollDAO.getKontrollType(kontrollId)
-  }
-
-  private fun getAggregationServiceType(kontrollId: Int) {
-    val testregelList: KontrollDAO.KontrollDB.Testreglar? = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first().testreglar
   }
 }

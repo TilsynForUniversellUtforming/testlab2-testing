@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.resultat.common
 
+import no.uutilsynet.testlab2testing.aggregering.model.AggregeringPerTestregelEntity
+import no.uutilsynet.testlab2testing.resultat.ResultatMetadata
 import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing
 import no.uutilsynet.testlab2testing.resultat.ResultatPerTestregel
 import no.uutilsynet.testlab2testing.resultat.ResultatPerTestregelDTO
@@ -44,7 +46,7 @@ object ResultatMapper {
         val testregel = testregelCache.getTestregelById(result.testregelId)
         return ResultatPerTestregel(
             id = result.id,
-            testgrunnlagId = result.testgrunnlagId,
+            testgrunnlagId = result.testgrunnlagId!!,
             namn = result.namn,
             typeKontroll = result.typeKontroll,
             testType = result.testType,
@@ -84,6 +86,30 @@ object ResultatMapper {
         val talElementBrot = result.sumOf { it.talElementBrot }
         val talElementSamsvar = result.sumOf { it.talElementSamsvar }
         return Triple(score, talElementBrot, talElementSamsvar)
+    }
+
+    fun mapResultatMetaToResultatPerTestregelDTO(
+        resultatMeta: ResultatMetadata,
+        results: List<AggregeringPerTestregelEntity>
+    ): List<ResultatPerTestregelDTO> {
+        return results
+            .map {
+                ResultatPerTestregelDTO(
+                    id = resultatMeta.kontrollId,
+                    testgrunnlagId = resultatMeta.testgrunnlagId,
+                    namn = resultatMeta.kontrollNamn,
+                    typeKontroll = resultatMeta.kontrollType,
+                    testType = resultatMeta.testgrunnlagType,
+                    dato = resultatMeta.dato,
+                    testar = listOf(),
+                    loeysingId = it.loeysingId,
+                    score = it.testregelGjennomsnittlegSideSamsvarProsent?:0.0,
+                    talElementSamsvar = it.talElementSamsvar,
+                    talElementBrot = it.talElementBrot,
+                    testregelId = it.testregelId,
+                    it.testrunUuid
+                )
+            }
     }
 
 }

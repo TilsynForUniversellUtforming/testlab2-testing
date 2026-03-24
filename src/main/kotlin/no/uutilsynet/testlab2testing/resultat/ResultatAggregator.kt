@@ -14,12 +14,14 @@ object ResultatAggregator {
 
     fun loeysingResultatList(
         result: List<ResultatPerTestregelDTO>,
-        resultatForLoeysingarPrTestgrunnlag: (List<ResultatPerTestregelDTO>, Int, Kontrolltype) -> List<LoeysingResultat>
+        resultatForLoeysingarPrTestgrunnlag:
+            (List<ResultatPerTestregelDTO>, Int, Kontrolltype) -> List<LoeysingResultat>
     ): List<LoeysingResultat> {
         return result
+            .filter { it.testgrunnlagId != null }
             .groupBy { it.testgrunnlagId }
             .map { (id, result) ->
-                resultatForLoeysingarPrTestgrunnlag(result, id, getKontrolltype(result))
+                resultatForLoeysingarPrTestgrunnlag(result, id!!, getKontrolltype(result))
             }
             .flatten()
     }

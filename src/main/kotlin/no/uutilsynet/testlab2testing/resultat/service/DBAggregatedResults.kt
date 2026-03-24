@@ -14,4 +14,6 @@ class DBAggregatedResults(
             .findByTestrunUuid(UUID.fromString(resultatMeta.testrunUuid))
             .toList()
     }
+
+
 }

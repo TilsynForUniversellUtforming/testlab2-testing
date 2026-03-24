@@ -22,6 +22,10 @@ class ResultatMetadataService(
             resultatMetadataClient.getResultatMetadata(kontrollId)
         }
 }
+
+    fun harResultInDb(kontrollId: Int): Boolean {
+        return resultatDAO.getResultatMetadata(kontrollId, null).isNotEmpty()
+    }
 }
 
 

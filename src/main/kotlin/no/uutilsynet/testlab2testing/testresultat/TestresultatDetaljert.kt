@@ -12,7 +12,7 @@ data class TestresultatDetaljert(
     val testregelId: Int,
     val testregelNoekkel: String,
     val testgrunnlagId: Int,
-    val side: URL,
+    val side: String,
     val suksesskriterium: List<String>,
     val testVartUtfoert: LocalDateTime?,
     val elementUtfall: String?,

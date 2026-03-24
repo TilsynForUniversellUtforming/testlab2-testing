@@ -45,7 +45,7 @@ sealed class KontrollResultatService(
   abstract fun getAlleResultat(): List<ResultatPerTestregelDTO>
 
   abstract fun progresjonPrLoeysing(
-      testgrunnlagId: Int,
+      resultatData: ResultatPerTestregelDTO,
       loeysingar: LoysingList,
   ): Map<Int, Int>
 

@@ -169,7 +169,7 @@ class AggregeringServiceTest(
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
 
     Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1)))
-        .thenReturn(mapOf(1 to URI("https://www.example.com").toURL()))
+        .thenReturn(mapOf(1 to "https://www.example.com"))
 
     Mockito.doReturn(listOf(testLoeysing)).`when`(maalingDao).getLoeysingarForMaaling(anyInt())
     Mockito.doReturn(listOf(testLoeysing))

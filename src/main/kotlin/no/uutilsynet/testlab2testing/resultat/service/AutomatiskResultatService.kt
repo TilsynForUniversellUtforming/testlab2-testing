@@ -120,7 +120,7 @@ class AutomatiskResultatService(
         testregel.id,
         testregel.testregelId,
         maalingId,
-        it.side,
+        it.side.toString(),
         it.suksesskriterium,
         it.testVartUtfoert,
         it.elementUtfall,
@@ -142,7 +142,7 @@ class AutomatiskResultatService(
   }
 
   override fun progresjonPrLoeysing(
-      testgrunnlagId: Int,
+      resultatData: ResultatPerTestregelDTO,
       loeysingar: LoysingList,
   ): Map<Int, Int> {
     return loeysingar.loeysingar.keys.associateWith { 100 }

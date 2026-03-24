@@ -37,7 +37,7 @@ class TestresultatDBConverter(
         testregelId,
         testregel.testregelId,
         this.maalingId ?: this.testgrunnlagId ?: 0,
-        URI(this.side).toURL(),
+        this.side,
         listOf(testregel.krav.suksesskriterium),
         LocalDateTime.ofInstant(this.testUtfoert, ZoneId.systemDefault()),
         this.elementUtfall,

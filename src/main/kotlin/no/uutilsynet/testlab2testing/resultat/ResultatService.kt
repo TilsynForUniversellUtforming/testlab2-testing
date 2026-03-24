@@ -10,6 +10,7 @@ import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.resultat.common.LoysingList
 import no.uutilsynet.testlab2testing.resultat.common.ResultatMapper
+import no.uutilsynet.testlab2testing.resultat.common.ResultatMapper.mapResultatMetaToResultatPerTestregelDTO
 import no.uutilsynet.testlab2testing.resultat.repository.ResultatDAO
 import no.uutilsynet.testlab2testing.resultat.service.AutomatiskResultatService
 import no.uutilsynet.testlab2testing.resultat.service.KontrollResultatService
@@ -100,7 +101,7 @@ class ResultatService(
         val testarar = getBrukararForTest(first.id)
         val loeysingar = getLoeysingMap(result.map { it.loeysingId }).getOrThrow()
         val statusLoeysingar =
-            progresjonPrLoeysing(first.testgrunnlagId, first.typeKontroll, loeysingar)
+            progresjonPrLoeysing(first, loeysingar)
 
 
         val resultLoeysingar =
@@ -139,7 +140,6 @@ class ResultatService(
         kontrollId: Int,
         loeysingId: Int?,
     ): List<ResultatOversiktLoeysing> {
-
         return getResultsPerTestregel(kontrollId, loeysingId)
             .toResultatOversiktLoeysing()
     }
@@ -149,31 +149,13 @@ class ResultatService(
         loeysingId: Int?
     ): List<ResultatPerTestregelDTO> = resultatMetadataService.hentResultatMetadata(kontrollId, loeysingId)
         .flatMap { resultatMetaElement ->
-            mapResultatMetaToResultatPerTestregelDTO(resultatMetaElement)
-        }
-
-    fun mapResultatMetaToResultatPerTestregelDTO(
-        resultatMeta: ResultatMetadata
-    ): List<ResultatPerTestregelDTO> {
-        return getAggregatedData(resultatMeta)
-            .map {
-            ResultatPerTestregelDTO(
-                id = resultatMeta.kontrollId,
-                testgrunnlagId = resultatMeta.testgrunnlagId,
-                namn = resultatMeta.kontrollNamn,
-                typeKontroll = resultatMeta.kontrollType,
-                testType = resultatMeta.testgrunnlagType,
-                dato = resultatMeta.dato,
-                testar = listOf(),
-                loeysingId = it.loeysingId,
-                score = it.testregelGjennomsnittlegSideSamsvarProsent?:0.0,
-                talElementSamsvar = it.talElementSamsvar,
-                talElementBrot = it.talElementBrot,
-                testregelId = it.testregelId,
-                it.testrunUuid
+            mapResultatMetaToResultatPerTestregelDTO(
+                resultatMetaElement,
+                getAggregatedData(resultatMetaElement)
             )
         }
-    }
+
+
 
     private fun getAggregatedData(resultatMeta: ResultatMetadata): List<AggregeringPerTestregelEntity> {
         return kontrollResultatServiceFactory
@@ -263,11 +245,10 @@ class ResultatService(
   }
 
   private fun progresjonPrLoeysing(
-      testgrunnlagId: Int,
-      kontrolltype: Kontrolltype,
+      resultatData: ResultatPerTestregelDTO,
       loeysingar: LoysingList,
   ): Map<Int, Int> {
-    return getResultatService(kontrolltype).progresjonPrLoeysing(testgrunnlagId, loeysingar)
+    return getResultatService(resultatData.typeKontroll).progresjonPrLoeysing(resultatData, loeysingar)
   }
 
   fun getTestresultatDetaljerPrTestregel(

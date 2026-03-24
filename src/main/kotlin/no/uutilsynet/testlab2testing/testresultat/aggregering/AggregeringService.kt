@@ -520,7 +520,7 @@ class AggregeringService(
   ): List<AggregeringPerSideDB> {
     val testresultatMap = testresultatList.groupBy { it.sideutvalId }
 
-    val sideutvalIdUrlMap: Map<Int, URL> =
+    val sideutvalIdUrlMap: Map<Int, String> =
         sideutvalDAO.getSideutvalUrlMapKontroll(testresultatMap.keys.toList())
 
     // Alle sideutvalIder skal referere til en gyldig url
@@ -539,8 +539,8 @@ class AggregeringService(
           AggregeringPerSideDB(
               null,
               testresultat.first().loeysingId,
-              entry.key!!,
-              entry.key!!.path.split("/").size,
+              URI(entry.key!!).toURL(),
+              entry.key!!.split("/").size,
               0.0,
               testresultat.count { it.elementResultat == TestresultatUtfall.samsvar },
               testresultat.count { it.elementResultat == TestresultatUtfall.brot },
