@@ -122,11 +122,11 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             ResultatMetadata(
                 kontrollId = rs.getInt("kontroll_id"),
                 kontrollNamn = rs.getString("kontroll_tittel"),
-                testrunUuid = rs.getString("testrun_uuid"),
+                testrunUuid = rs.getString("testrun_uuid")?:"",
                 testgrunnlagId = rs.getInt("testgrunnlag_id"),
                 kontrollType = Kontrolltype.valueOf(rs.getString("kontrolltype")),
                 testgrunnlagType = TestgrunnlagType.valueOf(rs.getString("testtype") ?: "OPPRINNELEG_TEST"),
-                dato = handleDate(rs.getDate("dato")),
+                datoOppretta = handleDate(rs.getDate("dato")),
                 testar = emptyList()
             )
         }

@@ -27,7 +27,7 @@ class ExternalAggregatedResultsService(
 ) : AggregatedResultsInterface {
 
     override fun getAggregatedDataPerTestregel(resultatMeta: ResultatMetadata): List<AggregeringPerTestregelEntity> {
-
+        println("Henter aggregerte data for testrunUuid: ${resultatMeta.testrunUuid}")
         return getResultElements(resultatMeta)
             .map { aggregert ->
                 AggregeringPerTestregelEntity(
@@ -60,9 +60,10 @@ class ExternalAggregatedResultsService(
     }
 
     private fun getResultElementsDetaljert(resultatMeta: ResultatMetadata) =
-        testresultatDetaljertClient.findByTestrunUuid(resultatMeta.testrunUuid)
+        testresultatDetaljertClient.findByTestgrunnlagTestrunUuid(resultatMeta.testrunUuid)
             .body?.embedded?.testresultat
             ?: throw IllegalArgumentException("Tomt resultat")
+
 
     fun getResultatDetaljert(resultatMeta: ResultatMetadata) : List<TestresultatDetaljert> {
         val result = getResultElementsDetaljert(resultatMeta)
@@ -77,7 +78,7 @@ class ExternalAggregatedResultsService(
                 loeysingId = element.loeysingId!!,
                 testregelId = testregel.id,
                 testregelNoekkel = testregel.testregelId,
-                testgrunnlagId = resultatMeta.testgrunnlagId!!,
+                testgrunnlagId = resultatMeta.testgrunnlagId,
                 side = sideutvalMap[element.sideutvalId!!].orEmpty(),
                 suksesskriterium = listOf(testregel.krav.suksesskriterium),
                 testVartUtfoert = element.testUtfoert?.toLocalDateTime(),
@@ -86,7 +87,7 @@ class ExternalAggregatedResultsService(
                 elementOmtale = elementOmtale(element),
                 brukarId = brukarService.getBrukarById(element.brukarId!!),
                 kommentar = null,
-                bilder = null
+                bilder = emptyList()
             )
         }
     }

@@ -46,7 +46,7 @@ object ResultatMapper {
         val testregel = testregelCache.getTestregelById(result.testregelId)
         return ResultatPerTestregel(
             id = result.id,
-            testgrunnlagId = result.testgrunnlagId!!,
+            testgrunnlagId = result.testgrunnlagId,
             namn = result.namn,
             typeKontroll = result.typeKontroll,
             testType = result.testType,
@@ -59,7 +59,8 @@ object ResultatMapper {
             testregelId = result.testregelId,
             testregeltTittel = testregel.namn,
             kravId = testregel.krav.id,
-            kravTittel = testregel.krav.tittel
+            kravTittel = testregel.krav.tittel,
+            testgrunnlagUuid = result.testgrunnlagUuid,
         )
     }
 
@@ -97,10 +98,10 @@ object ResultatMapper {
                 ResultatPerTestregelDTO(
                     id = resultatMeta.kontrollId,
                     testgrunnlagId = resultatMeta.testgrunnlagId,
-                    namn = resultatMeta.kontrollNamn,
-                    typeKontroll = resultatMeta.kontrollType,
+                    namn = resultatMeta.kontrollNamn?:"",
+                    typeKontroll = resultatMeta.kontrollType!!,
                     testType = resultatMeta.testgrunnlagType,
-                    dato = resultatMeta.dato,
+                    dato = resultatMeta.datoOppretta,
                     testar = listOf(),
                     loeysingId = it.loeysingId,
                     score = it.testregelGjennomsnittlegSideSamsvarProsent?:0.0,

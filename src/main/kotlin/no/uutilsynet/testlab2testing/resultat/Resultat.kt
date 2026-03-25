@@ -31,7 +31,7 @@ data class LoeysingResultat(
 
 data class ResultatPerTestregel(
     val id: Int,
-    val testgrunnlagId: Int,
+    val testgrunnlagId: Int?,
     val namn: String,
     val typeKontroll: Kontrolltype,
     val testType: TestgrunnlagType,
@@ -45,6 +45,7 @@ data class ResultatPerTestregel(
     val testregeltTittel: String,
     val kravId: Int,
     val kravTittel: String,
+    val testgrunnlagUuid: UUID?
 )
 
 data class ResultatPerTestregelDTO(

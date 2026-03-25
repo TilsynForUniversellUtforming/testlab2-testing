@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat.external
 
+import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.resultat.ResultatMetadata
 import no.uutilsynet.testlab2testing.resultat.export.ResultatRegisterProperties
 import no.uutilsynet.testlab2testing.resultat.external.model.Testgrunnlag
@@ -11,7 +12,8 @@ import org.springframework.web.client.body
 
 @Service
 class ResultatMetadataClient(restTemplate: RestTemplate,
-                             private val resultatRegisterProperties: ResultatRegisterProperties) {
+                             private val resultatRegisterProperties: ResultatRegisterProperties,
+    private val kontrollDAO: KontrollDAO) {
 
     val restClient = RestClient.create(restTemplate)
 
@@ -30,6 +32,12 @@ class ResultatMetadataClient(restTemplate: RestTemplate,
             .retrieve()
             .body<Array<ResultatMetadata>>()
 
-        return resultatMetadata?.toList() ?: emptyList();
+        val kontrollMetadata = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
+        return resultatMetadata?.map {
+            it.copy(
+                kontrollNamn = kontrollMetadata.tittel,
+                kontrollType = kontrollMetadata.kontrolltype)
+
+        }?.toList() ?: emptyList();
     }
 }

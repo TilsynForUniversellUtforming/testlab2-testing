@@ -2,10 +2,10 @@ package no.uutilsynet.testlab2testing.resultat.service
 
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
-import no.uutilsynet.testlab2testing.resultat.ResultatMetadataService
 import no.uutilsynet.testlab2testing.resultat.ResultatPerTestregelDTO
 import no.uutilsynet.testlab2testing.resultat.common.LoysingList
 import no.uutilsynet.testlab2testing.resultat.common.ResultatMapper.mapResultatMetaToResultatPerTestregelDTO
+import no.uutilsynet.testlab2testing.resultat.external.ResultatMetadataClient
 import no.uutilsynet.testlab2testing.resultat.util.TestresultatDetaljertListUtils.paginate
 import no.uutilsynet.testlab2testing.resultat.util.TestresultatDetaljertListUtils.sort
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
@@ -15,13 +15,15 @@ import org.springframework.stereotype.Service
 @Service
 class ResultatAppResultatService(
     testregelCache: TestregelCache,
-    private val resultatMetadataService: ResultatMetadataService,
-    private val externalAggregatedResultsService: ExternalAggregatedResultsService
+    private val externalAggregatedResultsService: ExternalAggregatedResultsService,
+    private val resultatMetadataClient: ResultatMetadataClient
 
 ) : KontrollResultatService(testregelCache) {
     override fun getKontrollResultat(kontrollId: Int): List<ResultatPerTestregelDTO> {
-        return resultatMetadataService.hentResultatMetadata(kontrollId, null)
+        println(kontrollId)
+        return resultatMetadataClient.getResultatMetadata(kontrollId)
             .flatMap { resultatMetaElement ->
+                println("Henter aggregert data for kontrollId: ${resultatMetaElement}")
                 mapResultatMetaToResultatPerTestregelDTO(
                     resultatMetaElement,
                     externalAggregatedResultsService.getAggregatedDataPerTestregel(resultatMetaElement)
@@ -31,7 +33,7 @@ class ResultatAppResultatService(
 
     // ...existing code...
     override fun getBrukararForTest(kontrollId: Int): List<String> {
-        TODO("Not yet implemented")
+        return listOf("Testar")
     }
 
     override fun getResultatForKontroll(
@@ -43,7 +45,7 @@ class ResultatAppResultatService(
     }
 
     override fun getResultatForKontroll(kontrollId: Int): List<TestresultatDetaljert> {
-        return resultatMetadataService.hentResultatMetadata(kontrollId, null)
+        return resultatMetadataClient.getResultatMetadata(kontrollId)
             .flatMap { resultatMetaElement ->
                 externalAggregatedResultsService.getResultatDetaljert(resultatMetaElement)
             }

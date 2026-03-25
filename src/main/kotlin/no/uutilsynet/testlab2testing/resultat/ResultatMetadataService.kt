@@ -24,18 +24,19 @@ class ResultatMetadataService(
 }
 
     fun harResultInDb(kontrollId: Int): Boolean {
-        return resultatDAO.getResultatMetadata(kontrollId, null).isNotEmpty()
+        return resultatDAO.getResultatMetadata(kontrollId, null)
+            .let { it.isNotEmpty() && it.first().testrunUuid != "" }
     }
 }
 
 
 data class ResultatMetadata(
     var kontrollId: Int,
-    val kontrollNamn: String,
-    val kontrollType: Kontrolltype,
+    val kontrollNamn: String?,
+    val kontrollType: Kontrolltype?,
     var testgrunnlagId: Int?,
     val testrunUuid: String,
     val testgrunnlagType: TestgrunnlagType,
-    val dato: LocalDate,
+    val datoOppretta: LocalDate,
     val testar: List<String>?
 )

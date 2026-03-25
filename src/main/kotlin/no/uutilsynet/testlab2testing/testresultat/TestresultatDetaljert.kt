@@ -11,7 +11,7 @@ data class TestresultatDetaljert(
     val loeysingId: Int,
     val testregelId: Int,
     val testregelNoekkel: String,
-    val testgrunnlagId: Int,
+    val testgrunnlagId: Int?,
     val side: String,
     val suksesskriterium: List<String>,
     val testVartUtfoert: LocalDateTime?,

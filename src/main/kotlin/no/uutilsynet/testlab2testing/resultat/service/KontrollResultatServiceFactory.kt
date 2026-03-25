@@ -35,10 +35,12 @@ class KontrollResultatServiceFactory(
   }
 
   private fun resultsInDB(kontrollId: Int): Boolean {
-    return resultatMetadataService.hentResultatMetadata(kontrollId, null).isNotEmpty()
+    return resultatMetadataService.harResultInDb(kontrollId)
   }
 
   fun getAggregatedResultatService(kontrollId: Int): AggregatedResultsInterface {
+    val results = resultsInDB(kontrollId)
+    println("KontrollId: $kontrollId, Results in DB: $results")
     if(resultsInDB(kontrollId)) {
       return dbAggregatedResults
     }

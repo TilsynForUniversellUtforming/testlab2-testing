@@ -10,7 +10,6 @@ import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.resultat.common.LoysingList
 import no.uutilsynet.testlab2testing.resultat.common.ResultatMapper
-import no.uutilsynet.testlab2testing.resultat.common.ResultatMapper.mapResultatMetaToResultatPerTestregelDTO
 import no.uutilsynet.testlab2testing.resultat.repository.ResultatDAO
 import no.uutilsynet.testlab2testing.resultat.service.AutomatiskResultatService
 import no.uutilsynet.testlab2testing.resultat.service.KontrollResultatService
@@ -27,8 +26,7 @@ class ResultatService(
     private val eksternResultatDAO: EksternResultatDAO,
     private val automatiskResultatService: AutomatiskResultatService,
     private val testregelCache: TestregelCache,
-    private val kontrollResultatServiceFactory: KontrollResultatServiceFactory,
-    private val resultatMetadataService: ResultatMetadataService
+    private val kontrollResultatServiceFactory: KontrollResultatServiceFactory
 ) {
 
   val logger = LoggerFactory.getLogger(ResultatService::class.java)
@@ -78,14 +76,14 @@ class ResultatService(
         result.first().testType,
         result.first().dato,
         erKontrollPublisert(result),
-        loeysingResultatList(result))
+        loeysingResultatList(result, kontrollId))
   }
 
-  private fun loeysingResultatList(result: List<ResultatPerTestregelDTO>): List<LoeysingResultat> {
+  private fun loeysingResultatList(result: List<ResultatPerTestregelDTO>, kontrollId: Int): List<LoeysingResultat> {
         return result
             .groupBy { it.testgrunnlagId }
             .map { (_, result) ->
-                resultatPrLoeysing(result)
+                resultatPrLoeysing(result,kontrollId)
             }
             .flatten()
   }
@@ -96,12 +94,13 @@ class ResultatService(
 
     private fun resultatPrLoeysing(
         result: List<ResultatPerTestregelDTO>,
+        kontrollId: Int,
     ): List<LoeysingResultat> {
         val first  = result.first()
         val testarar = getBrukararForTest(first.id)
         val loeysingar = getLoeysingMap(result.map { it.loeysingId }).getOrThrow()
         val statusLoeysingar =
-            progresjonPrLoeysing(first, loeysingar)
+            progresjonPrLoeysing(first, loeysingar,kontrollId)
 
 
         val resultLoeysingar =
@@ -127,7 +126,7 @@ class ResultatService(
     }
 
   fun getBrukararForTest(kontrollId: Int): List<String> {
-    return getResultService(kontrollId).getBrukararForTest(kontrollId)
+    return getResultatService(kontrollId).getBrukararForTest(kontrollId)
   }
 
   private fun limitResultatList(resultLoeysingar: List<LoeysingResultat>): List<LoeysingResultat> {
@@ -147,13 +146,12 @@ class ResultatService(
     private fun getResultsPerTestregel(
         kontrollId: Int,
         loeysingId: Int?
-    ): List<ResultatPerTestregelDTO> = resultatMetadataService.hentResultatMetadata(kontrollId, loeysingId)
-        .flatMap { resultatMetaElement ->
-            mapResultatMetaToResultatPerTestregelDTO(
-                resultatMetaElement,
-                getAggregatedData(resultatMetaElement)
-            )
-        }
+    ): List<ResultatPerTestregelDTO> {
+        val resultatService = kontrollResultatServiceFactory.getResultatService(kontrollId)
+        println(resultatService)
+        return kontrollResultatServiceFactory.getResultatService(kontrollId).getKontrollResultat(kontrollId)
+            .filter { it.loeysingId == loeysingId || loeysingId == null }
+    }
 
 
 
@@ -222,12 +220,12 @@ class ResultatService(
       kontrollId: Int,
       loeysingId: Int,
   ): List<TestresultatDetaljert> {
-    return getResultService(kontrollId)
+    return getResultatService(kontrollId)
         .getResultatBrotForKontroll(kontrollId, loeysingId)
         .sortedBy { it.side.toString() }
   }
 
-  fun getResultService(kontrollId: Int): KontrollResultatService {
+  fun getResultatService(kontrollId: Int): KontrollResultatService {
     return kontrollResultatServiceFactory.getResultatService(kontrollId)
   }
 
@@ -247,8 +245,9 @@ class ResultatService(
   private fun progresjonPrLoeysing(
       resultatData: ResultatPerTestregelDTO,
       loeysingar: LoysingList,
+      kontrollId: Int,
   ): Map<Int, Int> {
-    return getResultatService(resultatData.typeKontroll).progresjonPrLoeysing(resultatData, loeysingar)
+    return getResultatService(kontrollId).progresjonPrLoeysing(resultatData, loeysingar)
   }
 
   fun getTestresultatDetaljerPrTestregel(
@@ -257,7 +256,7 @@ class ResultatService(
       testregelId: Int,
       sortPaginationParams: SortPaginationParams
   ): List<TestresultatDetaljert> {
-    return getResultService(kontrollId)
+    return getResultatService(kontrollId)
         .getResultatForKontroll(kontrollId, loeysingId, testregelId, sortPaginationParams)
   }
 
@@ -319,7 +318,7 @@ class ResultatService(
         kravId: Int,
         sortPaginationParams: SortPaginationParams,
     ): List<TestresultatDetaljert> {
-        return getResultService(kontrollId)
+        return getResultatService(kontrollId)
             .getTestresulatDetaljertForKrav(kontrollId, loeysingId, kravId, sortPaginationParams)
     }
 
@@ -328,7 +327,7 @@ class ResultatService(
         loeysingId: Int,
         kravId: Int
     ): Result<Int> {
-        return getResultService(kontrollId)
+        return getResultatService(kontrollId)
             .getTalBrotForKontrollLoeysingKrav(kontrollId, loeysingId, kravId)
     }
 
@@ -337,7 +336,7 @@ class ResultatService(
         loeysingId: Int,
         testregelId: Int
     ): Result<Int> {
-        return getResultService(kontrollId)
+        return getResultatService(kontrollId)
             .getTalBrotForKontrollLoeysingTestregel(kontrollId, loeysingId, testregelId)
     }
 
