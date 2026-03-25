@@ -27,7 +27,6 @@ class ExternalAggregatedResultsService(
 ) : AggregatedResultsInterface {
 
     override fun getAggregatedDataPerTestregel(resultatMeta: ResultatMetadata): List<AggregeringPerTestregelEntity> {
-        println("Henter aggregerte data for testrunUuid: ${resultatMeta.testrunUuid}")
         return getResultElements(resultatMeta)
             .map { aggregert ->
                 AggregeringPerTestregelEntity(
@@ -69,6 +68,7 @@ class ExternalAggregatedResultsService(
         val result = getResultElementsDetaljert(resultatMeta)
 
         val sideutvalMap = sideutvalCacheGetSideutvalUrl(result.map { it.loeysingId })
+        println("Sideutvalmap " + sideutvalMap)
 
         return result.map { element ->
 

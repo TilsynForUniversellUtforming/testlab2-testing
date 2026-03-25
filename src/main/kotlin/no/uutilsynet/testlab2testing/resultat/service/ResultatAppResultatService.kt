@@ -23,7 +23,6 @@ class ResultatAppResultatService(
         println(kontrollId)
         return resultatMetadataClient.getResultatMetadata(kontrollId)
             .flatMap { resultatMetaElement ->
-                println("Henter aggregert data for kontrollId: ${resultatMetaElement}")
                 mapResultatMetaToResultatPerTestregelDTO(
                     resultatMetaElement,
                     externalAggregatedResultsService.getAggregatedDataPerTestregel(resultatMetaElement)

@@ -147,8 +147,6 @@ class ResultatService(
         kontrollId: Int,
         loeysingId: Int?
     ): List<ResultatPerTestregelDTO> {
-        val resultatService = kontrollResultatServiceFactory.getResultatService(kontrollId)
-        println(resultatService)
         return kontrollResultatServiceFactory.getResultatService(kontrollId).getKontrollResultat(kontrollId)
             .filter { it.loeysingId == loeysingId || loeysingId == null }
     }

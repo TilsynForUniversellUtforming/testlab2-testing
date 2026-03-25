@@ -26,7 +26,7 @@ class ResultatMetadataClient(restTemplate: RestTemplate,
         return testgrunnlag?.toList() ?: emptyList();
     }
 
-    fun getResultatMetadata(kontrollId: Int): List<ResultatMetadata> {
+    fun     getResultatMetadata(kontrollId: Int): List<ResultatMetadata> {
         val url = "${resultatRegisterProperties.host}/resultatmetadata/kontrollid/$kontrollId"
         val resultatMetadata = restClient.get().uri(url)
             .retrieve()
