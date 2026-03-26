@@ -68,7 +68,6 @@ class ExternalAggregatedResultsService(
         val result = getResultElementsDetaljert(resultatMeta)
 
         val sideutvalMap = sideutvalCacheGetSideutvalUrl(result.map { it.loeysingId })
-        println("Sideutvalmap " + sideutvalMap)
 
         return result.map { element ->
 
