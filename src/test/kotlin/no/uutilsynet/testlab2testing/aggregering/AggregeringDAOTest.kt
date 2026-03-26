@@ -15,10 +15,10 @@ import org.springframework.boot.test.context.SpringBootTest
 @SpringBootTest(properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///test-db"])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AggregeringDAOTest(
+
     @Autowired val aggregeringDAO: AggregeringDAO,
     @Autowired val testUtils: TestUtils
 ) {
-
   fun setUp(): Int {
     val testregelId = testUtils.createTestregelKrav().id
     val testgrunnlag = OpprettTestgrunnlag("Testgrunnlag", TestgrunnlagType.OPPRINNELEG_TEST)

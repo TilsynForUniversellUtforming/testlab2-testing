@@ -4,7 +4,6 @@ import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.TestgrunnlagType
 import no.uutilsynet.testlab2testing.common.TestUtils
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.resultat.repository.ResultatDAO
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
@@ -24,7 +23,6 @@ import org.springframework.test.context.ActiveProfiles
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ResultatDAOTest(
     @Autowired val resultatDAO: ResultatDAO,
-    @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val testUtils: TestUtils,
 ) {
 
