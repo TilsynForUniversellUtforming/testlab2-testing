@@ -69,7 +69,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   private val queryTestresultatMaaling =
       """select k.id, k.tittel as tittel,kontrolltype, maaling_id as testgrunnlag_id, 'OPPRINNELIG_TEST' as testtype,
-        dato_start as dato,
+        dato_start as dato,uuid as testrun_uuid,
         loeysing_id, testregel_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot
         from "testlab2_testing"."kontroll" k
         left join "testlab2_testing"."maalingv1" m on m.kontrollid=k.id
@@ -105,6 +105,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                         "type" as testtype,
                         coalesce(t.id,m.id) as testgrunnlag_id,
                         coalesce(t.dato_oppretta, m.dato_start) as dato,
+                        coalesce(t.uuid, m.uuid) as testrun_uuid,
                         kontrolltype
                         from "testlab2_testing"."kontroll" k
                         left join "testlab2_testing"."testgrunnlag" t on t.kontroll_id=k.id
