@@ -250,7 +250,7 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return crawlResultat
   }
 
-  fun getSideutvalUrlMapKontroll(sideutvalIds: List<Int>): Map<Int, URL> {
+  fun getSideutvalUrlMapKontroll(sideutvalIds: List<Int>): Map<Int, String> {
     if (sideutvalIds.isEmpty()) {
       return emptyMap()
     }
@@ -266,7 +266,7 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 .trimIndent(),
             mapOf("sideutvalIds" to sideutvalIds),
         ) { rs, _ ->
-          rs.getInt("sideutval_id") to URI(rs.getString("url")).toURL()
+          rs.getInt("sideutval_id") to (rs.getString("url"))
         }
         .toMap()
   }

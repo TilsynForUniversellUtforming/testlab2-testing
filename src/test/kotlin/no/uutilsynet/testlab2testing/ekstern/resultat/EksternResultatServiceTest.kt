@@ -3,12 +3,12 @@ package no.uutilsynet.testlab2testing.ekstern.resultat
 import java.time.Instant
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2.constants.TestgrunnlagType
 import no.uutilsynet.testlab2testing.ekstern.resultat.model.KontrollIdLoeysingId
 import no.uutilsynet.testlab2testing.ekstern.resultat.model.ResultatOversiktLoeysingEkstern
 import no.uutilsynet.testlab2testing.ekstern.resultat.model.TestEkstern
 import no.uutilsynet.testlab2testing.ekstern.resultat.model.TestListElementDB
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.resultat.LoeysingResultat
 import no.uutilsynet.testlab2testing.resultat.Resultat
 import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing

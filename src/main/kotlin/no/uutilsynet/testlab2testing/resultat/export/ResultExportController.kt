@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat.export
 
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelExport
 import no.uutilsynet.testlab2testing.testresultat.model.TestresultatExport
 import org.slf4j.LoggerFactory
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController
 class ResultExportController(
     private val testresultatDAO: TestresultatDAO,
     private val resultatClient: ResultatClient,
-    private val aggregeringDAO: AggregeringDAO,
     private val resultatExportMapper: ResultatExportMapper,
 ) {
 
@@ -25,15 +23,15 @@ class ResultExportController(
 
   @GetMapping("testgrunnlag/{testgrunnlagId}")
   fun getTestresultForExport(
-      @PathVariable("testgrunnlagId") testgrunnlagId: Int
+      @PathVariable testgrunnlagId: Int
   ): ResponseEntity<List<TestresultatExport>> {
     return ResponseEntity.ok().body(testresultatDAO.getTestresultatByTestgrunnlagId(testgrunnlagId))
   }
 
   @GetMapping("maaling/{maalingId}/loeysing/{loeysingId}")
   fun getTestresultForExportForMaaling(
-      @PathVariable("maalingId") maalingId: Int,
-      @PathVariable("loeysingId") loeysingId: Int
+      @PathVariable maalingId: Int,
+      @PathVariable loeysingId: Int
   ): ResponseEntity<List<TestresultatExport>> {
     return ResponseEntity.ok()
         .body(testresultatDAO.getTestresultatByMaalingId(maalingId, loeysingId))
@@ -41,8 +39,8 @@ class ResultExportController(
 
   @PostMapping("maaling/{maalingId}/loeysing/{loeysingId}")
   fun exportTestresultForMaaling(
-      @PathVariable("maalingId") maalingId: Int,
-      @PathVariable("loeysingId") loeysingId: Int,
+      @PathVariable maalingId: Int,
+      @PathVariable loeysingId: Int,
   ): ResponseEntity<List<Long>> {
     val testresultatList = testresultatDAO.getTestresultatByMaalingId(maalingId, loeysingId)
     return resultatClient
@@ -54,7 +52,7 @@ class ResultExportController(
 
   @PostMapping("testgrunnlag/{testgrunnlagId}")
   fun exportTestresultForTestgrunnlag(
-      @PathVariable("testgrunnlagId") testgrunnlagId: Int,
+      @PathVariable testgrunnlagId: Int,
   ): ResponseEntity<List<Long>> {
     val testresultatList = testresultatDAO.getTestresultatByTestgrunnlagId(testgrunnlagId)
 
@@ -70,7 +68,7 @@ class ResultExportController(
 
   @GetMapping("aggregering/testregel/{maalingId}")
   fun getAggregeringForMaaling(
-      @PathVariable("maalingId") maalingId: Int
+      @PathVariable maalingId: Int
   ): ResponseEntity<List<AggregeringPerTestregelExport>> {
     val aggregering = resultatExportMapper.getAggregeringForMaaling(maalingId)
     return ResponseEntity.ok().body(aggregering)
@@ -78,7 +76,7 @@ class ResultExportController(
 
   @PostMapping("aggregering/testregel/{maalingId}")
   fun exportAggregeringForMaaling(
-      @PathVariable("maalingId") maalingId: Int
+      @PathVariable maalingId: Int
   ): ResponseEntity<List<Long>> {
     val aggregering = resultatExportMapper.getAggregeringForMaaling(maalingId)
     return resultatClient

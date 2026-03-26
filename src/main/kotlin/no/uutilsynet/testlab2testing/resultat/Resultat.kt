@@ -2,7 +2,8 @@ package no.uutilsynet.testlab2testing.resultat
 
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
+import no.uutilsynet.testlab2.constants.TestgrunnlagType
+import java.util.UUID
 
 data class Resultat(
     val id: Int,
@@ -28,9 +29,9 @@ data class LoeysingResultat(
     val progresjon: Int = 0
 )
 
-data class ResultatLoeysing(
+data class ResultatPerTestregel(
     val id: Int,
-    val testgrunnlagId: Int,
+    val testgrunnlagId: Int?,
     val namn: String,
     val typeKontroll: Kontrolltype,
     val testType: TestgrunnlagType,
@@ -44,11 +45,12 @@ data class ResultatLoeysing(
     val testregeltTittel: String,
     val kravId: Int,
     val kravTittel: String,
+    val testgrunnlagUuid: UUID?
 )
 
-data class ResultatLoeysingDTO(
+data class ResultatPerTestregelDTO(
     val id: Int,
-    val testgrunnlagId: Int,
+    val testgrunnlagId: Int?,
     val namn: String,
     val typeKontroll: Kontrolltype,
     val testType: TestgrunnlagType,
@@ -59,6 +61,7 @@ data class ResultatLoeysingDTO(
     val talElementSamsvar: Int,
     val talElementBrot: Int,
     val testregelId: Int,
+    val testgrunnlagUuid: UUID?
 )
 
 /** Uttrekk resultat per løysing */

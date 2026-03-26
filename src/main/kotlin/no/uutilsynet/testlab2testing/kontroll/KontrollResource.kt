@@ -2,10 +2,10 @@ package no.uutilsynet.testlab2testing.kontroll
 
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.Sakstype
+import no.uutilsynet.testlab2.constants.TestgrunnlagType
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlagFromKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType.OPPRINNELEG_TEST
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestStatus
 import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
@@ -261,7 +261,7 @@ class KontrollResource(
         NyttTestgrunnlagFromKontroll(
             kontroll.id,
             "Testgrunnlag for kontroll ${kontroll.tittel}",
-            OPPRINNELEG_TEST,
+            TestgrunnlagType.OPPRINNELEG_TEST,
             kontroll.sideutvalList,
             kontroll.testreglar?.testregelList ?: emptyList())
     return testgrunnlagService.createOrUpdateFromKontroll(nyttTestgrunnlag)

@@ -2,9 +2,9 @@ package no.uutilsynet.testlab2testing.resultat
 
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2.constants.TestgrunnlagType
 import no.uutilsynet.testlab2testing.common.TestUtils
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
+import no.uutilsynet.testlab2testing.resultat.repository.ResultatDAO
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -23,7 +23,6 @@ import org.springframework.test.context.ActiveProfiles
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ResultatDAOTest(
     @Autowired val resultatDAO: ResultatDAO,
-    @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val testUtils: TestUtils,
 ) {
 
@@ -51,7 +50,7 @@ class ResultatDAOTest(
   @Test
   fun getTestresultatMaaling() {
 
-    val resultat: List<ResultatLoeysingDTO> = resultatDAO.getTestresultatMaaling()
+    val resultat: List<ResultatPerTestregelDTO> = resultatDAO.getTestresultatMaaling()
 
     assertThat(resultat.size).isEqualTo(2)
 
@@ -67,7 +66,7 @@ class ResultatDAOTest(
   fun testGetTestresultatMaalingWithParams() {
 
     val expected1 =
-        ResultatLoeysingDTO(
+        ResultatPerTestregelDTO(
             3,
             testgrunnlagId = maalingIds[0],
             "Forenkla kontroll 20204",
@@ -79,7 +78,8 @@ class ResultatDAOTest(
             0.5,
             6,
             3,
-            testregelId)
+            testregelId,
+            null)
 
     val resultat = resultatDAO.getTestresultatMaaling(maalingIds[0])
 
@@ -136,27 +136,6 @@ class ResultatDAOTest(
 
     resultat.map { it.testType }.contains(TestgrunnlagType.OPPRINNELEG_TEST)
     resultat.map { it.testType }.contains(TestgrunnlagType.RETEST)
-  }
-
-  @Test
-  fun getResultatKontrollLoeysing() {
-
-    val existing = testgrunnlagDAO.getTestgrunnlag(testgrunnlagIds[0]).getOrThrow()
-
-    val resultat = resultatDAO.getResultatKontrollLoeysing(existing.kontrollId, 2)
-
-    assertThat(resultat.size).isEqualTo(2)
-    assertThat(resultat[0].loeysingId).isEqualTo(2)
-  }
-
-  @Test
-  fun getResultatKontroll() {
-
-    val existing = testgrunnlagDAO.getTestgrunnlag(testgrunnlagIds[0]).getOrThrow()
-
-    val resultat = resultatDAO.getResultatKontroll(existing.kontrollId)
-
-    assertThat(resultat.size).isEqualTo(4)
   }
 
   private fun createTestgrunnlagList(

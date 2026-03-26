@@ -21,6 +21,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.web.PagedResourcesAssembler
 import org.springframework.hateoas.CollectionModel
 import org.springframework.stereotype.Service
+import kotlin.collections.map
 
 @Service
 class EksternResultatService(
@@ -169,11 +170,10 @@ class EksternResultatService(
 
   fun getRapportPrKrav(rapportId: String, loeysingId: Int): Result<List<ResultatKravEkstern>> {
     return runCatching {
-      getKontrollIdLoeysingIdsForRapportId(rapportId)
-          .filter { it.loeysingId == loeysingId }
-          .map { getResultatKravList(it) }
-          .flatten()
-          .map { it.toResultatKravEkstern() }
+        getKontrollIdLoeysingIdsForRapportId(rapportId)
+            .filter { it.loeysingId == loeysingId }
+            .flatMap { getResultatKravList(it) }
+            .map { it.toResultatKravEkstern() }
     }
   }
 

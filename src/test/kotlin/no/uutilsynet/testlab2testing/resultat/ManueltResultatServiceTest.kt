@@ -11,6 +11,8 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
+import no.uutilsynet.testlab2testing.resultat.repository.ResultatDAO
+import no.uutilsynet.testlab2testing.resultat.service.ManueltResultatService
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
@@ -37,13 +39,13 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
   private val manueltResultatService =
       ManueltResultatService(
           resultatDAO,
-          kravregisterClient,
           testgrunnlagDAO,
           testResultatDAO,
           sideutvalDAO,
           bildeService,
           testResultatDAOTestresultat,
-          testregelCache)
+          testregelCache
+      )
 
   @Test
   fun `test getFilteredAndMappedResults with valid filter`() {
@@ -73,7 +75,7 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
         .thenReturn(TestgrunnlagList(testgrunnlagList, listOf(testgrunnlagList)))
     `when`(testResultatDAO.getManyResults(anyInt())).thenReturn(Result.success(mockResult))
     `when`(sideutvalDAO.getSideutvalUrlMapKontroll(anyList()))
-        .thenReturn(mapOf(1 to URI("https://test.com").toURL()))
+        .thenReturn(mapOf(1 to "https://test.com"))
     `when`(testregelCache.getTestregelById(anyInt())).thenReturn(testregel)
 
     val result = manueltResultatService.getFilteredAndMappedResults(1, 1) { it.testregelId == 1 }

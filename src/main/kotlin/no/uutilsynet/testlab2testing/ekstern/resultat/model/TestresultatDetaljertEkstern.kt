@@ -9,6 +9,7 @@ import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
 import org.springframework.web.util.UriComponentsBuilder
+import java.net.URI
 
 @Relation(collectionRelation = "testresultat")
 data class TestresultatDetaljertEkstern(
@@ -29,7 +30,7 @@ fun TestresultatDetaljert.toTestresultatDetaljertEkstern(
 ): TestresultatDetaljertEkstern =
     TestresultatDetaljertEkstern(
         testregelNoekkel = this.testregelNoekkel,
-        side = this.side,
+        side = URI(this.side).toURL(),
         suksesskriterium = testregel.krav.tittel,
         veiledning = testregel.krav.urlRettleiing,
         testregelTittel = testregel.namn,

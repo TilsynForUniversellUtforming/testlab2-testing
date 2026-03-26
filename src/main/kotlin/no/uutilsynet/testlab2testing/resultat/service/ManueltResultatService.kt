@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.resultat
+package no.uutilsynet.testlab2testing.resultat.service
 
 import java.net.URL
 import java.time.Instant
@@ -11,24 +11,28 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
+import no.uutilsynet.testlab2testing.resultat.ResultatPerTestregelDTO
+import no.uutilsynet.testlab2testing.resultat.common.LoysingList
+import no.uutilsynet.testlab2testing.resultat.repository.ResultatDAO
+import no.uutilsynet.testlab2testing.resultat.util.TestresultatDetaljertListUtils.paginate
+import no.uutilsynet.testlab2testing.resultat.util.TestresultatDetaljertListUtils.sort
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
-import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 import org.springframework.stereotype.Service
 
 @Service
 class ManueltResultatService(
-    resultatDAO: ResultatDAO,
-    kravregisterClient: KravregisterClient,
+    private val resultatDAO: ResultatDAO,
     private val testgrunnlagDAO: TestgrunnlagDAO,
     private val testResultatDAO: TestResultatDAO,
     private val sideutvalDAO: SideutvalDAO,
     private val bildeService: BildeService,
-    testresultatDAO: no.uutilsynet.testlab2testing.testresultat.TestresultatDAO,
+    private val testresultatDAO: TestresultatDAO,
     testregelCache: TestregelCache
-) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelCache) {
+) : KontrollResultatService(testregelCache) {
 
   override fun getResultatForKontroll(
       kontrollId: Int,
@@ -85,14 +89,14 @@ class ManueltResultatService(
   fun getResultatPrTestgrunnlag(testgrunnlagId: Int) =
       testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
 
-  private fun getSideutvalMap(testresultat: List<ResultatManuellKontroll>): Map<Int, URL> {
+  private fun getSideutvalMap(testresultat: List<ResultatManuellKontroll>): Map<Int, String> {
     val sideutvalIds = testresultat.map { it.sideutvalId }.distinct()
     return sideutvalDAO.getSideutvalUrlMapKontroll(sideutvalIds)
   }
 
   private fun resultatManuellKontrollTotestresultatDetaljert(
       it: ResultatManuellKontroll,
-      sideutvalIdUrlMap: Map<Int, URL>,
+      sideutvalIdUrlMap: Map<Int, String>,
   ): TestresultatDetaljert {
     val testregel: TestregelAggregate = getTesteregelFromId(it.testregelId)
     return TestresultatDetaljert(
@@ -114,9 +118,9 @@ class ManueltResultatService(
   }
 
   private fun getUrlFromSideutval(
-      sideutvalIdUrlMap: Map<Int, URL>,
+      sideutvalIdUrlMap: Map<Int, String>,
       it: ResultatManuellKontroll,
-  ): URL {
+  ): String {
     return sideutvalIdUrlMap[it.sideutvalId]
         ?: throw IllegalArgumentException("Ugyldig testresultat url manglar")
   }
@@ -128,16 +132,17 @@ class ManueltResultatService(
     return testVartUtfoert?.atZone(Constants.ZONEID_OSLO)?.toLocalDateTime()
   }
 
-  override fun getAlleResultat(): List<ResultatLoeysingDTO> {
+  override fun getAlleResultat(): List<ResultatPerTestregelDTO> {
     return resultatDAO.getTestresultatTestgrunnlag()
   }
 
   override fun progresjonPrLoeysing(
-      testgrunnlagId: Int,
-      loeysingar: ResultatService.LoysingList,
+      resultatData: ResultatPerTestregelDTO,
+      loeysingar: LoysingList,
   ): Map<Int, Int> {
 
-    return getResultatPrTestgrunnlag(testgrunnlagId)
+    requireNotNull(resultatData.testgrunnlagId)
+    return getResultatPrTestgrunnlag(resultatData.testgrunnlagId)
         .groupBy { it.loeysingId }
         .entries
         .map { (loeysingId, result) -> Pair(loeysingId, percentageFerdig(result)) }
@@ -187,7 +192,7 @@ class ManueltResultatService(
           .times(100)
           .toInt()
 
-  override fun getKontrollResultat(kontrollId: Int): List<ResultatLoeysingDTO> {
+  override fun getKontrollResultat(kontrollId: Int): List<ResultatPerTestregelDTO> {
     val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
     val resultatTestgrunnlag = testgrunnlagId.let { resultatDAO.getTestresultatTestgrunnlag(it) }
 

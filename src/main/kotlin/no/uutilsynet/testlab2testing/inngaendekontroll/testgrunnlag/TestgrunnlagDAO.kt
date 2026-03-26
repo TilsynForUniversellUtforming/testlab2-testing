@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
+import no.uutilsynet.testlab2.constants.TestgrunnlagType
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
