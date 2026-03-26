@@ -78,7 +78,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   private val queryTestresultatTestgrunnlag =
       """select k.id as id, k.tittel as tittel, kontrolltype, testgrunnlag_id, testregel_id, type as testtype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot,
-            dato_oppretta as dato
+            dato_oppretta as dato, uuid as testrun_uuid
             from "testlab2_testing"."kontroll" k
             left join "testlab2_testing"."testgrunnlag" t on t.kontroll_id=k.id
             join "testlab2_testing"."aggregering_testregel" agt on agt.testgrunnlag_id=t.id
