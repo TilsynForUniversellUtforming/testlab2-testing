@@ -10,6 +10,7 @@ import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.body
 
 
+
 @Service
 class ResultatMetadataClient(restTemplate: RestTemplate,
                              private val resultatRegisterProperties: ResultatRegisterProperties,
