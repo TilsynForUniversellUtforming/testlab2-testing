@@ -99,7 +99,7 @@ class TestregelClient(
     return runCatching {
       restClient
           .get()
-          .uri("$testreglarUrl/innhaldstypeTesting")
+          .uri("$testreglarUrl/innhaldstypeForTesting")
           .retrieve()
           .body(object : ParameterizedTypeReference<List<InnhaldstypeTesting>>() {})
           ?: throw NoSuchElementException("Fant ingen innhaldstyper for testing")

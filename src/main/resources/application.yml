@@ -51,6 +51,8 @@ spring:
             platform: postgresql
     profiles:
         active: tokenClient
+    main:
+        lazy-initialization: true
 springdoc:
     swagger-ui:
         path: /api-dokumentasjon

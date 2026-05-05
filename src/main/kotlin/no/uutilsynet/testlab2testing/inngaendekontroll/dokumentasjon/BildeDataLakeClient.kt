@@ -45,8 +45,9 @@ class BildeDataLakeClient(private val blobStorageProperties: BlobStorageProperti
   }
 
   override fun toBlobUri(filnamn: String, sasToken: String): URI {
+    val cleanedFilename = filnamn.replace(" " , "%20")
     return URI(
-        "https://${blobStorageProperties.account}.blob.core.windows.net/${blobStorageProperties.container}/${filnamn}?$sasToken")
+        "https://${blobStorageProperties.account}.blob.core.windows.net/${blobStorageProperties.container}/${cleanedFilename}?$sasToken")
   }
 
   fun generateSas(sasValues: DataLakeServiceSasSignatureValues): String {
