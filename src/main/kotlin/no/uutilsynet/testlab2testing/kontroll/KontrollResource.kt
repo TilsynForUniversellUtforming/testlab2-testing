@@ -12,11 +12,17 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
-import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
@@ -62,7 +68,7 @@ class KontrollResource(
         }
         .getOrElse {
           logger.error("Feilet da jeg skulle hente alle kontroller", it)
-          throw RuntimeException(it)
+          throw IllegalStateException(it)
         }
   }
 
@@ -145,11 +151,7 @@ class KontrollResource(
   private fun kontollTestreglarToTestreglar(
       testreglar: KontrollDAO.KontrollDB.Testreglar?
   ): Testreglar? {
-    if (testreglar != null) {
-      val testregelList =
-          testregelClient.getTestregelListFromIds(testreglar.testregelIdList).getOrThrow()
-      return Testreglar(testreglar.regelsettId, testregelList)
-    }
+      testreglar?.let { return Testreglar(it.regelsettId, it.testregelIdList) }
     return null
   }
 
@@ -263,35 +265,27 @@ class KontrollResource(
             "Testgrunnlag for kontroll ${kontroll.tittel}",
             OPPRINNELEG_TEST,
             kontroll.sideutvalList,
-            kontroll.testreglar?.testregelList ?: emptyList())
+            kontroll.testreglar?.testregelIdList ?: emptyList())
     return testgrunnlagService.createOrUpdateFromKontroll(nyttTestgrunnlag)
   }
 
-  @GetMapping("/testmetadata/{kontrollId}")
-  fun testingMetadata(@PathVariable kontrollId: Int): KontrollTestingMetadata {
-    val kontroll = getKontrollAsResult(kontrollId).getOrThrow()
-    val sideutvaltypar = kontrollDAO.getSideutvalType()
-    val innholdtypeTestingList = testregelClient.getInnhaldstypeForTesting().getOrThrow()
+    @GetMapping("/testmetadata/{kontrollId}")
+    fun testingMetadata(@PathVariable kontrollId: Int): KontrollTestingMetadata {
+        val kontroll = getKontrollAsResult(kontrollId).getOrThrow()
+        val sideutvaltypar = kontrollDAO.getSideutvalType()
+        val innholdtypeTestingList = testregelClient.getInnhaldstypeForTesting().getOrThrow()
+        val innholdstypeTesting = testregelClient.getTestregelList().getOrThrow()
+            .filter { kontroll.testreglar?.testregelIdList?.contains(it.id) == true }
+            .map { it.innhaldstypeTesting }
+            .map { innholdstype -> innholdtypeTestingList.first { it.id == innholdstype } }
 
-    val innholdstypeTesting = innhaldstypeTestingForKontroll(kontroll, innholdtypeTestingList)
 
-    val sideutvalType =
-        kontroll.sideutvalList.map { sideutval ->
-          sideutvaltypar.first { it.id == sideutval.typeId }
-        }
+        val sideutvalType =
+            kontroll.sideutvalList.map { sideutval ->
+                sideutvaltypar.first { it.id == sideutval.typeId }
+            }
 
-    return KontrollTestingMetadata(innholdstypeTesting, sideutvalType)
-  }
+        return KontrollTestingMetadata(innholdstypeTesting, sideutvalType)
+    }
 
-  private fun innhaldstypeTestingForKontroll(
-      kontroll: Kontroll,
-      innholdtypeTestingList: List<InnhaldstypeTesting>,
-  ): List<InnhaldstypeTesting> {
-    val innholdstypeTesting =
-        kontroll.testreglar
-            ?.testregelList
-            ?.mapNotNull { testregel -> testregel.innhaldstypeTesting }
-            ?.map { innholdsype -> innholdtypeTestingList.first { it.id == innholdsype } }
-    return innholdstypeTesting ?: throw IllegalStateException("Kontroll har ingen testreglar")
-  }
 }

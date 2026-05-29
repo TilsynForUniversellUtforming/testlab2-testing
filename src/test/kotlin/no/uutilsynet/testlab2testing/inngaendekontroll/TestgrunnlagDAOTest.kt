@@ -58,7 +58,7 @@ class TestgrunnlagDAOTest(
 
     assertThat(testgrunnlag).isNotNull
     assertThat(testgrunnlag.namn).isEqualTo("Testgrunnlag")
-    assertThat(testgrunnlag.testreglar.map { it.id }).isEqualTo(listOf(1))
+    assertThat(testgrunnlag.testreglar).isEqualTo(listOf(1))
     assertThat(testgrunnlag.sideutval).isEqualTo(nyttTestgrunnlagManuell.sideutval)
     assertThat(testgrunnlag.type).isEqualTo(TestgrunnlagType.OPPRINNELEG_TEST)
   }
@@ -82,8 +82,8 @@ class TestgrunnlagDAOTest(
 
     val result = testgrunnlagDAO.updateTestgrunnlag(oppdatertTestgrunlag)
 
-    assertThat(result.getOrThrow().testreglar.map { it.id })
-        .isEqualTo(oppdatertTestgrunlag.testreglar.map { it.id })
+    assertThat(result.getOrThrow().testreglar)
+        .isEqualTo(oppdatertTestgrunlag.testreglar)
   }
 
   @Test

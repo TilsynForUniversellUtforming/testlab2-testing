@@ -22,7 +22,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     return getTestgrunnlagKontroll(testgrunnlagId).mapCatching {
       it.copy(
-          testreglar = getTestreglarForTestgrunnlag(testgrunnlagId),
+          testreglar = getTestreglarForTestgrunnlag(testgrunnlagId).map { testregel -> testregel.id },
           sideutval = getSideutvalForTestgrunnlag(testgrunnlagId))
     }
   }
@@ -225,7 +225,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "type" to testgrunnlag.type.name))
 
     updateTestgrunnlagLoeysingNettside(testgrunnlag.id, testgrunnlag.sideutval.map { it.id })
-    updateTestgrunnlagTestregel(testgrunnlag.id, testgrunnlag.testreglar.map { it.id })
+    updateTestgrunnlagTestregel(testgrunnlag.id, testgrunnlag.testreglar)
 
     return Result.success(testgrunnlag)
   }
@@ -289,4 +289,5 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "Fant ikkje testrunUuid for testgrunnlagId: $testgrunnlagId")
     }
   }
+
 }

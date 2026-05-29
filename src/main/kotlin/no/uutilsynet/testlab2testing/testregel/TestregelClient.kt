@@ -12,6 +12,7 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.body
 import org.springframework.web.util.UriComponentsBuilder
 
 private const val FANT_INGEN_TESTREGLAR = "Fant ingen testreglar"
@@ -29,7 +30,7 @@ class TestregelClient(
 
   fun getTestregelById(testregelId: Int): Result<Testregel> {
     return runCatching {
-      restClient.get().uri("$testreglarUrl$/testregelId").retrieve().body(Testregel::class.java)
+      restClient.get().uri("$testreglarUrl/$testregelId").retrieve().body<Testregel>()
           ?: throw NoSuchElementException("Fant ikkje testregel med id $testregelId")
     }
   }
@@ -99,7 +100,7 @@ class TestregelClient(
     return runCatching {
       restClient
           .get()
-          .uri("$testreglarUrl/innhaldstypeTesting")
+          .uri("$testreglarUrl/innhaldstypeForTesting")
           .retrieve()
           .body(object : ParameterizedTypeReference<List<InnhaldstypeTesting>>() {})
           ?: throw NoSuchElementException("Fant ingen innhaldstyper for testing")

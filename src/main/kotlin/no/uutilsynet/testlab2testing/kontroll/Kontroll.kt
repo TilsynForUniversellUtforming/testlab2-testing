@@ -20,7 +20,7 @@ data class Kontroll(
     val opprettaDato: LocalDate = LocalDate.now(),
 ) {
 
-  data class Testreglar(val regelsettId: Int? = null, val testregelList: List<Testregel>)
+  data class Testreglar(val regelsettId: Int? = null, val testregelIdList: List<Int>)
 }
 
 data class KontrollTestingMetadata(
