@@ -64,6 +64,32 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
     )
   }
 
+  fun getStyringsdataByKontrollId(kontrollId: Int): List<StyringsdataListElement> =
+      jdbcTemplate.query(
+          """
+      select
+        id,
+        kontroll_id,
+        loeysing_id,
+        ansvarleg,
+        oppretta,
+        frist,
+        reaksjon,
+        paalegg_reaksjon,
+        paalegg_klage_reaksjon,
+        bot_reaksjon,
+        bot_klage_reaksjon,
+        paalegg_id,
+        paalegg_klage_id,
+        bot_id,
+        bot_klage_id,
+        sist_lagra
+      from styringsdata_loeysing
+        where kontroll_id = :kontrollId
+    """.trimIndent(),
+          mapOf("kontrollId" to kontrollId),
+          styringsdataListElementRowMapper)
+
   fun getStyringsdataLoeysing(id: Int): List<StyringsdataListElement> =
       jdbcTemplate.query(
           """

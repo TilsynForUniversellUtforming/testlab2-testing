@@ -2,7 +2,6 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
 import java.time.Instant
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
 
 data class TestgrunnlagKontroll(
     val id: Int,
@@ -17,4 +16,17 @@ data class TestgrunnlagKontroll(
 data class TestgrunnlagList(
     val opprinneligTest: TestgrunnlagKontroll,
     val restestar: List<TestgrunnlagKontroll>
-)
+) {
+    fun toList(): List<TestgrunnlagKontroll> = listOf(opprinneligTest) + restestar
+}
+
+fun List<TestgrunnlagKontroll>.filterForLoeysing(loeysingId: Int): List<TestgrunnlagKontroll> =
+    filter { it.sideutval.any { sideutval -> sideutval.loeysingId == loeysingId } }
+
+fun List<TestgrunnlagKontroll>.newestTestgrunnlagIds(): Set<Int> {
+    val loeysingIds = flatMap { it.sideutval }.map { it.loeysingId }.distinct()
+    return loeysingIds.mapNotNull { loeysingId ->
+        filterForLoeysing(loeysingId).maxByOrNull { it.id }?.id
+    }.toSet()
+}
+

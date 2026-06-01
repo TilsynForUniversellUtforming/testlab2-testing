@@ -2,10 +2,11 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testoverview
 
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.Loeysingstype
+import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagList
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.newestTestgrunnlagIds
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase.Status
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
@@ -14,13 +15,11 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.styringsdata.StyringsdataListElement
 import no.uutilsynet.testlab2testing.styringsdata.StyringsdataService
-import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import org.springframework.stereotype.Service
 
 @Suppress("LongParameterList")
 @Service
 class TestoverviewService(
-    val testregelClient: TestregelClient,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val statisticsService: TestOverviewStatisticsService,
     val styringsdataService: StyringsdataService,
@@ -29,22 +28,51 @@ class TestoverviewService(
     val kontrollDAO: KontrollDAO,
 ) {
 
+
+    fun listTestOverviewElements(kontrollId: Int): List<TestingStatus> {
+        val kontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().single()
+        val testgrunnlagList = testgrunnlagService.getTestgrunnlagForKontroll(kontrollId).toList()
+        val loeysingar = getLoeysingMapFromTestgrunnlag(testgrunnlagList)
+        val allResultat = testResultatDAO.getManyResultsByKontrollId(kontrollId).getOrThrow()
+        val styringsdataMap = styringsdataService.getStyringsdataMapForKontroll(kontrollId)
+
+        return testgrunnlagList.flatMap { testgrunnlagKontroll ->
+            processTestgrunnlagKontroll(
+                testgrunnlagKontroll,
+                loeysingar,
+                kontroll.kontrolltype,
+                allResultat,
+                styringsdataMap,
+                testgrunnlagList.newestTestgrunnlagIds()
+            )
+        }
+    }
+
+
     private fun processTestgrunnlagKontroll(
         testgrunnlagKontroll: TestgrunnlagKontroll,
         loeysingarMap: Map<Int, Loeysing>,
         kontrolltype: Kontrolltype,
-        resultat: List<ResultatManuellKontroll>
+        allResultat: Map<Int, List<ResultatManuellKontroll>>,
+        styringsdataMap: Map<Int, StyringsdataListElement>,
+        newestTestgrunnlagIds: Set<Int>
     ): List<TestingStatus> {
+        val testresultat = allResultat[testgrunnlagKontroll.id] ?: emptyList()
+        val testresultatByLoeysing = testresultat.groupBy { it.loeysingId }
+        val isNewest = testgrunnlagKontroll.id in newestTestgrunnlagIds
+
         return mapSideutvalToLoeysing(testgrunnlagKontroll, loeysingarMap).map { loeysing ->
             mapToTestingStatus(
                 loeysing,
                 testgrunnlagKontroll,
                 kontrolltype,
-                resultat.filter { it.loeysingId == loeysing.id })
+                testresultatByLoeysing[loeysing.id] ?: emptyList(),
+                styringsdataMap[loeysing.id],
+                isNewest
+            )
         }
 
     }
-
 
 
     private fun mapSideutvalToLoeysing(
@@ -52,34 +80,19 @@ class TestoverviewService(
         loeysingarMap: Map<Int, Loeysing>
     ): List<Loeysing> = testgrunnlagKontroll.sideutval.mapNotNull { sideutval -> loeysingarMap[sideutval.loeysingId] }
 
-    fun listTestOverviewElements(kontrollId: Int): List<TestingStatus> {
-        val kontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().single()
-
-        val testgrunnlagList = testgrunnlagService.getTestgrunnlagForKontroll(kontrollId).toList()
-        val loeysingar: Map<Int, Loeysing> =
-            getLoeysingMapFromTestgrunnlag(testgrunnlagList)
-
-        return testgrunnlagList.flatMap { testgrunnlagKontroll ->
-            val testresultat = testResultatDAO.getManyResults(testgrunnlagKontroll.id).getOrThrow()
-            processTestgrunnlagKontroll(testgrunnlagKontroll, loeysingar, kontroll.kontrolltype, testresultat)
-        }
-
-
-    }
 
     private fun getLoeysingMapFromTestgrunnlag(testgrunnlagList: List<TestgrunnlagKontroll>): Map<Int, Loeysing> {
         val loeysingIds = testgrunnlagList.flatMap { it.sideutval }.map { it.loeysingId }
-
-        val loeysingar: Map<Int, Loeysing> =
-            loeysingsRegisterClient.getMany(loeysingIds).getOrThrow().associateBy { it.id }
-        return loeysingar
+        return loeysingsRegisterClient.getMany(loeysingIds).getOrThrow().associateBy { it.id }
     }
 
     private fun mapToTestingStatus(
         loeysing: Loeysing,
         testgrunnlagKontroll: TestgrunnlagKontroll,
         kontrollType: Kontrolltype,
-        resultat: List<ResultatManuellKontroll>
+        resultat: List<ResultatManuellKontroll>,
+        styringsdata: StyringsdataListElement?,
+        isNewest: Boolean
     ): TestingStatus {
         val testregelIdList = testgrunnlagKontroll.testreglar
         val sideutvalIdList = testgrunnlagKontroll.sideutval.toList().map { it.id }
@@ -91,7 +104,6 @@ class TestoverviewService(
             sideutvalIdList
         )
 
-
         return TestingStatus(
             loeysingId = loeysing.id,
             loeysingNamn = loeysing.namn,
@@ -101,9 +113,12 @@ class TestoverviewService(
             teststatistics = testStatistics,
             status = getTeststatus(resultat),
             kanSlette = kanSlette(resultat, testgrunnlagKontroll.type),
-            styringdataStatus = styringsdataStatus(loeysing.id, testgrunnlagKontroll.id)
+            styringdataStatus = styringsdataStatus(styringsdata),
+            styringsdataId = styringsdata?.id,
+            kanReteste = kanReteste(resultat, isNewest)
         )
     }
+
 
     private fun getTeststatus(results: List<ResultatManuellKontroll>): ManuellTestStatus {
         return when {
@@ -113,28 +128,28 @@ class TestoverviewService(
         }
     }
 
-    private fun styringsdataStatus(loeysingId: Int, kontrollId: Int): StyringsdataStatus {
-        val styringsdata: StyringsdataListElement? =
-            styringsdataService.getStyringsdataForLoeysing(loeysingId, kontrollId)
-        
+    private fun styringsdataStatus(styringsdata: StyringsdataListElement?): StyringsdataStatus {
         return when {
             styringsdata == null -> StyringsdataStatus.INGEN_REAKSJON_BRUKT
-            styringsdata.isBot  -> StyringsdataStatus.BOT
+            styringsdata.isBot -> StyringsdataStatus.BOT
             styringsdata.isPaalegg -> StyringsdataStatus.PAALEG
             else -> StyringsdataStatus.INGEN_REAKSJON_BRUKT
         }
-    }
-
-    fun TestgrunnlagList.toList(): List<TestgrunnlagKontroll> {
-        return listOf(this.opprinneligTest) + this.restestar
     }
 
     private fun kanSlette(resultat: List<ResultatManuellKontroll>, testgrunnlagType: TestgrunnlagType): Boolean {
         return resultat.isEmpty() && testgrunnlagType == TestgrunnlagType.RETEST
     }
 
+    private fun kanReteste(resultat: List<ResultatManuellKontroll>, isNewest: Boolean): Boolean {
+        val harBrot = resultat.any { it.elementResultat == TestresultatUtfall.brot && it.status == Status.Ferdig }
+        return harBrot && isNewest
+    }
 
 }
+
+
+
 
 
 

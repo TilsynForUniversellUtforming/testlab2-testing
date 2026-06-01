@@ -12,6 +12,7 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
+import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -34,250 +35,258 @@ class KontrollResource(
     val testgrunnlagService: TestgrunnlagService,
     val testregelClient: TestregelClient,
 ) {
-  private val logger: Logger = LoggerFactory.getLogger(KontrollResource::class.java)
+    private val logger: Logger = LoggerFactory.getLogger(KontrollResource::class.java)
 
-  data class KontrollListItem(
-      val id: Int,
-      val tittel: String,
-      val saksbehandler: String,
-      val sakstype: Sakstype,
-      val arkivreferanse: String,
-      val kontrolltype: Kontrolltype,
-      val virksomheter: List<String>, // liste med orgnummer
-      val styringsdataId: Int?
-  )
+    data class KontrollListItem(
+        val id: Int,
+        val tittel: String,
+        val saksbehandler: String,
+        val sakstype: Sakstype,
+        val arkivreferanse: String,
+        val kontrolltype: Kontrolltype,
+        val virksomheter: List<String>, // liste med orgnummer
+        val styringsdataId: Int?
+    )
 
-  @GetMapping
-  fun getKontroller(): List<KontrollListItem> {
-    return kontrollDAO
-        .getKontroller()
-        .mapCatching { kontrollRows ->
-          kontrollRows.map { kontrollDB ->
-            val virksomheter = getVirksomheterForKontroll(kontrollDB)
+    @GetMapping
+    fun getKontroller(): List<KontrollListItem> {
+        return kontrollDAO
+            .getKontroller()
+            .mapCatching { kontrollRows ->
+                kontrollRows.map { kontrollDB ->
+                    val virksomheter = getVirksomheterForKontroll(kontrollDB)
 
-            KontrollListItem(
-                kontrollDB.id,
-                kontrollDB.tittel,
-                kontrollDB.saksbehandler,
-                Sakstype.valueOf(kontrollDB.sakstype),
-                kontrollDB.arkivreferanse,
-                kontrollDB.kontrolltype,
-                virksomheter,
-                kontrollDB.styringsdataId)
-          }
-        }
-        .getOrElse {
-          logger.error("Feilet da jeg skulle hente alle kontroller", it)
-          throw IllegalStateException(it)
-        }
-  }
-
-  private fun getVirksomheterForKontroll(kontrollDB: KontrollDAO.KontrollDB): List<String> {
-    runCatching { getLoeysingarlistFromUtval(kontrollDB.utval).map { it.orgnummer }.distinct() }
-        .fold(
-            onSuccess = {
-              return it
-            },
-            onFailure = {
-              logger.error("Feil ved henting av virksomheter for kontroll ${kontrollDB.id}", it)
-              throw it
-            })
-  }
-
-  @PostMapping
-  fun createKontroll(@RequestBody opprettKontroll: OpprettKontroll): ResponseEntity<Unit> {
-    return runCatching {
-          val id = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
-          if (opprettKontroll.kontrolltype == Kontrolltype.ForenklaKontroll) {
-            maalingService.nyMaaling(id, opprettKontroll).getOrThrow()
-          }
-
-          location(id)
-        }
-        .fold(
-            onSuccess = { location -> ResponseEntity.created(location).build() },
-            onFailure = {
-              logger.error("Feil ved oppretting av kontroll", it)
-              ResponseEntity.badRequest().build()
-            })
-  }
-
-  @GetMapping("/{id}")
-  fun getKontroll(@PathVariable id: Int): ResponseEntity<Kontroll> {
-    return getKontrollAsResult(id)
-        .fold(
-            onSuccess = { ResponseEntity.ok(it) },
-            onFailure = {
-              when (it) {
-                is IllegalArgumentException -> ResponseEntity.notFound().build()
-                else -> {
-                  logger.error("Feil ved henting av kontroll", it)
-                  ResponseEntity.internalServerError().build()
+                    KontrollListItem(
+                        kontrollDB.id,
+                        kontrollDB.tittel,
+                        kontrollDB.saksbehandler,
+                        Sakstype.valueOf(kontrollDB.sakstype),
+                        kontrollDB.arkivreferanse,
+                        kontrollDB.kontrolltype,
+                        virksomheter,
+                        kontrollDB.styringsdataId
+                    )
                 }
-              }
-            })
-  }
+            }
+            .getOrElse {
+                logger.error("Feilet da jeg skulle hente alle kontroller", it)
+                throw IllegalStateException(it)
+            }
+    }
 
-  private fun getKontrollAsResult(kontrollId: Int): Result<Kontroll> = runCatching {
-    val kontrollDB = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
+    private fun getVirksomheterForKontroll(kontrollDB: KontrollDAO.KontrollDB): List<String> {
+        runCatching { getLoeysingarlistFromUtval(kontrollDB.utval).map { it.orgnummer }.distinct() }
+            .fold(
+                onSuccess = {
+                    return it
+                },
+                onFailure = {
+                    logger.error("Feil ved henting av virksomheter for kontroll ${kontrollDB.id}", it)
+                    throw it
+                })
+    }
 
-    Kontroll(
-        kontrollDB.id,
-        kontrollDB.kontrolltype,
-        kontrollDB.tittel,
-        kontrollDB.saksbehandler,
-        Sakstype.valueOf(kontrollDB.sakstype),
-        kontrollDB.arkivreferanse,
-        kontrollDbUtvalToUtval(kontrollDB),
-        kontollTestreglarToTestreglar(kontrollDB.testreglar),
-        kontrollDB.sideutval)
-  }
+    @PostMapping
+    fun createKontroll(@RequestBody opprettKontroll: OpprettKontroll): ResponseEntity<Unit> {
+        return runCatching {
+            val id = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
+            if (opprettKontroll.kontrolltype == Kontrolltype.ForenklaKontroll) {
+                maalingService.nyMaaling(id, opprettKontroll).getOrThrow()
+            }
 
-  private fun kontrollDbUtvalToUtval(kontroll: KontrollDAO.KontrollDB): Utval? {
-    return runCatching {
-          kontroll.utval?.let { utval ->
-            val loeysingar = getLoeysingarlistFromUtval(utval)
-            Utval(utval.id, utval.namn, loeysingar, utval.oppretta)
-          }
+            location(id)
         }
-        .fold(
-            onSuccess = { it },
-            onFailure = {
-              logger.error("Feil ved henting av løysingar for utval for kontroll ${kontroll.id}")
-              throw it
-            })
-  }
+            .fold(
+                onSuccess = { location -> ResponseEntity.created(location).build() },
+                onFailure = {
+                    logger.error("Feil ved oppretting av kontroll", it)
+                    ResponseEntity.badRequest().build()
+                })
+    }
 
-  private fun kontollTestreglarToTestreglar(
-      testreglar: KontrollDAO.KontrollDB.Testreglar?
-  ): Testreglar? {
-      testreglar?.let { return Testreglar(it.regelsettId, it.testregelIdList) }
-    return null
-  }
+    @GetMapping("/{id}")
+    fun getKontroll(@PathVariable id: Int): ResponseEntity<Kontroll> {
+        return getKontrollAsResult(id)
+            .fold(
+                onSuccess = { ResponseEntity.ok(it) },
+                onFailure = {
+                    when (it) {
+                        is IllegalArgumentException -> ResponseEntity.notFound().build()
+                        else -> {
+                            logger.error("Feil ved henting av kontroll", it)
+                            ResponseEntity.internalServerError().build()
+                        }
+                    }
+                })
+    }
 
-  private fun getLoeysingarlistFromUtval(utval: KontrollDAO.KontrollDB.Utval?): List<Loeysing> {
-    if (utval == null || utval.loeysingar.isEmpty()) return emptyList()
-    val idList = utval.loeysingar.map { it.id }
-    return loeysingsRegisterClient.getMany(idList).getOrThrow()
-  }
+    private fun getKontrollAsResult(kontrollId: Int): Result<Kontroll> = runCatching {
+        val kontrollDB = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
 
-  @DeleteMapping("/{id}")
-  fun deleteKontroll(@PathVariable id: Int): ResponseEntity<Unit> {
-    return runCatching {
-          kontrollDAO.deleteKontroll(id).getOrThrow()
-          maalingService.deleteKontrollMaaling(id).getOrThrow()
+        Kontroll(
+            kontrollDB.id,
+            kontrollDB.kontrolltype,
+            kontrollDB.tittel,
+            kontrollDB.saksbehandler,
+            Sakstype.valueOf(kontrollDB.sakstype),
+            kontrollDB.arkivreferanse,
+            kontrollDbUtvalToUtval(kontrollDB),
+            kontollTestreglarToTestreglar(kontrollDB.testreglar),
+            kontrollDB.sideutval
+        )
+    }
+
+    private fun kontrollDbUtvalToUtval(kontroll: KontrollDAO.KontrollDB): Utval? {
+        return runCatching {
+            kontroll.utval?.let { utval ->
+                val loeysingar = getLoeysingarlistFromUtval(utval)
+                Utval(utval.id, utval.namn, loeysingar, utval.oppretta)
+            }
         }
-        .fold(
-            onSuccess = { ResponseEntity.noContent().build() },
-            onFailure = {
-              logger.error("Feil ved sletting av kontroll", it)
-              ResponseEntity.internalServerError().build()
-            })
-  }
+            .fold(
+                onSuccess = { it },
+                onFailure = {
+                    logger.error("Feil ved henting av løysingar for utval for kontroll ${kontroll.id}")
+                    throw it
+                })
+    }
 
-  @PutMapping("/{id}")
-  fun updateKontroll(
-      @PathVariable id: Int,
-      @RequestBody updateBody: KontrollUpdate
-  ): ResponseEntity<Unit> =
-      runCatching {
+    private fun kontollTestreglarToTestreglar(
+        testreglar: KontrollDAO.KontrollDB.Testreglar?
+    ): Testreglar? {
+        testreglar?.let { return Testreglar(it.regelsettId, it.testregelIdList) }
+        return null
+    }
+
+    private fun getLoeysingarlistFromUtval(utval: KontrollDAO.KontrollDB.Utval?): List<Loeysing> {
+        if (utval == null || utval.loeysingar.isEmpty()) return emptyList()
+        val idList = utval.loeysingar.map { it.id }
+        return loeysingsRegisterClient.getMany(idList).getOrThrow()
+    }
+
+    @DeleteMapping("/{id}")
+    fun deleteKontroll(@PathVariable id: Int): ResponseEntity<Unit> {
+        return runCatching {
+            kontrollDAO.deleteKontroll(id).getOrThrow()
+            maalingService.deleteKontrollMaaling(id).getOrThrow()
+        }
+            .fold(
+                onSuccess = { ResponseEntity.noContent().build() },
+                onFailure = {
+                    logger.error("Feil ved sletting av kontroll", it)
+                    ResponseEntity.internalServerError().build()
+                })
+    }
+
+    @PutMapping("/{id}")
+    fun updateKontroll(
+        @PathVariable id: Int,
+        @RequestBody updateBody: KontrollUpdate
+    ): ResponseEntity<Unit> =
+        runCatching {
             require(updateBody.kontroll.id == id) { "id i URL-en og id er ikkje den same" }
             val hasTestresultat = testgrunnlagService.kontrollHasTestresultat(id)
 
             if (hasTestresultat && updateBody !is KontrollUpdate.Edit) {
-              logger.error("test er allereie starta for kontroll: ${id}")
-              throw IllegalArgumentException("Test er allereie starta")
+                logger.error("test er allereie starta for kontroll: ${id}")
+                throw IllegalArgumentException("Test er allereie starta")
             }
 
             when (updateBody) {
-              is KontrollUpdate.Edit -> {
-                kontrollDAO.updateKontroll(updateBody.kontroll)
-              }
-              is KontrollUpdate.Utval -> {
-                val (kontroll, utvalId) = updateBody
-                kontrollDAO.updateKontroll(kontroll, utvalId).getOrThrow()
-              }
-              is KontrollUpdate.Testreglar -> {
-                val (kontroll, testreglar) = updateBody
-                val (regelsettId, testregelIdList) = testreglar
-                kontrollDAO.updateKontroll(kontroll, regelsettId, testregelIdList).getOrThrow()
-              }
-              is KontrollUpdate.Sideutval -> {
-                val (kontroll, sideutvalList) = updateBody
-                if (sideutvalList.any { it.begrunnelse.isBlank() }) {
-                  logger.error("Ugyldig sideutval for kontroll: ${kontroll.id}")
-                  throw IllegalArgumentException("Ugyldige sider i sideutval")
+                is KontrollUpdate.Edit -> {
+                    kontrollDAO.updateKontroll(updateBody.kontroll)
                 }
-                kontrollDAO.updateKontroll(kontroll, sideutvalList).getOrThrow()
-              }
+
+                is KontrollUpdate.Utval -> {
+                    val (kontroll, utvalId) = updateBody
+                    kontrollDAO.updateKontroll(kontroll, utvalId).getOrThrow()
+                }
+
+                is KontrollUpdate.Testreglar -> {
+                    val (kontroll, testreglar) = updateBody
+                    val (regelsettId, testregelIdList) = testreglar
+                    kontrollDAO.updateKontroll(kontroll, regelsettId, testregelIdList).getOrThrow()
+                }
+
+                is KontrollUpdate.Sideutval -> {
+                    val (kontroll, sideutvalList) = updateBody
+                    if (sideutvalList.any { it.begrunnelse.isBlank() }) {
+                        logger.error("Ugyldig sideutval for kontroll: ${kontroll.id}")
+                        throw IllegalArgumentException("Ugyldige sider i sideutval")
+                    }
+                    kontrollDAO.updateKontroll(kontroll, sideutvalList).getOrThrow()
+                }
             }
             if (updateBody.kontroll.kontrolltype == Kontrolltype.ForenklaKontroll) {
-              maalingService.updateMaaling(getKontrollAsResult(id).getOrThrow())
+                maalingService.updateMaaling(getKontrollAsResult(id).getOrThrow())
             } else {
-              createOrUpdateTestgrunnlag(id)
+                createOrUpdateTestgrunnlag(id)
             }
-          }
-          .fold(
-              onSuccess = { ResponseEntity.noContent().build() },
-              onFailure = {
-                when (it) {
-                  is IllegalArgumentException -> ResponseEntity.badRequest().build()
-                  else -> {
-                    logger.error("Feil ved oppdatering av kontroll", it)
-                    ResponseEntity.internalServerError().build()
-                  }
-                }
-              })
+        }
+            .fold(
+                onSuccess = { ResponseEntity.noContent().build() },
+                onFailure = {
+                    when (it) {
+                        is IllegalArgumentException -> ResponseEntity.badRequest().build()
+                        else -> {
+                            logger.error("Feil ved oppdatering av kontroll", it)
+                            ResponseEntity.internalServerError().build()
+                        }
+                    }
+                })
 
-  @GetMapping("sideutvaltype")
-  fun getSideutvalType(): ResponseEntity<out Any> =
-      runCatching { ResponseEntity.ok(kontrollDAO.getSideutvalType()) }
-          .getOrElse {
-            logger.error("Feila ved henting av sideutvaltyper", it)
-            ResponseEntity.internalServerError().body(it.message)
-          }
+    @GetMapping("sideutvaltype")
+    fun getSideutvalType(): ResponseEntity<out Any> =
+        runCatching { ResponseEntity.ok(kontrollDAO.getSideutvalType()) }
+            .getOrElse {
+                logger.error("Feila ved henting av sideutvaltyper", it)
+                ResponseEntity.internalServerError().body(it.message)
+            }
 
-  @GetMapping("/test-status/{kontrollId}")
-  fun getTestStatus(
-      @PathVariable kontrollId: Int,
-  ): ResponseEntity<TestStatus> {
-    val hasTestresultat = testgrunnlagService.kontrollHasTestresultat(kontrollId)
-    return ResponseEntity.ok(if (hasTestresultat) TestStatus.Started else TestStatus.Pending)
-  }
+    @GetMapping("/test-status/{kontrollId}")
+    fun getTestStatus(
+        @PathVariable kontrollId: Int,
+    ): ResponseEntity<TestStatus> {
+        val hasTestresultat = testgrunnlagService.kontrollHasTestresultat(kontrollId)
+        return ResponseEntity.ok(if (hasTestresultat) TestStatus.Started else TestStatus.Pending)
+    }
 
-  private fun location(id: Int) =
-      ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
+    private fun location(id: Int) =
+        ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
 
-  data class OpprettKontroll(
-      val tittel: String,
-      val saksbehandler: String,
-      val sakstype: Sakstype,
-      val arkivreferanse: String,
-      val kontrolltype: Kontrolltype,
-  )
+    data class OpprettKontroll(
+        val tittel: String,
+        val saksbehandler: String,
+        val sakstype: Sakstype,
+        val arkivreferanse: String,
+        val kontrolltype: Kontrolltype,
+    )
 
-  fun createOrUpdateTestgrunnlag(kontrollId: Int): Result<Int> {
-    val kontroll = getKontrollAsResult(kontrollId).getOrThrow()
+    fun createOrUpdateTestgrunnlag(kontrollId: Int): Result<Int> {
+        val kontroll = getKontrollAsResult(kontrollId).getOrThrow()
 
-    val nyttTestgrunnlag =
-        NyttTestgrunnlagFromKontroll(
-            kontroll.id,
-            "Testgrunnlag for kontroll ${kontroll.tittel}",
-            OPPRINNELEG_TEST,
-            kontroll.sideutvalList,
-            kontroll.testreglar?.testregelIdList ?: emptyList())
-    return testgrunnlagService.createOrUpdateFromKontroll(nyttTestgrunnlag)
-  }
+        val nyttTestgrunnlag =
+            NyttTestgrunnlagFromKontroll(
+                kontroll.id,
+                "Testgrunnlag for kontroll ${kontroll.tittel}",
+                OPPRINNELEG_TEST,
+                kontroll.sideutvalList,
+                kontroll.testreglar?.testregelIdList ?: emptyList()
+            )
+        return testgrunnlagService.createOrUpdateFromKontroll(nyttTestgrunnlag)
+    }
 
     @GetMapping("/testmetadata/{kontrollId}")
     fun testingMetadata(@PathVariable kontrollId: Int): KontrollTestingMetadata {
         val kontroll = getKontrollAsResult(kontrollId).getOrThrow()
         val sideutvaltypar = kontrollDAO.getSideutvalType()
         val innholdtypeTestingList = testregelClient.getInnhaldstypeForTesting().getOrThrow()
+
+
         val innholdstypeTesting = testregelClient.getTestregelList().getOrThrow()
             .filter { kontroll.testreglar?.testregelIdList?.contains(it.id) == true }
             .map { it.innhaldstypeTesting }
-            .map { innholdstype -> innholdtypeTestingList.first { it.id == innholdstype } }
+            .mapNotNull { innholdstype -> innholdtypeTestingList.firstOrNull { it.id == innholdstype } }
 
 
         val sideutvalType =
@@ -285,7 +294,9 @@ class KontrollResource(
                 sideutvaltypar.first { it.id == sideutval.typeId }
             }
 
+
         return KontrollTestingMetadata(innholdstypeTesting, sideutvalType)
     }
+
 
 }
