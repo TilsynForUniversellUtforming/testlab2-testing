@@ -80,7 +80,8 @@ class TestResultatDAO(
                              join "testlab2_testing"."testgrunnlag" tg on ti.testgrunnlag_id = tg.id
                     where tg.kontroll_id = :kontrollId
                     order by ti.id
-                """.trimIndent(),
+                """
+                        .trimIndent(),
                     mapOf("kontrollId" to kontrollId),
                 ) { rs, _ ->
                   ResultatManuellKontroll(
@@ -90,8 +91,7 @@ class TestResultatDAO(
                       testregelId = rs.getInt("testregel_id"),
                       sideutvalId = rs.getInt("sideutval_id"),
                       brukar =
-                          Brukar(
-                              rs.getString("brukar_brukarnamn"), rs.getString("brukar_namn")),
+                          Brukar(rs.getString("brukar_brukarnamn"), rs.getString("brukar_namn")),
                       elementOmtale = rs.getString("element_omtale"),
                       elementResultat =
                           runCatching {
@@ -114,7 +114,9 @@ class TestResultatDAO(
             .groupBy { it.testgrunnlagId }
       }
 
-  private fun getSvarMapByKontrollId(kontrollId: Int): Map<Int, List<ResultatManuellKontrollBase.Svar>> =
+  private fun getSvarMapByKontrollId(
+      kontrollId: Int
+  ): Map<Int, List<ResultatManuellKontrollBase.Svar>> =
       jdbcTemplate
           .query(
               """
@@ -126,7 +128,8 @@ class TestResultatDAO(
                 join "testlab2_testing"."testgrunnlag" tg on ti.testgrunnlag_id = tg.id
               where tg.kontroll_id = :kontrollId
               order by ti.id, steg
-          """.trimIndent(),
+          """
+                  .trimIndent(),
               mapOf("kontrollId" to kontrollId),
           ) { rs, _ ->
             SvarDB(

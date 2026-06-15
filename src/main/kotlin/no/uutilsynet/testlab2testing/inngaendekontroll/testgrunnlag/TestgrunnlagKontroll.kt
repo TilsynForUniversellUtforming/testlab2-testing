@@ -17,16 +17,17 @@ data class TestgrunnlagList(
     val opprinneligTest: TestgrunnlagKontroll,
     val restestar: List<TestgrunnlagKontroll>
 ) {
-    fun toList(): List<TestgrunnlagKontroll> = listOf(opprinneligTest) + restestar
+  fun toList(): List<TestgrunnlagKontroll> = listOf(opprinneligTest) + restestar
 }
 
 fun List<TestgrunnlagKontroll>.filterForLoeysing(loeysingId: Int): List<TestgrunnlagKontroll> =
-    filter { it.sideutval.any { sideutval -> sideutval.loeysingId == loeysingId } }
+    filter {
+      it.sideutval.any { sideutval -> sideutval.loeysingId == loeysingId }
+    }
 
 fun List<TestgrunnlagKontroll>.newestTestgrunnlagIds(): Set<Int> {
-    val loeysingIds = flatMap { it.sideutval }.map { it.loeysingId }.distinct()
-    return loeysingIds.mapNotNull { loeysingId ->
-        filterForLoeysing(loeysingId).maxByOrNull { it.id }?.id
-    }.toSet()
+  val loeysingIds = flatMap { it.sideutval }.map { it.loeysingId }.distinct()
+  return loeysingIds
+      .mapNotNull { loeysingId -> filterForLoeysing(loeysingId).maxByOrNull { it.id }?.id }
+      .toSet()
 }
-

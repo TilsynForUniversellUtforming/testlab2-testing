@@ -5,7 +5,6 @@ import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.Sakstype
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
 
 data class Kontroll(
     val id: Int,

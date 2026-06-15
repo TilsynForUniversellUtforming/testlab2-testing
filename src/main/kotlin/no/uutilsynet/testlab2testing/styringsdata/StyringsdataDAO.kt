@@ -86,7 +86,8 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         sist_lagra
       from styringsdata_loeysing
         where kontroll_id = :kontrollId
-    """.trimIndent(),
+    """
+              .trimIndent(),
           mapOf("kontrollId" to kontrollId),
           styringsdataListElementRowMapper)
 

@@ -101,10 +101,9 @@ class TestgrunnlagService(
             testregelIdList = originalResultatBrotList.map { it.testregelId }.distinct())
 
     testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag).getOrElse {
-        logger.error(
-            "Kunne ikkje opprette testgrunnlag for løysing $loeysingId i kontroll $kontrollId med opprinnelig testgrunnlag $originalTestgrunnlagId",
-            it
-        )
+      logger.error(
+          "Kunne ikkje opprette testgrunnlag for løysing $loeysingId i kontroll $kontrollId med opprinnelig testgrunnlag $originalTestgrunnlagId",
+          it)
       throw it
     }
   }
@@ -174,10 +173,7 @@ class TestgrunnlagService(
     return loeysingList
   }
 
-    fun getTestgrunnlagForKontroll(kontrollId: Int): TestgrunnlagList {
-        return testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId)
-    }
-
-
-
+  fun getTestgrunnlagForKontroll(kontrollId: Int): TestgrunnlagList {
+    return testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId)
+  }
 }

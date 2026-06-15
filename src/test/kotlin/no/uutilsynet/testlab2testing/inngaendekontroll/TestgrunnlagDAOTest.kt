@@ -82,8 +82,7 @@ class TestgrunnlagDAOTest(
 
     val result = testgrunnlagDAO.updateTestgrunnlag(oppdatertTestgrunlag)
 
-    assertThat(result.getOrThrow().testreglar)
-        .isEqualTo(oppdatertTestgrunlag.testreglar)
+    assertThat(result.getOrThrow().testreglar).isEqualTo(oppdatertTestgrunlag.testreglar)
   }
 
   @Test

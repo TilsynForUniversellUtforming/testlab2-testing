@@ -9,93 +9,106 @@ import org.springframework.stereotype.Service
 @Service
 class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
 
-    fun getTestingStatusForLoeysing(
-        loeysingId: Int,
-        testgrunnlagId: Int,
-        testresultat: List<ResultatManuellKontroll>,
-        testregelIds: List<Int>,
-        sideutvalIds: List<Int>
-    ): TestStatusCount {
-        val numTestregel = testregelIds.size
-        val numSider = sideutvalIds.size
+  fun getTestingStatusForLoeysing(
+      loeysingId: Int,
+      testgrunnlagId: Int,
+      testresultat: List<ResultatManuellKontroll>,
+      testregelIds: List<Int>,
+      sideutvalIds: List<Int>
+  ): TestStatusCount {
+    val numTestregel = testregelIds.size
+    val numSider = sideutvalIds.size
 
-        //Sjekk kva som er riktig å vise når ein har retest
-        val total = numSider * numTestregel
-        val ferdig = uniqueTestKeyCount(testresultat.filter { it.status == ResultatManuellKontrollBase.Status.Ferdig })
-        val underArbeid =
-            uniqueTestKeyCount(testresultat.filter { it.status == ResultatManuellKontrollBase.Status.UnderArbeid })
-        val ikkjeStarta =
-            uniqueTestKeyCount(testresultat.filter { it.status == ResultatManuellKontrollBase.Status.IkkjePaabegynt })
+    // Sjekk kva som er riktig å vise når ein har retest
+    val total = numSider * numTestregel
+    val ferdig =
+        uniqueTestKeyCount(
+            testresultat.filter { it.status == ResultatManuellKontrollBase.Status.Ferdig })
+    val underArbeid =
+        uniqueTestKeyCount(
+            testresultat.filter { it.status == ResultatManuellKontrollBase.Status.UnderArbeid })
+    val ikkjeStarta =
+        uniqueTestKeyCount(
+            testresultat.filter { it.status == ResultatManuellKontrollBase.Status.IkkjePaabegynt })
 
-        val percentagePerSide = progresjonForSideutval(testregelIds, sideutvalIds, testresultat)
+    val percentagePerSide = progresjonForSideutval(testregelIds, sideutvalIds, testresultat)
 
-        val percemtagePerInnholdstype = progresjonForInnhaldstype(testregelIds, sideutvalIds, testresultat)
+    val percemtagePerInnholdstype =
+        progresjonForInnhaldstype(testregelIds, sideutvalIds, testresultat)
 
-        return TestStatusCount(
-            loeysingId,
-            testgrunnlagId,
-            total,
-            ferdig,
-            underArbeid,
-            ikkjeStarta,
-            percentagePerSide,
-            percemtagePerInnholdstype
-        )
+    return TestStatusCount(
+        loeysingId,
+        testgrunnlagId,
+        total,
+        ferdig,
+        underArbeid,
+        ikkjeStarta,
+        percentagePerSide,
+        percemtagePerInnholdstype)
+  }
 
-    }
+  fun uniqueTestKeyCount(resultat: List<ResultatManuellKontroll>): Int {
+    return resultat.map { "$it.testregelId_$it.sideutvalId" }.toSet().size
+  }
 
-    fun uniqueTestKeyCount(resultat: List<ResultatManuellKontroll>): Int {
-        return resultat.map { "$it.testregelId_$it.sideutvalId" }.toSet().size
+  fun toPerctentage(count: Int, total: Int): Double {
+    if (total == 0) return 0.0
+    return (count.toDouble() / total.toDouble()) * 100
+  }
 
-    }
+  fun progresjonForSideutval(
+      testregelIds: List<Int>,
+      sideutvalIds: List<Int>,
+      testresultat: List<ResultatManuellKontroll>
+  ): Double {
+    val finshedTestsKeys =
+        testresultat
+            .filter { it.status == ResultatManuellKontrollBase.Status.Ferdig }
+            .map { "$it.testregelId_$it.sideutvalId" }
+            .toSet()
 
-    fun toPerctentage(count: Int, total: Int): Double {
-        if (total == 0) return 0.0
-        return (count.toDouble() / total.toDouble()) * 100
-    }
+    val totalTestKeys =
+        testregelIds
+            .flatMap { testregelId ->
+              sideutvalIds.map { sideutvalId -> "${testregelId}_$sideutvalId" }
+            }
+            .toSet()
 
-    fun progresjonForSideutval(
-        testregelIds: List<Int>,
-        sideutvalIds: List<Int>,
-        testresultat: List<ResultatManuellKontroll>
-    ): Double {
-        val finshedTestsKeys = testresultat.filter { it.status == ResultatManuellKontrollBase.Status.Ferdig }
-            .map { "$it.testregelId_$it.sideutvalId" }.toSet()
+    val finishedTestsForSideutval = finshedTestsKeys.intersect(totalTestKeys).size
 
-        val totalTestKeys = testregelIds.flatMap { testregelId ->
-            sideutvalIds.map { sideutvalId -> "${testregelId}_$sideutvalId" }
-        }.toSet()
+    return toPerctentage(finishedTestsForSideutval, totalTestKeys.size)
+  }
 
-        val finishedTestsForSideutval = finshedTestsKeys.intersect(totalTestKeys).size
-
-        return toPerctentage(finishedTestsForSideutval, totalTestKeys.size)
-    }
-
-    fun progresjonForInnhaldstype(
-        testregelIds: List<Int>,
-        sideutvalIds: List<Int>,
-        testresultat: List<ResultatManuellKontroll>
-    ): Double {
-        val innholdstypeGroup =
-            testregelClient.getTestregelListFromIds(testregelIds).getOrThrow().groupBy { it.innhaldstypeTesting }
-
-        val finshedTestsKeys = testresultat.filter { it.status == ResultatManuellKontrollBase.Status.Ferdig }
-            .map { "$it.testregelId_$it.sideutvalId" }.toSet()
-
-
-        val finishedPerInnhaldstype = innholdstypeGroup.values.map { entries ->
-            val testForInnhaldstype = getTestKeys(entries, sideutvalIds)
-            val finishedTestsForInnhaldstype = finshedTestsKeys.intersect(testForInnhaldstype).size
-            toPerctentage(finishedTestsForInnhaldstype, testForInnhaldstype.size)
+  fun progresjonForInnhaldstype(
+      testregelIds: List<Int>,
+      sideutvalIds: List<Int>,
+      testresultat: List<ResultatManuellKontroll>
+  ): Double {
+    val innholdstypeGroup =
+        testregelClient.getTestregelListFromIds(testregelIds).getOrThrow().groupBy {
+          it.innhaldstypeTesting
         }
 
-        return finishedPerInnhaldstype.reduce(Double::plus) / testresultat.size
-    }
+    val finshedTestsKeys =
+        testresultat
+            .filter { it.status == ResultatManuellKontrollBase.Status.Ferdig }
+            .map { "$it.testregelId_$it.sideutvalId" }
+            .toSet()
 
-    private fun getTestKeys(
-        values: List<Testregel>,
-        sideutvalIds: List<Int>
-    ): Set<String> = values.flatMap { testregel ->
-        sideutvalIds.map { sideutvalId -> "${testregel.id}_$sideutvalId" }
-    }.toSet()
+    val finishedPerInnhaldstype =
+        innholdstypeGroup.values.map { entries ->
+          val testForInnhaldstype = getTestKeys(entries, sideutvalIds)
+          val finishedTestsForInnhaldstype = finshedTestsKeys.intersect(testForInnhaldstype).size
+          toPerctentage(finishedTestsForInnhaldstype, testForInnhaldstype.size)
+        }
+
+    return finishedPerInnhaldstype.reduce(Double::plus) / testresultat.size
+  }
+
+  private fun getTestKeys(values: List<Testregel>, sideutvalIds: List<Int>): Set<String> =
+      values
+          .flatMap { testregel ->
+            sideutvalIds.map { sideutvalId -> "${testregel.id}_$sideutvalId" }
+          }
+          .toSet()
 }
