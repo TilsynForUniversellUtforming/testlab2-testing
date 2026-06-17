@@ -220,7 +220,7 @@ class KontrollResource(
             }
           }
           .fold(
-              onSuccess = { ResponseEntity.ok().build() },
+              onSuccess = { ResponseEntity.noContent().build() },
               onFailure = {
                 when (it) {
                   is IllegalArgumentException -> ResponseEntity.badRequest().build()
