@@ -19,7 +19,6 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.styringsdata.StyringsdataListElement
 import no.uutilsynet.testlab2testing.styringsdata.StyringsdataService
-import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -37,7 +36,6 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
   @MockitoBean private lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
   @MockitoBean private lateinit var statisticsService: TestOverviewStatisticsService
   @MockitoBean private lateinit var styringsdataService: StyringsdataService
-  @MockitoBean private lateinit var testregelClient: TestregelClient
   @MockitoBean private lateinit var testResultatDAO: TestResultatDAO
   @MockitoBean private lateinit var kontrollDAO: KontrollDAO
 
@@ -182,13 +180,14 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
     `when`(testgrunnlagService.getTestgrunnlagForKontroll(kontrollId)).thenReturn(testgrunnlagList)
     `when`(loeysingsRegisterClient.getMany(listOf(loeysingId)))
         .thenReturn(Result.success(listOf(loeysing())))
-    `when`(testResultatDAO.getManyResults(testgrunnlagId)).thenReturn(Result.success(emptyList()))
+    `when`(testResultatDAO.getManyResultsByKontrollId(kontrollId))
+        .thenReturn(Result.success(mapOf(testgrunnlagId to emptyList())))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
                 loeysingId, testgrunnlagId, emptyList(), listOf(1, 2), listOf(1)))
         .thenReturn(testStatusCount())
-    `when`(styringsdataService.getStyringsdataForLoeysing(loeysingId, testgrunnlagId))
-        .thenReturn(styringsdataElement())
+    `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
+        .thenReturn(mapOf(loeysingId to styringsdataElement()))
 
     val result = testoverviewService.listTestOverviewElements(kontrollId)
 
@@ -211,7 +210,9 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
         .thenReturn(Result.success(listOf(kontrollDB())))
     `when`(testgrunnlagService.getTestgrunnlagForKontroll(kontrollId)).thenReturn(testgrunnlagList)
     `when`(loeysingsRegisterClient.getMany(emptyList())).thenReturn(Result.success(emptyList()))
-    `when`(testResultatDAO.getManyResults(testgrunnlagId)).thenReturn(Result.success(emptyList()))
+    `when`(testResultatDAO.getManyResultsByKontrollId(kontrollId))
+        .thenReturn(Result.success(mapOf(testgrunnlagId to emptyList())))
+    `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId)).thenReturn(emptyMap())
 
     val result = testoverviewService.listTestOverviewElements(kontrollId)
 
@@ -231,14 +232,14 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
     `when`(testgrunnlagService.getTestgrunnlagForKontroll(kontrollId)).thenReturn(testgrunnlagList)
     `when`(loeysingsRegisterClient.getMany(listOf(loeysingId)))
         .thenReturn(Result.success(listOf(loeysing())))
-    `when`(testResultatDAO.getManyResults(testgrunnlagId))
-        .thenReturn(Result.success(ferdigResultat))
+    `when`(testResultatDAO.getManyResultsByKontrollId(kontrollId))
+        .thenReturn(Result.success(mapOf(testgrunnlagId to ferdigResultat)))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
                 loeysingId, testgrunnlagId, ferdigResultat, listOf(1, 2), listOf(1)))
         .thenReturn(testStatusCount())
-    `when`(styringsdataService.getStyringsdataForLoeysing(loeysingId, testgrunnlagId))
-        .thenReturn(styringsdataElement())
+    `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
+        .thenReturn(mapOf(loeysingId to styringsdataElement()))
 
     val result = testoverviewService.listTestOverviewElements(kontrollId)
 
@@ -256,13 +257,14 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
     `when`(testgrunnlagService.getTestgrunnlagForKontroll(kontrollId)).thenReturn(testgrunnlagList)
     `when`(loeysingsRegisterClient.getMany(listOf(loeysingId)))
         .thenReturn(Result.success(listOf(loeysing())))
-    `when`(testResultatDAO.getManyResults(testgrunnlagId)).thenReturn(Result.success(mixedResultat))
+    `when`(testResultatDAO.getManyResultsByKontrollId(kontrollId))
+        .thenReturn(Result.success(mapOf(testgrunnlagId to mixedResultat)))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
                 loeysingId, testgrunnlagId, mixedResultat, listOf(1, 2), listOf(1)))
         .thenReturn(testStatusCount())
-    `when`(styringsdataService.getStyringsdataForLoeysing(loeysingId, testgrunnlagId))
-        .thenReturn(styringsdataElement())
+    `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
+        .thenReturn(mapOf(loeysingId to styringsdataElement()))
 
     val result = testoverviewService.listTestOverviewElements(kontrollId)
 
@@ -281,13 +283,14 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
     `when`(testgrunnlagService.getTestgrunnlagForKontroll(kontrollId)).thenReturn(testgrunnlagList)
     `when`(loeysingsRegisterClient.getMany(listOf(loeysingId)))
         .thenReturn(Result.success(listOf(loeysing())))
-    `when`(testResultatDAO.getManyResults(testgrunnlagId)).thenReturn(Result.success(emptyList()))
+    `when`(testResultatDAO.getManyResultsByKontrollId(kontrollId))
+        .thenReturn(Result.success(mapOf(testgrunnlagId to emptyList())))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
                 loeysingId, testgrunnlagId, emptyList(), listOf(1, 2), listOf(1)))
         .thenReturn(testStatusCount())
-    `when`(styringsdataService.getStyringsdataForLoeysing(loeysingId, testgrunnlagId))
-        .thenReturn(styringsdataElement(botReaksjon = Reaksjonstype.reaksjon))
+    `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
+        .thenReturn(mapOf(loeysingId to styringsdataElement(botReaksjon = Reaksjonstype.reaksjon)))
 
     val result = testoverviewService.listTestOverviewElements(kontrollId)
 
@@ -304,13 +307,15 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
     `when`(testgrunnlagService.getTestgrunnlagForKontroll(kontrollId)).thenReturn(testgrunnlagList)
     `when`(loeysingsRegisterClient.getMany(listOf(loeysingId)))
         .thenReturn(Result.success(listOf(loeysing())))
-    `when`(testResultatDAO.getManyResults(testgrunnlagId)).thenReturn(Result.success(emptyList()))
+    `when`(testResultatDAO.getManyResultsByKontrollId(kontrollId))
+        .thenReturn(Result.success(mapOf(testgrunnlagId to emptyList())))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
                 loeysingId, testgrunnlagId, emptyList(), listOf(1, 2), listOf(1)))
         .thenReturn(testStatusCount())
-    `when`(styringsdataService.getStyringsdataForLoeysing(loeysingId, testgrunnlagId))
-        .thenReturn(styringsdataElement(paaleggReaksjon = Reaksjonstype.reaksjon))
+    `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
+        .thenReturn(
+            mapOf(loeysingId to styringsdataElement(paaleggReaksjon = Reaksjonstype.reaksjon)))
 
     val result = testoverviewService.listTestOverviewElements(kontrollId)
 
@@ -329,13 +334,14 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
     `when`(testgrunnlagService.getTestgrunnlagForKontroll(kontrollId)).thenReturn(testgrunnlagList)
     `when`(loeysingsRegisterClient.getMany(listOf(loeysingId)))
         .thenReturn(Result.success(listOf(loeysing())))
-    `when`(testResultatDAO.getManyResults(testgrunnlagId)).thenReturn(Result.success(emptyList()))
+    `when`(testResultatDAO.getManyResultsByKontrollId(kontrollId))
+        .thenReturn(Result.success(mapOf(testgrunnlagId to emptyList())))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
                 loeysingId, testgrunnlagId, emptyList(), listOf(1, 2), listOf(1)))
         .thenReturn(testStatusCount())
-    `when`(styringsdataService.getStyringsdataForLoeysing(loeysingId, testgrunnlagId))
-        .thenReturn(styringsdataElement())
+    `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
+        .thenReturn(mapOf(loeysingId to styringsdataElement()))
 
     val result = testoverviewService.listTestOverviewElements(kontrollId)
 
@@ -352,13 +358,14 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
     `when`(testgrunnlagService.getTestgrunnlagForKontroll(kontrollId)).thenReturn(testgrunnlagList)
     `when`(loeysingsRegisterClient.getMany(listOf(loeysingId)))
         .thenReturn(Result.success(listOf(loeysing())))
-    `when`(testResultatDAO.getManyResults(testgrunnlagId)).thenReturn(Result.success(emptyList()))
+    `when`(testResultatDAO.getManyResultsByKontrollId(kontrollId))
+        .thenReturn(Result.success(mapOf(testgrunnlagId to emptyList())))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
                 loeysingId, testgrunnlagId, emptyList(), listOf(1, 2), listOf(1)))
         .thenReturn(testStatusCount())
-    `when`(styringsdataService.getStyringsdataForLoeysing(loeysingId, testgrunnlagId))
-        .thenReturn(styringsdataElement())
+    `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
+        .thenReturn(mapOf(loeysingId to styringsdataElement()))
 
     val result = testoverviewService.listTestOverviewElements(kontrollId)
 
@@ -376,14 +383,14 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
     `when`(testgrunnlagService.getTestgrunnlagForKontroll(kontrollId)).thenReturn(testgrunnlagList)
     `when`(loeysingsRegisterClient.getMany(listOf(loeysingId)))
         .thenReturn(Result.success(listOf(loeysing())))
-    `when`(testResultatDAO.getManyResults(testgrunnlagId))
-        .thenReturn(Result.success(existingResultat))
+    `when`(testResultatDAO.getManyResultsByKontrollId(kontrollId))
+        .thenReturn(Result.success(mapOf(testgrunnlagId to existingResultat)))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
                 loeysingId, testgrunnlagId, existingResultat, listOf(1, 2), listOf(1)))
         .thenReturn(testStatusCount())
-    `when`(styringsdataService.getStyringsdataForLoeysing(loeysingId, testgrunnlagId))
-        .thenReturn(styringsdataElement())
+    `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
+        .thenReturn(mapOf(loeysingId to styringsdataElement()))
 
     val result = testoverviewService.listTestOverviewElements(kontrollId)
 
@@ -404,8 +411,8 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
     `when`(testgrunnlagService.getTestgrunnlagForKontroll(kontrollId)).thenReturn(testgrunnlagList)
     `when`(loeysingsRegisterClient.getMany(listOf(loeysingId, loeysingId)))
         .thenReturn(Result.success(listOf(loeysing())))
-    `when`(testResultatDAO.getManyResults(testgrunnlagId)).thenReturn(Result.success(emptyList()))
-    `when`(testResultatDAO.getManyResults(retestId)).thenReturn(Result.success(emptyList()))
+    `when`(testResultatDAO.getManyResultsByKontrollId(kontrollId))
+        .thenReturn(Result.success(mapOf(testgrunnlagId to emptyList(), retestId to emptyList())))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
                 loeysingId, testgrunnlagId, emptyList(), listOf(1, 2), listOf(1)))
@@ -414,10 +421,8 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
             statisticsService.getTestingStatusForLoeysing(
                 loeysingId, retestId, emptyList(), listOf(1, 2), listOf(1)))
         .thenReturn(testStatusCount().copy(testgrunnlagId = retestId))
-    `when`(styringsdataService.getStyringsdataForLoeysing(loeysingId, testgrunnlagId))
-        .thenReturn(styringsdataElement())
-    `when`(styringsdataService.getStyringsdataForLoeysing(loeysingId, retestId))
-        .thenReturn(styringsdataElement())
+    `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
+        .thenReturn(mapOf(loeysingId to styringsdataElement()))
 
     val result = testoverviewService.listTestOverviewElements(kontrollId)
 
