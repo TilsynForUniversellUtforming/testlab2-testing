@@ -29,11 +29,11 @@ class StyringsdataResource(val styringsdataDAO: StyringsdataDAO) {
 
   @GetMapping("{stryingsdataType}/{stryingsdataId}")
   fun getStyringsdata(
-      @PathVariable("stryingsdataType") stryingsdataType: StyringsdataType,
-      @PathVariable("stryingsdataId") stryingsdataId: Int,
+      @PathVariable stryingsdataType: StyringsdataType,
+      @PathVariable stryingsdataId: Int,
   ): Styringsdata? {
     return if (stryingsdataType == StyringsdataType.loeysing) {
-      styringsdataDAO.getStyringsdataLoeysing(stryingsdataId).firstOrNull()?.let { styringsdata ->
+      styringsdataDAO.getStyringsdataLoeysingById(stryingsdataId).firstOrNull()?.let { styringsdata ->
         Styringsdata.Loeysing(
             id = styringsdata.id,
             loeysingId = styringsdata.kontrollId,
@@ -67,8 +67,7 @@ class StyringsdataResource(val styringsdataDAO: StyringsdataDAO) {
           styringsdataDAO.createStyringsdataKontroll(styringsdata)
         }
         else -> {
-          logger.error("Kan ikkje opprette styringsdata")
-          throw IllegalStateException("Kan ikkje opprette denne typen styringsdata")
+            error("Kan ikkje opprette denne typen styringsdata")
         }
       }.fold(
           { id -> ResponseEntity.created(location(styringsdata, id)).build() },
@@ -79,8 +78,8 @@ class StyringsdataResource(val styringsdataDAO: StyringsdataDAO) {
 
   @PutMapping("{stryingsdataType}/{stryingsdataId}")
   fun updateStyringsdata(
-      @PathVariable("stryingsdataType") stryingsdataType: StyringsdataType,
-      @PathVariable("stryingsdataId") stryingsdataId: Int,
+      @PathVariable stryingsdataType: StyringsdataType,
+      @PathVariable stryingsdataId: Int,
       @RequestBody styringsdata: Styringsdata
   ) =
       when (styringsdata) {
@@ -91,8 +90,7 @@ class StyringsdataResource(val styringsdataDAO: StyringsdataDAO) {
           styringsdataDAO.updateStyringsdataKontroll(stryingsdataId, styringsdata)
         }
         else -> {
-          logger.error("Kan ikkje oppdatere styringsdata med id $stryingsdataId")
-          throw IllegalStateException("Kan ikkje oppdatere styringsdata")
+            error("Kan ikkje opprette denne typen styringsdata")
         }
       }
 
