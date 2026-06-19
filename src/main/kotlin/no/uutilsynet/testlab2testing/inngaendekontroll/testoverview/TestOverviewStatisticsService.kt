@@ -34,7 +34,7 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
 
     val percentagePerSide = progresjonForSideutval(testregelIds, sideutvalIds, testresultat)
 
-    val percemtagePerInnholdstype =
+    val percectagePerInnholdstype =
         progresjonForInnhaldstype(testregelIds, sideutvalIds, testresultat)
 
     return TestStatusCount(
@@ -45,7 +45,7 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
         underArbeid,
         ikkjeStarta,
         percentagePerSide,
-        percemtagePerInnholdstype)
+        percectagePerInnholdstype)
   }
 
   fun uniqueTestKeyCount(resultat: List<ResultatManuellKontroll>): Int {

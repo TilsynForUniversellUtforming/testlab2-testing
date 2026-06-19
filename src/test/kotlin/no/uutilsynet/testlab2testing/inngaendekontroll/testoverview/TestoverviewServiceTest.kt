@@ -120,7 +120,7 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
           underArbeid = 0,
           ikkjeStarta = 2,
           percentagePerSide = 0.0,
-          persentagePerInnholdstype = 0.0)
+          percentagePerInnholdstype = 0.0)
 
   private fun resultat(status: Status = Status.IkkjePaabegynt) =
       ResultatManuellKontroll(
