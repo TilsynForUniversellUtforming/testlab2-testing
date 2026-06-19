@@ -1,3 +1,4 @@
 spring:
   datasource:
-    maximumPoolSize: 2
+    hikari:
+      maximum-pool-size: 2
