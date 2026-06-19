@@ -1,14 +1,14 @@
 package no.uutilsynet.testlab2testing.styringsdata
 
+import java.time.Instant
+import java.time.LocalDate
+import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.BotOekningType
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.Reaksjonstype
 import no.uutilsynet.testlab2.constants.ResultatKlage
 import no.uutilsynet.testlab2.constants.Sakstype
 import no.uutilsynet.testlab2.constants.StyringsdataKontrollStatus
-import java.time.Instant
-import java.time.LocalDate
-import kotlin.properties.Delegates
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Bot
@@ -37,7 +37,7 @@ class StyringsdataDAOTest(
   fun setUp() {
     kontrollId = createTestKontroll()
     styringsdataKontrollId = createTestStyringsdataKontroll()
-      styringsdataLoeysingById = createTestStyringsdataLoeysing()
+    styringsdataLoeysingById = createTestStyringsdataLoeysing()
   }
 
   @Test

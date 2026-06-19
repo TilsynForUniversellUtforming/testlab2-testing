@@ -1,11 +1,11 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testoverview
 
+import kotlin.collections.distinctBy
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.springframework.stereotype.Service
-import kotlin.collections.distinctBy
 
 @Service
 class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
@@ -65,7 +65,7 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
     val finshedTestsKeys =
         testresultat
             .filter { it.status == ResultatManuellKontrollBase.Status.Ferdig }
-            .distinctBy { it.testregelId to it.sideutvalId }
+            .map { "${it.testregelId}_${it.sideutvalId}" }
             .toSet()
 
     val totalTestKeys =
@@ -93,7 +93,8 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
     val finshedTestsKeys =
         testresultat
             .filter { it.status == ResultatManuellKontrollBase.Status.Ferdig }
-            .distinctBy { it.testregelId to it.sideutvalId }.toSet()
+            .map { "${it.testregelId}_${it.sideutvalId}" }
+            .toSet()
 
     val finishedPerInnhaldstype =
         innholdstypeGroup.values.map { entries ->
@@ -103,7 +104,7 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
         }
 
     if (finishedPerInnhaldstype.isEmpty()) return 0.0
-      return finishedPerInnhaldstype.average()
+    return finishedPerInnhaldstype.average()
   }
 
   private fun getTestKeys(values: List<Testregel>, sideutvalIds: List<Int>): Set<String> =

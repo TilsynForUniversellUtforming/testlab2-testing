@@ -173,6 +173,6 @@ fun Kontroll.toMaalingEdit(maalingId: Int): EditMaalingDTO =
     EditMaalingDTO(
         id = maalingId,
         navn = this.tittel,
-        testregelIdList = this.testreglar?.testregelIdList ?: emptyList(),
+        testregelIdList = this.testreglar?.testregelIdList,
         loeysingIdList = this.utval?.loeysingar?.map { it.id },
         crawlParameters = CrawlParameters())

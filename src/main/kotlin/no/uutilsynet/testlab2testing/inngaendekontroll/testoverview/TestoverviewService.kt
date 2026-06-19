@@ -73,7 +73,8 @@ class TestoverviewService(
       testgrunnlagKontroll: TestgrunnlagKontroll,
       loeysingarMap: Map<Int, Loeysing>
   ): List<Loeysing> =
-      testgrunnlagKontroll.sideutval.mapNotNull { sideutval -> loeysingarMap[sideutval.loeysingId] }
+      testgrunnlagKontroll.sideutval
+          .mapNotNull { sideutval -> loeysingarMap[sideutval.loeysingId] }
           .distinctBy { it.id }
 
   private fun getLoeysingMapFromTestgrunnlag(
