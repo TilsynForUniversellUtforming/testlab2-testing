@@ -115,7 +115,7 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
         where id = :id 
     """
               .trimIndent(),
-          mapOf("id" to id),
+          mapOf("loeysing_id" to id),
           styringsdataListElementRowMapper)
 
   fun getStyringsdataKontroll(

@@ -35,7 +35,11 @@ class WordRapportService(
     val testresultat = testResultatDAO.getManyResults(testgrunnlag).getOrThrow()
 
     logger.info(
-        "Genererer rapport for kontroll ${kontroll.id} og løysing ${loeysing.id} og testresultat ${testresultat.size} testresultat og testgrunnlag ${testgrunnlag}")
+        "Genererer rapport for kontroll {} og løysing {} ({} testresultat, testgrunnlagId={})",
+        kontroll.id,
+        loeysing.id,
+        testresultat.size,
+        testgrunnlag)
 
     return wordRapportBuilder
         .kontroll(kontroll)

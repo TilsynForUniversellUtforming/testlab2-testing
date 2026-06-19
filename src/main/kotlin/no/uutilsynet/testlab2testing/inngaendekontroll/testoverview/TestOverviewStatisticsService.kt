@@ -5,6 +5,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManu
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.springframework.stereotype.Service
+import kotlin.collections.distinctBy
 
 @Service
 class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
@@ -48,7 +49,7 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
   }
 
   fun uniqueTestKeyCount(resultat: List<ResultatManuellKontroll>): Int {
-    return resultat.map { "$it.testregelId_$it.sideutvalId" }.toSet().size
+    return resultat.distinctBy { it.testregelId to it.sideutvalId }.size
   }
 
   fun toPerctentage(count: Int, total: Int): Double {
@@ -64,7 +65,7 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
     val finshedTestsKeys =
         testresultat
             .filter { it.status == ResultatManuellKontrollBase.Status.Ferdig }
-            .map { "$it.testregelId_$it.sideutvalId" }
+            .distinctBy { it.testregelId to it.sideutvalId }
             .toSet()
 
     val totalTestKeys =
@@ -92,8 +93,7 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
     val finshedTestsKeys =
         testresultat
             .filter { it.status == ResultatManuellKontrollBase.Status.Ferdig }
-            .map { "$it.testregelId_$it.sideutvalId" }
-            .toSet()
+            .distinctBy { it.testregelId to it.sideutvalId }.toSet()
 
     val finishedPerInnhaldstype =
         innholdstypeGroup.values.map { entries ->
@@ -102,7 +102,8 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
           toPerctentage(finishedTestsForInnhaldstype, testForInnhaldstype.size)
         }
 
-    return finishedPerInnhaldstype.reduce(Double::plus) / testresultat.size
+    if (finishedPerInnhaldstype.isEmpty()) return 0.0
+      return finishedPerInnhaldstype.average()
   }
 
   private fun getTestKeys(values: List<Testregel>, sideutvalIds: List<Int>): Set<String> =

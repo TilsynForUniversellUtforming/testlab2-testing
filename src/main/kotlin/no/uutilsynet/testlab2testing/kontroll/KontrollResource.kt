@@ -278,14 +278,18 @@ class KontrollResource(
     val innholdtypeTestingList = testregelClient.getInnhaldstypeForTesting().getOrThrow()
 
     val innholdstypeTesting =
-        testregelClient
-            .getTestregelList()
-            .getOrThrow()
-            .filter { kontroll.testreglar?.testregelIdList?.contains(it.id) == true }
-            .map { it.innhaldstypeTesting }
-            .mapNotNull { innholdstype ->
-              innholdtypeTestingList.firstOrNull { it.id == innholdstype }
+        kontroll.testreglar?.testregelIdList
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { ids ->
+                testregelClient
+                    .getTestregelListFromIds(ids)
+                    .getOrThrow()
+                    .mapNotNull { it.innhaldstypeTesting }
+                    .mapNotNull { innholdstype ->
+                        innholdtypeTestingList.firstOrNull { it.id == innholdstype }
+                    }
             }
+            ?: emptyList()
 
     val sideutvalType =
         kontroll.sideutvalList.map { sideutval ->

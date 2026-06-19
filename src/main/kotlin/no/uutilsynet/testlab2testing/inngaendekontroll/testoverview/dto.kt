@@ -33,7 +33,7 @@ data class TestStatusCount(
     val underArbeid: Int,
     val ikkjeStarta: Int,
     val percentagePerSide: Double,
-    val persentagePerInnholdstype: Double
+    val percentagePerInnholdstype: Double
 )
 
 enum class StyringsdataStatus {
