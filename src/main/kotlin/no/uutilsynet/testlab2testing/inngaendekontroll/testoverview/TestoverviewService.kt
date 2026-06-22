@@ -106,7 +106,7 @@ class TestoverviewService(
         teststatistics = testStatistics,
         status = getTeststatus(resultat),
         kanSlette = kanSlette(resultat, testgrunnlagKontroll.type),
-        styringdataStatus = styringsdataStatus(styringsdata),
+        styringsdataStatus = styringsdataStatus(styringsdata),
         styringsdataId = styringsdata?.id,
         kanReteste = kanReteste(resultat, isNewest))
   }
