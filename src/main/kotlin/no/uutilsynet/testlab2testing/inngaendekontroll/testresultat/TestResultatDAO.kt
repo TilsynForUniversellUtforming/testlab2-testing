@@ -55,6 +55,89 @@ class TestResultatDAO(
   fun getManyResults(testgrunnlagId: Int): Result<List<ResultatManuellKontroll>> =
       getTestResultat(testgrunnlagId = testgrunnlagId)
 
+  fun getManyResultsByKontrollId(kontrollId: Int): Result<Map<Int, List<ResultatManuellKontroll>>> =
+      runCatching {
+        val testResultat =
+            jdbcTemplate
+                .query(
+                    """
+                    select ti.id as id,
+                           ti.testgrunnlag_id,
+                           ti.loeysing_id,
+                           ti.testregel_id,
+                           ti.sideutval_id,
+                           ti.element_omtale,
+                           ti.element_resultat,
+                           ti.element_utfall,
+                           ti.test_vart_utfoert,
+                           ti.kommentar,
+                           ti.sist_lagra,
+                           b.brukarnamn as brukar_brukarnamn,
+                           b.namn as brukar_namn,
+                           ti.status
+                    from testresultat ti
+                             join brukar b on ti.brukar_id = b.id
+                             join "testlab2_testing"."testgrunnlag" tg on ti.testgrunnlag_id = tg.id
+                    where tg.kontroll_id = :kontrollId
+                    order by ti.id
+                """
+                        .trimIndent(),
+                    mapOf("kontrollId" to kontrollId),
+                ) { rs, _ ->
+                  ResultatManuellKontroll(
+                      id = rs.getInt("id"),
+                      testgrunnlagId = rs.getInt("testgrunnlag_id"),
+                      loeysingId = rs.getInt("loeysing_id"),
+                      testregelId = rs.getInt("testregel_id"),
+                      sideutvalId = rs.getInt("sideutval_id"),
+                      brukar =
+                          Brukar(rs.getString("brukar_brukarnamn"), rs.getString("brukar_namn")),
+                      elementOmtale = rs.getString("element_omtale"),
+                      elementResultat =
+                          runCatching {
+                                enumValueOf<TestresultatUtfall>(rs.getString("element_resultat"))
+                              }
+                              .getOrNull(),
+                      elementUtfall = rs.getString("element_utfall"),
+                      svar = emptyList(),
+                      testVartUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant(),
+                      status =
+                          enumValueOf<ResultatManuellKontrollBase.Status>(rs.getString("status")),
+                      kommentar = rs.getString("kommentar"),
+                      sistLagra = rs.getTimestamp("sist_lagra").toInstant())
+                }
+                .toList()
+
+        val svarMap = getSvarMapByKontrollId(kontrollId)
+        testResultat
+            .map { it.copy(svar = svarMap[it.id] ?: emptyList()) }
+            .groupBy { it.testgrunnlagId }
+      }
+
+  private fun getSvarMapByKontrollId(
+      kontrollId: Int
+  ): Map<Int, List<ResultatManuellKontrollBase.Svar>> =
+      jdbcTemplate
+          .query(
+              """
+              select ti.id,
+                     tis.steg,
+                     tis.svar
+              from testresultat ti
+                join testresultat_svar tis on ti.id = tis.testresultat_id
+                join "testlab2_testing"."testgrunnlag" tg on ti.testgrunnlag_id = tg.id
+              where tg.kontroll_id = :kontrollId
+              order by ti.id, steg
+          """
+                  .trimIndent(),
+              mapOf("kontrollId" to kontrollId),
+          ) { rs, _ ->
+            SvarDB(
+                rs.getInt("id"),
+                ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar")))
+          }
+          .groupBy({ it.resultatManuellKontrollId }, { it.svar })
+
   data class SvarDB(val resultatManuellKontrollId: Int, val svar: ResultatManuellKontrollBase.Svar)
 
   private fun getTestResultat(

@@ -153,7 +153,7 @@ class TestgrunnlagService(
         namn = this.namn,
         type = this.type,
         sideutval = this.sideutval,
-        testregelIdList = this.testregelIdList.map { it.id })
+        testregelIdList = this.testregelIdList)
   }
 
   fun getLoeysingForTestgrunnlag(testgrunnlagId: Int): List<Loeysing> {
@@ -173,7 +173,7 @@ class TestgrunnlagService(
     return loeysingList
   }
 
-  fun hasTestgrunnlagTestregel(testregelId: Int): Boolean {
-    return testgrunnlagDAO.hasTestgrunnlagTestregel(testregelId)
+  fun getTestgrunnlagForKontroll(kontrollId: Int): TestgrunnlagList {
+    return testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId)
   }
 }

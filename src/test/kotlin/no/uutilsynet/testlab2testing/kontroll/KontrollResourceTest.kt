@@ -287,7 +287,7 @@ class KontrollResourceTest(
     val lagretKontroll = get(location).`as`(Kontroll::class.java)
 
     assertThat(lagretKontroll.testreglar?.regelsettId).isEqualTo(regelsett.id)
-    assertThat(lagretKontroll.testreglar?.testregelList?.map { it.id })
+    assertThat(lagretKontroll.testreglar?.testregelIdList)
         .isEqualTo(regelsett.testregelList.map { it.id })
   }
 
@@ -327,8 +327,7 @@ class KontrollResourceTest(
         .statusCode(equalTo(204))
     val lagretKontroll = get(location).`as`(Kontroll::class.java)
 
-    assertThat(lagretKontroll.testreglar?.testregelList?.map { it.id })
-        .isEqualTo(listOf(testregel.id))
+    assertThat(lagretKontroll.testreglar?.testregelIdList).isEqualTo(listOf(testregel.id))
   }
 
   @Test

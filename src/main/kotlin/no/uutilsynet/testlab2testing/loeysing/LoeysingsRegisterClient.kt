@@ -125,7 +125,7 @@ class LoeysingsRegisterClient(
                 .toUri()
         val response =
             restTemplate.getForObject(uri, Array<Loeysing.Expanded>::class.java)?.toList()
-                ?: throw RuntimeException(
+                ?: throw NoSuchElementException(
                     "loeysingsregisteret returnerte null for id-ane ${unique.joinToString(",")}")
 
         response
@@ -164,7 +164,8 @@ class LoeysingsRegisterClient(
               .build()
               .toUriString()
       restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
-          ?: throw RuntimeException("loeysingsregisteret returnerte null for verksemdsøk $search")
+          ?: throw NoSuchElementException(
+              "loeysingsregisteret returnerte null for verksemdsøk $search")
     }
   }
 
@@ -181,7 +182,7 @@ class LoeysingsRegisterClient(
     } else {
       return Loeysing(id, namn, url, verksemd.organisasjonsnummer, verksemd.namn)
     }
-    throw RuntimeException("Klarte ikkje hente loeysing med id $id")
+    throw NoSuchElementException("Klarte ikkje hente loeysing med id $id")
   }
 
   fun Loeysing.Simple.toLoeysing(): Loeysing {

@@ -5,7 +5,6 @@ import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.Sakstype
 import no.uutilsynet.testlab2testing.loeysing.Utval
 import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
 
 data class Kontroll(
     val id: Int,
@@ -20,7 +19,7 @@ data class Kontroll(
     val opprettaDato: LocalDate = LocalDate.now(),
 ) {
 
-  data class Testreglar(val regelsettId: Int? = null, val testregelList: List<Testregel>)
+  data class Testreglar(val regelsettId: Int? = null, val testregelIdList: List<Int>)
 }
 
 data class KontrollTestingMetadata(
