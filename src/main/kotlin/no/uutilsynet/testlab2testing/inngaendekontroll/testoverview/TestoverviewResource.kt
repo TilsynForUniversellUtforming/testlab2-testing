@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController
 class TestoverviewResource(val testoverviewService: TestoverviewService) {
 
   @GetMapping("/kontroll/{kontrollId}")
-  fun byKontroll(@PathVariable("kontrollId") kontrollId: Int): List<TestingStatus> {
+  fun byKontroll(@PathVariable kontrollId: Int): List<TestingStatus> {
     return testoverviewService.listTestOverviewElements(kontrollId)
   }
 }

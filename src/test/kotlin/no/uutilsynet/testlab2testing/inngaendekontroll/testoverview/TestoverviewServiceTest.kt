@@ -198,7 +198,7 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
     assertEquals(Kontrolltype.InngaaendeKontroll, result[0].kontrollType)
     assertEquals(TestgrunnlagType.OPPRINNELEG_TEST, result[0].testgrunnlagType)
     assertEquals(ManuellTestStatus.IKKJE_STARTA, result[0].status)
-    assertEquals(StyringsdataStatus.INGEN_REAKSJON_BRUKT, result[0].styringdataStatus)
+    assertEquals(StyringsdataStatus.INGEN_REAKSJON_BRUKT, result[0].styringsdataStatus)
   }
 
   @Test
@@ -294,7 +294,7 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
 
     val result = testoverviewService.listTestOverviewElements(kontrollId)
 
-    assertEquals(StyringsdataStatus.BOT, result.single().styringdataStatus)
+    assertEquals(StyringsdataStatus.BOT, result.single().styringsdataStatus)
   }
 
   @Test
@@ -319,7 +319,7 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
 
     val result = testoverviewService.listTestOverviewElements(kontrollId)
 
-    assertEquals(StyringsdataStatus.PAALEG, result.single().styringdataStatus)
+    assertEquals(StyringsdataStatus.PAALEG, result.single().styringsdataStatus)
   }
 
   // --- kanSlette ---
