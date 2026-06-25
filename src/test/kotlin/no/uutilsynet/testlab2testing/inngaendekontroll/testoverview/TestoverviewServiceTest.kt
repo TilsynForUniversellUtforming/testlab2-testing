@@ -319,7 +319,7 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
 
     val result = testoverviewService.listTestOverviewElements(kontrollId)
 
-    assertEquals(StyringsdataStatus.PAALEG, result.single().styringsdataStatus)
+    assertEquals(StyringsdataStatus.PAALEGG, result.single().styringsdataStatus)
   }
 
   // --- kanSlette ---

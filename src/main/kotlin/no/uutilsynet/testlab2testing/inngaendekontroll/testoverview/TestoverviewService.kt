@@ -123,7 +123,7 @@ class TestoverviewService(
     return when {
       styringsdata == null -> StyringsdataStatus.INGEN_REAKSJON_BRUKT
       styringsdata.isBot -> StyringsdataStatus.BOT
-      styringsdata.isPaalegg -> StyringsdataStatus.PAALEG
+      styringsdata.isPaalegg -> StyringsdataStatus.PAALEGG
       else -> StyringsdataStatus.INGEN_REAKSJON_BRUKT
     }
   }
