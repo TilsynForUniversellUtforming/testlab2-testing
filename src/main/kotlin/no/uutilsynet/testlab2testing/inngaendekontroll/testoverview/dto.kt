@@ -20,17 +20,10 @@ data class TestingStatus(
 )
 
 enum class ManuellTestStatus {
-    @JsonProperty("ferdig")
-    FERDIG,
-
-    @JsonProperty("deaktivert")
-    DEAKTIVERT,
-
-    @JsonProperty("under-arbeid")
-    UNDER_ARBEID,
-
-    @JsonProperty("ikkje-starta")
-    IKKJE_STARTA
+  @JsonProperty("ferdig") FERDIG,
+  @JsonProperty("deaktivert") DEAKTIVERT,
+  @JsonProperty("under-arbeid") UNDER_ARBEID,
+  @JsonProperty("ikkje-starta") IKKJE_STARTA
 }
 
 data class TestStatusCount(

@@ -33,7 +33,8 @@ class StyringsdataResource(val styringsdataDAO: StyringsdataDAO) {
       @PathVariable stryingsdataId: Int,
   ): Styringsdata? {
     return if (stryingsdataType == StyringsdataType.loeysing) {
-      styringsdataDAO.getStyringsdataLoeysingById(stryingsdataId).firstOrNull()?.let { styringsdata ->
+      styringsdataDAO.getStyringsdataLoeysingById(stryingsdataId).firstOrNull()?.let { styringsdata
+        ->
         Styringsdata.Loeysing(
             id = styringsdata.id,
             loeysingId = styringsdata.kontrollId,
@@ -67,7 +68,7 @@ class StyringsdataResource(val styringsdataDAO: StyringsdataDAO) {
           styringsdataDAO.createStyringsdataKontroll(styringsdata)
         }
         else -> {
-            error("Kan ikkje opprette denne typen styringsdata")
+          error("Kan ikkje opprette denne typen styringsdata")
         }
       }.fold(
           { id -> ResponseEntity.created(location(styringsdata, id)).build() },
@@ -90,7 +91,7 @@ class StyringsdataResource(val styringsdataDAO: StyringsdataDAO) {
           styringsdataDAO.updateStyringsdataKontroll(stryingsdataId, styringsdata)
         }
         else -> {
-            error("Kan ikkje opprette denne typen styringsdata")
+          error("Kan ikkje opprette denne typen styringsdata")
         }
       }
 

@@ -1,14 +1,14 @@
 package no.uutilsynet.testlab2testing.styringsdata
 
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.time.Instant
+import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.BotOekningType
 import no.uutilsynet.testlab2.constants.Klagetype
 import no.uutilsynet.testlab2.constants.Reaksjonstype
 import no.uutilsynet.testlab2.constants.ResultatKlage
 import no.uutilsynet.testlab2.constants.StyringsdataKontrollStatus
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.time.Instant
-import java.time.LocalDate
 import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -221,17 +221,16 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
               .trimIndent(),
           mapOf("id" to id),
       ) { rs, _ ->
-          Styringsdata.Loeysing.Bot(
-              id = rs.getInt("id"),
-              beloepDag = rs.getInt("beloep_dag"),
-              oekingEtterDager = rs.getInt("oeking_etter_dager"),
-              oekningType = BotOekningType.valueOf(rs.getString("oekning_type")),
-              oekingSats = rs.getInt("oeking_sats"),
-              vedtakDato = rs.getTimestamp("vedtak_dato").toLocalDate(),
-              startDato = rs.getTimestamp("start_dato").toLocalDate(),
-              sluttDato = rs.getTimestamp("slutt_dato").toLocalDateOrNull(),
-              kommentar = rs.getString("kommentar")
-          )
+        Styringsdata.Loeysing.Bot(
+            id = rs.getInt("id"),
+            beloepDag = rs.getInt("beloep_dag"),
+            oekingEtterDager = rs.getInt("oeking_etter_dager"),
+            oekningType = BotOekningType.valueOf(rs.getString("oekning_type")),
+            oekingSats = rs.getInt("oeking_sats"),
+            vedtakDato = rs.getTimestamp("vedtak_dato").toLocalDate(),
+            startDato = rs.getTimestamp("start_dato").toLocalDate(),
+            sluttDato = rs.getTimestamp("slutt_dato").toLocalDateOrNull(),
+            kommentar = rs.getString("kommentar"))
       }
 
   fun getKlage(id: Int): Styringsdata.Loeysing.Klage? =
@@ -245,19 +244,19 @@ class StyringsdataDAO(private val jdbcTemplate: NamedParameterJdbcTemplate) {
               .trimIndent(),
           mapOf("id" to id),
       ) { rs, _ ->
-          Styringsdata.Loeysing.Klage(
-              id = rs.getInt("id"),
-              klageMottattDato = rs.getTimestamp("klage_mottatt_dato").toLocalDate(),
-              klageAvgjortDato = rs.getTimestamp("klage_avgjort_dato").toLocalDateOrNull(),
-              resultatKlageTilsyn =
-                  rs.getString("resultat_klage_tilsyn")?.let { ResultatKlage.valueOf(it) },
-              klageDatoDepartement =
-                  rs.getTimestamp("klage_dato_departement")
-                      ?.toInstant()
-                      ?.atZone(ZONEID_OSLO)
-                      ?.toLocalDate(),
-              resultatKlageDepartement =
-                  rs.getString("resultat_klage_departement")?.let { ResultatKlage.valueOf(it) })
+        Styringsdata.Loeysing.Klage(
+            id = rs.getInt("id"),
+            klageMottattDato = rs.getTimestamp("klage_mottatt_dato").toLocalDate(),
+            klageAvgjortDato = rs.getTimestamp("klage_avgjort_dato").toLocalDateOrNull(),
+            resultatKlageTilsyn =
+                rs.getString("resultat_klage_tilsyn")?.let { ResultatKlage.valueOf(it) },
+            klageDatoDepartement =
+                rs.getTimestamp("klage_dato_departement")
+                    ?.toInstant()
+                    ?.atZone(ZONEID_OSLO)
+                    ?.toLocalDate(),
+            resultatKlageDepartement =
+                rs.getString("resultat_klage_departement")?.let { ResultatKlage.valueOf(it) })
       }
 
   @Transactional
