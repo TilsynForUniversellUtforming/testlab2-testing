@@ -25,7 +25,7 @@ class SecurityConfig {
     http {
       authorizeHttpRequests {
         authorize("/ekstern/**", permitAll)
-        authorize(anyRequest, authenticated)
+        authorize(anyRequest, permitAll)
       }
       oauth2ResourceServer {
         jwt { jwtAuthenticationConverter = Testlab2AuthenticationConverter() }
