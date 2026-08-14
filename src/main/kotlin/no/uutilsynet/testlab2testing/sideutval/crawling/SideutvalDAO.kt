@@ -54,7 +54,8 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val keyHolder = GeneratedKeyHolder()
 
     jdbcTemplate.update(
-        "insert into crawlresultat (loeysingid, status, status_url, maaling_id, sist_oppdatert) values (:loeysingid, :status, :status_url, :maaling_id, :sist_oppdatert)",
+        "insert into crawlresultat (loeysingid, status, status_url, maaling_id, sist_oppdatert) " +
+            "values (:loeysingid, :status, :status_url, :maaling_id, :sist_oppdatert)",
         MapSqlParameterSource(
             mapOf(
                 "loeysingid" to crawlResultat.loeysing.id,
@@ -65,7 +66,8 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         keyHolder,
         arrayOf("id"))
 
-    val id = keyHolder.key?.toInt() ?: throw RuntimeException("Feil ved insert av CrawlResultat")
+    val id =
+        keyHolder.key?.toInt() ?: throw NoSuchElementException("Feil ved insert av CrawlResultat")
 
     logger.debug(
         "CrawlResultat.Ferdig insert ferdig. maalingId: $maalingId loeysingId: ${crawlResultat.loeysing.id} ny crid: $id")
@@ -77,7 +79,8 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
 
     logger.debug(
-        "CrawlResultat.Ferdig insert nettsider ferdig. maalingId: $maalingId loeysingId: ${crawlResultat.loeysing.id} crid: $id antall nettsider: ${crawlResultat.nettsider.size}")
+        "CrawlResultat.Ferdig insert nettsider ferdig. maalingId: $maalingId loeysingId:" +
+            " ${crawlResultat.loeysing.id} crid: $id antall nettsider: ${crawlResultat.nettsider.size}")
   }
 
   private fun saveCrawlresultatFeila(crawlResultat: CrawlResultat.Feila, maalingId: Int) {
@@ -133,7 +136,8 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   private fun crawlresultatAlreadyFinished(crawlResultat: CrawlResultat, maalingId: Int): Boolean {
     val alreadyFinished =
         jdbcTemplate.queryForObject(
-            "select count(*) from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id and status = :status_finished",
+            "select count(*) from crawlresultat " +
+                "where loeysingid = :loeysingid and maaling_id = :maaling_id and status = :status_finished",
             mapOf(
                 "loeysingid" to crawlResultat.loeysing.id,
                 "maaling_id" to maalingId,
@@ -208,17 +212,16 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           while (rs.next()) {
             val id = rs.getInt("id")
             val loeysingId = rs.getInt("loeysingid")
-            val loeysing =
-                loeysingar[loeysingId]
-                    ?: throw IllegalStateException(
-                        "crawlresultat $id er lagra med ei løysing som ikkje finnes.")
+            val loeysing = loeysingar[loeysingId]
+
+            requireNotNull(loeysing) {
+              "crawlresultat $id er lagra med ei løysing som ikkje finnes."
+            }
             result.add(toCrawlResultat(rs, loeysing))
           }
 
           return result.toList()
         })
-        ?: throw RuntimeException(
-            "fikk `null` da vi forsøkte å hente crawlresultat for måling med id = $maalingId")
   }
 
   private fun toCrawlResultat(rs: ResultSet, loeysing: Loeysing): CrawlResultat {
@@ -244,7 +247,7 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             val antallNettsider = rs.getInt("ant_nettsider")
             CrawlResultat.Ferdig(antallNettsider, URI(statusUrl).toURL(), loeysing, sistOppdatert)
           }
-          else -> throw RuntimeException("ukjent status lagret i databasen: $status")
+          else -> error("ukjent status lagret i databasen: $status")
         }
 
     return crawlResultat
@@ -295,19 +298,22 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   fun getSideutvalIdsForMaalingAndUrl(maalingId: Int, url: URL): Result<Int> {
     return kotlin.runCatching {
-      jdbcTemplate
-          .queryForList(
-              """
+      requireNotNull(
+          jdbcTemplate
+              .queryForList(
+                  """
                 select cs.id
                 from crawl_side cs
                 join crawlresultat cr on cr.id = cs.crawlresultat_id
                 where cr.maaling_id = :maalingId
                 and cs.url = :url
               """
-                  .trimIndent(),
-              mapOf("maalingId" to maalingId, "url" to url.toString()),
-              Int::class.java)
-          .single()
+                      .trimIndent(),
+                  mapOf("maalingId" to maalingId, "url" to url.toString()),
+                  Int::class.java)
+              .single()) {
+            "Null sideutval id returned for maalingId=$maalingId and url=$url"
+          }
     }
   }
 }

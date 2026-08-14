@@ -269,7 +269,9 @@ class MaalingDAO(
     val query =
         """select idloeysing from "testlab2_testing"."maalingloeysing" where idmaaling = :id"""
     val loeysingIdList: List<Int> =
-        jdbcTemplate.queryForList(query, mapOf("id" to id), Int::class.java)
+        jdbcTemplate.queryForList(query, mapOf("id" to id), Int::class.java).map {
+          requireNotNull(it) { "Null idloeysing returned for maaling $id" }
+        }
     return loeysingIdList
   }
 
@@ -282,7 +284,6 @@ class MaalingDAO(
         """select m.max_lenker, m.tal_lenker from testlab2_testing."maalingv1" m where m.id = :id"""
     return runCatching {
           jdbcTemplate.queryForObject(query, mapOf("id" to maalingId), crawlParametersRowmapper)
-              ?: throw NoSuchElementException("Fant ikke crawlparametere for maaling $maalingId")
         }
         .getOrElse {
           logger.error(
@@ -404,10 +405,12 @@ class MaalingDAO(
           })
 
   fun getTestrelIdForMaaling(maalingId: Int): List<Int> {
-    return jdbcTemplate.queryForList(
-        """select testregel_id from "testlab2_testing"."maaling_testregel" where maaling_id = :maalingId""",
-        mapOf("maalingId" to maalingId),
-        Int::class.java)
+    return jdbcTemplate
+        .queryForList(
+            """select testregel_id from "testlab2_testing"."maaling_testregel" where maaling_id = :maalingId""",
+            mapOf("maalingId" to maalingId),
+            Int::class.java)
+        .map { requireNotNull(it) { "Null testregel_id returned for maaling $maalingId" } }
   }
 
   private fun loeysingsMetadataForMaaling(

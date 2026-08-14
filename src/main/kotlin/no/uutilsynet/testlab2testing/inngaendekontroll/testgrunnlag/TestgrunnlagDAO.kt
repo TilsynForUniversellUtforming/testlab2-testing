@@ -136,7 +136,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 """select t.id from "testlab2_testing"."testgrunnlag" t where t.kontroll_id = :kontrollId""",
                 mapOf("kontrollId" to kontrollId),
                 Int::class.java)
-            .toList()
+            .map { requireNotNull(it) { "Null testgrunnlag id returned for kontroll $kontrollId" } }
     return testgrunnlagIds
   }
 

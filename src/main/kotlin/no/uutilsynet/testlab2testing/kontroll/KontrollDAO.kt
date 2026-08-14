@@ -60,7 +60,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 """select id from "testlab2_testing"."kontroll"""",
                 emptyMap<String, String>(),
                 Int::class.java)
-            .toList()
+            .map { requireNotNull(it) { "Null kontroll id returned from query" } }
     return getKontroller(ids)
   }
 
@@ -161,10 +161,14 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val testreglar =
         KontrollDB.Testreglar(
                 resultSet.getInt("regelsett_id").takeUnless { resultSet.wasNull() },
-                jdbcTemplate.queryForList(
-                    """select testregel_id from "testlab2_testing"."kontroll_testreglar" where kontroll_id = :kontroll_id""",
-                    mapOf("kontroll_id" to kontrollId),
-                    Int::class.java))
+                jdbcTemplate
+                    .queryForList(
+                        """select testregel_id from "testlab2_testing"."kontroll_testreglar" where kontroll_id = :kontroll_id""",
+                        mapOf("kontroll_id" to kontrollId),
+                        Int::class.java)
+                    .map {
+                      requireNotNull(it) { "Null testregel_id returned for kontroll $kontrollId" }
+                    })
             .takeIf { it.regelsettId != null || it.testregelIdList.isNotEmpty() }
     return testreglar
   }
@@ -191,7 +195,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 """select loeysing_id as id from "testlab2_testing"."kontroll_loeysing" where kontroll_id = :kontroll_id""",
                 mapOf("kontroll_id" to kontrollId),
                 Int::class.java)
-            .toList()
+            .map { requireNotNull(it) { "Null loeysing_id returned for kontroll $kontrollId" } }
     return loeysingIdList
   }
 

@@ -88,9 +88,11 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       jdbcTemplate.update("update regelsett set aktiv = false where id = :id", mapOf("id" to id))
 
   fun getTestregelIdListForRegelsett(id: Int): List<Int> {
-    return jdbcTemplate.queryForList(
-        "select testregel_id from regelsett_testregel where regelsett_id = :id",
-        mapOf("id" to id),
-        Int::class.java)
+    return jdbcTemplate
+        .queryForList(
+            "select testregel_id from regelsett_testregel where regelsett_id = :id",
+            mapOf("id" to id),
+            Int::class.java)
+        .map { requireNotNull(it) { "Null testregel_id returned for regelsett $id" } }
   }
 }

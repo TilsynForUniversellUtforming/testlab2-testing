@@ -16,9 +16,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.resttestclient.TestRestTemplate
+import org.springframework.boot.resttestclient.exchange
+import org.springframework.boot.resttestclient.getForObject
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.boot.test.web.client.exchange
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -95,14 +96,14 @@ class RegelsettIntegrationTest(
   fun getRegelsettList() {
     val regelsettType = object : ParameterizedTypeReference<List<RegelsettBase>>() {}
     val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
+    val regelsett = restTemplate.getForObject<RegelsettResponse>(location)
     val responseIdList =
         restTemplate
             .exchange(regelsettBaseUri, HttpMethod.GET, HttpEntity.EMPTY, regelsettType)
             .body
             ?.map { it.id }
 
-    assertThat(responseIdList).contains(regelsett.id)
+    assertThat(responseIdList).contains(regelsett?.id)
   }
 
   @Test
@@ -110,7 +111,7 @@ class RegelsettIntegrationTest(
   fun getRegelsettListWithTestreglar() {
     val regelsettType = object : ParameterizedTypeReference<List<RegelsettResponse>>() {}
     val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
+    val regelsett = restTemplate.getForObject<RegelsettResponse>(location)
     val response =
         restTemplate
             .exchange(
@@ -121,7 +122,7 @@ class RegelsettIntegrationTest(
             .body
 
     assertThat(response?.get(0)?.testregelList).isNotEmpty
-    assertThat(response?.map { it.id }).contains(regelsett.id)
+    assertThat(response?.map { it.id }).contains(regelsett?.id)
   }
 
   @Test
@@ -129,10 +130,10 @@ class RegelsettIntegrationTest(
   fun getRegelsettListActiveInactive() {
     val regelsettType = object : ParameterizedTypeReference<List<RegelsettBase>>() {}
     val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
+    val regelsett = restTemplate.getForObject<RegelsettResponse>(location)
 
     restTemplate.exchange<Unit>(
-        "$regelsettBaseUri/${regelsett.id}", HttpMethod.DELETE, HttpEntity.EMPTY)
+        "$regelsettBaseUri/${regelsett?.id}", HttpMethod.DELETE, HttpEntity.EMPTY)
 
     val responseActiveIdList =
         restTemplate
@@ -140,7 +141,7 @@ class RegelsettIntegrationTest(
             .body
             ?.map { it.id }
 
-    assertThat(responseActiveIdList).doesNotContain(regelsett.id)
+    assertThat(responseActiveIdList).doesNotContain(regelsett?.id)
 
     val responseAllIdList =
         restTemplate
@@ -152,7 +153,7 @@ class RegelsettIntegrationTest(
             .body
             ?.map { it.id }
 
-    assertThat(responseAllIdList).contains(regelsett.id)
+    assertThat(responseAllIdList).contains(regelsett?.id)
   }
 
   @Test
@@ -162,10 +163,11 @@ class RegelsettIntegrationTest(
     val nameUpdate = regelsettName
 
     val location = createDefaultRegelsett(namn = name)
-    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
+    val regelsett = restTemplate.getForObject<RegelsettResponse>(location)
+    requireNotNull(regelsett)
     assertThat(regelsett.namn).isEqualTo(name)
 
-    restTemplate.exchange(
+    restTemplate.exchange<Unit>(
         regelsettBaseUri,
         HttpMethod.PUT,
         HttpEntity(
@@ -174,12 +176,11 @@ class RegelsettIntegrationTest(
                 namn = nameUpdate,
                 modus = regelsett.modus,
                 standard = regelsett.standard,
-                testregelIdList = regelsett.testregelList.map { it.id })),
-        Unit::class.java)
+                testregelIdList = regelsett.testregelList.map { it.id })))
 
-    val regelsettAfterUpdate = restTemplate.getForObject(location, RegelsettResponse::class.java)
+    val regelsettAfterUpdate = restTemplate.getForObject<RegelsettResponse>(location)
 
-    assertThat(regelsettAfterUpdate.namn).isEqualTo(nameUpdate)
+    assertThat(regelsettAfterUpdate?.namn).isEqualTo(nameUpdate)
   }
 
   @Test
@@ -188,11 +189,12 @@ class RegelsettIntegrationTest(
     val nameUpdate = ""
 
     val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
+    val regelsett = restTemplate.getForObject<RegelsettResponse>(location)
+    requireNotNull(regelsett)
     assertThat(regelsett.namn).isEqualTo(regelsettName)
 
     val response =
-        restTemplate.exchange(
+        restTemplate.exchange<String>(
             regelsettBaseUri,
             HttpMethod.PUT,
             HttpEntity(
@@ -201,8 +203,7 @@ class RegelsettIntegrationTest(
                     namn = nameUpdate,
                     modus = regelsett.modus,
                     standard = regelsett.standard,
-                    testregelIdList = regelsett.testregelList.map { it.id })),
-            String::class.java)
+                    testregelIdList = regelsett.testregelList.map { it.id })))
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
     assertThat(response.body).isEqualTo("mangler navn")
@@ -213,11 +214,12 @@ class RegelsettIntegrationTest(
       "Skal ikkje kunne oppdatere eit regelsett til ein annan type enn typen til testrelgane, eit regelsett og dets typar må vera same type")
   fun updateRegelsettIllegalTestregelType() {
     val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
+    val regelsett = restTemplate.getForObject<RegelsettResponse>(location)
+    requireNotNull(regelsett)
     assertThat(regelsett.modus).isEqualTo(TestregelModus.automatisk)
 
     val response =
-        restTemplate.exchange(
+        restTemplate.exchange<String>(
             regelsettBaseUri,
             HttpMethod.PUT,
             HttpEntity(
@@ -226,8 +228,7 @@ class RegelsettIntegrationTest(
                     namn = regelsett.namn,
                     modus = TestregelModus.manuell,
                     standard = regelsett.standard,
-                    testregelIdList = regelsett.testregelList.map { it.id })),
-            String::class.java)
+                    testregelIdList = regelsett.testregelList.map { it.id })))
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
     assertThat(response.body).contains("Id-ane 1, 2 er ikkje gyldige")
@@ -239,7 +240,7 @@ class RegelsettIntegrationTest(
   fun deleteRegelsett() {
     val regelsettType = object : ParameterizedTypeReference<List<RegelsettBase>>() {}
     val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
+    val regelsett = restTemplate.getForObject<RegelsettResponse>(location)
 
     val responseActiveIdList =
         restTemplate
@@ -247,10 +248,10 @@ class RegelsettIntegrationTest(
             .body
             ?.map { it.id }
 
-    assertThat(responseActiveIdList).contains(regelsett.id)
+    assertThat(responseActiveIdList).contains(regelsett?.id)
 
     restTemplate.exchange<Unit>(
-        "$regelsettBaseUri/${regelsett.id}", HttpMethod.DELETE, HttpEntity.EMPTY)
+        "$regelsettBaseUri/${regelsett?.id}", HttpMethod.DELETE, HttpEntity.EMPTY)
 
     val responseAllIdList =
         restTemplate
@@ -258,7 +259,7 @@ class RegelsettIntegrationTest(
             .body
             ?.map { it.id }
 
-    assertThat(responseAllIdList).doesNotContain(regelsett.id)
+    assertThat(responseAllIdList).doesNotContain(regelsett?.id)
   }
 
   private fun createDefaultRegelsett(
@@ -274,5 +275,5 @@ class RegelsettIntegrationTest(
               type,
               standard,
               testregelIdList,
-          ))
+          ))!!
 }

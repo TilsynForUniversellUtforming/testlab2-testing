@@ -15,8 +15,9 @@ import org.junit.jupiter.api.*
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.resttestclient.TestRestTemplate
+import org.springframework.boot.resttestclient.getForObject
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -84,7 +85,8 @@ class UtvalResourceTest(
             .extract()
             .header("Location")
 
-    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
+    val utval = restTemplate.getForObject<Utval>(location)
+    requireNotNull(utval)
 
     assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir"))
@@ -124,7 +126,8 @@ class UtvalResourceTest(
             .extract()
             .header("Location")
 
-    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
+    val utval = restTemplate.getForObject(location, Utval::class.java)
+    requireNotNull(utval)
 
     assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir", uuid))
@@ -148,7 +151,8 @@ class UtvalResourceTest(
             .statusCode(201)
             .extract()
             .header("Location")
-    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
+    val utval = restTemplate.getForObject<Utval>(location)
+    requireNotNull(utval)
 
     assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.url })

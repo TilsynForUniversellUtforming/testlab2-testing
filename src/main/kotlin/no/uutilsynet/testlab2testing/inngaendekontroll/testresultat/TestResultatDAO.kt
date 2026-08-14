@@ -402,7 +402,6 @@ class TestResultatDAO(
     jdbcTemplate.queryForObject(query, mapOf("testresultat_id" to testresultatId)) { rs, _ ->
       KontrollDocumentation(rs.getString("tittel"), rs.getInt("kontroll_id"))
     }
-        ?: throw NoSuchElementException("No kontroll found for testresultat $testresultatId")
   }
 
   fun getBrukararForTestgrunnlag(testgrunnlagId: Int): Result<List<Brukar>> {

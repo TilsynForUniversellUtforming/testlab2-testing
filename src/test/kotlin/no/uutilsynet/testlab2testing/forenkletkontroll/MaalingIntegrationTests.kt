@@ -30,8 +30,10 @@ import org.junit.jupiter.api.*
 import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.resttestclient.TestRestTemplate
+import org.springframework.boot.resttestclient.exchange
+import org.springframework.boot.resttestclient.getForObject
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -177,7 +179,7 @@ class MaalingIntegrationTests(
           .`when`(testregelClient)
           .getTestregelListFromIds(listOf(testregel.id))
       doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelList()
-      return restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
+      return restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)!!
     }
 
     @Test
@@ -185,7 +187,7 @@ class MaalingIntegrationTests(
     fun getMaaling() {
 
       val (id, navn, loeysingListFromApi) =
-          restTemplate.getForObject(location, MaalingDTO::class.java)
+          restTemplate.getForObject(location, MaalingDTO::class.java)!!
 
       assertThat(id, instanceOf(Int::class.java))
       assertThat(navn, equalTo(maalingTestName))
@@ -196,11 +198,11 @@ class MaalingIntegrationTests(
     @Test
     @DisplayName("så skal vi kunne finne den i lista over alle målinger")
     fun listMaalinger() {
-      val (id) = restTemplate.getForObject(location, MaalingDTO::class.java)
+      val (id) = restTemplate.getForObject<MaalingDTO>(location)!!
       val maalingList = object : ParameterizedTypeReference<List<MaalingListElement>>() {}
 
       val maalinger: ResponseEntity<List<MaalingListElement>> =
-          restTemplate.exchange("/v1/maalinger", HttpMethod.GET, HttpEntity.EMPTY, maalingList)!!
+          restTemplate.exchange("/v1/maalinger", HttpMethod.GET, HttpEntity.EMPTY, maalingList)
       val thisMaaling = maalinger.body?.find { it.id == id }!!
 
       assertThat(thisMaaling.id, equalTo(id))
@@ -210,7 +212,7 @@ class MaalingIntegrationTests(
     @Test
     @DisplayName("så skal den ha en status")
     fun shouldHaveStatus() {
-      val responseData = restTemplate.getForObject(location, String::class.java)
+      val responseData = restTemplate.getForObject<String>(location)
       val maaling = JSONObject(responseData)
 
       assertThat(maaling["status"], equalTo("planlegging"))
@@ -232,7 +234,8 @@ class MaalingIntegrationTests(
     @Test
     @DisplayName("så skal den ha en liste med overganger til gyldige tilstander")
     fun listTransitions() {
-      val maaling = restTemplate.getForObject(location, MaalingDTO::class.java)
+      val maaling = restTemplate.getForObject<MaalingDTO>(location)
+      requireNotNull(maaling)
       assertThat(maaling.aksjoner.size, greaterThan(0))
     }
 
@@ -241,6 +244,7 @@ class MaalingIntegrationTests(
         "når målingen har status 'planlegging', så skal det være en aksjon for å gå til 'crawling'")
     fun actionFromPlanlegging() {
       val maaling = restTemplate.getForObject(location, MaalingDTO::class.java)
+      requireNotNull(maaling)
       restTemplate.getForObject(location, Map::class.java)
       assert(maaling.status == "planlegging")
       val expectedData = mapOf("status" to "crawling")
@@ -257,8 +261,7 @@ class MaalingIntegrationTests(
   @DisplayName("en måling som ikke finnes i databasen skal returnere 404")
   fun getNonExisting() {
     val entity =
-        restTemplate.exchange(
-            "/v1/maalinger/0", HttpMethod.GET, HttpEntity.EMPTY, MaalingDTO::class.java)
+        restTemplate.exchange<MaalingDTO>("/v1/maalinger/0", HttpMethod.GET, HttpEntity.EMPTY)
     assertThat(entity.statusCode, equalTo(HttpStatus.NOT_FOUND))
   }
 
@@ -279,7 +282,7 @@ class MaalingIntegrationTests(
     doReturn(updatedLoeysingList)
         .`when`(loeysingsRegisterClient)
         .getMany(updatedLoeysingList.map { it.id })
-    restTemplate.exchange(
+    restTemplate.exchange<Unit>(
         "/v1/maalinger",
         HttpMethod.PUT,
         HttpEntity(
@@ -288,15 +291,14 @@ class MaalingIntegrationTests(
                 navn = maalingTestName,
                 loeysingIdList = updatedLoeysingList.map { it.id },
                 testregelIdList = testRegelList.map { it.id },
-                crawlParameters = null)),
-        Unit::class.java)
+                crawlParameters = null)))
 
     val updatedMaaling =
-        restTemplate.exchange(
-            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY, MaalingDTO::class.java)
+        restTemplate.exchange<MaalingDTO>(
+            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY)
 
-    Assertions.assertThat(updatedMaaling?.body).isNotNull
-    Assertions.assertThat(updatedMaaling?.body).isInstanceOf(MaalingDTO::class.java)
+    Assertions.assertThat(updatedMaaling.body).isNotNull
+    Assertions.assertThat(updatedMaaling.body).isInstanceOf(MaalingDTO::class.java)
 
     val response: MaalingDTO = updatedMaaling.body!!
 
@@ -318,19 +320,19 @@ class MaalingIntegrationTests(
             .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
 
     val existingMaaling =
-        restTemplate.exchange(
-            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY, MaalingDTO::class.java)
+        restTemplate.exchange<MaalingDTO>(
+            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY)
 
-    Assertions.assertThat(existingMaaling?.body).isNotNull
-    Assertions.assertThat(existingMaaling?.body).isInstanceOf(MaalingDTO::class.java)
+    Assertions.assertThat(existingMaaling.body).isNotNull
+    Assertions.assertThat(existingMaaling.body).isInstanceOf(MaalingDTO::class.java)
 
     restTemplate.delete("/v1/maalinger/${maaling.id}")
 
     val nonExistingMaaling =
-        restTemplate.exchange(
-            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY, MaalingDTO::class.java)
+        restTemplate.exchange<MaalingDTO>(
+            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY)
 
-    Assertions.assertThat(nonExistingMaaling?.body).isNull()
+    Assertions.assertThat(nonExistingMaaling.body).isNull()
   }
 
   @Nested
@@ -342,12 +344,12 @@ class MaalingIntegrationTests(
     fun hasTidspunkt() {
       val (key, sistOppdatert) = createMaaling()
 
-      val maalingFraApi = restTemplate.getForObject("/v1/maalinger/$key", MaalingDTO::class.java)
+      val maalingFraApi = restTemplate.getForObject<MaalingDTO>("/v1/maalinger/$key")
 
       // Vi mister noe nøyaktighet i noen tilfeller når vi har lagret tidspunktet i databasen og
       // hentet det tilbake. Derfor kutter vi nøyaktigheten til sekunder, som er godt nok her.
       val actual =
-          maalingFraApi.crawlResultat?.first()?.sistOppdatert?.truncatedTo(ChronoUnit.SECONDS)
+          maalingFraApi?.crawlResultat?.first()?.sistOppdatert?.truncatedTo(ChronoUnit.SECONDS)
       val expected = sistOppdatert.truncatedTo(ChronoUnit.SECONDS)
       assertThat(actual, equalTo(expected))
     }
@@ -357,9 +359,9 @@ class MaalingIntegrationTests(
     fun hasTestingAction() {
       val (key, _) = createMaaling()
 
-      val actual = restTemplate.getForObject("/v1/maalinger/$key", MaalingDTO::class.java)
+      val actual = restTemplate.getForObject<MaalingDTO>("/v1/maalinger/$key")
 
-      Assertions.assertThat(actual.aksjoner).anyMatch { aksjon ->
+      Assertions.assertThat(actual?.aksjoner).anyMatch { aksjon ->
         aksjon.data["status"] == "testing"
       }
     }
@@ -377,7 +379,7 @@ class MaalingIntegrationTests(
               "/v1/maalinger/$key/crawlresultat/nettsider?loeysingId=${uutilsynetLoeysing.id}",
               HttpMethod.GET,
               HttpEntity.EMPTY,
-              urlListType)!!
+              urlListType)
 
       Assertions.assertThat(urlList.body!!).containsExactly(uutilsynetLoeysing.url)
     }
@@ -394,7 +396,7 @@ class MaalingIntegrationTests(
               "/v1/maalinger/$key/crawlresultat/nettsider?loeysingId=${uutilsynetLoeysing.id}",
               HttpMethod.GET,
               HttpEntity.EMPTY,
-              urlListType)!!
+              urlListType)
 
       Assertions.assertThat(urlList.body!!).containsExactly(uutilsynetLoeysing.url)
     }

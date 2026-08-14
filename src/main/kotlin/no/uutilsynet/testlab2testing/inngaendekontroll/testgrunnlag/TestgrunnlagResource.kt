@@ -105,8 +105,4 @@ class TestgrunnlagResource(
           .path("testgrunnlag/kontroll/$id")
           .buildAndExpand(id)
           .toUri()
-
-  fun TestgrunnlagList.toList(): List<TestgrunnlagKontroll> {
-    return listOf<TestgrunnlagKontroll>(this.opprinneligTest) + this.restestar
-  }
 }

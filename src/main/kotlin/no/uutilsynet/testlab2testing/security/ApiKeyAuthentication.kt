@@ -3,10 +3,12 @@ package no.uutilsynet.testlab2testing.security
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.core.GrantedAuthority
 
-class ApiKeyAuthentication(
-    private val apiKey: String,
-    authorities: Collection<GrantedAuthority?>?
-) : AbstractAuthenticationToken(authorities) {
+class ApiKeyAuthentication(private val apiKey: String, authorities: Collection<GrantedAuthority>) :
+    AbstractAuthenticationToken(authorities) {
+
+  init {
+    super.setAuthenticated(true)
+  }
 
   override fun getCredentials(): Any? {
     return null

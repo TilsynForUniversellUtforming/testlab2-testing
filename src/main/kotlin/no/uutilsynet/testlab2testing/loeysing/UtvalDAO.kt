@@ -60,18 +60,17 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun getUtval(id: Int): Result<UtvalFromDatabase> = runCatching {
     jdbcTemplate.query(
         """
-              select utval.id           as utval_id,
-                     utval.namn         as utval_namn,
-                     utval.oppretta     as oppretta,
-                     ul.loeysing_id as loeysing_id
-              from "testlab2_testing"."utval"
-                       join "testlab2_testing"."utval_loeysing" ul on utval.id = ul.utval_id
-              where utval.id = :id
-            """
+                select utval.id           as utval_id,
+                       utval.namn         as utval_namn,
+                       utval.oppretta     as oppretta,
+                       ul.loeysing_id as loeysing_id
+                from "testlab2_testing"."utval"
+                         join "testlab2_testing"."utval_loeysing" ul on utval.id = ul.utval_id
+                where utval.id = :id
+              """
             .trimIndent(),
         mapOf("id" to id),
         ::toUtval)
-        ?: throw IllegalArgumentException("Fann ikkje utval med id $id")
   }
 
   fun getUtvalList(): Result<List<UtvalListItem>> = runCatching {
