@@ -33,7 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 
 private val TEST_URL = URI("http://localhost:8080/").toURL()
@@ -65,7 +65,7 @@ class AggregeringServiceTest(
   companion object {
     @Container
     @JvmStatic
-    var postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:15.3")
+    var postgres: PostgreSQLContainer = PostgreSQLContainer("postgres:15.3")
   }
 
   @Test
