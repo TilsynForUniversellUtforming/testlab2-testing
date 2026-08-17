@@ -9,5 +9,5 @@ data class AggregertResultatSuksesskriterium(
     val suksesskriterium: String,
     val talSiderSamsvar: Int,
     val talSiderBrot: Int,
-    val talSiderIkkjeForekomst: Int
+    val talSiderIkkjeForekomst: Int,
 ) : AutotesterTestresultat

@@ -28,7 +28,8 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
     loeysingar.forEach { loeysingId ->
       jdbcTemplate.update(
           """insert into "testlab2_testing"."utval_loeysing" (utval_id, loeysing_id) values (:utvalId, :loeysingId)""",
-          mapOf("utvalId" to utvalId, "loeysingId" to loeysingId))
+          mapOf("utvalId" to utvalId, "loeysingId" to loeysingId),
+      )
     }
   }
 
@@ -43,7 +44,8 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
     jdbcTemplate.update(
         """insert into "testlab2_testing"."utval" (namn, oppretta) values (:namn, :oppretta)""",
         mapSqlParameterSource,
-        keyHolder)
+        keyHolder,
+    )
 
     val utvalId = keyHolder.keys?.get("id") as Int
 
@@ -54,24 +56,24 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
       val id: Int,
       val namn: String,
       val loeysingar: List<Int>,
-      val oppretta: Instant
+      val oppretta: Instant,
   )
 
   fun getUtval(id: Int): Result<UtvalFromDatabase> = runCatching {
     jdbcTemplate.query(
         """
-              select utval.id           as utval_id,
-                     utval.namn         as utval_namn,
-                     utval.oppretta     as oppretta,
-                     ul.loeysing_id as loeysing_id
-              from "testlab2_testing"."utval"
-                       join "testlab2_testing"."utval_loeysing" ul on utval.id = ul.utval_id
-              where utval.id = :id
-            """
+        select utval.id           as utval_id,
+               utval.namn         as utval_namn,
+               utval.oppretta     as oppretta,
+               ul.loeysing_id as loeysing_id
+        from "testlab2_testing"."utval"
+                 join "testlab2_testing"."utval_loeysing" ul on utval.id = ul.utval_id
+        where utval.id = :id
+        """
             .trimIndent(),
         mapOf("id" to id),
-        ::toUtval)
-        ?: throw IllegalArgumentException("Fann ikkje utval med id $id")
+        ::toUtval,
+    )
   }
 
   fun getUtvalList(): Result<List<UtvalListItem>> = runCatching {
@@ -83,7 +85,9 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun deleteUtval(id: Int): Result<Unit> = runCatching {
     logger.atInfo().log("slettar utval med id $id")
     jdbcTemplate.update(
-        """delete from "testlab2_testing"."utval" where id = :id""", mapOf("id" to id))
+        """delete from "testlab2_testing"."utval" where id = :id""",
+        mapOf("id" to id),
+    )
   }
 
   private fun toUtval(rs: ResultSet): UtvalFromDatabase {

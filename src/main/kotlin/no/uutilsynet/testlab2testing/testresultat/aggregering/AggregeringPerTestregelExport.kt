@@ -14,5 +14,5 @@ data class AggregeringPerTestregelExport(
     val talSiderBrot: Int,
     val talSiderIkkjeForekomst: Int,
     val testregelGjennomsnittlegSideSamsvarProsent: Double?,
-    val testregelGjennomsnittlegSideBrotProsent: Double?
+    val testregelGjennomsnittlegSideBrotProsent: Double?,
 )

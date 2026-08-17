@@ -28,7 +28,8 @@ class TestKoeyringTest {
   @ParameterizedTest
   @MethodSource("pairsOfResponseTilstand")
   @DisplayName(
-      "gitt ei testkøyring med tilstand `ikkje starta`, test riktig kombinasjon av respons og ny tilstand")
+      "gitt ei testkøyring med tilstand `ikkje starta`, test riktig kombinasjon av respons og ny tilstand"
+  )
   fun testUpdateStatus(response: AutoTesterClient.AutoTesterStatus, tilstand: Class<*>) {
     val testKoeyring =
         TestKoeyring.IkkjeStarta(
@@ -36,7 +37,8 @@ class TestKoeyringTest {
             Instant.now(),
             URI(statusURL).toURL(),
             Brukar("test", "testar"),
-            crawlResultat.antallNettsider)
+            crawlResultat.antallNettsider,
+        )
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(tilstand)
   }
@@ -44,7 +46,8 @@ class TestKoeyringTest {
   @ParameterizedTest
   @MethodSource("pairsOfResponseTilstand")
   @DisplayName(
-      "gitt ei testkøyring med tilstand `starta`, test riktig kombinasjon av respons og ny tilstand")
+      "gitt ei testkøyring med tilstand `starta`, test riktig kombinasjon av respons og ny tilstand"
+  )
   fun testUpdateStatusFromStarta(response: AutoTesterClient.AutoTesterStatus, tilstand: Class<*>) {
     val testKoeyring =
         TestKoeyring.Starta(
@@ -53,7 +56,8 @@ class TestKoeyringTest {
             URI(statusURL).toURL(),
             Framgang(0, crawlResultat.nettsider.size),
             Brukar("test", "testar"),
-            crawlResultat.antallNettsider)
+            crawlResultat.antallNettsider,
+        )
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(tilstand)
   }
@@ -68,14 +72,16 @@ class TestKoeyringTest {
             URI(statusURL).toURL(),
             Framgang(0, crawlResultat.nettsider.size),
             Brukar("test", "testar"),
-            crawlResultat.antallNettsider)
+            crawlResultat.antallNettsider,
+        )
     val actual =
         TestKoeyring.updateStatus(testKoeyring, AutoTesterClient.AutoTesterStatus.Terminated)
     assertThat(actual).isInstanceOf(TestKoeyring.Feila::class.java)
   }
 
   @DisplayName(
-      "gitt ei testkøyring med tilstand `ferdig`, så blir ikkje tilstanden endra uansett kva ny tilstand som blir rapportert")
+      "gitt ei testkøyring med tilstand `ferdig`, så blir ikkje tilstanden endra uansett kva ny tilstand som blir rapportert"
+  )
   @ParameterizedTest
   @MethodSource("pairsOfResponseTilstand")
   fun testUpdateStatusFromFerdig(response: AutoTesterClient.AutoTesterStatus, tilstand: Class<*>) {
@@ -86,19 +92,25 @@ class TestKoeyringTest {
             URI(statusURL).toURL(),
             lenker = null,
             Brukar("test", "testar"),
-            crawlResultat.antallNettsider)
+            crawlResultat.antallNettsider,
+        )
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(TestKoeyring.Ferdig::class.java)
   }
 
   @DisplayName(
-      "gitt ei testkøyring med tilstand `feila`, så blir ikkje tilstanden endra uansett kva ny tilstand som blir rapportert")
+      "gitt ei testkøyring med tilstand `feila`, så blir ikkje tilstanden endra uansett kva ny tilstand som blir rapportert"
+  )
   @ParameterizedTest
   @MethodSource("pairsOfResponseTilstand")
   fun testUpdateStatusFromFeila(response: AutoTesterClient.AutoTesterStatus, tilstand: Class<*>) {
     val testKoeyring =
         TestKoeyring.Feila(
-            crawlResultat.loeysing, Instant.now(), "dette går ikkje", Brukar("test", "testar"))
+            crawlResultat.loeysing,
+            Instant.now(),
+            "dette går ikkje",
+            Brukar("test", "testar"),
+        )
     val actual = TestKoeyring.updateStatus(testKoeyring, response)
     assertThat(actual).isInstanceOf(TestKoeyring.Feila::class.java)
   }
@@ -108,10 +120,13 @@ class TestKoeyringTest {
     fun pairsOfResponseTilstand(): Stream<Arguments> {
       return Stream.of(
           Arguments.of(
-              AutoTesterClient.AutoTesterStatus.Pending, TestKoeyring.IkkjeStarta::class.java),
+              AutoTesterClient.AutoTesterStatus.Pending,
+              TestKoeyring.IkkjeStarta::class.java,
+          ),
           Arguments.of(
               AutoTesterClient.AutoTesterStatus.Running(AutoTesterClient.CustomStatus(0, 1)),
-              TestKoeyring.Starta::class.java),
+              TestKoeyring.Starta::class.java,
+          ),
           Arguments.of(
               AutoTesterClient.AutoTesterStatus.Completed(
                   AutoTesterClient.AutoTesterLenker(
@@ -122,11 +137,15 @@ class TestKoeyringTest {
                       URI("https://aggregeringSide.resultat").toURL(),
                       URI("https://aggregeringSideTR.resultat").toURL(),
                       URI("https://aggregeringLoeysing.resultat").toURL(),
-                  )),
-              TestKoeyring.Ferdig::class.java),
+                  )
+              ),
+              TestKoeyring.Ferdig::class.java,
+          ),
           Arguments.of(
               AutoTesterClient.AutoTesterStatus.Failed("401 Unauthorized"),
-              TestKoeyring.Feila::class.java))
+              TestKoeyring.Feila::class.java,
+          ),
+      )
     }
   }
 }

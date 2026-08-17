@@ -28,7 +28,7 @@ data class TestregelRapport(
     val testregelNoekkel: String,
     val kravId: Int,
     val kravTittel: String,
-    val kravUrl: URL?
+    val kravUrl: URL?,
 )
 
 data class Side(val sideNr: Int, val sideTittel: String, val sideUrl: URI)

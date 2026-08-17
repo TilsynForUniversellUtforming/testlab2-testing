@@ -23,8 +23,12 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.resttestclient.TestRestTemplate
+import org.springframework.boot.resttestclient.exchange
+import org.springframework.boot.resttestclient.getForEntity
+import org.springframework.boot.resttestclient.getForObject
+import org.springframework.boot.resttestclient.postForEntity
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
@@ -39,7 +43,7 @@ class TestResultatResourceTest(
     @Autowired val utvalDAO: UtvalDAO,
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
-    @Autowired private val testUtils: TestUtils
+    @Autowired private val testUtils: TestUtils,
 ) {
   private var kontrollId: Int by Delegates.notNull()
   private var utvalId: Int by Delegates.notNull()
@@ -63,7 +67,8 @@ class TestResultatResourceTest(
             "Ola Nordmann",
             Sakstype.Arkivsak,
             "1234",
-            Kontrolltype.InngaaendeKontroll)
+            Kontrolltype.InngaaendeKontroll,
+        )
 
     kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
@@ -95,7 +100,8 @@ class TestResultatResourceTest(
         kontroll,
         listOf(
             SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
-        ))
+        ),
+    )
 
     val createdKontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
     val testregelId =
@@ -116,7 +122,7 @@ class TestResultatResourceTest(
     testgrunnlagId = testgrunnlag.getOrThrow()
 
     val responseEntity =
-        restTemplate.postForEntity(
+        restTemplate.postForEntity<Unit>(
             "/testresultat",
             mapOf(
                 "testgrunnlagId" to testgrunnlagId,
@@ -125,7 +131,7 @@ class TestResultatResourceTest(
                 "sideutvalId" to sideutval.id,
                 "brukar" to mapOf("brukarnamn" to "testbrukar@digdir.no", "namn" to "Test Brukar"),
             ),
-            Unit::class.java)
+        )
 
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.CREATED)
     location = responseEntity.headers.location!!
@@ -138,7 +144,7 @@ class TestResultatResourceTest(
   @DisplayName("vi skal kunne legge til svar på et testresultat vi har opprettet")
   fun leggeTilSvar() {
     val testresultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
-    val endret = testresultat.copy(svar = svar)
+    val endret = testresultat?.copy(svar = svar)
     assertDoesNotThrow { restTemplate.put(location, endret) }
   }
 
@@ -146,16 +152,17 @@ class TestResultatResourceTest(
   @Order(3)
   @DisplayName("vi skal kunne hente ut et testresultat, og den skal inneholde brukaren")
   fun skalInneholdeBrukar() {
-    val resultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
-    assertThat(resultat.brukar).isEqualTo(Brukar("testbrukar@digdir.no", "Test Brukar"))
+    val resultat = restTemplate.getForObject<ResultatManuellKontroll>(location)
+    assertThat(resultat?.brukar).isEqualTo(Brukar("testbrukar@digdir.no", "Test Brukar"))
   }
 
   @Test
   @Order(3)
   @DisplayName(
-      "vi skal kunne hente ut et testresultat, og den skal inneholde svaret som er lagt inn")
+      "vi skal kunne hente ut et testresultat, og den skal inneholde svaret som er lagt inn"
+  )
   fun henteUtTestresultat() {
-    val responseEntity = restTemplate.getForEntity(location, ResultatManuellKontroll::class.java)
+    val responseEntity = restTemplate.getForEntity<ResultatManuellKontroll>(location)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
 
     val body = responseEntity.body!!
@@ -167,60 +174,65 @@ class TestResultatResourceTest(
   @Test
   @Order(4)
   @DisplayName(
-      "vi skal kunne legge til flere svar på et testresultat vi har opprettet, og hente dem ut igjen")
+      "vi skal kunne legge til flere svar på et testresultat vi har opprettet, og hente dem ut igjen"
+  )
   fun leggeTilFlereSvar() {
-    val resultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
-    val endret = resultat.copy(svar = resultat.svar + restenAvSvarene)
+    val resultat = restTemplate.getForObject<ResultatManuellKontroll>(location)
+    val endret = resultat?.copy(svar = resultat.svar + restenAvSvarene)
     restTemplate.put(location, endret)
 
-    val oppdatertResultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
+    val oppdatertResultat = restTemplate.getForObject<ResultatManuellKontroll>(location)
 
-    assertThat(oppdatertResultat.svar).containsExactlyElementsOf(svar + restenAvSvarene)
+    assertThat(oppdatertResultat?.svar).containsExactlyElementsOf(svar + restenAvSvarene)
   }
 
   @Test
   @Order(5)
   @DisplayName("vi skal kunne oppdatere et svar")
   fun oppdatereSvar() {
-    val resultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
-    val endretSvar = resultat.svar.map { if (it.steg == "3.4") it.copy(svar = "nei") else it }
+    val resultat = restTemplate.getForObject<ResultatManuellKontroll>(location)
+    val endretSvar = resultat?.svar?.map { if (it.steg == "3.4") it.copy(svar = "nei") else it }
+    requireNotNull(endretSvar)
     restTemplate.put(location, resultat.copy(svar = endretSvar))
 
-    val oppdatertResultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
+    val oppdatertResultat = restTemplate.getForObject<ResultatManuellKontroll>(location)
 
-    assertThat(oppdatertResultat.svar).contains(Svar("3.4", "nei"))
-    assertThat(oppdatertResultat.svar).doesNotContain(Svar("3.4", "ja"))
+    assertThat(oppdatertResultat?.svar).contains(Svar("3.4", "nei"))
+    assertThat(oppdatertResultat?.svar).doesNotContain(Svar("3.4", "ja"))
   }
 
   @Test
   @Order(6)
   @DisplayName("vi skal kunne oppdatere testresultatet med elementomtale")
   fun oppdatereTestresultat() {
-    val testresultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
-    val endret = testresultat.copy(elementOmtale = "iframe nummer 1")
+    val testresultat = restTemplate.getForObject<ResultatManuellKontroll>(location)
+    val endret = testresultat?.copy(elementOmtale = "iframe nummer 1")
 
     restTemplate.put(location, endret)
 
-    val oppdatert = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
+    val oppdatert = restTemplate.getForObject<ResultatManuellKontroll>(location)
 
-    assertThat(oppdatert.elementOmtale).isEqualTo("iframe nummer 1")
+    assertThat(oppdatert?.elementOmtale).isEqualTo("iframe nummer 1")
   }
 
   @Test
   @Order(7)
   @DisplayName(
-      "når vi oppdaterer resultatet med elementresultat og elementutfall, så skal også tidspunktet settes")
+      "når vi oppdaterer resultatet med elementresultat og elementutfall, så skal også tidspunktet settes"
+  )
   fun oppdatereTestresultatMedElementresultatOgElementutfall() {
     val start = Instant.now()
-    val testresultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
+    val testresultat = restTemplate.getForObject<ResultatManuellKontroll>(location)
     val elementUtfall =
         "Iframe har et tilgjengelig navn, som ikke beskriver formålet med innholdet i iframe."
     val elementResultat = TestresultatUtfall.brot
-    val endret = testresultat.copy(elementResultat = elementResultat, elementUtfall = elementUtfall)
+    val endret =
+        testresultat?.copy(elementResultat = elementResultat, elementUtfall = elementUtfall)
 
     restTemplate.put(location, endret)
 
-    val oppdatert = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
+    val oppdatert = restTemplate.getForObject<ResultatManuellKontroll>(location)
+    requireNotNull(oppdatert?.elementResultat)
 
     assertThat(oppdatert.elementResultat).isEqualTo(elementResultat)
     assertThat(oppdatert.elementUtfall).isEqualTo(elementUtfall)
@@ -232,16 +244,16 @@ class TestResultatResourceTest(
   @DisplayName("vi skal kunne oppdatere testresultat med frivillig kommentar")
   fun oppdatereTestresultatMedKommentar() {
     val start = Instant.now()
-    val testresultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
+    val testresultat = restTemplate.getForObject<ResultatManuellKontroll>(location)
     val kommentar = "Dette var en bra test"
-    val endret = testresultat.copy(kommentar = kommentar)
+    val endret = testresultat?.copy(kommentar = kommentar)
 
     restTemplate.put(location, endret)
 
-    val oppdatert = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
+    val oppdatert = restTemplate.getForObject<ResultatManuellKontroll>(location)
 
-    assertThat(oppdatert.kommentar).isEqualTo(kommentar)
-    assertThat(oppdatert.testVartUtfoert).isBetween(start, Instant.now())
+    assertThat(oppdatert?.kommentar).isEqualTo(kommentar)
+    assertThat(oppdatert?.testVartUtfoert).isBetween(start, Instant.now())
   }
 
   @Test
@@ -250,14 +262,17 @@ class TestResultatResourceTest(
   fun henteAlleResultaterForTestgrunnlag() {
     val resultatForTestgrunnlag =
         restTemplate.getForObject(
-            "/testresultat?testgrunnlagId=$testgrunnlagId", ResultatForTestgrunnlag::class.java)!!
+            "/testresultat?testgrunnlagId=$testgrunnlagId",
+            ResultatForTestgrunnlag::class.java,
+        )!!
     assertThat(resultatForTestgrunnlag.resultat).hasSize(1)
     val resultat = resultatForTestgrunnlag.resultat.first()
     assertThat(resultat.elementOmtale).isEqualTo("iframe nummer 1")
     assertThat(resultat.elementResultat).isEqualTo(resultat.elementResultat)
     assertThat(resultat.elementUtfall)
         .isEqualTo(
-            "Iframe har et tilgjengelig navn, som ikke beskriver formålet med innholdet i iframe.")
+            "Iframe har et tilgjengelig navn, som ikke beskriver formålet med innholdet i iframe."
+        )
     assertThat(resultat.testVartUtfoert).isNotNull()
     val expected =
         (svar + restenAvSvarene).map { if (it.steg == "3.4") it.copy(svar = "nei") else it }
@@ -268,10 +283,10 @@ class TestResultatResourceTest(
   @Order(10)
   @DisplayName("vi skal ikke kunne slette et testresultat hvis status er 'Ferdig'")
   fun sletteFerdigTestresultat() {
-    val resultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
-    val endret = resultat.copy(status = ResultatManuellKontrollBase.Status.Ferdig)
+    val resultat = restTemplate.getForObject<ResultatManuellKontroll>(location)
+    val endret = resultat?.copy(status = ResultatManuellKontrollBase.Status.Ferdig)
     restTemplate.put(location, endret)
-    val responseEntity = restTemplate.exchange(location, HttpMethod.DELETE, null, Unit::class.java)
+    val responseEntity = restTemplate.exchange<Unit>(location, HttpMethod.DELETE, null)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
   }
 
@@ -279,14 +294,15 @@ class TestResultatResourceTest(
   @Order(11)
   @DisplayName("vi skal kunne slette et testresultat hvis status er noe annet enn 'Ferdig'")
   fun sletteTestresultat() {
-    val resultat = restTemplate.getForObject(location, ResultatManuellKontroll::class.java)
-    val endret = resultat.copy(status = ResultatManuellKontrollBase.Status.UnderArbeid)
+    val resultat = restTemplate.getForObject<ResultatManuellKontroll>(location)
+    val endret = resultat?.copy(status = ResultatManuellKontrollBase.Status.UnderArbeid)
     restTemplate.put(location, endret)
 
     restTemplate.delete(location)
     val resultatForTestgrunnlag =
-        restTemplate.getForObject(
-            "/testresultat?testgrunnlagId=$testgrunnlagId", ResultatForTestgrunnlag::class.java)!!
+        restTemplate.getForObject<ResultatForTestgrunnlag>(
+            "/testresultat?testgrunnlagId=$testgrunnlagId"
+        )!!
     assertThat(resultatForTestgrunnlag.resultat).isEmpty()
   }
 

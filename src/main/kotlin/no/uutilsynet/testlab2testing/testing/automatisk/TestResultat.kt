@@ -17,7 +17,7 @@ data class TestResultat(
     val testVartUtfoert: LocalDateTime,
     val elementUtfall: String,
     val elementResultat: TestresultatUtfall,
-    val elementOmtale: TestresultatDetaljert.ElementOmtale?
+    val elementOmtale: TestresultatDetaljert.ElementOmtale?,
 ) : AutotesterTestresultat {
 
   companion object {
@@ -32,7 +32,7 @@ data class TestResultat(
         testVartUtfoert: String,
         elementUtfall: String,
         elementResultat: TestresultatUtfall,
-        elementOmtale: List<TestresultatDetaljert.ElementOmtale>? = null
+        elementOmtale: List<TestresultatDetaljert.ElementOmtale>? = null,
     ): TestResultat {
       return TestResultat(
           suksesskriterium,
@@ -43,7 +43,8 @@ data class TestResultat(
           parseLocalDateTime(testVartUtfoert),
           elementUtfall,
           elementResultat,
-          elementOmtale?.first())
+          elementOmtale?.first(),
+      )
     }
 
     fun parseLocalDateTime(s: String): LocalDateTime {

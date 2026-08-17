@@ -10,15 +10,16 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.restclient.RestTemplateBuilder
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 
 @SpringBootTest(
-    properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///ResultatDAOTest-db"])
+    properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///ResultatDAOTest-db"]
+)
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ResultatDAOTest(
@@ -44,7 +45,8 @@ class ResultatDAOTest(
     val testgrunnlagList =
         listOf(
             OpprettTestgrunnlag("Tilsyn 20204", TestgrunnlagType.OPPRINNELEG_TEST),
-            OpprettTestgrunnlag("Tilsyn 20204 Retest", TestgrunnlagType.RETEST))
+            OpprettTestgrunnlag("Tilsyn 20204 Retest", TestgrunnlagType.RETEST),
+        )
     testgrunnlagIds = createTestgrunnlagList(testgrunnlagList, listOf(1, 2))
   }
 
@@ -79,7 +81,8 @@ class ResultatDAOTest(
             0.5,
             6,
             3,
-            testregelId)
+            testregelId,
+        )
 
     val resultat = resultatDAO.getTestresultatMaaling(maalingIds[0])
 
@@ -161,14 +164,15 @@ class ResultatDAOTest(
 
   private fun createTestgrunnlagList(
       testgrunnlagList: List<OpprettTestgrunnlag>,
-      loeysingList: List<Int>
+      loeysingList: List<Int>,
   ): List<Int> {
     val kontroll =
         testUtils.createKontroll(
             "Inngåande kontroll",
             Kontrolltype.InngaaendeKontroll,
             loeysingList,
-            listOf(testregelId))
+            listOf(testregelId),
+        )
 
     return testgrunnlagList
         .map { testUtils.createTestgrunnlag(it, kontroll) }
@@ -186,7 +190,7 @@ class ResultatDAOTest(
 
 data class OpprettTestgrunnlag(
     val testgrunnlagNamn: String,
-    val testgrunnlagType: TestgrunnlagType
+    val testgrunnlagType: TestgrunnlagType,
 )
 
 @Bean

@@ -16,12 +16,15 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
   @Cacheable("kravFromSuksesskriterium", unless = "#result==null")
   fun getKrav(suksesskriterium: String): KravWcag2x {
     logger.info(
-        "Henter krav fra ${properties.host}/v1/krav/wcag2krav/suksesskriterium/$suksesskriterium .")
+        "Henter krav fra ${properties.host}/v1/krav/wcag2krav/suksesskriterium/$suksesskriterium ."
+    )
     return restTemplate.getForObject(
         "${properties.host}/v1/krav/wcag2krav/suksesskriterium/$suksesskriterium",
-        KravWcag2x::class.java)
+        KravWcag2x::class.java,
+    )
         ?: throw RuntimeException(
-            "Kravregisteret returnerte null for suksesskriterium $suksesskriterium")
+            "Kravregisteret returnerte null for suksesskriterium $suksesskriterium"
+        )
   }
 
   @Cacheable("kravFromId", unless = "#result==null")
@@ -34,7 +37,8 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
   fun getKravIdFromSuksesskritterium(suksesskriterium: String): Int {
     return getKravregisterCache().associateBy { it.suksesskriterium }[suksesskriterium]?.id
         ?: throw RuntimeException(
-            "Kravregisteret returnerte null for suksesskriterium $suksesskriterium")
+            "Kravregisteret returnerte null for suksesskriterium $suksesskriterium"
+        )
   }
 
   @Cacheable("suksesskriteriumFromKrav", unless = "#result == null")
@@ -49,9 +53,9 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
             "${properties.host}/v1/krav/wcag2krav",
             org.springframework.http.HttpMethod.GET,
             null,
-            object : org.springframework.core.ParameterizedTypeReference<List<KravWcag2x>>() {})
-        .body
-        ?: throw RuntimeException("Kravregisteret returnerte null for liste av krav")
+            object : org.springframework.core.ParameterizedTypeReference<List<KravWcag2x>>() {},
+        )
+        .body ?: throw RuntimeException("Kravregisteret returnerte null for liste av krav")
   }
 
   fun getKravregisterCache(): List<KravWcag2x> {

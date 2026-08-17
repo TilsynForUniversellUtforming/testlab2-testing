@@ -16,7 +16,8 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
     Type(TestKoeyring.IkkjeStarta::class, name = "ikkje_starta"),
     Type(TestKoeyring.Starta::class, name = "starta"),
     Type(TestKoeyring.Ferdig::class, name = "ferdig"),
-    Type(TestKoeyring.Feila::class, name = "feila"))
+    Type(TestKoeyring.Feila::class, name = "feila"),
+)
 sealed class TestKoeyring {
   abstract val loeysing: Loeysing
   abstract val sistOppdatert: Instant
@@ -52,31 +53,37 @@ sealed class TestKoeyring {
       override val loeysing: Loeysing,
       override val sistOppdatert: Instant,
       val feilmelding: String,
-      override val brukar: Brukar?
+      override val brukar: Brukar?,
   ) : TestKoeyring()
 
   companion object {
     fun from(crawlResultat: CrawlResultat.Ferdig, statusURL: URL, brukar: Brukar?): IkkjeStarta =
         IkkjeStarta(
-            crawlResultat.loeysing, Instant.now(), statusURL, brukar, crawlResultat.antallNettsider)
+            crawlResultat.loeysing,
+            Instant.now(),
+            statusURL,
+            brukar,
+            crawlResultat.antallNettsider,
+        )
 
     fun from(
         loeysing: Loeysing,
         statusURL: URL,
         brukar: Brukar?,
-        antallNettsider: Int
+        antallNettsider: Int,
     ): IkkjeStarta = IkkjeStarta(loeysing, Instant.now(), statusURL, brukar, antallNettsider)
 
     fun updateStatus(
         testKoeyring: TestKoeyring,
-        response: AutoTesterClient.AutoTesterStatus
+        response: AutoTesterClient.AutoTesterStatus,
     ): TestKoeyring =
         if (response is AutoTesterClient.AutoTesterStatus.Terminated) {
           Feila(
               testKoeyring.loeysing,
               Instant.now(),
               "Testen har blitt stoppa manuelt.",
-              testKoeyring.brukar)
+              testKoeyring.brukar,
+          )
         } else {
           when (testKoeyring) {
             is IkkjeStarta -> updateStatusIkkjeStarta(response, testKoeyring)
@@ -89,7 +96,7 @@ sealed class TestKoeyring {
 
     private fun updateStatusStarta(
         response: AutoTesterClient.AutoTesterStatus,
-        testKoeyring: Starta
+        testKoeyring: Starta,
     ) =
         when (response) {
           is AutoTesterClient.AutoTesterStatus.Pending ->
@@ -98,7 +105,8 @@ sealed class TestKoeyring {
                   Instant.now(),
                   testKoeyring.statusURL,
                   testKoeyring.brukar,
-                  testKoeyring.antallNettsider)
+                  testKoeyring.antallNettsider,
+              )
           is AutoTesterClient.AutoTesterStatus.Completed ->
               Ferdig(
                   testKoeyring.loeysing,
@@ -106,7 +114,8 @@ sealed class TestKoeyring {
                   testKoeyring.statusURL,
                   response.output,
                   testKoeyring.brukar,
-                  testKoeyring.antallNettsider)
+                  testKoeyring.antallNettsider,
+              )
           is AutoTesterClient.AutoTesterStatus.Failed ->
               Feila(testKoeyring.loeysing, Instant.now(), response.output, testKoeyring.brukar)
           is AutoTesterClient.AutoTesterStatus.Running ->
@@ -116,13 +125,14 @@ sealed class TestKoeyring {
                   testKoeyring.statusURL,
                   Framgang.from(response.customStatus, testKoeyring.antallNettsider),
                   testKoeyring.brukar,
-                  testKoeyring.antallNettsider)
+                  testKoeyring.antallNettsider,
+              )
           else -> testKoeyring
         }
 
     private fun updateStatusIkkjeStarta(
         response: AutoTesterClient.AutoTesterStatus,
-        testKoeyring: IkkjeStarta
+        testKoeyring: IkkjeStarta,
     ) =
         when (response) {
           is AutoTesterClient.AutoTesterStatus.Running ->
@@ -132,7 +142,8 @@ sealed class TestKoeyring {
                   testKoeyring.statusURL,
                   Framgang.from(response.customStatus, testKoeyring.antallNettsider),
                   testKoeyring.brukar,
-                  testKoeyring.antallNettsider)
+                  testKoeyring.antallNettsider,
+              )
           is AutoTesterClient.AutoTesterStatus.Completed ->
               Ferdig(
                   testKoeyring.loeysing,
@@ -140,7 +151,8 @@ sealed class TestKoeyring {
                   testKoeyring.statusURL,
                   response.output,
                   testKoeyring.brukar,
-                  testKoeyring.antallNettsider)
+                  testKoeyring.antallNettsider,
+              )
           is AutoTesterClient.AutoTesterStatus.Failed ->
               Feila(testKoeyring.loeysing, Instant.now(), response.output, testKoeyring.brukar)
           else -> testKoeyring

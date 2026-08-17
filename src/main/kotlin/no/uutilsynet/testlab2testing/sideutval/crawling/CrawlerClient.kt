@@ -29,15 +29,22 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
                         "maxLenker" to crawlParameters.maxLenker,
                         "talLenker" to crawlParameters.talLenker,
                         "idLoeysing" to loeysing.id,
-                        "domene" to loeysing.url),
-                    AutoTesterClient.StatusUris::class.java)!!
+                        "domene" to loeysing.url,
+                    ),
+                    AutoTesterClient.StatusUris::class.java,
+                )!!
             CrawlResultat.IkkjeStarta(statusUris.statusQueryGetUri.toURL(), loeysing, Instant.now())
           }
           .getOrElse { exception ->
             logger.error(
-                "feilet da jeg forsøkte å starte crawling for løysing ${loeysing.id}", exception)
+                "feilet da jeg forsøkte å starte crawling for løysing ${loeysing.id}",
+                exception,
+            )
             CrawlResultat.Feila(
-                exception.message ?: "start crawling feilet", loeysing, Instant.now())
+                exception.message ?: "start crawling feilet",
+                loeysing,
+                Instant.now(),
+            )
           }
 
   fun getStatus(crawlResultat: CrawlResultat.Starta, maalingId: Int): Result<CrawlStatus> =
@@ -51,7 +58,8 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
           .onFailure {
             logger.error(
                 "feilet da jeg forsøkte å hente status crawling $uri for måling id $maalingId løysing id $loeysingId",
-                it)
+                it,
+            )
           }
 }
 
@@ -60,13 +68,17 @@ data class CrawlerOutput(val url: String, val title: String)
 data class CustomStatus(val lenkerCrawla: Int, val maxLenker: Int)
 
 @JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "runtimeStatus")
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "runtimeStatus",
+)
 @JsonSubTypes(
     JsonSubTypes.Type(value = CrawlStatus.Pending::class, name = "Pending"),
     JsonSubTypes.Type(value = CrawlStatus.Running::class, name = "Running"),
     JsonSubTypes.Type(value = CrawlStatus.Completed::class, name = "Completed"),
     JsonSubTypes.Type(value = CrawlStatus.Failed::class, name = "Failed"),
-    JsonSubTypes.Type(value = CrawlStatus.Terminated::class, name = "Terminated"))
+    JsonSubTypes.Type(value = CrawlStatus.Terminated::class, name = "Terminated"),
+)
 sealed class CrawlStatus {
   object Pending : CrawlStatus()
 

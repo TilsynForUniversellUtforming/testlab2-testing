@@ -17,7 +17,8 @@ import org.slf4j.LoggerFactory
     Type(CrawlResultat.IkkjeStarta::class, name = "ikkje_starta"),
     Type(CrawlResultat.Starta::class, name = "starta"),
     Type(CrawlResultat.Ferdig::class, name = "ferdig"),
-    Type(CrawlResultat.Feila::class, name = "feila"))
+    Type(CrawlResultat.Feila::class, name = "feila"),
+)
 sealed class CrawlResultat {
   abstract val loeysing: Loeysing
   abstract val sistOppdatert: Instant
@@ -32,7 +33,7 @@ sealed class CrawlResultat {
       val statusUrl: URL,
       override val loeysing: Loeysing,
       override val sistOppdatert: Instant,
-      val framgang: Framgang
+      val framgang: Framgang,
   ) : CrawlResultat()
 
   data class Ferdig(
@@ -46,7 +47,7 @@ sealed class CrawlResultat {
   data class Feila(
       val feilmelding: String,
       override val loeysing: Loeysing,
-      override val sistOppdatert: Instant
+      override val sistOppdatert: Instant,
   ) : CrawlResultat()
 }
 
@@ -56,13 +57,17 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
         when (newStatus) {
           is CrawlStatus.Pending ->
               CrawlResultat.IkkjeStarta(
-                  crawlResultat.statusUrl, crawlResultat.loeysing, Instant.now())
+                  crawlResultat.statusUrl,
+                  crawlResultat.loeysing,
+                  Instant.now(),
+              )
           is CrawlStatus.Running ->
               CrawlResultat.Starta(
                   crawlResultat.statusUrl,
                   crawlResultat.loeysing,
                   Instant.now(),
-                  framgang = Framgang.from(newStatus.customStatus))
+                  framgang = Framgang.from(newStatus.customStatus),
+              )
           is CrawlStatus.Completed -> onStatusCompleted(newStatus, crawlResultat)
           is CrawlStatus.Failed ->
               CrawlResultat.Feila(newStatus.output, crawlResultat.loeysing, Instant.now())
@@ -70,14 +75,18 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
               CrawlResultat.Feila(
                   "Crawling av ${crawlResultat.loeysing.url} ble avbrutt.",
                   crawlResultat.loeysing,
-                  Instant.now())
+                  Instant.now(),
+              )
         }
       }
       is CrawlResultat.Starta -> {
         when (newStatus) {
           is CrawlStatus.Pending ->
               CrawlResultat.IkkjeStarta(
-                  crawlResultat.statusUrl, crawlResultat.loeysing, Instant.now())
+                  crawlResultat.statusUrl,
+                  crawlResultat.loeysing,
+                  Instant.now(),
+              )
           is CrawlStatus.Running ->
               crawlResultat.copy(framgang = Framgang.from(newStatus.customStatus))
           is CrawlStatus.Completed -> onStatusCompleted(newStatus, crawlResultat)
@@ -87,7 +96,8 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
               CrawlResultat.Feila(
                   "Crawling av ${crawlResultat.loeysing.url} ble avbrutt.",
                   crawlResultat.loeysing,
-                  Instant.now())
+                  Instant.now(),
+              )
         }
       }
       else -> crawlResultat
@@ -95,20 +105,22 @@ fun updateStatus(crawlResultat: CrawlResultat, newStatus: CrawlStatus): CrawlRes
 
 private fun onStatusCompleted(
     newStatus: CrawlStatus.Completed,
-    crawlResultat: CrawlResultat
+    crawlResultat: CrawlResultat,
 ): CrawlResultat {
   val logger: Logger = LoggerFactory.getLogger(CrawlResultat::class.java)
   return if (newStatus.output.isEmpty()) {
     CrawlResultat.Feila(
         "Crawling av ${crawlResultat.loeysing.url} feilet. Output fra crawleren var en tom liste.",
         crawlResultat.loeysing,
-        Instant.now())
+        Instant.now(),
+    )
   } else {
     val urlList = newStatus.output.map { runCatching { URI(it.url).toURL() } }
     urlList.forEach {
       if (it.isFailure)
           logger.info(
-              "Crawlresultatet for løysing ${crawlResultat.loeysing.id} inneholder en ugyldig url: ${it.exceptionOrNull()?.message}")
+              "Crawlresultatet for løysing ${crawlResultat.loeysing.id} inneholder en ugyldig url: ${it.exceptionOrNull()?.message}"
+          )
     }
     val (validUrls, invalidUrls) = urlList.partition { it.isSuccess }
 

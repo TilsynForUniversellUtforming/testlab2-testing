@@ -27,7 +27,7 @@ class AzureStorage2DbService(
     private val sideutvalDAO: SideutvalDAO,
     private val brukarService: BrukarService,
     private val testregelCache: TestregelCache,
-    private val testkoeyringDAO: TestkoeyringDAO
+    private val testkoeyringDAO: TestkoeyringDAO,
 ) {
 
   val logger = LoggerFactory.getLogger(AzureStorage2DbService::class.java)
@@ -35,13 +35,14 @@ class AzureStorage2DbService(
   fun getTestresultatFraAzureStorage(
       maalingId: Int,
       loeysingId: Int,
-      resulttatType: AutoTesterClient.ResultatUrls = AutoTesterClient.ResultatUrls.urlBrot
+      resulttatType: AutoTesterClient.ResultatUrls = AutoTesterClient.ResultatUrls.urlBrot,
   ): Result<List<AutotesterTestresultat>> {
     val testkoeyringMaalingLoeysing =
         maalingService.getFilteredAndFerdigTestkoeyringar(maalingId, loeysingId)
 
     logger.debug(
-        "Get testresultat from Azure Storage for maalingId: $maalingId, loeysingId: $loeysingId, size: ${testkoeyringMaalingLoeysing.size}")
+        "Get testresultat from Azure Storage for maalingId: $maalingId, loeysingId: $loeysingId, size: ${testkoeyringMaalingLoeysing.size}"
+    )
     return runBlocking {
       autoTesterClient
           .fetchResultat(testkoeyringMaalingLoeysing, resulttatType)
@@ -70,7 +71,8 @@ class AzureStorage2DbService(
             .collect(Collectors.toList())
 
     logger.debug(
-        "Get testresultat mapped to DB format for maalingId: $maalingId, loeysingId: $loeysingId, size: ${result.size}")
+        "Get testresultat mapped to DB format for maalingId: $maalingId, loeysingId: $loeysingId, size: ${result.size}"
+    )
     return result
   }
 
@@ -82,7 +84,8 @@ class AzureStorage2DbService(
           .map { it ->
             /*if (index % 500 == 0) {*/
             logger.debug(
-                "Creating testresultat in DB for loeysingId: $loeysingId,  testregelId: ${it.testregelId}, sideutvalId: ${it.sideutvalId}")
+                "Creating testresultat in DB for loeysingId: $loeysingId,  testregelId: ${it.testregelId}, sideutvalId: ${it.sideutvalId}"
+            )
             /*}*/
             testresultatDAO.create(it)
           }
@@ -94,7 +97,7 @@ class AzureStorage2DbService(
       testresultat: TestResultat,
       maalingId: Int,
       sideutvalCache: SideutvalCache,
-      brukarId: Int?
+      brukarId: Int?,
   ): TestresultatDBBase {
 
     /*if (index % 500 == 0) {*/
@@ -103,7 +106,8 @@ class AzureStorage2DbService(
         "Mapping autotester resultat to DB format for loeysing: {}, testregelId: {}, side: {}",
         testresultat.loeysingId,
         testresultat.testregelId,
-        testresultat.side)
+        testresultat.side,
+    )
 
     /*}*/
 
@@ -121,7 +125,8 @@ class AzureStorage2DbService(
           elementOmtalePointer = testresultat.elementOmtale?.pointer,
           elmentOmtaleHtml = testresultat.elementOmtale?.htmlCode,
           elementOmtaleDescription = testresultat.elementOmtale?.description,
-          brukarId = brukarId ?: 1)
+          brukarId = brukarId ?: 1,
+      )
     } else {
       TestresultatDBBase(
           null,
@@ -135,7 +140,8 @@ class AzureStorage2DbService(
           elementOmtalePointer = null,
           elmentOmtaleHtml = null,
           elementOmtaleDescription = null,
-          brukarId = brukarService.getUserId() ?: 0)
+          brukarId = brukarService.getUserId() ?: 0,
+      )
     }
   }
 }

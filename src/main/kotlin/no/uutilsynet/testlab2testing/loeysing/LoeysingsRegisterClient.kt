@@ -12,6 +12,7 @@ import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.getForObject
 import org.springframework.web.util.UriComponentsBuilder
 
 @ConfigurationProperties(prefix = "loeysingsregister")
@@ -24,23 +25,26 @@ private const val LOEYSINGSREGISTER_NEW_NOT_FOUND =
 class LoeysingsRegisterClient(
     val restTemplate: RestTemplate,
     val properties: LoeysingsRegisterProperties,
-    val clockProvider: ClockProvider
+    val clockProvider: ClockProvider,
 ) {
   val logger: Logger = LoggerFactory.getLogger(LoeysingsRegisterClient::class.java)
 
   @CacheEvict(
-      key = "#result.id", cacheNames = ["loeysing", "loeysingar"], condition = "#result!=null")
+      key = "#result.id",
+      cacheNames = ["loeysing", "loeysingar"],
+      condition = "#result!=null",
+  )
   fun saveLoeysing(namn: String, url: URL, orgnummer: String): Loeysing =
       runCatching {
             val location =
                 restTemplate.postForLocation(
                     "${properties.host}/v1/loeysing",
-                    mapOf("namn" to namn, "url" to url.toString(), "orgnummer" to orgnummer))
-                    ?: throw RuntimeException(LOEYSINGSREGISTER_NEW_NOT_FOUND)
+                    mapOf("namn" to namn, "url" to url.toString(), "orgnummer" to orgnummer),
+                ) ?: throw NoSuchElementException(LOEYSINGSREGISTER_NEW_NOT_FOUND)
 
             val loeysing =
-                restTemplate.getForObject(location, Loeysing.Simple::class.java)
-                    ?: throw RuntimeException(LOEYSINGSREGISTER_NEW_NOT_FOUND)
+                restTemplate.getForObject<Loeysing.Simple>(location)
+                    ?: throw NoSuchElementException(LOEYSINGSREGISTER_NEW_NOT_FOUND)
             loeysing.toLoeysing()
           }
           .getOrThrow()
@@ -72,8 +76,9 @@ class LoeysingsRegisterClient(
                 .build()
                 .toUri()
         restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
-            ?: throw RuntimeException(
-                "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}")
+            ?: throw NoSuchElementException(
+                "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}"
+            )
       }
     }
   }
@@ -87,7 +92,7 @@ class LoeysingsRegisterClient(
               .build()
               .toUriString()
       restTemplate.getForObject(uri, Array<Loeysing.Simple>::class.java)?.map { it.toLoeysing() }
-          ?: throw RuntimeException("loeysingsregisteret returnerte null for søk $search")
+          ?: throw NoSuchElementException("loeysingsregisteret returnerte null for søk $search")
     }
   }
 
@@ -104,7 +109,8 @@ class LoeysingsRegisterClient(
   @Cacheable("loeysingarExpanded")
   @Observed(
       name = "LoeysingsRegisterClient.getManyExpanded",
-      contextualName = "LoeysingsRegisterClient.getManyExpanded")
+      contextualName = "LoeysingsRegisterClient.getManyExpanded",
+  )
   fun getManyExpanded(
       idList: List<Int>,
       tidspunkt: Instant = Instant.now(clockProvider.clock),
@@ -124,9 +130,10 @@ class LoeysingsRegisterClient(
                 .build()
                 .toUri()
         val response =
-            restTemplate.getForObject(uri, Array<Loeysing.Expanded>::class.java)?.toList()
+            restTemplate.getForObject<Array<Loeysing.Expanded>>(uri)?.toList()
                 ?: throw NoSuchElementException(
-                    "loeysingsregisteret returnerte null for id-ane ${unique.joinToString(",")}")
+                    "loeysingsregisteret returnerte null for id-ane ${unique.joinToString(",")}"
+                )
 
         response
       }
@@ -150,7 +157,8 @@ class LoeysingsRegisterClient(
       logger.info("SearchVerkemd uri: $uri")
       restTemplate.getForObject(uri, Array<Verksemd>::class.java)?.toList()
           ?: throw NoSuchElementException(
-              "loeysingsregisteret returnerte null for verksemdsøk $search")
+              "loeysingsregisteret returnerte null for verksemdsøk $search"
+          )
     }
   }
 
@@ -165,7 +173,8 @@ class LoeysingsRegisterClient(
               .toUriString()
       restTemplate.getForObject(uri, Array<Loeysing>::class.java)?.toList()
           ?: throw NoSuchElementException(
-              "loeysingsregisteret returnerte null for verksemdsøk $search")
+              "loeysingsregisteret returnerte null for verksemdsøk $search"
+          )
     }
   }
 

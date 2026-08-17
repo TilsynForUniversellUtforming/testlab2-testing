@@ -20,9 +20,6 @@ rapportVerktoey:
     host: http://localhost:8084
 resultat:
     host: http://localhost:8085
-server:
-    error:
-        include-stacktrace: never
 spring:
     application:
         name: "testlab2-testing"
@@ -51,6 +48,9 @@ spring:
             platform: postgresql
     profiles:
         active: tokenClient
+    web:
+        error:
+            include-stacktrace: never
 springdoc:
     swagger-ui:
         path: /api-dokumentasjon

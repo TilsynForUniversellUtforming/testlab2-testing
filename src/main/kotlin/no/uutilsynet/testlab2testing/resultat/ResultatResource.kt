@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/resultat")
 class ResultatResource(
     val aggregeringService: AggregeringService,
-    val resultatService: ResultatService
+    val resultatService: ResultatService,
 ) {
 
   private val logger = LoggerFactory.getLogger(ResultatResource::class.java)
@@ -27,7 +27,7 @@ class ResultatResource(
   fun getResultatList(
       @RequestParam testgrunnlagId: Int?,
       @RequestParam maalingId: Int?,
-      @RequestParam loeysingId: Int?
+      @RequestParam loeysingId: Int?,
   ): List<TestresultatDetaljert> {
     logger.debug("Henter resultat for testgrunnlagId: $testgrunnlagId, maalingId: $maalingId")
 
@@ -50,7 +50,8 @@ class ResultatResource(
               onFailure = {
                 logger.error("Feil ved oppretting av aggregert resultat", it)
                 ResponseEntity.internalServerError().build()
-              })
+              },
+          )
 
   @GetMapping("/aggregert/{testgrunnlagId}")
   fun getAggregertResultat(@PathVariable testgrunnlagId: Int): List<AggregertResultatTestregelAPI> =
@@ -69,7 +70,7 @@ class ResultatResource(
   @GetMapping("/kontroll/{kontrollId}/loeysing/{loeysingId}")
   fun getResultatKontrollLoeysing(
       @PathVariable kontrollId: Int,
-      @PathVariable loeysingId: Int
+      @PathVariable loeysingId: Int,
   ): ResponseEntity<List<ResultatOversiktLoeysing>> {
     return ResponseEntity.ok(resultatService.getKontrollLoeysingResultat(kontrollId, loeysingId))
   }
@@ -91,9 +92,14 @@ class ResultatResource(
             sortParam = sortParam ?: SortParamTestregel.side,
             sortOrder = sortOrder ?: SortOrder.asc,
             pageNumber = page,
-            pageSize = size)
+            pageSize = size,
+        )
     return resultatService.getTestresultatDetaljerPrTestregel(
-        kontrollId, loeysingId, testregelId, sortPaginationParams)
+        kontrollId,
+        loeysingId,
+        testregelId,
+        sortPaginationParams,
+    )
   }
 
   @GetMapping("/tema")
@@ -102,7 +108,7 @@ class ResultatResource(
       @RequestParam kontrollType: Kontrolltype?,
       @RequestParam loeysingId: Int?,
       @RequestParam fraDato: LocalDate?,
-      @RequestParam tilDato: LocalDate?
+      @RequestParam tilDato: LocalDate?,
   ): List<ResultatTema> {
     return resultatService.getResultatPrTema(kontrollId, kontrollType, loeysingId, fraDato, tilDato)
   }
@@ -113,7 +119,7 @@ class ResultatResource(
       @RequestParam kontrollType: Kontrolltype?,
       @RequestParam loeysingId: Int?,
       @RequestParam fraDato: LocalDate?,
-      @RequestParam tilDato: LocalDate?
+      @RequestParam tilDato: LocalDate?,
   ): List<ResultatKrav> {
     return resultatService.getResultatPrKrav(kontrollId, kontrollType, loeysingId, fraDato, tilDato)
   }

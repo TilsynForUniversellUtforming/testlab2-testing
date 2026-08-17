@@ -33,8 +33,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.postgresql.PostgreSQLContainer
 
 private val TEST_URL = URI("http://localhost:8080/").toURL()
 
@@ -43,7 +43,8 @@ private const val TEST_ORGNR = "123456789"
 private const val TEST_ORG = "Test AS"
 
 @SpringBootTest(
-    properties = ["spring.datasource.url = jdbc:tc:postgresql:16-alpine:///AggregeringServiceTest"])
+    properties = ["spring.datasource.url = jdbc:tc:postgresql:16-alpine:///AggregeringServiceTest"]
+)
 class AggregeringServiceTest(
     @Autowired val aggregeringService: AggregeringService,
     @Autowired val testUtils: TestUtils,
@@ -63,9 +64,7 @@ class AggregeringServiceTest(
   @MockitoBean lateinit var testregelCache: TestregelCache
 
   companion object {
-    @Container
-    @JvmStatic
-    var postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:15.3")
+    @Container @JvmStatic var postgres: PostgreSQLContainer = PostgreSQLContainer("postgres:15.3")
   }
 
   @Test
@@ -82,7 +81,10 @@ class AggregeringServiceTest(
 
     Mockito.`when`(
             autoTesterClient.fetchResultatAggregering(
-                TEST_URL.toURI(), AutoTesterClient.ResultatUrls.urlAggreggeringTR))
+                TEST_URL.toURI(),
+                AutoTesterClient.ResultatUrls.urlAggreggeringTR,
+            )
+        )
         .thenReturn(listOf(aggregeringTestregel))
 
     Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1)).thenReturn(testLoeysing)
@@ -96,8 +98,9 @@ class AggregeringServiceTest(
 
     aggregeringService.saveAggregertResultatTestregelAutomatisk(testKoeyring)
 
-    val retrievedAggregering =
-        maalingId.let { aggregeringService.getAggregertResultatTestregel(it) }
+    val retrievedAggregering = maalingId.let {
+      aggregeringService.getAggregertResultatTestregel(it)
+    }
 
     assertThat(retrievedAggregering).isNotEmpty
     assert(retrievedAggregering[0].maalingId == maalingId)
@@ -119,9 +122,11 @@ class AggregeringServiceTest(
                     urlAggregeringTR = TEST_URL,
                     urlAggregeringSide = TEST_URL,
                     urlAggregeringLoeysing = TEST_URL,
-                    urlAggregeringSK = TEST_URL),
+                    urlAggregeringSK = TEST_URL,
+                ),
             Brukar("testar", "test"),
-            10)
+            10,
+        )
     return testKoeyring
   }
 
@@ -138,7 +143,8 @@ class AggregeringServiceTest(
             Instant.now(),
             listOf(1),
             listOf(testregelId),
-            crawlParameters)
+            crawlParameters,
+        )
 
     val aggregeringTestregel =
         AggregertResultatTestregel(
@@ -155,7 +161,8 @@ class AggregeringServiceTest(
             talSiderBrot = 1,
             talSiderIkkjeForekomst = 1,
             testregelGjennomsnittlegSideSamsvarProsent = 1.0,
-            testregelGjennomsnittlegSideBrotProsent = 1.0)
+            testregelGjennomsnittlegSideBrotProsent = 1.0,
+        )
 
     return aggregeringTestregel
   }
@@ -182,7 +189,11 @@ class AggregeringServiceTest(
 
     val kontroll =
         testUtils.createKontroll(
-            "Kontroll", Kontrolltype.InngaaendeKontroll, listOf(1), listOf(testregel.id))
+            "Kontroll",
+            Kontrolltype.InngaaendeKontroll,
+            listOf(1),
+            listOf(testregel.id),
+        )
     val testgrunnlagbase = OpprettTestgrunnlag("Testgrunnlag", TestgrunnlagType.OPPRINNELEG_TEST)
     val testgrunnlagId = testUtils.createTestgrunnlag(testgrunnlagbase, kontroll)
 
@@ -201,7 +212,8 @@ class AggregeringServiceTest(
             testVartUtfoert = Instant.now(),
             status = ResultatManuellKontrollBase.Status.Ferdig,
             kommentar = "Kommentar",
-            sistLagra = Instant.now())
+            sistLagra = Instant.now(),
+        )
 
     val resultatKontrol2 =
         ResultatManuellKontroll(
@@ -218,16 +230,19 @@ class AggregeringServiceTest(
             testVartUtfoert = Instant.now(),
             status = ResultatManuellKontrollBase.Status.Ferdig,
             kommentar = "Kommentar",
-            sistLagra = Instant.now())
+            sistLagra = Instant.now(),
+        )
 
     val status =
         aggregeringService.saveAggregertResultatTestregel(
-            listOf(resultatKontroll1, resultatKontrol2))
+            listOf(resultatKontroll1, resultatKontrol2)
+        )
     assertThat(status.isSuccess).isEqualTo(true)
 
     val status2 =
         aggregeringService.saveAggregertResultatTestregel(
-            listOf(resultatKontroll1, resultatKontrol2))
+            listOf(resultatKontroll1, resultatKontrol2)
+        )
     assertThat(status2.isSuccess).isEqualTo(true)
 
     val result = aggregeringService.getAggregertResultatTestregel(testgrunnlagId = testgrunnlagId)
@@ -243,9 +258,11 @@ class AggregeringServiceTest(
     assertThat(result2[0].talElementSamsvar).isEqualTo(1)
 
     aggregeringService.saveAggregertResultatSuksesskriterium(
-        listOf(resultatKontroll1, resultatKontrol2))
+        listOf(resultatKontroll1, resultatKontrol2)
+    )
     aggregeringService.saveAggregertResultatSuksesskriterium(
-        listOf(resultatKontroll1, resultatKontrol2))
+        listOf(resultatKontroll1, resultatKontrol2)
+    )
 
     val result3 =
         aggregeringService.getAggregertResultatSuksesskriterium(testgrunnlagId = testgrunnlagId)
@@ -263,7 +280,8 @@ class AggregeringServiceTest(
 
     assertThat(
             gjennomsnittTestresultat.testregelGjennomsnittlegSideSamsvarProsent!! +
-                gjennomsnittTestresultat.testregelGjennomsnittlegSideBrotProsent!!)
+                gjennomsnittTestresultat.testregelGjennomsnittlegSideBrotProsent!!
+        )
         .isCloseTo(1.0, Offset.offset(0.00001))
   }
 
@@ -290,7 +308,8 @@ class AggregeringServiceTest(
         mapOf(
             1 to TestresultatUtfall.brot,
             2 to TestresultatUtfall.samsvar,
-            3 to TestresultatUtfall.ikkjeForekomst)
+            3 to TestresultatUtfall.ikkjeForekomst,
+        )
     var id = 1
     for (side in 1..10) {
       for (testregel in 1..10) {
@@ -310,7 +329,9 @@ class AggregeringServiceTest(
                 testVartUtfoert = Instant.now(),
                 status = ResultatManuellKontrollBase.Status.Ferdig,
                 kommentar = "Kommentar",
-                sistLagra = Instant.now()))
+                sistLagra = Instant.now(),
+            )
+        )
         id++
       }
     }

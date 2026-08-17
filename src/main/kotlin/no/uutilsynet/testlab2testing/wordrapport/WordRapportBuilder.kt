@@ -18,7 +18,7 @@ class WordRapportBuilder(
     @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val kravregisterClient: KravregisterClient,
     @Autowired val testregelClient: TestregelClient,
-    @Autowired val testregelCache: TestregelCache
+    @Autowired val testregelCache: TestregelCache,
 ) {
 
   var rapportNummer: String? = null
@@ -61,7 +61,8 @@ class WordRapportBuilder(
         datoFra = datoTil.toString(),
         verksemd = verksemd ?: "",
         loeysing = loeysing?.namn ?: "",
-        avvik = avvik ?: emptyList())
+        avvik = avvik ?: emptyList(),
+    )
   }
 
   fun ResultatManuellKontroll.toAvvik(index: Int): Avvik {
@@ -77,7 +78,8 @@ class WordRapportBuilder(
         elementOmtale = this.elementOmtale.toString(),
         elementResultat = this.elementResultat.toString(),
         elementUtfall = this.elementUtfall,
-        tema = testregel.let { testregelCache.getTemaById(it.tema).tema })
+        tema = testregel.let { testregelCache.getTemaById(it.tema).tema },
+    )
   }
 
   fun Testregel.toTestregelRapport(): TestregelRapport {
@@ -87,7 +89,8 @@ class WordRapportBuilder(
         testregelNoekkel = this.testregelId,
         kravId = this.kravId,
         kravTittel = krav.tittel,
-        kravUrl = krav.urlRettleiing)
+        kravUrl = krav.urlRettleiing,
+    )
   }
 
   fun finnSide(sideutvalId: Int): Pair<Int, Sideutval> {

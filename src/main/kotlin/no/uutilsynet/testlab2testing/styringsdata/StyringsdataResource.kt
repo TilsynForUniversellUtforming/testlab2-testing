@@ -51,7 +51,8 @@ class StyringsdataResource(val styringsdataDAO: StyringsdataDAO) {
             paaleggKlage = styringsdata.paaleggKlageId?.let { styringsdataDAO.getKlage(it) },
             bot = styringsdata.botId?.let { styringsdataDAO.getBot(it) },
             botKlage = styringsdata.botKlageId?.let { styringsdataDAO.getKlage(it) },
-            sistLagra = styringsdata.sistLagra)
+            sistLagra = styringsdata.sistLagra,
+        )
       }
     } else {
       styringsdataDAO.getStyringsdataKontroll(stryingsdataId).firstOrNull()
@@ -75,13 +76,14 @@ class StyringsdataResource(val styringsdataDAO: StyringsdataDAO) {
           {
             logger.error("Feil ved oppretting av styringsdata", it)
             ResponseEntity.internalServerError().build()
-          })
+          },
+      )
 
   @PutMapping("{stryingsdataType}/{stryingsdataId}")
   fun updateStyringsdata(
       @PathVariable stryingsdataType: StyringsdataType,
       @PathVariable stryingsdataId: Int,
-      @RequestBody styringsdata: Styringsdata
+      @RequestBody styringsdata: Styringsdata,
   ) =
       when (styringsdata) {
         is Styringsdata.Loeysing -> {
@@ -108,5 +110,5 @@ class StyringsdataResource(val styringsdataDAO: StyringsdataDAO) {
 
 data class StyringsdataResult(
     val styringsdataKontrollId: Int?,
-    val styringsdataLoeysing: List<StyringsdataListElement> = emptyList()
+    val styringsdataLoeysing: List<StyringsdataListElement> = emptyList(),
 )

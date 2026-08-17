@@ -17,7 +17,7 @@ object ErrorHandlingUtil {
 
   fun createWithErrorHandling(
       func: () -> Int,
-      locationForId: (id: Int) -> URI
+      locationForId: (id: Int) -> URI,
   ): ResponseEntity<out Any> =
       runCatching { func() }
           .fold(
@@ -25,5 +25,6 @@ object ErrorHandlingUtil {
                 val location = locationForId(id)
                 ResponseEntity.created(location).build()
               },
-              { exception -> handleErrors(exception) })
+              { exception -> handleErrors(exception) },
+          )
 }

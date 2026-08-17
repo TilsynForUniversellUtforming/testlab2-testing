@@ -10,12 +10,12 @@ data class TestgrunnlagKontroll(
     val testreglar: List<Int> = emptyList(),
     val sideutval: List<Sideutval> = emptyList(),
     val type: TestgrunnlagType,
-    val datoOppretta: Instant
+    val datoOppretta: Instant,
 )
 
 data class TestgrunnlagList(
     val opprinneligTest: TestgrunnlagKontroll,
-    val restestar: List<TestgrunnlagKontroll>
+    val restestar: List<TestgrunnlagKontroll>,
 ) {
   fun toList(): List<TestgrunnlagKontroll> = listOf(opprinneligTest) + restestar
 }

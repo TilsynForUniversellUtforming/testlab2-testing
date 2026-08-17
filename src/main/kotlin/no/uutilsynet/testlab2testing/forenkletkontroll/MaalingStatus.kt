@@ -5,5 +5,5 @@ enum class MaalingStatus(val status: String) {
   crawling("crawling"),
   kvalitetssikring("kvalitetssikring"),
   testing("testing"),
-  testing_ferdig("testing_ferdig")
+  testing_ferdig("testing_ferdig"),
 }

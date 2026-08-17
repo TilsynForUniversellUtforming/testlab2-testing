@@ -24,7 +24,7 @@ class SecurityConfig {
   @Profile("security")
   open fun filterChain(
       http: HttpSecurity,
-      @Autowired authenticationFilter: AuthenticationFilter
+      @Autowired authenticationFilter: AuthenticationFilter,
   ): SecurityFilterChain {
 
     http {

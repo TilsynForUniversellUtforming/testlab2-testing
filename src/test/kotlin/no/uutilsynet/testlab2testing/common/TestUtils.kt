@@ -69,7 +69,8 @@ class TestUtils(
             namn = opprettTestgrunnlag.testgrunnlagNamn,
             type = opprettTestgrunnlag.testgrunnlagType,
             sideutval = kontroll.sideutval,
-            testregelIdList = kontroll.testreglar!!.testregelIdList)
+            testregelIdList = kontroll.testreglar!!.testregelIdList,
+        )
     val testgrunnlagId = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag).getOrThrow()
 
     return testgrunnlagId
@@ -79,7 +80,7 @@ class TestUtils(
       kontrollNamn: String,
       kontrolltype: Kontrolltype,
       loeysingId: List<Int>,
-      testregelIds: List<Int>
+      testregelIds: List<Int>,
   ): KontrollDAO.KontrollDB {
 
     val (kontrollId, kontroll) = opprettKontroll(kontrollNamn, kontrolltype)
@@ -92,10 +93,9 @@ class TestUtils(
 
   private fun opprettUtvalg(kontroll: Kontroll, loeysingId: List<Int> = listOf(1)) {
 
-    val sideUtval =
-        loeysingId.map {
-          SideutvalBase(it, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null)
-        }
+    val sideUtval = loeysingId.map {
+      SideutvalBase(it, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null)
+    }
 
     /* Add sideutval */
     kontrollDAO.updateKontroll(kontroll, sideUtval)
@@ -103,11 +103,16 @@ class TestUtils(
 
   private fun opprettKontroll(
       kontrollNamn: String,
-      kontrolltype: Kontrolltype
+      kontrolltype: Kontrolltype,
   ): Pair<Int, Kontroll> {
     val opprettKontroll =
         KontrollResource.OpprettKontroll(
-            kontrollNamn, "Ola Nordmann", Sakstype.Arkivsak, "1234", kontrolltype)
+            kontrollNamn,
+            "Ola Nordmann",
+            Sakstype.Arkivsak,
+            "1234",
+            kontrolltype,
+        )
 
     val kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
@@ -127,11 +132,16 @@ class TestUtils(
       testregelIds: List<Int>,
       loeysingList: List<Int>,
       maalingNamn: String,
-      kontrollId: Int
+      kontrollId: Int,
   ): Int {
     val maalingId =
         maalingDAO.createMaaling(
-            maalingNamn, Instant.now(), loeysingList, testregelIds, CrawlParameters())
+            maalingNamn,
+            Instant.now(),
+            loeysingList,
+            testregelIds,
+            CrawlParameters(),
+        )
     maalingDAO.updateKontrollId(maalingId, kontrollId)
 
     return maalingId
@@ -181,12 +191,16 @@ class TestUtils(
 
   fun createTestMaalingar(
       maalingNamn: List<String>,
-      idTestregels: List<Int> = listOf(testregelId)
+      idTestregels: List<Int> = listOf(testregelId),
   ): List<Int> {
     return maalingNamn.map {
       val kontroll =
           createKontroll(
-              "Forenkla kontroll 20204", Kontrolltype.ForenklaKontroll, listOf(1), idTestregels)
+              "Forenkla kontroll 20204",
+              Kontrolltype.ForenklaKontroll,
+              listOf(1),
+              idTestregels,
+          )
 
       createTestMaaling(idTestregels, kontroll, it)
     }
@@ -195,12 +209,16 @@ class TestUtils(
   fun createTestMaaling(
       testregelIds: List<Int>,
       kontroll: KontrollDAO.KontrollDB,
-      maalingNamn: String
+      maalingNamn: String,
   ): Int {
     val loeysingList = kontroll.sideutval.map { it.loeysingId }
     val maalingId =
         createTestMaaling(
-            testregelIds, kontroll.sideutval.map { it.loeysingId }, maalingNamn, kontroll.id)
+            testregelIds,
+            kontroll.sideutval.map { it.loeysingId },
+            maalingNamn,
+            kontroll.id,
+        )
 
     testregelIds.forEach { createAggregertTestresultat(maalingId, it, null, loeysingList) }
 
@@ -231,7 +249,8 @@ class TestUtils(
               0,
               0.5,
               0.5,
-              testgrunnlagId)
+              testgrunnlagId,
+          )
 
       aggregeringDAO.createAggregertResultatTestregel(aggregeringTestregel)
     }

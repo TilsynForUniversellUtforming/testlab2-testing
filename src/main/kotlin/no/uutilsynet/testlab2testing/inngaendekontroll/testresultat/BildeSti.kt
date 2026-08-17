@@ -19,7 +19,7 @@ data class Bilde(
     override val id: Int,
     val bildeURI: URI,
     val thumbnailURI: URI,
-    override val opprettet: Instant
+    override val opprettet: Instant,
 ) : BildeBase(id, opprettet)
 
 data class BildeListItem(

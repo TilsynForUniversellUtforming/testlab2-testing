@@ -24,5 +24,5 @@ data class Kontroll(
 
 data class KontrollTestingMetadata(
     val innhaldstypeTesting: List<InnhaldstypeTesting>,
-    val sideutvalList: List<SideutvalType>
+    val sideutvalList: List<SideutvalType>,
 )

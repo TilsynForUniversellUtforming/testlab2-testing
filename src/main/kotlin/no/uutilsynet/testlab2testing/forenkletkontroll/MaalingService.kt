@@ -74,7 +74,12 @@ class MaalingService(
       maalingDAO.createMaaling(navn, localDateNorway, utval, testregelIdList, crawlParameters)
     } else if (loeysingIdList != null) {
       maalingDAO.createMaaling(
-          navn, localDateNorway, loeysingIdList, testregelIdList, crawlParameters)
+          navn,
+          localDateNorway,
+          loeysingIdList,
+          testregelIdList,
+          crawlParameters,
+      )
     } else {
       throw IllegalArgumentException("utvalId eller loeysingIdList må være gitt")
     }
@@ -112,7 +117,8 @@ class MaalingService(
     return validateIdList(
             testregelIdList,
             testreglClient.getTestregelList().getOrThrow().map { it.id },
-            "testregelIdList")
+            "testregelIdList",
+        )
         .getOrThrow()
   }
 
@@ -158,7 +164,8 @@ class MaalingService(
             navn = navn,
             loeysingList = loeysingList,
             testregelList = testregelList.map { it.toTestregelBase() },
-            crawlParameters = this.crawlParameters ?: maaling.crawlParameters)
+            crawlParameters = this.crawlParameters ?: maaling.crawlParameters,
+        )
       }
       is Maaling.Crawling -> maaling.copy(navn = this.navn)
       is Maaling.Testing -> maaling.copy(navn = this.navn)
@@ -169,13 +176,12 @@ class MaalingService(
 
   private fun getTestreglarForMaaling(
       testregelIdList: List<Int>?,
-      maalingId: Int
+      maalingId: Int,
   ): List<Testregel> {
     val testregelList =
         testregelIdList?.let { idList ->
           testreglClient.getTestregelList().getOrThrow().filter { idList.contains(it.id) }
-        }
-            ?: emptyList<Testregel>().also { logger.warn("Måling $maalingId har ikkje testreglar") }
+        } ?: emptyList<Testregel>().also { logger.warn("Måling $maalingId har ikkje testreglar") }
     return testregelList
   }
 
@@ -221,7 +227,7 @@ class MaalingService(
   @Observed(name = "MaalingService.getTestresultatMaalingLoeysing")
   fun getTestresultatMaalingLoeysing(
       maalingId: Int,
-      loeysingId: Int?
+      loeysingId: Int?,
   ): Result<List<AutotesterTestresultat>> {
     return runBlocking {
       mapTestkoeyringToTestresultatBrot(getFilteredAndFerdigTestkoeyringar(maalingId, loeysingId))

@@ -7,5 +7,5 @@ data class AggregeringPerSuksesskriteriumDB(
     val talSiderSamsvar: Int,
     val talSiderBrot: Int,
     val talSiderIkkjeForekomst: Int,
-    val testgrunnlagId: Int?
+    val testgrunnlagId: Int?,
 ) {}

@@ -6,7 +6,7 @@ data class Utval(
     val id: Int,
     val namn: String,
     val loeysingar: List<Loeysing>,
-    val oppretta: Instant
+    val oppretta: Instant,
 )
 
 data class UtvalListItem(val id: UtvalId, val namn: String, val oppretta: Instant)

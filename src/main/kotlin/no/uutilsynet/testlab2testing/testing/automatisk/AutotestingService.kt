@@ -16,7 +16,7 @@ class AutotestingService(val autoTesterClient: AutoTesterClient, val sideutvalDA
       maalingId: Int,
       brukar: Brukar,
       loeysingar: List<Loeysing>,
-      testreglar: List<Testregel>
+      testreglar: List<Testregel>,
   ): List<TestKoeyring> = coroutineScope {
     val startTestarStatus = startTestar(loeysingar, maalingId, testreglar)
 
@@ -30,7 +30,8 @@ class AutotestingService(val autoTesterClient: AutoTesterClient, val sideutvalDA
                 exception.message
                     ?: "eg klarte ikkje å starte testing for ei løysing, og feilmeldinga manglar"
             TestKoeyring.Feila(result.getOrThrow().loeysing, Instant.now(), feilmelding, brukar)
-          })
+          },
+      )
     }
   }
 
@@ -57,7 +58,8 @@ class AutotestingService(val autoTesterClient: AutoTesterClient, val sideutvalDA
         }
     if (nettsider.isEmpty()) {
       throw RuntimeException(
-          "Tomt resultat frå crawling, kan ikkje starte test. maalingId: $maalingId loeysingId: ${loeysing.id}")
+          "Tomt resultat frå crawling, kan ikkje starte test. maalingId: $maalingId loeysingId: ${loeysing.id}"
+      )
     }
     return nettsider
   }

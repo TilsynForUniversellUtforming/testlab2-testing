@@ -14,7 +14,7 @@ data class TestEkstern(
     val score: Double,
     val kontrollType: Kontrolltype,
     val kontrollNamn: String,
-    val utfoert: Instant
+    val utfoert: Instant,
 )
 
 data class TestListElementEkstern(val verksemd: VerksemdEkstern, val testList: List<TestEkstern>)

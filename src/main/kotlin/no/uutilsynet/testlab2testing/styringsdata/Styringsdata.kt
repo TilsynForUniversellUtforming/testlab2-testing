@@ -12,7 +12,8 @@ import no.uutilsynet.testlab2.constants.StyringsdataKontrollStatus
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
     JsonSubTypes.Type(Styringsdata.Kontroll::class, name = "kontroll"),
-    JsonSubTypes.Type(Styringsdata.Loeysing::class, name = "loeysing"))
+    JsonSubTypes.Type(Styringsdata.Loeysing::class, name = "loeysing"),
+)
 sealed class Styringsdata {
   abstract val id: Int?
   abstract val kontrollId: Int
@@ -51,7 +52,7 @@ sealed class Styringsdata {
         val klageAvgjortDato: LocalDate?,
         val resultatKlageTilsyn: ResultatKlage?,
         val klageDatoDepartement: LocalDate?,
-        val resultatKlageDepartement: ResultatKlage?
+        val resultatKlageDepartement: ResultatKlage?,
     )
 
     data class Bot(

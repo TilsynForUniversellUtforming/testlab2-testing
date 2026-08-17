@@ -20,8 +20,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.resttestclient.TestRestTemplate
+import org.springframework.boot.resttestclient.getForEntity
+import org.springframework.boot.resttestclient.getForObject
+import org.springframework.boot.resttestclient.postForEntity
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
 
@@ -66,7 +69,8 @@ class StyringsdataResourceTest(
             paaleggKlage = null,
             bot = null,
             botKlage = null,
-            sistLagra = Instant.now())
+            sistLagra = Instant.now(),
+        )
 
     val responseEntity = restTemplate.postForEntity("/styringsdata", styringsdata, Unit::class.java)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.CREATED)
@@ -89,20 +93,21 @@ class StyringsdataResourceTest(
   @Order(3)
   @DisplayName("Skal kunne oppdatere et eksisterende styringsdata objekt med paalegg")
   fun updateStyringsdataWithPaalegg() {
-    val original = restTemplate.getForObject(locationLoeysing, Styringsdata.Loeysing::class.java)
+    val original = restTemplate.getForObject<Styringsdata.Loeysing>(locationLoeysing)
 
     val updated =
-        original.copy(
+        original?.copy(
             paalegg =
                 Paalegg(
                     id = null,
                     vedtakDato = LocalDate.now().minusDays(10),
-                    frist = LocalDate.now().plusDays(20)))
+                    frist = LocalDate.now().plusDays(20),
+                )
+        )
 
     restTemplate.put(locationLoeysing, updated)
 
-    val responseEntity =
-        restTemplate.getForEntity(locationLoeysing, Styringsdata.Loeysing::class.java)
+    val responseEntity = restTemplate.getForEntity<Styringsdata.Loeysing>(locationLoeysing)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
 
     val body = responseEntity.body!!
@@ -114,10 +119,10 @@ class StyringsdataResourceTest(
   @Order(4)
   @DisplayName("Skal kunne oppdatere et eksisterende styringsdata objekt med paaleggKlage")
   fun updateStyringsdataWithPaaleggKlage() {
-    val original = restTemplate.getForObject(locationLoeysing, Styringsdata.Loeysing::class.java)
+    val original = restTemplate.getForObject<Styringsdata.Loeysing>(locationLoeysing)
 
     val updated =
-        original.copy(
+        original?.copy(
             paaleggKlage =
                 Klage(
                     id = null,
@@ -125,12 +130,13 @@ class StyringsdataResourceTest(
                     klageAvgjortDato = LocalDate.now().plusDays(15),
                     resultatKlageTilsyn = ResultatKlage.stadfesta,
                     klageDatoDepartement = LocalDate.now().plusDays(20),
-                    resultatKlageDepartement = ResultatKlage.stadfesta))
+                    resultatKlageDepartement = ResultatKlage.stadfesta,
+                )
+        )
 
     restTemplate.put(locationLoeysing, updated)
 
-    val responseEntity =
-        restTemplate.getForEntity(locationLoeysing, Styringsdata.Loeysing::class.java)
+    val responseEntity = restTemplate.getForEntity<Styringsdata.Loeysing>(locationLoeysing)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
 
     val body = responseEntity.body!!
@@ -142,10 +148,10 @@ class StyringsdataResourceTest(
   @Order(5)
   @DisplayName("Skal kunne oppdatere et eksisterende styringsdata objekt med bot")
   fun updateStyringsdataWithBot() {
-    val original = restTemplate.getForObject(locationLoeysing, Styringsdata.Loeysing::class.java)
+    val original = restTemplate.getForObject<Styringsdata.Loeysing>(locationLoeysing)
 
     val updated =
-        original.copy(
+        original?.copy(
             bot =
                 Bot(
                     id = null,
@@ -156,12 +162,13 @@ class StyringsdataResourceTest(
                     vedtakDato = LocalDate.now().plusDays(30),
                     startDato = LocalDate.now(),
                     sluttDato = LocalDate.now().plusDays(60),
-                    kommentar = "Test kommentar"))
+                    kommentar = "Test kommentar",
+                )
+        )
 
     restTemplate.put(locationLoeysing, updated)
 
-    val responseEntity =
-        restTemplate.getForEntity(locationLoeysing, Styringsdata.Loeysing::class.java)
+    val responseEntity = restTemplate.getForEntity<Styringsdata.Loeysing>(locationLoeysing)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
 
     val body = responseEntity.body!!
@@ -173,10 +180,10 @@ class StyringsdataResourceTest(
   @Order(6)
   @DisplayName("Skal kunne oppdatere et eksisterende styringsdata objekt med botKlage")
   fun updateStyringsdataWithBotKlage() {
-    val original = restTemplate.getForObject(locationLoeysing, Styringsdata.Loeysing::class.java)
+    val original = restTemplate.getForObject<Styringsdata.Loeysing>(locationLoeysing)
 
     val updated =
-        original.copy(
+        original?.copy(
             botKlage =
                 Klage(
                     id = null,
@@ -184,12 +191,13 @@ class StyringsdataResourceTest(
                     klageAvgjortDato = LocalDate.now().plusDays(15),
                     resultatKlageTilsyn = ResultatKlage.stadfesta,
                     klageDatoDepartement = LocalDate.now().plusDays(20),
-                    resultatKlageDepartement = ResultatKlage.stadfesta))
+                    resultatKlageDepartement = ResultatKlage.stadfesta,
+                )
+        )
 
     restTemplate.put(locationLoeysing, updated)
 
-    val responseEntity =
-        restTemplate.getForEntity(locationLoeysing, Styringsdata.Loeysing::class.java)
+    val responseEntity = restTemplate.getForEntity<Styringsdata.Loeysing>(locationLoeysing)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
 
     val body = responseEntity.body!!
@@ -215,9 +223,10 @@ class StyringsdataResourceTest(
             status = null,
             svarFoerebelsRapportDato = null,
             varselSendtDato = null,
-            sistLagra = Instant.now())
+            sistLagra = Instant.now(),
+        )
 
-    val responseEntity = restTemplate.postForEntity("/styringsdata", styringsdata, Unit::class.java)
+    val responseEntity = restTemplate.postForEntity<Unit>("/styringsdata", styringsdata)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.CREATED)
     locationKontroll = responseEntity.headers.location!!
   }
@@ -226,8 +235,7 @@ class StyringsdataResourceTest(
   @Order(8)
   @DisplayName("Skal kunne hente styringdata for kontroll")
   fun getStyringsdataForKontroll() {
-    val responseEntity =
-        restTemplate.getForEntity(locationKontroll, Styringsdata.Kontroll::class.java)
+    val responseEntity = restTemplate.getForEntity<Styringsdata.Kontroll>(locationKontroll)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
 
     val body = responseEntity.body!!
@@ -238,10 +246,10 @@ class StyringsdataResourceTest(
   @Order(9)
   @DisplayName("Skal kunne oppdatere styringdata for kontroll")
   fun updateStyringsdataForKontroll() {
-    val original = restTemplate.getForObject(locationKontroll, Styringsdata.Kontroll::class.java)
+    val original = restTemplate.getForObject<Styringsdata.Kontroll>(locationKontroll)
 
     val updated =
-        original.copy(
+        original?.copy(
             oppretta = LocalDate.now(),
             frist = LocalDate.now().plusDays(1),
             endeligRapportDato = LocalDate.now().plusDays(2),
@@ -255,8 +263,7 @@ class StyringsdataResourceTest(
 
     restTemplate.put(locationKontroll, updated)
 
-    val responseEntity =
-        restTemplate.getForEntity(locationKontroll, Styringsdata.Kontroll::class.java)
+    val responseEntity = restTemplate.getForEntity<Styringsdata.Kontroll>(locationKontroll)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
 
     val body = responseEntity.body!!
@@ -275,8 +282,9 @@ class StyringsdataResourceTest(
   @DisplayName("Skal finne styringsdata for kontroll")
   fun findStyringsdataForKontroll() {
     val result =
-        restTemplate.getForObject(
-            "/styringsdata?kontrollId=$kontrollId", StyringsdataResult::class.java)
+        restTemplate.getForObject<StyringsdataResult>("/styringsdata?kontrollId=$kontrollId")
+
+    requireNotNull(result)
 
     val styringsdataKontrollId = locationKontroll.path.split("/").lastOrNull()
     val styringsdataLoeysingId = locationLoeysing.path.split("/").lastOrNull()
@@ -304,7 +312,8 @@ class StyringsdataResourceTest(
             paaleggKlage = null,
             bot = null,
             botKlage = null,
-            sistLagra = Instant.now())
+            sistLagra = Instant.now(),
+        )
     return styringsdataDAO.createStyringsdataLoeysing(styringsdata).getOrThrow()
   }
 
@@ -315,7 +324,8 @@ class StyringsdataResourceTest(
             "Ola Nordmann",
             Sakstype.Arkivsak,
             "1234",
-            Kontrolltype.InngaaendeKontroll)
+            Kontrolltype.InngaaendeKontroll,
+        )
 
     return kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
   }

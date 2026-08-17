@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.brukar
 
 import org.springframework.security.authentication.AnonymousAuthenticationToken
-import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Component
@@ -10,12 +9,15 @@ import org.springframework.stereotype.Component
 class BrukarService(val brukarDAO: BrukarDAO) {
 
   fun getCurrentUser(): Brukar {
-    val authentication: Authentication = SecurityContextHolder.getContext().authentication
-    if (authentication !is AnonymousAuthenticationToken) {
+    val authentication = SecurityContextHolder.getContext().authentication
+    if (authentication != null && authentication !is AnonymousAuthenticationToken) {
       val principal = authentication.principal as Jwt
       principal.getClaimAsString("preferred_username")
       val username = principal.getClaimAsString("preferred_username")
       val fullName = principal.getClaimAsString("name")
+
+      requireNotNull(username) { "preferred_username claim is missing in JWT" }
+      requireNotNull(fullName) { "preferred_fullname claim is missing in JWT" }
 
       return Brukar(username, fullName)
     }

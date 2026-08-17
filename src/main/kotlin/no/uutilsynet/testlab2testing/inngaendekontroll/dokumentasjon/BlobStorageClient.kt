@@ -35,7 +35,8 @@ class BlobStorageClient(
 
   override fun toBlobUri(filnamn: String, sasToken: String) =
       URI(
-          "https://${blobStorageProperties.account}.blob.core.windows.net/${blobStorageProperties.container}/${filnamn}?$sasToken")
+          "https://${blobStorageProperties.account}.blob.core.windows.net/${blobStorageProperties.container}/${filnamn}?$sasToken"
+      )
 
   fun generateSas(sasValues: BlobServiceSasSignatureValues): String {
     return blobContainerClient.generateSas(sasValues)
@@ -44,7 +45,9 @@ class BlobStorageClient(
   override fun getSasToken(): String {
     val expiryTime =
         OffsetDateTime.ofInstant(
-            Instant.now().plusMillis(blobStorageProperties.sasttl.toLong()), ZONEID_OSLO)
+            Instant.now().plusMillis(blobStorageProperties.sasttl.toLong()),
+            ZONEID_OSLO,
+        )
     val permission = BlobSasPermission().setReadPermission(true).setWritePermission(false)
     val sasValues = BlobServiceSasSignatureValues(expiryTime, permission)
     return generateSas(sasValues)

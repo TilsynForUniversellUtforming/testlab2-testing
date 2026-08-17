@@ -43,7 +43,9 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
                 svar = listOf(ResultatManuellKontrollBase.Svar("1.1", "Ja")),
                 kommentar = "Kommentar",
                 sistLagra = Instant.now(),
-                testVartUtfoert = null))
+                testVartUtfoert = null,
+            )
+        )
 
     `when`(testResultatDAO.getManyResults(originalTestgrunnlagId))
         .thenReturn(Result.success(originalResultatBrotList))
@@ -54,7 +56,8 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
             kontrollId = kontrollId,
             namn = "Original",
             type = TestgrunnlagType.OPPRINNELEG_TEST,
-            datoOppretta = Instant.now())
+            datoOppretta = Instant.now(),
+        )
 
     `when`(testgrunnlagDAO.getTestgrunnlag(originalTestgrunnlagId))
         .thenReturn(Result.success(originalTestgrunnlag))
@@ -66,7 +69,8 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
             namn = "Retest for kontroll $kontrollId",
             type = TestgrunnlagType.RETEST,
             sideutval = emptyList(),
-            testregelIdList = originalResultatBrotList.map { it.testregelId }.distinct())
+            testregelIdList = originalResultatBrotList.map { it.testregelId }.distinct(),
+        )
 
     `when`(testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag))
         .thenReturn(Result.success(newTestgrunnlagId))
@@ -100,7 +104,9 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
                 svar = listOf(ResultatManuellKontrollBase.Svar("1.1", "Ja")),
                 kommentar = "Kommentar",
                 sistLagra = Instant.now(),
-                testVartUtfoert = null))
+                testVartUtfoert = null,
+            )
+        )
 
     `when`(testResultatDAO.getManyResults(originalTestgrunnlagId))
         .thenReturn(Result.success(originalResultatList))
@@ -113,6 +119,8 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
     assertTrue(result.isFailure)
     assertTrue(result.exceptionOrNull() is IllegalArgumentException)
     assertEquals(
-        "Ingen resultat med brot, kan ikkje køyre retest", result.exceptionOrNull()?.message)
+        "Ingen resultat med brot, kan ikkje køyre retest",
+        result.exceptionOrNull()?.message,
+    )
   }
 }

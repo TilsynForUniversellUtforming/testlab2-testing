@@ -33,7 +33,7 @@ class ResultExportController(
   @GetMapping("maaling/{maalingId}/loeysing/{loeysingId}")
   fun getTestresultForExportForMaaling(
       @PathVariable("maalingId") maalingId: Int,
-      @PathVariable("loeysingId") loeysingId: Int
+      @PathVariable("loeysingId") loeysingId: Int,
   ): ResponseEntity<List<TestresultatExport>> {
     return ResponseEntity.ok()
         .body(testresultatDAO.getTestresultatByMaalingId(maalingId, loeysingId))
@@ -49,7 +49,8 @@ class ResultExportController(
         .putTestresultatList(testresultatList)
         .fold(
             { idList -> ResponseEntity.ok().body(idList) },
-            { _ -> ResponseEntity.internalServerError().build() })
+            { _ -> ResponseEntity.internalServerError().build() },
+        )
   }
 
   @PostMapping("testgrunnlag/{testgrunnlagId}")
@@ -65,7 +66,8 @@ class ResultExportController(
             { error ->
               logger.error(error.message)
               ResponseEntity.internalServerError().build()
-            })
+            },
+        )
   }
 
   @GetMapping("aggregering/testregel/{maalingId}")
@@ -88,6 +90,7 @@ class ResultExportController(
             { error ->
               logger.error(error.message)
               ResponseEntity.internalServerError().build()
-            })
+            },
+        )
   }
 }

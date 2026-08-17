@@ -49,7 +49,7 @@ class MaalingResource(
       val loeysingIdList: List<Int>?,
       val utvalId: UtvalId?,
       val testregelIdList: List<Int>,
-      val crawlParameters: CrawlParameters?
+      val crawlParameters: CrawlParameters?,
   )
 
   private val logger = LoggerFactory.getLogger(MaalingResource::class.java)
@@ -66,7 +66,8 @@ class MaalingResource(
               { exception ->
                 logger.error(exception.message)
                 ErrorHandlingUtil.handleErrors(exception)
-              })
+              },
+          )
 
   @PutMapping
   fun updateMaaling(@RequestBody dto: EditMaalingDTO): ResponseEntity<out Any> =
@@ -77,7 +78,8 @@ class MaalingResource(
               { exception ->
                 logger.error("Feila da vi skulle oppdatere målinga ${dto.id}", exception)
                 ErrorHandlingUtil.handleErrors(exception)
-              })
+              },
+          )
 
   @DeleteMapping("{id}")
   fun deleteMaaling(@PathVariable id: Int): ResponseEntity<out Any> =
@@ -95,22 +97,26 @@ class MaalingResource(
     return runCatching { maalingDAO.getMaaling(id) }
         .fold(
             onSuccess = { it.let { ResponseEntity.ok(it) } },
-            onFailure = { ErrorHandlingUtil.handleErrors(it) })
+            onFailure = { ErrorHandlingUtil.handleErrors(it) },
+        )
   }
 
   @GetMapping("{maalingId}/testresultat")
   fun getTestResultatList(
       @PathVariable maalingId: Int,
-      @RequestParam loeysingId: Int?
+      @RequestParam loeysingId: Int?,
   ): ResponseEntity<Any> =
       getTestresultat(maalingId, loeysingId)
           .fold(
               { testResultatList -> ResponseEntity.ok(testResultatList) },
               { error ->
                 logger.error(
-                    "Feila da vi skulle hente fullt resultat for målinga $maalingId", error)
+                    "Feila da vi skulle hente fullt resultat for målinga $maalingId",
+                    error,
+                )
                 ResponseEntity.internalServerError().body(error.firstMessage())
-              })
+              },
+          )
 
   fun getTestresultat(maalingId: Int, loeysingId: Int?): Result<List<AutotesterTestresultat>> {
 
@@ -135,18 +141,22 @@ class MaalingResource(
                       Schema(
                           type = "string",
                           defaultValue = "testresultat",
-                          allowableValues = ["testresultat", "suksesskriterium", "side"])),
+                          allowableValues = ["testresultat", "suksesskriterium", "side"],
+                      ),
+              ),
           ],
       responses =
           [
               ApiResponse(responseCode = "200", description = "Returnerer aggregeringa"),
               ApiResponse(responseCode = "400", description = "Målinga er ikkje ferdig testa"),
               ApiResponse(responseCode = "404", description = "Målinga vart ikkje funne"),
-              ApiResponse(responseCode = "500", description = "Andre feil")])
+              ApiResponse(responseCode = "500", description = "Andre feil"),
+          ],
+  )
   @GetMapping("{maalingId}/testresultat/aggregering")
   fun getAggregering(
       @PathVariable maalingId: Int,
-      @RequestParam aggregeringstype: String = "testregel"
+      @RequestParam aggregeringstype: String = "testregel",
   ): ResponseEntity<Any> {
 
     return when (aggregeringstype) {
@@ -160,7 +170,7 @@ class MaalingResource(
   @GetMapping("{maalingId}/crawlresultat/nettsider")
   fun getCrawlResultatNettsider(
       @PathVariable maalingId: Int,
-      @RequestParam loeysingId: Int
+      @RequestParam loeysingId: Int,
   ): ResponseEntity<List<URL>> =
       sideutvalDAO.getCrawlResultatNettsider(maalingId, loeysingId).let { ResponseEntity.ok(it) }
 
@@ -220,14 +230,15 @@ class MaalingResource(
             { error ->
               logger.error("Feila da vi skulle hente testreglar for målinga $id", error)
               ResponseEntity.internalServerError().body(emptyList())
-            })
+            },
+        )
   }
 
   private fun putNewStatusMaalingTestingFerdig(
       newStatus: Status,
       statusDTO: StatusDTO,
       maaling: Maaling.TestingFerdig,
-      brukar: Brukar
+      brukar: Brukar,
   ): ResponseEntity<Any> {
     return runBlocking(Dispatchers.IO) {
       when (newStatus) {
@@ -241,7 +252,7 @@ class MaalingResource(
       newStatus: Status,
       statusDTO: StatusDTO,
       maaling: Maaling.Kvalitetssikring,
-      brukar: Brukar
+      brukar: Brukar,
   ): ResponseEntity<Any> {
     return runBlocking(Dispatchers.IO) {
       when (newStatus) {
@@ -253,7 +264,7 @@ class MaalingResource(
 
   private fun putNewStatusMaalingPlanlegging(
       maaling: Maaling.Planlegging,
-      newStatus: Status
+      newStatus: Status,
   ): ResponseEntity<Any> {
     return runBlocking(Dispatchers.IO) {
       maaling.crawlParameters.validateParameters()

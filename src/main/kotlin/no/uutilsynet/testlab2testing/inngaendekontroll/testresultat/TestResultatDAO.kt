@@ -12,24 +12,23 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class TestResultatDAO(
     val jdbcTemplate: NamedParameterJdbcTemplate,
-    val brukarService: BrukarService
+    val brukarService: BrukarService,
 ) {
   @Transactional
   fun save(createTestResultat: TestResultatResource.CreateTestResultat): Result<Int> {
     return runCatching {
-      val brukarId: Int =
-          brukarService.getUserId() ?: throw RuntimeException("No authenticated user")
+      val brukarId = getUserId()
 
       val created = Timestamp.from(Instant.now())
 
       jdbcTemplate.queryForObject(
           """
-        insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
-                                     element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
-        values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
-                :testVartUtfoert,:status, :kommentar, :sist_lagra)
-        returning id
-      """
+          insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
+                                       element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
+          values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementOmtaleHtml, :elementUtfall,
+                  :testVartUtfoert,:status, :kommentar, :sist_lagra)
+          returning id
+          """
               .trimIndent(),
           mapOf(
               "testgrunnlagId" to createTestResultat.testgrunnlagId,
@@ -38,15 +37,25 @@ class TestResultatDAO(
               "sideutvalId" to createTestResultat.sideutvalId,
               "brukarId" to brukarId,
               "elementOmtale" to createTestResultat.elementOmtale,
+              "elementOmtaleHtml" to createTestResultat.elementOmtaleHtml,
               "elementResultat" to createTestResultat.elementResultat,
               "elementUtfall" to createTestResultat.elementUtfall,
               "kommentar" to createTestResultat.kommentar,
               "testVartUtfoert" to createTestResultat.testVartUtfoert,
               "status" to ResultatManuellKontrollBase.Status.IkkjePaabegynt.name,
               "kommentar" to createTestResultat.kommentar,
-              "sist_lagra" to created),
-          Int::class.java)!!
+              "sist_lagra" to created,
+          ),
+          Int::class.java,
+      )!!
     }
+  }
+
+  private fun getUserId(): Int {
+    val brukarId = brukarService.getUserId()
+
+    check(brukarId != null) { "No authenticated user" }
+    return brukarId
   }
 
   fun getTestResultat(id: Int): Result<ResultatManuellKontroll> =
@@ -67,6 +76,7 @@ class TestResultatDAO(
                            ti.testregel_id,
                            ti.sideutval_id,
                            ti.element_omtale,
+                           ti.element_omtale_html,
                            ti.element_resultat,
                            ti.element_utfall,
                            ti.test_vart_utfoert,
@@ -80,7 +90,7 @@ class TestResultatDAO(
                              join "testlab2_testing"."testgrunnlag" tg on ti.testgrunnlag_id = tg.id
                     where tg.kontroll_id = :kontrollId
                     order by ti.id
-                """
+                    """
                         .trimIndent(),
                     mapOf("kontrollId" to kontrollId),
                 ) { rs, _ ->
@@ -93,6 +103,7 @@ class TestResultatDAO(
                       brukar =
                           Brukar(rs.getString("brukar_brukarnamn"), rs.getString("brukar_namn")),
                       elementOmtale = rs.getString("element_omtale"),
+                      elementOmtaleHtml = rs.getString("element_omtale_html"),
                       elementResultat =
                           runCatching {
                                 enumValueOf<TestresultatUtfall>(rs.getString("element_resultat"))
@@ -104,7 +115,8 @@ class TestResultatDAO(
                       status =
                           enumValueOf<ResultatManuellKontrollBase.Status>(rs.getString("status")),
                       kommentar = rs.getString("kommentar"),
-                      sistLagra = rs.getTimestamp("sist_lagra").toInstant())
+                      sistLagra = rs.getTimestamp("sist_lagra").toInstant(),
+                  )
                 }
                 .toList()
 
@@ -128,13 +140,14 @@ class TestResultatDAO(
                 join "testlab2_testing"."testgrunnlag" tg on ti.testgrunnlag_id = tg.id
               where tg.kontroll_id = :kontrollId
               order by ti.id, steg
-          """
+              """
                   .trimIndent(),
               mapOf("kontrollId" to kontrollId),
           ) { rs, _ ->
             SvarDB(
                 rs.getInt("id"),
-                ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar")))
+                ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar")),
+            )
           }
           .groupBy({ it.resultatManuellKontrollId }, { it.svar })
 
@@ -142,7 +155,7 @@ class TestResultatDAO(
 
   private fun getTestResultat(
       resultatId: Int? = null,
-      testgrunnlagId: Int? = null
+      testgrunnlagId: Int? = null,
   ): Result<List<ResultatManuellKontroll>> = runCatching {
     val testResultat: List<ResultatManuellKontroll> =
         jdbcTemplate
@@ -154,6 +167,7 @@ class TestResultatDAO(
                        ti.testregel_id,
                        ti.sideutval_id,
                        ti.element_omtale,
+                       ti.element_omtale_html,
                        ti.element_resultat,
                        ti.element_utfall,
                        ti.test_vart_utfoert,
@@ -179,6 +193,7 @@ class TestResultatDAO(
                   sideutvalId = rs.getInt("sideutval_id"),
                   brukar = Brukar(rs.getString("brukar_brukarnamn"), rs.getString("brukar_namn")),
                   elementOmtale = rs.getString("element_omtale"),
+                  elementOmtaleHtml = rs.getString("element_omtale_html"),
                   elementResultat =
                       runCatching {
                             enumValueOf<TestresultatUtfall>(rs.getString("element_resultat"))
@@ -189,7 +204,8 @@ class TestResultatDAO(
                   testVartUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant(),
                   status = enumValueOf<ResultatManuellKontrollBase.Status>(rs.getString("status")),
                   kommentar = rs.getString("kommentar"),
-                  sistLagra = rs.getTimestamp("sist_lagra").toInstant())
+                  sistLagra = rs.getTimestamp("sist_lagra").toInstant(),
+              )
             }
             .toList()
 
@@ -200,7 +216,7 @@ class TestResultatDAO(
 
   private fun getSvarMapForTestresultat(
       resultatId: Int?,
-      testgrunnlagId: Int?
+      testgrunnlagId: Int?,
   ): Map<Int, List<ResultatManuellKontrollBase.Svar>> {
     val svarMap =
         jdbcTemplate
@@ -217,30 +233,31 @@ class TestResultatDAO(
                     order by id, steg
                 """
                     .trimIndent(),
-                mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId)) { rs, _ ->
-                  SvarDB(
-                      rs.getInt("id"),
-                      ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar")))
-                }
+                mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId),
+            ) { rs, _ ->
+              SvarDB(
+                  rs.getInt("id"),
+                  ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar")),
+              )
+            }
             .groupBy({ it.resultatManuellKontrollId }, { it.svar })
     return svarMap
   }
 
   @Transactional
   fun createRetest(retestResultat: ResultatManuellKontrollBase): Result<Unit> = runCatching {
-    val brukarId: Int = brukarService.getUserId() ?: throw RuntimeException("No authenticated user")
-
+    val brukarId = getUserId()
     val sistlagra = Timestamp.from(Instant.now())
 
     val id =
         jdbcTemplate.queryForObject(
             """
-        insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
-                                     element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
-        values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
-                :testVartUtfoert,:status, :kommentar, :sist_lagra)
-        returning id
-      """
+            insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
+                                         element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
+            values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementOmtaleHtml, :elementUtfall,
+                    :testVartUtfoert,:status, :kommentar, :sist_lagra)
+            returning id
+            """
                 .trimIndent(),
             mapOf(
                 "testgrunnlagId" to retestResultat.testgrunnlagId,
@@ -249,13 +266,16 @@ class TestResultatDAO(
                 "sideutvalId" to retestResultat.sideutvalId,
                 "brukarId" to brukarId,
                 "elementOmtale" to retestResultat.elementOmtale,
+                "elementOmtaleHtml" to retestResultat.elementOmtaleHtml,
                 "elementResultat" to retestResultat.elementResultat?.name,
                 "elementUtfall" to retestResultat.elementUtfall,
                 "testVartUtfoert" to retestResultat.testVartUtfoert?.let { Timestamp.from(it) },
                 "status" to retestResultat.status.name,
                 "kommentar" to retestResultat.kommentar,
-                "sist_lagra" to sistlagra),
-            Int::class.java)!!
+                "sist_lagra" to sistlagra,
+            ),
+            Int::class.java,
+        )!!
 
     saveSvarBatch(id, retestResultat.svar)
   }
@@ -281,50 +301,57 @@ class TestResultatDAO(
   private fun updateTestresultat(
       testResultat: ResultatManuellKontroll,
       testVartUtfoert: Timestamp?,
-      now: Timestamp?
+      now: Timestamp?,
   ) {
     jdbcTemplate.update(
         """
-          update testresultat
-          set element_omtale    = :elementOmtale,
-              element_resultat  = :elementResultat,
-              element_utfall    = :elementUtfall,
-              test_vart_utfoert = :testVartUtfoert,
-              status = :status,
-              kommentar = :kommentar,
-              sist_lagra = :sist_lagra
-          where id = :id
+        update testresultat
+        set element_omtale    = :elementOmtale,
+            element_omtale_html = :elementOmtaleHtml,
+            element_resultat  = :elementResultat,
+            element_utfall    = :elementUtfall,
+            test_vart_utfoert = :testVartUtfoert,
+            status = :status,
+            kommentar = :kommentar,
+            sist_lagra = :sist_lagra
+        where id = :id
         """
             .trimIndent(),
         mapOf(
             "elementOmtale" to testResultat.elementOmtale,
+            "elementOmtaleHtml" to testResultat.elementOmtaleHtml,
             "elementResultat" to testResultat.elementResultat?.name,
             "elementUtfall" to testResultat.elementUtfall,
             "testVartUtfoert" to testVartUtfoert,
             "status" to testResultat.status.name,
             "id" to testResultat.id,
             "kommentar" to testResultat.kommentar,
-            "sist_lagra" to now))
+            "sist_lagra" to now,
+        ),
+    )
   }
 
   private fun deleteGamleSvar(testResultat: ResultatManuellKontroll) {
     jdbcTemplate.update(
         """
-                delete from testresultat_svar
-                where testresultat_id = :id
-            """
+        delete from testresultat_svar
+        where testresultat_id = :id
+        """
             .trimIndent(),
-        mapOf("id" to testResultat.id))
+        mapOf("id" to testResultat.id),
+    )
   }
 
   private fun setTestVartUtfoert(
       testResultat: ResultatManuellKontroll,
-      now: Timestamp?
+      now: Timestamp?,
   ): Timestamp? {
     val testVartUtfoert =
-        if (testResultat.elementOmtale != null &&
-            testResultat.elementResultat != null &&
-            testResultat.elementUtfall != null)
+        if (
+            testResultat.elementOmtale != null &&
+                testResultat.elementResultat != null &&
+                testResultat.elementUtfall != null
+        )
             now
         else null
     return testVartUtfoert
@@ -334,11 +361,12 @@ class TestResultatDAO(
   fun delete(id: Int): Result<Unit> = runCatching {
     jdbcTemplate.update(
         """
-            delete from testresultat
-            where id = :id
+        delete from testresultat
+        where id = :id
         """
             .trimIndent(),
-        mapOf("id" to id))
+        mapOf("id" to id),
+    )
   }
 
   fun saveSvar(testresultatId: Int, stegOgSvar: ResultatManuellKontrollBase.Svar): Result<Unit> =
@@ -351,56 +379,56 @@ class TestResultatDAO(
             values (:testresultatId, :steg, :svar)
             on conflict (testresultat_id, steg) do update
             set svar = excluded.svar
-        """
+            """
                 .trimIndent(),
-            mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar))
+            mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar),
+        )
       }
 
   fun saveSvarBatch(
       testresultatId: Int,
-      stegOgSvarList: List<ResultatManuellKontrollBase.Svar>
+      stegOgSvarList: List<ResultatManuellKontrollBase.Svar>,
   ): Result<Unit> = runCatching {
-    val batchValues =
-        stegOgSvarList.map { (steg, svar) ->
-          mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar)
-        }
+    val batchValues = stegOgSvarList.map { (steg, svar) ->
+      mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar)
+    }
 
     jdbcTemplate.batchUpdate(
         """
-            insert into testresultat_svar (testresultat_id, steg, svar)
-            values (:testresultatId, :steg, :svar)
-            on conflict (testresultat_id, steg) do update
-            set svar = excluded.svar
+        insert into testresultat_svar (testresultat_id, steg, svar)
+        values (:testresultatId, :steg, :svar)
+        on conflict (testresultat_id, steg) do update
+        set svar = excluded.svar
         """
             .trimIndent(),
-        batchValues.toTypedArray())
+        batchValues.toTypedArray(),
+    )
   }
 
   fun getKontrollForTestresultat(testresultatId: Int): Result<KontrollDocumentation> = runCatching {
     val query =
         """
-            select tittel,kontroll_id from testresultat tr
-            join testgrunnlag tg on tg.id=tr.testgrunnlag_id
-            join kontroll k on k.id=tg.kontroll_id
-            where tr.id=:testresultat_id
+        select tittel,kontroll_id from testresultat tr
+        join testgrunnlag tg on tg.id=tr.testgrunnlag_id
+        join kontroll k on k.id=tg.kontroll_id
+        where tr.id=:testresultat_id
         """
             .trimIndent()
 
     jdbcTemplate.queryForObject(query, mapOf("testresultat_id" to testresultatId)) { rs, _ ->
       KontrollDocumentation(rs.getString("tittel"), rs.getInt("kontroll_id"))
     }
-        ?: throw RuntimeException("No kontroll found for testresultat $testresultatId")
   }
 
   fun getBrukararForTestgrunnlag(testgrunnlagId: Int): Result<List<Brukar>> {
     return runCatching {
       val query =
           """
-            select distinct b.brukarnamn, b.namn
-            from testresultat tr
-            join brukar b on tr.brukar_id = b.id
-            where tr.testgrunnlag_id = :testgrunnlagId
-        """
+          select distinct b.brukarnamn, b.namn
+          from testresultat tr
+          join brukar b on tr.brukar_id = b.id
+          where tr.testgrunnlag_id = :testgrunnlagId
+          """
               .trimIndent()
 
       jdbcTemplate.query(query, mapOf("testgrunnlagId" to testgrunnlagId)) { rs, _ ->

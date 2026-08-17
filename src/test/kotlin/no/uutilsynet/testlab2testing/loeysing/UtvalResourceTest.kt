@@ -15,8 +15,9 @@ import org.junit.jupiter.api.*
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.resttestclient.TestRestTemplate
+import org.springframework.boot.resttestclient.getForObject
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -56,7 +57,8 @@ class UtvalResourceTest(
   private val loeysingar =
       listOf(
           Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827"),
-          Loeysing.External("Digdir", "https://www.digdir.no", "991825827"))
+          Loeysing.External("Digdir", "https://www.digdir.no", "991825827"),
+      )
 
   @Test
   @DisplayName("vi skal kunne opprette eit nytt utval")
@@ -84,7 +86,8 @@ class UtvalResourceTest(
             .extract()
             .header("Location")
 
-    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
+    val utval = restTemplate.getForObject<Utval>(location)
+    requireNotNull(utval)
 
     assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir"))
@@ -92,7 +95,8 @@ class UtvalResourceTest(
   }
 
   @DisplayName(
-      "når vi opprettar eit utval med ei løysing som ikkje finst i databasen, så skal løysinga bli lagra, og utvalet oppretta")
+      "når vi opprettar eit utval med ei løysing som ikkje finst i databasen, så skal løysinga bli lagra, og utvalet oppretta"
+  )
   @Test
   fun opprettUtvalMedNyLoeysing() {
     val uutilsynet = Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827")
@@ -100,13 +104,21 @@ class UtvalResourceTest(
     val randomLoeysing = Loeysing.External(uuid, "https://www.$uuid.com", "000000000")
     val randomLoeysingNew =
         Loeysing(
-            3, randomLoeysing.namn, URI(randomLoeysing.url).toURL(), randomLoeysing.orgnummer, uuid)
+            3,
+            randomLoeysing.namn,
+            URI(randomLoeysing.url).toURL(),
+            randomLoeysing.orgnummer,
+            uuid,
+        )
     val newList = loeysingList + randomLoeysingNew
 
     doReturn(randomLoeysingNew)
         .`when`(loeysingsRegisterClient)
         .saveLoeysing(
-            randomLoeysing.namn, URI(randomLoeysing.url).toURL(), randomLoeysing.orgnummer)
+            randomLoeysing.namn,
+            URI(randomLoeysing.url).toURL(),
+            randomLoeysing.orgnummer,
+        )
     doReturn(loeysingList)
         .`when`(loeysingsRegisterClient)
         .getMany(listOf(randomLoeysingNew.id), maalingDateStart)
@@ -124,14 +136,16 @@ class UtvalResourceTest(
             .extract()
             .header("Location")
 
-    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
+    val utval = restTemplate.getForObject(location, Utval::class.java)
+    requireNotNull(utval)
 
     assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir", uuid))
   }
 
   @DisplayName(
-      "når utvalet har ein URL som manglar protocol, så skal vi anta https, og utvalet skal opprettast")
+      "når utvalet har ein URL som manglar protocol, så skal vi anta https, og utvalet skal opprettast"
+  )
   @Test
   fun opprettUtvalMedUrlUtenProtocol() {
     val uutilsynet = Loeysing.External("UUTilsynet", "www.uutilsynet.no", "991825827")
@@ -148,13 +162,17 @@ class UtvalResourceTest(
             .statusCode(201)
             .extract()
             .header("Location")
-    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
+    val utval = restTemplate.getForObject<Utval>(location)
+    requireNotNull(utval)
 
     assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.url })
         .containsAll(
             listOf(
-                URI("https://www.uutilsynet.no/").toURL(), URI("https://www.digdir.no/").toURL()))
+                URI("https://www.uutilsynet.no/").toURL(),
+                URI("https://www.digdir.no/").toURL(),
+            )
+        )
   }
 
   @DisplayName("vi skal kunne hente ei liste med alle utval")

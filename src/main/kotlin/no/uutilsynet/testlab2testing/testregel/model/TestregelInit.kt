@@ -19,5 +19,5 @@ data class TestregelInit(
     val testobjekt: Int?,
     val kravTilSamsvar: String?,
     val testregelSchema: String,
-    val innhaldstypeTesting: Int?
+    val innhaldstypeTesting: Int?,
 )

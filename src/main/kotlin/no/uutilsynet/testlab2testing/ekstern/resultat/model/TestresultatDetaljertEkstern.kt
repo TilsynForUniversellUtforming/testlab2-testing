@@ -40,7 +40,8 @@ fun TestresultatDetaljert.toTestresultatDetaljertEkstern(
             this.elementOmtale?.copy(
                 htmlCode = null,
                 pointer = this.elementOmtale.pointer,
-                description = this.elementOmtale.description),
+                description = this.elementOmtale.description,
+            ),
         bilder = this.bilder?.map { it.toEksternPath() },
     )
 
@@ -55,5 +56,6 @@ fun Bilde.toEksternPath(): Bilde {
           UriComponentsBuilder.fromUri(this.thumbnailURI)
               .replacePath("ekstern/tester/${this.thumbnailURI.path}")
               .build()
-              .toUri())
+              .toUri(),
+  )
 }

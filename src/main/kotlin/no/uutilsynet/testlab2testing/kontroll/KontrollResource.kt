@@ -44,7 +44,7 @@ class KontrollResource(
       val arkivreferanse: String,
       val kontrolltype: Kontrolltype,
       val virksomheter: List<String>, // liste med orgnummer
-      val styringsdataId: Int?
+      val styringsdataId: Int?,
   )
 
   @GetMapping
@@ -63,7 +63,8 @@ class KontrollResource(
                 kontrollDB.arkivreferanse,
                 kontrollDB.kontrolltype,
                 virksomheter,
-                kontrollDB.styringsdataId)
+                kontrollDB.styringsdataId,
+            )
           }
         }
         .getOrElse {
@@ -81,7 +82,8 @@ class KontrollResource(
             onFailure = {
               logger.error("Feil ved henting av virksomheter for kontroll ${kontrollDB.id}", it)
               throw it
-            })
+            },
+        )
   }
 
   @PostMapping
@@ -99,7 +101,8 @@ class KontrollResource(
             onFailure = {
               logger.error("Feil ved oppretting av kontroll", it)
               ResponseEntity.badRequest().build()
-            })
+            },
+        )
   }
 
   @GetMapping("/{id}")
@@ -115,7 +118,8 @@ class KontrollResource(
                   ResponseEntity.internalServerError().build()
                 }
               }
-            })
+            },
+        )
   }
 
   private fun getKontrollAsResult(kontrollId: Int): Result<Kontroll> = runCatching {
@@ -130,7 +134,8 @@ class KontrollResource(
         kontrollDB.arkivreferanse,
         kontrollDbUtvalToUtval(kontrollDB),
         kontollTestreglarToTestreglar(kontrollDB.testreglar),
-        kontrollDB.sideutval)
+        kontrollDB.sideutval,
+    )
   }
 
   private fun kontrollDbUtvalToUtval(kontroll: KontrollDAO.KontrollDB): Utval? {
@@ -145,7 +150,8 @@ class KontrollResource(
             onFailure = {
               logger.error("Feil ved henting av løysingar for utval for kontroll ${kontroll.id}")
               throw it
-            })
+            },
+        )
   }
 
   private fun kontollTestreglarToTestreglar(
@@ -174,13 +180,14 @@ class KontrollResource(
             onFailure = {
               logger.error("Feil ved sletting av kontroll", it)
               ResponseEntity.internalServerError().build()
-            })
+            },
+        )
   }
 
   @PutMapping("/{id}")
   fun updateKontroll(
       @PathVariable id: Int,
-      @RequestBody updateBody: KontrollUpdate
+      @RequestBody updateBody: KontrollUpdate,
   ): ResponseEntity<Unit> =
       runCatching {
             require(updateBody.kontroll.id == id) { "id i URL-en og id er ikkje den same" }
@@ -229,7 +236,8 @@ class KontrollResource(
                     ResponseEntity.internalServerError().build()
                   }
                 }
-              })
+              },
+          )
 
   @GetMapping("sideutvaltype")
   fun getSideutvalType(): ResponseEntity<out Any> =
@@ -267,7 +275,8 @@ class KontrollResource(
             "Testgrunnlag for kontroll ${kontroll.tittel}",
             OPPRINNELEG_TEST,
             kontroll.sideutvalList,
-            kontroll.testreglar?.testregelIdList ?: emptyList())
+            kontroll.testreglar?.testregelIdList ?: emptyList(),
+        )
     return testgrunnlagService.createOrUpdateFromKontroll(nyttTestgrunnlag)
   }
 
@@ -289,8 +298,7 @@ class KontrollResource(
                   .mapNotNull { innholdstype ->
                     innholdtypeTestingList.firstOrNull { it.id == innholdstype }
                   }
-            }
-            ?: emptyList()
+            } ?: emptyList()
 
     val sideutvalType =
         kontroll.sideutvalList.map { sideutval ->

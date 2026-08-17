@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*
 class RegelsettResource(
     private val regelsettDAO: RegelsettDAO,
     private val testregelClient: TestregelClient,
-    private val regelsettService: RegelsettService
+    private val regelsettService: RegelsettService,
 ) {
 
   val logger = LoggerFactory.getLogger(RegelsettResource::class.java)
@@ -31,12 +31,16 @@ class RegelsettResource(
               ApiResponse(
                   responseCode = "201",
                   description =
-                      "Når eit regelsett blir oppretta rikitg, lenke til nytt regelsett er i \"Location\" i header"),
+                      "Når eit regelsett blir oppretta rikitg, lenke til nytt regelsett er i \"Location\" i header",
+              ),
               ApiResponse(
                   responseCode = "400",
                   description =
-                      "Feil i request-objektet, til dømes manglande namn eller ugyldige testreglar"),
-              ApiResponse(responseCode = "500", description = "Andre feil")])
+                      "Feil i request-objektet, til dømes manglande namn eller ugyldige testreglar",
+              ),
+              ApiResponse(responseCode = "500", description = "Andre feil"),
+          ],
+  )
   @PostMapping
   fun createRegelsett(@RequestBody regelsett: RegelsettCreate): ResponseEntity<out Any> =
       runCatching {
@@ -45,7 +49,10 @@ class RegelsettResource(
             val testregelList = testregelClient.getTestregelList().getOrThrow()
             val testregelIdList =
                 validateRegelsettTestreglar(
-                        regelsett.testregelIdList, regelsett.modus, testregelList)
+                        regelsett.testregelIdList,
+                        regelsett.modus,
+                        testregelList,
+                    )
                     .getOrThrow()
 
             val id =
@@ -55,7 +62,8 @@ class RegelsettResource(
                         regelsett.modus,
                         regelsett.standard,
                         testregelIdList,
-                    ))
+                    )
+                )
 
             return ResponseEntity.created(URI("/v1/regelsett/${id}")).build()
           }
@@ -73,11 +81,13 @@ Returnerer ei liste med regelsett, eller ei tom liste om ingen finst. Ein kan sp
       responses =
           [
               ApiResponse(responseCode = "200", description = "Liste med eksisterande regelsett"),
-              ApiResponse(responseCode = "500", description = "Andre feil")])
+              ApiResponse(responseCode = "500", description = "Andre feil"),
+          ],
+  )
   @GetMapping
   fun getRegelsettList(
       @RequestParam(required = false, defaultValue = "false") includeInactive: Boolean = false,
-      @RequestParam(required = false, defaultValue = "false") includeTestreglar: Boolean = false
+      @RequestParam(required = false, defaultValue = "false") includeTestreglar: Boolean = false,
   ): List<RegelsettBase> =
       if (includeTestreglar) {
         regelsettService.getRegelsettTestreglarList(includeInactive)
@@ -92,7 +102,9 @@ Returnerer ei liste med regelsett, eller ei tom liste om ingen finst. Ein kan sp
           [
               ApiResponse(responseCode = "200", description = "Valt regelsett"),
               ApiResponse(responseCode = "404", description = "Ingen regelsett funne for gitt id"),
-              ApiResponse(responseCode = "500", description = "Andre feil")])
+              ApiResponse(responseCode = "500", description = "Andre feil"),
+          ],
+  )
   @GetMapping("{id}")
   fun getRegelsett(@PathVariable id: Int): ResponseEntity<RegelsettResponse> =
       regelsettService.getRegelsettResponse(id)?.let { ResponseEntity.ok(it) }
@@ -112,8 +124,11 @@ Returnerer ei liste med regelsett, eller ei tom liste om ingen finst. Ein kan sp
               ApiResponse(
                   responseCode = "400",
                   description =
-                      "Feil i request-objektet, til dømes manglande namn eller ugyldige testreglar"),
-              ApiResponse(responseCode = "500", description = "Andre feil")])
+                      "Feil i request-objektet, til dømes manglande namn eller ugyldige testreglar",
+              ),
+              ApiResponse(responseCode = "500", description = "Andre feil"),
+          ],
+  )
   @PutMapping
   fun updateRegelsett(@RequestBody regelsett: RegelsettEdit): ResponseEntity<out Any> =
       runCatching {
@@ -122,7 +137,10 @@ Returnerer ei liste med regelsett, eller ei tom liste om ingen finst. Ein kan sp
             val namn = validateNamn(regelsett.namn)
             val testregelIdList =
                 validateRegelsettTestreglar(
-                    regelsett.testregelIdList, regelsett.modus, testregelList)
+                    regelsett.testregelIdList,
+                    regelsett.modus,
+                    testregelList,
+                )
 
             regelsettDAO.updateRegelsett(
                 RegelsettEdit(
@@ -130,7 +148,9 @@ Returnerer ei liste med regelsett, eller ei tom liste om ingen finst. Ein kan sp
                     namn.getOrThrow(),
                     regelsett.modus,
                     regelsett.standard,
-                    testregelIdList.getOrThrow()))
+                    testregelIdList.getOrThrow(),
+                )
+            )
 
             ResponseEntity.noContent().build<Unit>()
           }
@@ -141,13 +161,16 @@ Returnerer ei liste med regelsett, eller ei tom liste om ingen finst. Ein kan sp
 
   @Operation(
       summary = "Deaktiver eit regelsett",
-      description = """
+      description =
+          """
       Man kan deaktivere eit regelsett med en gitt id.
       """,
       responses =
           [
               ApiResponse(responseCode = "204", description = "Regelsett er deaktivert"),
-              ApiResponse(responseCode = "500", description = "Andre feil")])
+              ApiResponse(responseCode = "500", description = "Andre feil"),
+          ],
+  )
   @DeleteMapping("{id}")
   fun deleteRegelsett(@PathVariable id: Int): ResponseEntity<out Any> =
       runCatching {

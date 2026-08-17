@@ -100,13 +100,22 @@ class MaalingKtTest {
   inner class TestingFerdigTests {
     private val crawlResultatForUUTilsynet =
         CrawlResultat.Ferdig(
-            1, URI("https://www.status.url").toURL(), uutilsynetLoeysing, Instant.now())
+            1,
+            URI("https://www.status.url").toURL(),
+            uutilsynetLoeysing,
+            Instant.now(),
+        )
     private val crawlResultatForDigdir =
         CrawlResultat.Ferdig(
-            1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now())
+            1,
+            URI("https://www.status.url").toURL(),
+            digdirLoeysing,
+            Instant.now(),
+        )
 
     @DisplayName(
-        "man skal ikke gå til status kvalitetssikring hvis noen crawlresultat har status starta")
+        "man skal ikke gå til status kvalitetssikring hvis noen crawlresultat har status starta"
+    )
     @Test
     fun toKvalitetssikringWithCrawlResultStarta() {
       val maaling =
@@ -115,14 +124,21 @@ class MaalingKtTest {
               crawlResultat =
                   listOf(
                       CrawlResultat.Ferdig(
-                          1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now()),
+                          1,
+                          URI("https://www.status.url").toURL(),
+                          digdirLoeysing,
+                          Instant.now(),
+                      ),
                       CrawlResultat.Starta(
                           URI("https://www.status.url").toURL(),
                           uutilsynetLoeysing,
                           Instant.now(),
-                          Framgang(10, 100))),
+                          Framgang(10, 100),
+                      ),
+                  ),
               navn = "Test",
-              datoStart = Instant.now())
+              datoStart = Instant.now(),
+          )
 
       val maalingCrawling = Maaling.toKvalitetssikring(maaling)
 
@@ -130,7 +146,8 @@ class MaalingKtTest {
     }
 
     @DisplayName(
-        "man skal ikke gå til status kvalitetssikring hvis noen crawlresultat har status ikkje starta")
+        "man skal ikke gå til status kvalitetssikring hvis noen crawlresultat har status ikkje starta"
+    )
     @Test
     fun toKvalitetssikringWithCrawlResultIkkjeStarta() {
       val maaling =
@@ -139,13 +156,20 @@ class MaalingKtTest {
               crawlResultat =
                   listOf(
                       CrawlResultat.Ferdig(
-                          1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now()),
+                          1,
+                          URI("https://www.status.url").toURL(),
+                          digdirLoeysing,
+                          Instant.now(),
+                      ),
                       CrawlResultat.IkkjeStarta(
                           URI("https://www.status.url").toURL(),
                           uutilsynetLoeysing,
-                          Instant.now())),
+                          Instant.now(),
+                      ),
+                  ),
               navn = "Test",
-              datoStart = Instant.now())
+              datoStart = Instant.now(),
+          )
 
       val maalingCrawling = Maaling.toKvalitetssikring(maaling)
 
@@ -153,7 +177,8 @@ class MaalingKtTest {
     }
 
     @DisplayName(
-        "man skal gå til status kvalitetssikring hvis alle crawlresultat har status ferdig")
+        "man skal gå til status kvalitetssikring hvis alle crawlresultat har status ferdig"
+    )
     @Test
     fun toKvalitetssikring() {
       val maaling =
@@ -162,14 +187,21 @@ class MaalingKtTest {
               crawlResultat =
                   listOf(
                       CrawlResultat.Ferdig(
-                          1, URI("https://www.status.url").toURL(), digdirLoeysing, Instant.now()),
+                          1,
+                          URI("https://www.status.url").toURL(),
+                          digdirLoeysing,
+                          Instant.now(),
+                      ),
                       CrawlResultat.Ferdig(
                           1,
                           URI("https://www.status.url").toURL(),
                           uutilsynetLoeysing,
-                          Instant.now())),
+                          Instant.now(),
+                      ),
+                  ),
               navn = "Test",
-              datoStart = Instant.now())
+              datoStart = Instant.now(),
+          )
 
       val maalingKvalitetssikring = Maaling.toKvalitetssikring(maaling)
 
@@ -177,7 +209,8 @@ class MaalingKtTest {
     }
 
     @DisplayName(
-        "når vi prøver å gå til TestingFerdig, og det finnes testkjøringer som ikke er ferdig, så skal det ikke gå")
+        "når vi prøver å gå til TestingFerdig, og det finnes testkjøringer som ikke er ferdig, så skal det ikke gå"
+    )
     @Test
     fun toTestingFails() {
       val maaling =
@@ -192,13 +225,17 @@ class MaalingKtTest {
                       URI("https://www.status.url").toURL(),
                       Framgang(0, 0),
                       Brukar("test", "testar"),
-                      10)))
+                      10,
+                  )
+              ),
+          )
       val result = Maaling.toTestingFerdig(maaling)
       assertThat(result).isNull()
     }
 
     @DisplayName(
-        "når vi prøver å gå til `testing_ferdig`, og alle testkjøringer er ferdige, så skal det gå bra")
+        "når vi prøver å gå til `testing_ferdig`, og alle testkjøringer er ferdige, så skal det gå bra"
+    )
     @Test
     fun toTestingSucceeds() {
       val maaling =
@@ -213,13 +250,17 @@ class MaalingKtTest {
                       URI("https://status.url").toURL(),
                       lenker,
                       Brukar("test", "testar"),
-                      10)))
+                      10,
+                  )
+              ),
+          )
       val result = Maaling.toTestingFerdig(maaling)
       assertThat(result).isNotNull
     }
 
     @DisplayName(
-        "når vi prøver å gå til `testing_ferdig` med en testkjøring som er ferdig, og en som har feila, så skal det gå bra")
+        "når vi prøver å gå til `testing_ferdig` med en testkjøring som er ferdig, og en som har feila, så skal det gå bra"
+    )
     @Test
     fun toTestingFerdigFeila() {
       val maaling =
@@ -232,15 +273,18 @@ class MaalingKtTest {
                       TestConstants.digdirLoeysing,
                       Instant.now(),
                       "autotester krasja",
-                      Brukar("test", "testar")),
+                      Brukar("test", "testar"),
+                  ),
                   TestKoeyring.Ferdig(
                       TestConstants.uutilsynetLoeysing,
                       Instant.now(),
                       URI("https://status.url").toURL(),
                       lenker,
                       Brukar("test", "testar"),
-                      10),
-              ))
+                      10,
+                  ),
+              ),
+          )
       val result = Maaling.toTestingFerdig(maaling)
       assertThat(result).isNotNull
     }
@@ -261,17 +305,22 @@ class MaalingKtTest {
                     URI("https://www.status.url").toURL(),
                     lenker,
                     Brukar("test", "testar"),
-                    10),
+                    10,
+                ),
                 TestKoeyring.Ferdig(
                     TestConstants.uutilsynetLoeysing,
                     Instant.now(),
                     URI("https://www.status.url").toURL(),
                     lenker,
                     Brukar("test", "testar"),
-                    10)))
+                    10,
+                ),
+            ),
+        )
 
     @DisplayName(
-        "når vi henter testkøyringar for ei måling, uten å spesifisere løysing, så skal vi få alle testkøyringane")
+        "når vi henter testkøyringar for ei måling, uten å spesifisere løysing, så skal vi få alle testkøyringane"
+    )
     @Test
     fun alleTestKoeyringar() {
       val testKoeyringar = Maaling.findFerdigeTestKoeyringar(maaling)
@@ -279,7 +328,8 @@ class MaalingKtTest {
     }
 
     @DisplayName(
-        "når vi henter testkøyringar for ei måling, og spesifiserer ei løysing, så skal vi få testkøyringane for den løysinga")
+        "når vi henter testkøyringar for ei måling, og spesifiserer ei løysing, så skal vi få testkøyringane for den løysinga"
+    )
     @Test
     fun testKoeyringarForLoeysing() {
       val testKoeyringar = Maaling.findFerdigeTestKoeyringar(maaling, uutilsynetLoeysing.id)

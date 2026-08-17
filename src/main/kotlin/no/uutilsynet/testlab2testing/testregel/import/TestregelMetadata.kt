@@ -9,5 +9,5 @@ data class TestregelMetadata(
     @JsonProperty("versjon") val versjon: String,
     @JsonProperty("type") val type: String,
     @JsonProperty("kravTilSamsvar") val kravTilSamsvar: String,
-    @JsonProperty("spraak") val spraak: String
+    @JsonProperty("spraak") val spraak: String,
 )

@@ -7,7 +7,7 @@ open class SideutvalBase(
     open val typeId: Int,
     open val begrunnelse: String,
     open val url: URI,
-    open val egendefinertType: String?
+    open val egendefinertType: String?,
 )
 
 data class Sideutval(

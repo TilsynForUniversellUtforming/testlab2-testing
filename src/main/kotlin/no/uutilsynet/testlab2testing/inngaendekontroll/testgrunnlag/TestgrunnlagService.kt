@@ -39,7 +39,8 @@ class TestgrunnlagService(
 
   fun createRetest(retest: RetestRequest): Result<Int> = runCatching {
     logger.debug(
-        "Retest for originalt testgrunnlag ${retest.originalTestgrunnlagId} og løysing ${retest.loeysingId}")
+        "Retest for originalt testgrunnlag ${retest.originalTestgrunnlagId} og løysing ${retest.loeysingId}"
+    )
 
     val originalResultatBrotList = getOriginalBrotResultat(retest).getOrThrow()
     val retestTestgrunnlagId =
@@ -54,6 +55,7 @@ class TestgrunnlagService(
               testregelId = it.testregelId,
               sideutvalId = it.sideutvalId,
               elementOmtale = it.elementOmtale,
+              elementOmtaleHtml = it.elementOmtaleHtml,
               elementResultat = it.elementResultat,
               elementUtfall = it.elementUtfall,
               svar = it.svar,
@@ -74,7 +76,7 @@ class TestgrunnlagService(
 
   private fun createRetestTestgrunnlag(
       retest: RetestRequest,
-      originalResultatBrotList: List<ResultatManuellKontroll>
+      originalResultatBrotList: List<ResultatManuellKontroll>,
   ): Result<Int> = runCatching {
     val (originalTestgrunnlagId, loeysingId) = retest
 
@@ -98,12 +100,14 @@ class TestgrunnlagService(
                   it.loeysingId == loeysingId && sideutvalIdsWithBrot.contains(it.id)
                 },
             // Vel kun testreglar med brot
-            testregelIdList = originalResultatBrotList.map { it.testregelId }.distinct())
+            testregelIdList = originalResultatBrotList.map { it.testregelId }.distinct(),
+        )
 
     testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag).getOrElse {
       logger.error(
           "Kunne ikkje opprette testgrunnlag for løysing $loeysingId i kontroll $kontrollId med opprinnelig testgrunnlag $originalTestgrunnlagId",
-          it)
+          it,
+      )
       throw it
     }
   }
@@ -116,17 +120,17 @@ class TestgrunnlagService(
     val originalResultatList =
         testResultatDAO.getManyResults(originalTestgrunnlagId).getOrElse {
           logger.error(
-              "Klarte ikkje å henta testresultat for testgrunnlag $originalTestgrunnlagId: $it")
+              "Klarte ikkje å henta testresultat for testgrunnlag $originalTestgrunnlagId: $it"
+          )
           throw it
         }
 
-    val brotResultat =
-        originalResultatList.filter {
-          it.testgrunnlagId == originalTestgrunnlagId &&
-              it.loeysingId == loeysingId &&
-              it.elementResultat != null &&
-              it.elementResultat == TestresultatUtfall.brot
-        }
+    val brotResultat = originalResultatList.filter {
+      it.testgrunnlagId == originalTestgrunnlagId &&
+          it.loeysingId == loeysingId &&
+          it.elementResultat != null &&
+          it.elementResultat == TestresultatUtfall.brot
+    }
 
     if (brotResultat.isEmpty()) {
       logger.info("Ingen resultat med brot, kan ikkje køyre retest")
@@ -138,14 +142,15 @@ class TestgrunnlagService(
 
   private fun updateExisting(
       eksisterendeTestgrunnlag: TestgrunnlagKontroll,
-      testgrunnlag: NyttTestgrunnlagFromKontroll
+      testgrunnlag: NyttTestgrunnlagFromKontroll,
   ) =
       testgrunnlagDAO.updateTestgrunnlag(
           eksisterendeTestgrunnlag.copy(
               namn = testgrunnlag.namn,
               testreglar = testgrunnlag.testregelIdList,
               sideutval = testgrunnlag.sideutval,
-          ))
+          )
+      )
 
   fun NyttTestgrunnlagFromKontroll.toNyttTestgrunnlag(): NyttTestgrunnlag {
     return NyttTestgrunnlag(
@@ -153,7 +158,8 @@ class TestgrunnlagService(
         namn = this.namn,
         type = this.type,
         sideutval = this.sideutval,
-        testregelIdList = this.testregelIdList)
+        testregelIdList = this.testregelIdList,
+    )
   }
 
   fun getLoeysingForTestgrunnlag(testgrunnlagId: Int): List<Loeysing> {
@@ -167,9 +173,11 @@ class TestgrunnlagService(
                 onFailure = {
                   logger.error(
                       "Feil ved henting av løysingar $loeysingIdList for testgrunnlag $testgrunnlagId",
-                      it)
+                      it,
+                  )
                   throw it
-                })
+                },
+            )
     return loeysingList
   }
 

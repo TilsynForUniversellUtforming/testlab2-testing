@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate
 @Component
 class ResultatClient(
     restTemplate: RestTemplate,
-    private val resultatRegisterProperties: ResultatRegisterProperties
+    private val resultatRegisterProperties: ResultatRegisterProperties,
 ) {
 
   val restClient = RestClient.create(restTemplate)
@@ -25,7 +25,8 @@ class ResultatClient(
           .retrieve()
           .body(object : ParameterizedTypeReference<List<Long>>() {})
           ?: throw NoSuchElementException(
-              "Resultatregisteret returnerte null for liste av testresultatIder")
+              "Resultatregisteret returnerte null for liste av testresultatIder"
+          )
     }
   }
 
@@ -40,7 +41,8 @@ class ResultatClient(
           .retrieve()
           .body(object : ParameterizedTypeReference<List<Long>>() {})
           ?: throw NoSuchElementException(
-              "Resultatregisteret returnerte null for liste av testresultatIder")
+              "Resultatregisteret returnerte null for liste av testresultatIder"
+          )
     }
   }
 }

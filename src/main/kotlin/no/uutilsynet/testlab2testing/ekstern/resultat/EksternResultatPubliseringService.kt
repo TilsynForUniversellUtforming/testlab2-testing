@@ -16,7 +16,7 @@ class EksternResultatPubliseringService(
     @Autowired val eksternResultatDAO: EksternResultatDAO,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val maalingService: MaalingService,
-    @Autowired val cacheManager: CacheManager
+    @Autowired val cacheManager: CacheManager,
 ) {
   private val logger = LoggerFactory.getLogger(EksternResultatPubliseringService::class.java)
 
@@ -82,7 +82,7 @@ class EksternResultatPubliseringService(
   private fun publiserResultatForLoeysingForKontroll(
       kontroll: KontrollDAO.KontrollDB,
       loeysingId: Int,
-      rapportId: String?
+      rapportId: String?,
   ): Result<Boolean> {
     return when (kontroll.kontrolltype) {
       Kontrolltype.Statusmaaling,
@@ -98,7 +98,7 @@ class EksternResultatPubliseringService(
   private fun publiserResultatForTestgrunnlag(
       kontrollId: Int,
       loeysingId: Int,
-      rapportId: String?
+      rapportId: String?,
   ): Result<Boolean> {
     val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
     return eksternResultatDAO.publisertTestgrunnlagResultat(testgrunnlagId, loeysingId, rapportId)
@@ -107,7 +107,7 @@ class EksternResultatPubliseringService(
   private fun publiserResultatForMaaling(
       kontrollId: Int,
       loeysingId: Int,
-      rapportId: String?
+      rapportId: String?,
   ): Result<Boolean> {
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)
     return eksternResultatDAO.publiserMaalingResultat(maalingId, loeysingId, rapportId)
@@ -115,7 +115,7 @@ class EksternResultatPubliseringService(
 
   private fun avpubliserResultatForLoeysingForKontroll(
       kontroll: KontrollDAO.KontrollDB,
-      loeysingId: Int
+      loeysingId: Int,
   ): Result<Boolean> {
     return when (kontroll.kontrolltype) {
       Kontrolltype.Statusmaaling,

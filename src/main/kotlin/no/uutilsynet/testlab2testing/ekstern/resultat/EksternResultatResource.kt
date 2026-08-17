@@ -67,7 +67,8 @@ class EksternResultatResource(
     return runCatching { eksternResultatService.getResultatForRapport(rapportId) }
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
-            onFailure = { ErrorHandlingUtil.handleErrors(it) })
+            onFailure = { ErrorHandlingUtil.handleErrors(it) },
+        )
   }
 
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}")
@@ -78,7 +79,8 @@ class EksternResultatResource(
     return runCatching { eksternResultatService.getRapportForLoeysing(rapportId, loeysingId) }
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
-            onFailure = { ErrorHandlingUtil.handleErrors(it) })
+            onFailure = { ErrorHandlingUtil.handleErrors(it) },
+        )
   }
 
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/tema")
@@ -90,7 +92,8 @@ class EksternResultatResource(
         .getRapportPrTema(rapportId, loeysingId)
         .fold(
             onSuccess = { resultatTema -> ResponseEntity.ok(resultatTema) },
-            onFailure = { ErrorHandlingUtil.handleErrors(it) })
+            onFailure = { ErrorHandlingUtil.handleErrors(it) },
+        )
   }
 
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/krav")
@@ -102,7 +105,8 @@ class EksternResultatResource(
         .getRapportPrKrav(rapportId, loeysingId)
         .fold(
             onSuccess = { resultatKrav -> ResponseEntity.ok(resultatKrav) },
-            onFailure = { ErrorHandlingUtil.handleErrors(it) })
+            onFailure = { ErrorHandlingUtil.handleErrors(it) },
+        )
   }
 
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/krav/{kravId}")
@@ -121,15 +125,21 @@ class EksternResultatResource(
             sortParam = sortParam ?: SortParamTestregel.side,
             sortOrder = sortOrder ?: SortOrder.asc,
             pageNumber = page,
-            pageSize = size)
+            pageSize = size,
+        )
 
     return runCatching {
           eksternResultatService.getRapportPrKravPagedResources(
-              rapportId, loeysingId, kravId, sortPaginationParams)
+              rapportId,
+              loeysingId,
+              kravId,
+              sortPaginationParams,
+          )
         }
         .fold(
             onSuccess = { resultatKrav -> ResponseEntity.ok(resultatKrav) },
-            onFailure = { ErrorHandlingUtil.handleErrors(it) })
+            onFailure = { ErrorHandlingUtil.handleErrors(it) },
+        )
   }
 
   @Observed(name = "EksternResultatResource.getDetaljertResultat")
@@ -149,15 +159,21 @@ class EksternResultatResource(
             sortParam = sortParam ?: SortParamTestregel.side,
             sortOrder = sortOrder ?: SortOrder.asc,
             pageNumber = page,
-            pageSize = size)
+            pageSize = size,
+        )
 
     return runCatching {
           eksternResultatService.getDetaljerResultatPaged(
-              rapportId, loeysingId, testregelId, sortPaginationParams)
+              rapportId,
+              loeysingId,
+              testregelId,
+              sortPaginationParams,
+          )
         }
         .fold(
             onSuccess = { results -> ResponseEntity.ok(results) },
-            onFailure = { ErrorHandlingUtil.handleErrors(it) })
+            onFailure = { ErrorHandlingUtil.handleErrors(it) },
+        )
   }
 
   @PutMapping("publiser/kontroll/{kontrollId}")
@@ -201,12 +217,15 @@ class EksternResultatResource(
     writer.newLine()
     testresults.forEach {
       writer.write(
-          "\"${it.suksesskriterium}\", \"${it.testregelNoekkel}\", \"${it.side}\",\"${it.elementOmtale?.pointer ?: it.elementOmtale?.description ?: ""}\"")
+          "\"${it.suksesskriterium}\", \"${it.testregelNoekkel}\", \"${it.side}\",\"${it.elementOmtale?.pointer ?: it.elementOmtale?.description ?: ""}\""
+      )
       writer.newLine()
     }
     writer.flush()
     response.setHeader(
-        HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=${fileName}; charset=UTF-8")
+        HttpHeaders.CONTENT_DISPOSITION,
+        "attachment; filename=${fileName}; charset=UTF-8",
+    )
     response.setHeader(HttpHeaders.CONTENT_TYPE, "text/csv; charset=UTF-8")
   }
 
@@ -233,7 +252,8 @@ class EksternResultatResource(
     val headers = HttpHeaders()
     headers.contentType =
         MediaType.parseMediaType(
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
     headers.setContentDispositionFormData("attachment", "resultat.xlsx")
     return headers
   }
@@ -241,7 +261,7 @@ class EksternResultatResource(
   @GetMapping("rapport/{rapportId}/loeysing/{loeysingId}/alle")
   fun getAllRestults(
       @PathVariable rapportId: String,
-      @PathVariable loeysingId: Int
+      @PathVariable loeysingId: Int,
   ): ResponseEntity<List<ResultatOversiktLoeysingEkstern>> {
 
     val results: List<ResultatOversiktLoeysingEkstern> =

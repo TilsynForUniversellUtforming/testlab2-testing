@@ -63,10 +63,12 @@ class BlobStorageClientTest {
 
     assertTrue(
         bilde.bildeURI.toString().removePrefix("//") ==
-            "${mockBlockStorageProperties.eksternalhost}/bilder/sti?bildesti=$bildeName")
+            "${mockBlockStorageProperties.eksternalhost}/bilder/sti?bildesti=$bildeName"
+    )
     assertTrue(
         bilde.thumbnailURI.toString().removePrefix("//") ==
-            "${mockBlockStorageProperties.eksternalhost}/bilder/sti?bildesti=$thumbName")
+            "${mockBlockStorageProperties.eksternalhost}/bilder/sti?bildesti=$thumbName"
+    )
   }
 
   @Test

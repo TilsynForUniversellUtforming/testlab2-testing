@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service
 class ResultatExportMapper(
     val aggregeringDAO: AggregeringDAO,
     val testgrunnlagDAO: TestgrunnlagDAO,
-    val maalingDAO: MaalingDAO
+    val maalingDAO: MaalingDAO,
 ) {
 
   fun getAggregeringForTestgrunnlag(testgrunnlagId: Int): List<AggregeringPerTestregelExport> {
@@ -52,5 +52,6 @@ private fun AggregeringPerTestregelDB.toAggregeringPerTestregelExport(
       talSiderBrot = this.talSiderBrot,
       talSiderIkkjeForekomst = this.talSiderIkkjeForekomst,
       testregelGjennomsnittlegSideSamsvarProsent = this.testregelGjennomsnittlegSideSamsvarProsent,
-      testregelGjennomsnittlegSideBrotProsent = this.testregelGjennomsnittlegSideBrotProsent)
+      testregelGjennomsnittlegSideBrotProsent = this.testregelGjennomsnittlegSideBrotProsent,
+  )
 }

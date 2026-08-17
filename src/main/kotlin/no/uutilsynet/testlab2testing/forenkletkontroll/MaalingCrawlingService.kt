@@ -11,12 +11,12 @@ import org.springframework.stereotype.Service
 class MaalingCrawlingService(
     val crawlerClient: CrawlerClient,
     val maalingService: MaalingService,
-    val maalingDAO: MaalingDAO
+    val maalingDAO: MaalingDAO,
 ) {
 
   fun restartCrawling(
       statusDTO: MaalingResource.StatusDTO,
-      maaling: Maaling.Kvalitetssikring
+      maaling: Maaling.Kvalitetssikring,
   ): ResponseEntity<Any> {
     val loeysingIdList = maalingService.getValidatedLoeysingList(statusDTO, maaling.id)
     val crawlParameters = maalingDAO.getCrawlParameters(maaling.id)
@@ -28,7 +28,7 @@ class MaalingCrawlingService(
   fun restartCrawling(
       maaling: Maaling.Kvalitetssikring,
       loeysingIdList: List<Int>,
-      crawlParameters: CrawlParameters
+      crawlParameters: CrawlParameters,
   ): Maaling.Crawling {
     val crawlResultat =
         maaling.crawlResultat.map {
@@ -39,7 +39,8 @@ class MaalingCrawlingService(
         id = maaling.id,
         navn = maaling.navn,
         datoStart = maaling.datoStart,
-        crawlResultat = crawlResultat)
+        crawlResultat = crawlResultat,
+    )
   }
 
   suspend fun startCrawling(maaling: Maaling.Planlegging): ResponseEntity<Any> {

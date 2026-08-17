@@ -14,5 +14,5 @@ data class TestresultatExport(
     val elementOmtalePointer: String,
     val elementOmtaleHtml: String,
     val elementOmtaleDescription: String,
-    val brukarId: Int
+    val brukarId: Int,
 )

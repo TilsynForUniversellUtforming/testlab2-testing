@@ -38,7 +38,8 @@ data class Testregel(
           this.tema,
           this.testobjekt,
           schema,
-          this.innhaldstypeTesting)
+          this.innhaldstypeTesting,
+      )
     }
 
     fun Testregel.toTestregelBase(): TestregelBase =
@@ -47,7 +48,8 @@ data class Testregel(
             namn = this.namn,
             kravId = this.kravId,
             modus = this.modus,
-            type = this.type)
+            type = this.type,
+        )
   }
 }
 

@@ -71,4 +71,5 @@ fun ResultatKrav.toResultatKravEkstern() =
         talElementBrot = this.talElementBrot,
         talElementSamsvar = this.talElementSamsvar,
         talElementVarsel = this.talElementVarsel,
-        talElementIkkjeForekomst = this.talElementIkkjeForekomst)
+        talElementIkkjeForekomst = this.talElementIkkjeForekomst,
+    )
