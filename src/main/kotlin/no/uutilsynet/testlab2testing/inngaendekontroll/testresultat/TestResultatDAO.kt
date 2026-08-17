@@ -17,16 +17,15 @@ class TestResultatDAO(
   @Transactional
   fun save(createTestResultat: TestResultatResource.CreateTestResultat): Result<Int> {
     return runCatching {
-      val brukarId: Int =
-          brukarService.getUserId() ?: throw RuntimeException("No authenticated user")
+      val brukarId = getUserId()
 
       val created = Timestamp.from(Instant.now())
 
       jdbcTemplate.queryForObject(
           """
         insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
-                                     element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
-        values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
+                                     element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
+        values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementOmtaleHtml, :elementUtfall,
                 :testVartUtfoert,:status, :kommentar, :sist_lagra)
         returning id
       """
@@ -38,6 +37,7 @@ class TestResultatDAO(
               "sideutvalId" to createTestResultat.sideutvalId,
               "brukarId" to brukarId,
               "elementOmtale" to createTestResultat.elementOmtale,
+              "elementOmtaleHtml" to createTestResultat.elementOmtaleHtml,
               "elementResultat" to createTestResultat.elementResultat,
               "elementUtfall" to createTestResultat.elementUtfall,
               "kommentar" to createTestResultat.kommentar,
@@ -47,6 +47,13 @@ class TestResultatDAO(
               "sist_lagra" to created),
           Int::class.java)!!
     }
+  }
+
+  private fun getUserId(): Int {
+    val brukarId = brukarService.getUserId()
+
+    check(brukarId != null) { "No authenticated user" }
+    return brukarId
   }
 
   fun getTestResultat(id: Int): Result<ResultatManuellKontroll> =
@@ -67,6 +74,7 @@ class TestResultatDAO(
                            ti.testregel_id,
                            ti.sideutval_id,
                            ti.element_omtale,
+                           ti.element_omtale_html,
                            ti.element_resultat,
                            ti.element_utfall,
                            ti.test_vart_utfoert,
@@ -93,6 +101,7 @@ class TestResultatDAO(
                       brukar =
                           Brukar(rs.getString("brukar_brukarnamn"), rs.getString("brukar_namn")),
                       elementOmtale = rs.getString("element_omtale"),
+                      elementOmtaleHtml = rs.getString("element_omtale_html"),
                       elementResultat =
                           runCatching {
                                 enumValueOf<TestresultatUtfall>(rs.getString("element_resultat"))
@@ -154,6 +163,7 @@ class TestResultatDAO(
                        ti.testregel_id,
                        ti.sideutval_id,
                        ti.element_omtale,
+                       ti.element_omtale_html,
                        ti.element_resultat,
                        ti.element_utfall,
                        ti.test_vart_utfoert,
@@ -179,6 +189,7 @@ class TestResultatDAO(
                   sideutvalId = rs.getInt("sideutval_id"),
                   brukar = Brukar(rs.getString("brukar_brukarnamn"), rs.getString("brukar_namn")),
                   elementOmtale = rs.getString("element_omtale"),
+                  elementOmtaleHtml = rs.getString("element_omtale_html"),
                   elementResultat =
                       runCatching {
                             enumValueOf<TestresultatUtfall>(rs.getString("element_resultat"))
@@ -228,16 +239,15 @@ class TestResultatDAO(
 
   @Transactional
   fun createRetest(retestResultat: ResultatManuellKontrollBase): Result<Unit> = runCatching {
-    val brukarId: Int = brukarService.getUserId() ?: throw RuntimeException("No authenticated user")
-
+    val brukarId = getUserId()
     val sistlagra = Timestamp.from(Instant.now())
 
     val id =
         jdbcTemplate.queryForObject(
             """
         insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
-                                     element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
-        values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementUtfall,
+                                     element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
+        values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementOmtaleHtml, :elementUtfall,
                 :testVartUtfoert,:status, :kommentar, :sist_lagra)
         returning id
       """
@@ -249,6 +259,7 @@ class TestResultatDAO(
                 "sideutvalId" to retestResultat.sideutvalId,
                 "brukarId" to brukarId,
                 "elementOmtale" to retestResultat.elementOmtale,
+                "elementOmtaleHtml" to retestResultat.elementOmtaleHtml,
                 "elementResultat" to retestResultat.elementResultat?.name,
                 "elementUtfall" to retestResultat.elementUtfall,
                 "testVartUtfoert" to retestResultat.testVartUtfoert?.let { Timestamp.from(it) },
@@ -287,6 +298,7 @@ class TestResultatDAO(
         """
           update testresultat
           set element_omtale    = :elementOmtale,
+              element_omtale_html = :elementOmtaleHtml,
               element_resultat  = :elementResultat,
               element_utfall    = :elementUtfall,
               test_vart_utfoert = :testVartUtfoert,
@@ -298,6 +310,7 @@ class TestResultatDAO(
             .trimIndent(),
         mapOf(
             "elementOmtale" to testResultat.elementOmtale,
+            "elementOmtaleHtml" to testResultat.elementOmtaleHtml,
             "elementResultat" to testResultat.elementResultat?.name,
             "elementUtfall" to testResultat.elementUtfall,
             "testVartUtfoert" to testVartUtfoert,
@@ -389,7 +402,7 @@ class TestResultatDAO(
     jdbcTemplate.queryForObject(query, mapOf("testresultat_id" to testresultatId)) { rs, _ ->
       KontrollDocumentation(rs.getString("tittel"), rs.getInt("kontroll_id"))
     }
-        ?: throw RuntimeException("No kontroll found for testresultat $testresultatId")
+        ?: throw NoSuchElementException("No kontroll found for testresultat $testresultatId")
   }
 
   fun getBrukararForTestgrunnlag(testgrunnlagId: Int): Result<List<Brukar>> {

@@ -54,6 +54,7 @@ class TestgrunnlagService(
               testregelId = it.testregelId,
               sideutvalId = it.sideutvalId,
               elementOmtale = it.elementOmtale,
+              elementOmtaleHtml = it.elementOmtaleHtml,
               elementResultat = it.elementResultat,
               elementUtfall = it.elementUtfall,
               svar = it.svar,

@@ -17,7 +17,8 @@ open class ResultatManuellKontrollBase(
     open val testVartUtfoert: Instant?,
     open val status: Status = Status.IkkjePaabegynt,
     open val kommentar: String?,
-    open val sistLagra: Instant
+    open val sistLagra: Instant,
+    open val elementOmtaleHtml: String? = null,
 ) {
   data class Svar(val steg: String, val svar: String)
 
@@ -43,7 +44,8 @@ data class ResultatManuellKontroll(
     override val testVartUtfoert: Instant?,
     override val status: Status = Status.IkkjePaabegynt,
     override val kommentar: String?,
-    override val sistLagra: Instant
+    override val sistLagra: Instant,
+    override val elementOmtaleHtml: String? = null,
 ) :
     ResultatManuellKontrollBase(
         testgrunnlagId,
@@ -58,4 +60,5 @@ data class ResultatManuellKontroll(
         testVartUtfoert,
         status,
         kommentar,
-        sistLagra)
+        sistLagra,
+        elementOmtaleHtml)
