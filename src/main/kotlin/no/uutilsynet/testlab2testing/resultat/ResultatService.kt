@@ -21,7 +21,7 @@ class ResultatService(
     private val eksternResultatDAO: EksternResultatDAO,
     private val automatiskResultatService: AutomatiskResultatService,
     private val testregelCache: TestregelCache,
-    private val kontrollResultatServiceFactory: KontrollResultatServiceFactory
+    private val kontrollResultatServiceFactory: KontrollResultatServiceFactory,
 ) {
 
   val logger = LoggerFactory.getLogger(ResultatService::class.java)
@@ -81,7 +81,8 @@ class ResultatService(
         resultatLoeysingar.first().testType,
         result.first().dato,
         publisert,
-        resultatLoeysingar)
+        resultatLoeysingar,
+    )
   }
 
   private fun loeysingResultatList(result: List<ResultatLoeysingDTO>): List<LoeysingResultat> {
@@ -106,8 +107,9 @@ class ResultatService(
     return resultatLoeysingar
   }
 
-  private fun mapResultatToLoeysingId(result: List<ResultatLoeysingDTO>) =
-      result.map { it.loeysingId }
+  private fun mapResultatToLoeysingId(result: List<ResultatLoeysingDTO>) = result.map {
+    it.loeysingId
+  }
 
   private fun erKontrollPublisert(result: List<ResultatLoeysingDTO>) =
       eksternResultatDAO.erKontrollPublisert(result.first().id, getKontrolltype(result))
@@ -134,7 +136,8 @@ class ResultatService(
                   calculateTalElementSamsvar(resultLoeysing),
                   calculateTalElementBrot(resultLoeysing),
                   testarar,
-                  statusLoeysingar[loeysingId] ?: 0)
+                  statusLoeysingar[loeysingId] ?: 0,
+              )
             }
 
     return resultLoeysingar
@@ -151,13 +154,17 @@ class ResultatService(
   }
 
   private fun calculateTalElementBrot(resultLoeysing: List<ResultatLoeysingDTO>) =
-      resultLoeysing.sumOf { it.talElementBrot }
+      resultLoeysing.sumOf {
+        it.talElementBrot
+      }
 
   private fun talTestaElementDTO(resultLoeysing: List<ResultatLoeysingDTO>) =
       calculateTalElementSamsvar(resultLoeysing) + calculateTalElementSamsvar(resultLoeysing)
 
   private fun calculateTalElementSamsvar(resultLoeysing: List<ResultatLoeysingDTO>) =
-      resultLoeysing.sumOf { it.talElementSamsvar }
+      resultLoeysing.sumOf {
+        it.talElementSamsvar
+      }
 
   private fun calculateScore(resultLoeysing: List<ResultatLoeysingDTO>) =
       resultLoeysing.filter { filterIkkjeForekomst(it) }.map { it.score }.average()
@@ -207,9 +214,12 @@ class ResultatService(
 
   private fun handleIkkjeForekomst(resultat: ResultatOversiktLoeysing): ResultatOversiktLoeysing {
     return handleIkkjeForekomstGeneric(
-        resultat, resultat.talElementBrot, resultat.talElementSamsvar) {
-          it.copy(score = null)
-        }
+        resultat,
+        resultat.talElementBrot,
+        resultat.talElementSamsvar,
+    ) {
+      it.copy(score = null)
+    }
   }
 
   private fun mapTestregel(result: ResultatLoeysingDTO): ResultatLoeysing {
@@ -230,7 +240,8 @@ class ResultatService(
         testregelId = result.testregelId,
         testregeltTittel = testregel.namn,
         kravId = testregel.krav.id,
-        kravTittel = testregel.krav.tittel)
+        kravTittel = testregel.krav.tittel,
+    )
   }
 
   @Observed(name = "resultatservice.getresultatforkontrollloeysingtestregel")
@@ -281,7 +292,8 @@ class ResultatService(
         talElementBrot = items.sumOf { it.talElementBrot },
         talElementSamsvar = items.sumOf { it.talElementSamsvar },
         talVarsel = 0,
-        talElementIkkjeForekomst = 0)
+        talElementIkkjeForekomst = 0,
+    )
   }
 
   private fun sumResulatKrav(entry: Map.Entry<Int, List<ResultatKrav>>): ResultatKrav {
@@ -294,7 +306,8 @@ class ResultatService(
         talElementBrot = items.sumOf { it.talElementBrot },
         talElementSamsvar = items.sumOf { it.talElementSamsvar },
         talElementVarsel = 0,
-        talElementIkkjeForekomst = 0)
+        talElementIkkjeForekomst = 0,
+    )
   }
 
   private fun calculateResultatTema(
@@ -309,7 +322,8 @@ class ResultatService(
         talElementBrot = talElementBrot,
         talElementSamsvar = talElementSamsvar,
         talVarsel = 0,
-        talElementIkkjeForekomst = 0)
+        talElementIkkjeForekomst = 0,
+    )
   }
 
   private fun calculateResultatKrav(
@@ -325,7 +339,8 @@ class ResultatService(
         talElementBrot = talElementBrot,
         talElementSamsvar = talElementSamsvar,
         talElementVarsel = 0,
-        talElementIkkjeForekomst = 0)
+        talElementIkkjeForekomst = 0,
+    )
   }
 
   private fun calculateScoreAndElements(
@@ -403,7 +418,8 @@ class ResultatService(
           result.first().testregeltTittel,
           talTestaElement(result),
           result.sumOf { it.talElementBrot },
-          result.sumOf { it.talElementSamsvar })
+          result.sumOf { it.talElementSamsvar },
+      )
 
   fun getBrotForRapportLoeysing(
       kontrollId: Int,
@@ -426,7 +442,7 @@ class ResultatService(
       item: T,
       talElementBrot: Int,
       talElementSamsvar: Int,
-      copyWithNullScore: (T) -> T
+      copyWithNullScore: (T) -> T,
   ): T {
     return if (talElementBrot == 0 && talElementSamsvar == 0) {
       copyWithNullScore(item)
@@ -445,7 +461,7 @@ class ResultatService(
   fun getTalBrotForKontrollLoeysingTestregel(
       kontrollId: Int,
       loeysingId: Int,
-      testregelId: Int
+      testregelId: Int,
   ): Result<Int> {
     return getResultService(kontrollId)
         .getTalBrotForKontrollLoeysingTestregel(kontrollId, loeysingId, testregelId)
@@ -454,7 +470,7 @@ class ResultatService(
   fun getTalBrotForKontrollLoeysingKrav(
       kontrollId: Int,
       loeysingId: Int,
-      kravId: Int
+      kravId: Int,
   ): Result<Int> {
     return getResultService(kontrollId)
         .getTalBrotForKontrollLoeysingKrav(kontrollId, loeysingId, kravId)
@@ -462,7 +478,7 @@ class ResultatService(
 
   fun getDetaljerResultatForKontroll(
       kontrollId: Int,
-      loeysingId: Int
+      loeysingId: Int,
   ): List<TestresultatDetaljert> {
     return getResultService(kontrollId).getResultatForKontroll(kontrollId, loeysingId)
   }

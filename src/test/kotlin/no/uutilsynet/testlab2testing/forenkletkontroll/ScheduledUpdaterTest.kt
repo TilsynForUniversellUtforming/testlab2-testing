@@ -32,18 +32,21 @@ class ScheduledUpdaterTest {
           url = URI("https://www.uutilsynet.no").toURL(),
           id = 1,
           orgnummer = "000000000",
-          verksemdNamn = "UUTilsynet")
+          verksemdNamn = "UUTilsynet",
+      )
 
   @Test
   @DisplayName(
-      "når oppdatering av status feiler mer enn 12 ganger, så skal crawlresultatet settes som 'feilet'")
+      "når oppdatering av status feiler mer enn 12 ganger, så skal crawlresultatet settes som 'feilet'"
+  )
   fun crawlStatusFailed() {
     val crawlResultat =
         CrawlResultat.Starta(
             statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
             loeysing = testLoeysing,
             sistOppdatert = Instant.now(),
-            framgang = Framgang(0, 0))
+            framgang = Framgang(0, 0),
+        )
 
     var updatedCrawlResultat: CrawlResultat? = null
     for (i in 1..13) {
@@ -58,14 +61,16 @@ class ScheduledUpdaterTest {
 
   @Test
   @DisplayName(
-      "når oppdatering av status feiler mer enn 12 ganger, så skal testkøyringa settes som 'feilet'")
+      "når oppdatering av status feiler mer enn 12 ganger, så skal testkøyringa settes som 'feilet'"
+  )
   fun testKoeyringStatusFailed() {
     val crawlResultat =
         CrawlResultat.Ferdig(
             antallNettsider = 1,
             statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
             loeysing = testLoeysing,
-            sistOppdatert = Instant.now())
+            sistOppdatert = Instant.now(),
+        )
     val testKoeyring =
         TestKoeyring.Starta(
             loeysing = crawlResultat.loeysing,
@@ -73,7 +78,8 @@ class ScheduledUpdaterTest {
             statusURL = URI("https://www.uutilsynet.no/status/1").toURL(),
             framgang = Framgang(0, 0),
             Brukar("test", "testar"),
-            crawlResultat.nettsider.size)
+            crawlResultat.nettsider.size,
+        )
 
     var updatedTestKoeyring: TestKoeyring? = null
     for (i in 1..21) {
@@ -88,7 +94,8 @@ class ScheduledUpdaterTest {
 
   @Test
   @DisplayName(
-      "når vi oppdaterer ei måling med status Crawling til Kvalitetssikring, så skal riktig data lagres og returneres")
+      "når vi oppdaterer ei måling med status Crawling til Kvalitetssikring, så skal riktig data lagres og returneres"
+  )
   fun updateIkkeFerdigToKvalitetssikring() {
     val updater = ScheduledUpdater(maalingDAO, crawlerClient, autoTesterClient, aggregeringService)
     val crawlerOutput =
@@ -98,7 +105,8 @@ class ScheduledUpdaterTest {
         CrawlResultat.IkkjeStarta(
             statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
             loeysing = testLoeysing,
-            sistOppdatert = Instant.now())
+            sistOppdatert = Instant.now(),
+        )
 
     `when`(crawlerClient.getStatus(crawlResultatIkkjeStarta, 1))
         .thenReturn(Result.success(CrawlStatus.Completed(crawlerOutput)))
@@ -108,7 +116,8 @@ class ScheduledUpdaterTest {
             id = 1,
             crawlResultat = listOf(crawlResultatIkkjeStarta),
             navn = "Test",
-            datoStart = Instant.now())
+            datoStart = Instant.now(),
+        )
 
     val expectedCrawlResultat =
         CrawlResultat.Ferdig(
@@ -116,7 +125,8 @@ class ScheduledUpdaterTest {
             statusUrl = crawlResultatIkkjeStarta.statusUrl,
             loeysing = crawlResultatIkkjeStarta.loeysing,
             sistOppdatert = Instant.now(),
-            nettsider = crawlerOutput.map { URI(it.url).toURL() })
+            nettsider = crawlerOutput.map { URI(it.url).toURL() },
+        )
 
     val updatedMaaling = updater.updateCrawlingStatuses(maaling)
 
@@ -131,7 +141,8 @@ class ScheduledUpdaterTest {
 
   @Test
   @DisplayName(
-      "når vi oppdaterer ei måling med crawlresultat som er ferdig, så skal vi få samme data tilbake")
+      "når vi oppdaterer ei måling med crawlresultat som er ferdig, så skal vi få samme data tilbake"
+  )
   fun updateKvalitetssikring() {
     val updater = ScheduledUpdater(maalingDAO, crawlerClient, autoTesterClient, aggregeringService)
 
@@ -141,10 +152,16 @@ class ScheduledUpdaterTest {
                 antallNettsider = 1,
                 statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
                 testLoeysing,
-                sistOppdatert = Instant.now()))
+                sistOppdatert = Instant.now(),
+            )
+        )
     val maaling =
         Maaling.Crawling(
-            id = 1, crawlResultat = crawlResultat, navn = "Test", datoStart = Instant.now())
+            id = 1,
+            crawlResultat = crawlResultat,
+            navn = "Test",
+            datoStart = Instant.now(),
+        )
 
     val updatedMaaling = updater.updateCrawlingStatuses(maaling)
 
@@ -154,7 +171,8 @@ class ScheduledUpdaterTest {
 
   @Test
   @DisplayName(
-      "når vi oppdaterer en måling med testkjøringer som ikke har starta, så skal vi få samme data tilbake")
+      "når vi oppdaterer en måling med testkjøringer som ikke har starta, så skal vi få samme data tilbake"
+  )
   fun updateTesting() {
     val updater = ScheduledUpdater(maalingDAO, crawlerClient, autoTesterClient, aggregeringService)
 
@@ -163,7 +181,8 @@ class ScheduledUpdaterTest {
             antallNettsider = 1,
             statusUrl = URI("https://www.uutilsynet.no/status/1").toURL(),
             loeysing = testLoeysing,
-            sistOppdatert = Instant.now())
+            sistOppdatert = Instant.now(),
+        )
 
     val testKoeyring =
         TestKoeyring.IkkjeStarta(
@@ -171,14 +190,16 @@ class ScheduledUpdaterTest {
             sistOppdatert = Instant.now(),
             statusURL = URI("https://www.uutilsynet.no/status/1").toURL(),
             Brukar("test", "testar"),
-            crawlResultat.nettsider.size)
+            crawlResultat.nettsider.size,
+        )
     val maaling =
         Maaling.Testing(
             id = 1,
             testKoeyringar = listOf(testKoeyring),
             navn = "Test",
             datoStart = Instant.now(),
-            aksjoner = listOf())
+            aksjoner = listOf(),
+        )
 
     `when`(autoTesterClient.updateStatus(testKoeyring))
         .thenReturn(Result.success(AutoTesterClient.AutoTesterStatus.Pending))

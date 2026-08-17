@@ -15,11 +15,12 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 
 @SpringBootTest(
-    properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///RegelsettDAOTest-db"])
+    properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///RegelsettDAOTest-db"]
+)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RegelsettDAOTest(
     @Autowired val regelsettDAO: RegelsettDAO,
-    @Autowired val regelsettService: RegelsettService
+    @Autowired val regelsettService: RegelsettService,
 ) {
 
   @MockitoBean lateinit var testregelClient: TestregelClient
@@ -34,7 +35,9 @@ class RegelsettDAOTest(
   @AfterAll
   fun cleanup() {
     regelsettDAO.jdbcTemplate.update(
-        "delete from regelsett where namn = :namn", mapOf("namn" to regelsettName))
+        "delete from regelsett where namn = :namn",
+        mapOf("namn" to regelsettName),
+    )
   }
 
   @Test
@@ -97,8 +100,9 @@ class RegelsettDAOTest(
 
     val testregelIdList = listOf(1, 2)
 
-    val regelsettTestregelIdMap =
-        regelsettList.associate { tr -> tr.id to tr.testregelList.map { it.id } }
+    val regelsettTestregelIdMap = regelsettList.associate { tr ->
+      tr.id to tr.testregelList.map { it.id }
+    }
 
     assertThat(regelsettTestregelIdMap[id1]).containsExactlyInAnyOrderElementsOf(testregelIdList)
     assertThat(regelsettTestregelIdMap[id2]).containsExactlyInAnyOrderElementsOf(testregelIdList)
@@ -140,7 +144,8 @@ class RegelsettDAOTest(
             regelsettModus,
             regelsettStandard,
             regelsettTestregelIdList,
-        ))
+        )
+    )
 
     val expectedAfter =
         Regelsett(id, regelsettName, regelsettModus, regelsettStandard, regelsettTestregelList)
@@ -168,7 +173,8 @@ class RegelsettDAOTest(
             regelsettModus,
             regelsettStandard,
             regelsettTestregelIdList,
-        ))
+        )
+    )
 
     val expectedAfter =
         Regelsett(id, regelsettName, regelsettModus, regelsettStandard, regelsettTestregelList)
@@ -199,7 +205,8 @@ class RegelsettDAOTest(
             regelsettModus,
             regelsettStandard,
             regelsettTestregelIdList,
-        ))
+        )
+    )
 
     val expectedAfter =
         Regelsett(id, regelsettName, regelsettModus, regelsettStandard, regelsettTestregelList)
@@ -220,7 +227,8 @@ class RegelsettDAOTest(
               type,
               standard,
               testregelIdList,
-          ))
+          )
+      )
 
   private fun compareRegelsett(actual: Regelsett?, expected: Regelsett) {
     assertThat(actual).isNotNull

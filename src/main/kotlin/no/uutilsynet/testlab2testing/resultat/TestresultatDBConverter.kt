@@ -30,7 +30,10 @@ class TestresultatDBConverter(
     val testregel = testregelCache.getTestregelById(testregelId)
     val elementOmtale =
         TestresultatDetaljert.ElementOmtale(
-            this.elmentOmtaleHtml, this.elementOmtalePointer, this.elementOmtaleDescription)
+            this.elmentOmtaleHtml,
+            this.elementOmtalePointer,
+            this.elementOmtaleDescription,
+        )
     return TestresultatDetaljert(
         this.id,
         this.loeysingId,
@@ -45,6 +48,7 @@ class TestresultatDBConverter(
         elementOmtale,
         null,
         null,
-        null)
+        null,
+    )
   }
 }

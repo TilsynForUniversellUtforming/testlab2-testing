@@ -33,7 +33,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 class MaalingDAOTest(
     @Autowired val maalingDAO: MaalingDAO,
     @Autowired val sideutvalDAO: SideutvalDAO,
-    @Autowired val testUtils: TestUtils
+    @Autowired val testUtils: TestUtils,
 ) {
 
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
@@ -57,16 +57,21 @@ class MaalingDAOTest(
   @AfterAll
   fun cleanup() {
     maalingDAO.jdbcTemplate.update(
-        "delete from maalingv1 where navn = :navn", mapOf("navn" to maalingTestName))
+        "delete from maalingv1 where navn = :navn",
+        mapOf("navn" to maalingTestName),
+    )
 
     if (deleteTheseIds.isNotEmpty()) {
       maalingDAO.jdbcTemplate.update(
-          "delete from maalingv1 where id in (:ids)", mapOf("ids" to deleteTheseIds))
+          "delete from maalingv1 where id in (:ids)",
+          mapOf("ids" to deleteTheseIds),
+      )
     }
   }
 
   @DisplayName(
-      "når vi lagar ei ny måling med ei løysing, og slettar løysinga etterpå, så skal vi fortsatt få data om løysinga når vi henter målinga")
+      "når vi lagar ei ny måling med ei løysing, og slettar løysinga etterpå, så skal vi fortsatt få data om løysinga når vi henter målinga"
+  )
   @Test
   fun getMaalingMedSlettaLoeysing() {
     val loeysing =
@@ -75,7 +80,8 @@ class MaalingDAOTest(
             "Løysing som skal bli sletta",
             URI("https://www.snartsletta.no/").toURL(),
             "123456785",
-            "Verksemd til sletting")
+            "Verksemd til sletting",
+        )
 
     doReturn(listOf(loeysing)).`when`(loeysingsRegisterClient).getMany(listOf(1), maalingDateStart)
 
@@ -86,7 +92,8 @@ class MaalingDAOTest(
                 maalingDateStart,
                 listOf(loeysing.id),
                 testRegelList.map(Testregel::id),
-                CrawlParameters())
+                CrawlParameters(),
+            )
             .also { id -> deleteTheseIds.add(id) }
 
     val maaling = maalingDAO.getMaaling(maalingId) as Maaling.Planlegging
@@ -95,7 +102,8 @@ class MaalingDAOTest(
   }
 
   @DisplayName(
-      "når vi henter en måling fra databasen som har status 'kvalitetssikring', så skal crawlresultatene inneholde en liste med nettsider")
+      "når vi henter en måling fra databasen som har status 'kvalitetssikring', så skal crawlresultatene inneholde en liste med nettsider"
+  )
   @Test
   fun getMaaling() {
     val id = saveMaalingWithStatusKvalitetssikring()
@@ -110,7 +118,8 @@ class MaalingDAOTest(
   }
 
   @DisplayName(
-      "når vi lagrer ei måling med status `crawling`, og crawlresultatene ikkje er ferdige, så skal framgangen også lagrast")
+      "når vi lagrer ei måling med status `crawling`, og crawlresultatene ikkje er ferdige, så skal framgangen også lagrast"
+  )
   @Test
   fun lagreCrawlResultatMedFramgang() {
     val id = saveMaalingWithStatusCrawling()
@@ -123,7 +132,8 @@ class MaalingDAOTest(
   }
 
   @DisplayName(
-      "når vi lagrer ei måling med status `testing`, så skal alle testkøyringene også lagrast")
+      "når vi lagrer ei måling med status `testing`, så skal alle testkøyringene også lagrast"
+  )
   @Test
   fun lagreTestkoeyringar() {
     val id = saveMaalingWithStatusTesting()
@@ -132,7 +142,8 @@ class MaalingDAOTest(
   }
 
   @DisplayName(
-      "Måling med med status `testing` og testkøyring med status `starta` skal ha framgang med antall sider lik antall sider crawlet")
+      "Måling med med status `testing` og testkøyring med status `starta` skal ha framgang med antall sider lik antall sider crawlet"
+  )
   @Test
   fun lagreTestkoeyringarStarta() {
     val id = saveMaalingWithStatusTestingStarta()
@@ -145,7 +156,8 @@ class MaalingDAOTest(
   }
 
   @DisplayName(
-      "når vi har lagra målingar med status 'crawling' og 'testing', så skal vi kunne finne dei når vi søker på status")
+      "når vi har lagra målingar med status 'crawling' og 'testing', så skal vi kunne finne dei når vi søker på status"
+  )
   @Test
   fun getMaalingByStatus() {
     val idCrawling = saveMaalingWithStatusCrawling()
@@ -156,7 +168,8 @@ class MaalingDAOTest(
   }
 
   @DisplayName(
-      "når vi lagrer ei måling med status `testing_ferdig` og med lenker til testresultatene, så skal lenkene også lagres")
+      "når vi lagrer ei måling med status `testing_ferdig` og med lenker til testresultatene, så skal lenkene også lagres"
+  )
   @Test
   fun lagreLenker() {
     val id = saveMaalingWithStatusTestingFerdig()
@@ -180,7 +193,11 @@ class MaalingDAOTest(
     val maaling: Maaling.Planlegging = createTestMaaling(maalingNavnOriginal)
     maalingDAO.updateMaaling(
         maaling.copy(
-            navn = maalingTestName, crawlParameters = crawlParameters, loeysingList = loeysingList))
+            navn = maalingTestName,
+            crawlParameters = crawlParameters,
+            loeysingList = loeysingList,
+        )
+    )
     doReturn(loeysingList)
         .`when`(loeysingsRegisterClient)
         .getMany(loeysingList.map { it.id }, maalingDateStart)
@@ -245,12 +262,17 @@ class MaalingDAOTest(
                         URI("https://status.uri").toURL(),
                         uutilsynetLoeysing,
                         Instant.now(),
-                        uutilsynetUrls),
-                )))!!
+                        uutilsynetUrls,
+                    ),
+                ),
+            )
+        )!!
     maalingDAO.save(kvalitetssikring).getOrThrow()
     val crawlResults =
         sideutvalDAO.getCrawlResultatForMaaling(
-            maaling.id, listOf(digdirLoeysing, uutilsynetLoeysing))
+            maaling.id,
+            listOf(digdirLoeysing, uutilsynetLoeysing),
+        )
     val digdirCrawlResult = crawlResults.find { it.loeysing == digdirLoeysing }
     assertThat(digdirCrawlResult).isInstanceOf(CrawlResultat.Ferdig::class.java)
     assertThat((digdirCrawlResult as CrawlResultat.Ferdig).antallNettsider)
@@ -276,27 +298,32 @@ class MaalingDAOTest(
                     URI("https://status.uri").toURL(),
                     digdirLoeysing,
                     Instant.now(),
-                )))
+                )
+            ),
+        )
 
     maalingDAO.save(crawling).getOrThrow()
     val crId =
         maalingDAO.jdbcTemplate.queryForObject(
             "select id from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id",
             mapOf("loeysingid" to digdirLoeysing.id, "maaling_id" to maaling.id),
-            Int::class.java)
+            Int::class.java,
+        )
     maalingDAO.save(crawling).getOrThrow()
 
     val crIdAfterInsert =
         maalingDAO.jdbcTemplate.queryForObject(
             "select id from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id",
             mapOf("loeysingid" to digdirLoeysing.id, "maaling_id" to maaling.id),
-            Int::class.java)
+            Int::class.java,
+        )
 
     assertThat(crId).isEqualTo(crIdAfterInsert)
   }
 
   @DisplayName(
-      "Skal kunne oppdatere CrawlResultat med andre statuser enn CrawlResultat.Ferdig mer enn en gang")
+      "Skal kunne oppdatere CrawlResultat med andre statuser enn CrawlResultat.Ferdig mer enn en gang"
+  )
   @Test
   fun shouldInsertNonFinishedCrawlResultTwice() {
     val maaling = createTestMaaling()
@@ -309,21 +336,26 @@ class MaalingDAOTest(
                     URI("https://status.uri").toURL(),
                     digdirLoeysing,
                     Instant.now(),
-                    Framgang(0, 10))))
+                    Framgang(0, 10),
+                )
+            ),
+        )
 
     maalingDAO.save(crawling).getOrThrow()
     val crId =
         maalingDAO.jdbcTemplate.queryForObject(
             "select id from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id",
             mapOf("loeysingid" to digdirLoeysing.id, "maaling_id" to maaling.id),
-            Int::class.java)
+            Int::class.java,
+        )
     maalingDAO.save(crawling).getOrThrow()
 
     val crIdAfterInsert =
         maalingDAO.jdbcTemplate.queryForObject(
             "select id from crawlresultat where loeysingid = :loeysingid and maaling_id = :maaling_id",
             mapOf("loeysingid" to digdirLoeysing.id, "maaling_id" to maaling.id),
-            Int::class.java)
+            Int::class.java,
+        )
 
     assertThat(crId).isNotEqualTo(crIdAfterInsert)
   }
@@ -333,7 +365,12 @@ class MaalingDAOTest(
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Ferdig(
-              1, URI("https://status.uri").toURL(), it, Instant.now(), it.url.toUrlListWithPages())
+              1,
+              URI("https://status.uri").toURL(),
+              it,
+              Instant.now(),
+              it.url.toUrlListWithPages(),
+          )
         }
     val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
     maalingDAO.save(kvalitetssikring)
@@ -351,9 +388,11 @@ class MaalingDAOTest(
                   URI("https://aggregeringSK.resultat").toURL(),
                   URI("https://aggregeringSide.resultat").toURL(),
                   URI("https://aggregeringSideTR.resultat").toURL(),
-                  URI("https://aggregeringLoeysing.resultat").toURL()),
+                  URI("https://aggregeringLoeysing.resultat").toURL(),
+              ),
               Brukar("test", "testar"),
-              crawlResultat.size)
+              crawlResultat.size,
+          )
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     val testingFerdig = Maaling.toTestingFerdig(testing)!!
@@ -368,7 +407,8 @@ class MaalingDAOTest(
               maalingDateStart,
               loeysingList.map { it.id },
               testRegelList.map { it.id },
-              CrawlParameters())
+              CrawlParameters(),
+          )
           .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
 
   private fun saveMaalingWithStatusKvalitetssikring(name: String = maalingTestName): Int {
@@ -376,7 +416,12 @@ class MaalingDAOTest(
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Ferdig(
-              1, URI("https://status.uri").toURL(), it, Instant.now(), it.url.toUrlListWithPages())
+              1,
+              URI("https://status.uri").toURL(),
+              it,
+              Instant.now(),
+              it.url.toUrlListWithPages(),
+          )
         }
     val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
     maalingDAO.save(kvalitetssikring).getOrThrow()
@@ -392,12 +437,17 @@ class MaalingDAOTest(
                 maalingDateStart,
                 loeysingList.map { it.id },
                 testRegelList.map { it.id },
-                CrawlParameters(maxLenker, 30))
+                CrawlParameters(maxLenker, 30),
+            )
             .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Starta(
-              URI("https://status.uri").toURL(), it, Instant.now(), Framgang(10, maxLenker))
+              URI("https://status.uri").toURL(),
+              it,
+              Instant.now(),
+              Framgang(10, maxLenker),
+          )
         }
     val crawling = Maaling.toCrawling(maaling, crawlResultat)
     maalingDAO.save(crawling).getOrThrow()
@@ -409,7 +459,12 @@ class MaalingDAOTest(
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Ferdig(
-              1, URI("https://status.uri").toURL(), it, Instant.now(), it.url.toUrlListWithPages())
+              1,
+              URI("https://status.uri").toURL(),
+              it,
+              Instant.now(),
+              it.url.toUrlListWithPages(),
+          )
         }
     val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
     maalingDAO.save(kvalitetssikring)
@@ -420,7 +475,8 @@ class MaalingDAOTest(
               Instant.now(),
               URI("https://teststatus.url").toURL(),
               Brukar("test", "testar"),
-              crawlResultat.size)
+              crawlResultat.size,
+          )
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     maalingDAO.save(testing).getOrThrow()
@@ -432,7 +488,12 @@ class MaalingDAOTest(
     val crawlResultat =
         maaling.loeysingList.map {
           CrawlResultat.Ferdig(
-              1, URI("https://status.uri").toURL(), it, Instant.now(), it.url.toUrlListWithPages())
+              1,
+              URI("https://status.uri").toURL(),
+              it,
+              Instant.now(),
+              it.url.toUrlListWithPages(),
+          )
         }
     val kvalitetssikring = Maaling.toKvalitetssikring(Maaling.toCrawling(maaling, crawlResultat))!!
     maalingDAO.save(kvalitetssikring)
@@ -444,7 +505,8 @@ class MaalingDAOTest(
               URI("https://teststatus.url").toURL(),
               Framgang(0, crawlResultat.size),
               Brukar("test", "testar"),
-              crawlResultat.size)
+              crawlResultat.size,
+          )
         }
     val testing = Maaling.toTesting(kvalitetssikring, testKoeyringar)
     maalingDAO.save(testing).getOrThrow()

@@ -27,36 +27,53 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             .addValue("maaling_id", aggregertResultatTestregel.maalingId, Types.INTEGER)
             .addValue("loeysing_id", aggregertResultatTestregel.loeysingId, Types.INTEGER)
             .addValue(
-                "suksesskriterium", aggregertResultatTestregel.suksesskriterium, Types.INTEGER)
+                "suksesskriterium",
+                aggregertResultatTestregel.suksesskriterium,
+                Types.INTEGER,
+            )
             .addValue(
                 "fleire_suksesskriterium",
                 aggregertResultatTestregel.fleireSuksesskriterium.map { it }.toTypedArray(),
-                Types.ARRAY)
+                Types.ARRAY,
+            )
             .addValue("testregel_id", aggregertResultatTestregel.testregelId, Types.INTEGER)
             .addValue(
-                "tal_element_samsvar", aggregertResultatTestregel.talElementSamsvar, Types.INTEGER)
+                "tal_element_samsvar",
+                aggregertResultatTestregel.talElementSamsvar,
+                Types.INTEGER,
+            )
             .addValue("tal_element_brot", aggregertResultatTestregel.talElementBrot, Types.INTEGER)
             .addValue(
-                "tal_element_varsel", aggregertResultatTestregel.talElementVarsel, Types.INTEGER)
+                "tal_element_varsel",
+                aggregertResultatTestregel.talElementVarsel,
+                Types.INTEGER,
+            )
             .addValue(
                 "tal_element_ikkje_forekomst",
                 aggregertResultatTestregel.talElementIkkjeForekomst,
-                Types.INTEGER)
+                Types.INTEGER,
+            )
             .addValue(
-                "tal_sider_samsvar", aggregertResultatTestregel.talSiderSamsvar, Types.INTEGER)
+                "tal_sider_samsvar",
+                aggregertResultatTestregel.talSiderSamsvar,
+                Types.INTEGER,
+            )
             .addValue("tal_sider_brot", aggregertResultatTestregel.talSiderBrot, Types.INTEGER)
             .addValue(
                 "tal_sider_ikkje_forekomst",
                 aggregertResultatTestregel.talSiderIkkjeForekomst,
-                Types.INTEGER)
+                Types.INTEGER,
+            )
             .addValue(
                 "testregel_gjennomsnittleg_side_brot_prosent",
                 aggregertResultatTestregel.testregelGjennomsnittlegSideBrotProsent,
-                Types.FLOAT)
+                Types.FLOAT,
+            )
             .addValue(
                 "testregel_gjennomsnittleg_side_samsvar_prosent",
                 aggregertResultatTestregel.testregelGjennomsnittlegSideSamsvarProsent,
-                Types.FLOAT)
+                Types.FLOAT,
+            )
             .addValue("testgrunnlag_id", aggregertResultatTestregel.testgrunnlagId, Types.INTEGER)
 
     jdbcTemplate.update(sql, parameterSource, keyHolder)
@@ -66,7 +83,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun floatNullVedIkkjeForekomst(
       value: Double,
       talElementSamsvar: Int,
-      talElemenBrot: Int
+      talElemenBrot: Int,
   ): Double? {
     if (talElemenBrot == 0 && talElementSamsvar == 0) {
       return null
@@ -93,7 +110,8 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "tal_sider_samsvar" to aggregertResultatSuksesskriterium.talSiderSamsvar,
             "tal_sider_brot" to aggregertResultatSuksesskriterium.talSiderBrot,
             "tal_sider_ikkje_forekomst" to aggregertResultatSuksesskriterium.talSiderIkkjeForekomst,
-            "testgrunnlag_id" to aggregertResultatSuksesskriterium.testgrunnlagId)
+            "testgrunnlag_id" to aggregertResultatSuksesskriterium.testgrunnlagId,
+        )
 
     return jdbcTemplate.update(sql, parameterMap)
   }
@@ -118,13 +136,16 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "tal_element_brot" to aggregertResultatSide.talElementBrot,
             "tal_element_varsel" to aggregertResultatSide.talElementVarsel,
             "tal_element_ikkje_forekomst" to aggregertResultatSide.talElementIkkjeForekomst,
-            "testgrunnlag_id" to aggregertResultatSide.testgrunnlagId)
+            "testgrunnlag_id" to aggregertResultatSide.testgrunnlagId,
+        )
 
     val result = jdbcTemplate.update(sql, parameterMap)
     if (result < 1) {
       return Result.failure(
           RuntimeException(
-              "Kunne ikkje lagre aggregert resultat for side for testgrunnlag ${aggregertResultatSide.testgrunnlagId} og side ${aggregertResultatSide.sideUrl.toURI().toString()}"))
+              "Kunne ikkje lagre aggregert resultat for side for testgrunnlag ${aggregertResultatSide.testgrunnlagId} og side ${aggregertResultatSide.sideUrl.toURI().toString()}"
+          )
+      )
     }
     return Result.success(result)
   }
@@ -138,7 +159,9 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "testregelId" to aggregering.testregelId,
             "maalingId" to aggregering.maalingId,
             "loeysingId" to aggregering.loeysingId,
-            "testgrunnlagId" to aggregering.testgrunnlagId))
+            "testgrunnlagId" to aggregering.testgrunnlagId,
+        ),
+    )
   }
 
   fun deleteAggregertResultatSuksesskriterium(aggregering: AggregeringPerSuksesskriteriumDB): Int {
@@ -150,7 +173,9 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "suksesskriteriumId" to aggregering.suksesskriteriumId,
             "maalingId" to aggregering.maalingId,
             "loeysingId" to aggregering.loeysingId,
-            "testgrunnlagId" to aggregering.testgrunnlagId))
+            "testgrunnlagId" to aggregering.testgrunnlagId,
+        ),
+    )
   }
 
   fun deleteAggregertResultatSide(aggregering: AggregeringPerSideDB): Int {
@@ -162,7 +187,9 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             "side" to aggregering.sideUrl.toURI().toString(),
             "maalingId" to aggregering.maalingId,
             "loeysingId" to aggregering.loeysingId,
-            "testgrunnlagId" to aggregering.testgrunnlagId))
+            "testgrunnlagId" to aggregering.testgrunnlagId,
+        ),
+    )
   }
 
   fun getAggregertResultatTestregelForMaaling(maalingId: Int): List<AggregeringPerTestregelDB> {
@@ -215,7 +242,8 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         jdbcTemplate.queryForObject(
             queryString,
             mapOf("maalingId" to maalingId, "aggregeringstype" to aggregeringsTabell),
-            Int::class.java)
+            Int::class.java,
+        )
 
     if (count != null && count > 0) {
       return true
@@ -281,13 +309,16 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             floatNullVedIkkjeForekomst(
                 rs.getDouble("testregel_gjennomsnittleg_side_brot_prosent"),
                 talElementSamsvar,
-                talElemenBrot),
+                talElemenBrot,
+            ),
         testregelGjennomsnittlegSideSamsvarProsent =
             floatNullVedIkkjeForekomst(
                 rs.getDouble("testregel_gjennomsnittleg_side_samsvar_prosent"),
                 talElementSamsvar,
-                talElemenBrot),
-        testgrunnlagId = rs.getInt("testgrunnlag_id").takeIf { it > 0 })
+                talElemenBrot,
+            ),
+        testgrunnlagId = rs.getInt("testgrunnlag_id").takeIf { it > 0 },
+    )
   }
 
   private fun aggregeringPerSideRowmapper(rs: ResultSet): AggregeringPerSideDB {
@@ -301,12 +332,16 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         sideNivaa = rs.getInt("side_nivaa"),
         gjennomsnittligBruddProsentTR =
             floatNullVedIkkjeForekomst(
-                rs.getDouble("gjennomsnittlig_brudd_prosent_tr"), talElementSamsvar, talElemenBrot),
+                rs.getDouble("gjennomsnittlig_brudd_prosent_tr"),
+                talElementSamsvar,
+                talElemenBrot,
+            ),
         talElementSamsvar = rs.getInt("tal_element_samsvar"),
         talElementBrot = rs.getInt("tal_element_brot"),
         talElementVarsel = rs.getInt("tal_element_varsel"),
         talElementIkkjeForekomst = rs.getInt("tal_element_ikkje_forekomst"),
-        testgrunnlagId = rs.getInt("testgrunnlag_id"))
+        testgrunnlagId = rs.getInt("testgrunnlag_id"),
+    )
   }
 
   private fun aggregeringPerSuksesskriteriumRowmapper(rs: ResultSet) =
@@ -317,5 +352,6 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           talSiderSamsvar = rs.getInt("tal_sider_samsvar"),
           talSiderBrot = rs.getInt("tal_sider_brot"),
           talSiderIkkjeForekomst = rs.getInt("tal_sider_ikkje_forekomst"),
-          testgrunnlagId = rs.getInt("testgrunnlag_id"))
+          testgrunnlagId = rs.getInt("testgrunnlag_id"),
+      )
 }

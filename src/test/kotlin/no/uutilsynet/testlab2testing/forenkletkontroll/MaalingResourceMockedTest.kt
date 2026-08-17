@@ -39,7 +39,8 @@ import org.springframework.test.web.client.response.MockRestResponseCreators
     AutoTesterClient::class,
     AutoTesterProperties::class,
     AutotestingService::class,
-    MaalingService::class)
+    MaalingService::class,
+)
 class MaalingResourceMockedTest {
 
   @Autowired private lateinit var server: MockRestServiceServer
@@ -78,7 +79,8 @@ class MaalingResourceMockedTest {
             maalingService,
             brukarService,
             maalingTestingService,
-            maalingCrawlingService)
+            maalingCrawlingService,
+        )
   }
 
   @Test
@@ -107,7 +109,11 @@ class MaalingResourceMockedTest {
                         1,
                         1,
                         "QW",
-                        1))))
+                        1,
+                    )
+                )
+            )
+        )
 
     val result = maalingResource.putNewStatus(id, status)
 
@@ -138,13 +144,16 @@ class MaalingResourceMockedTest {
                 1,
                 1,
                 "QW-ACT-R12",
-                1))
+                1,
+            )
+        )
 
     val nettsider =
         listOf(
             URI("https://www.uutilsynet.no/").toURL(),
             URI("https://www.uutilsynet.no/underside/1").toURL(),
-            URI("https://www.uutilsynet.no/underside/2").toURL())
+            URI("https://www.uutilsynet.no/underside/2").toURL(),
+        )
 
     val expectedRequestData =
         mapOf(
@@ -169,11 +178,14 @@ class MaalingResourceMockedTest {
         .expect(
             ExpectedCount.manyTimes(),
             MockRestRequestMatchers.requestTo(
-                CoreMatchers.startsWith(autoTesterClient.autoTesterProperties.url)))
+                CoreMatchers.startsWith(autoTesterClient.autoTesterProperties.url)
+            ),
+        )
         .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
         .andExpect(
             MockRestRequestMatchers.content()
-                .json(objectMapper.writeValueAsString(expectedRequestData)))
+                .json(objectMapper.writeValueAsString(expectedRequestData))
+        )
         .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON))
 
     val result = maalingResource.putNewStatus(id, status)

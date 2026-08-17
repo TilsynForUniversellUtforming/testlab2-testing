@@ -29,7 +29,7 @@ data class AutoTesterProperties(val url: String, val code: String)
 @Component
 class AutoTesterClient(
     val restTemplate: RestTemplate,
-    val autoTesterProperties: AutoTesterProperties
+    val autoTesterProperties: AutoTesterProperties,
 ) {
 
   val logger: Logger = LoggerFactory.getLogger(AutoTesterClient::class.java)
@@ -50,7 +50,8 @@ class AutoTesterClient(
                   "idLoeysing" to loeysing.id,
                   "resultatSomFil" to true,
                   "actRegler" to actRegler.map { it.testregelSchema },
-                  "loeysing" to loeysing)
+                  "loeysing" to loeysing,
+              )
 
           val restClient = RestClient.builder(restTemplate).build()
 
@@ -69,12 +70,13 @@ class AutoTesterClient(
 
           statusUris?.let {
             AutotestingStatus(loeysing, it.statusQueryGetUri.toURL(), nettsider.size)
-          }
-              ?: throw RuntimeException("mangler statusQueryGetUri i responsen")
+          } ?: throw RuntimeException("mangler statusQueryGetUri i responsen")
         }
         .onFailure {
           logger.error(
-              "Kunne ikkje starte test for måling id $maalingId løysing id ${loeysing.id}", it)
+              "Kunne ikkje starte test for måling id $maalingId løysing id ${loeysing.id}",
+              it,
+          )
         }
   }
 
@@ -94,16 +96,15 @@ class AutoTesterClient(
       testKoeyringar: List<TestkoeyringDTO.Ferdig>,
       resultatType: ResultatUrls,
   ): Map<TestkoeyringDTO, Result<List<AutotesterTestresultat>>> = coroutineScope {
-    val deferreds =
-        testKoeyringar.map { testKoeyring ->
-          async { testKoeyring to fetchResultat(testKoeyring, resultatType) }
-        }
+    val deferreds = testKoeyringar.map { testKoeyring ->
+      async { testKoeyring to fetchResultat(testKoeyring, resultatType) }
+    }
     deferreds.awaitAll().toMap()
   }
 
   private fun fetchResultat(
       testKoeyring: TestkoeyringDTO.Ferdig,
-      resultatType: ResultatUrls
+      resultatType: ResultatUrls,
   ): Result<List<AutotesterTestresultat>> =
       testKoeyring.lenker.let { lenker ->
         runCatching {
@@ -130,13 +131,15 @@ class AutoTesterClient(
         ?.flatten()
         ?.toList()
         ?: throw RuntimeException(
-            "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra $uri")
+            "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra $uri"
+        )
   }
 
   fun fetchResultatAggregering(uri: URI, resultatType: ResultatUrls): List<AutotesterTestresultat> {
     return restTemplate.getForObject(uri, getAggregationClass(resultatType))?.toList()
         ?: throw RuntimeException(
-            "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra $uri")
+            "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra $uri"
+        )
   }
 
   private fun getAggregationClass(
@@ -162,11 +165,14 @@ class AutoTesterClient(
       val urlAggregeringSK: URL,
       val urlAggregeringSide: URL,
       val urlAggregeringSideTR: URL,
-      val urlAggregeringLoeysing: URL
+      val urlAggregeringLoeysing: URL,
   )
 
   @JsonTypeInfo(
-      use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "runtimeStatus")
+      use = JsonTypeInfo.Id.NAME,
+      include = JsonTypeInfo.As.PROPERTY,
+      property = "runtimeStatus",
+  )
   @JsonSubTypes(
       JsonSubTypes.Type(value = AutoTesterStatus.Pending::class, name = "Pending"),
       JsonSubTypes.Type(value = AutoTesterStatus.Running::class, name = "Running"),
@@ -174,7 +180,8 @@ class AutoTesterClient(
       JsonSubTypes.Type(value = AutoTesterStatus.Failed::class, name = "Failed"),
       JsonSubTypes.Type(value = AutoTesterStatus.Terminated::class, name = "Terminated"),
       JsonSubTypes.Type(value = AutoTesterStatus.Other::class, name = "ContinuedAsNew"),
-      JsonSubTypes.Type(value = AutoTesterStatus.Other::class, name = "Suspended"))
+      JsonSubTypes.Type(value = AutoTesterStatus.Other::class, name = "Suspended"),
+  )
   sealed class AutoTesterStatus {
     data object Pending : AutoTesterStatus()
 
@@ -198,12 +205,12 @@ class AutoTesterClient(
     urlAggregeringSK,
     urlAggregeringSide,
     urlAggregeringSideTR,
-    urlAggregeringLoeysing
+    urlAggregeringLoeysing,
   }
 
   data class AutotestingStatus(
       val loeysing: Loeysing,
       val statusUrl: URL,
-      val antallNettsider: Int
+      val antallNettsider: Int,
   )
 }

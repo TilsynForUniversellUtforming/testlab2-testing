@@ -29,7 +29,7 @@ class AggregeringService(
     val sideutvalDAO: SideutvalDAO,
     val maalingDAO: MaalingDAO,
     private val testgrunnlagService: TestgrunnlagService,
-    private val testregelCache: TestregelCache
+    private val testregelCache: TestregelCache,
 ) {
 
   private val logger = LoggerFactory.getLogger(AggregeringService::class.java)
@@ -48,10 +48,11 @@ class AggregeringService(
       filterType: Class<T>,
       dtoMapper: (T) -> D,
       daoSaver: (D) -> Unit,
-      logName: String
+      logName: String,
   ) {
     logger.info(
-        "Lagrer aggregert resultat for $logName for testkoeyring ${testKoeyring.loeysing.namn}")
+        "Lagrer aggregert resultat for $logName for testkoeyring ${testKoeyring.loeysing.namn}"
+    )
     val aggregeringUrl =
         urlExtractor(testKoeyring.lenker) ?: throw RuntimeException(AGGREGERING_URL_ER_NULL)
     runCatching {
@@ -64,7 +65,8 @@ class AggregeringService(
         .onFailure {
           logger.error(
               "Kunne ikkje lagre aggregert resultat for $logName for testkoeyring ${testKoeyring.loeysing.namn}",
-              it)
+              it,
+          )
           throw it
         }
   }
@@ -77,7 +79,8 @@ class AggregeringService(
           AggregertResultatTestregel::class.java,
           ::aggregertResultatTestregelToDTO,
           aggregeringDAO::createAggregertResultatTestregel,
-          "testregel")
+          "testregel",
+      )
 
   fun saveAggregertResultatSuksesskriteriumAutomatisk(testKoeyring: TestKoeyring.Ferdig) =
       saveAggregertResultat(
@@ -87,7 +90,8 @@ class AggregeringService(
           AggregertResultatSuksesskriterium::class.java,
           ::aggregertResultatSuksesskritieriumToDTO,
           aggregeringDAO::createAggregertResultatSuksesskriterium,
-          "suksesskriterium")
+          "suksesskriterium",
+      )
 
   fun saveAggregeringSideAutomatisk(testKoeyring: TestKoeyring.Ferdig) =
       saveAggregertResultat(
@@ -97,7 +101,8 @@ class AggregeringService(
           AggregertResultatSide::class.java,
           ::aggregerteResultatSideTODTO,
           aggregeringDAO::createAggregeringSide,
-          "side")
+          "side",
+      )
 
   fun aggregertResultatTestregelToDTO(
       aggregertResultatTestregel: AggregertResultatTestregel
@@ -122,7 +127,8 @@ class AggregeringService(
         aggregertResultatTestregel.talSiderIkkjeForekomst,
         aggregertResultatTestregel.testregelGjennomsnittlegSideSamsvarProsent,
         aggregertResultatTestregel.testregelGjennomsnittlegSideBrotProsent,
-        null)
+        null,
+    )
   }
 
   fun aggregerteResultatSideTODTO(
@@ -138,7 +144,8 @@ class AggregeringService(
         aggregertResultatSide.talElementBrot,
         aggregertResultatSide.talElementVarsel,
         aggregertResultatSide.talElementIkkjeForekomst,
-        null)
+        null,
+    )
   }
 
   fun aggregertResultatSuksesskritieriumToDTO(
@@ -149,16 +156,18 @@ class AggregeringService(
         aggregertResultatSuksesskriterium.maalingId,
         aggregertResultatSuksesskriterium.loeysing.id,
         kravregisterClient.getKravIdFromSuksesskritterium(
-            aggregertResultatSuksesskriterium.suksesskriterium),
+            aggregertResultatSuksesskriterium.suksesskriterium
+        ),
         aggregertResultatSuksesskriterium.talSiderSamsvar,
         aggregertResultatSuksesskriterium.talSiderBrot,
         aggregertResultatSuksesskriterium.talSiderIkkjeForekomst,
-        null)
+        null,
+    )
   }
 
   fun dtoToAggregertResultatTestregel(
       aggregeringPerTestregelDB: AggregeringPerTestregelDB,
-      loeysingList: List<Loeysing>
+      loeysingList: List<Loeysing>,
   ): AggregertResultatTestregelAPI {
 
     val id = aggregeringPerTestregelDB.maalingId ?: aggregeringPerTestregelDB.testgrunnlagId
@@ -178,12 +187,13 @@ class AggregeringService(
         aggregeringPerTestregelDB.talSiderBrot,
         aggregeringPerTestregelDB.talSiderIkkjeForekomst,
         aggregeringPerTestregelDB.testregelGjennomsnittlegSideSamsvarProsent,
-        aggregeringPerTestregelDB.testregelGjennomsnittlegSideBrotProsent)
+        aggregeringPerTestregelDB.testregelGjennomsnittlegSideBrotProsent,
+    )
   }
 
   fun dtoToAggregertResultatSide(
       aggregeringPerSideDB: AggregeringPerSideDB,
-      loeysingList: List<Loeysing>
+      loeysingList: List<Loeysing>,
   ): AggregertResultatSide {
     return AggregertResultatSide(
         aggregeringPerSideDB.maalingId ?: aggregeringPerSideDB.testgrunnlagId,
@@ -194,12 +204,13 @@ class AggregeringService(
         aggregeringPerSideDB.talElementSamsvar,
         aggregeringPerSideDB.talElementBrot,
         aggregeringPerSideDB.talElementVarsel,
-        aggregeringPerSideDB.talElementIkkjeForekomst)
+        aggregeringPerSideDB.talElementIkkjeForekomst,
+    )
   }
 
   fun dtoTOAggregertResultatSuksesskriterium(
       aggregeringPerSuksesskriteriumDB: AggregeringPerSuksesskriteriumDB,
-      loeysingList: List<Loeysing>
+      loeysingList: List<Loeysing>,
   ): AggregertResultatSuksesskriterium {
     return AggregertResultatSuksesskriterium(
         aggregeringPerSuksesskriteriumDB.maalingId
@@ -208,7 +219,8 @@ class AggregeringService(
         getSuksesskriterium(aggregeringPerSuksesskriteriumDB.suksesskriteriumId),
         aggregeringPerSuksesskriteriumDB.talSiderSamsvar,
         aggregeringPerSuksesskriteriumDB.talSiderBrot,
-        aggregeringPerSuksesskriteriumDB.talSiderIkkjeForekomst)
+        aggregeringPerSuksesskriteriumDB.talSiderIkkjeForekomst,
+    )
   }
 
   private fun getSuksesskriterium(suksesskriteriumId: Int) =
@@ -224,7 +236,7 @@ class AggregeringService(
 
   fun getAggregertResultatTestregel(
       maalingId: Int? = null,
-      testgrunnlagId: Int? = null
+      testgrunnlagId: Int? = null,
   ): List<AggregertResultatTestregelAPI> {
     logger.info("Henter aggregert resultat for testregel med id ${maalingId?:testgrunnlagId}")
     val id = maalingId ?: testgrunnlagId ?: return emptyList()
@@ -239,7 +251,7 @@ class AggregeringService(
 
   fun getAggregertResultatSide(
       maalingId: Int? = null,
-      testgrunnlagId: Int? = null
+      testgrunnlagId: Int? = null,
   ): List<AggregertResultatSide> {
     logger.info("Henter aggregering for resultat for side med id ${maalingId?:testgrunnlagId}")
     val id = maalingId ?: testgrunnlagId ?: return emptyList()
@@ -265,7 +277,7 @@ class AggregeringService(
 
   fun getAggregertResultatSuksesskriterium(
       maalingId: Int? = null,
-      testgrunnlagId: Int? = null
+      testgrunnlagId: Int? = null,
   ): List<AggregertResultatSuksesskriterium> {
     if (maalingId != null) {
       val loeysingList = getLoeysingarForMaaling(maalingId)
@@ -312,7 +324,8 @@ class AggregeringService(
             },
             onFailure = {
               return Result.failure(it)
-            })
+            },
+        )
   }
 
   @Transactional
@@ -325,7 +338,8 @@ class AggregeringService(
             val result = aggregeringDAO.createAggregertResultatTestregel(it)
             if (result < 1) {
               throw RuntimeException(
-                  "Kunne ikkje lagre aggregert resultat for testregel for testgrunnlag ${it.testgrunnlagId} og testregel ${it.testregelId}")
+                  "Kunne ikkje lagre aggregert resultat for testregel for testgrunnlag ${it.testgrunnlagId} og testregel ${it.testregelId}"
+              )
             }
           }
         }
@@ -335,7 +349,8 @@ class AggregeringService(
             },
             onFailure = {
               return Result.failure(it)
-            })
+            },
+        )
   }
 
   @Transactional
@@ -349,7 +364,8 @@ class AggregeringService(
             val result = aggregeringDAO.createAggregertResultatSuksesskriterium(it)
             if (result < 1) {
               throw RuntimeException(
-                  "Kunne ikkje lagre aggregert resultat for testregel for testgrunnlag ${it.testgrunnlagId} og suksesskriterium ${it.suksesskriteriumId}")
+                  "Kunne ikkje lagre aggregert resultat for testregel for testgrunnlag ${it.testgrunnlagId} og suksesskriterium ${it.suksesskriteriumId}"
+              )
             }
           }
         }
@@ -359,7 +375,8 @@ class AggregeringService(
             },
             onFailure = {
               return Result.failure(it)
-            })
+            },
+        )
   }
 
   fun saveAggregertResultatSide(testresultatList: List<ResultatManuellKontroll>): Result<Boolean> =
@@ -374,7 +391,8 @@ class AggregeringService(
               },
               onFailure = {
                 return Result.failure(it)
-              })
+              },
+          )
 
   private fun createAggregeringPerTestregelDTO(
       testresultatForSak: List<ResultatManuellKontroll>
@@ -422,7 +440,8 @@ class AggregeringService(
         talSiderIkkjeForekomst,
         gjennomsnittTestresultat.testregelGjennomsnittlegSideSamsvarProsent,
         gjennomsnittTestresultat.testregelGjennomsnittlegSideBrotProsent,
-        testresultat.first().testgrunnlagId)
+        testresultat.first().testgrunnlagId,
+    )
   }
 
   fun processPrSideutval(values: List<ResultatManuellKontroll>): ResultatPerTestregelPerSide {
@@ -432,7 +451,10 @@ class AggregeringService(
 
     if (ikkjeForekomst) {
       return ResultatPerTestregelPerSide(
-          brotprosentTrSide = 0.0, samsvarsprosentTrSide = 0.0, ikkjeForekomst = true)
+          brotprosentTrSide = 0.0,
+          samsvarsprosentTrSide = 0.0,
+          ikkjeForekomst = true,
+      )
     }
 
     return ResultatPerTestregelPerSide(
@@ -442,14 +464,16 @@ class AggregeringService(
         samsvarsprosentTrSide =
             (talElementUtfall.talSamsvar.toDouble() /
                 (talElementUtfall.talBrot + talElementUtfall.talSamsvar).toDouble()),
-        ikkjeForekomst = false)
+        ikkjeForekomst = false,
+    )
   }
 
   private fun countElementUtfall(values: List<ResultatManuellKontroll>): TalUtfall {
     val talElementBrot = values.count { it.elementResultat == TestresultatUtfall.brot }
     val talElementSamsvar = values.count { it.elementResultat == TestresultatUtfall.samsvar }
-    val talElementIkkjeForekomst =
-        values.count { it.elementResultat == TestresultatUtfall.ikkjeForekomst }
+    val talElementIkkjeForekomst = values.count {
+      it.elementResultat == TestresultatUtfall.ikkjeForekomst
+    }
     val talElementVarsel = values.count { it.elementResultat == TestresultatUtfall.varsel }
     val talElementIkkjeTesta = values.count { it.elementResultat == TestresultatUtfall.ikkjeTesta }
     return TalUtfall(
@@ -457,7 +481,8 @@ class AggregeringService(
         talSamsvar = talElementSamsvar,
         talIkkjeForekomst = talElementIkkjeForekomst,
         talVarsel = talElementVarsel,
-        talIkkjeTesta = talElementIkkjeTesta)
+        talIkkjeTesta = talElementIkkjeTesta,
+    )
   }
 
   fun calculateTestregelGjennomsnitt(
@@ -487,7 +512,9 @@ class AggregeringService(
         (summertSamsvarprosent / talSiderMedForekomst).takeUnless { it.isNaN() }
 
     return GjennomsnittTestresultat(
-        testregelGjennomsnittlegSideSamsvar, testregelGjennomsnittlegSideBrot)
+        testregelGjennomsnittlegSideSamsvar,
+        testregelGjennomsnittlegSideBrot,
+    )
   }
 
   private fun addIfNotIkkjeForekomst(value: Double, ikkjeForekomst: Boolean): Double {
@@ -511,7 +538,8 @@ class AggregeringService(
               talSiderSamsvar,
               talSiderBrot,
               talSiderIkkjeForekomst,
-              testresultat.first().testgrunnlagId)
+              testresultat.first().testgrunnlagId,
+          )
         }
   }
 
@@ -546,7 +574,8 @@ class AggregeringService(
               testresultat.count { it.elementResultat == TestresultatUtfall.brot },
               0,
               testresultat.count { it.elementResultat == TestresultatUtfall.ikkjeForekomst },
-              testresultat.first().testgrunnlagId)
+              testresultat.first().testgrunnlagId,
+          )
         }
   }
 
@@ -574,7 +603,8 @@ class AggregeringService(
         talSamsvar = talSiderSamsvar,
         talIkkjeForekomst = talSiderIkkjeForekomst,
         talVarsel = talSiderVarsel,
-        talIkkjeTesta = talSiderIkkjeTesta)
+        talIkkjeTesta = talSiderIkkjeTesta,
+    )
   }
 
   fun getKravIdFraTestregel(id: Int): Int {
@@ -601,11 +631,11 @@ class AggregeringService(
 
 data class GjennomsnittTestresultat(
     val testregelGjennomsnittlegSideSamsvarProsent: Double?,
-    val testregelGjennomsnittlegSideBrotProsent: Double?
+    val testregelGjennomsnittlegSideBrotProsent: Double?,
 )
 
 data class ResultatPerTestregelPerSide(
     val brotprosentTrSide: Double,
     val samsvarsprosentTrSide: Double,
-    val ikkjeForekomst: Boolean
+    val ikkjeForekomst: Boolean,
 )

@@ -9,7 +9,8 @@ data class CrawlParameters(val maxLenker: Int = 100, val talLenker: Int = 30) {
           }
           talLenker > 2000 -> {
             throw IllegalArgumentException(
-                "Kan ikkje velgje større utval enn 2000 sidar per løysing")
+                "Kan ikkje velgje større utval enn 2000 sidar per løysing"
+            )
           }
           maxLenker < 1 -> {
             throw IllegalArgumentException("Kan ikkje velgje mindre enn 1 sidar per løysing")

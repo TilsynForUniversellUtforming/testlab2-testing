@@ -24,7 +24,8 @@ class TestResultatTest {
 
   @Test
   @DisplayName(
-      "gitt et testresultat som ikke har elementOmtale, så skal vi kunne lese det som en instans av TestResultat")
+      "gitt et testresultat som ikke har elementOmtale, så skal vi kunne lese det som en instans av TestResultat"
+  )
   fun manglerElementOmtale() {
     val json =
         """
@@ -40,7 +41,7 @@ class TestResultatTest {
           "elementUtfall": "The `title` element doesn't exist.",
           "testVartUtfoert": "6/2/2023, 8:51:10 AM"
         }
-      """
+        """
             .trimIndent()
     val objectMapper =
         jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)

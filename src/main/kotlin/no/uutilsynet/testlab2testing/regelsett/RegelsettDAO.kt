@@ -17,7 +17,9 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             jdbcTemplate.query(
                 "select id, namn, modus, standard from regelsett where id = :id",
                 mapOf("id" to id),
-                DataClassRowMapper.newInstance(RegelsettBase::class.java)))
+                DataClassRowMapper.newInstance(RegelsettBase::class.java),
+            )
+        )
 
     return regelsettDTO
   }
@@ -28,7 +30,8 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     return jdbcTemplate.query(
         "select id, namn, modus, standard from regelsett where $activeSql",
-        DataClassRowMapper.newInstance(RegelsettBase::class.java))
+        DataClassRowMapper.newInstance(RegelsettBase::class.java),
+    )
   }
 
   @Transactional
@@ -42,35 +45,41 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 "modus" to regelsett.modus.value,
                 "standard" to regelsett.standard,
             ),
-            Int::class.java)!!
+            Int::class.java,
+        )!!
 
     val updateBatchValuesRegelsettTestregel =
         regelsett.testregelIdList.map { mapOf("regelsett_id" to id, "testregel_id" to it) }
 
     jdbcTemplate.batchUpdate(
         "insert into regelsett_testregel (regelsett_id, testregel_id) values (:regelsett_id, :testregel_id)",
-        updateBatchValuesRegelsettTestregel.toTypedArray())
+        updateBatchValuesRegelsettTestregel.toTypedArray(),
+    )
 
     return id
   }
 
   @Transactional
   @CacheEvict(
-      key = "#regelsett.id", cacheNames = ["regelsett", "regelsettlist", "regelsettlistbase"])
+      key = "#regelsett.id",
+      cacheNames = ["regelsett", "regelsettlist", "regelsettlistbase"],
+  )
   fun updateRegelsett(regelsett: RegelsettEdit) {
     jdbcTemplate.update(
         "delete from regelsett_testregel where regelsett_id = :regelsett_id ",
-        mapOf("regelsett_id" to regelsett.id))
+        mapOf("regelsett_id" to regelsett.id),
+    )
 
     jdbcTemplate.update(
         """
-      update regelsett set
-      namn = :namn,
-      standard = :standard
-      where id = :id
-      """
+        update regelsett set
+        namn = :namn,
+        standard = :standard
+        where id = :id
+        """
             .trimIndent(),
-        mapOf("namn" to regelsett.namn, "standard" to regelsett.standard, "id" to regelsett.id))
+        mapOf("namn" to regelsett.namn, "standard" to regelsett.standard, "id" to regelsett.id),
+    )
 
     val updateBatchValuesRegelsettTestregel =
         regelsett.testregelIdList.map {
@@ -79,7 +88,8 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     jdbcTemplate.batchUpdate(
         "insert into regelsett_testregel (regelsett_id, testregel_id) values (:regelsett_id, :testregel_id)",
-        updateBatchValuesRegelsettTestregel.toTypedArray())
+        updateBatchValuesRegelsettTestregel.toTypedArray(),
+    )
   }
 
   @Transactional
@@ -92,7 +102,8 @@ class RegelsettDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         .queryForList(
             "select testregel_id from regelsett_testregel where regelsett_id = :id",
             mapOf("id" to id),
-            Int::class.java)
+            Int::class.java,
+        )
         .map { requireNotNull(it) { "Null testregel_id returned for regelsett $id" } }
   }
 }

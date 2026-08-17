@@ -49,7 +49,8 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
           namn = "Test Loeysing",
           url = URI("https://example.com").toURL(),
           orgnummer = "123456789",
-          verksemdNamn = "Test Verksemd")
+          verksemdNamn = "Test Verksemd",
+      )
 
   private fun sideutval(id: Int = 1) =
       Sideutval(
@@ -58,12 +59,13 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
           typeId = 1,
           begrunnelse = "Begrunnelse",
           url = URI.create("https://example.com/side"),
-          egendefinertType = null)
+          egendefinertType = null,
+      )
 
   private fun testgrunnlag(
       id: Int = testgrunnlagId,
       sideutval: List<Sideutval> = listOf(sideutval()),
-      type: TestgrunnlagType = TestgrunnlagType.OPPRINNELEG_TEST
+      type: TestgrunnlagType = TestgrunnlagType.OPPRINNELEG_TEST,
   ) =
       TestgrunnlagKontroll(
           id = id,
@@ -72,7 +74,8 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
           testreglar = listOf(1, 2),
           sideutval = sideutval,
           type = type,
-          datoOppretta = Instant.now())
+          datoOppretta = Instant.now(),
+      )
 
   private fun kontrollDB() =
       KontrollDAO.KontrollDB(
@@ -86,12 +89,13 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
           testreglar = null,
           sideutval = emptyList(),
           opprettaDato = Instant.now(),
-          styringsdataId = null)
+          styringsdataId = null,
+      )
 
   private fun styringsdataElement(
       loeysingId: Int = this.loeysingId,
       paaleggReaksjon: Reaksjonstype = Reaksjonstype.ingenReaksjon,
-      botReaksjon: Reaksjonstype = Reaksjonstype.ingenReaksjon
+      botReaksjon: Reaksjonstype = Reaksjonstype.ingenReaksjon,
   ) =
       StyringsdataListElement(
           id = 1,
@@ -109,7 +113,8 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
           paaleggId = null,
           paaleggKlageId = null,
           botId = null,
-          botKlageId = null)
+          botKlageId = null,
+      )
 
   private fun testStatusCount() =
       TestStatusCount(
@@ -120,7 +125,8 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
           underArbeid = 0,
           ikkjeStarta = 2,
           percentagePerSide = 0.0,
-          percentagePerInnholdstype = 0.0)
+          percentagePerInnholdstype = 0.0,
+      )
 
   private fun resultat(status: Status = Status.IkkjePaabegynt) =
       ResultatManuellKontroll(
@@ -136,7 +142,8 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
           testVartUtfoert = null,
           status = status,
           kommentar = null,
-          sistLagra = Instant.now())
+          sistLagra = Instant.now(),
+      )
 
   // --- TestgrunnlagList.toList() ---
 
@@ -184,7 +191,13 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
         .thenReturn(Result.success(mapOf(testgrunnlagId to emptyList())))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
-                loeysingId, testgrunnlagId, emptyList(), listOf(1, 2), listOf(1)))
+                loeysingId,
+                testgrunnlagId,
+                emptyList(),
+                listOf(1, 2),
+                listOf(1),
+            )
+        )
         .thenReturn(testStatusCount())
     `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
         .thenReturn(mapOf(loeysingId to styringsdataElement()))
@@ -236,7 +249,13 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
         .thenReturn(Result.success(mapOf(testgrunnlagId to ferdigResultat)))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
-                loeysingId, testgrunnlagId, ferdigResultat, listOf(1, 2), listOf(1)))
+                loeysingId,
+                testgrunnlagId,
+                ferdigResultat,
+                listOf(1, 2),
+                listOf(1),
+            )
+        )
         .thenReturn(testStatusCount())
     `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
         .thenReturn(mapOf(loeysingId to styringsdataElement()))
@@ -261,7 +280,13 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
         .thenReturn(Result.success(mapOf(testgrunnlagId to mixedResultat)))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
-                loeysingId, testgrunnlagId, mixedResultat, listOf(1, 2), listOf(1)))
+                loeysingId,
+                testgrunnlagId,
+                mixedResultat,
+                listOf(1, 2),
+                listOf(1),
+            )
+        )
         .thenReturn(testStatusCount())
     `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
         .thenReturn(mapOf(loeysingId to styringsdataElement()))
@@ -287,7 +312,13 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
         .thenReturn(Result.success(mapOf(testgrunnlagId to emptyList())))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
-                loeysingId, testgrunnlagId, emptyList(), listOf(1, 2), listOf(1)))
+                loeysingId,
+                testgrunnlagId,
+                emptyList(),
+                listOf(1, 2),
+                listOf(1),
+            )
+        )
         .thenReturn(testStatusCount())
     `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
         .thenReturn(mapOf(loeysingId to styringsdataElement(botReaksjon = Reaksjonstype.reaksjon)))
@@ -311,11 +342,18 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
         .thenReturn(Result.success(mapOf(testgrunnlagId to emptyList())))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
-                loeysingId, testgrunnlagId, emptyList(), listOf(1, 2), listOf(1)))
+                loeysingId,
+                testgrunnlagId,
+                emptyList(),
+                listOf(1, 2),
+                listOf(1),
+            )
+        )
         .thenReturn(testStatusCount())
     `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
         .thenReturn(
-            mapOf(loeysingId to styringsdataElement(paaleggReaksjon = Reaksjonstype.reaksjon)))
+            mapOf(loeysingId to styringsdataElement(paaleggReaksjon = Reaksjonstype.reaksjon))
+        )
 
     val result = testoverviewService.listTestOverviewElements(kontrollId)
 
@@ -338,7 +376,13 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
         .thenReturn(Result.success(mapOf(testgrunnlagId to emptyList())))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
-                loeysingId, testgrunnlagId, emptyList(), listOf(1, 2), listOf(1)))
+                loeysingId,
+                testgrunnlagId,
+                emptyList(),
+                listOf(1, 2),
+                listOf(1),
+            )
+        )
         .thenReturn(testStatusCount())
     `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
         .thenReturn(mapOf(loeysingId to styringsdataElement()))
@@ -362,7 +406,13 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
         .thenReturn(Result.success(mapOf(testgrunnlagId to emptyList())))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
-                loeysingId, testgrunnlagId, emptyList(), listOf(1, 2), listOf(1)))
+                loeysingId,
+                testgrunnlagId,
+                emptyList(),
+                listOf(1, 2),
+                listOf(1),
+            )
+        )
         .thenReturn(testStatusCount())
     `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
         .thenReturn(mapOf(loeysingId to styringsdataElement()))
@@ -387,7 +437,13 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
         .thenReturn(Result.success(mapOf(testgrunnlagId to existingResultat)))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
-                loeysingId, testgrunnlagId, existingResultat, listOf(1, 2), listOf(1)))
+                loeysingId,
+                testgrunnlagId,
+                existingResultat,
+                listOf(1, 2),
+                listOf(1),
+            )
+        )
         .thenReturn(testStatusCount())
     `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
         .thenReturn(mapOf(loeysingId to styringsdataElement()))
@@ -415,11 +471,23 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
         .thenReturn(Result.success(mapOf(testgrunnlagId to emptyList(), retestId to emptyList())))
     `when`(
             statisticsService.getTestingStatusForLoeysing(
-                loeysingId, testgrunnlagId, emptyList(), listOf(1, 2), listOf(1)))
+                loeysingId,
+                testgrunnlagId,
+                emptyList(),
+                listOf(1, 2),
+                listOf(1),
+            )
+        )
         .thenReturn(testStatusCount())
     `when`(
             statisticsService.getTestingStatusForLoeysing(
-                loeysingId, retestId, emptyList(), listOf(1, 2), listOf(1)))
+                loeysingId,
+                retestId,
+                emptyList(),
+                listOf(1, 2),
+                listOf(1),
+            )
+        )
         .thenReturn(testStatusCount().copy(testgrunnlagId = retestId))
     `when`(styringsdataService.getStyringsdataMapForKontroll(kontrollId))
         .thenReturn(mapOf(loeysingId to styringsdataElement()))

@@ -5,5 +5,5 @@ data class TalUtfall(
     val talSamsvar: Int,
     val talIkkjeForekomst: Int,
     val talVarsel: Int,
-    val talIkkjeTesta: Int
+    val talIkkjeTesta: Int,
 )

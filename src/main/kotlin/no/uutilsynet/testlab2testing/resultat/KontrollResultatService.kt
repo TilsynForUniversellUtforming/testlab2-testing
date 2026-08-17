@@ -63,7 +63,7 @@ sealed class KontrollResultatService(
       kontrollId: Int,
       loeysingId: Int,
       kravId: Int,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDetaljert>
 
   protected fun getTestreglarForKrav(kravId: Int): List<TestregelAggregate> {
@@ -79,7 +79,7 @@ sealed class KontrollResultatService(
   abstract fun getTalBrotForKontrollLoeysingKrav(
       kontrollId: Int,
       loeysingId: Int,
-      kravId: Int
+      kravId: Int,
   ): Result<Int>
 
   protected fun List<TestresultatDetaljert>.paginate(
@@ -111,6 +111,6 @@ sealed class KontrollResultatService(
 
   protected fun resultSubListEnd(
       sortPaginationParams: SortPaginationParams,
-      resultat: List<TestresultatDetaljert>
+      resultat: List<TestresultatDetaljert>,
   ): Int = min((sortPaginationParams.pageNumber + 1) * sortPaginationParams.pageSize, resultat.size)
 }

@@ -15,5 +15,5 @@ data class AggregeringPerTestregelDB(
     val talSiderIkkjeForekomst: Int,
     val testregelGjennomsnittlegSideSamsvarProsent: Double?,
     val testregelGjennomsnittlegSideBrotProsent: Double?,
-    val testgrunnlagId: Int?
+    val testgrunnlagId: Int?,
 )

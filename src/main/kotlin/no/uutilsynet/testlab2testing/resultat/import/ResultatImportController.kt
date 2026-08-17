@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/resultat/import")
 class ResultatImportController(
     private val azureStorage2DbService: AzureStorage2DbService,
-    private val maalingDAO: MaalingDAO
+    private val maalingDAO: MaalingDAO,
 ) {
 
   @GetMapping("/maaling/{maalingId}/loeysing/{loeysingId}")

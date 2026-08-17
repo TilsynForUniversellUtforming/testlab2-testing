@@ -7,7 +7,7 @@ import no.uutilsynet.testlab2testing.testregel.model.Testregel
 fun validateRegelsettTestreglar(
     testregelIdList: List<Int>,
     type: TestregelModus,
-    existingTestregelList: List<Testregel>
+    existingTestregelList: List<Testregel>,
 ): Result<List<Int>> {
   val testregelIdsOfType = existingTestregelList.filter { it.modus == type }.map { it.id }
 

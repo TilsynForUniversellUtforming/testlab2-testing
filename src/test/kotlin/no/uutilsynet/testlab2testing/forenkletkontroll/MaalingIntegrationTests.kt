@@ -31,6 +31,7 @@ import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.resttestclient.TestRestTemplate
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient
 import org.springframework.boot.resttestclient.exchange
 import org.springframework.boot.resttestclient.getForObject
 import org.springframework.boot.test.context.SpringBootTest
@@ -41,19 +42,25 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.web.servlet.client.RestTestClient
+import org.springframework.web.client.RestClient
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@AutoConfigureRestTestClient
 @ActiveProfiles("test")
 class MaalingIntegrationTests(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val maalingDAO: MaalingDAO,
     @Autowired val utvalDAO: UtvalDAO,
-    @Autowired val testUtils: TestUtils
+    @Autowired val testUtils: TestUtils,
+    @Autowired private val restTestClient: RestTestClient
 ) {
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
   @MockitoBean lateinit var testregelClient: TestregelClient
   @MockitoBean lateinit var clockProvider: ClockProvider
+
+
 
   val utvalTestName = "testutval"
   val loeysingsIdList = loeysingList.map { it.id }
@@ -80,16 +87,25 @@ class MaalingIntegrationTests(
   @AfterAll
   fun cleanup() {
     maalingDAO.jdbcTemplate.update(
-        "delete from maalingv1 where navn = :navn", mapOf("navn" to maalingTestName))
+        "delete from maalingv1 where navn = :navn",
+        mapOf("navn" to maalingTestName),
+    )
     maalingDAO.jdbcTemplate.update(
-        "delete from utval where namn = :namn", mapOf("namn" to utvalTestName))
+        "delete from utval where namn = :namn",
+        mapOf("namn" to utvalTestName),
+    )
   }
 
   @Test
   @DisplayName("vi kan opprette en ny måling basert på ei liste med løsninger")
   fun postNewMaaling() {
     val locationPattern = """/v1/maalinger/\d+"""
-    val location = restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
+    val location =
+        restTestClient
+            .post()
+            .uri { builder -> builder.path("/v1/maalinger").build() }
+            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            .body(maalingRequestBody)
     assertThat(location.toString(), matchesPattern(locationPattern))
   }
 
@@ -103,8 +119,20 @@ class MaalingIntegrationTests(
             "datoStart" to maalingDateStart,
             "utvalId" to utvalId,
             "testregelIdList" to testRegelList.map { it.id },
-            "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10))
-    val location = restTemplate.postForLocation("/v1/maalinger", requestBody)
+            "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10),
+        )
+
+    val location =
+        RestClient.create()
+            .post()
+            .uri { builder -> builder.path("/v1/maalinger").build() }
+            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            .body(requestBody)
+            .retrieve()
+            .toBodilessEntity()
+            .headers
+            .location
+
     val locationPattern = """/v1/maalinger/\d+"""
     assertThat(location, notNullValue())
     assertThat(location.toString(), matchesPattern(locationPattern))
@@ -112,20 +140,31 @@ class MaalingIntegrationTests(
 
   @Test
   @DisplayName(
-      "når vi oppretter en ny måling, men mangler utvalg og løsninger, så får vi en feilmelding")
+      "når vi oppretter en ny måling, men mangler utvalg og løsninger, så får vi en feilmelding"
+  )
   fun postNewMaalingWithoutUtvalgAndLoeysing() {
     val requestBody =
         mapOf(
             "navn" to maalingTestName,
             "testregelIdList" to testRegelList.map { it.id },
-            "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10))
-    val response = restTemplate.postForEntity("/v1/maalinger", requestBody, String::class.java)
+            "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10),
+        )
+
+    val response =
+        RestClient.create()
+            .post()
+            .uri { builder -> builder.path("/v1/maalinger").build() }
+            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            .body(requestBody)
+            .retrieve()
+            .toBodilessEntity()
     assertThat(response.statusCode, equalTo(HttpStatus.BAD_REQUEST))
   }
 
   @Test
   @DisplayName(
-      "når vi har opprettet en måling basert på et utvalg, så skal utvalgs-ID lagres på målingen")
+      "når vi har opprettet en måling basert på et utvalg, så skal utvalgs-ID lagres på målingen"
+  )
   fun saveUtvalId() {
     doReturn(loeysingList)
         .`when`(loeysingsRegisterClient)
@@ -137,8 +176,20 @@ class MaalingIntegrationTests(
             "datoStart" to maalingDateStart,
             "utvalId" to utvalId,
             "testregelIdList" to testRegelList.map { it.id },
-            "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10))
-    val location = restTemplate.postForLocation("/v1/maalinger", requestBody)
+            "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10),
+        )
+
+    val location =
+        RestClient.create()
+            .post()
+            .uri { builder -> builder.path("/v1/maalinger").build() }
+            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            .body(requestBody)
+            .retrieve()
+            .toBodilessEntity()
+            .headers
+            .location
+
     assertThat(location, notNullValue())
 
     val maalingId = location!!.path.split("/").last().toInt()
@@ -159,7 +210,16 @@ class MaalingIntegrationTests(
   @DisplayName("det er ikke mulig å opprette en ny måling hvis løsningen ikke finnes i databasen")
   fun postInvalidNewMaaling() {
     val requestBody = mapOf("navn" to maalingTestName, "loeysingIdList" to listOf(1, 2, 3, 11))
-    val response = restTemplate.postForEntity("/v1/maalinger", requestBody, String::class.java)
+
+    val response =
+        RestClient.create()
+            .post()
+            .uri { builder -> builder.path("/v1/maalinger").build() }
+            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            .body(requestBody)
+            .retrieve()
+            .toBodilessEntity()
+
     assertThat(response.statusCode, equalTo(HttpStatus.BAD_REQUEST))
   }
 
@@ -227,7 +287,8 @@ class MaalingIntegrationTests(
         val item = jsonArray.getJSONObject(i)
         assertThat(
             item["status"],
-            oneOf("planlegging", "crawling", "kvalitetssikring", "testing", "testing_ferdig"))
+            oneOf("planlegging", "crawling", "kvalitetssikring", "testing", "testing_ferdig"),
+        )
       }
     }
 
@@ -241,7 +302,8 @@ class MaalingIntegrationTests(
 
     @Test
     @DisplayName(
-        "når målingen har status 'planlegging', så skal det være en aksjon for å gå til 'crawling'")
+        "når målingen har status 'planlegging', så skal det være en aksjon for å gå til 'crawling'"
+    )
     fun actionFromPlanlegging() {
       val maaling = restTemplate.getForObject(location, MaalingDTO::class.java)
       requireNotNull(maaling)
@@ -275,7 +337,8 @@ class MaalingIntegrationTests(
                 maalingDateStart,
                 loeysingsIdList,
                 testRegelList.map { it.id },
-                CrawlParameters())
+                CrawlParameters(),
+            )
             .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
 
     val updatedLoeysingList = listOf(maaling.loeysingList[0])
@@ -291,11 +354,17 @@ class MaalingIntegrationTests(
                 navn = maalingTestName,
                 loeysingIdList = updatedLoeysingList.map { it.id },
                 testregelIdList = testRegelList.map { it.id },
-                crawlParameters = null)))
+                crawlParameters = null,
+            )
+        ),
+    )
 
     val updatedMaaling =
         restTemplate.exchange<MaalingDTO>(
-            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY)
+            "/v1/maalinger/${maaling.id}",
+            HttpMethod.GET,
+            HttpEntity.EMPTY,
+        )
 
     Assertions.assertThat(updatedMaaling.body).isNotNull
     Assertions.assertThat(updatedMaaling.body).isInstanceOf(MaalingDTO::class.java)
@@ -316,12 +385,16 @@ class MaalingIntegrationTests(
                 maalingDateStart,
                 loeysingList.map { it.id },
                 testRegelList.map { it.id },
-                CrawlParameters())
+                CrawlParameters(),
+            )
             .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
 
     val existingMaaling =
         restTemplate.exchange<MaalingDTO>(
-            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY)
+            "/v1/maalinger/${maaling.id}",
+            HttpMethod.GET,
+            HttpEntity.EMPTY,
+        )
 
     Assertions.assertThat(existingMaaling.body).isNotNull
     Assertions.assertThat(existingMaaling.body).isInstanceOf(MaalingDTO::class.java)
@@ -330,7 +403,10 @@ class MaalingIntegrationTests(
 
     val nonExistingMaaling =
         restTemplate.exchange<MaalingDTO>(
-            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY)
+            "/v1/maalinger/${maaling.id}",
+            HttpMethod.GET,
+            HttpEntity.EMPTY,
+        )
 
     Assertions.assertThat(nonExistingMaaling.body).isNull()
   }
@@ -379,7 +455,8 @@ class MaalingIntegrationTests(
               "/v1/maalinger/$key/crawlresultat/nettsider?loeysingId=${uutilsynetLoeysing.id}",
               HttpMethod.GET,
               HttpEntity.EMPTY,
-              urlListType)
+              urlListType,
+          )
 
       Assertions.assertThat(urlList.body!!).containsExactly(uutilsynetLoeysing.url)
     }
@@ -396,7 +473,8 @@ class MaalingIntegrationTests(
               "/v1/maalinger/$key/crawlresultat/nettsider?loeysingId=${uutilsynetLoeysing.id}",
               HttpMethod.GET,
               HttpEntity.EMPTY,
-              urlListType)
+              urlListType,
+          )
 
       Assertions.assertThat(urlList.body!!).containsExactly(uutilsynetLoeysing.url)
     }
@@ -412,7 +490,8 @@ class MaalingIntegrationTests(
               maalingDateStart,
               singleLoeysing.map { it.id },
               testRegelList.map { it.id },
-              crawlParameters)
+              crawlParameters,
+          )
       val planlagtMaaling = maalingDAO.getMaaling(id) as Maaling.Planlegging
       val sistOppdatert = Instant.now()
       val crawlingMaaling =
@@ -424,7 +503,10 @@ class MaalingIntegrationTests(
                       URI("https://status.uri").toURL(),
                       uutilsynetLoeysing,
                       sistOppdatert,
-                      listOf(uutilsynetLoeysing.url))))
+                      listOf(uutilsynetLoeysing.url),
+                  )
+              ),
+          )
       val kvalitetssikring = Maaling.toKvalitetssikring(crawlingMaaling)!!
       maalingDAO.save(kvalitetssikring).getOrThrow()
       return Pair(id, sistOppdatert)

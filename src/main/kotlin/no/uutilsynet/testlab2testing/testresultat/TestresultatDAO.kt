@@ -33,22 +33,23 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         elementOmtalePointer = rs.getString("element_omtale_pointer"),
         elmentOmtaleHtml = rs.getString("element_omtale_html"),
         elementOmtaleDescription = rs.getString("element_omtale"),
-        brukarId = rs.getInt("brukar_id"))
+        brukarId = rs.getInt("brukar_id"),
+    )
   }
 
   fun create(testresultat: TestresultatDBBase): Int {
     val sql =
         """
-            INSERT INTO testresultat (
-            testgrunnlag_id, maaling_id,
-                testregel_id, loeysing_id, crawl_side_id, test_vart_utfoert, element_utfall, element_resultat,
-                element_omtale_pointer, element_omtale_html, element_omtale, brukar_id
-            ) VALUES (
-            :testgrunnlagId, :maalingId,
-                :testregelId, :loeysingId, :sideutvalId, :testUtfoert, :elementUtfall, :elementResultat,
-                :elementOmtalePointer, :elmentOmtalerHtml, :elementOmtalerDescription, :brukarid
-            )
-            RETURNING id
+        INSERT INTO testresultat (
+        testgrunnlag_id, maaling_id,
+            testregel_id, loeysing_id, crawl_side_id, test_vart_utfoert, element_utfall, element_resultat,
+            element_omtale_pointer, element_omtale_html, element_omtale, brukar_id
+        ) VALUES (
+        :testgrunnlagId, :maalingId,
+            :testregelId, :loeysingId, :sideutvalId, :testUtfoert, :elementUtfall, :elementResultat,
+            :elementOmtalePointer, :elmentOmtalerHtml, :elementOmtalerDescription, :brukarid
+        )
+        RETURNING id
         """
             .trimIndent()
     val params =
@@ -77,21 +78,21 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun update(testresultat: TestresultatDB): Int {
     val sql =
         """
-            UPDATE testresultat
-            SET
-             testgrunnlag_id = :testgrunnlagId,
-             maaling_id = :maalingId,
-             testregel_id = :testregelId,
-                loeysing_id = :loeysingId,
-                sideutval_id = :sideutvalId,
-                test_vart_utfoert = :testUtfoert,
-                element_utfall = :elementUtfall,
-                element_resultat = :elementResultat,
-                element_omtale_pointer = :elementOmtalePointer,
-                element_omtale_html = :elmentOmtaleHtml,
-                element_omtale = :elementOmtaleDescription,
-                brukar_id = :brukarid
-            WHERE id = :id
+        UPDATE testresultat
+        SET
+         testgrunnlag_id = :testgrunnlagId,
+         maaling_id = :maalingId,
+         testregel_id = :testregelId,
+            loeysing_id = :loeysingId,
+            sideutval_id = :sideutvalId,
+            test_vart_utfoert = :testUtfoert,
+            element_utfall = :elementUtfall,
+            element_resultat = :elementResultat,
+            element_omtale_pointer = :elementOmtalePointer,
+            element_omtale_html = :elmentOmtaleHtml,
+            element_omtale = :elementOmtaleDescription,
+            brukar_id = :brukarid
+        WHERE id = :id
         """
             .trimIndent()
     val params =
@@ -135,7 +136,8 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             onFailure = {
               logger.error(it.message)
               emptyList()
-            })
+            },
+        )
   }
 
   @Observed(name = "List<TestresultatDB> listBy maalingId and loeysingId brot")
@@ -154,7 +156,8 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             onFailure = {
               logger.error(it.message)
               emptyList()
-            })
+            },
+        )
   }
 
   @Observed(name = "List<TestresultatDB> listBy maalingId and loeysingId brot")
@@ -162,7 +165,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       maalingId: Int,
       loeysingId: Int?,
       testregelId: Int,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDB> {
     val sql =
         "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id=:testregelId and element_resultat= 'brot' order by %s %s limit :limit offset :offset"
@@ -170,7 +173,8 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val formated =
         sql.format(
             mapSortParamToDBField(sortPaginationParams.sortParam),
-            sortPaginationParams.sortOrder.name)
+            sortPaginationParams.sortOrder.name,
+        )
 
     val params =
         MapSqlParameterSource()
@@ -189,14 +193,15 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             onFailure = {
               logger.error(it.message)
               emptyList()
-            })
+            },
+        )
   }
 
   fun listBy(
       maalingId: Int,
       loeysingId: Int?,
       testregelIds: List<Int>,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDB> {
     val sql =
         "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id in (:testregelIds) and element_resultat= 'brot' order by %s %s limit :limit offset :offset"
@@ -204,7 +209,8 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val formated =
         sql.format(
             mapSortParamToDBField(sortPaginationParams.sortParam),
-            sortPaginationParams.sortOrder.name)
+            sortPaginationParams.sortOrder.name,
+        )
 
     val params =
         MapSqlParameterSource()
@@ -242,19 +248,23 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   ): Result<Int> {
     return runCatching {
       jdbcTemplate.queryForObject(
-          """select count(*) from testlab2_testing.testresultat tr
-                where tr.loeysing_id=:loeysingId
-                and tr.testregel_id=:testregelId
-                and tr.element_resultat = 'brot'
-                and (:testgrunnlagId::int is null or testgrunnlag_id=:testgrunnlagId)
-                and(:maalingId::int is null or maaling_id=:maalingId)"""
+          """
+          select count(*) from testlab2_testing.testresultat tr
+                          where tr.loeysing_id=:loeysingId
+                          and tr.testregel_id=:testregelId
+                          and tr.element_resultat = 'brot'
+                          and (:testgrunnlagId::int is null or testgrunnlag_id=:testgrunnlagId)
+                          and(:maalingId::int is null or maaling_id=:maalingId)
+          """
               .trimIndent(),
           mapOf(
               "maalingId" to maalingId,
               "testgrunnlagId" to testgrunnlagId,
               "loeysingId" to loeysingId,
-              "testregelId" to testregelId),
-          Int::class.java) as Int
+              "testregelId" to testregelId,
+          ),
+          Int::class.java,
+      ) as Int
     }
   }
 
@@ -262,23 +272,27 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       loeysingId: Int,
       testregelIds: List<Int>,
       testgrunnlagId: Int?,
-      maalingId: Int?
+      maalingId: Int?,
   ): Result<Int> {
     return runCatching {
       jdbcTemplate.queryForObject(
-          """select count(*) from testlab2_testing.testresultat tr
-                where tr.loeysing_id=:loeysingId
-                and tr.testregel_id in (:testregelIds)
-                and tr.element_resultat = 'brot'
-                and (:testgrunnlagId::int is null or testgrunnlag_id=:testgrunnlagId)
-                and(:maalingId::int is null or maaling_id=:maalingId)"""
+          """
+          select count(*) from testlab2_testing.testresultat tr
+                          where tr.loeysing_id=:loeysingId
+                          and tr.testregel_id in (:testregelIds)
+                          and tr.element_resultat = 'brot'
+                          and (:testgrunnlagId::int is null or testgrunnlag_id=:testgrunnlagId)
+                          and(:maalingId::int is null or maaling_id=:maalingId)
+          """
               .trimIndent(),
           mapOf(
               "maalingId" to maalingId,
               "testgrunnlagId" to testgrunnlagId,
               "loeysingId" to loeysingId,
-              "testregelIds" to testregelIds),
-          Int::class.java) as Int
+              "testregelIds" to testregelIds,
+          ),
+          Int::class.java,
+      ) as Int
     }
   }
 
@@ -301,13 +315,16 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
    */
   fun getTestresultatByTestgrunnlagId(testgrunnlagId: Int): List<TestresultatExport> =
       jdbcTemplate.query(
-          """SELECT * FROM testresultat t
-               join testlab2_testing.testgrunnlag tg on tg.id=t.testgrunnlag_id
-               WHERE testgrunnlag_id = :testgrunnlagId"""
+          """
+          |SELECT * FROM testresultat t
+          |               join testlab2_testing.testgrunnlag tg on tg.id=t.testgrunnlag_id
+          |               WHERE testgrunnlag_id = :testgrunnlagId
+          """
               .trimMargin(),
-          MapSqlParameterSource().addValue("testgrunnlagId", testgrunnlagId)) { rs, _ ->
-            mapResultSetToTestresultatDBBase(rs)
-          }
+          MapSqlParameterSource().addValue("testgrunnlagId", testgrunnlagId),
+      ) { rs, _ ->
+        mapResultSetToTestresultatDBBase(rs)
+      }
 
   fun getTestresultatByMaalingId(maalingId: Int, loeysingId: Int): List<TestresultatExport> =
       jdbcTemplate.query(
@@ -316,9 +333,10 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             WHERE maaling_id = :maalingId and loeysing_id = :loeysingId""",
           MapSqlParameterSource()
               .addValue("maalingId", maalingId)
-              .addValue("loeysingId", loeysingId)) { rs, _ ->
-            mapResultSetToTestresultatDBBase(rs)
-          }
+              .addValue("loeysingId", loeysingId),
+      ) { rs, _ ->
+        mapResultSetToTestresultatDBBase(rs)
+      }
 
   private fun mapResultSetToTestresultatDBBase(rs: ResultSet): TestresultatExport =
       TestresultatExport(
@@ -326,13 +344,15 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           testregelId = rs.getInt("testregel_id"),
           loeysingId = rs.getInt("loeysing_id"),
           sideutvalId = rs.getInt("crawl_side_id"),
-          testUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant()
-                  ?: java.time.Instant.now(),
+          testUtfoert =
+              rs.getTimestamp("test_vart_utfoert")?.toInstant() ?: java.time.Instant.now(),
           elementUtfall = rs.getString("element_utfall") ?: "",
-          elementResultat = rs.getString("element_resultat")?.let { TestresultatUtfall.valueOf(it) }
+          elementResultat =
+              rs.getString("element_resultat")?.let { TestresultatUtfall.valueOf(it) }
                   ?: TestresultatUtfall.ikkjeForekomst,
           elementOmtalePointer = rs.getString("element_omtale_pointer") ?: "",
           elementOmtaleHtml = rs.getString("element_omtale_html") ?: "",
           elementOmtaleDescription = rs.getString("element_omtale") ?: "",
-          brukarId = rs.getInt("brukar_id"))
+          brukarId = rs.getInt("brukar_id"),
+      )
 }

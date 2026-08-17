@@ -18,7 +18,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 @RequestMapping("/testgrunnlag/kontroll")
 class TestgrunnlagResource(
     val testgrunnlagDAO: TestgrunnlagDAO,
-    val testgrunnlagService: TestgrunnlagService
+    val testgrunnlagService: TestgrunnlagService,
 ) {
 
   val logger: Logger = LoggerFactory.getLogger(TestgrunnlagResource::class.java)
@@ -26,7 +26,7 @@ class TestgrunnlagResource(
   @GetMapping
   fun getTestgrunnlagList(
       @RequestParam kontrollId: Int,
-      @RequestParam loeysingId: Int?
+      @RequestParam loeysingId: Int?,
   ): ResponseEntity<List<TestgrunnlagKontroll>> {
     return ResponseEntity.ok(testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).toList())
   }
@@ -34,7 +34,8 @@ class TestgrunnlagResource(
   @PostMapping
   fun createTestgrunnlag(@RequestBody testgrunnlag: NyttTestgrunnlag): ResponseEntity<Int> {
     logger.info(
-        "Opprett testgrunnlag for sak ${testgrunnlag.kontrollId} og loeysinger ${testgrunnlag.sideutval.map { it.loeysingId }}")
+        "Opprett testgrunnlag for sak ${testgrunnlag.kontrollId} og loeysinger ${testgrunnlag.sideutval.map { it.loeysingId }}"
+    )
 
     return runCatching { testgrunnlagDAO.createTestgrunnlag(testgrunnlag).getOrThrow() }
         .fold(
@@ -45,7 +46,8 @@ class TestgrunnlagResource(
             onFailure = {
               logger.error("Feil ved oppretting av testgrunnlag", it)
               ResponseEntity.internalServerError().build()
-            })
+            },
+        )
   }
 
   @PostMapping("retest")
@@ -59,7 +61,8 @@ class TestgrunnlagResource(
               onFailure = {
                 logger.error("Kunne ikkje lage retest av testresultat", it)
                 ResponseEntity.internalServerError().build()
-              })
+              },
+          )
 
   @GetMapping("list/{kontrollId}")
   fun listTestgrunnlagForKontroll(
@@ -73,20 +76,22 @@ class TestgrunnlagResource(
         .getTestgrunnlag(id)
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
-            onFailure = { ResponseEntity.notFound().build() })
+            onFailure = { ResponseEntity.notFound().build() },
+        )
   }
 
   @PutMapping("/{id}")
   fun updateTestgrunnlag(
       @PathVariable id: Int,
-      @RequestBody testgrunnlag: TestgrunnlagKontroll
+      @RequestBody testgrunnlag: TestgrunnlagKontroll,
   ): ResponseEntity<TestgrunnlagKontroll> {
     require(testgrunnlag.id == id) { "id i URL-en og id er ikkje den same" }
     return testgrunnlagDAO
         .updateTestgrunnlag(testgrunnlag)
         .fold(
             onSuccess = { ResponseEntity.ok(it) },
-            onFailure = { ResponseEntity.notFound().build() })
+            onFailure = { ResponseEntity.notFound().build() },
+        )
   }
 
   @DeleteMapping("/{id}")
@@ -97,7 +102,8 @@ class TestgrunnlagResource(
             onFailure = {
               logger.error("Feil ved sletting av testgrunnlag", it)
               ResponseEntity.notFound().build()
-            })
+            },
+        )
   }
 
   private fun location(id: Int) =

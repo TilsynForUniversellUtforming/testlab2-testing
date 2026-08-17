@@ -23,7 +23,7 @@ class AuthenticationFilter(val tokenAuthenticationService: TokenAuthenticationSe
   override fun doFilter(
       request: ServletRequest,
       response: ServletResponse,
-      filterChain: FilterChain
+      filterChain: FilterChain,
   ) {
     if ((request as HttpServletRequest).getHeader("X-API-KEY") != null) {
       try {

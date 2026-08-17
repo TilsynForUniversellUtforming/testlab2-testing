@@ -111,30 +111,31 @@ class StyringsdataDAOTest(
         Paalegg(
             id = null,
             vedtakDato = LocalDate.now().minusDays(10),
-            frist = LocalDate.now().plusDays(20))
+            frist = LocalDate.now().plusDays(20),
+        )
 
     val originalStyringsdata =
         styringsdataDAO.getStyringsdataLoeysingById(styringsdataLoeysingById).first()
-    val updatedStyringsdata =
-        originalStyringsdata.let { styringsdata ->
-          Styringsdata.Loeysing(
-              id = styringsdata.id,
-              loeysingId = styringsdata.kontrollId,
-              kontrollId = styringsdata.loeysingId,
-              ansvarleg = styringsdata.ansvarleg,
-              oppretta = styringsdata.oppretta,
-              frist = styringsdata.frist,
-              reaksjon = styringsdata.reaksjon,
-              paaleggReaksjon = styringsdata.paaleggReaksjon,
-              paaleggKlageReaksjon = styringsdata.paaleggKlageReaksjon,
-              botReaksjon = styringsdata.botReaksjon,
-              botKlageReaksjon = styringsdata.botKlageReaksjon,
-              paalegg = paalegg,
-              paaleggKlage = null,
-              bot = null,
-              botKlage = null,
-              sistLagra = styringsdata.sistLagra)
-        }
+    val updatedStyringsdata = originalStyringsdata.let { styringsdata ->
+      Styringsdata.Loeysing(
+          id = styringsdata.id,
+          loeysingId = styringsdata.kontrollId,
+          kontrollId = styringsdata.loeysingId,
+          ansvarleg = styringsdata.ansvarleg,
+          oppretta = styringsdata.oppretta,
+          frist = styringsdata.frist,
+          reaksjon = styringsdata.reaksjon,
+          paaleggReaksjon = styringsdata.paaleggReaksjon,
+          paaleggKlageReaksjon = styringsdata.paaleggKlageReaksjon,
+          botReaksjon = styringsdata.botReaksjon,
+          botKlageReaksjon = styringsdata.botKlageReaksjon,
+          paalegg = paalegg,
+          paaleggKlage = null,
+          bot = null,
+          botKlage = null,
+          sistLagra = styringsdata.sistLagra,
+      )
+    }
 
     styringsdataDAO.updateStyringsdataLoeysing(styringsdataLoeysingById, updatedStyringsdata)
 
@@ -153,30 +154,31 @@ class StyringsdataDAOTest(
             klageAvgjortDato = LocalDate.now().plusDays(15),
             resultatKlageTilsyn = ResultatKlage.stadfesta,
             klageDatoDepartement = LocalDate.now().plusDays(20),
-            resultatKlageDepartement = ResultatKlage.stadfesta)
+            resultatKlageDepartement = ResultatKlage.stadfesta,
+        )
 
     val originalStyringsdata =
         styringsdataDAO.getStyringsdataLoeysingById(styringsdataLoeysingById).first()
-    val updatedStyringsdata =
-        originalStyringsdata.let { styringsdata ->
-          Styringsdata.Loeysing(
-              id = styringsdata.id,
-              loeysingId = styringsdata.kontrollId,
-              kontrollId = styringsdata.loeysingId,
-              ansvarleg = styringsdata.ansvarleg,
-              oppretta = styringsdata.oppretta,
-              frist = styringsdata.frist,
-              reaksjon = styringsdata.reaksjon,
-              paaleggReaksjon = styringsdata.paaleggReaksjon,
-              paaleggKlageReaksjon = styringsdata.paaleggKlageReaksjon,
-              botReaksjon = styringsdata.botReaksjon,
-              botKlageReaksjon = styringsdata.botKlageReaksjon,
-              paalegg = styringsdata.paaleggId?.let { styringsdataDAO.getPaalegg(it) },
-              paaleggKlage = paaleggKlage,
-              bot = null,
-              botKlage = null,
-              sistLagra = styringsdata.sistLagra)
-        }
+    val updatedStyringsdata = originalStyringsdata.let { styringsdata ->
+      Styringsdata.Loeysing(
+          id = styringsdata.id,
+          loeysingId = styringsdata.kontrollId,
+          kontrollId = styringsdata.loeysingId,
+          ansvarleg = styringsdata.ansvarleg,
+          oppretta = styringsdata.oppretta,
+          frist = styringsdata.frist,
+          reaksjon = styringsdata.reaksjon,
+          paaleggReaksjon = styringsdata.paaleggReaksjon,
+          paaleggKlageReaksjon = styringsdata.paaleggKlageReaksjon,
+          botReaksjon = styringsdata.botReaksjon,
+          botKlageReaksjon = styringsdata.botKlageReaksjon,
+          paalegg = styringsdata.paaleggId?.let { styringsdataDAO.getPaalegg(it) },
+          paaleggKlage = paaleggKlage,
+          bot = null,
+          botKlage = null,
+          sistLagra = styringsdata.sistLagra,
+      )
+    }
 
     styringsdataDAO.updateStyringsdataLoeysing(styringsdataLoeysingById, updatedStyringsdata)
 
@@ -198,30 +200,31 @@ class StyringsdataDAOTest(
             vedtakDato = LocalDate.now().plusDays(30),
             startDato = LocalDate.now(),
             sluttDato = LocalDate.now().plusDays(60),
-            kommentar = "Updated Test Bot")
+            kommentar = "Updated Test Bot",
+        )
 
     val originalStyringsdata =
         styringsdataDAO.getStyringsdataLoeysingById(styringsdataLoeysingById).first()
-    val updatedStyringsdata =
-        originalStyringsdata.let { styringsdata ->
-          Styringsdata.Loeysing(
-              id = styringsdata.id,
-              loeysingId = styringsdata.kontrollId,
-              kontrollId = styringsdata.loeysingId,
-              ansvarleg = styringsdata.ansvarleg,
-              oppretta = styringsdata.oppretta,
-              frist = styringsdata.frist,
-              reaksjon = styringsdata.reaksjon,
-              paaleggReaksjon = styringsdata.paaleggReaksjon,
-              paaleggKlageReaksjon = styringsdata.paaleggKlageReaksjon,
-              botReaksjon = styringsdata.botReaksjon,
-              botKlageReaksjon = styringsdata.botKlageReaksjon,
-              paalegg = styringsdata.paaleggId?.let { styringsdataDAO.getPaalegg(it) },
-              paaleggKlage = styringsdata.paaleggKlageId?.let { styringsdataDAO.getKlage(it) },
-              bot = bot,
-              botKlage = null,
-              sistLagra = styringsdata.sistLagra)
-        }
+    val updatedStyringsdata = originalStyringsdata.let { styringsdata ->
+      Styringsdata.Loeysing(
+          id = styringsdata.id,
+          loeysingId = styringsdata.kontrollId,
+          kontrollId = styringsdata.loeysingId,
+          ansvarleg = styringsdata.ansvarleg,
+          oppretta = styringsdata.oppretta,
+          frist = styringsdata.frist,
+          reaksjon = styringsdata.reaksjon,
+          paaleggReaksjon = styringsdata.paaleggReaksjon,
+          paaleggKlageReaksjon = styringsdata.paaleggKlageReaksjon,
+          botReaksjon = styringsdata.botReaksjon,
+          botKlageReaksjon = styringsdata.botKlageReaksjon,
+          paalegg = styringsdata.paaleggId?.let { styringsdataDAO.getPaalegg(it) },
+          paaleggKlage = styringsdata.paaleggKlageId?.let { styringsdataDAO.getKlage(it) },
+          bot = bot,
+          botKlage = null,
+          sistLagra = styringsdata.sistLagra,
+      )
+    }
 
     styringsdataDAO.updateStyringsdataLoeysing(styringsdataLoeysingById, updatedStyringsdata)
 
@@ -240,30 +243,31 @@ class StyringsdataDAOTest(
             klageAvgjortDato = LocalDate.now().plusDays(15),
             resultatKlageTilsyn = ResultatKlage.stadfesta,
             klageDatoDepartement = LocalDate.now().plusDays(20),
-            resultatKlageDepartement = ResultatKlage.stadfesta)
+            resultatKlageDepartement = ResultatKlage.stadfesta,
+        )
 
     val originalStyringsdata =
         styringsdataDAO.getStyringsdataLoeysingById(styringsdataLoeysingById).first()
-    val updatedStyringsdata =
-        originalStyringsdata.let { styringsdata ->
-          Styringsdata.Loeysing(
-              id = styringsdata.id,
-              loeysingId = styringsdata.kontrollId,
-              kontrollId = styringsdata.loeysingId,
-              ansvarleg = styringsdata.ansvarleg,
-              oppretta = styringsdata.oppretta,
-              frist = styringsdata.frist,
-              reaksjon = styringsdata.reaksjon,
-              paaleggReaksjon = styringsdata.paaleggReaksjon,
-              paaleggKlageReaksjon = styringsdata.paaleggKlageReaksjon,
-              botReaksjon = styringsdata.botReaksjon,
-              botKlageReaksjon = styringsdata.botKlageReaksjon,
-              paalegg = styringsdata.paaleggId?.let { styringsdataDAO.getPaalegg(it) },
-              paaleggKlage = styringsdata.paaleggKlageId?.let { styringsdataDAO.getKlage(it) },
-              bot = styringsdata.botId?.let { styringsdataDAO.getBot(it) },
-              botKlage = botKlage,
-              sistLagra = styringsdata.sistLagra)
-        }
+    val updatedStyringsdata = originalStyringsdata.let { styringsdata ->
+      Styringsdata.Loeysing(
+          id = styringsdata.id,
+          loeysingId = styringsdata.kontrollId,
+          kontrollId = styringsdata.loeysingId,
+          ansvarleg = styringsdata.ansvarleg,
+          oppretta = styringsdata.oppretta,
+          frist = styringsdata.frist,
+          reaksjon = styringsdata.reaksjon,
+          paaleggReaksjon = styringsdata.paaleggReaksjon,
+          paaleggKlageReaksjon = styringsdata.paaleggKlageReaksjon,
+          botReaksjon = styringsdata.botReaksjon,
+          botKlageReaksjon = styringsdata.botKlageReaksjon,
+          paalegg = styringsdata.paaleggId?.let { styringsdataDAO.getPaalegg(it) },
+          paaleggKlage = styringsdata.paaleggKlageId?.let { styringsdataDAO.getKlage(it) },
+          bot = styringsdata.botId?.let { styringsdataDAO.getBot(it) },
+          botKlage = botKlage,
+          sistLagra = styringsdata.sistLagra,
+      )
+    }
 
     styringsdataDAO.updateStyringsdataLoeysing(styringsdataLoeysingById, updatedStyringsdata)
 
@@ -288,7 +292,8 @@ class StyringsdataDAOTest(
             status = null,
             svarFoerebelsRapportDato = null,
             varselSendtDato = null,
-            sistLagra = Instant.now())
+            sistLagra = Instant.now(),
+        )
     return styringsdataDAO.createStyringsdataKontroll(styringsdata).getOrThrow()
   }
 
@@ -310,7 +315,8 @@ class StyringsdataDAOTest(
             paaleggKlage = null,
             bot = null,
             botKlage = null,
-            sistLagra = Instant.now())
+            sistLagra = Instant.now(),
+        )
     return styringsdataDAO.createStyringsdataLoeysing(styringsdata).getOrThrow()
   }
 
@@ -321,7 +327,8 @@ class StyringsdataDAOTest(
             "Ola Nordmann",
             Sakstype.Arkivsak,
             "1234",
-            Kontrolltype.InngaaendeKontroll)
+            Kontrolltype.InngaaendeKontroll,
+        )
 
     return kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
   }

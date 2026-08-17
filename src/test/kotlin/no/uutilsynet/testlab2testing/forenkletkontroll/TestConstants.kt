@@ -32,7 +32,11 @@ object TestConstants {
 
   val uutilsynetLoeysingExpanded =
       Loeysing.Expanded(
-          1, "UUTilsynet", URI("https://www.uutilsynet.no/").toURL(), uutilsynetVerksemd)
+          1,
+          "UUTilsynet",
+          URI("https://www.uutilsynet.no/").toURL(),
+          uutilsynetVerksemd,
+      )
 
   val uutilsynetLoeysing = uutilsynetLoeysingExpanded.toLoeysing()
 
@@ -56,7 +60,8 @@ object TestConstants {
           1,
           1,
           "QW-ACT-12",
-          1)
+          1,
+      )
 
   val testRegelList = listOf(testregel)
 
@@ -68,7 +73,8 @@ object TestConstants {
           "datoStart" to maalingDateStart,
           "loeysingIdList" to loeysingList.map { it.id },
           "testregelIdList" to testRegelList.map { it.id },
-          "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10))
+          "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10),
+      )
 
   const val statusURL = "https://status.url"
   val crawlResultat =
@@ -92,7 +98,8 @@ object TestConstants {
               URI("https://aggregeringLoeysing.resultat").toURL(),
           ),
           Brukar("test", "testar"),
-          crawlResultat.antallNettsider)
+          crawlResultat.antallNettsider,
+      )
 
   val testKoeyring2 =
       TestKoeyring.Ferdig(
@@ -109,7 +116,8 @@ object TestConstants {
               URI("https://aggregeringLoeysing.resultat").toURL(),
           ),
           Brukar("test", "testar"),
-          crawlResultat2.antallNettsider)
+          crawlResultat2.antallNettsider,
+      )
 
   val testKoeyringList = listOf(testKoeyring, testKoeyring2)
 }

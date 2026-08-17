@@ -10,7 +10,7 @@ class ResultatAppResultatService(
     resultatDAO: ResultatDAO,
     kravregisterClient: KravregisterClient,
     testresultatDAO: TestresultatDAO,
-    testregelCache: TestregelCache
+    testregelCache: TestregelCache,
 ) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelCache) {
   override fun getBrukararForTest(kontrollId: Int): List<String> {
     TODO("Not yet implemented")
@@ -18,7 +18,7 @@ class ResultatAppResultatService(
 
   override fun getResultatForKontroll(
       kontrollId: Int,
-      loeysingId: Int
+      loeysingId: Int,
   ): List<TestresultatDetaljert> {
     TODO("Not yet implemented")
   }
@@ -31,7 +31,7 @@ class ResultatAppResultatService(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDetaljert> {
     TODO("Not yet implemented")
   }
@@ -42,7 +42,7 @@ class ResultatAppResultatService(
 
   override fun progresjonPrLoeysing(
       testgrunnlagId: Int,
-      loeysingar: ResultatService.LoysingList
+      loeysingar: ResultatService.LoysingList,
   ): Map<Int, Int> {
     TODO("Not yet implemented")
   }
@@ -51,7 +51,7 @@ class ResultatAppResultatService(
       kontrollId: Int,
       loeysingId: Int,
       kravId: Int,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDetaljert> {
     TODO("Not yet implemented")
   }
@@ -59,7 +59,7 @@ class ResultatAppResultatService(
   override fun getTalBrotForKontrollLoeysingTestregel(
       kontrollId: Int,
       loeysingId: Int,
-      testregelId: Int
+      testregelId: Int,
   ): Result<Int> {
     TODO("Not yet implemented")
   }
@@ -67,7 +67,7 @@ class ResultatAppResultatService(
   override fun getTalBrotForKontrollLoeysingKrav(
       kontrollId: Int,
       loeysingId: Int,
-      kravId: Int
+      kravId: Int,
   ): Result<Int> {
     TODO("Not yet implemented")
   }

@@ -68,7 +68,8 @@ class KontrollResourceTest(
           "saksbehandler" to "Ola Nordmann",
           "sakstype" to "forvaltningssak",
           "kontrolltype" to "inngaaende-kontroll",
-          "arkivreferanse" to "1234")
+          "arkivreferanse" to "1234",
+      )
 
   @Test
   @DisplayName("når vi oppretter en kontroll så skal vi få en URI som resultat i location")
@@ -82,7 +83,9 @@ class KontrollResourceTest(
         .then()
         .statusCode(equalTo(201))
         .header(
-            "Location", org.hamcrest.CoreMatchers.startsWith("http://localhost:$port/kontroller/"))
+            "Location",
+            org.hamcrest.CoreMatchers.startsWith("http://localhost:$port/kontroller/"),
+        )
   }
 
   @Test
@@ -104,7 +107,8 @@ class KontrollResourceTest(
 
   @Test
   @DisplayName(
-      "gitt at vi har opprettet en kontroll, så skal vi kunne hente den ut igjen med url-en i location")
+      "gitt at vi har opprettet en kontroll, så skal vi kunne hente den ut igjen med url-en i location"
+  )
   fun getKontrollById() {
     val body = kontrollInitBody
     val location =
@@ -129,7 +133,8 @@ class KontrollResourceTest(
 
   @Test
   @DisplayName(
-      "gitt vi har en kontroll, når vi oppdaterer den med et utvalg, så skal kontrollen være lagret med dataene fra utvalget")
+      "gitt vi har en kontroll, når vi oppdaterer den med et utvalg, så skal kontrollen være lagret med dataene fra utvalget"
+  )
   fun updateKontrollWithLoeysingar() {
     RestAssured.defaultParser = Parser.JSON
     val body = kontrollInitBody
@@ -164,7 +169,8 @@ class KontrollResourceTest(
         mapOf(
             "kontroll" to opprettetKontroll,
             "utvalId" to utval.id,
-            "kontrollSteg" to KontrollSteg.Utval)
+            "kontrollSteg" to KontrollSteg.Utval,
+        )
     given()
         .port(port)
         .body(updateBody)
@@ -181,7 +187,8 @@ class KontrollResourceTest(
 
   @Test
   @DisplayName(
-      "gitt at vi har opprettet en kontroll, så skal vi kunne oppdatere den flere ganger med samme utval")
+      "gitt at vi har opprettet en kontroll, så skal vi kunne oppdatere den flere ganger med samme utval"
+  )
   fun oppdaterUtvalgFlereGanger() {
     RestAssured.defaultParser = Parser.JSON
     val body = kontrollInitBody
@@ -216,7 +223,8 @@ class KontrollResourceTest(
         mapOf(
             "kontroll" to opprettetKontroll,
             "utvalId" to utval.id,
-            "kontrollSteg" to KontrollSteg.Utval)
+            "kontrollSteg" to KontrollSteg.Utval,
+        )
     (1..3).forEach { _ ->
       given()
           .port(port)
@@ -255,7 +263,8 @@ class KontrollResourceTest(
             namn = "regelsett_skal_slettes",
             modus = testregel.modus,
             standard = false,
-            testregelIdList = listOf(testregel.id))
+            testregelIdList = listOf(testregel.id),
+        )
 
     val regelsettLocationForId =
         given()
@@ -275,8 +284,10 @@ class KontrollResourceTest(
             "testreglar" to
                 mapOf(
                     "regelsettId" to regelsett.id,
-                    "testregelIdList" to regelsett.testregelList.map { it.id }),
-            "kontrollSteg" to KontrollSteg.Testreglar)
+                    "testregelIdList" to regelsett.testregelList.map { it.id },
+                ),
+            "kontrollSteg" to KontrollSteg.Testreglar,
+        )
     given()
         .port(port)
         .body(updateBody)
@@ -316,7 +327,8 @@ class KontrollResourceTest(
         mapOf(
             "kontroll" to opprettetKontroll,
             "testreglar" to mapOf("regelsettId" to null, "testregelIdList" to listOf(testregel.id)),
-            "kontrollSteg" to KontrollSteg.Testreglar)
+            "kontrollSteg" to KontrollSteg.Testreglar,
+        )
 
     given()
         .port(port)
@@ -388,7 +400,8 @@ class KontrollResourceTest(
         mapOf(
             "kontroll" to opprettetKontroll,
             "utvalId" to utval.id,
-            "kontrollSteg" to KontrollSteg.Utval)
+            "kontrollSteg" to KontrollSteg.Utval,
+        )
 
     given()
         .port(port)
@@ -409,8 +422,11 @@ class KontrollResourceTest(
                         "typeId" to 1,
                         "begrunnelse" to "Side med elementer",
                         "url" to "https://www.uutilsynet.no",
-                        "egendefinertObjekt" to "")),
-            "kontrollSteg" to KontrollSteg.Sideutval)
+                        "egendefinertObjekt" to "",
+                    )
+                ),
+            "kontrollSteg" to KontrollSteg.Sideutval,
+        )
 
     given()
         .port(port)

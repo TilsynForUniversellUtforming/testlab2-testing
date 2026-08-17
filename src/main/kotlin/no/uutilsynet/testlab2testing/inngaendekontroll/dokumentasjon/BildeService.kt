@@ -66,7 +66,8 @@ class BildeService(
   private fun getBildeStiFromBildeId(bildeId: Int) =
       listOf(
           bildeDAO.getBildeSti(bildeId).getOrThrow()
-              ?: throw IllegalArgumentException("Fann ikkje bilde for bilde-id $bildeId"))
+              ?: throw IllegalArgumentException("Fann ikkje bilde for bilde-id $bildeId")
+      )
 
   private fun deleteBilde(bildeSti: BildeSti) {
     blobClient.deleteBilde(bildeSti.bilde).onFailure {
@@ -115,7 +116,7 @@ class BildeService(
       testresultatId: Int,
       indexOffset: Int,
       bildeList: List<MultipartFile>,
-      kontrolInfo: KontrollDocumentation
+      kontrolInfo: KontrollDocumentation,
   ): Result<List<BildeRequest>> {
     val allowedMIMETypes =
         listOf(MimeTypeUtils.IMAGE_JPEG_VALUE, MimeTypeUtils.IMAGE_PNG_VALUE, "image/bmp")

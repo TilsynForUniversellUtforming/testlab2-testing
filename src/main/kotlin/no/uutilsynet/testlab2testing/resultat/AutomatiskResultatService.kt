@@ -27,7 +27,7 @@ class AutomatiskResultatService(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDetaljert> {
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)
     return if (testresultatDAO.hasResultInDB(maalingId, loeysingId)) {
@@ -42,7 +42,7 @@ class AutomatiskResultatService(
 
   override fun getResultatForKontroll(
       kontrollId: Int,
-      loeysingId: Int
+      loeysingId: Int,
   ): List<TestresultatDetaljert> {
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)
     return if (testresultatDAO.hasResultInDB(maalingId, loeysingId)) {
@@ -63,30 +63,38 @@ class AutomatiskResultatService(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDetaljert> {
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)
     return getAutomatiskTestresultatMaaling(
-        maalingId, loeysingId, testregelId, sortPaginationParams)
+        maalingId,
+        loeysingId,
+        testregelId,
+        sortPaginationParams,
+    )
   }
 
   private fun getAutomatiskTestresultatMaaling(
       maalingId: Int,
       loeysingId: Int,
       testregelId: Int,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDetaljert> {
 
     val resultat =
         testresultatDAO.listBy(
-            maalingId = maalingId, loeysingId = loeysingId, testregelId, sortPaginationParams)
+            maalingId = maalingId,
+            loeysingId = loeysingId,
+            testregelId,
+            sortPaginationParams,
+        )
     return testresultatDBConverter.mapTestresults(resultat)
   }
 
   @Observed(name = "AutomatiskResultatService.getAutomatiskTestresultatMaaling")
   fun getAutomatiskTestresultatMaaling(
       maalingId: Int,
-      loeysingId: Int
+      loeysingId: Int,
   ): List<TestresultatDetaljert> {
     val resultat = testresultatDAO.listBy(maalingId = maalingId, loeysingId = loeysingId)
     return testresultatDBConverter.mapTestresults(resultat)
@@ -107,7 +115,7 @@ class AutomatiskResultatService(
 
   private fun testresultatDetaljertMaaling(
       it: TestResultat,
-      maalingId: Int
+      maalingId: Int,
   ): TestresultatDetaljert {
     val testregel = testregelCache.getTestregelByKey(it.testregelId)
     return TestresultatDetaljert(
@@ -124,7 +132,8 @@ class AutomatiskResultatService(
         it.elementOmtale,
         null,
         null,
-        emptyList())
+        emptyList(),
+    )
   }
 
   private fun getKontrollResultatMaaling(maalingId: Int?): List<ResultatLoeysingDTO> {
@@ -148,7 +157,7 @@ class AutomatiskResultatService(
       kontrollId: Int,
       loeysingId: Int,
       kravId: Int,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDetaljert> {
     val testreglar = getTestreglarForKrav(kravId).map { it.id }
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)
@@ -177,7 +186,7 @@ class AutomatiskResultatService(
   override fun getTalBrotForKontrollLoeysingTestregel(
       kontrollId: Int,
       loeysingId: Int,
-      testregelId: Int
+      testregelId: Int,
   ): Result<Int> {
     return runCatching {
       val maalingId = maalingService.getMaalingForKontroll(kontrollId)
@@ -196,7 +205,7 @@ class AutomatiskResultatService(
   override fun getTalBrotForKontrollLoeysingKrav(
       kontrollId: Int,
       loeysingId: Int,
-      kravId: Int
+      kravId: Int,
   ): Result<Int> {
     val testregelIds = getTestreglarForKrav(kravId).map { it.id }
     val maalingId = maalingService.getMaalingForKontroll(kontrollId)

@@ -15,7 +15,7 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
       testgrunnlagId: Int,
       testresultat: List<ResultatManuellKontroll>,
       testregelIds: List<Int>,
-      sideutvalIds: List<Int>
+      sideutvalIds: List<Int>,
   ): TestStatusCount {
     val numTestregel = testregelIds.size
     val numSider = sideutvalIds.size
@@ -24,13 +24,16 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
     val total = numSider * numTestregel
     val ferdig =
         uniqueTestKeyCount(
-            testresultat.filter { it.status == ResultatManuellKontrollBase.Status.Ferdig })
+            testresultat.filter { it.status == ResultatManuellKontrollBase.Status.Ferdig }
+        )
     val underArbeid =
         uniqueTestKeyCount(
-            testresultat.filter { it.status == ResultatManuellKontrollBase.Status.UnderArbeid })
+            testresultat.filter { it.status == ResultatManuellKontrollBase.Status.UnderArbeid }
+        )
     val ikkjeStarta =
         uniqueTestKeyCount(
-            testresultat.filter { it.status == ResultatManuellKontrollBase.Status.IkkjePaabegynt })
+            testresultat.filter { it.status == ResultatManuellKontrollBase.Status.IkkjePaabegynt }
+        )
 
     val percentagePerSide = progresjonForSideutval(testregelIds, sideutvalIds, testresultat)
 
@@ -45,7 +48,8 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
         underArbeid,
         ikkjeStarta,
         percentagePerSide,
-        percectagePerInnholdstype)
+        percectagePerInnholdstype,
+    )
   }
 
   fun uniqueTestKeyCount(resultat: List<ResultatManuellKontroll>): Int {
@@ -60,7 +64,7 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
   fun progresjonForSideutval(
       testregelIds: List<Int>,
       sideutvalIds: List<Int>,
-      testresultat: List<ResultatManuellKontroll>
+      testresultat: List<ResultatManuellKontroll>,
   ): Double {
     val finshedTestsKeys =
         testresultat
@@ -83,7 +87,7 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
   fun progresjonForInnhaldstype(
       testregelIds: List<Int>,
       sideutvalIds: List<Int>,
-      testresultat: List<ResultatManuellKontroll>
+      testresultat: List<ResultatManuellKontroll>,
   ): Double {
     val innholdstypeGroup =
         testregelClient.getTestregelListFromIds(testregelIds).getOrThrow().groupBy {

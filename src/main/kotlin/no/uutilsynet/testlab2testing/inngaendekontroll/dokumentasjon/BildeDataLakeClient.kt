@@ -46,7 +46,8 @@ class BildeDataLakeClient(private val blobStorageProperties: BlobStorageProperti
 
   override fun toBlobUri(filnamn: String, sasToken: String): URI {
     return URI(
-        "https://${blobStorageProperties.account}.blob.core.windows.net/${blobStorageProperties.container}/${filnamn}?$sasToken")
+        "https://${blobStorageProperties.account}.blob.core.windows.net/${blobStorageProperties.container}/${filnamn}?$sasToken"
+    )
   }
 
   fun generateSas(sasValues: DataLakeServiceSasSignatureValues): String {
@@ -56,7 +57,9 @@ class BildeDataLakeClient(private val blobStorageProperties: BlobStorageProperti
   override fun getSasToken(): String {
     val expiryTime =
         OffsetDateTime.ofInstant(
-            Instant.now().plusMillis(blobStorageProperties.sasttl.toLong()), ZONEID_OSLO)
+            Instant.now().plusMillis(blobStorageProperties.sasttl.toLong()),
+            ZONEID_OSLO,
+        )
     val permission = PathSasPermission().setReadPermission(true).setWritePermission(false)
 
     val sasValues = DataLakeServiceSasSignatureValues(expiryTime, permission)
@@ -74,7 +77,9 @@ class BildeDataLakeClient(private val blobStorageProperties: BlobStorageProperti
       getDeletionId(imagePath)
           .onSuccess {
             dataLakeFileSystemClient.undeletePath(
-                dataLakeFileClient.filePath, getDeletionId(imagePath).getOrThrow())
+                dataLakeFileClient.filePath,
+                getDeletionId(imagePath).getOrThrow(),
+            )
           }
           .onFailure { throw RuntimeException("Kunne ikkje hente restore fil $imagePath") }
     }

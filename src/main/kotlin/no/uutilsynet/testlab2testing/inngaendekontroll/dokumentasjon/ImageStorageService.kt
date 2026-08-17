@@ -17,7 +17,7 @@ import org.springframework.web.util.UriComponentsBuilder
 @Service
 class ImageStorageService(
     private val blobStorageProperties: BlobStorageProperties,
-    @Qualifier("bildeDataLakeClient") val imageStorageClient: ImageStorageClient
+    @Qualifier("bildeDataLakeClient") val imageStorageClient: ImageStorageClient,
 ) {
 
   private val logger = LoggerFactory.getLogger(ImageStorageService::class.java)
@@ -31,7 +31,8 @@ class ImageStorageService(
               val imagesToUpload =
                   listOf(
                       detail.image to detail.fullFileName,
-                      detail.thumbnail to detail.fullThumbnailName)
+                      detail.thumbnail to detail.fullThumbnailName,
+                  )
 
               imagesToUpload.forEach { (image, fileName) ->
                 uploadSingleBilde(image, fileName, detail.fileExtension)
@@ -48,15 +49,15 @@ class ImageStorageService(
       runCatching {
             imageStorageClient.getSasToken()
 
-            val result =
-                bildeStiList.map { bilde ->
-                  Bilde(
-                      id = bilde.id,
-                      bildeURI = getBaseUri().queryParam("bildesti", bilde.bilde).build().toUri(),
-                      thumbnailURI =
-                          getBaseUri().queryParam("bildesti", bilde.thumbnail).build().toUri(),
-                      opprettet = bilde.opprettet)
-                }
+            val result = bildeStiList.map { bilde ->
+              Bilde(
+                  id = bilde.id,
+                  bildeURI = getBaseUri().queryParam("bildesti", bilde.bilde).build().toUri(),
+                  thumbnailURI =
+                      getBaseUri().queryParam("bildesti", bilde.thumbnail).build().toUri(),
+                  opprettet = bilde.opprettet,
+              )
+            }
             logger.info("Hentet bilder" + result)
             result
           }

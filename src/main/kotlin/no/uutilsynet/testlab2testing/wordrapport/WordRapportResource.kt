@@ -12,11 +12,12 @@ class WordRapportResource(val rapportService: WordRapportService) {
 
   @GetMapping(
       "/kontroll/{kontrollId}/loeysing/{loeysingId}",
-      produces = ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"])
+      produces = ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+  )
   fun lagRapport(
       @PathVariable kontrollId: Int,
       @PathVariable loeysingId: Int,
-      response: HttpServletResponse
+      response: HttpServletResponse,
   ) {
 
     response.setHeader("Content-disposition", "attachment;filename=tilsynsrapport.docx")

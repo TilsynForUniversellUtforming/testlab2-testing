@@ -11,7 +11,7 @@ data class Resultat(
     val testType: TestgrunnlagType,
     val dato: LocalDate,
     val publisert: Boolean,
-    val loeysingar: List<LoeysingResultat>
+    val loeysingar: List<LoeysingResultat>,
 )
 
 data class LoeysingResultat(
@@ -25,7 +25,7 @@ data class LoeysingResultat(
     val talElementSamsvar: Int,
     val talElementBrot: Int,
     val testar: List<String>,
-    val progresjon: Int = 0
+    val progresjon: Int = 0,
 )
 
 data class ResultatLoeysing(

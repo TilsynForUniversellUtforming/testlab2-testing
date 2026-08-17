@@ -45,7 +45,7 @@ class MaalingDAO(
     val sideutvalDAO: SideutvalDAO,
     val cacheManager: CacheManager,
     val testkoeyringDAO: TestkoeyringDAO,
-    val testregelClient: TestregelClient
+    val testregelClient: TestregelClient,
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
@@ -56,7 +56,7 @@ class MaalingDAO(
       val datoStart: Instant,
       val status: MaalingStatus,
       val maxLenker: Int,
-      val talLenker: Int
+      val talLenker: Int,
   )
 
   object MaalingParams {
@@ -65,16 +65,16 @@ class MaalingDAO(
 
     val createMaalingSql =
         """
-      insert into "testlab2_testing"."maalingv1" (navn, status, dato_start, max_lenker, tal_lenker, utval_id) 
-      values (:navn, :status, :dato_start, :max_lenker, :tal_lenker, :utvalId)
-    """
+        insert into "testlab2_testing"."maalingv1" (navn, status, dato_start, max_lenker, tal_lenker, utval_id) 
+        values (:navn, :status, :dato_start, :max_lenker, :tal_lenker, :utvalId)
+        """
             .trimIndent()
 
     fun createMaalingParams(
         navn: String,
         datoStart: Instant,
         crawlParameters: CrawlParameters,
-        utvalId: UtvalId? = null
+        utvalId: UtvalId? = null,
     ): MapSqlParameterSource {
 
       val params = MapSqlParameterSource()
@@ -127,13 +127,14 @@ class MaalingDAO(
       datoStart: Instant,
       utval: Utval,
       testregelIdList: List<Int>,
-      crawlParameters: CrawlParameters
+      crawlParameters: CrawlParameters,
   ): Int {
     val keyHolder: KeyHolder = GeneratedKeyHolder()
     jdbcTemplate.update(
         createMaalingSql,
         createMaalingParams(navn, datoStart, crawlParameters, utval.id),
-        keyHolder)
+        keyHolder,
+    )
 
     val idMaaling = keyHolder.keys?.get("id") as Int
     val loeysingIdList = utval.loeysingar.map { it.id }
@@ -149,12 +150,15 @@ class MaalingDAO(
       datoStart: Instant,
       loyesingIds: List<Int>,
       testregelIdList: List<Int>,
-      crawlParameters: CrawlParameters
+      crawlParameters: CrawlParameters,
   ): Int {
     val keyHolder = GeneratedKeyHolder()
 
     jdbcTemplate.update(
-        createMaalingSql, createMaalingParams(navn, datoStart, crawlParameters), keyHolder)
+        createMaalingSql,
+        createMaalingParams(navn, datoStart, crawlParameters),
+        keyHolder,
+    )
     val idMaaling = keyHolder.keys?.get("id") as Int
 
     updateLoeysingarForMaaling(loyesingIds, idMaaling)
@@ -167,14 +171,17 @@ class MaalingDAO(
     for (idTestregel: Int in testregelIdList) {
       jdbcTemplate.update(
           insertMaalingTestregelQuery,
-          mapOf("maaling_id" to idMaaling, "testregel_id" to idTestregel))
+          mapOf("maaling_id" to idMaaling, "testregel_id" to idTestregel),
+      )
     }
   }
 
   private fun updateLoeysingarForMaaling(loyesingIds: List<Int>, idMaaling: Int) {
     for (idLoeysing: Int in loyesingIds) {
       jdbcTemplate.update(
-          insertMaalingLoeysingQuery, mapOf("idMaaling" to idMaaling, "idLoeysing" to idLoeysing))
+          insertMaalingLoeysingQuery,
+          mapOf("idMaaling" to idMaaling, "idLoeysing" to idLoeysing),
+      )
     }
   }
 
@@ -182,7 +189,8 @@ class MaalingDAO(
   fun getMaaling(id: Int): Maaling {
     val maaling =
         DataAccessUtils.singleResult(
-            jdbcTemplate.query(selectMaalingByIdSql, mapOf("id" to id), maalingRowmapper))
+            jdbcTemplate.query(selectMaalingByIdSql, mapOf("id" to id), maalingRowmapper)
+        )
 
     return maaling?.toMaaling() ?: throw NoSuchElementException("Fant ikke måling med id $id")
   }
@@ -202,11 +210,13 @@ class MaalingDAO(
         .query(
             selectMaalingByStatus,
             mapOf("statusList" to statusList.map { it.status }),
-            maalingRowmapper)
+            maalingRowmapper,
+        )
         .map { it.toMaaling() }
         .also {
           logger.debug(
-              "hentet ${it.size} målinger fra databasen med status 'crawling' eller 'testing'")
+              "hentet ${it.size} målinger fra databasen med status 'crawling' eller 'testing'"
+          )
         }
   }
 
@@ -219,7 +229,8 @@ class MaalingDAO(
             datoStart,
             getLoeysingarForMaaling(id, datoStart),
             getTestregelList(),
-            CrawlParameters(maxLenker, talLenker))
+            CrawlParameters(maxLenker, talLenker),
+        )
       }
       MaalingStatus.crawling -> {
         Maaling.Crawling(id, navn, datoStart, getCrawlResultatForMaaling())
@@ -238,7 +249,9 @@ class MaalingDAO(
 
   private fun MaalingDTO.getTestkoeyingarForMaaling() =
       testkoeyringDAO.getTestKoeyringarForMaaling(
-          id, loeysingsMetadataForMaaling(id, getLoeysingarForMaaling(id, datoStart)))
+          id,
+          loeysingsMetadataForMaaling(id, getLoeysingarForMaaling(id, datoStart)),
+      )
 
   private fun MaalingDTO.getCrawlResultatForMaaling() =
       crawlResultatForMaaling(id, getLoeysingarForMaaling(id, datoStart))
@@ -261,7 +274,8 @@ class MaalingDAO(
                 onFailure = {
                   logger.error("Feil ved henting av løysingar $loeysingIdList for maaling $id", it)
                   throw it
-                })
+                },
+            )
     return loeysingList
   }
 
@@ -287,7 +301,8 @@ class MaalingDAO(
         }
         .getOrElse {
           logger.error(
-              "Kunne ikke hente crawlparametere for maaling $maalingId, velger default parametere")
+              "Kunne ikke hente crawlparametere for maaling $maalingId, velger default parametere"
+          )
           throw it
         }
   }
@@ -325,7 +340,8 @@ class MaalingDAO(
   private fun deleteFromMaalingTestregel(maalingId: Int) {
     jdbcTemplate.update(
         """delete from "testlab2_testing"."maaling_testregel" where maaling_id = :maalingId""",
-        mapOf("maalingId" to maalingId))
+        mapOf("maalingId" to maalingId),
+    )
   }
 
   private fun updateMaalingTestregel(maaling: Maaling.Planlegging) {
@@ -335,7 +351,9 @@ class MaalingDAO(
     val updateBatchValuesLoeysing =
         maaling.loeysingList.map { mapOf("maalingId" to maaling.id, "loeysingId" to it.id) }
     jdbcTemplate.batchUpdate(
-        updateMaalingTestregelLoeysingQuery, updateBatchValuesLoeysing.toTypedArray())
+        updateMaalingTestregelLoeysingQuery,
+        updateBatchValuesLoeysing.toTypedArray(),
+    )
   }
 
   private fun deleteFromMaalingLoeysing(maaling: Maaling) {
@@ -347,9 +365,11 @@ class MaalingDAO(
 
   private fun updateMaaling(maaling: Maaling.Planlegging) {
     val updateQuery =
-        """update "testlab2_testing"."maalingv1" 
-            set navn = :navn, status = :status, max_lenker = :max_lenker, tal_lenker = :tal_lenker 
-            where id = :id"""
+        """
+        |update "testlab2_testing"."maalingv1" 
+        |            set navn = :navn, status = :status, max_lenker = :max_lenker, tal_lenker = :tal_lenker 
+        |            where id = :id
+        """
             .trimMargin()
 
     jdbcTemplate.update(
@@ -359,7 +379,9 @@ class MaalingDAO(
             "navn" to maaling.navn,
             "status" to "planlegging",
             "max_lenker" to maaling.crawlParameters.maxLenker,
-            "tal_lenker" to maaling.crawlParameters.talLenker))
+            "tal_lenker" to maaling.crawlParameters.talLenker,
+        ),
+    )
   }
 
   @Transactional
@@ -393,7 +415,8 @@ class MaalingDAO(
   fun updateKontrollId(kontrollId: Int, maalingId: Int) =
       jdbcTemplate.update(
           """update "testlab2_testing"."maalingv1" set kontrollId = :kontrollId where id = :maalingId""",
-          mapOf("kontrollId" to kontrollId, "maalingId" to maalingId))
+          mapOf("kontrollId" to kontrollId, "maalingId" to maalingId),
+      )
 
   fun getMaalingIdFromKontrollId(kontrollId: Int): Int? =
       DataAccessUtils.singleResult(
@@ -402,20 +425,22 @@ class MaalingDAO(
               mapOf("kontrollId" to kontrollId),
           ) { rs, _ ->
             rs.getInt("id")
-          })
+          }
+      )
 
   fun getTestrelIdForMaaling(maalingId: Int): List<Int> {
     return jdbcTemplate
         .queryForList(
             """select testregel_id from "testlab2_testing"."maaling_testregel" where maaling_id = :maalingId""",
             mapOf("maalingId" to maalingId),
-            Int::class.java)
+            Int::class.java,
+        )
         .map { requireNotNull(it) { "Null testregel_id returned for maaling $maalingId" } }
   }
 
   private fun loeysingsMetadataForMaaling(
       maalingId: Int,
-      loeysingList: List<Loeysing>
+      loeysingList: List<Loeysing>,
   ): Map<Int, LoeysingMetadata> {
     return sideutvalDAO
         .getCrawlResultatForMaaling(maalingId, loeysingList)
@@ -433,8 +458,8 @@ class MaalingDAO(
               mapOf("maalingId" to maalingId),
           ) { rs, _ ->
             rs.getString("uuid")
-          })
-          ?: throw NoSuchElementException("Fant ikkje testrunUuid for maalingId: $maalingId")
+          }
+      ) ?: throw NoSuchElementException("Fant ikkje testrunUuid for maalingId: $maalingId")
     }
   }
 

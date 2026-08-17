@@ -13,7 +13,8 @@ class LogMessages(@Autowired val messageSource: MessageSource) {
         "ekstern.resultat.tests.notfound.orgnr",
         arrayOf(orgnr),
         "Fant ikkje publiserte testar for orgnr {0}",
-        LocaleContextHolder.getLocale())
+        LocaleContextHolder.getLocale(),
+    )
   }
 
   fun loeysingNotFoundForOrgnr(orgnr: String): String? {
@@ -21,7 +22,8 @@ class LogMessages(@Autowired val messageSource: MessageSource) {
         "ekstern.resultat.loeysing.notfound.orgnr",
         arrayOf(orgnr),
         "Fant ingen løysingar for verkemd med søk {0}",
-        LocaleContextHolder.getLocale())
+        LocaleContextHolder.getLocale(),
+    )
   }
 
   fun verksemdMultipleFoundForSearch(orgnr: String): String? {
@@ -29,6 +31,7 @@ class LogMessages(@Autowired val messageSource: MessageSource) {
         "ekstern.resultat.verksemd.multiple.found.orgnr",
         arrayOf(orgnr),
         "Fant fleire verksemder for søk etter {0}. Spesifiser søket nærmare",
-        LocaleContextHolder.getLocale())
+        LocaleContextHolder.getLocale(),
+    )
   }
 }

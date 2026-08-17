@@ -52,5 +52,5 @@ enum class TestkoeyringStatus {
   ferdig,
   feila,
   starta,
-  ikkje_starta
+  ikkje_starta,
 }

@@ -30,7 +30,7 @@ class EksternResultatService(
     private val testregelCache: TestregelCache,
     private val logMessages: LogMessages,
     private val testresultatEksternAssembler: TestresultatEksternAssembler,
-    private val pagedResourcesAssembler: PagedResourcesAssembler<TestresultatDetaljertEkstern>
+    private val pagedResourcesAssembler: PagedResourcesAssembler<TestresultatDetaljertEkstern>,
 ) {
 
   private val logger = LoggerFactory.getLogger(EksternResultatService::class.java)
@@ -64,7 +64,9 @@ class EksternResultatService(
   }
 
   private fun filterLoeysingarOnId(loeysingar: List<LoeysingResultat>, loeysingId: Int) =
-      loeysingar.filter { loeysing -> loeysing.loeysingId == loeysingId }
+      loeysingar.filter { loeysing ->
+        loeysing.loeysingId == loeysingId
+      }
 
   private fun getVerksemd(orgnr: String): Result<VerksemdEkstern> {
     return searchForOrganization(orgnr).mapCatching { verksemder ->
@@ -80,7 +82,8 @@ class EksternResultatService(
             onSuccess = { it },
             onFailure = {
               throw IllegalArgumentException(logMessages.verksemdMultipleFoundForSearch(orgnr))
-            })
+            },
+        )
   }
 
   private fun searchForOrganization(orgnr: String) = loeysingsRegisterClient.searchVerksemd(orgnr)
@@ -124,7 +127,7 @@ class EksternResultatService(
 
   fun getRapportForLoeysing(
       rapportId: String,
-      loeysingId: Int
+      loeysingId: Int,
   ): List<ResultatOversiktLoeysingEkstern> {
     return getKontrollLoeysing(rapportId, loeysingId)
         .mapCatching { getResultatEksternFromRapportLoeysing(it) }
@@ -133,7 +136,7 @@ class EksternResultatService(
 
   private fun getKontrollLoeysing(
       rapportId: String,
-      loeysingId: Int
+      loeysingId: Int,
   ): Result<KontrollIdLoeysingId> {
     return eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId)).map {
       filterkontrollIdLoeysingIdOnLoeysingId(it, loeysingId)
@@ -142,7 +145,7 @@ class EksternResultatService(
 
   private fun filterkontrollIdLoeysingIdOnLoeysingId(
       kontrollIdLoeysingIds: List<KontrollIdLoeysingId>,
-      loeysingId: Int
+      loeysingId: Int,
   ): KontrollIdLoeysingId {
     return kontrollIdLoeysingIds.first { it.loeysingId == loeysingId }
   }
@@ -151,7 +154,9 @@ class EksternResultatService(
       kontrollLoeysing: KontrollIdLoeysingId
   ): List<ResultatOversiktLoeysing> {
     return resultatService.getKontrollLoeysingResultatIkkjeRetest(
-        kontrollLoeysing.kontrollId, kontrollLoeysing.loeysingId)
+        kontrollLoeysing.kontrollId,
+        kontrollLoeysing.loeysingId,
+    )
   }
 
   fun getResultatEksternFromRapportLoeysing(kontrollLoeysing: KontrollIdLoeysingId) =
@@ -179,16 +184,26 @@ class EksternResultatService(
 
   private fun getResultatTemaList(kontrollLoeysing: KontrollIdLoeysingId) =
       resultatService.getResultatPrTema(
-          kontrollLoeysing.kontrollId, null, kontrollLoeysing.loeysingId, null, null)
+          kontrollLoeysing.kontrollId,
+          null,
+          kontrollLoeysing.loeysingId,
+          null,
+          null,
+      )
 
   private fun getResultatKravList(kontrollLoeysing: KontrollIdLoeysingId) =
       resultatService.getResultatPrKrav(
-          kontrollLoeysing.kontrollId, null, kontrollLoeysing.loeysingId, null, null)
+          kontrollLoeysing.kontrollId,
+          null,
+          kontrollLoeysing.loeysingId,
+          null,
+          null,
+      )
 
   private fun getTestresultatDetaljertEkstern(
       kontrollLoeysing: KontrollIdLoeysingId,
       testregel: TestregelAggregate,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ) =
       getResultatPrTestregel(kontrollLoeysing, testregel, sortPaginationParams)
           .parallelStream()
@@ -202,13 +217,14 @@ class EksternResultatService(
   private fun getResultatPrTestregel(
       kontrollLoeysing: KontrollIdLoeysingId,
       testregel: TestregelAggregate,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ) =
       resultatService.getTestresultatDetaljerPrTestregel(
           kontrollLoeysing.kontrollId,
           kontrollLoeysing.loeysingId,
           testregel.id,
-          sortPaginationParams)
+          sortPaginationParams,
+      )
 
   private fun getKontrollIdLoeysingIdsForRapportId(rapportId: String): List<KontrollIdLoeysingId> {
     return eksternResultatDAO.findKontrollLoeysingFromRapportId((rapportId)).getOrThrow()
@@ -218,7 +234,7 @@ class EksternResultatService(
       rapportId: String,
       loeysingId: Int,
       testregelId: Int,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDetaljertEkstern> {
     return getKontrollLoeysing(rapportId, loeysingId)
         .mapCatching {
@@ -232,19 +248,24 @@ class EksternResultatService(
       rapportId: String,
       loeysingId: Int,
       testregelId: Int,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): CollectionModel<TestresultatDetaljertEkstern> {
     val pageRequest = PageRequest.of(sortPaginationParams.pageNumber, sortPaginationParams.pageSize)
     val results =
         getResultatListKontrollAsEksterntResultat(
-            rapportId, loeysingId, testregelId, sortPaginationParams)
+            rapportId,
+            loeysingId,
+            testregelId,
+            sortPaginationParams,
+        )
 
     val total =
         resultatService
             .getTalBrotForKontrollLoeysingTestregel(
                 getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId,
                 loeysingId,
-                testregelId)
+                testregelId,
+            )
             .getOrThrow()
 
     val page = PageImpl(results, pageRequest, total.toLong())
@@ -253,7 +274,8 @@ class EksternResultatService(
 
   @Observed(
       name = "ekstern_get_resultat_for_rapport",
-      contextualName = "EksternResultatService.getResultatForRapport")
+      contextualName = "EksternResultatService.getResultatForRapport",
+  )
   fun getResultatForRapport(rapportId: String): List<TestEkstern> {
 
     return eksternResultatDAO.getTestsForRapportIds(rapportId).toTestEksternList().sortedBy {
@@ -271,7 +293,7 @@ class EksternResultatService(
       rapportId: String,
       loeysingId: Int,
       kravId: Int,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDetaljertEkstern> {
     return resultatService
         .getResultatPrKrav(
@@ -287,7 +309,7 @@ class EksternResultatService(
       rapportId: String,
       loeysingId: Int,
       kravId: Int,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): CollectionModel<TestresultatDetaljertEkstern> {
     val pageRequest = PageRequest.of(sortPaginationParams.pageNumber, sortPaginationParams.pageSize)
     val results =
@@ -296,14 +318,16 @@ class EksternResultatService(
                 compareBy {
                   it.side.toString()
                   it.testregelNoekkel
-                })
+                }
+            )
 
     val total =
         resultatService
             .getTalBrotForKontrollLoeysingKrav(
                 getKontrollLoeysing(rapportId, loeysingId).getOrThrow().kontrollId,
                 loeysingId,
-                kravId)
+                kravId,
+            )
             .getOrThrow()
 
     val page = PageImpl(results, pageRequest, total.toLong())

@@ -18,7 +18,7 @@ class BildeResource(val bildeService: BildeService) {
   @PostMapping("/{testresultatId}")
   fun createBilde(
       @PathVariable testresultatId: Int,
-      @RequestParam("bilder") bilder: List<MultipartFile>
+      @RequestParam("bilder") bilder: List<MultipartFile>,
   ): ResponseEntity<Any> =
       bildeService
           .createBilde(testresultatId, bilder)
@@ -27,7 +27,8 @@ class BildeResource(val bildeService: BildeService) {
               {
                 logger.error("Feil ved opplasting av bilder", it)
                 ResponseEntity.internalServerError().build()
-              })
+              },
+          )
 
   @DeleteMapping("{testresultatId}/{bildeId}")
   fun deleteBilde(@PathVariable testresultatId: Int, @PathVariable bildeId: Int) =
@@ -38,7 +39,8 @@ class BildeResource(val bildeService: BildeService) {
               {
                 logger.error("Kunne ikkje slette bilde", it)
                 ResponseEntity.internalServerError().build<Unit>()
-              })
+              },
+          )
 
   @GetMapping("/{testresultatId}")
   fun getBildeListForTestresultat(@PathVariable testresultatId: Int): ResponseEntity<List<Bilde>> =
@@ -49,7 +51,8 @@ class BildeResource(val bildeService: BildeService) {
               {
                 logger.error("Feil ved henting av bilder", it)
                 ResponseEntity.internalServerError().build()
-              })
+              },
+          )
 
   @CacheEvict(value = ["bildeCache"], allEntries = true)
   @Scheduled(fixedRateString = "\${blobstorage.sasttl}")

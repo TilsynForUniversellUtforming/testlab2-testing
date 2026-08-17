@@ -45,14 +45,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 
 @SpringBootTest(
     properties =
-        arrayOf("spring.datasource.url: jdbc:tc:postgresql:16-alpine:///ResultatServiceTest"))
+        arrayOf("spring.datasource.url: jdbc:tc:postgresql:16-alpine:///ResultatServiceTest")
+)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ResultatServiceTest(
     @Autowired val aggregeringDAO: AggregeringDAO,
     @Autowired val maalingDao: MaalingDAO,
     @Autowired val utvalDAO: UtvalDAO,
     @Autowired val resultatService: ResultatService,
-    @Autowired val testUtils: TestUtils
+    @Autowired val testUtils: TestUtils,
 ) {
 
   private var kontrollId: Int by Delegates.notNull()
@@ -80,7 +81,8 @@ class ResultatServiceTest(
 
     testUtils.createTestMaalingar(
         listOf("Forenkla kontroll 20204", "Forenkla kontroll 20205"),
-        listOf(testregel.id, testregel2.id))
+        listOf(testregel.id, testregel2.id),
+    )
   }
 
   @Test
@@ -92,7 +94,8 @@ class ResultatServiceTest(
             1,
             "testloeysing",
             URI.create("https://www.uutilsynet.no").toURL(),
-            Verksemd(1, "Testverksemd", "123456789"))
+            Verksemd(1, "Testverksemd", "123456789"),
+        )
     Mockito.`when`(loeysingsRegisterClient.getManyExpanded(Mockito.anyList()))
         .thenReturn(Result.success(listOf(testloeysing)))
     val resultat =
@@ -118,11 +121,31 @@ class ResultatServiceTest(
 
     maalingId =
         maalingDao.createMaaling(
-            "Testmaaling_resultat", Instant.now(), listOf(1), listOf(testregelId), crawlParameters)
+            "Testmaaling_resultat",
+            Instant.now(),
+            listOf(1),
+            listOf(testregelId),
+            crawlParameters,
+        )
 
     aggregertResultat =
         AggregeringPerTestregelDB(
-            maalingId, 1, testregelId, 1, arrayListOf(1, 2), 1, 2, 1, 1, 1, 1, 1, 0.5, 0.5, null)
+            maalingId,
+            1,
+            testregelId,
+            1,
+            arrayListOf(1, 2),
+            1,
+            2,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0.5,
+            0.5,
+            null,
+        )
 
     aggregeringDAO.createAggregertResultatTestregel(aggregertResultat)
     maalingDao.updateKontrollId(kontrollId, maalingId)
@@ -137,7 +160,8 @@ class ResultatServiceTest(
             "Ola Nordmann",
             Sakstype.Arkivsak,
             "1234",
-            Kontrolltype.ForenklaKontroll)
+            Kontrolltype.ForenklaKontroll,
+        )
 
     kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
@@ -166,7 +190,8 @@ class ResultatServiceTest(
         kontroll,
         listOf(
             SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
-        ))
+        ),
+    )
 
     return kontrollId
   }
@@ -181,7 +206,8 @@ class ResultatServiceTest(
             emptyList(),
             emptyList(),
             TestgrunnlagType.OPPRINNELEG_TEST,
-            Instant.now())
+            Instant.now(),
+        )
     val testgrunnlagList = TestgrunnlagList(testgrunnlagKontroll, emptyList())
     val testregel = testUtils.createTestregelAggregate()
 
@@ -200,7 +226,8 @@ class ResultatServiceTest(
             Instant.now(),
             ResultatManuellKontrollBase.Status.UnderArbeid,
             null,
-            Instant.now())
+            Instant.now(),
+        )
     val resultat2 =
         ResultatManuellKontroll(
             1,
@@ -216,7 +243,8 @@ class ResultatServiceTest(
             Instant.now(),
             ResultatManuellKontrollBase.Status.UnderArbeid,
             null,
-            Instant.now())
+            Instant.now(),
+        )
 
     val sideUtvalList = mapOf(1 to URI.create("https://www.example.com").toURL())
 
@@ -238,7 +266,8 @@ class ResultatServiceTest(
             sortParam = SortParamTestregel.side,
             sortOrder = SortOrder.asc,
             pageNumber = 0,
-            pageSize = 20)
+            pageSize = 20,
+        )
 
     val resultat = resultatService.getTestresultatDetaljerPrTestregel(1, 1, 1, sortPaginationParams)
     assertNotNull(resultat)
@@ -287,7 +316,8 @@ class ResultatServiceTest(
             talElementBrot = 6,
             talElementSamsvar = 12,
             talElementVarsel = 0,
-            talElementIkkjeForekomst = 0)
+            talElementIkkjeForekomst = 0,
+        )
 
     val resultat = resultatService.getResultatPrKrav(1, null, 1, null, null)
 

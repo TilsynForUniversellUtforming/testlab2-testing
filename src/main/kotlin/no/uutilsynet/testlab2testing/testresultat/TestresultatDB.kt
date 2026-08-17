@@ -48,6 +48,7 @@ data class TestresultatDBBase(
         elementOmtalePointer = this.elementOmtalePointer ?: "",
         elementOmtaleHtml = this.elmentOmtaleHtml ?: "",
         elementOmtaleDescription = this.elementOmtaleDescription ?: "",
-        brukarId = this.brukarId)
+        brukarId = this.brukarId,
+    )
   }
 }

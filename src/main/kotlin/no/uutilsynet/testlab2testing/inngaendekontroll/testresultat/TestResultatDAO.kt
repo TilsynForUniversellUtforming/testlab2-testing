@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class TestResultatDAO(
     val jdbcTemplate: NamedParameterJdbcTemplate,
-    val brukarService: BrukarService
+    val brukarService: BrukarService,
 ) {
   @Transactional
   fun save(createTestResultat: TestResultatResource.CreateTestResultat): Result<Int> {
@@ -23,12 +23,12 @@ class TestResultatDAO(
 
       jdbcTemplate.queryForObject(
           """
-        insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
-                                     element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
-        values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementOmtaleHtml, :elementUtfall,
-                :testVartUtfoert,:status, :kommentar, :sist_lagra)
-        returning id
-      """
+          insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
+                                       element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
+          values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementOmtaleHtml, :elementUtfall,
+                  :testVartUtfoert,:status, :kommentar, :sist_lagra)
+          returning id
+          """
               .trimIndent(),
           mapOf(
               "testgrunnlagId" to createTestResultat.testgrunnlagId,
@@ -44,8 +44,10 @@ class TestResultatDAO(
               "testVartUtfoert" to createTestResultat.testVartUtfoert,
               "status" to ResultatManuellKontrollBase.Status.IkkjePaabegynt.name,
               "kommentar" to createTestResultat.kommentar,
-              "sist_lagra" to created),
-          Int::class.java)!!
+              "sist_lagra" to created,
+          ),
+          Int::class.java,
+      )!!
     }
   }
 
@@ -88,7 +90,7 @@ class TestResultatDAO(
                              join "testlab2_testing"."testgrunnlag" tg on ti.testgrunnlag_id = tg.id
                     where tg.kontroll_id = :kontrollId
                     order by ti.id
-                """
+                    """
                         .trimIndent(),
                     mapOf("kontrollId" to kontrollId),
                 ) { rs, _ ->
@@ -113,7 +115,8 @@ class TestResultatDAO(
                       status =
                           enumValueOf<ResultatManuellKontrollBase.Status>(rs.getString("status")),
                       kommentar = rs.getString("kommentar"),
-                      sistLagra = rs.getTimestamp("sist_lagra").toInstant())
+                      sistLagra = rs.getTimestamp("sist_lagra").toInstant(),
+                  )
                 }
                 .toList()
 
@@ -137,13 +140,14 @@ class TestResultatDAO(
                 join "testlab2_testing"."testgrunnlag" tg on ti.testgrunnlag_id = tg.id
               where tg.kontroll_id = :kontrollId
               order by ti.id, steg
-          """
+              """
                   .trimIndent(),
               mapOf("kontrollId" to kontrollId),
           ) { rs, _ ->
             SvarDB(
                 rs.getInt("id"),
-                ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar")))
+                ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar")),
+            )
           }
           .groupBy({ it.resultatManuellKontrollId }, { it.svar })
 
@@ -151,7 +155,7 @@ class TestResultatDAO(
 
   private fun getTestResultat(
       resultatId: Int? = null,
-      testgrunnlagId: Int? = null
+      testgrunnlagId: Int? = null,
   ): Result<List<ResultatManuellKontroll>> = runCatching {
     val testResultat: List<ResultatManuellKontroll> =
         jdbcTemplate
@@ -200,7 +204,8 @@ class TestResultatDAO(
                   testVartUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant(),
                   status = enumValueOf<ResultatManuellKontrollBase.Status>(rs.getString("status")),
                   kommentar = rs.getString("kommentar"),
-                  sistLagra = rs.getTimestamp("sist_lagra").toInstant())
+                  sistLagra = rs.getTimestamp("sist_lagra").toInstant(),
+              )
             }
             .toList()
 
@@ -211,7 +216,7 @@ class TestResultatDAO(
 
   private fun getSvarMapForTestresultat(
       resultatId: Int?,
-      testgrunnlagId: Int?
+      testgrunnlagId: Int?,
   ): Map<Int, List<ResultatManuellKontrollBase.Svar>> {
     val svarMap =
         jdbcTemplate
@@ -228,11 +233,13 @@ class TestResultatDAO(
                     order by id, steg
                 """
                     .trimIndent(),
-                mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId)) { rs, _ ->
-                  SvarDB(
-                      rs.getInt("id"),
-                      ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar")))
-                }
+                mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId),
+            ) { rs, _ ->
+              SvarDB(
+                  rs.getInt("id"),
+                  ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar")),
+              )
+            }
             .groupBy({ it.resultatManuellKontrollId }, { it.svar })
     return svarMap
   }
@@ -245,12 +252,12 @@ class TestResultatDAO(
     val id =
         jdbcTemplate.queryForObject(
             """
-        insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
-                                     element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
-        values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementOmtaleHtml, :elementUtfall,
-                :testVartUtfoert,:status, :kommentar, :sist_lagra)
-        returning id
-      """
+            insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
+                                         element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
+            values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementOmtaleHtml, :elementUtfall,
+                    :testVartUtfoert,:status, :kommentar, :sist_lagra)
+            returning id
+            """
                 .trimIndent(),
             mapOf(
                 "testgrunnlagId" to retestResultat.testgrunnlagId,
@@ -265,8 +272,10 @@ class TestResultatDAO(
                 "testVartUtfoert" to retestResultat.testVartUtfoert?.let { Timestamp.from(it) },
                 "status" to retestResultat.status.name,
                 "kommentar" to retestResultat.kommentar,
-                "sist_lagra" to sistlagra),
-            Int::class.java)!!
+                "sist_lagra" to sistlagra,
+            ),
+            Int::class.java,
+        )!!
 
     saveSvarBatch(id, retestResultat.svar)
   }
@@ -292,20 +301,20 @@ class TestResultatDAO(
   private fun updateTestresultat(
       testResultat: ResultatManuellKontroll,
       testVartUtfoert: Timestamp?,
-      now: Timestamp?
+      now: Timestamp?,
   ) {
     jdbcTemplate.update(
         """
-          update testresultat
-          set element_omtale    = :elementOmtale,
-              element_omtale_html = :elementOmtaleHtml,
-              element_resultat  = :elementResultat,
-              element_utfall    = :elementUtfall,
-              test_vart_utfoert = :testVartUtfoert,
-              status = :status,
-              kommentar = :kommentar,
-              sist_lagra = :sist_lagra
-          where id = :id
+        update testresultat
+        set element_omtale    = :elementOmtale,
+            element_omtale_html = :elementOmtaleHtml,
+            element_resultat  = :elementResultat,
+            element_utfall    = :elementUtfall,
+            test_vart_utfoert = :testVartUtfoert,
+            status = :status,
+            kommentar = :kommentar,
+            sist_lagra = :sist_lagra
+        where id = :id
         """
             .trimIndent(),
         mapOf(
@@ -317,27 +326,32 @@ class TestResultatDAO(
             "status" to testResultat.status.name,
             "id" to testResultat.id,
             "kommentar" to testResultat.kommentar,
-            "sist_lagra" to now))
+            "sist_lagra" to now,
+        ),
+    )
   }
 
   private fun deleteGamleSvar(testResultat: ResultatManuellKontroll) {
     jdbcTemplate.update(
         """
-                delete from testresultat_svar
-                where testresultat_id = :id
-            """
+        delete from testresultat_svar
+        where testresultat_id = :id
+        """
             .trimIndent(),
-        mapOf("id" to testResultat.id))
+        mapOf("id" to testResultat.id),
+    )
   }
 
   private fun setTestVartUtfoert(
       testResultat: ResultatManuellKontroll,
-      now: Timestamp?
+      now: Timestamp?,
   ): Timestamp? {
     val testVartUtfoert =
-        if (testResultat.elementOmtale != null &&
-            testResultat.elementResultat != null &&
-            testResultat.elementUtfall != null)
+        if (
+            testResultat.elementOmtale != null &&
+                testResultat.elementResultat != null &&
+                testResultat.elementUtfall != null
+        )
             now
         else null
     return testVartUtfoert
@@ -347,11 +361,12 @@ class TestResultatDAO(
   fun delete(id: Int): Result<Unit> = runCatching {
     jdbcTemplate.update(
         """
-            delete from testresultat
-            where id = :id
+        delete from testresultat
+        where id = :id
         """
             .trimIndent(),
-        mapOf("id" to id))
+        mapOf("id" to id),
+    )
   }
 
   fun saveSvar(testresultatId: Int, stegOgSvar: ResultatManuellKontrollBase.Svar): Result<Unit> =
@@ -364,38 +379,39 @@ class TestResultatDAO(
             values (:testresultatId, :steg, :svar)
             on conflict (testresultat_id, steg) do update
             set svar = excluded.svar
-        """
+            """
                 .trimIndent(),
-            mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar))
+            mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar),
+        )
       }
 
   fun saveSvarBatch(
       testresultatId: Int,
-      stegOgSvarList: List<ResultatManuellKontrollBase.Svar>
+      stegOgSvarList: List<ResultatManuellKontrollBase.Svar>,
   ): Result<Unit> = runCatching {
-    val batchValues =
-        stegOgSvarList.map { (steg, svar) ->
-          mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar)
-        }
+    val batchValues = stegOgSvarList.map { (steg, svar) ->
+      mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar)
+    }
 
     jdbcTemplate.batchUpdate(
         """
-            insert into testresultat_svar (testresultat_id, steg, svar)
-            values (:testresultatId, :steg, :svar)
-            on conflict (testresultat_id, steg) do update
-            set svar = excluded.svar
+        insert into testresultat_svar (testresultat_id, steg, svar)
+        values (:testresultatId, :steg, :svar)
+        on conflict (testresultat_id, steg) do update
+        set svar = excluded.svar
         """
             .trimIndent(),
-        batchValues.toTypedArray())
+        batchValues.toTypedArray(),
+    )
   }
 
   fun getKontrollForTestresultat(testresultatId: Int): Result<KontrollDocumentation> = runCatching {
     val query =
         """
-            select tittel,kontroll_id from testresultat tr
-            join testgrunnlag tg on tg.id=tr.testgrunnlag_id
-            join kontroll k on k.id=tg.kontroll_id
-            where tr.id=:testresultat_id
+        select tittel,kontroll_id from testresultat tr
+        join testgrunnlag tg on tg.id=tr.testgrunnlag_id
+        join kontroll k on k.id=tg.kontroll_id
+        where tr.id=:testresultat_id
         """
             .trimIndent()
 
@@ -408,11 +424,11 @@ class TestResultatDAO(
     return runCatching {
       val query =
           """
-            select distinct b.brukarnamn, b.namn
-            from testresultat tr
-            join brukar b on tr.brukar_id = b.id
-            where tr.testgrunnlag_id = :testgrunnlagId
-        """
+          select distinct b.brukarnamn, b.namn
+          from testresultat tr
+          join brukar b on tr.brukar_id = b.id
+          where tr.testgrunnlag_id = :testgrunnlagId
+          """
               .trimIndent()
 
       jdbcTemplate.query(query, mapOf("testgrunnlagId" to testgrunnlagId)) { rs, _ ->

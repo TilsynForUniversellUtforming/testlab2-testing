@@ -49,7 +49,8 @@ class ErrorHandlingUtilTests {
 
   @Test
   @DisplayName(
-      "executeWithErrorHandling skal returnere 'internal server error' hvis funksjonen kaster andre exceptions")
+      "executeWithErrorHandling skal returnere 'internal server error' hvis funksjonen kaster andre exceptions"
+  )
   fun executeWithErrorHandlingOtherException() {
     val responseEntity = ErrorHandlingUtil.executeWithErrorHandling(otherExFunction)
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.statusCode)
@@ -58,7 +59,8 @@ class ErrorHandlingUtilTests {
 
   @Test
   @DisplayName(
-      "executeWithErrorHandling skal returnere 'created' response hvis funksjonen går gjennom")
+      "executeWithErrorHandling skal returnere 'created' response hvis funksjonen går gjennom"
+  )
   fun createWithErrorHandlingSuccess() {
     val responseEntity = ErrorHandlingUtil.createWithErrorHandling(okFunction, locationForId)
     assertEquals(HttpStatus.CREATED, responseEntity.statusCode)
@@ -75,7 +77,8 @@ class ErrorHandlingUtilTests {
 
   @Test
   @DisplayName(
-      "createWithErrorHandling skal returnere 'internal server error' hvis funksjonen kaster andre exceptions")
+      "createWithErrorHandling skal returnere 'internal server error' hvis funksjonen kaster andre exceptions"
+  )
   fun createWithErrorHandlingOtherException() {
     val responseEntity = ErrorHandlingUtil.createWithErrorHandling(otherExFunction, locationForId)
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.statusCode)

@@ -20,7 +20,8 @@ fun validateOrgNummer(s: String?): Result<String> = runCatching {
     s
   } else {
     throw IllegalArgumentException(
-        "$s er ikkje eit gyldig organisasjonsnummer. Eksempel på gyldig orgnummer: 991825827")
+        "$s er ikkje eit gyldig organisasjonsnummer. Eksempel på gyldig orgnummer: 991825827"
+    )
   }
 }
 
@@ -44,7 +45,7 @@ fun validateStatus(s: String?): Result<Status> =
 fun validateIdList(
     list: List<Int>?,
     validIds: List<Int>,
-    parameterName: String
+    parameterName: String,
 ): Result<List<Int>> = runCatching {
   require(!list.isNullOrEmpty()) {
     "Eg forventa eit parameter `${parameterName}` som skulle inneholde ei liste med id-ar, men han var tom."

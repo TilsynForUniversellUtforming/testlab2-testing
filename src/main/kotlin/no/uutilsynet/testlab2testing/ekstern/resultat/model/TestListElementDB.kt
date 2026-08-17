@@ -27,4 +27,5 @@ fun TestListElementDB.toListElement(
         score = score,
         kontrollType = this.kontrollType,
         kontrollNamn = this.kontrollNamn,
-        utfoert = this.utfoert)
+        utfoert = this.utfoert,
+    )

@@ -18,10 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder
 private const val FANT_INGEN_TESTREGLAR = "Fant ingen testreglar"
 
 @Service
-class TestregelClient(
-    restTemplate: RestTemplate,
-    private val kravregisterProperties: KravRegisterProperties
-) {
+class TestregelClient(restTemplate: RestTemplate, kravregisterProperties: KravRegisterProperties) {
 
   val restClient = RestClient.create(restTemplate)
   val testreglarUrl = "${kravregisterProperties.host}/v1/testreglar"
@@ -59,7 +56,8 @@ class TestregelClient(
           .retrieve()
           .body(object : ParameterizedTypeReference<List<Testregel>>() {})
           ?: throw NoSuchElementException(
-              "Fant ingen testreglar for id-liste: ${testregelIdList.joinToString(",")}")
+              "Fant ingen testreglar for id-liste: ${testregelIdList.joinToString(",")}"
+          )
     }
   }
 

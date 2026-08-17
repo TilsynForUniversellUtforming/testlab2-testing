@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service
 @Service
 class RegelsettService(
     private val regelsettDAO: RegelsettDAO,
-    private val testregelClient: TestregelClient
+    private val testregelClient: TestregelClient,
 ) {
 
   fun getRegelsett(regelsettId: Int): Regelsett {
@@ -27,11 +27,21 @@ class RegelsettService(
     val testregelList = testregelClient.getTestregelListFromIds(testregelIds).getOrThrow()
 
     return Regelsett(
-        this.id, this.namn, this.modus, this.standard, testregelList.map { it.toTestregelBase() })
+        this.id,
+        this.namn,
+        this.modus,
+        this.standard,
+        testregelList.map { it.toTestregelBase() },
+    )
   }
 
   fun toRegelsettResponse(regelsett: Regelsett): RegelsettResponse {
     return RegelsettResponse(
-        regelsett.id, regelsett.namn, regelsett.modus, regelsett.standard, regelsett.testregelList)
+        regelsett.id,
+        regelsett.namn,
+        regelsett.modus,
+        regelsett.standard,
+        regelsett.testregelList,
+    )
   }
 }

@@ -26,7 +26,7 @@ open class ResultatManuellKontrollBase(
     IkkjePaabegynt,
     UnderArbeid,
     Ferdig,
-    Deaktivert
+    Deaktivert,
   }
 }
 
@@ -61,4 +61,5 @@ data class ResultatManuellKontroll(
         status,
         kommentar,
         sistLagra,
-        elementOmtaleHtml)
+        elementOmtaleHtml,
+    )

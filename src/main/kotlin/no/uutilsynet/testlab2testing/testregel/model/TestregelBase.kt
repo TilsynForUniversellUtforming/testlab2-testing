@@ -8,5 +8,5 @@ open class TestregelBase(
     open val namn: String,
     open val kravId: Int,
     open val modus: TestregelModus,
-    open val type: TestregelInnholdstype
+    open val type: TestregelInnholdstype,
 )

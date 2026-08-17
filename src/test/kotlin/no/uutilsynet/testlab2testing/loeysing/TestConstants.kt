@@ -9,5 +9,6 @@ object TestConstants {
       mapOf(
           "namn" to loeysingTestName,
           "url" to loeysingTestUrl,
-          "orgnummer" to loeysingTestOrgNummer)
+          "orgnummer" to loeysingTestOrgNummer,
+      )
 }

@@ -25,7 +25,7 @@ class MaalingTestingService(
   suspend fun restartTesting(
       statusDTO: MaalingResource.StatusDTO,
       maaling: Maaling.TestingFerdig,
-      brukar: Brukar
+      brukar: Brukar,
   ): ResponseEntity<Any> {
     return coroutineScope {
       logger.info("Restarter testing for måling ${maaling.id}")
@@ -37,7 +37,11 @@ class MaalingTestingService(
 
       val testKoeyringar =
           autotestingService.startTesting(
-              maaling.id, brukar, retestList.map { it.loeysing }, testreglar)
+              maaling.id,
+              brukar,
+              retestList.map { it.loeysing },
+              testreglar,
+          )
 
       saveUpdated(maaling, rest.plus(testKoeyringar)).getOrThrow()
       ResponseEntity.ok().build()
@@ -46,14 +50,15 @@ class MaalingTestingService(
 
   private suspend fun saveUpdated(
       maaling: Maaling,
-      testKoeyringar: List<TestKoeyring>
+      testKoeyringar: List<TestKoeyring>,
   ): Result<Maaling> {
     val updated =
         Maaling.Testing(
             id = maaling.id,
             navn = maaling.navn,
             datoStart = maaling.datoStart,
-            testKoeyringar = testKoeyringar)
+            testKoeyringar = testKoeyringar,
+        )
     return withContext(Dispatchers.IO) { maalingDAO.save(updated) }
   }
 

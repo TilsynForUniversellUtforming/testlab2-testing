@@ -45,7 +45,8 @@ class TestResultatResource(
               {
                 logger.error("Feil ved oppretting av testresultat", it)
                 ResponseEntity.internalServerError().build()
-              })
+              },
+          )
 
   @GetMapping("/{id}")
   fun getOneResult(@PathVariable id: Int): ResponseEntity<ResultatManuellKontroll> {
@@ -56,7 +57,8 @@ class TestResultatResource(
             onFailure = {
               logger.error("Feil ved henting av testresultat", it)
               ResponseEntity.internalServerError().build()
-            })
+            },
+        )
   }
 
   @GetMapping
@@ -70,13 +72,14 @@ class TestResultatResource(
             onFailure = {
               logger.error("Feil ved henting av testresultat", it)
               ResponseEntity.internalServerError().build()
-            })
+            },
+        )
   }
 
   @PutMapping("/{id}")
   fun updateTestResultat(
       @PathVariable id: Int,
-      @RequestBody testResultat: ResultatManuellKontroll
+      @RequestBody testResultat: ResultatManuellKontroll,
   ): ResponseEntity<Unit> {
     require(testResultat.id == id) { "id i URL-en og id i dei innsendte dataene er ikkje den same" }
     val brukar = brukarService.getCurrentUser()
@@ -88,7 +91,8 @@ class TestResultatResource(
             onFailure = {
               logger.error("Feil ved oppdatering av testresultat", it)
               ResponseEntity.internalServerError().build()
-            })
+            },
+        )
   }
 
   @PostMapping("/aggregert/{testgrunnlagId}")
@@ -116,7 +120,8 @@ class TestResultatResource(
                   logger.error("Feil ved sletting av testresultat eller bilde", it)
                   ResponseEntity.internalServerError().build()
                 }
-              })
+              },
+          )
 
   @GetMapping("/aggregert/{testgrunnlagId}")
   fun getAggregertResultat(@PathVariable testgrunnlagId: Int) =

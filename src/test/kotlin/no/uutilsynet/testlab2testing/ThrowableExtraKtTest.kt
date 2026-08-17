@@ -8,7 +8,8 @@ class ThrowableExtraKtTest {
 
   @Test
   @DisplayName(
-      "når vi henter firstMessage for en Throwable, så skal vi få meldingen for den innerste")
+      "når vi henter firstMessage for en Throwable, så skal vi få meldingen for den innerste"
+  )
   fun testFirstMessage() {
     val throwable = Throwable("Outer", Throwable("Inner", Throwable("Innermost")))
     assertThat(throwable.firstMessage()).isEqualTo("Innermost")
@@ -16,7 +17,8 @@ class ThrowableExtraKtTest {
 
   @Test
   @DisplayName(
-      "når vi henter firstMessage for en Throwable uten cause, så skal vi få meldingen for den gitte Throwable")
+      "når vi henter firstMessage for en Throwable uten cause, så skal vi få meldingen for den gitte Throwable"
+  )
   fun testFirstMessageNoCause() {
     val throwable = Throwable("Outer")
     assertThat(throwable.firstMessage()).isEqualTo("Outer")

@@ -16,6 +16,6 @@ sealed class Sideutval {
       override val id: Int,
       override val adresse: String,
       val begrunnelse: String,
-      val sideutvaltype: SideutvalType
+      val sideutvaltype: SideutvalType,
   ) : Sideutval()
 }

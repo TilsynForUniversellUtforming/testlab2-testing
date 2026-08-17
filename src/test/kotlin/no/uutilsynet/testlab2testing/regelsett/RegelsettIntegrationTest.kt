@@ -29,7 +29,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///RegelsettTest-db"])
+    properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///RegelsettTest-db"],
+)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
 class RegelsettIntegrationTest(
@@ -53,7 +54,9 @@ class RegelsettIntegrationTest(
   @AfterAll
   fun cleanup() {
     regelsettDAO.jdbcTemplate.update(
-        "delete from regelsett where namn = :namn", mapOf("namn" to regelsettName))
+        "delete from regelsett where namn = :namn",
+        mapOf("namn" to regelsettName),
+    )
   }
 
   @Test
@@ -70,7 +73,10 @@ class RegelsettIntegrationTest(
   fun createRegelsettIllegalName() {
     val response =
         restTemplate.postForEntity(
-            regelsettBaseUri, regelsettTestCreateRequestBody(namn = ""), String::class.java)
+            regelsettBaseUri,
+            regelsettTestCreateRequestBody(namn = ""),
+            String::class.java,
+        )
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
     assertThat(response.body).isEqualTo("mangler navn")
@@ -84,7 +90,8 @@ class RegelsettIntegrationTest(
         restTemplate.postForEntity(
             regelsettBaseUri,
             regelsettTestCreateRequestBody(modus = TestregelModus.manuell),
-            String::class.java)
+            String::class.java,
+        )
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
     assertThat(response.body).contains("Id-ane 1, 2 er ikkje gyldige")
@@ -118,7 +125,8 @@ class RegelsettIntegrationTest(
                 "$regelsettBaseUri?includeTestreglar=true",
                 HttpMethod.GET,
                 HttpEntity.EMPTY,
-                regelsettType)
+                regelsettType,
+            )
             .body
 
     assertThat(response?.get(0)?.testregelList).isNotEmpty
@@ -133,7 +141,10 @@ class RegelsettIntegrationTest(
     val regelsett = restTemplate.getForObject<RegelsettResponse>(location)
 
     restTemplate.exchange<Unit>(
-        "$regelsettBaseUri/${regelsett?.id}", HttpMethod.DELETE, HttpEntity.EMPTY)
+        "$regelsettBaseUri/${regelsett?.id}",
+        HttpMethod.DELETE,
+        HttpEntity.EMPTY,
+    )
 
     val responseActiveIdList =
         restTemplate
@@ -149,7 +160,8 @@ class RegelsettIntegrationTest(
                 "$regelsettBaseUri?includeInactive=true",
                 HttpMethod.GET,
                 HttpEntity.EMPTY,
-                regelsettType)
+                regelsettType,
+            )
             .body
             ?.map { it.id }
 
@@ -176,7 +188,10 @@ class RegelsettIntegrationTest(
                 namn = nameUpdate,
                 modus = regelsett.modus,
                 standard = regelsett.standard,
-                testregelIdList = regelsett.testregelList.map { it.id })))
+                testregelIdList = regelsett.testregelList.map { it.id },
+            )
+        ),
+    )
 
     val regelsettAfterUpdate = restTemplate.getForObject<RegelsettResponse>(location)
 
@@ -203,7 +218,10 @@ class RegelsettIntegrationTest(
                     namn = nameUpdate,
                     modus = regelsett.modus,
                     standard = regelsett.standard,
-                    testregelIdList = regelsett.testregelList.map { it.id })))
+                    testregelIdList = regelsett.testregelList.map { it.id },
+                )
+            ),
+        )
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
     assertThat(response.body).isEqualTo("mangler navn")
@@ -211,7 +229,8 @@ class RegelsettIntegrationTest(
 
   @Test
   @DisplayName(
-      "Skal ikkje kunne oppdatere eit regelsett til ein annan type enn typen til testrelgane, eit regelsett og dets typar må vera same type")
+      "Skal ikkje kunne oppdatere eit regelsett til ein annan type enn typen til testrelgane, eit regelsett og dets typar må vera same type"
+  )
   fun updateRegelsettIllegalTestregelType() {
     val location = createDefaultRegelsett()
     val regelsett = restTemplate.getForObject<RegelsettResponse>(location)
@@ -228,7 +247,10 @@ class RegelsettIntegrationTest(
                     namn = regelsett.namn,
                     modus = TestregelModus.manuell,
                     standard = regelsett.standard,
-                    testregelIdList = regelsett.testregelList.map { it.id })))
+                    testregelIdList = regelsett.testregelList.map { it.id },
+                )
+            ),
+        )
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
     assertThat(response.body).contains("Id-ane 1, 2 er ikkje gyldige")
@@ -236,7 +258,8 @@ class RegelsettIntegrationTest(
 
   @Test
   @DisplayName(
-      "Hvis ein slettar (setter inaktivt) eit regelsett, skal det ikkje kome opp i lista hvis ikkje annna er spesifisert")
+      "Hvis ein slettar (setter inaktivt) eit regelsett, skal det ikkje kome opp i lista hvis ikkje annna er spesifisert"
+  )
   fun deleteRegelsett() {
     val regelsettType = object : ParameterizedTypeReference<List<RegelsettBase>>() {}
     val location = createDefaultRegelsett()
@@ -251,7 +274,10 @@ class RegelsettIntegrationTest(
     assertThat(responseActiveIdList).contains(regelsett?.id)
 
     restTemplate.exchange<Unit>(
-        "$regelsettBaseUri/${regelsett?.id}", HttpMethod.DELETE, HttpEntity.EMPTY)
+        "$regelsettBaseUri/${regelsett?.id}",
+        HttpMethod.DELETE,
+        HttpEntity.EMPTY,
+    )
 
     val responseAllIdList =
         restTemplate
@@ -275,5 +301,6 @@ class RegelsettIntegrationTest(
               type,
               standard,
               testregelIdList,
-          ))!!
+          ),
+      )!!
 }

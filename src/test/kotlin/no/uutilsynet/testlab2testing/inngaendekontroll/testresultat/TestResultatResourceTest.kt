@@ -43,7 +43,7 @@ class TestResultatResourceTest(
     @Autowired val utvalDAO: UtvalDAO,
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
-    @Autowired private val testUtils: TestUtils
+    @Autowired private val testUtils: TestUtils,
 ) {
   private var kontrollId: Int by Delegates.notNull()
   private var utvalId: Int by Delegates.notNull()
@@ -67,7 +67,8 @@ class TestResultatResourceTest(
             "Ola Nordmann",
             Sakstype.Arkivsak,
             "1234",
-            Kontrolltype.InngaaendeKontroll)
+            Kontrolltype.InngaaendeKontroll,
+        )
 
     kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
@@ -99,7 +100,8 @@ class TestResultatResourceTest(
         kontroll,
         listOf(
             SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
-        ))
+        ),
+    )
 
     val createdKontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
     val testregelId =
@@ -128,7 +130,8 @@ class TestResultatResourceTest(
                 "testregelId" to testregelId,
                 "sideutvalId" to sideutval.id,
                 "brukar" to mapOf("brukarnamn" to "testbrukar@digdir.no", "namn" to "Test Brukar"),
-            ))
+            ),
+        )
 
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.CREATED)
     location = responseEntity.headers.location!!
@@ -156,7 +159,8 @@ class TestResultatResourceTest(
   @Test
   @Order(3)
   @DisplayName(
-      "vi skal kunne hente ut et testresultat, og den skal inneholde svaret som er lagt inn")
+      "vi skal kunne hente ut et testresultat, og den skal inneholde svaret som er lagt inn"
+  )
   fun henteUtTestresultat() {
     val responseEntity = restTemplate.getForEntity<ResultatManuellKontroll>(location)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
@@ -170,7 +174,8 @@ class TestResultatResourceTest(
   @Test
   @Order(4)
   @DisplayName(
-      "vi skal kunne legge til flere svar på et testresultat vi har opprettet, og hente dem ut igjen")
+      "vi skal kunne legge til flere svar på et testresultat vi har opprettet, og hente dem ut igjen"
+  )
   fun leggeTilFlereSvar() {
     val resultat = restTemplate.getForObject<ResultatManuellKontroll>(location)
     val endret = resultat?.copy(svar = resultat.svar + restenAvSvarene)
@@ -213,7 +218,8 @@ class TestResultatResourceTest(
   @Test
   @Order(7)
   @DisplayName(
-      "når vi oppdaterer resultatet med elementresultat og elementutfall, så skal også tidspunktet settes")
+      "når vi oppdaterer resultatet med elementresultat og elementutfall, så skal også tidspunktet settes"
+  )
   fun oppdatereTestresultatMedElementresultatOgElementutfall() {
     val start = Instant.now()
     val testresultat = restTemplate.getForObject<ResultatManuellKontroll>(location)
@@ -256,14 +262,17 @@ class TestResultatResourceTest(
   fun henteAlleResultaterForTestgrunnlag() {
     val resultatForTestgrunnlag =
         restTemplate.getForObject(
-            "/testresultat?testgrunnlagId=$testgrunnlagId", ResultatForTestgrunnlag::class.java)!!
+            "/testresultat?testgrunnlagId=$testgrunnlagId",
+            ResultatForTestgrunnlag::class.java,
+        )!!
     assertThat(resultatForTestgrunnlag.resultat).hasSize(1)
     val resultat = resultatForTestgrunnlag.resultat.first()
     assertThat(resultat.elementOmtale).isEqualTo("iframe nummer 1")
     assertThat(resultat.elementResultat).isEqualTo(resultat.elementResultat)
     assertThat(resultat.elementUtfall)
         .isEqualTo(
-            "Iframe har et tilgjengelig navn, som ikke beskriver formålet med innholdet i iframe.")
+            "Iframe har et tilgjengelig navn, som ikke beskriver formålet med innholdet i iframe."
+        )
     assertThat(resultat.testVartUtfoert).isNotNull()
     val expected =
         (svar + restenAvSvarene).map { if (it.steg == "3.4") it.copy(svar = "nei") else it }
@@ -292,7 +301,8 @@ class TestResultatResourceTest(
     restTemplate.delete(location)
     val resultatForTestgrunnlag =
         restTemplate.getForObject<ResultatForTestgrunnlag>(
-            "/testresultat?testgrunnlagId=$testgrunnlagId")!!
+            "/testresultat?testgrunnlagId=$testgrunnlagId"
+        )!!
     assertThat(resultatForTestgrunnlag.resultat).isEmpty()
   }
 

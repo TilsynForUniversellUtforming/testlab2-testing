@@ -17,69 +17,72 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
   private val resultatQuery =
       """
-        select 
-          k.id     as id,
-          k.tittel as tittel,
-         coalesce(maaling_id, testgrunnlag_id) as testgrunnlag_id,
-         testtype,
-          kontrolltype,
-          loeysing_id,
-          testregel_gjennomsnittleg_side_samsvar_prosent,
-          tal_element_samsvar,
-          tal_element_brot,
-          kontroll_id,
-          dato,
-          testregel_id
-        from "testlab2_testing"."kontroll" k
-          join (
-            select 
-              loeysing_id,
-              testregel_gjennomsnittleg_side_samsvar_prosent,
-              tal_element_samsvar,
-              tal_element_brot,
-              testregel_id,
-              maaling_id,
-              testgrunnlag_id,
-              type as testtype,
-              case
-              when maaling_id is not null
-                then m.kontrollid
-                else t.kontroll_id
-              end as kontroll_id,
-              case
-              when maaling_id is not null
-                then m.dato_start
-                else t.dato_oppretta
-              end as dato
-            from "testlab2_testing"."aggregering_testregel" agt
-              left join "testlab2_testing"."maalingv1" m on m.id = agt.maaling_id
-              left join "testlab2_testing"."testgrunnlag" t on t.id = agt.testgrunnlag_id
-            where case
-              when maaling_id is not null
-                then m.kontrollid
-                else t.kontroll_id
-              end is not null
-            ) as ag
-        on k.id = ag.kontroll_id
+      select 
+        k.id     as id,
+        k.tittel as tittel,
+       coalesce(maaling_id, testgrunnlag_id) as testgrunnlag_id,
+       testtype,
+        kontrolltype,
+        loeysing_id,
+        testregel_gjennomsnittleg_side_samsvar_prosent,
+        tal_element_samsvar,
+        tal_element_brot,
+        kontroll_id,
+        dato,
+        testregel_id
+      from "testlab2_testing"."kontroll" k
+        join (
+          select 
+            loeysing_id,
+            testregel_gjennomsnittleg_side_samsvar_prosent,
+            tal_element_samsvar,
+            tal_element_brot,
+            testregel_id,
+            maaling_id,
+            testgrunnlag_id,
+            type as testtype,
+            case
+            when maaling_id is not null
+              then m.kontrollid
+              else t.kontroll_id
+            end as kontroll_id,
+            case
+            when maaling_id is not null
+              then m.dato_start
+              else t.dato_oppretta
+            end as dato
+          from "testlab2_testing"."aggregering_testregel" agt
+            left join "testlab2_testing"."maalingv1" m on m.id = agt.maaling_id
+            left join "testlab2_testing"."testgrunnlag" t on t.id = agt.testgrunnlag_id
+          where case
+            when maaling_id is not null
+              then m.kontrollid
+              else t.kontroll_id
+            end is not null
+          ) as ag
+      on k.id = ag.kontroll_id
       """
           .trimIndent()
 
   private val queryTestresultatMaaling =
-      """select k.id, k.tittel as tittel,kontrolltype, maaling_id as testgrunnlag_id, 'OPPRINNELIG_TEST' as testtype,
-        dato_start as dato,
-        loeysing_id, testregel_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot
-        from "testlab2_testing"."kontroll" k
-        left join "testlab2_testing"."maalingv1" m on m.kontrollid=k.id
-        join "testlab2_testing"."aggregering_testregel" agt on agt.maaling_id=m.id"""
+      """
+      select k.id, k.tittel as tittel,kontrolltype, maaling_id as testgrunnlag_id, 'OPPRINNELIG_TEST' as testtype,
+              dato_start as dato,
+              loeysing_id, testregel_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot
+              from "testlab2_testing"."kontroll" k
+              left join "testlab2_testing"."maalingv1" m on m.kontrollid=k.id
+              join "testlab2_testing"."aggregering_testregel" agt on agt.maaling_id=m.id
+      """
           .trimIndent()
 
   private val queryTestresultatTestgrunnlag =
-      """select k.id as id, k.tittel as tittel, kontrolltype, testgrunnlag_id, testregel_id, type as testtype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot,
-            dato_oppretta as dato
-            from "testlab2_testing"."kontroll" k
-            left join "testlab2_testing"."testgrunnlag" t on t.kontroll_id=k.id
-            join "testlab2_testing"."aggregering_testregel" agt on agt.testgrunnlag_id=t.id
-        """
+      """
+      select k.id as id, k.tittel as tittel, kontrolltype, testgrunnlag_id, testregel_id, type as testtype, loeysing_id, testregel_gjennomsnittleg_side_samsvar_prosent, tal_element_samsvar,tal_element_brot,
+                  dato_oppretta as dato
+                  from "testlab2_testing"."kontroll" k
+                  left join "testlab2_testing"."testgrunnlag" t on t.kontroll_id=k.id
+                  join "testlab2_testing"."aggregering_testregel" agt on agt.testgrunnlag_id=t.id
+      """
           .trimIndent()
 
   fun getTestresultatMaaling(): List<ResultatLoeysingDTO> {
@@ -120,7 +123,8 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         testregelGjennomsnittlegSideSamsvarProsent,
         talElementSamsvar,
         talElementBrot,
-        testregelId)
+        testregelId,
+    )
   }
 
   private fun setTestType(kontrolltype: Kontrolltype, resultSet: ResultSet): String {
@@ -172,9 +176,11 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return runCatching {
           val query = "$resultatQuery where k.id = :kontrollId  and loeysing_id = :loeysingId"
           jdbcTemplate.query(
-              query, mapOf("kontrollId" to kontrollId, "loeysingId" to loeysingId)) { rs, _ ->
-                resultatLoeysingRowmapper(rs)
-              }
+              query,
+              mapOf("kontrollId" to kontrollId, "loeysingId" to loeysingId),
+          ) { rs, _ ->
+            resultatLoeysingRowmapper(rs)
+          }
         }
         .getOrThrow()
   }
@@ -184,7 +190,7 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       kontrolltype: Kontrolltype?,
       loeysingId: Int?,
       startDato: LocalDate?,
-      sluttDato: LocalDate?
+      sluttDato: LocalDate?,
   ): List<ResultatTema> {
     runCatching {
           val query =
@@ -245,9 +251,11 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   "kontrollType" to kontrolltype?.name,
                   "loeysingId" to loeysingId,
                   "startDato" to startDato,
-                  "sluttDato" to sluttDato)) { rs, _ ->
-                resultatTemaRowmapper(rs)
-              }
+                  "sluttDato" to sluttDato,
+              ),
+          ) { rs, _ ->
+            resultatTemaRowmapper(rs)
+          }
         }
         .getOrElse {
           logger.error(it.message)
@@ -263,14 +271,15 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           rs.getInt("tal_element_brot"),
           rs.getInt("tal_element_samsvar"),
           rs.getInt("tal_element_varsel"),
-          rs.getInt("tal_element_ikkje_forekomst"))
+          rs.getInt("tal_element_ikkje_forekomst"),
+      )
 
   fun getResultatPrKrav(
       kontrollId: Int?,
       kontrollType: Kontrolltype?,
       loeysingId: Int?,
       fraDato: LocalDate?,
-      tilDato: LocalDate?
+      tilDato: LocalDate?,
   ): List<ResultatKravBase> {
     kotlin
         .runCatching {
@@ -333,15 +342,18 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   "kontrollType" to kontrollType?.name,
                   "loeysingId" to loeysingId,
                   "startDato" to fraDato,
-                  "sluttDato" to tilDato)) { rs, _ ->
-                ResultatKravBase(
-                    rs.getInt("krav_id"),
-                    rs.getDouble("score"),
-                    rs.getInt("tal_element_brot"),
-                    rs.getInt("tal_element_samsvar"),
-                    rs.getInt("tal_element_varsel"),
-                    rs.getInt("tal_element_ikkje_forekomst"))
-              }
+                  "sluttDato" to tilDato,
+              ),
+          ) { rs, _ ->
+            ResultatKravBase(
+                rs.getInt("krav_id"),
+                rs.getDouble("score"),
+                rs.getInt("tal_element_brot"),
+                rs.getInt("tal_element_samsvar"),
+                rs.getInt("tal_element_varsel"),
+                rs.getInt("tal_element_ikkje_forekomst"),
+            )
+          }
         }
         .getOrElse {
           logger.error(it.stackTraceToString())

@@ -17,10 +17,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 @RequestMapping("v1/utval")
 @Tag(
     name = "Utval",
-    description = "API for å lage og hente utval. Eit utval er ei samling med løysingar.")
+    description = "API for å lage og hente utval. Eit utval er ei samling med løysingar.",
+)
 class UtvalResource(
     @Autowired val utvalDAO: UtvalDAO,
-    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient
+    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
 ) {
   val logger: Logger = LoggerFactory.getLogger(UtvalResource::class.java)
 
@@ -41,11 +42,14 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
               ApiResponse(
                   responseCode = "201",
                   description =
-                      "Utvalet vart laga, og du finn ei lenke til det nye utvalet i headeren \"Location\""),
+                      "Utvalet vart laga, og du finn ei lenke til det nye utvalet i headeren \"Location\"",
+              ),
               ApiResponse(
                   responseCode = "400",
-                  description =
-                      "Eit av argumenta var ugyldig. Du finn meir informasjon i *body*.")])
+                  description = "Eit av argumenta var ugyldig. Du finn meir informasjon i *body*.",
+              ),
+          ],
+  )
   @PostMapping
   fun createUtval(@RequestBody nyttUtval: NyttUtval): ResponseEntity<Unit> {
     val utvalNamn = validateNamn(nyttUtval.namn).getOrThrow()
@@ -57,20 +61,19 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
           Triple(namn, url, orgnummer)
         }
 
-    val loeysingar: List<Loeysing> =
-        loeysingList.map { (namn, url, orgnummer) ->
-          val sammeOrgnummer = loeysingsRegisterClient.search(orgnummer).getOrThrow()
-          val foundLoeysing = sammeOrgnummer.find { sameURL(it.url, url) }
-          if (foundLoeysing == null) {
-            logger
-                .atInfo()
-                .log("lagrar ei ny løysing som vi ikkje fann i databasen: $namn, $url, $orgnummer")
-            val loeysing = loeysingsRegisterClient.saveLoeysing(namn, url, orgnummer)
-            loeysing
-          } else {
-            foundLoeysing
-          }
-        }
+    val loeysingar: List<Loeysing> = loeysingList.map { (namn, url, orgnummer) ->
+      val sammeOrgnummer = loeysingsRegisterClient.search(orgnummer).getOrThrow()
+      val foundLoeysing = sammeOrgnummer.find { sameURL(it.url, url) }
+      if (foundLoeysing == null) {
+        logger
+            .atInfo()
+            .log("lagrar ei ny løysing som vi ikkje fann i databasen: $namn, $url, $orgnummer")
+        val loeysing = loeysingsRegisterClient.saveLoeysing(namn, url, orgnummer)
+        loeysing
+      } else {
+        foundLoeysing
+      }
+    }
     logger.atInfo().log("lagrar eit nytt utval med namn ${nyttUtval.namn}")
     val utvalId = utvalDAO.createUtval(utvalNamn, loeysingar.map { it.id }).getOrThrow()
     return ResponseEntity.created(location(utvalId)).build()
@@ -89,7 +92,9 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
       responses =
           [
               ApiResponse(responseCode = "200", description = "Utvalet vart funne"),
-              ApiResponse(responseCode = "404", description = "Utvalet vart ikkje funne")])
+              ApiResponse(responseCode = "404", description = "Utvalet vart ikkje funne"),
+          ],
+  )
   @GetMapping("{id}")
   fun getUtval(@PathVariable id: Int): ResponseEntity<Utval> {
     return fetchUtval(id)
@@ -114,7 +119,8 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
       description =
           "Kvart utval er berre beskrive med id og namn. For å hente lista med løysingar i utvalet, bruk GET /v1/utval/{id}.",
       responses =
-          [ApiResponse(responseCode = "200", description = "Returnerer ei liste med alle utval")])
+          [ApiResponse(responseCode = "200", description = "Returnerer ei liste med alle utval")],
+  )
   @GetMapping
   fun getUtvalList(): List<UtvalListItem> {
     return utvalDAO.getUtvalList().getOrThrow()

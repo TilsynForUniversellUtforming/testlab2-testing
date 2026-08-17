@@ -64,7 +64,8 @@ class AutoTesterClientTest {
     }
 
     @DisplayName(
-        "når responsen fra autotester er `Completed`, og responsen inneholder urler til testresultater, så skal det parses til responsklassen")
+        "når responsen fra autotester er `Completed`, og responsen inneholder urler til testresultater, så skal det parses til responsklassen"
+    )
     @Test
     fun completedWithURLs() {
       val jsonString =
@@ -96,7 +97,9 @@ class AutoTesterClientTest {
       val outputFromAutotester = """{"runtimeStatus":"Terminated", "output": null}"""
       val terminated =
           objectMapper.readValue(
-              outputFromAutotester, AutoTesterClient.AutoTesterStatus::class.java)
+              outputFromAutotester,
+              AutoTesterClient.AutoTesterStatus::class.java,
+          )
       assertThat(terminated).isInstanceOf(AutoTesterClient.AutoTesterStatus.Terminated::class.java)
     }
   }
@@ -110,7 +113,8 @@ class AutoTesterClientTest {
         listOf(
             URI("https://www.uutilsynet.no/").toURL(),
             URI("https://www.uutilsynet.no/underside/1").toURL(),
-            URI("https://www.uutilsynet.no/underside/2").toURL())
+            URI("https://www.uutilsynet.no/underside/2").toURL(),
+        )
 
     val expectedRequestData =
         mapOf(
@@ -128,11 +132,14 @@ class AutoTesterClientTest {
         .expect(
             ExpectedCount.manyTimes(),
             MockRestRequestMatchers.requestTo(
-                CoreMatchers.startsWith(autoTesterClient.autoTesterProperties.url)))
+                CoreMatchers.startsWith(autoTesterClient.autoTesterProperties.url)
+            ),
+        )
         .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
         .andExpect(
             MockRestRequestMatchers.content()
-                .json(objectMapper.writeValueAsString(expectedRequestData)))
+                .json(objectMapper.writeValueAsString(expectedRequestData))
+        )
         .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON))
 
     val result =
@@ -140,7 +147,10 @@ class AutoTesterClientTest {
 
     val expectedStatus =
         AutoTesterClient.AutotestingStatus(
-            crawlResultat.loeysing, statusUris.statusQueryGetUri.toURL(), nettsider.size)
+            crawlResultat.loeysing,
+            statusUris.statusQueryGetUri.toURL(),
+            nettsider.size,
+        )
 
     assertThat(result.isSuccess).isTrue
 
@@ -153,60 +163,68 @@ class AutoTesterClientTest {
     server
         .expect(
             ExpectedCount.manyTimes(),
-            MockRestRequestMatchers.requestTo(CoreMatchers.startsWith(statusURL)))
+            MockRestRequestMatchers.requestTo(CoreMatchers.startsWith(statusURL)),
+        )
         .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
         .andRespond(MockRestResponseCreators.withSuccess(jsonFailure, MediaType.APPLICATION_JSON))
 
     val testKoeyringIkkjeStarta =
         TestKoeyring.from(
-            TestConstants.crawlResultat, URI(statusURL).toURL(), Brukar("test", "testar"))
+            TestConstants.crawlResultat,
+            URI(statusURL).toURL(),
+            Brukar("test", "testar"),
+        )
     val response = autoTesterClient.updateStatus(testKoeyringIkkjeStarta)
 
     assertThat(response.isFailure).isTrue
   }
 
   private val jsonFailure =
-      """{"runtimeStatus":"Completed", "output":[{
-    "suksesskriterium": [
-      "2.4.2"
-    ],
-    "side": "https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160",
-    "maalingId": 46,
-    "loeysingId": 1,
-    "testregelId": "QW-ACT-R1",
-    "sideNivaa": 1,
-    "testVartUtfoert": "3/23/2023, 11:15:54 AM"
-  }]}"""
+      """
+      {"runtimeStatus":"Completed", "output":[{
+          "suksesskriterium": [
+            "2.4.2"
+          ],
+          "side": "https://www.uutilsynet.no/statistikk-og-rapporter/digitale-barrierar/1160",
+          "maalingId": 46,
+          "loeysingId": 1,
+          "testregelId": "QW-ACT-R1",
+          "sideNivaa": 1,
+          "testVartUtfoert": "3/23/2023, 11:15:54 AM"
+        }]}
+      """
           .trimIndent()
 
   @DisplayName("Aggregering skal returnere null-verdiar i json fil")
   @Test()
   fun aggregeringReturnNullValues() {
     val jsonResult =
-        """[{
-            "fleireSuksesskriterium": [
-            "2.5.3"
-            ],
-            "loeysing": {
-            "id": 2429,
-            "url": "https://www.jarlsberg-ikt.no/",
-            "orgnummer": "919431016",
-            "namn": "JARLSBERG IKT - INTERKOMMUNALT SAMARBEID",
-            "verksemdNamn": "JARLSBERG IKT - INTERKOMMUNALT SAMARBEID"
-        },
-            "maalingId": 280,
-            "suksesskriterium": "2.5.3",
-            "talElementBrot": 0,
-            "talElementSamsvar": 0,
-            "talElementVarsel": 0,
-            "talElementIkkjeForekomst": 0,
-            "talSiderBrot": 0,
-            "talSiderIkkjeForekomst": 10,
-            "talSiderSamsvar": 0,
-            "testregelId": "QW-ACT-R30",
-            "testregelGjennomsnittlegSideBrotProsent": null,
-            "testregelGjennomsnittlegSideSamsvarProsent": null
-        }]"""
+        """
+        [{
+                    "fleireSuksesskriterium": [
+                    "2.5.3"
+                    ],
+                    "loeysing": {
+                    "id": 2429,
+                    "url": "https://www.jarlsberg-ikt.no/",
+                    "orgnummer": "919431016",
+                    "namn": "JARLSBERG IKT - INTERKOMMUNALT SAMARBEID",
+                    "verksemdNamn": "JARLSBERG IKT - INTERKOMMUNALT SAMARBEID"
+                },
+                    "maalingId": 280,
+                    "suksesskriterium": "2.5.3",
+                    "talElementBrot": 0,
+                    "talElementSamsvar": 0,
+                    "talElementVarsel": 0,
+                    "talElementIkkjeForekomst": 0,
+                    "talSiderBrot": 0,
+                    "talSiderIkkjeForekomst": 10,
+                    "talSiderSamsvar": 0,
+                    "testregelId": "QW-ACT-R30",
+                    "testregelGjennomsnittlegSideBrotProsent": null,
+                    "testregelGjennomsnittlegSideSamsvarProsent": null
+                }]
+        """
             .trimIndent()
 
     val lenker =
@@ -227,20 +245,25 @@ class AutoTesterClientTest {
             10,
             Instant.now(),
             URI(statusURL).toURL(),
-            lenker = lenker)
+            lenker = lenker,
+        )
 
     server
         .expect(
             ExpectedCount.manyTimes(),
             MockRestRequestMatchers.requestTo(
-                CoreMatchers.startsWith("https://aggregering.resultat")))
+                CoreMatchers.startsWith("https://aggregering.resultat")
+            ),
+        )
         .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
         .andRespond(MockRestResponseCreators.withSuccess(jsonResult, MediaType.APPLICATION_JSON))
 
     val response: AggregertResultatTestregel =
         runBlocking {
               autoTesterClient.fetchResultat(
-                  listOf(testKoeyring), AutoTesterClient.ResultatUrls.urlAggreggeringTR)
+                  listOf(testKoeyring),
+                  AutoTesterClient.ResultatUrls.urlAggreggeringTR,
+              )
             }
             .values
             .first()

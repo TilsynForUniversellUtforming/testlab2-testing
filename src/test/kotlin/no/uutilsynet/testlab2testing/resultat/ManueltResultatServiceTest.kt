@@ -43,7 +43,8 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
           sideutvalDAO,
           bildeService,
           testResultatDAOTestresultat,
-          testregelCache)
+          testregelCache,
+      )
 
   @Test
   fun `test getFilteredAndMappedResults with valid filter`() {
@@ -63,7 +64,9 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
                 null,
                 ResultatManuellKontrollBase.Status.Ferdig,
                 "kommentar",
-                Instant.now()))
+                Instant.now(),
+            )
+        )
 
     val testgrunnlagList = mock(TestgrunnlagKontroll::class.java)
 

@@ -7,5 +7,5 @@ data class GithubFolder(
     val download_url: String?,
     val type: String,
     val content: String?,
-    val encoding: String?
+    val encoding: String?,
 )

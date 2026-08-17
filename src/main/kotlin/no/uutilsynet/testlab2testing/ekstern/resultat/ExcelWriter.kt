@@ -49,7 +49,8 @@ class ExcelWriter {
         workSheet,
         "Dato for kontroll",
         LocalDate.ofInstant(kontrollInfo.utfoert, ZoneId.systemDefault()).toString(),
-        2)
+        2,
+    )
     writeMetadataRow(workSheet, "Type kontroll", kontrollInfo.kontrollType.toString(), 3)
   }
 
@@ -114,7 +115,7 @@ class ExcelWriter {
       headerRow: Row,
       style: CellStyle,
       columnIndex: Int,
-      cellValue: String
+      cellValue: String,
   ) {
     val cell = headerRow.createCell(columnIndex)
     cell.setCellValue(cellValue)

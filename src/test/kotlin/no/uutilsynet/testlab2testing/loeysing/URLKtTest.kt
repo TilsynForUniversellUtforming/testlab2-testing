@@ -64,7 +64,8 @@ class URLKtTest {
 
     @Test
     @DisplayName(
-        "når adressen inneholder en '?', og ikke har query, så skal den ignoreres, og URLene skal være like")
+        "når adressen inneholder en '?', og ikke har query, så skal den ignoreres, og URLene skal være like"
+    )
     fun queryIgnoreres() {
       val a = URI("https://www.uutilsynet.no/utvalg?").toURL()
       val b = URI("https://www.uutilsynet.no/utvalg").toURL()

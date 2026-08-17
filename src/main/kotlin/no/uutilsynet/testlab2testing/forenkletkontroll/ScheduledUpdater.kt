@@ -38,7 +38,8 @@ class ScheduledUpdater(
           maalingDAO.saveMany(oppdaterteMaalinger).getOrThrow()
           if (statusCrawling.isNotEmpty()) {
             logger.info(
-                "oppdaterte status for ${statusCrawling.size} målinger med status `crawling`")
+                "oppdaterte status for ${statusCrawling.size} målinger med status `crawling`"
+            )
           }
         }
         .getOrElse {
@@ -55,7 +56,9 @@ class ScheduledUpdater(
         }
         .getOrElse {
           logger.error(
-              "klarte ikke å oppdatere status for målinger med status `testing` i maalingDAO", it)
+              "klarte ikke å oppdatere status for målinger med status `testing` i maalingDAO",
+              it,
+          )
         }
   }
 
@@ -115,7 +118,7 @@ class ScheduledUpdater(
 
     fun updateCrawlingStatus(
         crawlResultat: CrawlResultat,
-        getNewStatus: (CrawlResultat) -> Result<CrawlStatus>
+        getNewStatus: (CrawlResultat) -> Result<CrawlStatus>,
     ): CrawlResultat {
       val updated =
           getNewStatus(crawlResultat).map { newStatus -> updateStatus(crawlResultat, newStatus) }
@@ -127,11 +130,13 @@ class ScheduledUpdater(
         } else {
           logger.error(
               "feila da eg forsøkte å oppdatere status for løysing ${crawlResultat.loeysing.id}",
-              updated.exceptionOrNull())
+              updated.exceptionOrNull(),
+          )
           CrawlResultat.Feila(
               "Crawling av ${crawlResultat.loeysing.url} feila. Eg klarte ikkje å hente status frå crawleren.",
               crawlResultat.loeysing,
-              Instant.now())
+              Instant.now(),
+          )
         }
       } else {
         failedCrawlStatusAttempts.remove(crawlResultat)
@@ -143,7 +148,7 @@ class ScheduledUpdater(
 
     fun updateTestingStatus(
         testKoeyring: TestKoeyring,
-        getNewStatus: (TestKoeyring) -> Result<AutoTesterClient.AutoTesterStatus>
+        getNewStatus: (TestKoeyring) -> Result<AutoTesterClient.AutoTesterStatus>,
     ): TestKoeyring {
       val updated =
           getNewStatus(testKoeyring).map { newStatus ->
@@ -157,12 +162,14 @@ class ScheduledUpdater(
         } else {
           logger.error(
               "feila da eg forsøkte å oppdatere status for løysing ${testKoeyring.loeysing.id}",
-              updated.exceptionOrNull())
+              updated.exceptionOrNull(),
+          )
           TestKoeyring.Feila(
               testKoeyring.loeysing,
               Instant.now(),
               "Testing av ${testKoeyring.loeysing.url} feila. Eg klarte ikkje å hente status frå autotestaren.",
-              testKoeyring.brukar)
+              testKoeyring.brukar,
+          )
         }
       } else {
         failedTestingStatusAttempts.remove(testKoeyring)

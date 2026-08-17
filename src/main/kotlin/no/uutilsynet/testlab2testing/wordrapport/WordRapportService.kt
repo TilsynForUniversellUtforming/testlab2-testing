@@ -21,7 +21,7 @@ class WordRapportService(
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
-    @Autowired val properties: RapportVerktoeyKlient
+    @Autowired val properties: RapportVerktoeyKlient,
 ) {
 
   private val logger = LoggerFactory.getLogger(WordRapportService::class.java)
@@ -39,7 +39,8 @@ class WordRapportService(
         kontroll.id,
         loeysing.id,
         testresultat.size,
-        testgrunnlag)
+        testgrunnlag,
+    )
 
     return wordRapportBuilder
         .kontroll(kontroll)
@@ -60,7 +61,8 @@ class WordRapportService(
             "datoTil" to wordRapport.datoTil,
             "verksemd" to wordRapport.verksemd,
             "loeysing" to wordRapport.loeysing,
-            "avvik" to wordRapport.avvik)
+            "avvik" to wordRapport.avvik,
+        )
 
     val response =
         restClient
@@ -70,7 +72,9 @@ class WordRapportService(
             .contentType(MediaType.APPLICATION_JSON)
             .accept(
                 MediaType.valueOf(
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                )
+            )
             .retrieve()
             .onStatus(HttpStatusCode::isError) { _, response ->
               logger.error(response.body.readAllBytes().contentToString())

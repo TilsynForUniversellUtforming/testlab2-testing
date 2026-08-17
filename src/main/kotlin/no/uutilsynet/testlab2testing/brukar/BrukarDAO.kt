@@ -13,29 +13,31 @@ class BrukarDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun saveBrukar(brukar: Brukar): Int {
     return jdbcTemplate.queryForObject(
         """
-            insert into brukar (brukarnamn, namn)
-            values (:brukarnamn, :namn)
-            on conflict (brukarnamn) do update
-            set namn = :namn
-            returning id
+        insert into brukar (brukarnamn, namn)
+        values (:brukarnamn, :namn)
+        on conflict (brukarnamn) do update
+        set namn = :namn
+        returning id
         """
             .trimIndent(),
         mapOf("brukarnamn" to brukar.brukarnamn, "namn" to brukar.namn),
-        Int::class.java)!!
+        Int::class.java,
+    )!!
   }
 
   fun getBrukar(brukarnamn: String): Brukar? {
     return jdbcTemplate
         .query(
             """
-                select brukarnamn, namn
-                from brukar
-                where brukarnamn = :brukarnamn
+            select brukarnamn, namn
+            from brukar
+            where brukarnamn = :brukarnamn
             """
                 .trimIndent(),
-            mapOf("brukarnamn" to brukarnamn)) { rs, _ ->
-              Brukar(rs.getString("brukarnamn"), rs.getString("namn"))
-            }
+            mapOf("brukarnamn" to brukarnamn),
+        ) { rs, _ ->
+          Brukar(rs.getString("brukarnamn"), rs.getString("namn"))
+        }
         .firstOrNull()
   }
 
@@ -43,14 +45,15 @@ class BrukarDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return jdbcTemplate
         .query(
             """
-                    select id
-                    from brukar
-                    where brukarnamn = :brukarnamn
-                """
+            select id
+            from brukar
+            where brukarnamn = :brukarnamn
+            """
                 .trimIndent(),
-            mapOf("brukarnamn" to brukarnamn)) { rs, _ ->
-              rs.getInt("id")
-            }
+            mapOf("brukarnamn" to brukarnamn),
+        ) { rs, _ ->
+          rs.getInt("id")
+        }
         .firstOrNull()
   }
 
@@ -58,14 +61,15 @@ class BrukarDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return jdbcTemplate
         .query(
             """
-                    select brukarnamn, namn
-                    from brukar
-                    where id = :brukarId
-                """
+            select brukarnamn, namn
+            from brukar
+            where id = :brukarId
+            """
                 .trimIndent(),
-            mapOf("brukarId" to brukarId)) { rs, _ ->
-              Brukar(rs.getString("brukarnamn"), rs.getString("namn"))
-            }
+            mapOf("brukarId" to brukarId),
+        ) { rs, _ ->
+          Brukar(rs.getString("brukarnamn"), rs.getString("namn"))
+        }
         .firstOrNull()
   }
 }

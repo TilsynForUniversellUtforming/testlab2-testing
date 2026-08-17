@@ -69,7 +69,8 @@ class StyringsdataResourceTest(
             paaleggKlage = null,
             bot = null,
             botKlage = null,
-            sistLagra = Instant.now())
+            sistLagra = Instant.now(),
+        )
 
     val responseEntity = restTemplate.postForEntity("/styringsdata", styringsdata, Unit::class.java)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.CREATED)
@@ -100,7 +101,9 @@ class StyringsdataResourceTest(
                 Paalegg(
                     id = null,
                     vedtakDato = LocalDate.now().minusDays(10),
-                    frist = LocalDate.now().plusDays(20)))
+                    frist = LocalDate.now().plusDays(20),
+                )
+        )
 
     restTemplate.put(locationLoeysing, updated)
 
@@ -127,7 +130,9 @@ class StyringsdataResourceTest(
                     klageAvgjortDato = LocalDate.now().plusDays(15),
                     resultatKlageTilsyn = ResultatKlage.stadfesta,
                     klageDatoDepartement = LocalDate.now().plusDays(20),
-                    resultatKlageDepartement = ResultatKlage.stadfesta))
+                    resultatKlageDepartement = ResultatKlage.stadfesta,
+                )
+        )
 
     restTemplate.put(locationLoeysing, updated)
 
@@ -157,7 +162,9 @@ class StyringsdataResourceTest(
                     vedtakDato = LocalDate.now().plusDays(30),
                     startDato = LocalDate.now(),
                     sluttDato = LocalDate.now().plusDays(60),
-                    kommentar = "Test kommentar"))
+                    kommentar = "Test kommentar",
+                )
+        )
 
     restTemplate.put(locationLoeysing, updated)
 
@@ -184,7 +191,9 @@ class StyringsdataResourceTest(
                     klageAvgjortDato = LocalDate.now().plusDays(15),
                     resultatKlageTilsyn = ResultatKlage.stadfesta,
                     klageDatoDepartement = LocalDate.now().plusDays(20),
-                    resultatKlageDepartement = ResultatKlage.stadfesta))
+                    resultatKlageDepartement = ResultatKlage.stadfesta,
+                )
+        )
 
     restTemplate.put(locationLoeysing, updated)
 
@@ -214,7 +223,8 @@ class StyringsdataResourceTest(
             status = null,
             svarFoerebelsRapportDato = null,
             varselSendtDato = null,
-            sistLagra = Instant.now())
+            sistLagra = Instant.now(),
+        )
 
     val responseEntity = restTemplate.postForEntity<Unit>("/styringsdata", styringsdata)
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.CREATED)
@@ -302,7 +312,8 @@ class StyringsdataResourceTest(
             paaleggKlage = null,
             bot = null,
             botKlage = null,
-            sistLagra = Instant.now())
+            sistLagra = Instant.now(),
+        )
     return styringsdataDAO.createStyringsdataLoeysing(styringsdata).getOrThrow()
   }
 
@@ -313,7 +324,8 @@ class StyringsdataResourceTest(
             "Ola Nordmann",
             Sakstype.Arkivsak,
             "1234",
-            Kontrolltype.InngaaendeKontroll)
+            Kontrolltype.InngaaendeKontroll,
+        )
 
     return kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
   }

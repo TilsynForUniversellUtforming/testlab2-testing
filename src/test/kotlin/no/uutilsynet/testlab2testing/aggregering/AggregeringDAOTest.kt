@@ -16,7 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AggregeringDAOTest(
     @Autowired val aggregeringDAO: AggregeringDAO,
-    @Autowired val testUtils: TestUtils
+    @Autowired val testUtils: TestUtils,
 ) {
 
   fun setUp(): Int {
@@ -24,7 +24,11 @@ class AggregeringDAOTest(
     val testgrunnlag = OpprettTestgrunnlag("Testgrunnlag", TestgrunnlagType.OPPRINNELEG_TEST)
     val kontroll =
         testUtils.createKontroll(
-            "Kontroll", Kontrolltype.InngaaendeKontroll, listOf(1), listOf(testregelId))
+            "Kontroll",
+            Kontrolltype.InngaaendeKontroll,
+            listOf(1),
+            listOf(testregelId),
+        )
 
     return testUtils.createTestgrunnlag(testgrunnlag, kontroll)
   }

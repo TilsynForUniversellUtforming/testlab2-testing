@@ -10,7 +10,7 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory
 @Service
 class ResultatAppClient(
     restTemplate: RestTemplate,
-    private val resultatRegisterProperties: ResultatRegisterProperties
+    private val resultatRegisterProperties: ResultatRegisterProperties,
 ) {
 
   val restClient = RestClient.create(restTemplate)

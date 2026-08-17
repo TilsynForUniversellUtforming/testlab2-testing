@@ -57,7 +57,8 @@ class UtvalResourceTest(
   private val loeysingar =
       listOf(
           Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827"),
-          Loeysing.External("Digdir", "https://www.digdir.no", "991825827"))
+          Loeysing.External("Digdir", "https://www.digdir.no", "991825827"),
+      )
 
   @Test
   @DisplayName("vi skal kunne opprette eit nytt utval")
@@ -94,7 +95,8 @@ class UtvalResourceTest(
   }
 
   @DisplayName(
-      "når vi opprettar eit utval med ei løysing som ikkje finst i databasen, så skal løysinga bli lagra, og utvalet oppretta")
+      "når vi opprettar eit utval med ei løysing som ikkje finst i databasen, så skal løysinga bli lagra, og utvalet oppretta"
+  )
   @Test
   fun opprettUtvalMedNyLoeysing() {
     val uutilsynet = Loeysing.External("UUTilsynet", "https://www.uutilsynet.no", "991825827")
@@ -102,13 +104,21 @@ class UtvalResourceTest(
     val randomLoeysing = Loeysing.External(uuid, "https://www.$uuid.com", "000000000")
     val randomLoeysingNew =
         Loeysing(
-            3, randomLoeysing.namn, URI(randomLoeysing.url).toURL(), randomLoeysing.orgnummer, uuid)
+            3,
+            randomLoeysing.namn,
+            URI(randomLoeysing.url).toURL(),
+            randomLoeysing.orgnummer,
+            uuid,
+        )
     val newList = loeysingList + randomLoeysingNew
 
     doReturn(randomLoeysingNew)
         .`when`(loeysingsRegisterClient)
         .saveLoeysing(
-            randomLoeysing.namn, URI(randomLoeysing.url).toURL(), randomLoeysing.orgnummer)
+            randomLoeysing.namn,
+            URI(randomLoeysing.url).toURL(),
+            randomLoeysing.orgnummer,
+        )
     doReturn(loeysingList)
         .`when`(loeysingsRegisterClient)
         .getMany(listOf(randomLoeysingNew.id), maalingDateStart)
@@ -134,7 +144,8 @@ class UtvalResourceTest(
   }
 
   @DisplayName(
-      "når utvalet har ein URL som manglar protocol, så skal vi anta https, og utvalet skal opprettast")
+      "når utvalet har ein URL som manglar protocol, så skal vi anta https, og utvalet skal opprettast"
+  )
   @Test
   fun opprettUtvalMedUrlUtenProtocol() {
     val uutilsynet = Loeysing.External("UUTilsynet", "www.uutilsynet.no", "991825827")
@@ -158,7 +169,10 @@ class UtvalResourceTest(
     assertThat(utval.loeysingar.map { it.url })
         .containsAll(
             listOf(
-                URI("https://www.uutilsynet.no/").toURL(), URI("https://www.digdir.no/").toURL()))
+                URI("https://www.uutilsynet.no/").toURL(),
+                URI("https://www.digdir.no/").toURL(),
+            )
+        )
   }
 
   @DisplayName("vi skal kunne hente ei liste med alle utval")

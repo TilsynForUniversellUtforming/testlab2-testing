@@ -23,7 +23,8 @@ object RegelsettTestConstants {
               1,
               1,
               "QW-ACT-R1",
-              1),
+              1,
+          ),
           Testregel(
               2,
               "QW-ACT-R2",
@@ -35,7 +36,9 @@ object RegelsettTestConstants {
               1,
               1,
               "QW-ACT-R2",
-              1))
+              1,
+          ),
+      )
 
   val regelsettTestregelIdList = regelsettTestregelList.map { it.id }
 
@@ -49,5 +52,6 @@ object RegelsettTestConstants {
           "namn" to namn,
           "modus" to modus,
           "standard" to standard,
-          "testregelIdList" to testregelIdList)
+          "testregelIdList" to testregelIdList,
+      )
 }

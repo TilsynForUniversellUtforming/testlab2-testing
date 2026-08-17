@@ -42,7 +42,8 @@ class TestoverviewService(
           kontroll.kontrolltype,
           allResultat,
           styringsdataMap,
-          testgrunnlagList.newestTestgrunnlagIds())
+          testgrunnlagList.newestTestgrunnlagIds(),
+      )
     }
   }
 
@@ -52,7 +53,7 @@ class TestoverviewService(
       kontrolltype: Kontrolltype,
       allResultat: Map<Int, List<ResultatManuellKontroll>>,
       styringsdataMap: Map<Int, StyringsdataListElement>,
-      newestTestgrunnlagIds: Set<Int>
+      newestTestgrunnlagIds: Set<Int>,
   ): List<TestingStatus> {
     val testresultat = allResultat[testgrunnlagKontroll.id] ?: emptyList()
     val testresultatByLoeysing = testresultat.groupBy { it.loeysingId }
@@ -65,13 +66,14 @@ class TestoverviewService(
           kontrolltype,
           testresultatByLoeysing[loeysing.id] ?: emptyList(),
           styringsdataMap[loeysing.id],
-          isNewest)
+          isNewest,
+      )
     }
   }
 
   private fun mapSideutvalToLoeysing(
       testgrunnlagKontroll: TestgrunnlagKontroll,
-      loeysingarMap: Map<Int, Loeysing>
+      loeysingarMap: Map<Int, Loeysing>,
   ): List<Loeysing> =
       testgrunnlagKontroll.sideutval
           .mapNotNull { sideutval -> loeysingarMap[sideutval.loeysingId] }
@@ -90,13 +92,18 @@ class TestoverviewService(
       kontrollType: Kontrolltype,
       resultat: List<ResultatManuellKontroll>,
       styringsdata: StyringsdataListElement?,
-      isNewest: Boolean
+      isNewest: Boolean,
   ): TestingStatus {
     val testregelIdList = testgrunnlagKontroll.testreglar
     val sideutvalIdList = testgrunnlagKontroll.sideutval.toList().map { it.id }
     val testStatistics =
         statisticsService.getTestingStatusForLoeysing(
-            loeysing.id, testgrunnlagKontroll.id, resultat, testregelIdList, sideutvalIdList)
+            loeysing.id,
+            testgrunnlagKontroll.id,
+            resultat,
+            testregelIdList,
+            sideutvalIdList,
+        )
 
     return TestingStatus(
         loeysingId = loeysing.id,
@@ -109,7 +116,8 @@ class TestoverviewService(
         kanSlette = kanSlette(resultat, testgrunnlagKontroll.type),
         styringsdataStatus = styringsdataStatus(styringsdata),
         styringsdataId = styringsdata?.id,
-        kanReteste = kanReteste(resultat, isNewest))
+        kanReteste = kanReteste(resultat, isNewest),
+    )
   }
 
   private fun getTeststatus(results: List<ResultatManuellKontroll>): ManuellTestStatus {
@@ -131,14 +139,15 @@ class TestoverviewService(
 
   private fun kanSlette(
       resultat: List<ResultatManuellKontroll>,
-      testgrunnlagType: TestgrunnlagType
+      testgrunnlagType: TestgrunnlagType,
   ): Boolean {
     return resultat.isEmpty() && testgrunnlagType == TestgrunnlagType.RETEST
   }
 
   private fun kanReteste(resultat: List<ResultatManuellKontroll>, isNewest: Boolean): Boolean {
-    val harBrot =
-        resultat.any { it.elementResultat == TestresultatUtfall.brot && it.status == Status.Ferdig }
+    val harBrot = resultat.any {
+      it.elementResultat == TestresultatUtfall.brot && it.status == Status.Ferdig
+    }
     return harBrot && isNewest
   }
 }

@@ -16,14 +16,14 @@ data class TestingStatus(
     val status: ManuellTestStatus,
     val kanSlette: Boolean,
     val kanReteste: Boolean,
-    val teststatistics: TestStatusCount
+    val teststatistics: TestStatusCount,
 )
 
 enum class ManuellTestStatus {
   @JsonProperty("ferdig") FERDIG,
   @JsonProperty("deaktivert") DEAKTIVERT,
   @JsonProperty("under-arbeid") UNDER_ARBEID,
-  @JsonProperty("ikkje-starta") IKKJE_STARTA
+  @JsonProperty("ikkje-starta") IKKJE_STARTA,
 }
 
 data class TestStatusCount(
@@ -34,12 +34,12 @@ data class TestStatusCount(
     val underArbeid: Int,
     val ikkjeStarta: Int,
     val percentagePerSide: Double,
-    val percentagePerInnholdstype: Double
+    val percentagePerInnholdstype: Double,
 )
 
 enum class StyringsdataStatus {
   BOT,
   PAALEGG,
   KLAGE,
-  INGEN_REAKSJON_BRUKT
+  INGEN_REAKSJON_BRUKT,
 }

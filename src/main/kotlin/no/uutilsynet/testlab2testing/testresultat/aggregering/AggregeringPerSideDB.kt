@@ -12,5 +12,5 @@ data class AggregeringPerSideDB(
     val talElementBrot: Int,
     val talElementVarsel: Int,
     val talElementIkkjeForekomst: Int,
-    val testgrunnlagId: Int?
+    val testgrunnlagId: Int?,
 ) {}

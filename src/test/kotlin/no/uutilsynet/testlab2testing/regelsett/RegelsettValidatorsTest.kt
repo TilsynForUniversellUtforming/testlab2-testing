@@ -27,7 +27,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R12",
-                1),
+                1,
+            ),
             Testregel(
                 2,
                 "TR2",
@@ -39,7 +40,9 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R13",
-                1))
+                1,
+            ),
+        )
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelModus.automatisk
 
@@ -62,7 +65,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 """"{"gaaTil": 1}""",
-                1),
+                1,
+            ),
             Testregel(
                 2,
                 "TR2",
@@ -74,7 +78,9 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 """{"gaaTil": 1}""",
-                1))
+                1,
+            ),
+        )
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelModus.manuell
 
@@ -97,7 +103,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R12",
-                1),
+                1,
+            ),
             Testregel(
                 2,
                 "TR2",
@@ -109,7 +116,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R13",
-                1),
+                1,
+            ),
             Testregel(
                 3,
                 "TR3",
@@ -121,7 +129,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R14",
-                1),
+                1,
+            ),
         )
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelModus.automatisk
@@ -147,7 +156,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R12",
-                1),
+                1,
+            ),
             Testregel(
                 2,
                 "TR2",
@@ -159,7 +169,9 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R13",
-                1))
+                1,
+            ),
+        )
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelModus.automatisk
 
@@ -182,7 +194,8 @@ class RegelsettValidatorsTest {
                 1,
                 1,
                 "QW-ACT-R12",
-                1),
+                1,
+            ),
         )
     val testregelIdList = listOf(1, 2)
     val regelsettType = TestregelModus.automatisk

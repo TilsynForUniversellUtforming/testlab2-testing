@@ -47,8 +47,10 @@ class CrawlerClientTest {
                 "uutilsynet",
                 URI("https://www.uutilsynet.no").toURL(),
                 "123456785",
-                "uutilsynet"),
-            Loeysing(2, "digdir", URI("https://www.digdir.no").toURL(), "123456785", "digdir"))
+                "uutilsynet",
+            ),
+            Loeysing(2, "digdir", URI("https://www.digdir.no").toURL(), "123456785", "digdir"),
+        )
 
     val testregelList =
         listOf(
@@ -63,7 +65,9 @@ class CrawlerClientTest {
                 1,
                 1,
                 "QW-ACT-12",
-                1))
+                1,
+            )
+        )
     val maaling =
         Maaling.Planlegging(
             1,
@@ -71,7 +75,8 @@ class CrawlerClientTest {
             maalingDateStart,
             loeysingList,
             testregelList.map { it.toTestregelBase() },
-            CrawlParameters())
+            CrawlParameters(),
+        )
     runBlocking {
       val oppdatertMaaling = start(maaling)
 
@@ -102,5 +107,7 @@ class CrawlerClientTest {
                   "sendEventPostUri" to "https://send.event.uri",
                   "statusQueryGetUri" to "https://status.query.uri",
                   "suspendPostUri" to "https://suspend.uri",
-                  "terminatePostUri" to "https://terminate.uri"))
+                  "terminatePostUri" to "https://terminate.uri",
+              )
+          )
 }

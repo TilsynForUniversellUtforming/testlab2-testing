@@ -41,7 +41,8 @@ class BildeServiceTest(@Autowired val bildeService: BildeService) {
             image = expectedBilde,
             thumbnail = expectedThumbnail,
             fileName = "1_0",
-            fileExtension = "jpg")
+            fileExtension = "jpg",
+        )
 
     val bilde = listOf(MockMultipartFile("bilde", "bilde.jpg", "image/jpeg", mockImageByteArray()))
     val expectedImageDetails = listOf(expectedBildeDetalj)
@@ -56,7 +57,9 @@ class BildeServiceTest(@Autowired val bildeService: BildeService) {
             bildeDAO.saveBilde(
                 testresultatId,
                 expectedBildeDetalj.fullFileName,
-                expectedBildeDetalj.fullThumbnailName))
+                expectedBildeDetalj.fullThumbnailName,
+            )
+        )
         .thenReturn(Result.success(1))
 
     `when`(imageStorageService.uploadBilder(anyList()))
@@ -84,7 +87,8 @@ class BildeServiceTest(@Autowired val bildeService: BildeService) {
             image = expectedBilde,
             thumbnail = expectedThumbnail,
             fileName = expectedFileName,
-            fileExtension = "jpg")
+            fileExtension = "jpg",
+        )
 
     val bilde = listOf(MockMultipartFile("bilde", "bilde.jpg", "image/jpeg", mockImageByteArray()))
     val expectedImageDetails = listOf(expectedBildeDetalj)
@@ -94,7 +98,9 @@ class BildeServiceTest(@Autowired val bildeService: BildeService) {
             Result.success(
                 (0..numImages).map {
                   (BildeSti(1, "1_${it}.jpg", "1_${it}_thumb.jpg", Instant.now()))
-                }))
+                }
+            )
+        )
 
     `when`(testResultatDAO.getKontrollForTestresultat(testresultatId))
         .thenReturn(Result.success(KontrollDocumentation("Testkontroll", 1)))
@@ -103,7 +109,9 @@ class BildeServiceTest(@Autowired val bildeService: BildeService) {
             bildeDAO.saveBilde(
                 testresultatId,
                 expectedBildeDetalj.fullFileName,
-                expectedBildeDetalj.fullThumbnailName))
+                expectedBildeDetalj.fullThumbnailName,
+            )
+        )
         .thenReturn(Result.success(1))
 
     `when`(imageStorageService.uploadBilder(anyList()))

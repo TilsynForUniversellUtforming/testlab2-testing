@@ -57,7 +57,8 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
                 2,
                 2,
                 listOf("testar"),
-                1),
+                1,
+            ),
             LoeysingResultat(
                 2,
                 "Loeysingsnamn2",
@@ -69,7 +70,9 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
                 2,
                 2,
                 listOf("testar"),
-                2))
+                2,
+            ),
+        )
 
     val expectedResultat =
         Resultat(
@@ -79,7 +82,8 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
             TestgrunnlagType.OPPRINNELEG_TEST,
             LocalDate.now(),
             true,
-            expectedLoeysingar)
+            expectedLoeysingar,
+        )
 
     Mockito.`when`(resultatService.getKontrollResultatMedType(1, Kontrolltype.ForenklaKontroll))
         .thenReturn(listOf(expectedResultat))
@@ -92,7 +96,8 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
             Kontrolltype.ForenklaKontroll,
             "Forenkla kontroll",
             Instant.now(),
-            Instant.now())
+            Instant.now(),
+        )
 
     val expected =
         TestEkstern(
@@ -104,7 +109,8 @@ class EksternResultatServiceTest(@Autowired val eksternResultatService: EksternR
             0.5,
             Kontrolltype.ForenklaKontroll,
             "Forenkla kontroll",
-            Instant.now())
+            Instant.now(),
+        )
 
     val result = eksternResultatService.toTestListEkstern(testListElementDB)
 
@@ -129,7 +135,8 @@ object RapportTestdata {
               0.5,
               3,
               1,
-              2),
+              2,
+          ),
           ResultatOversiktLoeysingEkstern(
               "loysing1",
               Kontrolltype.ForenklaKontroll,
@@ -139,7 +146,8 @@ object RapportTestdata {
               0.4,
               3,
               1,
-              2),
+              2,
+          ),
       )
   val restresultat =
       listOf(
@@ -154,7 +162,8 @@ object RapportTestdata {
               "1.1.1",
               3,
               1,
-              2),
+              2,
+          ),
           ResultatOversiktLoeysing(
               1,
               "loysing1",
@@ -166,6 +175,7 @@ object RapportTestdata {
               "1.2.1",
               3,
               1,
-              2),
+              2,
+          ),
       )
 }

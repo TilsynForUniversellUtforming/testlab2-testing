@@ -50,7 +50,8 @@ class TestgrunnlagDAOTest(
             namn = "Testgrunnlag",
             type = TestgrunnlagType.OPPRINNELEG_TEST,
             sideutval = testKontroll!!.sideutval,
-            testregelIdList = testKontroll?.testreglar?.testregelIdList ?: emptyList())
+            testregelIdList = testKontroll?.testreglar?.testregelIdList ?: emptyList(),
+        )
 
     val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlagManuell)
     assertDoesNotThrow { id }
@@ -71,7 +72,8 @@ class TestgrunnlagDAOTest(
             namn = "Testgrunnlag",
             type = TestgrunnlagType.OPPRINNELEG_TEST,
             sideutval = testKontroll!!.sideutval,
-            testregelIdList = testKontroll?.testreglar?.testregelIdList ?: emptyList())
+            testregelIdList = testKontroll?.testreglar?.testregelIdList ?: emptyList(),
+        )
 
     val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlagManuell)
     assertDoesNotThrow { id }
@@ -93,7 +95,8 @@ class TestgrunnlagDAOTest(
             namn = "Testgrunnlag",
             type = TestgrunnlagType.OPPRINNELEG_TEST,
             sideutval = testKontroll!!.sideutval,
-            testregelIdList = testKontroll?.testreglar?.testregelIdList ?: emptyList())
+            testregelIdList = testKontroll?.testreglar?.testregelIdList ?: emptyList(),
+        )
 
     val id = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlagManuell)
 
@@ -103,7 +106,8 @@ class TestgrunnlagDAOTest(
 
     assertThat(
         listOf(testgrunnlagDAO.getTestgrunnlagForKontroll(testKontroll!!.id).opprinneligTest)
-            .isEmpty())
+            .isEmpty()
+    )
   }
 
   private fun opprettTestsak(): KontrollDAO.KontrollDB {
@@ -113,7 +117,8 @@ class TestgrunnlagDAOTest(
             "Ola Nordmann",
             Sakstype.Arkivsak,
             "1234",
-            Kontrolltype.InngaaendeKontroll)
+            Kontrolltype.InngaaendeKontroll,
+        )
 
     kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
@@ -141,7 +146,8 @@ class TestgrunnlagDAOTest(
         kontroll,
         listOf(
             SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
-        ))
+        ),
+    )
 
     return kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
   }

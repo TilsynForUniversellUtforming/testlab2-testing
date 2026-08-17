@@ -13,5 +13,5 @@ data class AggregertResultatSide(
     val talElementSamsvar: Int,
     val talElementBrot: Int,
     val talElementVarsel: Int,
-    val talElementIkkjeForekomst: Int
+    val talElementIkkjeForekomst: Int,
 ) : AutotesterTestresultat

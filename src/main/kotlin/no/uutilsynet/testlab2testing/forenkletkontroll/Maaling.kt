@@ -19,7 +19,8 @@ import no.uutilsynet.testlab2testing.testregel.model.TestregelBase
     JsonSubTypes.Type(Maaling.Crawling::class, name = "crawling"),
     JsonSubTypes.Type(Maaling.Kvalitetssikring::class, name = "kvalitetssikring"),
     JsonSubTypes.Type(Maaling.Testing::class, name = "testing"),
-    JsonSubTypes.Type(Maaling.TestingFerdig::class, name = "testing_ferdig"))
+    JsonSubTypes.Type(Maaling.TestingFerdig::class, name = "testing_ferdig"),
+)
 sealed class Maaling {
   abstract val id: Int
   abstract val navn: String
@@ -32,7 +33,7 @@ sealed class Maaling {
       override val datoStart: Instant,
       val loeysingList: List<Loeysing>,
       val testregelList: List<TestregelBase>,
-      val crawlParameters: CrawlParameters
+      val crawlParameters: CrawlParameters,
   ) : Maaling() {
     override val aksjoner: List<Aksjon>
       get() = listOf(Aksjon.StartCrawling(URI("${locationForId(id)}/status")))
@@ -42,7 +43,7 @@ sealed class Maaling {
       override val id: Int,
       override val navn: String,
       override val datoStart: Instant,
-      val crawlResultat: List<CrawlResultat>
+      val crawlResultat: List<CrawlResultat>,
   ) : Maaling() {
     override val aksjoner: List<Aksjon>
       get() = listOf()
@@ -56,7 +57,8 @@ sealed class Maaling {
       override val aksjoner: List<Aksjon> =
           listOf(
               Aksjon.RestartCrawling(URI("${locationForId(id)}/status")),
-              Aksjon.StartTesting(URI("${locationForId(id)}/status")))
+              Aksjon.StartTesting(URI("${locationForId(id)}/status")),
+          ),
   ) : Maaling()
 
   data class Testing(
@@ -92,16 +94,19 @@ sealed class Maaling {
         Crawling(planlagtMaaling.id, planlagtMaaling.navn, planlagtMaaling.datoStart, crawlResultat)
 
     fun toKvalitetssikring(crawlingMaaling: Crawling): Kvalitetssikring? =
-        if (crawlingMaaling.crawlResultat.any {
-          it is CrawlResultat.IkkjeStarta || it is CrawlResultat.Starta
-        }) {
+        if (
+            crawlingMaaling.crawlResultat.any {
+              it is CrawlResultat.IkkjeStarta || it is CrawlResultat.Starta
+            }
+        ) {
           null
         } else {
           Kvalitetssikring(
               crawlingMaaling.id,
               crawlingMaaling.navn,
               crawlingMaaling.datoStart,
-              crawlingMaaling.crawlResultat)
+              crawlingMaaling.crawlResultat,
+          )
         }
 
     fun toTesting(maaling: Kvalitetssikring, testKoeyringar: List<TestKoeyring>): Testing {
@@ -110,7 +115,7 @@ sealed class Maaling {
 
     fun findFerdigeTestKoeyringar(
         maaling: Maaling,
-        loeysingId: Int? = null
+        loeysingId: Int? = null,
     ): List<TestKoeyring.Ferdig> {
       val testKoeyringar =
           when (maaling) {
@@ -131,7 +136,7 @@ data class MaalingListElement(
     val id: Int,
     val navn: String,
     val datoStart: Instant,
-    val status: String
+    val status: String,
 )
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "id")
@@ -139,7 +144,8 @@ data class MaalingListElement(
     JsonSubTypes.Type(value = Aksjon.StartCrawling::class, name = "start_crawling"),
     JsonSubTypes.Type(value = Aksjon.RestartCrawling::class, name = "restart_crawling"),
     JsonSubTypes.Type(value = Aksjon.StartTesting::class, name = "start_testing"),
-    JsonSubTypes.Type(value = Aksjon.RestartTesting::class, name = "restart_testing"))
+    JsonSubTypes.Type(value = Aksjon.RestartTesting::class, name = "restart_testing"),
+)
 sealed class Aksjon(val data: Map<String, String>) {
   val metode = "PUT"
 
@@ -158,7 +164,7 @@ fun locationForId(id: Number): URI = URI.create("/v1/maalinger/${id}")
 
 enum class Status {
   Crawling,
-  Testing
+  Testing,
 }
 
 fun KontrollResource.OpprettKontroll.toNyMaaling(): MaalingResource.NyMaalingDTO =
@@ -167,7 +173,8 @@ fun KontrollResource.OpprettKontroll.toNyMaaling(): MaalingResource.NyMaalingDTO
         crawlParameters = CrawlParameters(),
         loeysingIdList = null,
         testregelIdList = emptyList(),
-        utvalId = null)
+        utvalId = null,
+    )
 
 fun Kontroll.toMaalingEdit(maalingId: Int): EditMaalingDTO =
     EditMaalingDTO(
@@ -175,4 +182,5 @@ fun Kontroll.toMaalingEdit(maalingId: Int): EditMaalingDTO =
         navn = this.tittel,
         testregelIdList = this.testreglar?.testregelIdList ?: emptyList(),
         loeysingIdList = this.utval?.loeysingar?.map { it.id },
-        crawlParameters = CrawlParameters())
+        crawlParameters = CrawlParameters(),
+    )

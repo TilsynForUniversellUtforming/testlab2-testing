@@ -27,14 +27,14 @@ class ManueltResultatService(
     private val sideutvalDAO: SideutvalDAO,
     private val bildeService: BildeService,
     testresultatDAO: no.uutilsynet.testlab2testing.testresultat.TestresultatDAO,
-    testregelCache: TestregelCache
+    testregelCache: TestregelCache,
 ) : KontrollResultatService(resultatDAO, kravregisterClient, testresultatDAO, testregelCache) {
 
   override fun getResultatForKontroll(
       kontrollId: Int,
       loeysingId: Int,
       testregelId: Int,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDetaljert> {
     return getFilteredAndMappedResults(kontrollId, loeysingId) {
           filterByTestregel(it.testregelId, listOf(testregelId)) && it.elementResultat != null
@@ -61,7 +61,7 @@ class ManueltResultatService(
   fun getFilteredAndMappedResults(
       kontrollId: Int,
       loeysingId: Int,
-      filter: (ResultatManuellKontroll) -> Boolean
+      filter: (ResultatManuellKontroll) -> Boolean,
   ): List<TestresultatDetaljert> {
     val testresultat = getTestresultatForKontroll(kontrollId, loeysingId)
     val sideutvalIdUrlMap = getSideutvalMap(testresultat)
@@ -107,10 +107,14 @@ class ManueltResultatService(
         it.elementUtfall,
         it.elementResultat,
         TestresultatDetaljert.ElementOmtale(
-            htmlCode = null, pointer = null, description = it.elementOmtale),
+            htmlCode = null,
+            pointer = null,
+            description = it.elementOmtale,
+        ),
         it.brukar,
         it.kommentar,
-        getBildeForTestresultat(it))
+        getBildeForTestresultat(it),
+    )
   }
 
   private fun getUrlFromSideutval(
@@ -148,7 +152,7 @@ class ManueltResultatService(
       kontrollId: Int,
       loeysingId: Int,
       kravId: Int,
-      sortPaginationParams: SortPaginationParams
+      sortPaginationParams: SortPaginationParams,
   ): List<TestresultatDetaljert> {
     val testreglar = getTestreglarForKrav(kravId).map { it.id }
     return getFilteredAndMappedResults(kontrollId, loeysingId) {
@@ -161,22 +165,30 @@ class ManueltResultatService(
   override fun getTalBrotForKontrollLoeysingTestregel(
       kontrollId: Int,
       loeysingId: Int,
-      testregelId: Int
+      testregelId: Int,
   ): Result<Int> {
     val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
     return testresultatDAO.getTalBrotForKontrollLoeysingTestregel(
-        loeysingId, testregelId, testgrunnlagId, null)
+        loeysingId,
+        testregelId,
+        testgrunnlagId,
+        null,
+    )
   }
 
   override fun getTalBrotForKontrollLoeysingKrav(
       kontrollId: Int,
       loeysingId: Int,
-      kravId: Int
+      kravId: Int,
   ): Result<Int> {
     val testgrunnlagId = testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId).opprinneligTest.id
     val testregelIds = getTestreglarForKrav(kravId).map { it.id }
     return testresultatDAO.getTalBrotForKontrollLoeysingKrav(
-        loeysingId, testregelIds, testgrunnlagId, null)
+        loeysingId,
+        testregelIds,
+        testgrunnlagId,
+        null,
+    )
   }
 
   private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =

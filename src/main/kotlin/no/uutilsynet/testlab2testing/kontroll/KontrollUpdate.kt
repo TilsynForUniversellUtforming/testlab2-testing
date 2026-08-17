@@ -5,12 +5,16 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 
 @JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "kontrollSteg")
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "kontrollSteg",
+)
 @JsonSubTypes(
     JsonSubTypes.Type(value = KontrollUpdate.Edit::class, name = "edit"),
     JsonSubTypes.Type(value = KontrollUpdate.Utval::class, name = "utval"),
     JsonSubTypes.Type(value = KontrollUpdate.Testreglar::class, name = "testreglar"),
-    JsonSubTypes.Type(value = KontrollUpdate.Sideutval::class, name = "sideutval"))
+    JsonSubTypes.Type(value = KontrollUpdate.Sideutval::class, name = "sideutval"),
+)
 sealed class KontrollUpdate {
   abstract val kontroll: Kontroll
 
@@ -27,12 +31,12 @@ sealed class KontrollUpdate {
 
 data class KontrollTestreglarUpdate(
     val regelsettId: Int? = null,
-    val testregelIdList: List<Int> = emptyList()
+    val testregelIdList: List<Int> = emptyList(),
 )
 
 enum class KontrollSteg {
   @JsonProperty("edit") Edit,
   @JsonProperty("utval") Utval,
   @JsonProperty("testreglar") Testreglar,
-  @JsonProperty("sideutval") Sideutval
+  @JsonProperty("sideutval") Sideutval,
 }
