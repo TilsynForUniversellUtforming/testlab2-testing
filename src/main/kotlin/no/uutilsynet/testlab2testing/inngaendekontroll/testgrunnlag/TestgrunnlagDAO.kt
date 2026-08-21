@@ -3,7 +3,6 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 import java.sql.Timestamp
 import java.time.Instant
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.slf4j.LoggerFactory
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
@@ -22,8 +21,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     return getTestgrunnlagKontroll(testgrunnlagId).mapCatching {
       it.copy(
-          testreglar =
-              getTestreglarForTestgrunnlag(testgrunnlagId).map { testregel -> testregel.id },
+          testreglar = getTestreglarForTestgrunnlag(testgrunnlagId),
           sideutval = getSideutvalForTestgrunnlag(testgrunnlagId))
     }
   }
@@ -49,34 +47,18 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         .toList()
   }
 
-  private fun getTestreglarForTestgrunnlag(testgrunnlagId: Int): List<Testregel> {
+  private fun getTestreglarForTestgrunnlag(testgrunnlagId: Int): List<Int> {
     return jdbcTemplate
-        .query(
+        .queryForList(
             """
                   select 
-                    t.id,
-                    t.krav_id,
-                    t.testregel_schema,
-                    t.namn,
-                    t.modus,
-                    t.testregel_id,
-                    t.versjon,
-                    t.status,
-                    t.dato_sist_endra,
-                    t.modus,
-                    t.spraak,
-                    t.tema,
-                    t.type,
-                    t.testobjekt,
-                    t.krav_til_samsvar,
-                    t.innhaldstype_testing
+                    ttk.testregel_id
                   from "testlab2_testing"."testgrunnlag_testregel_kontroll" ttk 
-                  join "testlab2_testing"."testregel" t on t.id = ttk.testregel_id
                     where testgrunnlag_id = :testgrunnlagId
                 """
                 .trimMargin(),
             mapOf("testgrunnlagId" to testgrunnlagId),
-            DataClassRowMapper.newInstance(Testregel::class.java))
+            Int::class.java)
         .toList()
   }
 
@@ -84,7 +66,9 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val testgrunnlag =
         DataAccessUtils.singleResult(
             jdbcTemplate.query(
-                """select id, kontroll_id, namn, type, dato_oppretta from "testlab2_testing"."testgrunnlag" where id = :testgrunnlagId""",
+                """select id, kontroll_id, namn, type, dato_oppretta 
+                    |from "testlab2_testing"."testgrunnlag" where id = :testgrunnlagId"""
+                    .trimMargin(),
                 mapOf("testgrunnlagId" to testgrunnlagId),
             ) { rs, _ ->
               TestgrunnlagKontroll(
@@ -108,7 +92,9 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val result =
         DataAccessUtils.singleResult(
             jdbcTemplate.query(
-                """select id from "testlab2_testing"."testgrunnlag" where kontroll_id = :kontrollId and type = 'OPPRINNELEG_TEST'""",
+                """select id from "testlab2_testing"."testgrunnlag" 
+                    |where kontroll_id = :kontrollId and type = 'OPPRINNELEG_TEST'"""
+                    .trimMargin(),
                 mapOf("kontrollId" to kontrollId),
             ) { rs, _ ->
               rs.getInt("id")
@@ -198,7 +184,9 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         sideutvalIdList.map { mapOf("testgrunnlagId" to testgrunnlagId, "sideutvalId" to it) }
 
     jdbcTemplate.batchUpdate(
-        """insert into "testlab2_testing"."testgrunnlag_sideutval_kontroll" (testgrunnlag_id, sideutval_id) values (:testgrunnlagId, :sideutvalId)""",
+        """insert into "testlab2_testing"."testgrunnlag_sideutval_kontroll" (testgrunnlag_id, sideutval_id) 
+            |values (:testgrunnlagId, :sideutvalId)"""
+            .trimMargin(),
         updateBatchValuesRegelsettTestregel.toTypedArray())
   }
 
@@ -207,7 +195,9 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         testregelIdList.map { mapOf("testgrunnlagId" to testgrunnlagId, "testregelId" to it) }
 
     jdbcTemplate.batchUpdate(
-        """insert into "testlab2_testing"."testgrunnlag_testregel_kontroll" (testgrunnlag_id, testregel_id) values (:testgrunnlagId, :testregelId)""",
+        """insert into "testlab2_testing"."testgrunnlag_testregel_kontroll" (testgrunnlag_id, testregel_id) 
+            |values (:testgrunnlagId, :testregelId)"""
+            .trimMargin(),
         updateBatchValuesRegelsettTestregel.toTypedArray())
   }
 
@@ -245,36 +235,6 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         mapOf("testgrunnlagId" to testgrunnlagId))
 
     saveTestgrunnlagTestregel(testgrunnlagId, testreglar)
-  }
-
-  fun getTestgrunnlagIdForKontroll(kontrollId: Int): Result<Int> {
-    return runCatching {
-      DataAccessUtils.singleResult(
-          jdbcTemplate.query(
-              "select id from testgrunnlag where kontroll_id = :kontrollId",
-              mapOf("kontrollId" to kontrollId),
-          ) { rs, _ ->
-            rs.getInt("id")
-          })
-          ?: throw NoSuchElementException("Testgrunnlag for kontroll finns ikkje")
-    }
-  }
-
-  fun hasTestgrunnlagTestregel(testregelId: Int): Boolean {
-    val resultat =
-        jdbcTemplate
-            .query(
-                """
-        select 1 from "testlab2_testing"."testgrunnlag_testregel_kontroll" ttk
-        where ttk.testregel_id = :testregelId
-      """
-                    .trimIndent(),
-                mapOf("testregelId" to testregelId)) { rs, _ ->
-                  rs.getInt(1)
-                }
-            .toList()
-
-    return resultat.isNotEmpty()
   }
 
   fun getTestrunUuidForTestgrunnlag(testgrunnlagId: Int): Result<String> {
