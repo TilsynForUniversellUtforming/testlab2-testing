@@ -184,12 +184,6 @@ class KontrollResource(
   ): ResponseEntity<Unit> =
       runCatching {
             require(updateBody.kontroll.id == id) { "id i URL-en og id er ikkje den same" }
-            val hasTestresultat = testgrunnlagService.kontrollHasTestresultat(id)
-
-            if (hasTestresultat && updateBody !is KontrollUpdate.Edit) {
-              logger.error("test er allereie starta for kontroll: ${id}")
-              throw IllegalArgumentException("Test er allereie starta")
-            }
 
             when (updateBody) {
               is KontrollUpdate.Edit -> {
