@@ -159,8 +159,12 @@ class ResultatService(
   private fun calculateTalElementSamsvar(resultLoeysing: List<ResultatLoeysingDTO>) =
       resultLoeysing.sumOf { it.talElementSamsvar }
 
-  private fun calculateScore(resultLoeysing: List<ResultatLoeysingDTO>) =
-      resultLoeysing.filter { filterIkkjeForekomst(it) }.map { it.score }.average()
+  private fun calculateScore(resultLoeysing: List<ResultatLoeysingDTO>):Double {
+      return resultLoeysing.filter { filterIkkjeForekomst(it) }
+          .map { it.score }
+          .let { if (it.isEmpty()) 0.0 else it.average() }
+  }
+
 
   private fun filterIkkjeForekomst(it: ResultatLoeysingDTO) =
       !erIkkjeForekomst(it.talElementBrot, it.talElementSamsvar)
