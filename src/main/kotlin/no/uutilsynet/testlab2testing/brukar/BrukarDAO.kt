@@ -31,6 +31,7 @@ class BrukarDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 select brukarnamn, namn
                 from brukar
                 where brukarnamn = :brukarnamn
+                and deaktivert = false
             """
                 .trimIndent(),
             mapOf("brukarnamn" to brukarnamn)) { rs, _ ->
@@ -46,6 +47,7 @@ class BrukarDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     select id
                     from brukar
                     where brukarnamn = :brukarnamn
+                    and deaktivert = false
                 """
                 .trimIndent(),
             mapOf("brukarnamn" to brukarnamn)) { rs, _ ->
@@ -61,6 +63,7 @@ class BrukarDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                     select brukarnamn, namn
                     from brukar
                     where id = :brukarId
+                    and deaktivert = false
                 """
                 .trimIndent(),
             mapOf("brukarId" to brukarId)) { rs, _ ->
@@ -68,4 +71,17 @@ class BrukarDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             }
         .firstOrNull()
   }
+
+    fun getBrukarList(): List<Brukar> {
+        return jdbcTemplate.query(
+            """
+                select brukarnamn, namn
+                from brukar
+                where deaktivert = false
+            """.trimIndent(),
+            emptyMap<String, String>()
+        )              { rs, _ ->
+            Brukar(rs.getString("brukarnamn"), rs.getString("namn"))
+        }
+    }
 }
