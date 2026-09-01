@@ -1,10 +1,10 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
-import java.awt.Image
-import java.awt.image.BufferedImage
-import java.net.HttpURLConnection
-import javax.imageio.ImageIO
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.*
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.KontrollDocumentation
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.annotation.CacheEvict
@@ -17,14 +17,20 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.util.MimeTypeUtils
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.util.UriComponentsBuilder
+import java.awt.Image
+import java.awt.image.BufferedImage
+import java.net.HttpURLConnection
+import java.nio.charset.Charset
+import javax.imageio.ImageIO
 
 private const val GJENNOPPRETT_BILDE_FEIL = "Kunne ikkje gjenopprette bilde"
 
 @Service
 class BildeService(
-    @Autowired val testResultatDAO: TestResultatDAO,
-    @Autowired val bildeDAO: BildeDAO,
-    @Lazy val blobClient: ImageStorageService,
+  @Autowired val testResultatDAO: TestResultatDAO,
+  @Autowired val bildeDAO: BildeDAO,
+  @Lazy val blobClient: ImageStorageService,
 ) {
 
   private val logger = LoggerFactory.getLogger(BildeService::class.java)
@@ -153,7 +159,13 @@ class BildeService(
   }
 
   fun getBildeResponse(bildesti: String): ResponseEntity<InputStreamResource> {
-    val bildeConnection = getBilde(bildesti)
+    val encodaSti = UriComponentsBuilder.newInstance().path(bildesti)
+      .build()
+      .encode(Charset.forName("UTF-8"))
+      .toUriString()
+
+
+      val bildeConnection = getBilde(encodaSti)
     val contentType: String = bildeConnection.contentType ?: "image/jpeg"
     val mediaType = MediaType.parseMediaType(contentType)
 
