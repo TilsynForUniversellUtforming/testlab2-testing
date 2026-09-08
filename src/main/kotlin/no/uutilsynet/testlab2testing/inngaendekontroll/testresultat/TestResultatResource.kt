@@ -1,11 +1,5 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
-import java.io.ByteArrayInputStream
-import java.io.File
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
-import java.time.Instant
-import java.util.Base64
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
@@ -26,8 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
+import java.time.Instant
 
 @RestController
 @RequestMapping("/testresultat")
