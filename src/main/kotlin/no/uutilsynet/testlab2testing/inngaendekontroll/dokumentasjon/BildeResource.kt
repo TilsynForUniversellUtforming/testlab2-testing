@@ -59,7 +59,6 @@ class BildeResource(val bildeService: BildeService) {
 
   @GetMapping("sti")
   fun getBilde(@RequestParam("bildesti") bildesti: String): ResponseEntity<InputStreamResource> {
-
     return bildeService.getBildeResponse(bildesti)
   }
 }
