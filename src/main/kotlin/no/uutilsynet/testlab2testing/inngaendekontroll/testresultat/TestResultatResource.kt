@@ -1,12 +1,13 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
-import java.time.Instant
+import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
-import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.testing.automatisk.elementtesting.AutomaticTestingService
+import no.uutilsynet.testlab2testing.testing.automatisk.elementtesting.AutotesterPayload
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
 import org.springframework.http.ResponseEntity
@@ -20,15 +21,16 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
+import java.time.Instant
 
 @RestController
 @RequestMapping("/testresultat")
 class TestResultatResource(
     val testResultatDAO: TestResultatDAO,
-    val testgrunnlagDAO: TestgrunnlagDAO,
-    val aggregeringService: AggregeringService,
     val brukarService: BrukarService,
     val bildeService: BildeService,
+    val automaticTestingService: AutomaticTestingService,
+    val testregelCache: TestregelCache,
 ) {
   val logger: Logger = getLogger(TestResultatResource::class.java)
 
@@ -38,7 +40,25 @@ class TestResultatResource(
   ): ResponseEntity<Unit> =
       runCatching {
             val brukar = brukarService.getCurrentUser()
-            testResultatDAO.save(createTestResultat.copy(brukar = brukar)).getOrThrow()
+
+          val resultToSave =
+              if (isTestregelAutomatic(createTestResultat.testregelId)) {
+                  val newResult = getResultAutomatic(createTestResultat)
+                  if (newResult.elementResultat == null) {
+                      createTestResultat
+                  } else {
+                      newResult
+              }
+
+              } else {
+                createTestResultat
+              }
+          logger.info(resultToSave.toString())
+
+
+
+          testResultatDAO.save(resultToSave.copy(brukar = brukar)).getOrThrow()
+          1
           }
           .fold(
               { id -> ResponseEntity.created(location(id)).build() },
@@ -91,9 +111,7 @@ class TestResultatResource(
             })
   }
 
-  @PostMapping("/aggregert/{testgrunnlagId}")
-  fun createAggregertResultat(@PathVariable testgrunnlagId: Int) =
-      aggregeringService.saveAggregertResultat(testgrunnlagId)
+
 
   @DeleteMapping("/{id}")
   fun deleteTestResultat(@PathVariable id: Int): ResponseEntity<Unit> =
@@ -118,12 +136,37 @@ class TestResultatResource(
                 }
               })
 
-  @GetMapping("/aggregert/{testgrunnlagId}")
-  fun getAggregertResultat(@PathVariable testgrunnlagId: Int) =
-      aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
+
+
+
+    fun getResultAutomatic(ceateTestResultat: CreateTestResultat): CreateTestResultat {
+        val testregel = testregelCache.getTestregelById(ceateTestResultat.testregelId)
+        return automaticTestingService.testElement(
+            AutotesterPayload(
+                htmlElement = ceateTestResultat.elementOmtaleHtml ?: "",
+                qualwebRule = testregel.testregelId
+            )
+        ).fold(
+            onSuccess = { ceateTestResultat.copy(
+                elementResultat = TestresultatUtfall.valueOf(it.elementResultat),
+                elementUtfall = it.elementUtfall
+            ) },
+            onFailure = {
+                ceateTestResultat
+            }
+        )
+
+
+    }
 
   private fun location(id: Int) =
       ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
+
+    private fun isTestregelAutomatic(testregelId: Int): Boolean {
+        val testregel = testregelCache.getTestregelById(testregelId)
+        return testregel.modus == TestregelModus.automatisk
+    }
+
 
   data class CreateTestResultat(
       val testgrunnlagId: Int,

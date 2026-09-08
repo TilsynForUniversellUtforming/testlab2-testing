@@ -38,7 +38,7 @@ class TestResultatDAO(
               "brukarId" to brukarId,
               "elementOmtale" to createTestResultat.elementOmtale,
               "elementOmtaleHtml" to createTestResultat.elementOmtaleHtml,
-              "elementResultat" to createTestResultat.elementResultat,
+              "elementResultat" to createTestResultat.elementResultat?.name,
               "elementUtfall" to createTestResultat.elementUtfall,
               "kommentar" to createTestResultat.kommentar,
               "testVartUtfoert" to createTestResultat.testVartUtfoert,
