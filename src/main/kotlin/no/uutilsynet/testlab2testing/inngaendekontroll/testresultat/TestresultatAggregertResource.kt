@@ -13,11 +13,11 @@ class TestresultatAggregertResource(
     val aggregeringService: AggregeringService,
 ) {
 
-    @PostMapping("/aggregert/{testgrunnlagId}")
-    fun createAggregertResultat(@PathVariable testgrunnlagId: Int) =
-        aggregeringService.saveAggregertResultat(testgrunnlagId)
+  @PostMapping("/aggregert/{testgrunnlagId}")
+  fun createAggregertResultat(@PathVariable testgrunnlagId: Int) =
+      aggregeringService.saveAggregertResultat(testgrunnlagId)
 
-    @GetMapping("/aggregert/{testgrunnlagId}")
-    fun getAggregertResultat(@PathVariable testgrunnlagId: Int) =
-        aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
+  @GetMapping("/aggregert/{testgrunnlagId}")
+  fun getAggregertResultat(@PathVariable testgrunnlagId: Int) =
+      aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
 }

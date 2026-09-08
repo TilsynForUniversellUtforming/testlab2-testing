@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/users")
 class BrukarResource(val brukarService: BrukarService) {
 
-    @GetMapping()
-    fun listBrukarar(): List<Brukar> {
-        return brukarService.getBrukarList()
-    }
+  @GetMapping()
+  fun listBrukarar(): List<Brukar> {
+    return brukarService.getBrukarList()
+  }
 }

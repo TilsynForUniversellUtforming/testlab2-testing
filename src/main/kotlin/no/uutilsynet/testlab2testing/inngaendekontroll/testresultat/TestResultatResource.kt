@@ -1,5 +1,11 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
+import java.io.ByteArrayInputStream
+import java.io.File
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
+import java.time.Instant
+import java.util.Base64
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
@@ -20,8 +26,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
-import java.time.Instant
 
 @RestController
 @RequestMapping("/testresultat")
@@ -31,6 +37,7 @@ class TestResultatResource(
     val bildeService: BildeService,
     val automaticTestingService: AutomaticTestingService,
     val testregelCache: TestregelCache,
+    val dataUrlConverter: DataUrlConverter
 ) {
   val logger: Logger = getLogger(TestResultatResource::class.java)
 
@@ -41,24 +48,15 @@ class TestResultatResource(
       runCatching {
             val brukar = brukarService.getCurrentUser()
 
-          val resultToSave =
-              if (isTestregelAutomatic(createTestResultat.testregelId)) {
-                  val newResult = getResultAutomatic(createTestResultat)
-                  if (newResult.elementResultat == null) {
-                      createTestResultat
-                  } else {
-                      newResult
-              }
+            val resultToSave = resolveResultToSave(createTestResultat)
 
-              } else {
-                createTestResultat
-              }
-          logger.info(resultToSave.toString())
+            val testresultatId =
+                testResultatDAO.save(resultToSave.copy(brukar = brukar)).getOrThrow()
 
-
-
-          testResultatDAO.save(resultToSave.copy(brukar = brukar)).getOrThrow()
-          1
+            if (!createTestResultat.imageDataUrl.isNullOrBlank()) {
+              saveImage(testresultatId, createTestResultat.imageDataUrl)
+            }
+            testresultatId
           }
           .fold(
               { id -> ResponseEntity.created(location(id)).build() },
@@ -111,8 +109,6 @@ class TestResultatResource(
             })
   }
 
-
-
   @DeleteMapping("/{id}")
   fun deleteTestResultat(@PathVariable id: Int): ResponseEntity<Unit> =
       runCatching {
@@ -136,37 +132,47 @@ class TestResultatResource(
                 }
               })
 
-
-
-
-    fun getResultAutomatic(ceateTestResultat: CreateTestResultat): CreateTestResultat {
-        val testregel = testregelCache.getTestregelById(ceateTestResultat.testregelId)
-        return automaticTestingService.testElement(
+  fun getResultAutomatic(ceateTestResultat: CreateTestResultat): CreateTestResultat {
+    val testregel = testregelCache.getTestregelById(ceateTestResultat.testregelId)
+    return automaticTestingService
+        .testElement(
             AutotesterPayload(
                 htmlElement = ceateTestResultat.elementOmtaleHtml ?: "",
-                qualwebRule = testregel.testregelId
-            )
-        ).fold(
-            onSuccess = { ceateTestResultat.copy(
-                elementResultat = TestresultatUtfall.valueOf(it.elementResultat),
-                elementUtfall = it.elementUtfall
-            ) },
-            onFailure = {
-                ceateTestResultat
-            }
-        )
+                qualwebRule = testregel.testregelId))
+        .fold(
+            onSuccess = {
+              ceateTestResultat.copy(
+                  elementResultat = TestresultatUtfall.valueOf(it.elementResultat),
+                  elementUtfall = it.elementUtfall)
+            },
+            onFailure = { ceateTestResultat })
+  }
 
+  private fun resolveResultToSave(input: CreateTestResultat): CreateTestResultat {
+    if (!isTestregelAutomatic(input.testregelId)) return input
 
+    return getResultAutomatic(input).takeIf { it.elementResultat != null } ?: input
+  }
+
+  private fun saveImage(testresultatId: Int, bildeDataUrl: String) {
+      val bilde = dataUrlConverter.dataUrlToImage(bildeDataUrl)
+    bildeService.createBilde(testresultatId, listOf(bilde)).onFailure {
+      logger.error("Feil ved opplasting av bilder", it)
+      throw it
     }
+  }
+
+
+
+
 
   private fun location(id: Int) =
       ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
 
-    private fun isTestregelAutomatic(testregelId: Int): Boolean {
-        val testregel = testregelCache.getTestregelById(testregelId)
-        return testregel.modus == TestregelModus.automatisk
-    }
-
+  private fun isTestregelAutomatic(testregelId: Int): Boolean {
+    val testregel = testregelCache.getTestregelById(testregelId)
+    return testregel.modus == TestregelModus.automatisk
+  }
 
   data class CreateTestResultat(
       val testgrunnlagId: Int,
@@ -180,5 +186,6 @@ class TestResultatResource(
       val elementUtfall: String? = null,
       val testVartUtfoert: Instant? = null,
       val kommentar: String? = null,
+      val imageDataUrl: String? = null
   )
 }

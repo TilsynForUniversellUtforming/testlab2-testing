@@ -72,16 +72,16 @@ class BrukarDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         .firstOrNull()
   }
 
-    fun getBrukarList(): List<Brukar> {
-        return jdbcTemplate.query(
-            """
+  fun getBrukarList(): List<Brukar> {
+    return jdbcTemplate.query(
+        """
                 select brukarnamn, namn
                 from brukar
                 where deaktivert = false
-            """.trimIndent(),
-            emptyMap<String, String>()
-        )              { rs, _ ->
-            Brukar(rs.getString("brukarnamn"), rs.getString("namn"))
+            """
+            .trimIndent(),
+        emptyMap<String, String>()) { rs, _ ->
+          Brukar(rs.getString("brukarnamn"), rs.getString("namn"))
         }
-    }
+  }
 }
