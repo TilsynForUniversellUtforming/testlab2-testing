@@ -3,6 +3,9 @@ api:
 autotester:
     code: ''
     url: http://localhost:7071/api/orchestrators/orchestrator
+
+autotester2:
+    url: http://localhost:3000/api
 blobstorage:
     account: account
     connection: DefaultEndpointsProtocol=https;AccountName=account;AccountKey=key;EndpointSuffix=example.com

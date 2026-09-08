@@ -5,6 +5,7 @@ import java.time.Instant
 import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.Sakstype
+import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
@@ -18,16 +19,24 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
+import no.uutilsynet.testlab2testing.testing.automatisk.elementtesting.AutomaticTestingService
+import no.uutilsynet.testlab2testing.testregel.TestregelCache
+import no.uutilsynet.testlab2testing.testregel.model.Testregel
+import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
+import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.mock
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.client.postForEntity
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -47,6 +56,8 @@ class TestResultatResourceTest(
   private var testgrunnlagId: Int by Delegates.notNull()
 
   @MockitoSpyBean lateinit var brukarService: BrukarService
+  @MockitoBean lateinit var testregelCache: TestregelCache
+
 
   @AfterAll
   fun cleanup() {
@@ -64,6 +75,11 @@ class TestResultatResourceTest(
             Sakstype.Arkivsak,
             "1234",
             Kontrolltype.InngaaendeKontroll)
+
+      val testregelMock = mock(TestregelAggregate::class.java)
+      doReturn(TestregelModus.manuell).`when`(testregelMock).modus
+
+
 
     kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
@@ -97,6 +113,7 @@ class TestResultatResourceTest(
             SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
         ))
 
+
     val createdKontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
     val testregelId =
         createdKontroll.testreglar?.testregelIdList?.first()
@@ -115,8 +132,10 @@ class TestResultatResourceTest(
     val testgrunnlag = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag)
     testgrunnlagId = testgrunnlag.getOrThrow()
 
+      doReturn(testregelMock).`when`(testregelCache).getTestregelById(testregelId)
+
     val responseEntity =
-        restTemplate.postForEntity(
+        restTemplate.postForEntity<Unit>(
             "/testresultat",
             mapOf(
                 "testgrunnlagId" to testgrunnlagId,
@@ -124,8 +143,8 @@ class TestResultatResourceTest(
                 "testregelId" to testregelId,
                 "sideutvalId" to sideutval.id,
                 "brukar" to mapOf("brukarnamn" to "testbrukar@digdir.no", "namn" to "Test Brukar"),
-            ),
-            Unit::class.java)
+            )
+        )
 
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.CREATED)
     location = responseEntity.headers.location!!
