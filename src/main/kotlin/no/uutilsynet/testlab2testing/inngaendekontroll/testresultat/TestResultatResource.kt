@@ -1,5 +1,6 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
+import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
-import java.time.Instant
 
 @RestController
 @RequestMapping("/testresultat")
@@ -149,16 +149,12 @@ class TestResultatResource(
   }
 
   private fun saveImage(testresultatId: Int, bildeDataUrl: String) {
-      val bilde = dataUrlConverter.dataUrlToImage(bildeDataUrl)
+    val bilde = dataUrlConverter.dataUrlToImage(bildeDataUrl)
     bildeService.createBilde(testresultatId, listOf(bilde)).onFailure {
       logger.error("Feil ved opplasting av bilder", it)
       throw it
     }
   }
-
-
-
-
 
   private fun location(id: Int) =
       ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
