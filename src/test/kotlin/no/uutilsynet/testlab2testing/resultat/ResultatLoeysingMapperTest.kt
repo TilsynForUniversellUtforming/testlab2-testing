@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.resultat
 
 import java.net.URI
 import java.time.LocalDate
+import kotlin.jvm.java
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.KravStatus
 import no.uutilsynet.testlab2.constants.TestregelModus
@@ -21,7 +22,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 
-class ResultatMapperTest {
+class ResultatLoeysingMapperTest {
 
   private val testregelCache = mock(TestregelCache::class.java)
   private val resultatMapper = ResultatMapper(testregelCache, ResultatCalculator())

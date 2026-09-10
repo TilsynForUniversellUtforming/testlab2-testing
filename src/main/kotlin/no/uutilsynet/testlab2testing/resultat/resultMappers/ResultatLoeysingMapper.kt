@@ -1,10 +1,16 @@
-package no.uutilsynet.testlab2testing.resultat
+package no.uutilsynet.testlab2testing.resultat.resultMappers
 
+import no.uutilsynet.testlab2testing.resultat.LoysingList
+import no.uutilsynet.testlab2testing.resultat.ResultatKrav
+import no.uutilsynet.testlab2testing.resultat.ResultatLoeysing
+import no.uutilsynet.testlab2testing.resultat.ResultatLoeysingDTO
+import no.uutilsynet.testlab2testing.resultat.ResultatOversiktLoeysing
+import no.uutilsynet.testlab2testing.resultat.ResultatTema
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import org.springframework.stereotype.Component
 
 @Component
-class ResultatMapper(
+class ResultatLoeysingMapper(
     private val testregelCache: TestregelCache,
     private val resultatCalculator: ResultatCalculator,
 ) {

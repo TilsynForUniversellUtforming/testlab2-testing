@@ -1,5 +1,7 @@
-package no.uutilsynet.testlab2testing.resultat
+package no.uutilsynet.testlab2testing.resultat.resultMappers
 
+import no.uutilsynet.testlab2testing.resultat.ResultatLoeysing
+import no.uutilsynet.testlab2testing.resultat.ResultatLoeysingDTO
 import org.springframework.stereotype.Component
 
 @Component
