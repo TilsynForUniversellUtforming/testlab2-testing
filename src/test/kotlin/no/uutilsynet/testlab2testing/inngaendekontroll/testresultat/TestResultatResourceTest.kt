@@ -19,14 +19,11 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
-import no.uutilsynet.testlab2testing.testing.automatisk.elementtesting.AutomaticTestingService
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
-import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
-import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,7 +55,6 @@ class TestResultatResourceTest(
   @MockitoSpyBean lateinit var brukarService: BrukarService
   @MockitoBean lateinit var testregelCache: TestregelCache
 
-
   @AfterAll
   fun cleanup() {
     utvalDAO.deleteUtval(utvalId)
@@ -76,10 +72,8 @@ class TestResultatResourceTest(
             "1234",
             Kontrolltype.InngaaendeKontroll)
 
-      val testregelMock = mock(TestregelAggregate::class.java)
-      doReturn(TestregelModus.manuell).`when`(testregelMock).modus
-
-
+    val testregelMock = mock(TestregelAggregate::class.java)
+    doReturn(TestregelModus.manuell).`when`(testregelMock).modus
 
     kontrollId = kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
 
@@ -113,7 +107,6 @@ class TestResultatResourceTest(
             SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
         ))
 
-
     val createdKontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
     val testregelId =
         createdKontroll.testreglar?.testregelIdList?.first()
@@ -132,7 +125,7 @@ class TestResultatResourceTest(
     val testgrunnlag = testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag)
     testgrunnlagId = testgrunnlag.getOrThrow()
 
-      doReturn(testregelMock).`when`(testregelCache).getTestregelById(testregelId)
+    doReturn(testregelMock).`when`(testregelCache).getTestregelById(testregelId)
 
     val responseEntity =
         restTemplate.postForEntity<Unit>(
@@ -143,8 +136,7 @@ class TestResultatResourceTest(
                 "testregelId" to testregelId,
                 "sideutvalId" to sideutval.id,
                 "brukar" to mapOf("brukarnamn" to "testbrukar@digdir.no", "namn" to "Test Brukar"),
-            )
-        )
+            ))
 
     assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.CREATED)
     location = responseEntity.headers.location!!

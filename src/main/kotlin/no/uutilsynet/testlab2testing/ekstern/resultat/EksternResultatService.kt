@@ -49,7 +49,7 @@ class EksternResultatService(
   }
 
   private fun List<TestListElementDB>.toTestEksternList(): List<TestEkstern> {
-    return this.sortedBy { it.publisert }.map(::toTestListEkstern).flatten()
+    return this.sortedBy { it.publisert }.flatMap(::toTestListEkstern)
   }
 
   private fun getKontrollResult(test: TestListElementDB): Resultat {

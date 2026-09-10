@@ -40,10 +40,7 @@ class ResultatAppResultatService(
     TODO("Not yet implemented")
   }
 
-  override fun progresjonPrLoeysing(
-      testgrunnlagId: Int,
-      loeysingar: ResultatService.LoysingList
-  ): Map<Int, Int> {
+  override fun progresjonPrLoeysing(testgrunnlagId: Int, loeysingar: LoysingList): Map<Int, Int> {
     TODO("Not yet implemented")
   }
 

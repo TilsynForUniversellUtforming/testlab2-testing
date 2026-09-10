@@ -57,13 +57,13 @@ class ResultatResource(
       aggregeringService.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId)
 
   @GetMapping("list")
-  fun getListTest(type: Kontrolltype?): ResponseEntity<List<Resultat>> {
+  fun getKontrollList(type: Kontrolltype?): ResponseEntity<List<Resultat>> {
     return ResponseEntity.ok(resultatService.getResultatList(type))
   }
 
   @GetMapping("/kontroll/{id}")
   fun getResultatKontrolll(@PathVariable id: Int): ResponseEntity<List<Resultat>> {
-    return ResponseEntity.ok(resultatService.getKontrollResultat(id))
+    return ResponseEntity.ok(resultatService.getKontrollResultatByKontrollId(id))
   }
 
   @GetMapping("/kontroll/{kontrollId}/loeysing/{loeysingId}")
