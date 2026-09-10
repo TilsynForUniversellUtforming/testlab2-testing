@@ -12,6 +12,8 @@ import no.uutilsynet.testlab2.constants.WcagSamsvarsnivaa
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.Verksemd
+import no.uutilsynet.testlab2testing.resultat.resultMappers.ResultatCalculator
+import no.uutilsynet.testlab2testing.resultat.resultMappers.ResultatLoeysingMapper
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravWcag2x
 import no.uutilsynet.testlab2testing.testregel.model.Tema
@@ -25,7 +27,7 @@ import org.mockito.Mockito.`when`
 class ResultatLoeysingMapperTest {
 
   private val testregelCache = mock(TestregelCache::class.java)
-  private val resultatMapper = ResultatMapper(testregelCache, ResultatCalculator())
+  private val resultatMapper = ResultatLoeysingMapper(testregelCache, ResultatCalculator())
 
   @Test
   fun `toResultatTema maps tema and aggregates score and elements`() {
