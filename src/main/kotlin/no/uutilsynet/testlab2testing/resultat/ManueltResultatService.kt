@@ -134,7 +134,7 @@ class ManueltResultatService(
 
   override fun progresjonPrLoeysing(
       testgrunnlagId: Int,
-      loeysingar: ResultatService.LoysingList,
+      loeysingar: LoysingList,
   ): Map<Int, Int> {
 
     return getResultatPrTestgrunnlag(testgrunnlagId)

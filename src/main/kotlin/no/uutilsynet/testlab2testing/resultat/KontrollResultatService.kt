@@ -5,7 +5,6 @@ import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.common.SortOrder
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.common.SortParamTestregel
-import no.uutilsynet.testlab2testing.resultat.ResultatService.LoysingList
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate

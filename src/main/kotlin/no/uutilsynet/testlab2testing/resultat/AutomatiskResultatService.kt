@@ -139,7 +139,7 @@ class AutomatiskResultatService(
 
   override fun progresjonPrLoeysing(
       testgrunnlagId: Int,
-      loeysingar: ResultatService.LoysingList,
+      loeysingar: LoysingList,
   ): Map<Int, Int> {
     return loeysingar.loeysingar.keys.associateWith { 100 }
   }

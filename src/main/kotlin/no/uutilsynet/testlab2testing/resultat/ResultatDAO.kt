@@ -177,4 +177,36 @@ class ResultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         }
         .getOrThrow()
   }
+
+  fun getResultatByKontrollType(kontrolltype: Kontrolltype): List<ResultatLoeysingDTO> {
+    val query = "$resultatQuery where kontrolltype = :kontrolltype"
+    return jdbcTemplate.query(query, mapOf("kontrolltype" to kontrolltype.toString())) { rs, _ ->
+      resultatLoeysingRowmapper(rs)
+    }
+  }
+
+  fun getResultatByDateRange(startDate: LocalDate, endDate: LocalDate): List<ResultatLoeysingDTO> {
+    val query = "$resultatQuery where dato between :startDate and :endDate"
+    return jdbcTemplate.query(query, mapOf("startDate" to startDate, "endDate" to endDate)) { rs, _
+      ->
+      resultatLoeysingRowmapper(rs)
+    }
+  }
+
+  fun getResultatByKontrollTypeAndDateRange(
+      kontrolltype: Kontrolltype,
+      startDate: LocalDate,
+      endDate: LocalDate
+  ): List<ResultatLoeysingDTO> {
+    val query =
+        "$resultatQuery where kontrolltype = :kontrolltype and dato between :startDate and :endDate"
+    return jdbcTemplate.query(
+        query,
+        mapOf(
+            "kontrolltype" to kontrolltype.toString(),
+            "startDate" to startDate,
+            "endDate" to endDate)) { rs, _ ->
+          resultatLoeysingRowmapper(rs)
+        }
+  }
 }
