@@ -1,18 +1,18 @@
-package no.uutilsynet.testlab2testing.loeysing
+package no.uutilsynet.testlab2testing.loeysing.utval
 
 import io.restassured.RestAssured.given
-import io.restassured.http.ContentType
 import jakarta.validation.ClockProvider
-import java.net.URI
-import java.time.Clock
-import java.time.ZoneId
-import java.util.*
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
-import no.uutilsynet.testlab2testing.loeysing.UtvalResource.NyttUtval
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
+import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.*
-import org.mockito.Mockito.anyString
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -20,6 +20,12 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import java.net.URI
+import java.time.Clock
+import java.time.ZoneId
+import java.util.UUID
+import kotlin.collections.get
+import kotlin.text.get
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -28,12 +34,14 @@ class UtvalResourceTest(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val utvalDAO: UtvalDAO,
 ) {
-  @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+  @MockitoBean
+  lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
   @MockitoBean lateinit var clockProvider: ClockProvider
 
   val uuid = UUID.randomUUID().toString()
 
-  @LocalServerPort var port: Int = 0
+  @LocalServerPort
+  var port: Int = 0
 
   @BeforeEach
   fun setup() {
@@ -63,8 +71,8 @@ class UtvalResourceTest(
   fun nyttUtval() {
     given()
         .port(port)
-        .contentType(ContentType.JSON)
-        .body(NyttUtval(uuid, loeysingar))
+        .contentType("application/json")
+        .body(UtvalResource.NyttUtval(uuid, loeysingar))
         .post("/v1/utval")
         .then()
         .statusCode(201)
@@ -76,8 +84,8 @@ class UtvalResourceTest(
     val location =
         given()
             .port(port)
-            .contentType(ContentType.JSON)
-            .body(NyttUtval(uuid, loeysingar))
+            .contentType("application/json")
+            .body(UtvalResource.NyttUtval(uuid, loeysingar))
             .post("/v1/utval")
             .then()
             .statusCode(201)
@@ -116,8 +124,8 @@ class UtvalResourceTest(
     val location =
         given()
             .port(port)
-            .contentType(ContentType.JSON)
-            .body(NyttUtval(uuid, loeysingList))
+            .contentType("application/json")
+            .body(UtvalResource.NyttUtval(uuid, loeysingList))
             .post("/v1/utval")
             .then()
             .statusCode(201)
@@ -141,8 +149,8 @@ class UtvalResourceTest(
     val location =
         given()
             .port(port)
-            .contentType(ContentType.JSON)
-            .body(NyttUtval(uuid, loeysingList))
+            .contentType("application/json")
+            .body(UtvalResource.NyttUtval(uuid, loeysingList))
             .post("/v1/utval")
             .then()
             .statusCode(201)
@@ -162,7 +170,7 @@ class UtvalResourceTest(
   fun hentAlleUtval() {
     given()
         .port(port)
-        .contentType(ContentType.JSON)
+        .contentType("application/json")
         .get("/v1/utval")
         .`as`(Array<UtvalListItem>::class.java)
         .forEach {
@@ -178,8 +186,8 @@ class UtvalResourceTest(
     val location =
         given()
             .port(port)
-            .contentType(ContentType.JSON)
-            .body(NyttUtval(uuid, loeysingar))
+            .contentType("application/json")
+            .body(UtvalResource.NyttUtval(uuid, loeysingar))
             .post("/v1/utval")
             .then()
             .statusCode(201)

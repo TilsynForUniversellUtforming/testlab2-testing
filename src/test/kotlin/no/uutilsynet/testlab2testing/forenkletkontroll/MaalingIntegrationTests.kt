@@ -17,7 +17,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.uutilsynetL
 import no.uutilsynet.testlab2testing.forenkletkontroll.dto.EditMaalingDTO
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
+import no.uutilsynet.testlab2testing.loeysing.utval.UtvalDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.testregel.TestregelClient

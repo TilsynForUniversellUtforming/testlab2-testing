@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.loeysing
+package no.uutilsynet.testlab2testing.loeysing.utval
 
 import java.sql.ResultSet
 import java.sql.Timestamp
@@ -23,6 +23,46 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
     insertUtvalLoeysingar(loeysingar, utvalId)
     utvalId
   }
+
+    fun getUtval(id: Int): Result<UtvalFromDatabase> = runCatching {
+        jdbcTemplate.query(
+            """
+              select utval.id           as utval_id,
+                     utval.namn         as utval_namn,
+                     utval.oppretta     as oppretta,
+                     ul.loeysing_id as loeysing_id
+              from "testlab2_testing"."utval"
+                       join "testlab2_testing"."utval_loeysing" ul on utval.id = ul.utval_id
+              where utval.id = :id
+            """
+                .trimIndent(),
+            mapOf("id" to id),
+            ::toUtval)
+            ?: throw IllegalArgumentException("Fann ikkje utval med id $id")
+    }
+
+    fun getUtvalList(): Result<List<UtvalListItem>> = runCatching {
+        jdbcTemplate.query("""select id, namn, oppretta from "testlab2_testing"."utval"""") { rs, _ ->
+            UtvalListItem(rs.getInt("id"), rs.getString("namn"), rs.getTimestamp("oppretta").toInstant())
+        }
+    }
+
+    fun deleteUtval(id: Int): Result<Unit> = runCatching {
+        logger.atInfo().log("slettar utval med id $id")
+        jdbcTemplate.update(
+            """delete from "testlab2_testing"."utval" where id = :id""", mapOf("id" to id))
+    }
+
+    fun updateUtval(id: Int, namn: String, loeysingar: List<Int>): Result<UtvalId> = runCatching {
+        logger.atInfo().log("oppdaterar utval med id $id")
+        jdbcTemplate.update(
+            """update "testlab2_testing"."utval" set namn = :namn where id = :id""", mapOf("id" to id, "namn" to namn))
+
+        jdbcTemplate.update(
+            """delete from "testlab2_testing"."utval_loeysing" where utval_id = :id""", mapOf("id" to id))
+        insertUtvalLoeysingar(loeysingar, id)
+        id
+    }
 
   private fun insertUtvalLoeysingar(loeysingar: List<Int>, utvalId: Int) {
     loeysingar.forEach { loeysingId ->
@@ -50,41 +90,6 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
     return utvalId
   }
 
-  data class UtvalFromDatabase(
-      val id: Int,
-      val namn: String,
-      val loeysingar: List<Int>,
-      val oppretta: Instant
-  )
-
-  fun getUtval(id: Int): Result<UtvalFromDatabase> = runCatching {
-    jdbcTemplate.query(
-        """
-              select utval.id           as utval_id,
-                     utval.namn         as utval_namn,
-                     utval.oppretta     as oppretta,
-                     ul.loeysing_id as loeysing_id
-              from "testlab2_testing"."utval"
-                       join "testlab2_testing"."utval_loeysing" ul on utval.id = ul.utval_id
-              where utval.id = :id
-            """
-            .trimIndent(),
-        mapOf("id" to id),
-        ::toUtval)
-        ?: throw IllegalArgumentException("Fann ikkje utval med id $id")
-  }
-
-  fun getUtvalList(): Result<List<UtvalListItem>> = runCatching {
-    jdbcTemplate.query("""select id, namn, oppretta from "testlab2_testing"."utval"""") { rs, _ ->
-      UtvalListItem(rs.getInt("id"), rs.getString("namn"), rs.getTimestamp("oppretta").toInstant())
-    }
-  }
-
-  fun deleteUtval(id: Int): Result<Unit> = runCatching {
-    logger.atInfo().log("slettar utval med id $id")
-    jdbcTemplate.update(
-        """delete from "testlab2_testing"."utval" where id = :id""", mapOf("id" to id))
-  }
 
   private fun toUtval(rs: ResultSet): UtvalFromDatabase {
     require(rs.isBeforeFirst)
@@ -99,5 +104,12 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
     return UtvalFromDatabase(id, namn, loeysingar.toList(), oppretta)
   }
 }
+
+data class UtvalFromDatabase(
+    val id: Int,
+    val namn: String,
+    val loeysingar: List<Int>,
+    val oppretta: Instant
+)
 
 typealias UtvalId = Int

@@ -3,7 +3,7 @@ package no.uutilsynet.testlab2testing.kontroll
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.Sakstype
-import no.uutilsynet.testlab2testing.loeysing.Utval
+import no.uutilsynet.testlab2testing.loeysing.utval.Utval
 import no.uutilsynet.testlab2testing.testregel.model.InnhaldstypeTesting
 
 data class Kontroll(

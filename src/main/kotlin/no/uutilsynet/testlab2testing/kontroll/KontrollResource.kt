@@ -10,7 +10,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestStatus
 import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.loeysing.Utval
+import no.uutilsynet.testlab2testing.loeysing.utval.Utval
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

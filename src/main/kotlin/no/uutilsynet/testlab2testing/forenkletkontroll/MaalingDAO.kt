@@ -16,8 +16,8 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO.MaalingParams.updateMaalingSql
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.loeysing.Utval
-import no.uutilsynet.testlab2testing.loeysing.UtvalId
+import no.uutilsynet.testlab2testing.loeysing.utval.Utval
+import no.uutilsynet.testlab2testing.loeysing.utval.UtvalId
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
