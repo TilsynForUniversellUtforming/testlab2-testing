@@ -119,6 +119,15 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
     return utvalDAO.getUtvalList().getOrThrow()
   }
 
+    @GetMapping("/loeysingar")
+    fun getUtvalListLoeysingar(): List<Utval> {
+        val utvalList = utvalDAO.getUtvalListLoeysingar().getOrThrow()
+        return utvalList.map { utvalFromDatabase ->
+            val loeysingar = loeysingsRegisterClient.getMany(utvalFromDatabase.loeysingar).getOrThrow()
+            Utval(utvalFromDatabase.id, utvalFromDatabase.namn, loeysingar, utvalFromDatabase.oppretta)
+        }
+    }
+
   @DeleteMapping("{id}")
   fun deleteUtval(@PathVariable id: Int): ResponseEntity<Unit> {
     utvalDAO.deleteUtval(id)

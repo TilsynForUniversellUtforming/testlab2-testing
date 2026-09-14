@@ -47,6 +47,37 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
         }
     }
 
+    fun getUtvalListLoeysingar(): Result<List<UtvalFromDatabase>> = runCatching {
+        val grouped = linkedMapOf<Int, MutableUtval>()
+        jdbcTemplate.query(
+            """select utval.id           as utval_id,
+                utval.namn         as utval_namn,
+                utval.oppretta     as oppretta,
+                ul.loeysing_id as loeysing_id
+                        from "testlab2_testing"."utval"
+                        join "testlab2_testing"."utval_loeysing" ul on utval.id = ul.utval_id"""
+        ) { rs, _ ->
+            val id = rs.getInt("utval_id")
+            val item = grouped.getOrPut(id) {MutableUtval(
+                id = id,
+                namn = rs.getString("utval_namn"),
+                oppretta = rs.getTimestamp("oppretta").toInstant(),
+                loeysingar = mutableListOf()
+            )}
+            item.loeysingar.add(rs.getInt("loeysing_id"))
+            }
+
+            grouped.values.map {
+                UtvalFromDatabase(
+                    id = it.id,
+                    namn = it.namn,
+                    loeysingar = it.loeysingar.toList(),
+                    oppretta = it.oppretta
+                )
+            }
+    }
+
+
     fun deleteUtval(id: Int): Result<Unit> = runCatching {
         logger.atInfo().log("slettar utval med id $id")
         jdbcTemplate.update(
@@ -104,6 +135,13 @@ class UtvalDAO(@Autowired val jdbcTemplate: NamedParameterJdbcTemplate) {
     return UtvalFromDatabase(id, namn, loeysingar.toList(), oppretta)
   }
 }
+
+private data class MutableUtval(
+    val id: Int,
+    val namn: String,
+    val oppretta: Instant,
+    val loeysingar: MutableList<Int>
+)
 
 data class UtvalFromDatabase(
     val id: Int,
