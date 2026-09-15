@@ -1,5 +1,6 @@
-package no.uutilsynet.testlab2testing.loeysing
+package no.uutilsynet.testlab2testing.loeysing.utval
 
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import java.time.Instant
 
 data class Utval(

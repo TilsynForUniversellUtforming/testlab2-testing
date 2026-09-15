@@ -12,7 +12,7 @@ import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
-import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
+import no.uutilsynet.testlab2testing.loeysing.utval.UtvalDAO
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired

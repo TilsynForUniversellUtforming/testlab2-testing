@@ -18,7 +18,7 @@ import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
-import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
+import no.uutilsynet.testlab2testing.loeysing.utval.UtvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import org.assertj.core.api.Assertions.assertThat

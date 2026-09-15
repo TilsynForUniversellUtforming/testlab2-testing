@@ -23,7 +23,7 @@ import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.kontroll.SideutvalBase
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.loeysing.UtvalDAO
+import no.uutilsynet.testlab2testing.loeysing.utval.UtvalDAO
 import no.uutilsynet.testlab2testing.loeysing.Verksemd
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO

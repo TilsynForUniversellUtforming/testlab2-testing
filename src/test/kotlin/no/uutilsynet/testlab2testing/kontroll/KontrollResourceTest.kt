@@ -16,8 +16,8 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDate
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestStatus
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
-import no.uutilsynet.testlab2testing.loeysing.Utval
-import no.uutilsynet.testlab2testing.loeysing.UtvalResource
+import no.uutilsynet.testlab2testing.loeysing.utval.Utval
+import no.uutilsynet.testlab2testing.loeysing.utval.UtvalResource
 import no.uutilsynet.testlab2testing.regelsett.Regelsett
 import no.uutilsynet.testlab2testing.regelsett.RegelsettCreate
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
