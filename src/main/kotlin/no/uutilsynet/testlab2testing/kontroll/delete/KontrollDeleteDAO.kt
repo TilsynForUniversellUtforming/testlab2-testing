@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.kontroll
+package no.uutilsynet.testlab2testing.kontroll.delete
 
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component

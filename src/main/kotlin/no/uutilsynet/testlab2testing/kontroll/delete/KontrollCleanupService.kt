@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.kontroll
+package no.uutilsynet.testlab2testing.kontroll.delete
 
 import no.uutilsynet.testlab2testing.styringsdata.StyringsdataCleanupDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatCleanupDAO
@@ -12,11 +12,10 @@ class KontrollCleanupService(
 ) {
 
   fun cleanupKontrollData(kontrollId: Int) {
-
+    styringsdataCleanupDAO.deleteStyringdataLoeysingByKontrollId(kontrollId)
     styringsdataCleanupDAO.deleteStyringsdataLoeysingPaaleggByKontrollId(kontrollId)
     styringsdataCleanupDAO.deleteStyringsdataBotByKontrollId(kontrollId)
     styringsdataCleanupDAO.deleteStyringsdatLoeysingKlageByKontrollId(kontrollId)
-    styringsdataCleanupDAO.deleteStyringdataLoeysingByKontrollId(kontrollId)
     styringsdataCleanupDAO.deleteStyringdataKontrollByKontrollId(kontrollId)
 
     // Delete data in the correct order to avoid foreign key constraint violations
@@ -33,5 +32,6 @@ class KontrollCleanupService(
     kontrollDeleteDAO.deleteKontrollLoeysingByKontrollId(kontrollId)
     kontrollDeleteDAO.deleteKontrollTestregelByKontrollId(kontrollId)
     kontrollDeleteDAO.deleteKontrollSideutvalByKontrollId(kontrollId)
+    kontrollDeleteDAO.deleteKontrollByKontrollId(kontrollId)
   }
 }

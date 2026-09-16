@@ -4,6 +4,8 @@ import java.net.URI
 import java.time.Instant
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Reaksjonstype
+import no.uutilsynet.testlab2testing.kontroll.delete.KontrollCleanupService
+import no.uutilsynet.testlab2testing.kontroll.delete.KontrollDeleteDAO
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata
 import no.uutilsynet.testlab2testing.styringsdata.StyringsdataCleanupDAO
 import no.uutilsynet.testlab2testing.styringsdata.StyringsdataDAO
