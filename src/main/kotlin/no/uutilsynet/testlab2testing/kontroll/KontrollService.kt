@@ -19,116 +19,108 @@ class KontrollService(
     private val testregelClient: TestregelClient,
 ) {
 
-    private val logger: Logger = LoggerFactory.getLogger(KontrollService::class.java)
+  private val logger: Logger = LoggerFactory.getLogger(KontrollService::class.java)
 
+  fun getKontroller(): Result<List<KontrollListItem>> {
+    return kontrollDAO.getKontroller().mapCatching { kontrollRows ->
+      kontrollRows.map { kontrollDB ->
+        val virksomheter = getVirksomheterForKontroll(kontrollDB)
 
-    fun getKontroller(): Result<List<KontrollListItem>> {
-        return kontrollDAO
-            .getKontroller()
-            .mapCatching { kontrollRows ->
-                kontrollRows.map { kontrollDB ->
-                    val virksomheter = getVirksomheterForKontroll(kontrollDB)
-
-                    KontrollListItem(
-                        kontrollDB.id,
-                        kontrollDB.tittel,
-                        kontrollDB.saksbehandler,
-                        Sakstype.valueOf(kontrollDB.sakstype),
-                        kontrollDB.arkivreferanse,
-                        kontrollDB.kontrolltype,
-                        virksomheter,
-                        kontrollDB.styringsdataId
-                    )
-                }
-            }
-
-    }
-
-    fun getKontrollAsResult(kontrollId: Int): Result<Kontroll> = runCatching {
-        val kontrollDB = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
-
-        Kontroll(
+        KontrollListItem(
             kontrollDB.id,
-            kontrollDB.kontrolltype,
             kontrollDB.tittel,
             kontrollDB.saksbehandler,
             Sakstype.valueOf(kontrollDB.sakstype),
             kontrollDB.arkivreferanse,
-            kontrollDbUtvalToUtval(kontrollDB),
-            kontollTestreglarToTestreglar(kontrollDB.testreglar),
-            kontrollDB.sideutval
-        )
+            kontrollDB.kontrolltype,
+            virksomheter,
+            kontrollDB.styringsdataId)
+      }
     }
+  }
 
-    fun testingMetadata(@PathVariable kontrollId: Int): KontrollTestingMetadata {
-        val kontroll = getKontrollAsResult(kontrollId).getOrThrow()
-        val sideutvaltypar = kontrollDAO.getSideutvalType()
-        val innholdtypeTestingList = testregelClient.getInnhaldstypeForTesting().getOrThrow()
+  fun getKontrollAsResult(kontrollId: Int): Result<Kontroll> = runCatching {
+    val kontrollDB = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().first()
 
-        val innholdstypeTesting =
-            kontroll.testreglar
-                ?.testregelIdList
-                ?.takeIf { it.isNotEmpty() }
-                ?.let { ids ->
-                    testregelClient
-                        .getTestregelListFromIds(ids)
-                        .getOrThrow()
-                        .mapNotNull { it.innhaldstypeTesting }
-                        .mapNotNull { innholdstype ->
-                            innholdtypeTestingList.firstOrNull { it.id == innholdstype }
-                        }
-                }
-                ?: emptyList()
+    Kontroll(
+        kontrollDB.id,
+        kontrollDB.kontrolltype,
+        kontrollDB.tittel,
+        kontrollDB.saksbehandler,
+        Sakstype.valueOf(kontrollDB.sakstype),
+        kontrollDB.arkivreferanse,
+        kontrollDbUtvalToUtval(kontrollDB),
+        kontollTestreglarToTestreglar(kontrollDB.testreglar),
+        kontrollDB.sideutval)
+  }
 
-        val sideutvalType =
-            kontroll.sideutvalList.map { sideutval ->
-                sideutvaltypar.first { it.id == sideutval.typeId }
+  fun testingMetadata(@PathVariable kontrollId: Int): KontrollTestingMetadata {
+    val kontroll = getKontrollAsResult(kontrollId).getOrThrow()
+    val sideutvaltypar = kontrollDAO.getSideutvalType()
+    val innholdtypeTestingList = testregelClient.getInnhaldstypeForTesting().getOrThrow()
+
+    val innholdstypeTesting =
+        kontroll.testreglar
+            ?.testregelIdList
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { ids ->
+              testregelClient
+                  .getTestregelListFromIds(ids)
+                  .getOrThrow()
+                  .mapNotNull { it.innhaldstypeTesting }
+                  .mapNotNull { innholdstype ->
+                    innholdtypeTestingList.firstOrNull { it.id == innholdstype }
+                  }
             }
+            ?: emptyList()
 
-        return KontrollTestingMetadata(innholdstypeTesting, sideutvalType)
-    }
-
-    private fun getVirksomheterForKontroll(kontrollDB: KontrollDAO.KontrollDB): List<String> {
-        runCatching { getLoeysingarlistFromUtval(kontrollDB.utval).map { it.orgnummer }.distinct() }
-            .fold(
-                onSuccess = {
-                    return it
-                },
-                onFailure = {
-                    logger.error("Feil ved henting av virksomheter for kontroll ${kontrollDB.id}", it)
-                    throw it
-                })
-    }
-
-
-    private fun getLoeysingarlistFromUtval(utval: KontrollDAO.KontrollDB.Utval?): List<Loeysing> {
-        if (utval == null || utval.loeysingar.isEmpty()) return emptyList()
-        val idList = utval.loeysingar.map { it.id }
-        return loeysingsRegisterClient.getMany(idList).getOrThrow()
-    }
-
-    private fun kontrollDbUtvalToUtval(kontroll: KontrollDAO.KontrollDB): Utval? {
-        return runCatching {
-            kontroll.utval?.let { utval ->
-                val loeysingar = getLoeysingarlistFromUtval(utval)
-                Utval(utval.id, utval.namn, loeysingar, utval.oppretta)
-            }
+    val sideutvalType =
+        kontroll.sideutvalList.map { sideutval ->
+          sideutvaltypar.first { it.id == sideutval.typeId }
         }
-            .fold(
-                onSuccess = { it },
-                onFailure = {
-                    logger.error("Feil ved henting av løysingar for utval for kontroll ${kontroll.id}")
-                    throw it
-                })
-    }
 
-    private fun kontollTestreglarToTestreglar(
-        testreglar: KontrollDAO.KontrollDB.Testreglar?
-    ): Testreglar? {
-        testreglar?.let {
-            return Testreglar(it.regelsettId, it.testregelIdList)
+    return KontrollTestingMetadata(innholdstypeTesting, sideutvalType)
+  }
+
+  private fun getVirksomheterForKontroll(kontrollDB: KontrollDAO.KontrollDB): List<String> {
+    runCatching { getLoeysingarlistFromUtval(kontrollDB.utval).map { it.orgnummer }.distinct() }
+        .fold(
+            onSuccess = {
+              return it
+            },
+            onFailure = {
+              logger.error("Feil ved henting av virksomheter for kontroll ${kontrollDB.id}", it)
+              throw it
+            })
+  }
+
+  private fun getLoeysingarlistFromUtval(utval: KontrollDAO.KontrollDB.Utval?): List<Loeysing> {
+    if (utval == null || utval.loeysingar.isEmpty()) return emptyList()
+    val idList = utval.loeysingar.map { it.id }
+    return loeysingsRegisterClient.getMany(idList).getOrThrow()
+  }
+
+  private fun kontrollDbUtvalToUtval(kontroll: KontrollDAO.KontrollDB): Utval? {
+    return runCatching {
+          kontroll.utval?.let { utval ->
+            val loeysingar = getLoeysingarlistFromUtval(utval)
+            Utval(utval.id, utval.namn, loeysingar, utval.oppretta)
+          }
         }
-        return null
-    }
+        .fold(
+            onSuccess = { it },
+            onFailure = {
+              logger.error("Feil ved henting av løysingar for utval for kontroll ${kontroll.id}")
+              throw it
+            })
+  }
 
+  private fun kontollTestreglarToTestreglar(
+      testreglar: KontrollDAO.KontrollDB.Testreglar?
+  ): Testreglar? {
+    testreglar?.let {
+      return Testreglar(it.regelsettId, it.testregelIdList)
+    }
+    return null
+  }
 }

@@ -3,6 +3,8 @@ package no.uutilsynet.testlab2testing.loeysing.utval
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
+import java.net.URI
+import java.net.URL
 import no.uutilsynet.testlab2testing.common.validateNamn
 import no.uutilsynet.testlab2testing.common.validateOrgNummer
 import no.uutilsynet.testlab2testing.common.validateURL
@@ -21,8 +23,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
-import java.net.URI
-import java.net.URL
 
 @RestController
 @RequestMapping("v1/utval")
@@ -60,11 +60,9 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
   @PostMapping
   fun createUtval(@RequestBody nyttUtval: NyttUtval): ResponseEntity<Unit> {
     val utvalNamn = validateNamn(nyttUtval.namn).getOrThrow()
-      val loeysingList =
-          validateLoeysingList(nyttUtval)
+    val loeysingList = validateLoeysingList(nyttUtval)
 
-      val loeysingar: List<Loeysing> =
-          getOrCreateLoeysing(loeysingList)
+    val loeysingar: List<Loeysing> = getOrCreateLoeysing(loeysingList)
 
     logger.atInfo().log("lagrar eit nytt utval med namn ${nyttUtval.namn}")
     val utvalId = utvalDAO.createUtval(utvalNamn, loeysingar.map { it.id }).getOrThrow()
@@ -77,16 +75,15 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
           .buildAndExpand(utvalId)
           .toUri()
 
-    @Operation(
-        summary = "Hentar detaljert informasjon om eit utval.",
-        description =
-            "Kvart utval inneheld id, namn og ei liste med løysingar. " +
-                    "For å finne id-en til eit utval, kan du bruke GET /v1/utval.",
-        responses =
-            [
-                ApiResponse(responseCode = "200", description = "Utvalet vart funne"),
-                ApiResponse(responseCode = "404", description = "Utvalet vart ikkje funne")]
-    )
+  @Operation(
+      summary = "Hentar detaljert informasjon om eit utval.",
+      description =
+          "Kvart utval inneheld id, namn og ei liste med løysingar. " +
+              "For å finne id-en til eit utval, kan du bruke GET /v1/utval.",
+      responses =
+          [
+              ApiResponse(responseCode = "200", description = "Utvalet vart funne"),
+              ApiResponse(responseCode = "404", description = "Utvalet vart ikkje funne")])
   @GetMapping("{id}")
   fun getUtval(@PathVariable id: Int): ResponseEntity<Utval> {
     return fetchUtval(id)
@@ -106,27 +103,26 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
     }
   }
 
-    @Operation(
-        summary = "Hentar ei liste med alle utvala.",
-        description =
-            "Kvart utval er berre beskrive med id og namn." +
-                    " For å hente lista med løysingar i utvalet, bruk GET /v1/utval/{id}.",
-        responses =
-            [ApiResponse(responseCode = "200", description = "Returnerer ei liste med alle utval")]
-    )
+  @Operation(
+      summary = "Hentar ei liste med alle utvala.",
+      description =
+          "Kvart utval er berre beskrive med id og namn." +
+              " For å hente lista med løysingar i utvalet, bruk GET /v1/utval/{id}.",
+      responses =
+          [ApiResponse(responseCode = "200", description = "Returnerer ei liste med alle utval")])
   @GetMapping
   fun getUtvalList(): List<UtvalListItem> {
     return utvalDAO.getUtvalList().getOrThrow()
   }
 
-    @GetMapping("/loeysingar")
-    fun getUtvalListLoeysingar(): List<Utval> {
-        val utvalList = utvalDAO.getUtvalListLoeysingar().getOrThrow()
-        return utvalList.map { utvalFromDatabase ->
-            val loeysingar = loeysingsRegisterClient.getMany(utvalFromDatabase.loeysingar).getOrThrow()
-            Utval(utvalFromDatabase.id, utvalFromDatabase.namn, loeysingar, utvalFromDatabase.oppretta)
-        }
+  @GetMapping("/loeysingar")
+  fun getUtvalListLoeysingar(): List<Utval> {
+    val utvalList = utvalDAO.getUtvalListLoeysingar().getOrThrow()
+    return utvalList.map { utvalFromDatabase ->
+      val loeysingar = loeysingsRegisterClient.getMany(utvalFromDatabase.loeysingar).getOrThrow()
+      Utval(utvalFromDatabase.id, utvalFromDatabase.namn, loeysingar, utvalFromDatabase.oppretta)
     }
+  }
 
   @DeleteMapping("{id}")
   fun deleteUtval(@PathVariable id: Int): ResponseEntity<Unit> {
@@ -134,48 +130,45 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
     return ResponseEntity.ok().build()
   }
 
-    @PutMapping("{id}")
-    fun updateUtval(@PathVariable id: Int, @RequestBody nyttUtval: NyttUtval): ResponseEntity<URI?> {
-        val utvalNamn = validateNamn(nyttUtval.namn).getOrThrow()
-        val loeysingList =
-            validateLoeysingList(nyttUtval)
+  @PutMapping("{id}")
+  fun updateUtval(@PathVariable id: Int, @RequestBody nyttUtval: NyttUtval): ResponseEntity<URI?> {
+    val utvalNamn = validateNamn(nyttUtval.namn).getOrThrow()
+    val loeysingList = validateLoeysingList(nyttUtval)
 
-        val loeysingar: List<Loeysing> =
-            getOrCreateLoeysing(loeysingList)
-        logger.atInfo().log("oppdaterar eit nytt utval med namn ${nyttUtval.namn}")
-        val utvalId = utvalDAO.updateUtval(id,utvalNamn, loeysingar.map { it.id }).getOrThrow()
-        return ResponseEntity.ok(location(utvalId))
+    val loeysingar: List<Loeysing> = getOrCreateLoeysing(loeysingList)
+    logger.atInfo().log("oppdaterar eit nytt utval med namn ${nyttUtval.namn}")
+    val utvalId = utvalDAO.updateUtval(id, utvalNamn, loeysingar.map { it.id }).getOrThrow()
+    return ResponseEntity.ok(location(utvalId))
+  }
+
+  private fun validateLoeysingList(nyttUtval: NyttUtval): List<Triple<String, URL, String>> {
+    val loeysingList =
+        nyttUtval.loeysingList.map {
+          val namn = validateNamn(it.namn).getOrThrow()
+          val url = validateURL(it.url).getOrThrow()
+          val orgnummer = validateOrgNummer(it.orgnummer).getOrThrow()
+          Triple(namn, url, orgnummer)
         }
+    return loeysingList
+  }
 
-    private fun validateLoeysingList(nyttUtval: NyttUtval): List<Triple<String, URL, String>> {
-        val loeysingList =
-            nyttUtval.loeysingList.map {
-                val namn = validateNamn(it.namn).getOrThrow()
-                val url = validateURL(it.url).getOrThrow()
-                val orgnummer = validateOrgNummer(it.orgnummer).getOrThrow()
-                Triple(namn, url, orgnummer)
-            }
-        return loeysingList
-    }
+  private fun getOrCreateLoeysing(loeysingList: List<Triple<String, URL, String>>): List<Loeysing> {
+    val loeysingar: List<Loeysing> =
+        loeysingList.map { (namn, url, orgnummer) ->
+          val sammeOrgnummer = loeysingsRegisterClient.search(orgnummer).getOrThrow()
+          val foundLoeysing = sammeOrgnummer.find { sameURL(it.url, url) }
+          if (foundLoeysing == null) {
+            logger
+                .atInfo()
+                .log("lagrar ei ny løysing som vi ikkje fann i databasen: $namn, $url, $orgnummer")
+            val loeysing = loeysingsRegisterClient.saveLoeysing(namn, url, orgnummer)
+            loeysing
+          } else {
+            foundLoeysing
+          }
+        }
+    return loeysingar
+  }
 
-    private fun getOrCreateLoeysing(loeysingList: List<Triple<String, URL, String>>): List<Loeysing> {
-        val loeysingar: List<Loeysing> =
-            loeysingList.map { (namn, url, orgnummer) ->
-                val sammeOrgnummer = loeysingsRegisterClient.search(orgnummer).getOrThrow()
-                val foundLoeysing = sammeOrgnummer.find { sameURL(it.url, url) }
-                if (foundLoeysing == null) {
-                    logger
-                        .atInfo()
-                        .log("lagrar ei ny løysing som vi ikkje fann i databasen: $namn, $url, $orgnummer")
-                    val loeysing = loeysingsRegisterClient.saveLoeysing(namn, url, orgnummer)
-                    loeysing
-                } else {
-                    foundLoeysing
-                }
-            }
-        return loeysingar
-    }
-
-
-    data class NyttUtval(val namn: String, val loeysingList: List<Loeysing.External>)
+  data class NyttUtval(val namn: String, val loeysingList: List<Loeysing.External>)
 }

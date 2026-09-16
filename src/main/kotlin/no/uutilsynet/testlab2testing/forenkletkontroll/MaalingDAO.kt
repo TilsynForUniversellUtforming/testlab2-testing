@@ -19,18 +19,15 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.loeysing.utval.Utval
 import no.uutilsynet.testlab2testing.loeysing.utval.UtvalId
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
-import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDAO
-import no.uutilsynet.testlab2testing.testregel.TestregelClient
-import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.toTestregelBase
-import no.uutilsynet.testlab2testing.testregel.model.TestregelBase
 import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.DataClassRowMapper
+import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
@@ -45,22 +42,22 @@ class MaalingDAO(
     val sideutvalDAO: SideutvalDAO,
     val cacheManager: CacheManager,
     val testkoeyringDAO: TestkoeyringDAO,
-    val testregelClient: TestregelClient
+    val maalingMapper: MaalingMapper
 ) {
 
   private val logger = LoggerFactory.getLogger(MaalingDAO::class.java)
 
-  data class MaalingDTO(
-      val id: Int,
-      val navn: String,
-      val datoStart: Instant,
-      val status: MaalingStatus,
-      val maxLenker: Int,
-      val talLenker: Int
-  )
-
   object MaalingParams {
-    val maalingRowmapper = DataClassRowMapper.newInstance(MaalingDTO::class.java)
+    val maalingRowmapper =
+        RowMapper<MaalingDbRow> { rs, _ ->
+          MaalingDbRow(
+              id = rs.getInt("id"),
+              navn = rs.getString("navn"),
+              datoStart = rs.getTimestamp("dato_start").toInstant(),
+              status = MaalingStatus.valueOf(rs.getString("status")),
+              maxLenker = rs.getInt("max_lenker"),
+              talLenker = rs.getInt("tal_lenker"))
+        }
     val crawlParametersRowmapper = DataClassRowMapper.newInstance(CrawlParameters::class.java)
 
     val createMaalingSql =
@@ -180,11 +177,12 @@ class MaalingDAO(
 
   @Cacheable("maalingCache", key = "#id")
   fun getMaaling(id: Int): Maaling {
-    val maaling =
+    val maaling: MaalingDbRow? =
         DataAccessUtils.singleResult(
             jdbcTemplate.query(selectMaalingByIdSql, mapOf("id" to id), maalingRowmapper))
 
-    return maaling?.toMaaling() ?: throw NoSuchElementException("Fant ikke måling med id $id")
+    return maaling?.let(maalingMapper::toMaaling)
+        ?: throw NoSuchElementException("Fant ikke måling med id $id")
   }
 
   @Transactional
@@ -203,52 +201,13 @@ class MaalingDAO(
             selectMaalingByStatus,
             mapOf("statusList" to statusList.map { it.status }),
             maalingRowmapper)
-        .map { it.toMaaling() }
+        .map(maalingMapper::toMaaling)
         .also {
           logger.debug(
-              "hentet ${it.size} målinger fra databasen med status 'crawling' eller 'testing'")
+              "hentet {} målinger fra databasen med status {}",
+              it.size,
+              statusList.map { status -> status.status })
         }
-  }
-
-  private fun MaalingDTO.toMaaling(): Maaling {
-    return when (status) {
-      MaalingStatus.planlegging -> {
-        Maaling.Planlegging(
-            id,
-            navn,
-            datoStart,
-            getLoeysingarForMaaling(id, datoStart),
-            getTestregelList(),
-            CrawlParameters(maxLenker, talLenker))
-      }
-      MaalingStatus.crawling -> {
-        Maaling.Crawling(id, navn, datoStart, getCrawlResultatForMaaling())
-      }
-      MaalingStatus.kvalitetssikring -> {
-        Maaling.Kvalitetssikring(id, navn, datoStart, getCrawlResultatForMaaling())
-      }
-      MaalingStatus.testing -> {
-        Maaling.Testing(id, navn, datoStart, getTestkoeyingarForMaaling())
-      }
-      MaalingStatus.testing_ferdig -> {
-        Maaling.TestingFerdig(id, navn, datoStart, getTestkoeyingarForMaaling())
-      }
-    }
-  }
-
-  private fun MaalingDTO.getTestkoeyingarForMaaling() =
-      testkoeyringDAO.getTestKoeyringarForMaaling(
-          id, loeysingsMetadataForMaaling(id, getLoeysingarForMaaling(id, datoStart)))
-
-  private fun MaalingDTO.getCrawlResultatForMaaling() =
-      crawlResultatForMaaling(id, getLoeysingarForMaaling(id, datoStart))
-
-  private fun MaalingDTO.getTestregelList(): List<TestregelBase> {
-    val testregelIds = getTestrelIdForMaaling(id)
-
-    return testregelClient.getTestregelListFromIds(testregelIds).getOrThrow().map {
-      it.toTestregelBase()
-    }
   }
 
   fun getLoeysingarForMaaling(id: Int, datoStart: Instant): List<Loeysing> {
@@ -307,7 +266,7 @@ class MaalingDAO(
     if (maaling is Maaling.Planlegging) {
       updateMaaling(maaling)
       deleteFromMaalingLoeysing(maaling)
-      updateMaalingTestregel(maaling)
+      updateMaalingLoeysing(maaling)
       deleteFromMaalingTestregel(maaling.id)
       insertMaalingTestregel(maaling)
     } else {
@@ -327,7 +286,7 @@ class MaalingDAO(
         mapOf("maalingId" to maalingId))
   }
 
-  private fun updateMaalingTestregel(maaling: Maaling.Planlegging) {
+  private fun updateMaalingLoeysing(maaling: Maaling.Planlegging) {
     val updateMaalingTestregelLoeysingQuery =
         """insert into "testlab2_testing"."maalingloeysing" (idMaaling, idLoeysing) values (:maalingId, :loeysingId)"""
 
@@ -410,18 +369,6 @@ class MaalingDAO(
         Int::class.java)
   }
 
-  private fun loeysingsMetadataForMaaling(
-      maalingId: Int,
-      loeysingList: List<Loeysing>
-  ): Map<Int, LoeysingMetadata> {
-    return sideutvalDAO
-        .getCrawlResultatForMaaling(maalingId, loeysingList)
-        .filterIsInstance<CrawlResultat.Ferdig>()
-        .associate {
-          it.loeysing.id to LoeysingMetadata(it.loeysing.id, it.loeysing, it.antallNettsider)
-        }
-  }
-
   fun getTestrunUuidForMaaling(maalingId: Int): Result<String> {
     return runCatching {
       DataAccessUtils.singleResult(
@@ -434,6 +381,4 @@ class MaalingDAO(
           ?: throw NoSuchElementException("Fant ikkje testrunUuid for maalingId: $maalingId")
     }
   }
-
-  data class LoeysingMetadata(val id: Int, val loeysing: Loeysing, val antallNettsider: Int)
 }
