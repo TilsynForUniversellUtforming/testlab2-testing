@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service
 @Service
 class MaalingService(
     val maalingDAO: MaalingDAO,
+    val maalingReadService: MaalingReadService,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val utvalDAO: UtvalDAO,
     val aggregeringService: AggregeringService,
@@ -81,13 +82,10 @@ class MaalingService(
   }
 
   fun updateMaaling(kontroll: Kontroll): Result<Unit> = runCatching {
-    val maalingId = maalingDAO.getMaalingIdFromKontrollId(kontroll.id)
-    if (maalingId != null) {
-      val maalingEdit = kontroll.toMaalingEdit(maalingId)
-      maalingDAO.updateMaaling(maalingEdit.toMaaling())
-    } else {
-      throw IllegalArgumentException("Måling finns ikkje for kontroll")
-    }
+    val maalingId = maalingReadService.getMaalingIdFromKontrollId(kontroll.id)
+    require(maalingId != null) { "Måling finns ikkje for kontroll" }
+    val maalingEdit = kontroll.toMaalingEdit(maalingId)
+    maalingDAO.updateMaaling(maalingEdit.toMaaling())
   }
 
   fun updateMaaling(dto: EditMaalingDTO): Result<Unit> = runCatching {
@@ -96,7 +94,7 @@ class MaalingService(
   }
 
   fun deleteKontrollMaaling(kontrollId: Int): Result<Unit> = runCatching {
-    val maalingId = maalingDAO.getMaalingIdFromKontrollId(kontrollId)
+    val maalingId = maalingReadService.getMaalingIdFromKontrollId(kontrollId)
     if (maalingId != null) {
       return deleteMaaling(maalingId)
     }
@@ -296,14 +294,20 @@ class MaalingService(
 
   fun getTestreglarForMaaling(maalingId: Int): Result<List<Testregel>> {
     return runCatching {
-      val testregelIds = maalingDAO.getTestrelIdForMaaling(maalingId)
+      val testregelIds = maalingReadService.getTestregelIdsForMaaling(maalingId)
       testreglClient.getTestregelListFromIds(testregelIds).getOrThrow()
     }
   }
 
+  private fun getLoeysingarForMaaling(id: Int, datoStart: Instant): List<Loeysing> =
+      maalingReadService.getLoeysingarForMaaling(id, datoStart)
+
+  fun getLoeysingarForMaaling(id: Int): List<Loeysing> =
+      maalingReadService.getLoeysingarForMaaling(id)
+
   @Observed(name = "MaalingService.getMaalingForKontroll")
   fun getMaalingForKontroll(kontrollId: Int): Int {
-    return maalingDAO.getMaalingIdFromKontrollId(kontrollId)
+    return maalingReadService.getMaalingIdFromKontrollId(kontrollId)
         ?: throw NoSuchElementException("Fant ikkje måling for kontrollId $kontrollId")
   }
 }

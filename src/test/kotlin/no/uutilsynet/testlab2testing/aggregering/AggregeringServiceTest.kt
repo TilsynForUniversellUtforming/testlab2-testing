@@ -8,6 +8,7 @@ import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
@@ -59,6 +60,7 @@ class AggregeringServiceTest(
   @MockitoBean lateinit var sideutvalDAO: SideutvalDAO
 
   @MockitoSpyBean lateinit var maalingDao: MaalingDAO
+  @MockitoSpyBean lateinit var maalingService: MaalingService
 
   @MockitoBean lateinit var testregelCache: TestregelCache
 
@@ -90,7 +92,7 @@ class AggregeringServiceTest(
     Mockito.`when`(kravregisterClient.getKravIdFromSuksesskritterium("1.1.1")).thenReturn(1)
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
     Mockito.`when`(kravregisterClient.listKrav()).thenReturn(listOf(testUtils.kravWcag2xObject()))
-    Mockito.doReturn(listOf(testLoeysing)).`when`(maalingDao).getLoeysingarForMaaling(maalingId)
+    Mockito.doReturn(listOf(testLoeysing)).`when`(maalingService).getLoeysingarForMaaling(maalingId)
     Mockito.`when`(testregelCache.getTestregelByKey(anyString())).thenReturn(testregel)
     Mockito.`when`(testregelCache.getTestregelById(anyInt())).thenReturn(testregel)
 
@@ -171,7 +173,7 @@ class AggregeringServiceTest(
     Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1)))
         .thenReturn(mapOf(1 to URI("https://www.example.com").toURL()))
 
-    Mockito.doReturn(listOf(testLoeysing)).`when`(maalingDao).getLoeysingarForMaaling(anyInt())
+    Mockito.doReturn(listOf(testLoeysing)).`when`(maalingService).getLoeysingarForMaaling(anyInt())
     Mockito.doReturn(listOf(testLoeysing))
         .`when`(testgrunnlagService)
         .getLoeysingForTestgrunnlag(anyInt())

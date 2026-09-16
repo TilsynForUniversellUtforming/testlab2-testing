@@ -4,6 +4,7 @@ import java.net.URI
 import java.net.URL
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingReadService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
@@ -22,12 +23,13 @@ private const val AGGREGERING_URL_ER_NULL = "Aggregering url er null"
 
 @Service
 class AggregeringService(
-    val autoTesterClient: AutoTesterClient,
-    val kravregisterClient: KravregisterClient,
-    val aggregeringDAO: AggregeringDAO,
-    val testResultatDAO: TestResultatDAO,
-    val sideutvalDAO: SideutvalDAO,
-    val maalingDAO: MaalingDAO,
+    private val autoTesterClient: AutoTesterClient,
+    private val kravregisterClient: KravregisterClient,
+    private val aggregeringDAO: AggregeringDAO,
+    private val testResultatDAO: TestResultatDAO,
+    private val sideutvalDAO: SideutvalDAO,
+    private val maalingDAO: MaalingDAO,
+    private val maalingReadService: MaalingReadService,
     private val testgrunnlagService: TestgrunnlagService,
     private val testregelCache: TestregelCache
 ) {
@@ -261,7 +263,7 @@ class AggregeringService(
       testgrunnlagService.getLoeysingForTestgrunnlag(testgrunnlagId)
 
   private fun getLoeysingarForMaaling(maalingId: Int) =
-      maalingDAO.getLoeysingarForMaaling(maalingId)
+      maalingReadService.getLoeysingarForMaaling(maalingId)
 
   fun getAggregertResultatSuksesskriterium(
       maalingId: Int? = null,

@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("v1/maalinger")
 class MaalingResource(
     val maalingDAO: MaalingDAO,
+    val maalingReadService: MaalingReadService,
     val sideutvalDAO: SideutvalDAO,
     val maalingService: MaalingService,
     val brukarService: BrukarService,
@@ -202,7 +203,7 @@ class MaalingResource(
 
   @GetMapping("kontroll/{kontrollId}")
   fun getMaalingIdFromKontrollId(@PathVariable kontrollId: Int): ResponseEntity<Int> {
-    return maalingDAO.getMaalingIdFromKontrollId(kontrollId)?.let { ResponseEntity.ok(it) }
+    return maalingReadService.getMaalingIdFromKontrollId(kontrollId)?.let { ResponseEntity.ok(it) }
         ?: ResponseEntity.badRequest().build()
   }
 
