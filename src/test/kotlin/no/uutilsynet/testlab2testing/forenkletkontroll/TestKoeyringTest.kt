@@ -8,6 +8,7 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.crawlResult
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.statusURL
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
+import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDTO
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -16,6 +17,122 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
 class TestKoeyringTest {
+
+  @Test
+  fun `konverterer TestkoeyringDTO IkkjeStarta til TestKoeyring IkkjeStarta`() {
+    val brukar = Brukar("test", "testar")
+    val sistOppdatert = Instant.now()
+    val dto =
+        TestkoeyringDTO.IkkjeStarta(
+            maalingId = 1,
+            loeysingId = crawlResultat.loeysing.id,
+            brukarId = 1,
+            lenkerTesta = 0,
+            sistOppdatert = sistOppdatert,
+            statusURL = URI(statusURL).toURL())
+
+    val actual =
+        TestKoeyring.from(dto, crawlResultat.loeysing, brukar, crawlResultat.antallNettsider)
+
+    assertThat(actual)
+        .isEqualTo(
+            TestKoeyring.IkkjeStarta(
+                loeysing = crawlResultat.loeysing,
+                sistOppdatert = sistOppdatert,
+                statusURL = URI(statusURL).toURL(),
+                brukar = brukar,
+                antallNettsider = crawlResultat.antallNettsider))
+  }
+
+  @Test
+  fun `konverterer TestkoeyringDTO Starta til TestKoeyring Starta`() {
+    val brukar = Brukar("test", "testar")
+    val sistOppdatert = Instant.now()
+    val dto =
+        TestkoeyringDTO.Starta(
+            maalingId = 1,
+            loeysingId = crawlResultat.loeysing.id,
+            brukarId = 1,
+            lenkerTesta = 2,
+            sistOppdatert = sistOppdatert,
+            statusURL = URI(statusURL).toURL())
+
+    val actual =
+        TestKoeyring.from(dto, crawlResultat.loeysing, brukar, crawlResultat.antallNettsider)
+
+    assertThat(actual)
+        .isEqualTo(
+            TestKoeyring.Starta(
+                loeysing = crawlResultat.loeysing,
+                sistOppdatert = sistOppdatert,
+                statusURL = URI(statusURL).toURL(),
+                framgang = Framgang(2, crawlResultat.antallNettsider),
+                brukar = brukar,
+                antallNettsider = crawlResultat.antallNettsider))
+  }
+
+  @Test
+  fun `konverterer TestkoeyringDTO Ferdig til TestKoeyring Ferdig`() {
+    val brukar = Brukar("test", "testar")
+    val sistOppdatert = Instant.now()
+    val lenker =
+        AutoTesterClient.AutoTesterLenker(
+            URI("https://fullt.resultat").toURL(),
+            URI("https://brot.resultat").toURL(),
+            URI("https://aggregering.resultat").toURL(),
+            URI("https://aggregeringSK.resultat").toURL(),
+            URI("https://aggregeringSide.resultat").toURL(),
+            URI("https://aggregeringSideTR.resultat").toURL(),
+            URI("https://aggregeringLoeysing.resultat").toURL(),
+        )
+    val dto =
+        TestkoeyringDTO.Ferdig(
+            maalingId = 1,
+            loeysingId = crawlResultat.loeysing.id,
+            brukarId = 1,
+            lenkerTesta = crawlResultat.antallNettsider,
+            sistOppdatert = sistOppdatert,
+            statusURL = URI(statusURL).toURL(),
+            lenker = lenker)
+
+    val actual =
+        TestKoeyring.from(dto, crawlResultat.loeysing, brukar, crawlResultat.antallNettsider)
+
+    assertThat(actual)
+        .isEqualTo(
+            TestKoeyring.Ferdig(
+                loeysing = crawlResultat.loeysing,
+                sistOppdatert = sistOppdatert,
+                statusURL = URI(statusURL).toURL(),
+                lenker = lenker,
+                brukar = brukar,
+                antallNettsider = crawlResultat.antallNettsider))
+  }
+
+  @Test
+  fun `konverterer TestkoeyringDTO Feila til TestKoeyring Feila`() {
+    val brukar = Brukar("test", "testar")
+    val sistOppdatert = Instant.now()
+    val dto =
+        TestkoeyringDTO.Feila(
+            maalingId = 1,
+            loeysingId = crawlResultat.loeysing.id,
+            brukarId = 1,
+            lenkerTesta = null,
+            sistOppdatert = sistOppdatert,
+            feilmelding = "Feila")
+
+    val actual =
+        TestKoeyring.from(dto, crawlResultat.loeysing, brukar, crawlResultat.antallNettsider)
+
+    assertThat(actual)
+        .isEqualTo(
+            TestKoeyring.Feila(
+                loeysing = crawlResultat.loeysing,
+                sistOppdatert = sistOppdatert,
+                feilmelding = "Feila",
+                brukar = brukar))
+  }
 
   @Test
   @DisplayName("ei ny TestKøyring startar med status `ikkje starta`")
@@ -75,10 +192,11 @@ class TestKoeyringTest {
   }
 
   @DisplayName(
-      "gitt ei testkøyring med tilstand `ferdig`, så blir ikkje tilstanden endra uansett kva ny tilstand som blir rapportert")
+      "gitt ei testkøyring med tilstand `ferdig`, så blir ikkje tilstanden endra " +
+          "uansett kva ny tilstand som blir rapportert")
   @ParameterizedTest
   @MethodSource("pairsOfResponseTilstand")
-  fun testUpdateStatusFromFerdig(response: AutoTesterClient.AutoTesterStatus, tilstand: Class<*>) {
+  fun testUpdateStatusFromFerdig(response: AutoTesterClient.AutoTesterStatus) {
     val testKoeyring =
         TestKoeyring.Ferdig(
             crawlResultat.loeysing,
@@ -92,10 +210,11 @@ class TestKoeyringTest {
   }
 
   @DisplayName(
-      "gitt ei testkøyring med tilstand `feila`, så blir ikkje tilstanden endra uansett kva ny tilstand som blir rapportert")
+      "gitt ei testkøyring med tilstand `feila`, så blir ikkje tilstanden endra " +
+          "uansett kva ny tilstand som blir rapportert")
   @ParameterizedTest
   @MethodSource("pairsOfResponseTilstand")
-  fun testUpdateStatusFromFeila(response: AutoTesterClient.AutoTesterStatus, tilstand: Class<*>) {
+  fun testUpdateStatusFromFeila(response: AutoTesterClient.AutoTesterStatus) {
     val testKoeyring =
         TestKoeyring.Feila(
             crawlResultat.loeysing, Instant.now(), "dette går ikkje", Brukar("test", "testar"))

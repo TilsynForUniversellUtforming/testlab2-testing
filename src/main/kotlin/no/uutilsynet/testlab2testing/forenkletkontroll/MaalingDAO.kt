@@ -236,6 +236,8 @@ class MaalingDAO(
     maalinger
   }
 
+
+
   @Transactional
   fun updateKontrollId(kontrollId: Int, maalingId: Int) =
       jdbcTemplate.update(
@@ -301,4 +303,5 @@ class MaalingDAO(
             "max_lenker" to maaling.crawlParameters.maxLenker,
             "tal_lenker" to maaling.crawlParameters.talLenker))
   }
+
 }

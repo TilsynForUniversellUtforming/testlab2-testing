@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
+@Suppress("LongParameterList")
 @RestController
 @RequestMapping("v1/maalinger")
 class MaalingResource(
@@ -43,6 +44,7 @@ class MaalingResource(
     val brukarService: BrukarService,
     val maalingTestingService: MaalingTestingService,
     val maalingCrawlingService: MaalingCrawlingService,
+    val maalingAggregeringService: MaalingAggregeringService
 ) {
 
   data class NyMaalingDTO(
@@ -151,9 +153,9 @@ class MaalingResource(
   ): ResponseEntity<Any> {
 
     return when (aggregeringstype) {
-      "testresultat" -> maalingService.hentEllerGenererAggregeringPrTestregel(maalingId)
-      "suksesskriterium" -> maalingService.hentEllerGenererAggregeringPrSuksesskriterium(maalingId)
-      "side" -> maalingService.hentEllerGenererAggregeringPrSide(maalingId)
+      "testresultat" -> maalingAggregeringService.hentEllerGenererAggregeringPrTestregel(maalingId)
+      "suksesskriterium" -> maalingAggregeringService.hentEllerGenererAggregeringPrSuksesskriterium(maalingId)
+      "side" -> maalingAggregeringService.hentEllerGenererAggregeringPrSide(maalingId)
       else -> throw IllegalArgumentException("Ugyldig aggregeringstype: $aggregeringstype")
     }
   }
@@ -209,7 +211,7 @@ class MaalingResource(
 
   @GetMapping("aggregering/reimport")
   fun reimportAggregering(@RequestParam maalingId: Int, @RequestParam loeysingId: Int?) {
-    maalingService.reimportAggregeringar(maalingId, loeysingId)
+    maalingAggregeringService.reimportAggregeringar(maalingId, loeysingId)
   }
 
   @GetMapping("{id}/testreglar")

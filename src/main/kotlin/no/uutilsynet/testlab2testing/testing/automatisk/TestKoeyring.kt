@@ -145,5 +145,19 @@ sealed class TestKoeyring {
               Feila(testKoeyring.loeysing, Instant.now(), response.output, testKoeyring.brukar)
           else -> testKoeyring
         }
+
+      fun toTestkoeyringDTO(maalingId:Int):TestkoeyringDTO {
+          when(this) {
+              is TestKoeyring.IkkjeStarta -> return TestkoeyringDTO.IkkjeStarta(
+                  maalingId = maalingId,
+                  loeysingId = this.loeysing.id,
+                  brukarId = this.brukar?.id,
+                  lenkerTesta = null,
+                  sistOppdatert = this.sistOppdatert,
+                  statusURL = this.statusURL
+              )
+          }
+
+      }
   }
 }

@@ -3,7 +3,6 @@ package no.uutilsynet.testlab2testing.testresultat.aggregering
 import java.net.URI
 import java.net.URL
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingReadService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
@@ -11,7 +10,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultat
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
-import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
+import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDTO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
@@ -21,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional
 
 private const val AGGREGERING_URL_ER_NULL = "Aggregering url er null"
 
+@Suppress("LongParameterList")
 @Service
 class AggregeringService(
     private val autoTesterClient: AutoTesterClient,
@@ -28,7 +28,6 @@ class AggregeringService(
     private val aggregeringDAO: AggregeringDAO,
     private val testResultatDAO: TestResultatDAO,
     private val sideutvalDAO: SideutvalDAO,
-    private val maalingDAO: MaalingDAO,
     private val maalingReadService: MaalingReadService,
     private val testgrunnlagService: TestgrunnlagService,
     private val testregelCache: TestregelCache
@@ -37,25 +36,27 @@ class AggregeringService(
   private val logger = LoggerFactory.getLogger(AggregeringService::class.java)
 
   @Transactional
-  fun saveAggregering(testKoeyring: TestKoeyring.Ferdig) {
-    saveAggregertResultatTestregelAutomatisk(testKoeyring)
-    saveAggregeringSideAutomatisk(testKoeyring)
-    saveAggregertResultatSuksesskriteriumAutomatisk(testKoeyring)
+  fun saveAggregering(lenker: AutoTesterClient.AutoTesterLenker, loeysingId: Int) {
+    saveAggregertResultatTestregelAutomatisk(lenker,loeysingId)
+    saveAggregeringSideAutomatisk(lenker,loeysingId)
+    saveAggregertResultatSuksesskriteriumAutomatisk(lenker,loeysingId)
   }
 
-  fun <T, D> saveAggregertResultat(
-      testKoeyring: TestKoeyring.Ferdig,
-      urlExtractor: (AutoTesterClient.AutoTesterLenker?) -> URI?,
+    @Suppress("LongParameterList")
+  private fun <T, D> saveAggregertResultat(
+        urlExtractor: (AutoTesterClient.AutoTesterLenker?) -> URI?,
       resultType: AutoTesterClient.ResultatUrls,
       filterType: Class<T>,
       dtoMapper: (T) -> D,
       daoSaver: (D) -> Unit,
-      logName: String
+      logName: String,
+      lenker: AutoTesterClient.AutoTesterLenker,
+      loeysingId: Int
   ) {
     logger.info(
-        "Lagrer aggregert resultat for $logName for testkoeyring ${testKoeyring.loeysing.namn}")
+        "Lagrer aggregert resultat for $logName for testkoeyring $loeysingId")
     val aggregeringUrl =
-        urlExtractor(testKoeyring.lenker) ?: throw RuntimeException(AGGREGERING_URL_ER_NULL)
+        urlExtractor(lenker) ?: throw IllegalArgumentException(AGGREGERING_URL_ER_NULL)
     runCatching {
           autoTesterClient
               .fetchResultatAggregering(aggregeringUrl, resultType)
@@ -65,41 +66,47 @@ class AggregeringService(
         }
         .onFailure {
           logger.error(
-              "Kunne ikkje lagre aggregert resultat for $logName for testkoeyring ${testKoeyring.loeysing.namn}",
+              "Kunne ikkje lagre aggregert resultat for $logName for testkoeyring $loeysingId",
               it)
           throw it
         }
   }
 
-  fun saveAggregertResultatTestregelAutomatisk(testKoeyring: TestKoeyring.Ferdig) =
+  fun saveAggregertResultatTestregelAutomatisk( lenker: AutoTesterClient.AutoTesterLenker, loeysingId: Int) =
       saveAggregertResultat(
-          testKoeyring,
           { it?.urlAggregeringTR?.toURI() },
           AutoTesterClient.ResultatUrls.urlAggreggeringTR,
           AggregertResultatTestregel::class.java,
           ::aggregertResultatTestregelToDTO,
           aggregeringDAO::createAggregertResultatTestregel,
-          "testregel")
+          "testregel",
+          lenker,
+          loeysingId)
 
-  fun saveAggregertResultatSuksesskriteriumAutomatisk(testKoeyring: TestKoeyring.Ferdig) =
+  fun saveAggregertResultatSuksesskriteriumAutomatisk(
+      lenker: AutoTesterClient.AutoTesterLenker, loeysingId: Int
+  ) =
       saveAggregertResultat(
-          testKoeyring,
           { it?.urlAggregeringSK?.toURI() },
           AutoTesterClient.ResultatUrls.urlAggregeringSK,
           AggregertResultatSuksesskriterium::class.java,
           ::aggregertResultatSuksesskritieriumToDTO,
           aggregeringDAO::createAggregertResultatSuksesskriterium,
-          "suksesskriterium")
+          "suksesskriterium",
+          lenker,
+          loeysingId
+      )
 
-  fun saveAggregeringSideAutomatisk(testKoeyring: TestKoeyring.Ferdig) =
+  fun saveAggregeringSideAutomatisk(lenker: AutoTesterClient.AutoTesterLenker, loeysingId: Int) =
       saveAggregertResultat(
-          testKoeyring,
           { it?.urlAggregeringSide?.toURI() },
           AutoTesterClient.ResultatUrls.urlAggregeringSide,
           AggregertResultatSide::class.java,
           ::aggregerteResultatSideTODTO,
           aggregeringDAO::createAggregeringSide,
-          "side")
+          "side",
+          lenker,
+          loeysingId)
 
   fun aggregertResultatTestregelToDTO(
       aggregertResultatTestregel: AggregertResultatTestregel
@@ -269,18 +276,23 @@ class AggregeringService(
       maalingId: Int? = null,
       testgrunnlagId: Int? = null
   ): List<AggregertResultatSuksesskriterium> {
-    if (maalingId != null) {
-      val loeysingList = getLoeysingarForMaaling(maalingId)
-      return aggregeringDAO.getAggregertResultatSuksesskriteriumForMaaling(maalingId).map {
-        dtoTOAggregertResultatSuksesskriterium(it, loeysingList)
+      return when {
+          maalingId != null -> {
+              val loeysingList = getLoeysingarForMaaling(maalingId)
+              aggregeringDAO.getAggregertResultatSuksesskriteriumForMaaling(maalingId).map {
+                  dtoTOAggregertResultatSuksesskriterium(it, loeysingList)
+              }
+          }
+
+          testgrunnlagId != null -> {
+              val loeysingList = getLoeysingarForTestgrunnlag(testgrunnlagId)
+              aggregeringDAO
+                  .getAggregertResultatSuksesskriteriumForTestgrunnlag(testgrunnlagId)
+                  .map { dtoTOAggregertResultatSuksesskriterium(it, loeysingList) }
+          }
+
+          else -> emptyList()
       }
-    } else if (testgrunnlagId != null) {
-      val loeysingList = getLoeysingarForTestgrunnlag(testgrunnlagId)
-      return aggregeringDAO
-          .getAggregertResultatSuksesskriteriumForTestgrunnlag(testgrunnlagId)
-          .map { dtoTOAggregertResultatSuksesskriterium(it, loeysingList) }
-    }
-    return emptyList()
   }
 
   fun harMaalingLagraAggregering(maalingId: Int, aggregeringstype: String): Boolean {
@@ -321,16 +333,17 @@ class AggregeringService(
   fun saveAggregertResultatTestregel(
       testresultatForSak: List<ResultatManuellKontroll>
   ): Result<Boolean> {
-    runCatching {
+      runCatching {
           val aggregertResultatTestregel = createAggregeringPerTestregelDTO(testresultatForSak)
           aggregertResultatTestregel.forEach {
-            val result = aggregeringDAO.createAggregertResultatTestregel(it)
-            if (result < 1) {
-              throw RuntimeException(
-                  "Kunne ikkje lagre aggregert resultat for testregel for testgrunnlag ${it.testgrunnlagId} og testregel ${it.testregelId}")
-            }
+              val result = aggregeringDAO.createAggregertResultatTestregel(it)
+              check(result > 0) {
+                  "Kunne ikkje lagre aggregert resultat for testregel for testgrunnlag" +
+                          " ${it.testgrunnlagId} og testregel ${it.testregelId}"
+              }
+
           }
-        }
+      }
         .fold(
             onSuccess = {
               return Result.success(true)
@@ -349,10 +362,8 @@ class AggregeringService(
               createAggregeringPerSuksesskriteriumDTO(testresultatForSak)
           aggregertResultatSuksesskriterium.forEach {
             val result = aggregeringDAO.createAggregertResultatSuksesskriterium(it)
-            if (result < 1) {
-              throw RuntimeException(
-                  "Kunne ikkje lagre aggregert resultat for testregel for testgrunnlag ${it.testgrunnlagId} og suksesskriterium ${it.suksesskriteriumId}")
-            }
+            check(result > 0) {"Kunne ikkje lagre aggregert resultat for testregel " +
+                    "for testgrunnlag ${it.testgrunnlagId} og suksesskriterium ${it.suksesskriteriumId}"}
           }
         }
         .fold(
@@ -384,9 +395,7 @@ class AggregeringService(
 
     return testresultatForSak
         .groupBy { it.loeysingId }
-        .entries
-        .map { aggregeringPerTestregelDTOPrLoeysing(it.value) }
-        .flatten()
+        .entries.flatMap { aggregeringPerTestregelDTOPrLoeysing(it.value) }
   }
 
   private fun aggregeringPerTestregelDTOPrLoeysing(
@@ -584,16 +593,12 @@ class AggregeringService(
   }
 
   fun calculateUtfall(utfall: List<TestresultatUtfall?>): TestresultatUtfall {
-    if (utfall.contains(TestresultatUtfall.brot)) {
-      return TestresultatUtfall.brot
-    }
-    if (utfall.contains(TestresultatUtfall.varsel)) {
-      return TestresultatUtfall.varsel
-    }
-    if (utfall.contains(TestresultatUtfall.samsvar)) {
-      return TestresultatUtfall.samsvar
-    }
-    return TestresultatUtfall.ikkjeForekomst
+      return when {
+          utfall.contains(TestresultatUtfall.brot) -> TestresultatUtfall.brot
+          utfall.contains(TestresultatUtfall.varsel) -> TestresultatUtfall.varsel
+          utfall.contains(TestresultatUtfall.samsvar) -> TestresultatUtfall.samsvar
+          else -> TestresultatUtfall.ikkjeForekomst
+      }
   }
 
   fun ResultatManuellKontroll.kravId(): Int {

@@ -96,4 +96,25 @@ class MaalingReadService(
           ?: throw NoSuchElementException("Fant ikkje testrunUuid for maalingId: $maalingId")
     }
   }
+
+  fun getKontrollIdFromMaalingId(maalingId: Int): Int {
+
+    return DataAccessUtils.singleResult(
+        jdbcTemplate.query(
+            """select kontrollId from "testlab2_testing"."maalingv1" where id = :maalingId""",
+            mapOf("maalingId" to maalingId),
+        ) { rs, _ ->
+          rs.getInt("kontrollId")
+        })
+        ?: throw NoSuchElementException("Fant ikkje kontrollId for maalingId: $maalingId")
+  }
+    fun isMaalingFerdigTesta(maalingId: Int): Boolean {
+        return jdbcTemplate.query(
+            """select status from "testlab2_testing"."maalingv1" where id = :maalingId""",
+            mapOf("maalingId" to maalingId)
+        ) { rs, _ ->
+            val status = rs.getString("status")
+            MaalingStatus.valueOf(status) == MaalingStatus.testing_ferdig
+        }.first()
+    }
 }
