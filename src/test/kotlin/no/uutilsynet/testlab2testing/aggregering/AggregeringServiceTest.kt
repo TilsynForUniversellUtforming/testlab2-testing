@@ -96,7 +96,9 @@ class AggregeringServiceTest(
     Mockito.`when`(testregelCache.getTestregelByKey(anyString())).thenReturn(testregel)
     Mockito.`when`(testregelCache.getTestregelById(anyInt())).thenReturn(testregel)
 
-    aggregeringService.saveAggregertResultatTestregelAutomatisk(testKoeyring)
+    aggregeringService.saveAggregertResultatTestregelAutomatisk(
+        testKoeyring.lenker!!,1
+    )
 
     val retrievedAggregering =
         maalingId.let { aggregeringService.getAggregertResultatTestregel(it) }

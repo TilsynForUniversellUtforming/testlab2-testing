@@ -146,18 +146,5 @@ sealed class TestKoeyring {
           else -> testKoeyring
         }
 
-      fun toTestkoeyringDTO(maalingId:Int):TestkoeyringDTO {
-          when(this) {
-              is TestKoeyring.IkkjeStarta -> return TestkoeyringDTO.IkkjeStarta(
-                  maalingId = maalingId,
-                  loeysingId = this.loeysing.id,
-                  brukarId = this.brukar?.id,
-                  lenkerTesta = null,
-                  sistOppdatert = this.sistOppdatert,
-                  statusURL = this.statusURL
-              )
-          }
-
-      }
   }
 }

@@ -61,7 +61,10 @@ class MaalingResourceMockedTest {
 
   @MockitoBean private lateinit var maalingCrawlingService: MaalingCrawlingService
 
-  private lateinit var maalingTestingService: MaalingTestingService
+  @MockitoBean private lateinit var maalingAggregeringService: MaalingAggregeringService
+
+
+    private lateinit var maalingTestingService: MaalingTestingService
 
   private lateinit var maalingResource: MaalingResource
 
@@ -81,7 +84,9 @@ class MaalingResourceMockedTest {
             maalingService,
             brukarService,
             maalingTestingService,
-            maalingCrawlingService)
+            maalingCrawlingService,
+            maalingAggregeringService
+        )
   }
 
   @Test

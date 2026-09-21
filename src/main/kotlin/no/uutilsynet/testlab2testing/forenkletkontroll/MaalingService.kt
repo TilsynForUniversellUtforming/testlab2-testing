@@ -22,7 +22,6 @@ import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDTO
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.toTestregelBase
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -34,7 +33,6 @@ class MaalingService(
     val maalingReadService: MaalingReadService,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val utvalDAO: UtvalDAO,
-    val aggregeringService: AggregeringService,
     val autoTesterClient: AutoTesterClient,
     val testreglClient: TestregelClient,
     val testkoeyringDAO: TestkoeyringDAO,
@@ -155,27 +153,29 @@ class MaalingService(
             .getOrThrow()
   }
 
-  private fun EditMaalingDTO.toMaaling(): Maaling {
-    val navn = validateNamn(this.navn).getOrThrow()
-    this.crawlParameters?.validateParameters()
+    private fun EditMaalingDTO.toMaaling(): Maaling {
+        val navn = validateNamn(this.navn).getOrThrow()
 
-    return when (val maaling = maalingDAO.getMaaling(this.id)) {
-      is Maaling.Planlegging -> {
-        val loeysingList = getLoeysingarForMaaling(this.loeysingIdList, maaling.id)
-        val testregelList = getTestreglarForMaaling(this.testregelIdList, maaling.id)
+        return when (val maaling = maalingDAO.getMaaling(this.id)) {
+            is Maaling.Planlegging -> {
+                this.crawlParameters?.validateParameters()
+                val loeysingList = getLoeysingarForMaaling(this.loeysingIdList, maaling.id)
+                val testregelList = getTestreglarForMaaling(this.testregelIdList, maaling.id)
 
-        maaling.copy(
-            navn = navn,
-            loeysingList = loeysingList,
-            testregelList = testregelList.map { it.toTestregelBase() },
-            crawlParameters = this.crawlParameters ?: maaling.crawlParameters)
-      }
-      is Maaling.Crawling -> maaling.copy(navn = this.navn)
-      is Maaling.Testing -> maaling.copy(navn = this.navn)
-      is Maaling.TestingFerdig -> maaling.copy(navn = this.navn)
-      is Maaling.Kvalitetssikring -> maaling.copy(navn = this.navn)
+                maaling.copy(
+                    navn = navn,
+                    loeysingList = loeysingList,
+                    testregelList = testregelList.map { it.toTestregelBase() },
+                    crawlParameters = this.crawlParameters ?: maaling.crawlParameters
+                )
+            }
+
+            is Maaling.Crawling -> maaling.copy(navn = navn)
+            is Maaling.Testing -> maaling.copy(navn = navn)
+            is Maaling.TestingFerdig -> maaling.copy(navn = navn)
+            is Maaling.Kvalitetssikring -> maaling.copy(navn = navn)
+        }
     }
-  }
 
   private fun getTestreglarForMaaling(
       testregelIdList: List<Int>?,
@@ -200,7 +200,7 @@ class MaalingService(
     return getTestkoeyringar(maalingId).filterIsInstance<TestkoeyringDTO.Ferdig>()
   }
 
-  suspend fun mapTestkoeyringToTestresultatBrot(
+  private suspend fun mapTestkoeyringToTestresultatBrot(
       ferdigeTestKoeyringar: List<TestkoeyringDTO.Ferdig>
   ) = autoTesterClient.fetchResultat(ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlBrot)
 
