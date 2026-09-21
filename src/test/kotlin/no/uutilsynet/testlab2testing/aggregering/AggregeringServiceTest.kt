@@ -24,6 +24,7 @@ import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatTestregel
+import no.uutilsynet.testlab2testing.testresultat.aggregering.mappers.AggregeringToDTOMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Offset
 import org.junit.jupiter.api.Test
@@ -48,6 +49,7 @@ private const val TEST_ORG = "Test AS"
 class AggregeringServiceTest(
     @Autowired val aggregeringService: AggregeringService,
     @Autowired val testUtils: TestUtils,
+    @Autowired val aggregeringToDTOMapper: AggregeringToDTOMapper
 ) {
 
   @MockitoSpyBean lateinit var testgrunnlagService: TestgrunnlagService
@@ -263,7 +265,7 @@ class AggregeringServiceTest(
   fun calculateTestregelGjennomsnitt() {
     val testresultat: ArrayList<ResultatManuellKontroll> = resultatManuellKontrollTestdata()
 
-    val gjennomsnittTestresultat = aggregeringService.calculateTestregelGjennomsnitt(testresultat)
+    val gjennomsnittTestresultat = aggregeringToDTOMapper.calculateTestregelGjennomsnitt(testresultat)
 
     assertThat(
             gjennomsnittTestresultat.testregelGjennomsnittlegSideSamsvarProsent!! +
@@ -278,7 +280,7 @@ class AggregeringServiceTest(
     testresultat
         .groupBy { it.sideutvalId }
         .forEach { _ ->
-          val result = aggregeringService.processPrSideutval(testresultat)
+          val result = aggregeringToDTOMapper.processPrSideutval(testresultat)
           assertThat(result.brotprosentTrSide + result.samsvarsprosentTrSide)
               .isCloseTo(1.0, Offset.offset(0.00001))
           if (result.ikkjeForekomst) {

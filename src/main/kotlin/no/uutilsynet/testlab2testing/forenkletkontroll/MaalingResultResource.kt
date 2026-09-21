@@ -6,6 +6,8 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.resultat.LoeysingResultat
 import no.uutilsynet.testlab2testing.resultat.ResultatService
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
+import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatTestregelAPI
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -17,7 +19,8 @@ import kotlin.math.roundToInt
 class MaalingResultResource(
     private val maalingService: MaalingService,
     private val resultatService: ResultatService,
-    private val maalingDAO: MaalingDAO
+    private val maalingDAO: MaalingDAO,
+    private val aggregeringService: AggregeringService
 ) {
 
     @GetMapping("{maalingId}")
@@ -33,10 +36,6 @@ class MaalingResultResource(
               val results = resultMap[it.loeysing.id] ?: emptyList()
               val overallCompliancePercent =
                   calculateOverallCompliancePercentage(results)
-
-              println("Testkoeyring status" + testkoeyringStatus(it))
-
-
               Testresult(
                   loeysing = it.loeysing,
                   tilstand = testkoeyringStatus(it),
@@ -49,6 +48,15 @@ class MaalingResultResource(
           emptyList()
       }
   }
+
+
+    @GetMapping("{maalingId}/loeysing/{loeysingId}")
+    fun getTestresultatForLoeysing(
+        @PathVariable maalingId: Int,
+        @PathVariable loeysingId: Int
+    ): List<AggregertResultatTestregelAPI> {
+        return aggregeringService.getAggregertResultatTestregel(maalingId, loeysingId)
+    }
 
     private fun calculateOverallCompliancePercentage(
         results: List<LoeysingResultat>
