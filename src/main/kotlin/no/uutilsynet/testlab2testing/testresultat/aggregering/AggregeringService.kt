@@ -7,8 +7,6 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManu
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
-import no.uutilsynet.testlab2testing.testregel.TestregelCache
-import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import no.uutilsynet.testlab2testing.testresultat.aggregering.mappers.AggregeringFromDTOMapper
 import no.uutilsynet.testlab2testing.testresultat.aggregering.mappers.AggregeringToDTOMapper
 import org.slf4j.LoggerFactory
@@ -25,23 +23,21 @@ class AggregeringService(
     private val testResultatDAO: TestResultatDAO,
     private val maalingReadService: MaalingReadService,
     private val testgrunnlagService: TestgrunnlagService,
-    private val testregelCache: TestregelCache,
     private val aggregeringToDTOMapper: AggregeringToDTOMapper,
     private val aggregeringFromDTOMapper: AggregeringFromDTOMapper
 ) {
-
   private val logger = LoggerFactory.getLogger(AggregeringService::class.java)
 
   @Transactional
   fun saveAggregering(lenker: AutoTesterClient.AutoTesterLenker, loeysingId: Int) {
-    saveAggregertResultatTestregelAutomatisk(lenker,loeysingId)
-    saveAggregeringSideAutomatisk(lenker,loeysingId)
-    saveAggregertResultatSuksesskriteriumAutomatisk(lenker,loeysingId)
+    saveAggregertResultatTestregelAutomatisk(lenker, loeysingId)
+    saveAggregeringSideAutomatisk(lenker, loeysingId)
+    saveAggregertResultatSuksesskriteriumAutomatisk(lenker, loeysingId)
   }
 
-    @Suppress("LongParameterList")
+  @Suppress("LongParameterList")
   private fun <T, D> saveAggregertResultat(
-        urlExtractor: (AutoTesterClient.AutoTesterLenker?) -> URI?,
+      urlExtractor: (AutoTesterClient.AutoTesterLenker?) -> URI?,
       resultType: AutoTesterClient.ResultatUrls,
       filterType: Class<T>,
       dtoMapper: (T) -> D,
@@ -50,8 +46,7 @@ class AggregeringService(
       lenker: AutoTesterClient.AutoTesterLenker,
       loeysingId: Int
   ) {
-    logger.info(
-        "Lagrer aggregert resultat for $logName for testkoeyring $loeysingId")
+    logger.info("Lagrer aggregert resultat for $logName for testkoeyring $loeysingId")
     val aggregeringUrl =
         urlExtractor(lenker) ?: throw IllegalArgumentException(AGGREGERING_URL_ER_NULL)
     runCatching {
@@ -63,13 +58,15 @@ class AggregeringService(
         }
         .onFailure {
           logger.error(
-              "Kunne ikkje lagre aggregert resultat for $logName for testkoeyring $loeysingId",
-              it)
+              "Kunne ikkje lagre aggregert resultat for $logName for testkoeyring $loeysingId", it)
           throw it
         }
   }
 
-  fun saveAggregertResultatTestregelAutomatisk( lenker: AutoTesterClient.AutoTesterLenker, loeysingId: Int) =
+  fun saveAggregertResultatTestregelAutomatisk(
+      lenker: AutoTesterClient.AutoTesterLenker,
+      loeysingId: Int
+  ) =
       saveAggregertResultat(
           { it?.urlAggregeringTR?.toURI() },
           AutoTesterClient.ResultatUrls.urlAggreggeringTR,
@@ -81,7 +78,8 @@ class AggregeringService(
           loeysingId)
 
   fun saveAggregertResultatSuksesskriteriumAutomatisk(
-      lenker: AutoTesterClient.AutoTesterLenker, loeysingId: Int
+      lenker: AutoTesterClient.AutoTesterLenker,
+      loeysingId: Int
   ) =
       saveAggregertResultat(
           { it?.urlAggregeringSK?.toURI() },
@@ -91,8 +89,7 @@ class AggregeringService(
           aggregeringDAO::createAggregertResultatSuksesskriterium,
           "suksesskriterium",
           lenker,
-          loeysingId
-      )
+          loeysingId)
 
   fun saveAggregeringSideAutomatisk(lenker: AutoTesterClient.AutoTesterLenker, loeysingId: Int) =
       saveAggregertResultat(
@@ -105,79 +102,44 @@ class AggregeringService(
           lenker,
           loeysingId)
 
-
-
   fun getAggregertResultatTestregel(
       maalingId: Int? = null,
       testgrunnlagId: Int? = null
   ): List<AggregertResultatTestregelAPI> {
-    logger.info("Henter aggregert resultat for testregel med id ${maalingId?:testgrunnlagId}")
-    val id = maalingId ?: testgrunnlagId ?: return emptyList()
-      val loeysingList =
-          getLoeysingList(maalingId, id)
-
-      val resultater =
-        if (maalingId != null) aggregeringDAO.getAggregertResultatTestregelForMaaling(id)
-        else aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(id)
-    return resultater.map { aggregeringFromDTOMapper.dtoToAggregertResultatTestregel(it, loeysingList) }
+    logger.info("Henter aggregert resultat for testregel med id ${maalingId ?: testgrunnlagId}")
+    return getAggregertResultat(
+        maalingId = maalingId,
+        testgrunnlagId = testgrunnlagId,
+        fetchForMaaling = aggregeringDAO::getAggregertResultatTestregelForMaaling,
+        fetchForTestgrunnlag = aggregeringDAO::getAggregertResultatTestregelForTestgrunnlag,
+        map = aggregeringFromDTOMapper::dtoToAggregertResultatTestregel)
   }
 
   fun getAggregertResultatSide(
       maalingId: Int? = null,
       testgrunnlagId: Int? = null
   ): List<AggregertResultatSide> {
-    logger.info("Henter aggregering for resultat for side med id ${maalingId?:testgrunnlagId}")
-    val id = maalingId ?: testgrunnlagId ?: return emptyList()
-
-      val loeysingList =
-          getLoeysingList(maalingId, id)
-
-      return if (maalingId != null)
-        aggregeringDAO.getAggregertResultatSideForMaaling(id).map {
-            aggregeringFromDTOMapper.dtoToAggregertResultatSide(it, loeysingList)
-        }
-    else
-        aggregeringDAO.getAggregertResultatSideForTestgrunnlag(id).map {
-            aggregeringFromDTOMapper.dtoToAggregertResultatSide(it, loeysingList)
-        }
+    logger.info("Henter aggregert resultat for side med id ${maalingId ?: testgrunnlagId}")
+    return getAggregertResultat(
+        maalingId = maalingId,
+        testgrunnlagId = testgrunnlagId,
+        fetchForMaaling = aggregeringDAO::getAggregertResultatSideForMaaling,
+        fetchForTestgrunnlag = aggregeringDAO::getAggregertResultatSideForTestgrunnlag,
+        map = aggregeringFromDTOMapper::dtoToAggregertResultatSide)
   }
-
-    private fun getLoeysingList(
-        maalingId: Int?,
-        id: Int
-    ): List<Loeysing> {
-        val loeysingList =
-            if (maalingId != null) getLoeysingarForMaaling(id) else getLoeysingarForTestgrunnlag(id)
-        return loeysingList
-    }
-
-    private fun getLoeysingarForTestgrunnlag(testgrunnlagId: Int) =
-      testgrunnlagService.getLoeysingForTestgrunnlag(testgrunnlagId)
-
-  private fun getLoeysingarForMaaling(maalingId: Int) =
-      maalingReadService.getLoeysingarForMaaling(maalingId)
 
   fun getAggregertResultatSuksesskriterium(
       maalingId: Int? = null,
       testgrunnlagId: Int? = null
   ): List<AggregertResultatSuksesskriterium> {
-      return when {
-          maalingId != null -> {
-              val loeysingList = getLoeysingarForMaaling(maalingId)
-              aggregeringDAO.getAggregertResultatSuksesskriteriumForMaaling(maalingId).map {
-                  aggregeringFromDTOMapper.dtoTOAggregertResultatSuksesskriterium(it, loeysingList)
-              }
-          }
-
-          testgrunnlagId != null -> {
-              val loeysingList = getLoeysingarForTestgrunnlag(testgrunnlagId)
-              aggregeringDAO
-                  .getAggregertResultatSuksesskriteriumForTestgrunnlag(testgrunnlagId)
-                  .map { aggregeringFromDTOMapper.dtoTOAggregertResultatSuksesskriterium(it, loeysingList) }
-          }
-
-          else -> emptyList()
-      }
+    logger.info(
+        "Henter aggregert resultat for suksesskriterium med id ${maalingId ?: testgrunnlagId}")
+    return getAggregertResultat(
+        maalingId = maalingId,
+        testgrunnlagId = testgrunnlagId,
+        fetchForMaaling = aggregeringDAO::getAggregertResultatSuksesskriteriumForMaaling,
+        fetchForTestgrunnlag = aggregeringDAO::getAggregertResultatSuksesskriteriumForTestgrunnlag,
+        map = aggregeringFromDTOMapper::dtoTOAggregertResultatSuksesskriterium)
   }
 
   fun harMaalingLagraAggregering(maalingId: Int, aggregeringstype: String): Boolean {
@@ -188,104 +150,84 @@ class AggregeringService(
       testgrunnlagId: Int
   ): List<AggregertResultatTestregelAPI> {
     logger.info("Henter aggregert resultat for testgrunnlag med id $testgrunnlagId")
-    val loeysingList = getLoeysingarForTestgrunnlag(testgrunnlagId)
+    val loeysingList = testgrunnlagService.getLoeysingForTestgrunnlag(testgrunnlagId)
     return aggregeringDAO.getAggregertResultatTestregelForTestgrunnlag(testgrunnlagId).map {
-        aggregeringFromDTOMapper.dtoToAggregertResultatTestregel(it, loeysingList)
+      aggregeringFromDTOMapper.dtoToAggregertResultatTestregel(it, loeysingList)
     }
   }
 
   @Transactional
   fun saveAggregertResultat(testgrunnlagId: Int): Result<Boolean> {
-
-    runCatching {
-          val testresultatList =
-              testResultatDAO.getManyResults(testgrunnlagId = testgrunnlagId).getOrThrow()
-
-          saveAggregertResultatTestregel(testresultatList).getOrThrow()
-          saveAggregertResultatSuksesskriterium(testresultatList).getOrThrow()
-          saveAggregertResultatSide(testresultatList).getOrThrow()
-        }
-        .fold(
-            onSuccess = {
-              return Result.success(true)
-            },
-            onFailure = {
-              return Result.failure(it)
-            })
+    return toBooleanResult {
+      val testresultatList =
+          testResultatDAO.getManyResults(testgrunnlagId = testgrunnlagId).getOrThrow()
+      saveAggregertResultatTestregel(testresultatList).getOrThrow()
+      saveAggregertResultatSuksesskriterium(testresultatList).getOrThrow()
+      saveAggregertResultatSide(testresultatList).getOrThrow()
+    }
   }
 
   @Transactional
   fun saveAggregertResultatTestregel(
       testresultatForSak: List<ResultatManuellKontroll>
   ): Result<Boolean> {
-      runCatching {
-          val aggregertResultatTestregel = createAggregeringPerTestregelDTO(testresultatForSak)
-          aggregertResultatTestregel.forEach {
-              val result = aggregeringDAO.createAggregertResultatTestregel(it)
-              check(result > 0) {
-                  "Kunne ikkje lagre aggregert resultat for testregel for testgrunnlag" +
-                          " ${it.testgrunnlagId} og testregel ${it.testregelId}"
-              }
-
-          }
+    return toBooleanResult {
+      val aggregertResultatTestregel =
+          aggregeringToDTOMapper.createAggregeringPerTestregelDTO(testresultatForSak)
+      aggregertResultatTestregel.forEach {
+        val result = aggregeringDAO.createAggregertResultatTestregel(it)
+        check(result > 0) {
+          "Kunne ikkje lagre aggregert resultat for testregel for testgrunnlag " +
+              "${it.testgrunnlagId} og testregel ${it.testregelId}"
+        }
       }
-        .fold(
-            onSuccess = {
-              return Result.success(true)
-            },
-            onFailure = {
-              return Result.failure(it)
-            })
+    }
   }
 
   @Transactional
   fun saveAggregertResultatSuksesskriterium(
       testresultatForSak: List<ResultatManuellKontroll>
   ): Result<Boolean> {
-    runCatching {
-          val aggregertResultatSuksesskriterium =
-              aggregeringToDTOMapper.createAggregeringPerSuksesskriteriumDTO(testresultatForSak)
-          aggregertResultatSuksesskriterium.forEach {
-            val result = aggregeringDAO.createAggregertResultatSuksesskriterium(it)
-            check(result > 0) {"Kunne ikkje lagre aggregert resultat for testregel " +
-                    "for testgrunnlag ${it.testgrunnlagId} og suksesskriterium ${it.suksesskriteriumId}"}
-          }
+    return toBooleanResult {
+      val aggregertResultatSuksesskriterium =
+          aggregeringToDTOMapper.createAggregeringPerSuksesskriteriumDTO(testresultatForSak)
+      aggregertResultatSuksesskriterium.forEach {
+        val result = aggregeringDAO.createAggregertResultatSuksesskriterium(it)
+        check(result > 0) {
+          "Kunne ikkje lagre aggregert resultat for testregel " +
+              "for testgrunnlag ${it.testgrunnlagId} og suksesskriterium ${it.suksesskriteriumId}"
         }
-        .fold(
-            onSuccess = {
-              return Result.success(true)
-            },
-            onFailure = {
-              return Result.failure(it)
-            })
+      }
+    }
   }
 
   fun saveAggregertResultatSide(testresultatList: List<ResultatManuellKontroll>): Result<Boolean> =
-      runCatching {
-            val aggregertResultatSide = aggregeringToDTOMapper.createAggregeringPerSideDTO(testresultatList)
+      toBooleanResult {
+        val aggregertResultatSide =
+            aggregeringToDTOMapper.createAggregeringPerSideDTO(testresultatList)
+        aggregertResultatSide.forEach { aggregeringDAO.createAggregeringSide(it).getOrThrow() }
+      }
 
-            aggregertResultatSide.forEach { aggregeringDAO.createAggregeringSide(it).getOrThrow() }
-          }
-          .fold(
-              onSuccess = {
-                return Result.success(true)
-              },
-              onFailure = {
-                return Result.failure(it)
-              })
-
-  private fun createAggregeringPerTestregelDTO(
-      testresultatForSak: List<ResultatManuellKontroll>
-  ): List<AggregeringPerTestregelDB> {
-    return testresultatForSak
-        .groupBy { it.loeysingId }
-        .entries.flatMap { aggregeringPerTestregelDTOPrLoeysing(it.value) }
+  private inline fun toBooleanResult(operation: () -> Unit): Result<Boolean> {
+    return runCatching(operation).map { true }
   }
 
-  private fun aggregeringPerTestregelDTOPrLoeysing(
-      it: List<ResultatManuellKontroll>
-  ): List<AggregeringPerTestregelDB> {
-    return it.groupBy { it.testregelId }.entries.map { aggregeringToDTOMapper.aggregeringPerTestregelDB(it) }
+  private fun <T, R> getAggregertResultat(
+      maalingId: Int?,
+      testgrunnlagId: Int?,
+      fetchForMaaling: (Int) -> List<T>,
+      fetchForTestgrunnlag: (Int) -> List<T>,
+      map: (T, List<Loeysing>) -> R
+  ): List<R> {
+    val id = maalingId ?: testgrunnlagId ?: return emptyList()
+    val loeysingList =
+        if (maalingId != null) {
+          maalingReadService.getLoeysingarForMaaling(id)
+        } else {
+          testgrunnlagService.getLoeysingForTestgrunnlag(id)
+        }
+    val resultater = if (maalingId != null) fetchForMaaling(id) else fetchForTestgrunnlag(id)
+    return resultater.map { map(it, loeysingList) }
   }
 }
 

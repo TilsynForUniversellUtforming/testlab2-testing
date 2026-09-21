@@ -18,72 +18,69 @@ class AggregeringFromDTOMapper(
     private val kravregisterClient: KravregisterClient
 ) {
 
-    fun dtoToAggregertResultatTestregel(
-        aggregeringPerTestregelDB: AggregeringPerTestregelDB,
-        loeysingList: List<Loeysing>
-    ): AggregertResultatTestregelAPI {
+  fun dtoToAggregertResultatTestregel(
+      aggregeringPerTestregelDB: AggregeringPerTestregelDB,
+      loeysingList: List<Loeysing>
+  ): AggregertResultatTestregelAPI {
 
-        val id = aggregeringPerTestregelDB.maalingId ?: aggregeringPerTestregelDB.testgrunnlagId
+    val id = aggregeringPerTestregelDB.maalingId ?: aggregeringPerTestregelDB.testgrunnlagId
 
-        val testregel = getTestregel(aggregeringPerTestregelDB.testregelId)
+    val testregel = getTestregel(aggregeringPerTestregelDB.testregelId)
 
-        return AggregertResultatTestregelAPI(
-            id,
-            getLoeysing(aggregeringPerTestregelDB.loeysingId, loeysingList),
-            testregel.testregelId,
-            getSuksesskriterium(aggregeringPerTestregelDB.suksesskriterium),
-            aggregeringPerTestregelDB.talElementSamsvar,
-            aggregeringPerTestregelDB.talElementBrot,
-            aggregeringPerTestregelDB.talElementVarsel,
-            aggregeringPerTestregelDB.talElementIkkjeForekomst,
-            aggregeringPerTestregelDB.talSiderSamsvar,
-            aggregeringPerTestregelDB.talSiderBrot,
-            aggregeringPerTestregelDB.talSiderIkkjeForekomst,
-            aggregeringPerTestregelDB.testregelGjennomsnittlegSideSamsvarProsent,
-            aggregeringPerTestregelDB.testregelGjennomsnittlegSideBrotProsent
-        )
-    }
+    return AggregertResultatTestregelAPI(
+        id,
+        getLoeysing(aggregeringPerTestregelDB.loeysingId, loeysingList),
+        testregel.testregelId,
+        getSuksesskriterium(aggregeringPerTestregelDB.suksesskriterium),
+        aggregeringPerTestregelDB.talElementSamsvar,
+        aggregeringPerTestregelDB.talElementBrot,
+        aggregeringPerTestregelDB.talElementVarsel,
+        aggregeringPerTestregelDB.talElementIkkjeForekomst,
+        aggregeringPerTestregelDB.talSiderSamsvar,
+        aggregeringPerTestregelDB.talSiderBrot,
+        aggregeringPerTestregelDB.talSiderIkkjeForekomst,
+        aggregeringPerTestregelDB.testregelGjennomsnittlegSideSamsvarProsent,
+        aggregeringPerTestregelDB.testregelGjennomsnittlegSideBrotProsent)
+  }
 
-    fun dtoToAggregertResultatSide(
-        aggregeringPerSideDB: AggregeringPerSideDB,
-        loeysingList: List<Loeysing>
-    ): AggregertResultatSide {
-        return AggregertResultatSide(
-            aggregeringPerSideDB.maalingId ?: aggregeringPerSideDB.testgrunnlagId,
-            getLoeysing(aggregeringPerSideDB.loeysingId, loeysingList),
-            aggregeringPerSideDB.sideUrl,
-            aggregeringPerSideDB.sideNivaa,
-            aggregeringPerSideDB.gjennomsnittligBruddProsentTR,
-            aggregeringPerSideDB.talElementSamsvar,
-            aggregeringPerSideDB.talElementBrot,
-            aggregeringPerSideDB.talElementVarsel,
-            aggregeringPerSideDB.talElementIkkjeForekomst
-        )
-    }
+  fun dtoToAggregertResultatSide(
+      aggregeringPerSideDB: AggregeringPerSideDB,
+      loeysingList: List<Loeysing>
+  ): AggregertResultatSide {
+    return AggregertResultatSide(
+        aggregeringPerSideDB.maalingId ?: aggregeringPerSideDB.testgrunnlagId,
+        getLoeysing(aggregeringPerSideDB.loeysingId, loeysingList),
+        aggregeringPerSideDB.sideUrl,
+        aggregeringPerSideDB.sideNivaa,
+        aggregeringPerSideDB.gjennomsnittligBruddProsentTR,
+        aggregeringPerSideDB.talElementSamsvar,
+        aggregeringPerSideDB.talElementBrot,
+        aggregeringPerSideDB.talElementVarsel,
+        aggregeringPerSideDB.talElementIkkjeForekomst)
+  }
 
-    fun dtoTOAggregertResultatSuksesskriterium(
-        aggregeringPerSuksesskriteriumDB: AggregeringPerSuksesskriteriumDB,
-        loeysingList: List<Loeysing>
-    ): AggregertResultatSuksesskriterium {
-        return AggregertResultatSuksesskriterium(
-            aggregeringPerSuksesskriteriumDB.maalingId
-                ?: aggregeringPerSuksesskriteriumDB.testgrunnlagId,
-            getLoeysing(aggregeringPerSuksesskriteriumDB.loeysingId, loeysingList),
-            getSuksesskriterium(aggregeringPerSuksesskriteriumDB.suksesskriteriumId),
-            aggregeringPerSuksesskriteriumDB.talSiderSamsvar,
-            aggregeringPerSuksesskriteriumDB.talSiderBrot,
-            aggregeringPerSuksesskriteriumDB.talSiderIkkjeForekomst
-        )
-    }
+  fun dtoTOAggregertResultatSuksesskriterium(
+      aggregeringPerSuksesskriteriumDB: AggregeringPerSuksesskriteriumDB,
+      loeysingList: List<Loeysing>
+  ): AggregertResultatSuksesskriterium {
+    return AggregertResultatSuksesskriterium(
+        aggregeringPerSuksesskriteriumDB.maalingId
+            ?: aggregeringPerSuksesskriteriumDB.testgrunnlagId,
+        getLoeysing(aggregeringPerSuksesskriteriumDB.loeysingId, loeysingList),
+        getSuksesskriterium(aggregeringPerSuksesskriteriumDB.suksesskriteriumId),
+        aggregeringPerSuksesskriteriumDB.talSiderSamsvar,
+        aggregeringPerSuksesskriteriumDB.talSiderBrot,
+        aggregeringPerSuksesskriteriumDB.talSiderIkkjeForekomst)
+  }
 
-    private fun getSuksesskriterium(suksesskriteriumId: Int) =
-        kravregisterClient.getSuksesskriteriumFromKrav(suksesskriteriumId)
+  private fun getSuksesskriterium(suksesskriteriumId: Int) =
+      kravregisterClient.getSuksesskriteriumFromKrav(suksesskriteriumId)
 
-    private fun getLoeysing(loeysingId: Int, loeysingList: List<Loeysing>): Loeysing =
-        loeysingList.firstOrNull { it.id == loeysingId }
-            ?: throw NoSuchElementException("Fant ikkje loeysing med id $loeysingId")
+  private fun getLoeysing(loeysingId: Int, loeysingList: List<Loeysing>): Loeysing =
+      loeysingList.firstOrNull { it.id == loeysingId }
+          ?: throw NoSuchElementException("Fant ikkje loeysing med id $loeysingId")
 
-    fun getTestregel(testregelId: Int): TestregelAggregate {
-        return testregelCache.getTestregelById(testregelId)
-    }
+  fun getTestregel(testregelId: Int): TestregelAggregate {
+    return testregelCache.getTestregelById(testregelId)
+  }
 }

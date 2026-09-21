@@ -231,11 +231,11 @@ class TestkoeyringDAO(
   }
 
   fun deleteExistingTestkoeyring(maalingId: Int, loeysingId: Int) {
-      jdbcTemplate.update(
-          """delete from "testlab2_testing"."testkoeyring" 
-              |where maaling_id = :maaling_id and loeysing_id = :loeysing_id""".trimMargin(),
-          mapOf("maaling_id" to maalingId, "loeysing_id" to loeysingId)
-      )
+    jdbcTemplate.update(
+        """delete from "testlab2_testing"."testkoeyring" 
+              |where maaling_id = :maaling_id and loeysing_id = :loeysing_id"""
+            .trimMargin(),
+        mapOf("maaling_id" to maalingId, "loeysing_id" to loeysingId))
   }
 
   private fun feilmelding(testKoeyring: TestKoeyring): String? =
@@ -337,7 +337,7 @@ class TestkoeyringDAO(
 
   private fun statusUrlFromResultSet(rs: ResultSet): URL = URI(rs.getString("status_url")).toURL()
 
-    @Suppress("LongParameterList")
+  @Suppress("LongParameterList")
   private fun autoTesterLenker(
       urlFulltResultat: String?,
       urlBrot: String?,

@@ -66,27 +66,15 @@ class MaalingService(
     crawlParameters.validateParameters()
 
     val localDateNorway = Instant.now(clockProvider.clock)
-      when {
-          utvalId != null ->
-              maalingDAO.createMaaling(
-                  navn,
-                  localDateNorway,
-                  getUtval(utvalId),
-                  testregelIdList,
-                  crawlParameters
-              )
-
-          loeysingIdList != null ->
-              maalingDAO.createMaaling(
-                  navn,
-                  localDateNorway,
-                  loeysingIdList,
-                  testregelIdList,
-                  crawlParameters
-              )
-
-          else -> error("utvalId eller loeysingIdList må vere gitt")
-      }
+    when {
+      utvalId != null ->
+          maalingDAO.createMaaling(
+              navn, localDateNorway, getUtval(utvalId), testregelIdList, crawlParameters)
+      loeysingIdList != null ->
+          maalingDAO.createMaaling(
+              navn, localDateNorway, loeysingIdList, testregelIdList, crawlParameters)
+      else -> error("utvalId eller loeysingIdList må vere gitt")
+    }
   }
 
   fun updateMaaling(kontroll: Kontroll): Result<Unit> = runCatching {
@@ -110,9 +98,9 @@ class MaalingService(
 
   fun deleteMaaling(id: Int): Result<Unit> = runCatching { maalingDAO.deleteMaaling(id) }
 
-    fun isMaalingFerdigTestet(maalingId: Int): Boolean {
-        return maalingReadService.isMaalingFerdigTesta(maalingId)
-    }
+  fun isMaalingFerdigTestet(maalingId: Int): Boolean {
+    return maalingReadService.isMaalingFerdigTesta(maalingId)
+  }
 
   private fun validatedTestregeldList(dto: MaalingResource.NyMaalingDTO): List<Int> {
     return validatedTestregelList(dto.testregelIdList)
@@ -145,46 +133,44 @@ class MaalingService(
 
   private fun getUtval(utvalId: Int): Utval {
     return utvalDAO
-            .getUtval(utvalId)
-            .mapCatching {
-              val loeysingar = loeysingsRegisterClient.getMany(it.loeysingar).getOrThrow()
-              Utval(it.id, it.namn, loeysingar, it.oppretta)
-            }
-            .getOrThrow()
+        .getUtval(utvalId)
+        .mapCatching {
+          val loeysingar = loeysingsRegisterClient.getMany(it.loeysingar).getOrThrow()
+          Utval(it.id, it.namn, loeysingar, it.oppretta)
+        }
+        .getOrThrow()
   }
 
-    private fun EditMaalingDTO.toMaaling(): Maaling {
-        val navn = validateNamn(this.navn).getOrThrow()
+  private fun EditMaalingDTO.toMaaling(): Maaling {
+    val navn = validateNamn(this.navn).getOrThrow()
 
-        return when (val maaling = maalingDAO.getMaaling(this.id)) {
-            is Maaling.Planlegging -> {
-                this.crawlParameters?.validateParameters()
-                val loeysingList = getLoeysingarForMaaling(this.loeysingIdList, maaling.id)
-                val testregelList = getTestreglarForMaaling(this.testregelIdList, maaling.id)
+    return when (val maaling = maalingDAO.getMaaling(this.id)) {
+      is Maaling.Planlegging -> {
+        this.crawlParameters?.validateParameters()
+        val loeysingList = getLoeysingarForMaaling(this.loeysingIdList, maaling.id)
+        val testregelList = getTestreglarForMaaling(this.testregelIdList, maaling.id)
 
-                maaling.copy(
-                    navn = navn,
-                    loeysingList = loeysingList,
-                    testregelList = testregelList.map { it.toTestregelBase() },
-                    crawlParameters = this.crawlParameters ?: maaling.crawlParameters
-                )
-            }
-
-            is Maaling.Crawling -> maaling.copy(navn = navn)
-            is Maaling.Testing -> maaling.copy(navn = navn)
-            is Maaling.TestingFerdig -> maaling.copy(navn = navn)
-            is Maaling.Kvalitetssikring -> maaling.copy(navn = navn)
-        }
+        maaling.copy(
+            navn = navn,
+            loeysingList = loeysingList,
+            testregelList = testregelList.map { it.toTestregelBase() },
+            crawlParameters = this.crawlParameters ?: maaling.crawlParameters)
+      }
+      is Maaling.Crawling -> maaling.copy(navn = navn)
+      is Maaling.Testing -> maaling.copy(navn = navn)
+      is Maaling.TestingFerdig -> maaling.copy(navn = navn)
+      is Maaling.Kvalitetssikring -> maaling.copy(navn = navn)
     }
+  }
 
   private fun getTestreglarForMaaling(
       testregelIdList: List<Int>?,
       maalingId: Int
   ): List<Testregel> {
-      return testregelIdList?.let { idList ->
-          testreglClient.getTestregelList().getOrThrow().filter { idList.contains(it.id) }
-      }
-          ?: emptyList<Testregel>().also { logger.warn("Måling $maalingId har ikkje testreglar") }
+    return testregelIdList?.let { idList ->
+      testreglClient.getTestregelList().getOrThrow().filter { idList.contains(it.id) }
+    }
+        ?: emptyList<Testregel>().also { logger.warn("Måling $maalingId har ikkje testreglar") }
   }
 
   private fun getLoeysingarForMaaling(
@@ -192,11 +178,10 @@ class MaalingService(
       maalingId: Int,
   ): List<Loeysing> {
     return idList?.let { idList -> loeysingsRegisterClient.getMany(idList) }?.getOrThrow()
-            ?: emptyList<Loeysing>().also { logger.warn("Måling $maalingId har ikkje løysingar") }
+        ?: emptyList<Loeysing>().also { logger.warn("Måling $maalingId har ikkje løysingar") }
   }
 
-
-    fun getFerdigeTestkoeyringar(maalingId: Int): List<TestkoeyringDTO.Ferdig> {
+  fun getFerdigeTestkoeyringar(maalingId: Int): List<TestkoeyringDTO.Ferdig> {
     return getTestkoeyringar(maalingId).filterIsInstance<TestkoeyringDTO.Ferdig>()
   }
 
@@ -222,19 +207,17 @@ class MaalingService(
         loeysingId == null || it.loeysingId == loeysingId
       }
 
-
-    fun getValidatedLoeysingList(statusDTO: MaalingResource.StatusDTO, id: Int): List<Int> {
-        return validateIdList(statusDTO.loeysingIdList,
-            getValidIds(statusDTO, id),
-            "loeysingIdList").getOrThrow()
-    }
+  fun getValidatedLoeysingList(statusDTO: MaalingResource.StatusDTO, id: Int): List<Int> {
+    return validateIdList(statusDTO.loeysingIdList, getValidIds(statusDTO, id), "loeysingIdList")
+        .getOrThrow()
+  }
 
   private fun getValidIds(statusDTO: MaalingResource.StatusDTO, maalingId: Int): List<Int> {
     return if (statusDTO.loeysingIdList?.isNotEmpty() == true) {
-          getLoeysingarForMaaling(statusDTO.loeysingIdList, maalingId).map { it.id }
-        } else {
-          emptyList()
-        }
+      getLoeysingarForMaaling(statusDTO.loeysingIdList, maalingId).map { it.id }
+    } else {
+      emptyList()
+    }
   }
 
   fun getTestreglarForMaaling(maalingId: Int): Result<List<Testregel>> {

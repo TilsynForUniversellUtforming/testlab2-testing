@@ -98,9 +98,7 @@ class AggregeringServiceTest(
     Mockito.`when`(testregelCache.getTestregelByKey(anyString())).thenReturn(testregel)
     Mockito.`when`(testregelCache.getTestregelById(anyInt())).thenReturn(testregel)
 
-    aggregeringService.saveAggregertResultatTestregelAutomatisk(
-        testKoeyring.lenker!!,1
-    )
+    aggregeringService.saveAggregertResultatTestregelAutomatisk(testKoeyring.lenker!!, 1)
 
     val retrievedAggregering =
         maalingId.let { aggregeringService.getAggregertResultatTestregel(it) }
@@ -265,7 +263,8 @@ class AggregeringServiceTest(
   fun calculateTestregelGjennomsnitt() {
     val testresultat: ArrayList<ResultatManuellKontroll> = resultatManuellKontrollTestdata()
 
-    val gjennomsnittTestresultat = aggregeringToDTOMapper.calculateTestregelGjennomsnitt(testresultat)
+    val gjennomsnittTestresultat =
+        aggregeringToDTOMapper.calculateTestregelGjennomsnitt(testresultat)
 
     assertThat(
             gjennomsnittTestresultat.testregelGjennomsnittlegSideSamsvarProsent!! +

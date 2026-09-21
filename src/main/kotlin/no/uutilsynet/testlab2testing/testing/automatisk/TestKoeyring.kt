@@ -145,6 +145,5 @@ sealed class TestKoeyring {
               Feila(testKoeyring.loeysing, Instant.now(), response.output, testKoeyring.brukar)
           else -> testKoeyring
         }
-
   }
 }

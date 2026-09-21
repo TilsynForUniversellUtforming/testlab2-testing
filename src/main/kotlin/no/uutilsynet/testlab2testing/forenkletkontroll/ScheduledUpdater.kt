@@ -89,8 +89,8 @@ class ScheduledUpdater(
                   updateTestingStatus(it) { testKoeyring ->
                     autoTesterClient.updateStatus(testKoeyring as TestKoeyring.Starta)
                   }
-              if (status is TestKoeyring.Ferdig && status.lenker!=null) {
-                aggregeringService.saveAggregering(status.lenker,status.loeysing.id)
+              if (status is TestKoeyring.Ferdig && status.lenker != null) {
+                aggregeringService.saveAggregering(status.lenker, status.loeysing.id)
               }
               status
             }

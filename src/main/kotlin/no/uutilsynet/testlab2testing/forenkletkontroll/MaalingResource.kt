@@ -154,7 +154,8 @@ class MaalingResource(
 
     return when (aggregeringstype) {
       "testregel" -> maalingAggregeringService.hentEllerGenererAggregeringPrTestregel(maalingId)
-      "suksesskriterium" -> maalingAggregeringService.hentEllerGenererAggregeringPrSuksesskriterium(maalingId)
+      "suksesskriterium" ->
+          maalingAggregeringService.hentEllerGenererAggregeringPrSuksesskriterium(maalingId)
       "side" -> maalingAggregeringService.hentEllerGenererAggregeringPrSide(maalingId)
       else -> throw IllegalArgumentException("Ugyldig aggregeringstype: $aggregeringstype")
     }
