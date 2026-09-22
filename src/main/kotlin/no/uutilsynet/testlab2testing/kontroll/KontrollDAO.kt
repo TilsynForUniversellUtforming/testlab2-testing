@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.kontroll
 import java.net.URI
 import java.sql.ResultSet
 import java.time.Instant
+import kotlin.collections.filterIsInstance
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.DataClassRowMapper
@@ -60,6 +61,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 """select id from "testlab2_testing"."kontroll"""",
                 emptyMap<String, String>(),
                 Int::class.java)
+            .filterIsInstance<Int>()
             .toList()
     return getKontroller(ids)
   }
@@ -161,10 +163,12 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     val testreglar =
         KontrollDB.Testreglar(
                 resultSet.getInt("regelsett_id").takeUnless { resultSet.wasNull() },
-                jdbcTemplate.queryForList(
-                    """select testregel_id from "testlab2_testing"."kontroll_testreglar" where kontroll_id = :kontroll_id""",
-                    mapOf("kontroll_id" to kontrollId),
-                    Int::class.java))
+                jdbcTemplate
+                    .queryForList(
+                        """select testregel_id from "testlab2_testing"."kontroll_testreglar" where kontroll_id = :kontroll_id""",
+                        mapOf("kontroll_id" to kontrollId),
+                        Int::class.java)
+                    .filterIsInstance<Int>())
             .takeIf { it.regelsettId != null || it.testregelIdList.isNotEmpty() }
     return testreglar
   }
@@ -185,14 +189,15 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   private fun getLoeysingIdListForKontroll(kontrollId: Int): List<Int> {
-    val loeysingIdList =
-        jdbcTemplate
-            .queryForList(
-                """select loeysing_id as id from "testlab2_testing"."kontroll_loeysing" where kontroll_id = :kontroll_id""",
-                mapOf("kontroll_id" to kontrollId),
-                Int::class.java)
-            .toList()
-    return loeysingIdList
+    return jdbcTemplate
+        .queryForList(
+            """select loeysing_id as id from "testlab2_testing"."kontroll_loeysing" 
+                    |where kontroll_id = :kontroll_id"""
+                .trimMargin(),
+            mapOf("kontroll_id" to kontrollId),
+            Int::class.java)
+        .filterIsInstance<Int>()
+        .toList()
   }
 
   data class KontrollDB(

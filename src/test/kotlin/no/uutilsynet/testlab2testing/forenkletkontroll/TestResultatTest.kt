@@ -1,12 +1,11 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.time.Month
 import no.uutilsynet.testlab2testing.testing.automatisk.TestResultat
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import tools.jackson.module.kotlin.jacksonObjectMapper
 
 class TestResultatTest {
   @Test
@@ -42,8 +41,7 @@ class TestResultatTest {
         }
       """
             .trimIndent()
-    val objectMapper =
-        jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    val objectMapper = jacksonObjectMapper()
     val testResultat = objectMapper.readValue(json, TestResultat::class.java)
     assertThat(testResultat.elementOmtale).isNull()
   }

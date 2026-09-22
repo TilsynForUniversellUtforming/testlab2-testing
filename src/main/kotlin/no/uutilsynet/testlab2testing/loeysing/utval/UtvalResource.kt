@@ -131,7 +131,7 @@ kan importere eit utval frå ei CSV-fil eller ein python dataframe med dette API
   }
 
   @PutMapping("{id}")
-  fun updateUtval(@PathVariable id: Int, @RequestBody nyttUtval: NyttUtval): ResponseEntity<URI?> {
+  fun updateUtval(@PathVariable id: Int, @RequestBody nyttUtval: NyttUtval): ResponseEntity<URI> {
     val utvalNamn = validateNamn(nyttUtval.namn).getOrThrow()
     val loeysingList = validateLoeysingList(nyttUtval)
 

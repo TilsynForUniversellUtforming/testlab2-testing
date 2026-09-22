@@ -1,16 +1,14 @@
 package no.uutilsynet.testlab2testing
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import jakarta.validation.ClockProvider
 import java.time.Clock
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan
+import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
+import org.springframework.boot.restclient.RestTemplateBuilder
 import org.springframework.boot.runApplication
-import org.springframework.boot.web.client.RestTemplateBuilder
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
 import org.springframework.http.MediaType
@@ -30,9 +28,7 @@ class Testlab2TestingApplication {
 
   @Bean
   fun restTemplate(restTemplateBuilder: RestTemplateBuilder): RestTemplate {
-    val objectMapper =
-        jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    objectMapper.registerModule(JavaTimeModule())
+    val objectMapper = jacksonObjectMapper()
     val mappingJackson2HttpMessageConverter = MappingJackson2HttpMessageConverter()
     mappingJackson2HttpMessageConverter.objectMapper = objectMapper
     mappingJackson2HttpMessageConverter.supportedMediaTypes =

@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import kotlinx.coroutines.*
 import no.uutilsynet.testlab2.constants.TestregelInnholdstype
@@ -20,12 +19,13 @@ import org.hamcrest.CoreMatchers.startsWith
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
+import org.springframework.boot.restclient.test.autoconfigure.RestClientTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.client.ExpectedCount.manyTimes
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
+import tools.jackson.module.kotlin.jacksonObjectMapper
 
 @RestClientTest(CrawlerClient::class, CrawlerProperties::class)
 @DisplayName("Crawler test")

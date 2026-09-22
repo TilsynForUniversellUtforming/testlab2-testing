@@ -23,9 +23,6 @@ rapportVerktoey:
     host: http://localhost:8084
 resultat:
     host: http://localhost:8085
-server:
-    error:
-        include-stacktrace: never
 spring:
     application:
         name: "testlab2-testing"
@@ -54,6 +51,9 @@ spring:
             platform: postgresql
     profiles:
         active: tokenClient
+    web:
+        error:
+            include-stacktrace: never
 springdoc:
     swagger-ui:
         path: /api-dokumentasjon
@@ -66,14 +66,17 @@ management:
     tracing:
         sampling:
             probability: '1.0'
-        enabled: false
+        export:
+            enabled: false
 
     observations:
         annotations:
             enabled: true
-    otlp:
+    opentelemetry:
         tracing:
-            endpoint: http://localhost:4318/v1/traces
+            export:
+                otlp:
+                    endpoint: http://localhost:4318/v1/traces
 
 #otel:
 #    exporter:

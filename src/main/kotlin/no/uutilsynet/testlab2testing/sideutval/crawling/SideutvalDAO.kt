@@ -307,6 +307,7 @@ class SideutvalDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                   .trimIndent(),
               mapOf("maalingId" to maalingId, "url" to url.toString()),
               Int::class.java)
+          .filterIsInstance<Int>()
           .single()
     }
   }

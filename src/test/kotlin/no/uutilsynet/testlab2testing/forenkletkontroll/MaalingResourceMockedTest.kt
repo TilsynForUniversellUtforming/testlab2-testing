@@ -1,7 +1,5 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import no.uutilsynet.testlab2.constants.TestregelInnholdstype
 import no.uutilsynet.testlab2.constants.TestregelModus
@@ -25,7 +23,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
+import org.springframework.boot.restclient.test.autoconfigure.RestClientTest
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -34,6 +32,7 @@ import org.springframework.test.web.client.ExpectedCount
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers
 import org.springframework.test.web.client.response.MockRestResponseCreators
+import tools.jackson.module.kotlin.jacksonObjectMapper
 
 @RestClientTest(
     AutoTesterClient::class,
@@ -49,7 +48,7 @@ class MaalingResourceMockedTest {
 
   @MockitoBean private lateinit var maalingDAO: MaalingDAO
 
-  @MockitoBean private lateinit var maalingReadDAO: MaalingReadDAO
+  @MockitoBean private lateinit var maalingReadService: MaalingReadService
 
   @MockitoBean private lateinit var maalingService: MaalingService
 
@@ -67,8 +66,7 @@ class MaalingResourceMockedTest {
 
   private lateinit var maalingResource: MaalingResource
 
-  private val objectMapper =
-      jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+  private val objectMapper = jacksonObjectMapper()
 
   @BeforeEach
   fun setup() {
@@ -78,7 +76,7 @@ class MaalingResourceMockedTest {
     maalingResource =
         MaalingResource(
             maalingDAO,
-            maalingReadDAO,
+            maalingReadService,
             sideutvalDAO,
             maalingService,
             brukarService,
