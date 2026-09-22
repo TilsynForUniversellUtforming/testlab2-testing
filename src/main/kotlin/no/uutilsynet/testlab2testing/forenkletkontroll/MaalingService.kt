@@ -17,24 +17,22 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters.Companion.validateParameters
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.AutotesterTestresultat
-import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
 import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDAO
 import no.uutilsynet.testlab2testing.testing.automatisk.TestkoeyringDTO
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.toTestregelBase
-import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.toSingleResult
 import org.slf4j.LoggerFactory
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 
+@Suppress("LongParameterList")
 @Service
 class MaalingService(
     val maalingDAO: MaalingDAO,
+    val maalingReadDAO: MaalingReadDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val utvalDAO: UtvalDAO,
-    val aggregeringService: AggregeringService,
     val autoTesterClient: AutoTesterClient,
     val testreglClient: TestregelClient,
     val testkoeyringDAO: TestkoeyringDAO,
@@ -68,26 +66,22 @@ class MaalingService(
     crawlParameters.validateParameters()
 
     val localDateNorway = Instant.now(clockProvider.clock)
-
-    if (utvalId != null) {
-      val utval = getUtval(utvalId)
-      maalingDAO.createMaaling(navn, localDateNorway, utval, testregelIdList, crawlParameters)
-    } else if (loeysingIdList != null) {
-      maalingDAO.createMaaling(
-          navn, localDateNorway, loeysingIdList, testregelIdList, crawlParameters)
-    } else {
-      throw IllegalArgumentException("utvalId eller loeysingIdList må være gitt")
+    when {
+      utvalId != null ->
+          maalingDAO.createMaaling(
+              navn, localDateNorway, getUtval(utvalId), testregelIdList, crawlParameters)
+      loeysingIdList != null ->
+          maalingDAO.createMaaling(
+              navn, localDateNorway, loeysingIdList, testregelIdList, crawlParameters)
+      else -> throw IllegalArgumentException("utvalId eller loeysingIdList må vere gitt")
     }
   }
 
   fun updateMaaling(kontroll: Kontroll): Result<Unit> = runCatching {
-    val maalingId = maalingDAO.getMaalingIdFromKontrollId(kontroll.id)
-    if (maalingId != null) {
-      val maalingEdit = kontroll.toMaalingEdit(maalingId)
-      maalingDAO.updateMaaling(maalingEdit.toMaaling())
-    } else {
-      throw IllegalArgumentException("Måling finns ikkje for kontroll")
-    }
+    val maalingId = maalingReadDAO.getMaalingIdFromKontrollId(kontroll.id)
+    require(maalingId != null) { "Måling finns ikkje for kontroll" }
+    val maalingEdit = kontroll.toMaalingEdit(maalingId)
+    maalingDAO.updateMaaling(maalingEdit.toMaaling())
   }
 
   fun updateMaaling(dto: EditMaalingDTO): Result<Unit> = runCatching {
@@ -96,13 +90,17 @@ class MaalingService(
   }
 
   fun deleteKontrollMaaling(kontrollId: Int): Result<Unit> = runCatching {
-    val maalingId = maalingDAO.getMaalingIdFromKontrollId(kontrollId)
+    val maalingId = maalingReadDAO.getMaalingIdFromKontrollId(kontrollId)
     if (maalingId != null) {
       return deleteMaaling(maalingId)
     }
   }
 
   fun deleteMaaling(id: Int): Result<Unit> = runCatching { maalingDAO.deleteMaaling(id) }
+
+  fun isMaalingFerdigTestet(maalingId: Int): Boolean {
+    return maalingReadDAO.isMaalingFerdigTesta(maalingId)
+  }
 
   private fun validatedTestregeldList(dto: MaalingResource.NyMaalingDTO): List<Int> {
     return validatedTestregelList(dto.testregelIdList)
@@ -134,23 +132,21 @@ class MaalingService(
   }
 
   private fun getUtval(utvalId: Int): Utval {
-    val utval =
-        utvalDAO
-            .getUtval(utvalId)
-            .mapCatching {
-              val loeysingar = loeysingsRegisterClient.getMany(it.loeysingar).getOrThrow()
-              Utval(it.id, it.namn, loeysingar, it.oppretta)
-            }
-            .getOrThrow()
-    return utval
+    return utvalDAO
+        .getUtval(utvalId)
+        .mapCatching {
+          val loeysingar = loeysingsRegisterClient.getMany(it.loeysingar).getOrThrow()
+          Utval(it.id, it.namn, loeysingar, it.oppretta)
+        }
+        .getOrThrow()
   }
 
   private fun EditMaalingDTO.toMaaling(): Maaling {
     val navn = validateNamn(this.navn).getOrThrow()
-    this.crawlParameters?.validateParameters()
 
     return when (val maaling = maalingDAO.getMaaling(this.id)) {
       is Maaling.Planlegging -> {
+        this.crawlParameters?.validateParameters()
         val loeysingList = getLoeysingarForMaaling(this.loeysingIdList, maaling.id)
         val testregelList = getTestreglarForMaaling(this.testregelIdList, maaling.id)
 
@@ -160,10 +156,10 @@ class MaalingService(
             testregelList = testregelList.map { it.toTestregelBase() },
             crawlParameters = this.crawlParameters ?: maaling.crawlParameters)
       }
-      is Maaling.Crawling -> maaling.copy(navn = this.navn)
-      is Maaling.Testing -> maaling.copy(navn = this.navn)
-      is Maaling.TestingFerdig -> maaling.copy(navn = this.navn)
-      is Maaling.Kvalitetssikring -> maaling.copy(navn = this.navn)
+      is Maaling.Crawling -> maaling.copy(navn = navn)
+      is Maaling.Testing -> maaling.copy(navn = navn)
+      is Maaling.TestingFerdig -> maaling.copy(navn = navn)
+      is Maaling.Kvalitetssikring -> maaling.copy(navn = navn)
     }
   }
 
@@ -171,50 +167,25 @@ class MaalingService(
       testregelIdList: List<Int>?,
       maalingId: Int
   ): List<Testregel> {
-    val testregelList =
-        testregelIdList?.let { idList ->
-          testreglClient.getTestregelList().getOrThrow().filter { idList.contains(it.id) }
-        }
-            ?: emptyList<Testregel>().also { logger.warn("Måling $maalingId har ikkje testreglar") }
-    return testregelList
+    return testregelIdList?.let { idList ->
+      testreglClient.getTestregelList().getOrThrow().filter { idList.contains(it.id) }
+    }
+        ?: emptyList<Testregel>().also { logger.warn("Måling $maalingId har ikkje testreglar") }
   }
 
   private fun getLoeysingarForMaaling(
       idList: List<Int>?,
       maalingId: Int,
   ): List<Loeysing> {
-    val loeysingList =
-        idList?.let { idList -> loeysingsRegisterClient.getMany(idList) }?.getOrThrow()
-            ?: emptyList<Loeysing>().also { logger.warn("Måling $maalingId har ikkje løysingar") }
-    return loeysingList
-  }
-
-  fun reimportAggregeringar(maalingId: Int, loeysingId: Int?) {
-    runCatching {
-      val maaling = maalingDAO.getMaaling(maalingId)
-      require(maaling is Maaling.TestingFerdig) { "Måling er ikkje ferdig testa" }
-
-      maaling.testKoeyringar
-          .filterIsInstance<TestKoeyring.Ferdig>()
-          .filter { filterTestkoeyring(it, loeysingId) }
-          .forEach { aggregeringService.saveAggregering(it) }
-    }
-  }
-
-  fun filterTestkoeyring(testKoeyring: TestKoeyring, loeysingId: Int?): Boolean {
-    if (loeysingId != null) {
-      return testKoeyring.loeysing.id == loeysingId
-    }
-    return true
+    return idList?.let { idList -> loeysingsRegisterClient.getMany(idList) }?.getOrThrow()
+        ?: emptyList<Loeysing>().also { logger.warn("Måling $maalingId har ikkje løysingar") }
   }
 
   fun getFerdigeTestkoeyringar(maalingId: Int): List<TestkoeyringDTO.Ferdig> {
-    return testkoeyringDAO
-        .getTestkoeyringarForMaaling(maalingId)
-        .filterIsInstance<TestkoeyringDTO.Ferdig>()
+    return getTestkoeyringar(maalingId).filterIsInstance<TestkoeyringDTO.Ferdig>()
   }
 
-  suspend fun mapTestkoeyringToTestresultatBrot(
+  private suspend fun mapTestkoeyringToTestresultatBrot(
       ferdigeTestKoeyringar: List<TestkoeyringDTO.Ferdig>
   ) = autoTesterClient.fetchResultat(ferdigeTestKoeyringar, AutoTesterClient.ResultatUrls.urlBrot)
 
@@ -236,74 +207,40 @@ class MaalingService(
         loeysingId == null || it.loeysingId == loeysingId
       }
 
-  fun hentEllerGenererAggregeringPrSide(maalingId: Int): ResponseEntity<Any> {
-    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "side")) {
-      val testKoeyringar = getTestKoeyringar(maalingId)
-      testKoeyringar.forEach { aggregeringService.saveAggregeringSideAutomatisk(it) }
-    }
-    return aggregeringService.getAggregertResultatSide(maalingId).let { ResponseEntity.ok(it) }
-  }
-
-  fun hentEllerGenererAggregeringPrSuksesskriterium(maalingId: Int): ResponseEntity<Any> {
-    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "suksesskriterium")) {
-      val testKoeyringar = getTestKoeyringar(maalingId)
-      testKoeyringar.forEach {
-        aggregeringService.saveAggregertResultatSuksesskriteriumAutomatisk(it)
-      }
-    }
-    return aggregeringService.getAggregertResultatSuksesskriterium(maalingId).let {
-      ResponseEntity.ok(it)
-    }
-  }
-
-  fun hentEllerGenererAggregeringPrTestregel(maalingId: Int): ResponseEntity<Any> {
-    if (!aggregeringService.harMaalingLagraAggregering(maalingId, "testresultat")) {
-      logger.info("Aggregering er ikkje generert for måling $maalingId, genererer no")
-      val testKoeyringar = getTestKoeyringar(maalingId)
-      testKoeyringar.forEach { aggregeringService.saveAggregertResultatTestregelAutomatisk(it) }
-    }
-    return aggregeringService.getAggregertResultatTestregel(maalingId).let { ResponseEntity.ok(it) }
-  }
-
-  private fun getTestKoeyringar(maalingId: Int): List<TestKoeyring.Ferdig> {
-    return runCatching {
-          maalingDAO.getMaaling(maalingId).let { maaling ->
-            Maaling.findFerdigeTestKoeyringar(maaling)
-          }
-        }
-        .getOrElse {
-          logger.error("Feila ved henting av testkøyringar for måling $maalingId", it)
-          throw it
-        }
-  }
-
   fun getValidatedLoeysingList(statusDTO: MaalingResource.StatusDTO, id: Int): List<Int> {
-    val validIds = getValidIds(statusDTO, id)
-    val loeysingIdList =
-        validateIdList(statusDTO.loeysingIdList, validIds, "loeysingIdList").getOrThrow()
-    return loeysingIdList
+    return validateIdList(statusDTO.loeysingIdList, getValidIds(statusDTO, id), "loeysingIdList")
+        .getOrThrow()
   }
 
   private fun getValidIds(statusDTO: MaalingResource.StatusDTO, maalingId: Int): List<Int> {
-    val validIds =
-        if (statusDTO.loeysingIdList?.isNotEmpty() == true) {
-          getLoeysingarForMaaling(statusDTO.loeysingIdList, maalingId).map { it.id }
-        } else {
-          emptyList()
-        }
-    return validIds
+    return if (statusDTO.loeysingIdList?.isNotEmpty() == true) {
+      getLoeysingarForMaaling(statusDTO.loeysingIdList, maalingId).map { it.id }
+    } else {
+      emptyList()
+    }
   }
 
   fun getTestreglarForMaaling(maalingId: Int): Result<List<Testregel>> {
     return runCatching {
-      val testregelIds = maalingDAO.getTestrelIdForMaaling(maalingId)
+      val testregelIds = maalingReadDAO.getTestregelIdsForMaaling(maalingId)
       testreglClient.getTestregelListFromIds(testregelIds).getOrThrow()
     }
   }
 
+  fun getLoeysingarForMaaling(id: Int): List<Loeysing> =
+      maalingReadDAO.getLoeysingarForMaaling(id)
+
   @Observed(name = "MaalingService.getMaalingForKontroll")
   fun getMaalingForKontroll(kontrollId: Int): Int {
-    return maalingDAO.getMaalingIdFromKontrollId(kontrollId)
+    return maalingReadDAO.getMaalingIdFromKontrollId(kontrollId)
         ?: throw NoSuchElementException("Fant ikkje måling for kontrollId $kontrollId")
+  }
+
+  fun getKontrollIdForMaaling(maalingId: Int): Int {
+    return maalingReadDAO.getKontrollIdFromMaalingId(maalingId)
+  }
+
+  fun getTestkoeyringar(maalingId: Int): List<TestkoeyringDTO> {
+    return testkoeyringDAO.getTestkoeyringarForMaaling(maalingId)
   }
 }

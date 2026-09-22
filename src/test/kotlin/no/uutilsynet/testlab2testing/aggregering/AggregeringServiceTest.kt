@@ -8,6 +8,8 @@ import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingReadDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
@@ -23,6 +25,7 @@ import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.krav.KravregisterClient
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringService
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregertResultatTestregel
+import no.uutilsynet.testlab2testing.testresultat.aggregering.mappers.AggregeringToDTOMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Offset
 import org.junit.jupiter.api.Test
@@ -47,6 +50,7 @@ private const val TEST_ORG = "Test AS"
 class AggregeringServiceTest(
     @Autowired val aggregeringService: AggregeringService,
     @Autowired val testUtils: TestUtils,
+    @Autowired val aggregeringToDTOMapper: AggregeringToDTOMapper
 ) {
 
   @MockitoSpyBean lateinit var testgrunnlagService: TestgrunnlagService
@@ -59,8 +63,11 @@ class AggregeringServiceTest(
   @MockitoBean lateinit var sideutvalDAO: SideutvalDAO
 
   @MockitoSpyBean lateinit var maalingDao: MaalingDAO
+  @MockitoSpyBean lateinit var maalingService: MaalingService
+    @MockitoSpyBean lateinit var maalingReadDAO: MaalingReadDAO
 
-  @MockitoBean lateinit var testregelCache: TestregelCache
+
+    @MockitoBean lateinit var testregelCache: TestregelCache
 
   companion object {
     @Container
@@ -86,15 +93,18 @@ class AggregeringServiceTest(
         .thenReturn(listOf(aggregeringTestregel))
 
     Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1)).thenReturn(testLoeysing)
+    Mockito.`when`(maalingReadDAO.getLoeysingarForMaaling(1)).thenReturn(listOf(testLoeysing))
 
-    Mockito.`when`(kravregisterClient.getKravIdFromSuksesskritterium("1.1.1")).thenReturn(1)
+
+
+      Mockito.`when`(kravregisterClient.getKravIdFromSuksesskritterium("1.1.1")).thenReturn(1)
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
     Mockito.`when`(kravregisterClient.listKrav()).thenReturn(listOf(testUtils.kravWcag2xObject()))
-    Mockito.doReturn(listOf(testLoeysing)).`when`(maalingDao).getLoeysingarForMaaling(maalingId)
+    Mockito.doReturn(listOf(testLoeysing)).`when`(maalingService).getLoeysingarForMaaling(maalingId)
     Mockito.`when`(testregelCache.getTestregelByKey(anyString())).thenReturn(testregel)
     Mockito.`when`(testregelCache.getTestregelById(anyInt())).thenReturn(testregel)
 
-    aggregeringService.saveAggregertResultatTestregelAutomatisk(testKoeyring)
+    aggregeringService.saveAggregertResultatTestregelAutomatisk(testKoeyring.lenker!!, 1)
 
     val retrievedAggregering =
         maalingId.let { aggregeringService.getAggregertResultatTestregel(it) }
@@ -171,7 +181,7 @@ class AggregeringServiceTest(
     Mockito.`when`(sideutvalDAO.getSideutvalUrlMapKontroll(listOf(1)))
         .thenReturn(mapOf(1 to URI("https://www.example.com").toURL()))
 
-    Mockito.doReturn(listOf(testLoeysing)).`when`(maalingDao).getLoeysingarForMaaling(anyInt())
+    Mockito.doReturn(listOf(testLoeysing)).`when`(maalingService).getLoeysingarForMaaling(anyInt())
     Mockito.doReturn(listOf(testLoeysing))
         .`when`(testgrunnlagService)
         .getLoeysingForTestgrunnlag(anyInt())
@@ -259,7 +269,8 @@ class AggregeringServiceTest(
   fun calculateTestregelGjennomsnitt() {
     val testresultat: ArrayList<ResultatManuellKontroll> = resultatManuellKontrollTestdata()
 
-    val gjennomsnittTestresultat = aggregeringService.calculateTestregelGjennomsnitt(testresultat)
+    val gjennomsnittTestresultat =
+        aggregeringToDTOMapper.calculateTestregelGjennomsnitt(testresultat)
 
     assertThat(
             gjennomsnittTestresultat.testregelGjennomsnittlegSideSamsvarProsent!! +
@@ -274,7 +285,7 @@ class AggregeringServiceTest(
     testresultat
         .groupBy { it.sideutvalId }
         .forEach { _ ->
-          val result = aggregeringService.processPrSideutval(testresultat)
+          val result = aggregeringToDTOMapper.processPrSideutval(testresultat)
           assertThat(result.brotprosentTrSide + result.samsvarsprosentTrSide)
               .isCloseTo(1.0, Offset.offset(0.00001))
           if (result.ikkjeForekomst) {

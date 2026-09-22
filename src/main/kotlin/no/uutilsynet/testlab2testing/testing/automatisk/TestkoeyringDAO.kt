@@ -8,7 +8,7 @@ import java.time.Instant
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.forenkletkontroll.Framgang
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.LoeysingMetadata
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -22,7 +22,7 @@ class TestkoeyringDAO(
 
   fun getTestKoeyringarForMaaling(
       maalingId: Int,
-      loeysingmetadataMap: Map<Int, MaalingDAO.LoeysingMetadata>
+      loeysingmetadataMap: Map<Int, LoeysingMetadata>
   ): List<TestKoeyring> {
     return jdbcTemplate.query<TestKoeyring>(
         """
@@ -38,7 +38,7 @@ class TestkoeyringDAO(
           val brukar = getBrukarFromResultSet(rs)
           val crawlResultatForLoeysing =
               loeysingmetadataMap[loeysingId]
-                  ?: throw RuntimeException(
+                  ?: throw NoSuchElementException(
                       "Finner ikkje crawlresultat for loeysing med id = $loeysingId")
 
           val sistOppdatert = rs.getTimestamp("sist_oppdatert").toInstant()
@@ -68,7 +68,7 @@ class TestkoeyringDAO(
                   crawlResultatForLoeysing.antallNettsider,
                   brukar)
             }
-            else -> throw RuntimeException("ukjent status $status")
+            else -> error("ukjent status $status")
           }
         })
   }
@@ -232,7 +232,9 @@ class TestkoeyringDAO(
 
   fun deleteExistingTestkoeyring(maalingId: Int, loeysingId: Int) {
     jdbcTemplate.update(
-        """delete from "testlab2_testing"."testkoeyring" where maaling_id = :maaling_id and loeysing_id = :loeysing_id""",
+        """delete from "testlab2_testing"."testkoeyring" 
+              |where maaling_id = :maaling_id and loeysing_id = :loeysing_id"""
+            .trimMargin(),
         mapOf("maaling_id" to maalingId, "loeysing_id" to loeysingId))
   }
 
@@ -335,6 +337,7 @@ class TestkoeyringDAO(
 
   private fun statusUrlFromResultSet(rs: ResultSet): URL = URI(rs.getString("status_url")).toURL()
 
+  @Suppress("LongParameterList")
   private fun autoTesterLenker(
       urlFulltResultat: String?,
       urlBrot: String?,

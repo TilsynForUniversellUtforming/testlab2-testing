@@ -31,7 +31,9 @@ class ResultatService(
 
   @Cacheable("resultatKontroll")
   fun getKontrollResultatByKontrollId(kontrollId: Int): List<Resultat> {
-    return resultatAggregator.getKontrollResultatCommon { resultatDAO.getResultatKontroll(kontrollId) }
+    return resultatAggregator.getKontrollResultatCommon {
+      resultatDAO.getResultatKontroll(kontrollId)
+    }
   }
 
   fun getResultatForMaaling(maalingId: Int, loeysingId: Int?): List<TestresultatDetaljert> {
@@ -40,7 +42,9 @@ class ResultatService(
 
   fun getResultatList(type: Kontrolltype?): List<Resultat> {
     if (type != null) {
-      return resultatAggregator.getKontrollResultatCommon { getResultatService(type).getAlleResultat() }
+      return resultatAggregator.getKontrollResultatCommon {
+        getResultatService(type).getAlleResultat()
+      }
     }
     return getKontrollResultat()
   }
@@ -49,7 +53,6 @@ class ResultatService(
   fun getKontrollResultatMedType(kontrollId: Int, kontrolltype: Kontrolltype): List<Resultat> {
     return resultatForKontrollType(kontrolltype, kontrollId)
   }
-
 
   fun getKontrollLoeysingResultat(
       kontrollId: Int,
@@ -106,47 +109,47 @@ class ResultatService(
         .map(resultatLoeysingMapper::sumResultatTema)
   }
 
-    fun getTalBrotForKontrollLoeysingTestregel(
-        kontrollId: Int,
-        loeysingId: Int,
-        testregelId: Int
-    ): Result<Int> {
-        return getResultService(kontrollId)
-            .getTalBrotForKontrollLoeysingTestregel(kontrollId, loeysingId, testregelId)
-    }
+  fun getTalBrotForKontrollLoeysingTestregel(
+      kontrollId: Int,
+      loeysingId: Int,
+      testregelId: Int
+  ): Result<Int> {
+    return getResultService(kontrollId)
+        .getTalBrotForKontrollLoeysingTestregel(kontrollId, loeysingId, testregelId)
+  }
 
-    fun getTalBrotForKontrollLoeysingKrav(
-        kontrollId: Int,
-        loeysingId: Int,
-        kravId: Int
-    ): Result<Int> {
-        return getResultService(kontrollId)
-            .getTalBrotForKontrollLoeysingKrav(kontrollId, loeysingId, kravId)
-    }
+  fun getTalBrotForKontrollLoeysingKrav(
+      kontrollId: Int,
+      loeysingId: Int,
+      kravId: Int
+  ): Result<Int> {
+    return getResultService(kontrollId)
+        .getTalBrotForKontrollLoeysingKrav(kontrollId, loeysingId, kravId)
+  }
 
-    fun getResultatPrKrav(
-        kontrollId: Int?,
-        kontrollType: Kontrolltype?,
-        loeysingId: Int?,
-        fraDato: LocalDate?,
-        tilDato: LocalDate?,
-    ): List<ResultatKrav> {
+  fun getResultatPrKrav(
+      kontrollId: Int?,
+      kontrollType: Kontrolltype?,
+      loeysingId: Int?,
+      fraDato: LocalDate?,
+      tilDato: LocalDate?,
+  ): List<ResultatKrav> {
 
-        return getResultat(kontrollId, loeysingId, kontrollType, fraDato, tilDato)
-            .groupBy { it.testregelId }
-            .map(resultatLoeysingMapper::toResultatKrav)
-            .groupBy { it.kravId }
-            .map(resultatLoeysingMapper::sumResultatKrav)
-    }
+    return getResultat(kontrollId, loeysingId, kontrollType, fraDato, tilDato)
+        .groupBy { it.testregelId }
+        .map(resultatLoeysingMapper::toResultatKrav)
+        .groupBy { it.kravId }
+        .map(resultatLoeysingMapper::sumResultatKrav)
+  }
 
-    fun getBrotForRapportLoeysing(
-        kontrollId: Int,
-        loeysingId: Int,
-    ): List<TestresultatDetaljert> {
-        return getResultService(kontrollId)
-            .getResultatBrotForKontroll(kontrollId, loeysingId)
-            .sortedBy { it.side.toString() }
-    }
+  fun getBrotForRapportLoeysing(
+      kontrollId: Int,
+      loeysingId: Int,
+  ): List<TestresultatDetaljert> {
+    return getResultService(kontrollId)
+        .getResultatBrotForKontroll(kontrollId, loeysingId)
+        .sortedBy { it.side.toString() }
+  }
 
   private fun getResultat(
       kontrollId: Int?,
@@ -183,15 +186,13 @@ class ResultatService(
     return resultatDAO.getResultatByDateRange(fraDato, tilDato)
   }
 
-
-
   private fun getResultService(kontrollId: Int): KontrollResultatService {
     return kontrollResultatServiceFactory.getResultatService(kontrollId)
   }
 
-
-    private fun getKontrollResultat(): List<Resultat> {
-    return resultatAggregator.getKontrollResultatCommon { resultatDAO.getAllResultat() }
+  private fun getKontrollResultat(): List<Resultat> {
+    return resultatAggregator
+        .getKontrollResultatCommon { resultatDAO.getAllResultat() }
         .map { it.copy(loeysingar = limitResultatList(it.loeysingar)) }
   }
 
@@ -201,13 +202,13 @@ class ResultatService(
     }
   }
 
-    private fun limitResultatList(resultLoeysingar: List<LoeysingResultat>): List<LoeysingResultat> {
+  private fun limitResultatList(resultLoeysingar: List<LoeysingResultat>): List<LoeysingResultat> {
     return if (resultLoeysingar.size > RESULATA_LIST_LIMIT) {
       resultLoeysingar.subList(0, RESULATA_LIST_LIMIT)
     } else resultLoeysingar
   }
 
-    private fun getLoeysingMap(listLoysingId: List<Int>): Result<LoysingList> {
+  private fun getLoeysingMap(listLoysingId: List<Int>): Result<LoysingList> {
     return loeysingsRegisterClient.getManyExpanded(listLoysingId).mapCatching { loeysingList ->
       LoysingList(loeysingList.associateBy { it.id })
     }
@@ -220,5 +221,4 @@ class ResultatService(
   private fun getLoeysingar(resultat: List<ResultatLoeysingDTO>): LoysingList {
     return resultat.map { it.loeysingId }.let { getLoeysingMap(it).getOrThrow() }
   }
-
 }

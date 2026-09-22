@@ -2,6 +2,12 @@ package no.uutilsynet.testlab2testing.loeysing.utval
 
 import io.restassured.RestAssured.given
 import jakarta.validation.ClockProvider
+import java.net.URI
+import java.time.Clock
+import java.time.ZoneId
+import java.util.UUID
+import kotlin.collections.get
+import kotlin.text.get
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
@@ -20,12 +26,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import java.net.URI
-import java.time.Clock
-import java.time.ZoneId
-import java.util.UUID
-import kotlin.collections.get
-import kotlin.text.get
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -34,14 +34,12 @@ class UtvalResourceTest(
     @Autowired val restTemplate: TestRestTemplate,
     @Autowired val utvalDAO: UtvalDAO,
 ) {
-  @MockitoBean
-  lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
+  @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
   @MockitoBean lateinit var clockProvider: ClockProvider
 
   val uuid = UUID.randomUUID().toString()
 
-  @LocalServerPort
-  var port: Int = 0
+  @LocalServerPort var port: Int = 0
 
   @BeforeEach
   fun setup() {

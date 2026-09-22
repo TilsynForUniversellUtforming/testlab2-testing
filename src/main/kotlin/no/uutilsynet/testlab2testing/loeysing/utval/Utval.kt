@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.loeysing.utval
 
-import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import java.time.Instant
+import no.uutilsynet.testlab2testing.loeysing.Loeysing
 
 data class Utval(
     val id: Int,

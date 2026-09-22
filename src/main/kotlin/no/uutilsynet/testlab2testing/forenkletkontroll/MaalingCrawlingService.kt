@@ -11,7 +11,8 @@ import org.springframework.stereotype.Service
 class MaalingCrawlingService(
     val crawlerClient: CrawlerClient,
     val maalingService: MaalingService,
-    val maalingDAO: MaalingDAO
+    val maalingDAO: MaalingDAO,
+    val maalingReadDAO: MaalingReadDAO
 ) {
 
   fun restartCrawling(
@@ -19,7 +20,7 @@ class MaalingCrawlingService(
       maaling: Maaling.Kvalitetssikring
   ): ResponseEntity<Any> {
     val loeysingIdList = maalingService.getValidatedLoeysingList(statusDTO, maaling.id)
-    val crawlParameters = maalingDAO.getCrawlParameters(maaling.id)
+    val crawlParameters = maalingReadDAO.getCrawlParameters(maaling.id)
     val updated = restartCrawling(maaling, loeysingIdList, crawlParameters)
     maalingDAO.save(updated).getOrThrow()
     return ResponseEntity.ok().build()

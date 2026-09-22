@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat.import
 
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/resultat/import")
 class ResultatImportController(
     private val azureStorage2DbService: AzureStorage2DbService,
-    private val maalingDAO: MaalingDAO
+    private val maalingService: MaalingService
 ) {
 
   @GetMapping("/maaling/{maalingId}/loeysing/{loeysingId}")
@@ -22,7 +22,7 @@ class ResultatImportController(
 
   @GetMapping("/maaling/{maalingId}")
   fun importMaaling(@PathVariable maalingId: Int) {
-    val loeysinger = maalingDAO.getLoeysingarForMaaling(maalingId)
+    val loeysinger = maalingService.getLoeysingarForMaaling(maalingId)
     loeysinger.forEach { loeysing ->
       azureStorage2DbService.createTestresultatDB(maalingId = maalingId, loeysingId = loeysing.id)
     }

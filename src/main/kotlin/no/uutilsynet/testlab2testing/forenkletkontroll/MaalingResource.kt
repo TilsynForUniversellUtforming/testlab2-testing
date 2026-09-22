@@ -33,15 +33,18 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
+@Suppress("LongParameterList")
 @RestController
 @RequestMapping("v1/maalinger")
 class MaalingResource(
     val maalingDAO: MaalingDAO,
+    val maalingReadDAO: MaalingReadDAO,
     val sideutvalDAO: SideutvalDAO,
     val maalingService: MaalingService,
     val brukarService: BrukarService,
     val maalingTestingService: MaalingTestingService,
     val maalingCrawlingService: MaalingCrawlingService,
+    val maalingAggregeringService: MaalingAggregeringService
 ) {
 
   data class NyMaalingDTO(
@@ -150,9 +153,10 @@ class MaalingResource(
   ): ResponseEntity<Any> {
 
     return when (aggregeringstype) {
-      "testresultat" -> maalingService.hentEllerGenererAggregeringPrTestregel(maalingId)
-      "suksesskriterium" -> maalingService.hentEllerGenererAggregeringPrSuksesskriterium(maalingId)
-      "side" -> maalingService.hentEllerGenererAggregeringPrSide(maalingId)
+      "testregel" -> maalingAggregeringService.hentEllerGenererAggregeringPrTestregel(maalingId)
+      "suksesskriterium" ->
+          maalingAggregeringService.hentEllerGenererAggregeringPrSuksesskriterium(maalingId)
+      "side" -> maalingAggregeringService.hentEllerGenererAggregeringPrSide(maalingId)
       else -> throw IllegalArgumentException("Ugyldig aggregeringstype: $aggregeringstype")
     }
   }
@@ -202,13 +206,13 @@ class MaalingResource(
 
   @GetMapping("kontroll/{kontrollId}")
   fun getMaalingIdFromKontrollId(@PathVariable kontrollId: Int): ResponseEntity<Int> {
-    return maalingDAO.getMaalingIdFromKontrollId(kontrollId)?.let { ResponseEntity.ok(it) }
+    return maalingReadDAO.getMaalingIdFromKontrollId(kontrollId)?.let { ResponseEntity.ok(it) }
         ?: ResponseEntity.badRequest().build()
   }
 
   @GetMapping("aggregering/reimport")
   fun reimportAggregering(@RequestParam maalingId: Int, @RequestParam loeysingId: Int?) {
-    maalingService.reimportAggregeringar(maalingId, loeysingId)
+    maalingAggregeringService.reimportAggregeringar(maalingId, loeysingId)
   }
 
   @GetMapping("{id}/testreglar")

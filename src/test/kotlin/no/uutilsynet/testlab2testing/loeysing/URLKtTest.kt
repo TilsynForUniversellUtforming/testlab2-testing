@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.loeysing
 
-import no.uutilsynet.testlab2testing.loeysing.utval.sameURL
 import java.net.URI
+import no.uutilsynet.testlab2testing.loeysing.utval.sameURL
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested

@@ -1,6 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat.export
 
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingReadDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringDAO
 import no.uutilsynet.testlab2testing.testresultat.aggregering.AggregeringPerTestregelDB
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service
 class ResultatExportMapper(
     val aggregeringDAO: AggregeringDAO,
     val testgrunnlagDAO: TestgrunnlagDAO,
-    val maalingDAO: MaalingDAO
+    val maalingReadDAO: MaalingReadDAO
 ) {
 
   fun getAggregeringForTestgrunnlag(testgrunnlagId: Int): List<AggregeringPerTestregelExport> {
@@ -31,7 +31,7 @@ class ResultatExportMapper(
   }
 
   fun getTestrunIdforMaaling(maalingId: Int): String {
-    return maalingDAO.getTestrunUuidForMaaling(maalingId).getOrThrow()
+    return maalingReadDAO.getTestrunUuidForMaaling(maalingId).getOrThrow()
   }
 }
 
