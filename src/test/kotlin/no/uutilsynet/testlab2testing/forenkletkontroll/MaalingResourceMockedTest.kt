@@ -49,7 +49,7 @@ class MaalingResourceMockedTest {
 
   @MockitoBean private lateinit var maalingDAO: MaalingDAO
 
-  @MockitoBean private lateinit var maalingReadService: MaalingReadService
+  @MockitoBean private lateinit var maalingReadDAO: MaalingReadDAO
 
   @MockitoBean private lateinit var maalingService: MaalingService
 
@@ -78,7 +78,7 @@ class MaalingResourceMockedTest {
     maalingResource =
         MaalingResource(
             maalingDAO,
-            maalingReadService,
+            maalingReadDAO,
             sideutvalDAO,
             maalingService,
             brukarService,

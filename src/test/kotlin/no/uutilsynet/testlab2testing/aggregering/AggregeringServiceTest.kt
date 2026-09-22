@@ -8,7 +8,7 @@ import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingReadService
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingReadDAO
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
@@ -64,7 +64,7 @@ class AggregeringServiceTest(
 
   @MockitoSpyBean lateinit var maalingDao: MaalingDAO
   @MockitoSpyBean lateinit var maalingService: MaalingService
-    @MockitoSpyBean lateinit var maalingReadService: MaalingReadService
+    @MockitoSpyBean lateinit var maalingReadDAO: MaalingReadDAO
 
 
     @MockitoBean lateinit var testregelCache: TestregelCache
@@ -93,7 +93,7 @@ class AggregeringServiceTest(
         .thenReturn(listOf(aggregeringTestregel))
 
     Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1)).thenReturn(testLoeysing)
-    Mockito.`when`(maalingReadService.getLoeysingarForMaaling(1)).thenReturn(listOf(testLoeysing))
+    Mockito.`when`(maalingReadDAO.getLoeysingarForMaaling(1)).thenReturn(listOf(testLoeysing))
 
 
 

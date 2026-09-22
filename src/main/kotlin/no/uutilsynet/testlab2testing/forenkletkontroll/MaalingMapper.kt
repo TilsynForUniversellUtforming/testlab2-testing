@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class MaalingMapper(
-    private val maalingReadService: MaalingReadService,
+    private val maalingReadDAO: MaalingReadDAO,
     private val sideutvalDAO: SideutvalDAO,
     private val testkoeyringDAO: TestkoeyringDAO,
 ) {
@@ -17,13 +17,13 @@ class MaalingMapper(
 
   private inner class MaalingContext(private val maalingDbRow: MaalingDbRow) {
     private val loeysingar by lazy {
-      maalingReadService.getLoeysingarForMaaling(maalingDbRow.id, maalingDbRow.datoStart)
+      maalingReadDAO.getLoeysingarForMaaling(maalingDbRow.id, maalingDbRow.datoStart)
     }
     private val crawlResultat by lazy {
       sideutvalDAO.getCrawlResultatForMaaling(maalingDbRow.id, loeysingar)
     }
     private val testreglar by lazy {
-      maalingReadService.getTestregelBaseListForMaaling(maalingDbRow.id)
+      maalingReadDAO.getTestregelBaseListForMaaling(maalingDbRow.id)
     }
     private val testkoeyringar by lazy {
       testkoeyringDAO.getTestKoeyringarForMaaling(maalingDbRow.id, loeysingsMetadata(crawlResultat))

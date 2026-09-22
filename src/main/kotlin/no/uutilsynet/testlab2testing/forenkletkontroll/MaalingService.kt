@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service
 @Service
 class MaalingService(
     val maalingDAO: MaalingDAO,
-    val maalingReadService: MaalingReadService,
+    val maalingReadDAO: MaalingReadDAO,
     val loeysingsRegisterClient: LoeysingsRegisterClient,
     val utvalDAO: UtvalDAO,
     val autoTesterClient: AutoTesterClient,
@@ -78,7 +78,7 @@ class MaalingService(
   }
 
   fun updateMaaling(kontroll: Kontroll): Result<Unit> = runCatching {
-    val maalingId = maalingReadService.getMaalingIdFromKontrollId(kontroll.id)
+    val maalingId = maalingReadDAO.getMaalingIdFromKontrollId(kontroll.id)
     require(maalingId != null) { "Måling finns ikkje for kontroll" }
     val maalingEdit = kontroll.toMaalingEdit(maalingId)
     maalingDAO.updateMaaling(maalingEdit.toMaaling())
@@ -90,7 +90,7 @@ class MaalingService(
   }
 
   fun deleteKontrollMaaling(kontrollId: Int): Result<Unit> = runCatching {
-    val maalingId = maalingReadService.getMaalingIdFromKontrollId(kontrollId)
+    val maalingId = maalingReadDAO.getMaalingIdFromKontrollId(kontrollId)
     if (maalingId != null) {
       return deleteMaaling(maalingId)
     }
@@ -99,7 +99,7 @@ class MaalingService(
   fun deleteMaaling(id: Int): Result<Unit> = runCatching { maalingDAO.deleteMaaling(id) }
 
   fun isMaalingFerdigTestet(maalingId: Int): Boolean {
-    return maalingReadService.isMaalingFerdigTesta(maalingId)
+    return maalingReadDAO.isMaalingFerdigTesta(maalingId)
   }
 
   private fun validatedTestregeldList(dto: MaalingResource.NyMaalingDTO): List<Int> {
@@ -222,22 +222,22 @@ class MaalingService(
 
   fun getTestreglarForMaaling(maalingId: Int): Result<List<Testregel>> {
     return runCatching {
-      val testregelIds = maalingReadService.getTestregelIdsForMaaling(maalingId)
+      val testregelIds = maalingReadDAO.getTestregelIdsForMaaling(maalingId)
       testreglClient.getTestregelListFromIds(testregelIds).getOrThrow()
     }
   }
 
   fun getLoeysingarForMaaling(id: Int): List<Loeysing> =
-      maalingReadService.getLoeysingarForMaaling(id)
+      maalingReadDAO.getLoeysingarForMaaling(id)
 
   @Observed(name = "MaalingService.getMaalingForKontroll")
   fun getMaalingForKontroll(kontrollId: Int): Int {
-    return maalingReadService.getMaalingIdFromKontrollId(kontrollId)
+    return maalingReadDAO.getMaalingIdFromKontrollId(kontrollId)
         ?: throw NoSuchElementException("Fant ikkje måling for kontrollId $kontrollId")
   }
 
   fun getKontrollIdForMaaling(maalingId: Int): Int {
-    return maalingReadService.getKontrollIdFromMaalingId(maalingId)
+    return maalingReadDAO.getKontrollIdFromMaalingId(maalingId)
   }
 
   fun getTestkoeyringar(maalingId: Int): List<TestkoeyringDTO> {

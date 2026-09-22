@@ -14,13 +14,13 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 
 @Service
-class MaalingReadService(
+class MaalingReadDAO(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
     private val loeysingsRegisterClient: LoeysingsRegisterClient,
     private val testregelClient: TestregelClient,
 ) {
 
-  private val logger = LoggerFactory.getLogger(MaalingReadService::class.java)
+  private val logger = LoggerFactory.getLogger(MaalingReadDAO::class.java)
   private val crawlParametersRowmapper = DataClassRowMapper.newInstance(CrawlParameters::class.java)
 
   fun getLoeysingIdsForMaaling(maalingId: Int): List<Int> {
