@@ -73,7 +73,7 @@ class MaalingService(
       loeysingIdList != null ->
           maalingDAO.createMaaling(
               navn, localDateNorway, loeysingIdList, testregelIdList, crawlParameters)
-      else -> error("utvalId eller loeysingIdList må vere gitt")
+      else -> throw IllegalArgumentException("utvalId eller loeysingIdList må vere gitt")
     }
   }
 
