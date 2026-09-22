@@ -25,12 +25,10 @@ class AggregeringFromDTOMapper(
 
     val id = aggregeringPerTestregelDB.maalingId ?: aggregeringPerTestregelDB.testgrunnlagId
 
-    val testregel = getTestregel(aggregeringPerTestregelDB.testregelId)
-
     return AggregertResultatTestregelAPI(
         id,
         getLoeysing(aggregeringPerTestregelDB.loeysingId, loeysingList),
-        testregel.testregelId,
+        resolveTestregelId(aggregeringPerTestregelDB.testregelId),
         getSuksesskriterium(aggregeringPerTestregelDB.suksesskriterium),
         aggregeringPerTestregelDB.talElementSamsvar,
         aggregeringPerTestregelDB.talElementBrot,
@@ -82,5 +80,10 @@ class AggregeringFromDTOMapper(
 
   fun getTestregel(testregelId: Int): TestregelAggregate {
     return testregelCache.getTestregelById(testregelId)
+  }
+
+  private fun resolveTestregelId(testregelId: Int): String {
+    return runCatching { getTestregel(testregelId).testregelId }
+        .getOrElse { testregelId.toString() }
   }
 }

@@ -8,6 +8,7 @@ import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingReadService
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
@@ -63,8 +64,10 @@ class AggregeringServiceTest(
 
   @MockitoSpyBean lateinit var maalingDao: MaalingDAO
   @MockitoSpyBean lateinit var maalingService: MaalingService
+    @MockitoSpyBean lateinit var maalingReadService: MaalingReadService
 
-  @MockitoBean lateinit var testregelCache: TestregelCache
+
+    @MockitoBean lateinit var testregelCache: TestregelCache
 
   companion object {
     @Container
@@ -90,8 +93,11 @@ class AggregeringServiceTest(
         .thenReturn(listOf(aggregeringTestregel))
 
     Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1)).thenReturn(testLoeysing)
+    Mockito.`when`(maalingReadService.getLoeysingarForMaaling(1)).thenReturn(listOf(testLoeysing))
 
-    Mockito.`when`(kravregisterClient.getKravIdFromSuksesskritterium("1.1.1")).thenReturn(1)
+
+
+      Mockito.`when`(kravregisterClient.getKravIdFromSuksesskritterium("1.1.1")).thenReturn(1)
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
     Mockito.`when`(kravregisterClient.listKrav()).thenReturn(listOf(testUtils.kravWcag2xObject()))
     Mockito.doReturn(listOf(testLoeysing)).`when`(maalingService).getLoeysingarForMaaling(maalingId)

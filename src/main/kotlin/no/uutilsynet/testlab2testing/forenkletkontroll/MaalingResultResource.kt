@@ -54,7 +54,9 @@ class MaalingResultResource(
       @PathVariable maalingId: Int,
       @PathVariable loeysingId: Int
   ): List<AggregertResultatTestregelAPI> {
-    return aggregeringService.getAggregertResultatTestregel(maalingId).filter { it.loeysing.id == loeysingId }
+    return aggregeringService.getAggregertResultatTestregel(maalingId).filter {
+      it.loeysing.id == loeysingId
+    }
   }
 
   private fun calculateOverallCompliancePercentage(results: List<LoeysingResultat>): Int? {

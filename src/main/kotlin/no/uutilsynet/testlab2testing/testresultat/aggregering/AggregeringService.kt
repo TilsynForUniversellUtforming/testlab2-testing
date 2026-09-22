@@ -112,7 +112,7 @@ class AggregeringService(
         testgrunnlagId = testgrunnlagId,
         fetchForMaaling = aggregeringDAO::getAggregertResultatTestregelForMaaling,
         fetchForTestgrunnlag = aggregeringDAO::getAggregertResultatTestregelForTestgrunnlag,
-        map = aggregeringFromDTOMapper::dtoToAggregertResultatTestregel)
+        mapResults = aggregeringFromDTOMapper::dtoToAggregertResultatTestregel)
   }
 
   fun getAggregertResultatSide(
@@ -125,7 +125,7 @@ class AggregeringService(
         testgrunnlagId = testgrunnlagId,
         fetchForMaaling = aggregeringDAO::getAggregertResultatSideForMaaling,
         fetchForTestgrunnlag = aggregeringDAO::getAggregertResultatSideForTestgrunnlag,
-        map = aggregeringFromDTOMapper::dtoToAggregertResultatSide)
+        mapResults = aggregeringFromDTOMapper::dtoToAggregertResultatSide)
   }
 
   fun getAggregertResultatSuksesskriterium(
@@ -139,7 +139,7 @@ class AggregeringService(
         testgrunnlagId = testgrunnlagId,
         fetchForMaaling = aggregeringDAO::getAggregertResultatSuksesskriteriumForMaaling,
         fetchForTestgrunnlag = aggregeringDAO::getAggregertResultatSuksesskriteriumForTestgrunnlag,
-        map = aggregeringFromDTOMapper::dtoTOAggregertResultatSuksesskriterium)
+        mapResults = aggregeringFromDTOMapper::dtoTOAggregertResultatSuksesskriterium)
   }
 
   fun harMaalingLagraAggregering(maalingId: Int, aggregeringstype: String): Boolean {
@@ -217,7 +217,7 @@ class AggregeringService(
       testgrunnlagId: Int?,
       fetchForMaaling: (Int) -> List<T>,
       fetchForTestgrunnlag: (Int) -> List<T>,
-      map: (T, List<Loeysing>) -> R
+      mapResults: (T, List<Loeysing>) -> R
   ): List<R> {
     val id = maalingId ?: testgrunnlagId ?: return emptyList()
     val loeysingList =
@@ -227,7 +227,7 @@ class AggregeringService(
           testgrunnlagService.getLoeysingForTestgrunnlag(id)
         }
     val resultater = if (maalingId != null) fetchForMaaling(id) else fetchForTestgrunnlag(id)
-    return resultater.map { map(it, loeysingList) }
+    return resultater.map { mapResults(it, loeysingList) }
   }
 }
 
