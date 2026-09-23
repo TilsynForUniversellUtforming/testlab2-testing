@@ -30,6 +30,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.client.ExpectedCount
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers
@@ -45,7 +46,7 @@ import tools.jackson.module.kotlin.jacksonObjectMapper
 class MaalingResourceMockedTest {
 
   @Autowired private lateinit var server: MockRestServiceServer
-  @Autowired private lateinit var autoTesterClient: AutoTesterClient
+  @MockitoSpyBean private lateinit var autoTesterClient: AutoTesterClient
 
   @Autowired private lateinit var autotesterService: AutotestingService
 

@@ -29,6 +29,7 @@ import org.json.JSONObject
 import org.junit.jupiter.api.*
 import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpStatus
@@ -43,9 +44,9 @@ import org.springframework.web.context.WebApplicationContext
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
 class MaalingIntegrationTests(
-    val maalingDAO: MaalingDAO,
-    val utvalDAO: UtvalDAO,
-    val testUtils: TestUtils
+    @Autowired val  maalingDAO: MaalingDAO,
+    @Autowired val utvalDAO: UtvalDAO,
+    @Autowired val testUtils: TestUtils
 ) {
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
   @MockitoBean lateinit var testregelClient: TestregelClient

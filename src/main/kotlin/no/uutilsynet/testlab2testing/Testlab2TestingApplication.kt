@@ -16,7 +16,6 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter
     exclude = [SecurityAutoConfiguration::class, HibernateJpaAutoConfiguration::class])
 @ConfigurationPropertiesScan
 @EnableScheduling
-@EnableCaching
 class Testlab2TestingApplication {
 
   @Bean

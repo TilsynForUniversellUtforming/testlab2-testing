@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.resttestclient.TestRestTemplate
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.ParameterizedTypeReference
@@ -33,7 +32,6 @@ import org.springframework.web.context.WebApplicationContext
 @ActiveProfiles("test")
 @AutoConfigureTestRestTemplate
 class RegelsettIntegrationTest(
-    @Autowired val restTemplate: TestRestTemplate,
     @Autowired val regelsettDAO: RegelsettDAO,
 ) {
 
@@ -97,7 +95,7 @@ class RegelsettIntegrationTest(
             .returnResult<String>()
             .responseBody
 
-    assertThat(response).isEqualTo("mangler navn")
+    assertThat(response).isEqualTo("\"mangler navn\"")
   }
 
   @Test
@@ -219,7 +217,7 @@ class RegelsettIntegrationTest(
                 testregelIdList = regelsett.testregelList.map { it.id }))
         .exchange()
         .expectStatus()
-        .isOk
+        .isNoContent
 
     val regelsettAfterUpdate = getRegelsettResponse(location)
 
@@ -252,7 +250,7 @@ class RegelsettIntegrationTest(
             .returnResult<String>()
             .responseBody
 
-    assertThat(response).isEqualTo("mangler navn")
+    assertThat(response).isEqualTo("\"mangler navn\"")
   }
 
   @Test
