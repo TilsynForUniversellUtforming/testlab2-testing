@@ -6,8 +6,6 @@ import java.net.URI
 import java.time.Clock
 import java.time.ZoneId
 import java.util.UUID
-import kotlin.collections.get
-import kotlin.text.get
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
@@ -21,19 +19,20 @@ import org.junit.jupiter.api.TestInstance
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.resttestclient.TestRestTemplate
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.web.servlet.client.RestTestClient
+import org.springframework.test.web.servlet.client.expectBody
+import org.springframework.web.context.WebApplicationContext
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
 @AutoConfigureTestRestTemplate
 class UtvalResourceTest(
-    @Autowired val restTemplate: TestRestTemplate,
     @Autowired val utvalDAO: UtvalDAO,
 ) {
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
@@ -43,8 +42,12 @@ class UtvalResourceTest(
 
   @LocalServerPort var port: Int = 0
 
-  @BeforeEach
-  fun setup() {
+    lateinit var client: RestTestClient
+
+
+    @BeforeEach
+  fun setup(context: WebApplicationContext) {
+      client = RestTestClient.bindToApplicationContext(context).build()
     doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(loeysingList.map { it.id })
     doReturn(loeysingList[0])
         .`when`(loeysingsRegisterClient)
@@ -92,9 +95,10 @@ class UtvalResourceTest(
             .extract()
             .header("Location")
 
-    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
+      val utval: Utval = getUtval(location)
 
-    assertThat(utval.namn).isEqualTo(uuid)
+
+      assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir"))
     assertThat(utval.oppretta).isNotNull()
   }
@@ -132,9 +136,9 @@ class UtvalResourceTest(
             .extract()
             .header("Location")
 
-    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
+      val utval: Utval = getUtval(location)
 
-    assertThat(utval.namn).isEqualTo(uuid)
+      assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir", uuid))
   }
 
@@ -156,16 +160,18 @@ class UtvalResourceTest(
             .statusCode(201)
             .extract()
             .header("Location")
-    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
 
-    assertThat(utval.namn).isEqualTo(uuid)
+      val utval: Utval = getUtval(location)
+
+
+      assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.url })
         .containsAll(
             listOf(
                 URI("https://www.uutilsynet.no/").toURL(), URI("https://www.digdir.no/").toURL()))
   }
 
-  @DisplayName("vi skal kunne hente ei liste med alle utval")
+    @DisplayName("vi skal kunne hente ei liste med alle utval")
   @Test
   fun hentAlleUtval() {
     given()
@@ -198,4 +204,15 @@ class UtvalResourceTest(
 
     given().port(port).get(location).then().statusCode(404)
   }
+
+    private fun getUtval(location: String): Utval {
+        val utval: Utval = client.get()
+            .uri(location)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody<Utval>()
+            .returnResult()
+            .responseBody!!
+        return utval
+    }
 }

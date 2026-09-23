@@ -1,4 +1,4 @@
-package no.uutilsynet.testlab2testing.common
+package no.uutilsynet.testlab2testing.config
 
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.MediaType

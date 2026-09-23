@@ -17,6 +17,9 @@ class BrukarService(val brukarDAO: BrukarDAO) {
       val username = principal.getClaimAsString("preferred_username")
       val fullName = principal.getClaimAsString("name")
 
+      requireNotNull(username) { "preferred_username claim is missing in JWT" }
+      requireNotNull(fullName) { "preferred_fullname claim is missing in JWT" }
+
       return Brukar(username, fullName)
     }
     return Brukar("anonym", "anonymous")

@@ -1,6 +1,7 @@
-package no.uutilsynet.testlab2testing.common
+package no.uutilsynet.testlab2testing.config
 
-import java.util.*
+import java.util.Locale
+import java.util.TimeZone
 import org.springframework.context.MessageSource
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

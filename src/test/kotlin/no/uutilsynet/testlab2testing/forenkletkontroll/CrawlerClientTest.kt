@@ -11,7 +11,6 @@ import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlerClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlerProperties
-import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.toTestregelBase
 import org.assertj.core.api.Assertions.assertThat

@@ -26,10 +26,14 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.web.servlet.client.RestTestClient
+import org.springframework.test.web.servlet.client.returnResult
+import org.springframework.web.context.WebApplicationContext
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///RegelsettTest-db"])
+    properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///RegelsettTest-db"]
+)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
 @AutoConfigureTestRestTemplate
@@ -38,243 +42,278 @@ class RegelsettIntegrationTest(
     @Autowired val regelsettDAO: RegelsettDAO,
 ) {
 
-  @MockitoBean lateinit var testregelClient: TestregelClient
+    @MockitoBean
+    lateinit var testregelClient: TestregelClient
 
-  val regelsettBaseUri = "/v1/regelsett"
+    val regelsettBaseUri = "/v1/regelsett"
 
-  @BeforeEach
-  fun setup() {
-    doReturn(Result.success(regelsettTestregelList))
-        .`when`(testregelClient)
-        .getTestregelListFromIds(regelsettTestregelIdList)
+    lateinit var client: RestTestClient
 
-    doReturn(Result.success(regelsettTestregelList)).`when`(testregelClient).getTestregelList()
-  }
 
-  @AfterAll
-  fun cleanup() {
-    regelsettDAO.jdbcTemplate.update(
-        "delete from regelsett where namn = :namn", mapOf("namn" to regelsettName))
-  }
+    @BeforeEach
+    fun setup(context: WebApplicationContext) {
+        client = RestTestClient.bindToApplicationContext(context).build()
 
-  @Test
-  @DisplayName("Skal kunne opprette eit regelsett")
-  fun createRegelsett() {
-    val locationPattern = """/v1/regelsett/\d+"""
-    val location = restTemplate.postForLocation(regelsettBaseUri, regelsettTestCreateRequestBody())
+        doReturn(Result.success(regelsettTestregelList))
+            .`when`(testregelClient)
+            .getTestregelListFromIds(regelsettTestregelIdList)
 
-    assertThat(location.toString()).matches(locationPattern)
-  }
+        doReturn(Result.success(regelsettTestregelList)).`when`(testregelClient).getTestregelList()
+    }
 
-  @Test
-  @DisplayName("Skal ikkje kunne opprette eit regelsett med tomt namn")
-  fun createRegelsettIllegalName() {
-    val response =
-        restTemplate.postForEntity(
-            regelsettBaseUri, regelsettTestCreateRequestBody(namn = ""), String::class.java)
+    @AfterAll
+    fun cleanup() {
+        regelsettDAO.jdbcTemplate.update(
+            "delete from regelsett where namn = :namn", mapOf("namn" to regelsettName)
+        )
+    }
 
-    assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    assertThat(response.body).isEqualTo("mangler navn")
-    assertThat(response.headers.location).isNull()
-  }
+    @Test
+    @DisplayName("Skal kunne opprette eit regelsett")
+    fun createRegelsett() {
+        val locationPattern = """/v1/regelsett/\d+"""
 
-  @Test
-  @DisplayName("Skal ikkje kunne opprette eit regelsett med andre typar testreglar enn regelsettet")
-  fun createRegelsettIllegalTestregelType() {
-    val response =
-        restTemplate.postForEntity(
-            regelsettBaseUri,
-            regelsettTestCreateRequestBody(modus = TestregelModus.manuell),
-            String::class.java)
+        val location = client.post()
+            .uri(regelsettBaseUri)
+            .body(regelsettTestCreateRequestBody())
+            .exchange()
+            .expectStatus().isCreated
+            .returnResult().responseHeaders.location
 
-    assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    assertThat(response.body).contains("Id-ane 1, 2 er ikkje gyldige")
-    assertThat(response.headers.location).isNull()
-  }
 
-  @Test
-  @DisplayName("Skal kunne hente ei liste med aktive regelsett")
-  fun getRegelsettList() {
-    val regelsettType = object : ParameterizedTypeReference<List<RegelsettBase>>() {}
-    val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
-    val responseIdList =
-        restTemplate
-            .exchange(regelsettBaseUri, HttpMethod.GET, HttpEntity.EMPTY, regelsettType)
-            .body
-            ?.map { it.id }
+        assertThat(location.toString()).matches(locationPattern)
+    }
 
-    assertThat(responseIdList).contains(regelsett.id)
-  }
+    @Test
+    @DisplayName("Skal ikkje kunne opprette eit regelsett med tomt namn")
+    fun createRegelsettIllegalName() {
 
-  @Test
-  @DisplayName("Skal kunne hente ei liste med regelsett med testreglar")
-  fun getRegelsettListWithTestreglar() {
-    val regelsettType = object : ParameterizedTypeReference<List<RegelsettResponse>>() {}
-    val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
-    val response =
-        restTemplate
-            .exchange(
-                "$regelsettBaseUri?includeTestreglar=true",
-                HttpMethod.GET,
-                HttpEntity.EMPTY,
-                regelsettType)
-            .body
 
-    assertThat(response?.get(0)?.testregelList).isNotEmpty
-    assertThat(response?.map { it.id }).contains(regelsett.id)
-  }
+        val response = client.post()
+            .uri(regelsettBaseUri)
+            .body(regelsettTestCreateRequestBody(namn = ""))
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectHeader().doesNotExist("Location")
+            .returnResult<String>()
+            .responseBody
 
-  @Test
-  @DisplayName("Skal kunne hente ei liste med både aktive og inaktive regelsett")
-  fun getRegelsettListActiveInactive() {
-    val regelsettType = object : ParameterizedTypeReference<List<RegelsettBase>>() {}
-    val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
 
-    restTemplate.exchange<Unit>(
-        "$regelsettBaseUri/${regelsett.id}", HttpMethod.DELETE, HttpEntity.EMPTY)
+        assertThat(response).isEqualTo("mangler navn")
 
-    val responseActiveIdList =
-        restTemplate
-            .exchange(regelsettBaseUri, HttpMethod.GET, HttpEntity.EMPTY, regelsettType)
-            .body
-            ?.map { it.id }
+    }
 
-    assertThat(responseActiveIdList).doesNotContain(regelsett.id)
+    @Test
+    @DisplayName("Skal ikkje kunne opprette eit regelsett med andre typar testreglar enn regelsettet")
+    fun createRegelsettIllegalTestregelType() {
 
-    val responseAllIdList =
-        restTemplate
-            .exchange(
-                "$regelsettBaseUri?includeInactive=true",
-                HttpMethod.GET,
-                HttpEntity.EMPTY,
-                regelsettType)
-            .body
-            ?.map { it.id }
+        val response = client.post()
+            .uri(regelsettBaseUri)
+            .body(regelsettTestCreateRequestBody(modus = TestregelModus.manuell))
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectHeader().doesNotExist("Location")
+            .returnResult<String>()
+            .responseBody
 
-    assertThat(responseAllIdList).contains(regelsett.id)
-  }
 
-  @Test
-  @DisplayName("Skal kunne oppdatere eit regelsett")
-  fun updateRegelsett() {
-    val name = "${regelsettName}_1"
-    val nameUpdate = regelsettName
+        assertThat(response).contains("Id-ane 1, 2 er ikkje gyldige")
+    }
 
-    val location = createDefaultRegelsett(namn = name)
-    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
-    assertThat(regelsett.namn).isEqualTo(name)
+    @Test
+    @DisplayName("Skal kunne hente ei liste med aktive regelsett")
+    fun getRegelsettList() {
+        val location = createDefaultRegelsett()
 
-    restTemplate.exchange(
-        regelsettBaseUri,
-        HttpMethod.PUT,
-        HttpEntity(
-            RegelsettEdit(
-                id = regelsett.id,
-                namn = nameUpdate,
-                modus = regelsett.modus,
-                standard = regelsett.standard,
-                testregelIdList = regelsett.testregelList.map { it.id })),
-        Unit::class.java)
+        val regelsett = getRegelsettResponse(location)
 
-    val regelsettAfterUpdate = restTemplate.getForObject(location, RegelsettResponse::class.java)
+        val responseIdList = client.get()
+            .uri(regelsettBaseUri)
+            .exchange()
+            .expectStatus().isOk
+            .returnResult<List<RegelsettBase>>()
+            .responseBody!!
+            .map { it.id }
 
-    assertThat(regelsettAfterUpdate.namn).isEqualTo(nameUpdate)
-  }
 
-  @Test
-  @DisplayName("Skal ikkje kunne oppdatere eit regelsett med ulovlig namn")
-  fun updateRegelsettIllegalName() {
-    val nameUpdate = ""
+        assertThat(responseIdList).contains(regelsett.id)
+    }
 
-    val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
-    assertThat(regelsett.namn).isEqualTo(regelsettName)
+    @Test
+    @DisplayName("Skal kunne hente ei liste med regelsett med testreglar")
+    fun getRegelsettListWithTestreglar() {
+        val location = createDefaultRegelsett()
 
-    val response =
-        restTemplate.exchange(
-            regelsettBaseUri,
-            HttpMethod.PUT,
-            HttpEntity(
+
+        val regelsett = getRegelsettResponse(location)
+
+        val response = client.get()
+            .uri("$regelsettBaseUri?includeTestreglar=true")
+            .exchange()
+            .expectStatus().isOk
+            .returnResult<List<RegelsettResponse>>()
+            .responseBody!!
+
+
+        assertThat(response.get(0).testregelList).isNotEmpty
+        assertThat(response.map { it.id }).contains(regelsett.id)
+    }
+
+
+    @Test
+    @DisplayName("Skal kunne hente ei liste med både aktive og inaktive regelsett")
+    fun getRegelsettListActiveInactive() {
+        val location = createDefaultRegelsett()
+        val regelsett = getRegelsettResponse(location)
+
+        client.delete().uri("$regelsettBaseUri/${regelsett.id}").exchange().expectStatus().isNoContent
+
+        val responseActiveIdList = client.get().uri(regelsettBaseUri).exchange().expectStatus().isOk
+            .returnResult<List<RegelsettBase>>().responseBody!!.map { it.id }
+
+
+        assertThat(responseActiveIdList).doesNotContain(regelsett.id)
+
+        val responseAllIdList =
+            client.get().uri("$regelsettBaseUri?includeInactive=true").exchange().expectStatus().isOk
+                .returnResult<List<RegelsettBase>>().responseBody!!.map { it.id }
+
+
+
+        assertThat(responseAllIdList).contains(regelsett.id)
+    }
+
+    @Test
+    @DisplayName("Skal kunne oppdatere eit regelsett")
+    fun updateRegelsett() {
+        val name = "${regelsettName}_1"
+        val nameUpdate = regelsettName
+
+        val location = createDefaultRegelsett(namn = name)
+        val regelsett = getRegelsettResponse(location)
+        assertThat(regelsett.namn).isEqualTo(name)
+
+        client.put().uri(regelsettBaseUri)
+            .body(
                 RegelsettEdit(
                     id = regelsett.id,
                     namn = nameUpdate,
                     modus = regelsett.modus,
                     standard = regelsett.standard,
-                    testregelIdList = regelsett.testregelList.map { it.id })),
-            String::class.java)
+                    testregelIdList = regelsett.testregelList.map { it.id })
+            )
+            .exchange()
+            .expectStatus().isOk
 
-    assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    assertThat(response.body).isEqualTo("mangler navn")
-  }
 
-  @Test
-  @DisplayName(
-      "Skal ikkje kunne oppdatere eit regelsett til ein annan type enn typen til testrelgane, eit regelsett og dets typar må vera same type")
-  fun updateRegelsettIllegalTestregelType() {
-    val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
-    assertThat(regelsett.modus).isEqualTo(TestregelModus.automatisk)
+        val regelsettAfterUpdate = getRegelsettResponse(location)
 
-    val response =
-        restTemplate.exchange(
-            regelsettBaseUri,
-            HttpMethod.PUT,
-            HttpEntity(
+        assertThat(regelsettAfterUpdate.namn).isEqualTo(nameUpdate)
+    }
+
+    @Test
+    @DisplayName("Skal ikkje kunne oppdatere eit regelsett med ulovlig namn")
+    fun updateRegelsettIllegalName() {
+        val nameUpdate = ""
+
+        val location = createDefaultRegelsett()
+        val regelsett = getRegelsettResponse(location)
+        assertThat(regelsett.namn).isEqualTo(regelsettName)
+
+        val response = client.put()
+            .uri(regelsettBaseUri)
+            .body(
+                RegelsettEdit(
+                    id = regelsett.id,
+                    namn = nameUpdate,
+                    modus = regelsett.modus,
+                    standard = regelsett.standard,
+                    testregelIdList = regelsett.testregelList.map { it.id })
+            )
+            .exchange()
+            .expectStatus().isBadRequest
+            .returnResult<String>()
+            .responseBody
+
+
+        assertThat(response).isEqualTo("mangler navn")
+    }
+
+    @Test
+    @DisplayName(
+        "Skal ikkje kunne oppdatere eit regelsett til ein annan type enn typen til testrelgane, eit regelsett og dets typar må vera same type"
+    )
+    fun updateRegelsettIllegalTestregelType() {
+        val location = createDefaultRegelsett()
+        val regelsett = getRegelsettResponse(location)
+        assertThat(regelsett.modus).isEqualTo(TestregelModus.automatisk)
+
+        val response = client.put()
+            .uri(regelsettBaseUri)
+            .body(
                 RegelsettEdit(
                     id = regelsett.id,
                     namn = regelsett.namn,
                     modus = TestregelModus.manuell,
                     standard = regelsett.standard,
-                    testregelIdList = regelsett.testregelList.map { it.id })),
-            String::class.java)
+                    testregelIdList = regelsett.testregelList.map { it.id })
+            )
+            .exchange()
+            .expectStatus().isBadRequest
+            .returnResult<String>()
+            .responseBody
 
-    assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    assertThat(response.body).contains("Id-ane 1, 2 er ikkje gyldige")
-  }
+        assertThat(response).contains("Id-ane 1, 2 er ikkje gyldige")
+    }
 
-  @Test
-  @DisplayName(
-      "Hvis ein slettar (setter inaktivt) eit regelsett, skal det ikkje kome opp i lista hvis ikkje annna er spesifisert")
-  fun deleteRegelsett() {
-    val regelsettType = object : ParameterizedTypeReference<List<RegelsettBase>>() {}
-    val location = createDefaultRegelsett()
-    val regelsett = restTemplate.getForObject(location, RegelsettResponse::class.java)
+    @Test
+    @DisplayName(
+        "Hvis ein slettar (setter inaktivt) eit regelsett, skal det ikkje kome opp i lista hvis ikkje annna er spesifisert"
+    )
+    fun deleteRegelsett() {
+        val regelsettType = object : ParameterizedTypeReference<List<RegelsettBase>>() {}
+        val location = createDefaultRegelsett()
+        val regelsett = getRegelsettResponse(location)
 
-    val responseActiveIdList =
-        restTemplate
-            .exchange(regelsettBaseUri, HttpMethod.GET, HttpEntity.EMPTY, regelsettType)
-            .body
-            ?.map { it.id }
+        val responseActiveIdList = client.get().uri(regelsettBaseUri).exchange().expectStatus().isOk
+            .returnResult<List<RegelsettBase>>().responseBody!!.map { it.id }
 
-    assertThat(responseActiveIdList).contains(regelsett.id)
 
-    restTemplate.exchange<Unit>(
-        "$regelsettBaseUri/${regelsett.id}", HttpMethod.DELETE, HttpEntity.EMPTY)
 
-    val responseAllIdList =
-        restTemplate
-            .exchange(regelsettBaseUri, HttpMethod.GET, HttpEntity.EMPTY, regelsettType)
-            .body
-            ?.map { it.id }
+        assertThat(responseActiveIdList).contains(regelsett.id)
 
-    assertThat(responseAllIdList).doesNotContain(regelsett.id)
-  }
+        client.delete().uri("$regelsettBaseUri/${regelsett.id}").exchange().expectStatus().isNoContent
 
-  private fun createDefaultRegelsett(
-      namn: String = regelsettName,
-      type: TestregelModus = regelsettModus,
-      standard: Boolean = RegelsettTestConstants.regelsettStandard,
-      testregelIdList: List<Int> = regelsettTestregelIdList,
-  ): URI =
-      restTemplate.postForLocation(
-          regelsettBaseUri,
-          regelsettTestCreateRequestBody(
-              namn,
-              type,
-              standard,
-              testregelIdList,
-          ))
+
+        val responseAllIdList = client.get().uri(regelsettBaseUri).exchange().expectStatus().isOk
+            .returnResult<List<RegelsettBase>>().responseBody!!.map { it.id }
+
+
+
+        assertThat(responseAllIdList).doesNotContain(regelsett.id)
+    }
+
+    private fun createDefaultRegelsett(
+        namn: String = regelsettName,
+        type: TestregelModus = regelsettModus,
+        standard: Boolean = RegelsettTestConstants.regelsettStandard,
+        testregelIdList: List<Int> = regelsettTestregelIdList,
+    ): URI =
+
+        client.post()
+            .uri(regelsettBaseUri)
+            .body(regelsettTestCreateRequestBody(namn, type, standard, testregelIdList))
+            .exchange()
+            .expectStatus().isCreated
+            .returnResult().responseHeaders.location!!
+
+    private fun getRegelsettResponse(location: URI): RegelsettResponse {
+        val regelsett = client.get()
+            .uri(location)
+            .exchange()
+            .expectStatus().isOk
+            .returnResult<RegelsettResponse>()
+            .responseBody!!
+        return regelsett
+    }
 }

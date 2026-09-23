@@ -1,0 +1,16 @@
+package no.uutilsynet.testlab2testing.config
+
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.web.client.RestClient
+
+@Configuration
+class RestClientConfig {
+  @Bean
+  fun restClient(builder: RestClient.Builder): RestClient {
+    return builder
+        .bufferContent({ uri, method -> true })
+        .requestInterceptor({ request, body, execution -> execution.execute(request, body) })
+        .build()
+  }
+}

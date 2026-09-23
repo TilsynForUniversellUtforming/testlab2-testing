@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import jakarta.validation.ClockProvider
 import java.time.Clock
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -11,10 +10,9 @@ import org.springframework.boot.runApplication
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
-import org.springframework.http.MediaType
 import org.springframework.http.client.BufferingClientHttpRequestFactory
 import org.springframework.http.client.SimpleClientHttpRequestFactory
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.filter.CommonsRequestLoggingFilter
@@ -27,15 +25,12 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter
 class Testlab2TestingApplication {
 
   @Bean
-  fun restTemplate(restTemplateBuilder: RestTemplateBuilder): RestTemplate {
-    val objectMapper = jacksonObjectMapper()
-    val mappingJackson2HttpMessageConverter = MappingJackson2HttpMessageConverter()
-    mappingJackson2HttpMessageConverter.objectMapper = objectMapper
-    mappingJackson2HttpMessageConverter.supportedMediaTypes =
-        listOf(MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM)
-
+  fun restTemplate(
+      restTemplateBuilder: RestTemplateBuilder,
+      jacksonJsonHttpMessageConverter: JacksonJsonHttpMessageConverter,
+  ): RestTemplate {
     return restTemplateBuilder
-        .messageConverters(mappingJackson2HttpMessageConverter)
+        .messageConverters(jacksonJsonHttpMessageConverter)
         .requestFactory(::reqestFactory)
         .build()
   }

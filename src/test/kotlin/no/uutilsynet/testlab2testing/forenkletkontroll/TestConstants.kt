@@ -11,10 +11,14 @@ import no.uutilsynet.testlab2testing.loeysing.Verksemd
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import no.uutilsynet.testlab2testing.testing.automatisk.TestKoeyring
-import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
 
 object TestConstants {
+
+  val name = "test_skal_slettes"
+  val testregelTestKravId = 1
+  val testregelSchemaAutomatisk = "QW-ACT-R70"
+  val testregelSchemaManuell = """{ "gaaTil": 1 }"""
 
   val uutilsynetVerksemd =
       Verksemd(
@@ -48,8 +52,8 @@ object TestConstants {
       Testregel(
           1,
           "QW-ACT-12",
-          TestConstants.name,
-          TestConstants.testregelTestKravId,
+          name,
+          testregelTestKravId,
           TestregelStatus.publisert,
           TestregelInnholdstype.nett,
           TestregelModus.automatisk,
