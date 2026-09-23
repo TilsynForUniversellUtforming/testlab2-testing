@@ -9,28 +9,32 @@ import no.uutilsynet.testlab2testing.testing.automatisk.AutoTesterClient
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
-import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.RestClient
+import org.springframework.web.client.body
 
 @ConfigurationProperties(prefix = "crawler")
 data class CrawlerProperties(val url: String, val code: String)
 
 @Component
-class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: RestTemplate) {
+class CrawlerClient(val crawlerProperties: CrawlerProperties, val restClient: RestClient) {
 
   private val logger = LoggerFactory.getLogger(CrawlerClient::class.java)
 
   fun start(loeysing: Loeysing, crawlParameters: CrawlParameters): CrawlResultat =
       runCatching {
             val statusUris =
-                restTemplate.postForObject(
-                    "${crawlerProperties.url}?code=${crawlerProperties.code}",
-                    mapOf(
-                        "startUrl" to loeysing.url,
-                        "maxLenker" to crawlParameters.maxLenker,
-                        "talLenker" to crawlParameters.talLenker,
-                        "idLoeysing" to loeysing.id,
-                        "domene" to loeysing.url),
-                    AutoTesterClient.StatusUris::class.java)!!
+                restClient
+                    .post()
+                    .uri("${crawlerProperties.url}?code=${crawlerProperties.code}")
+                    .body(
+                        mapOf(
+                            "startUrl" to loeysing.url,
+                            "maxLenker" to crawlParameters.maxLenker,
+                            "talLenker" to crawlParameters.talLenker,
+                            "idLoeysing" to loeysing.id,
+                            "domene" to loeysing.url))
+                    .retrieve()
+                    .body<AutoTesterClient.StatusUris>()!!
             CrawlResultat.IkkjeStarta(statusUris.statusQueryGetUri.toURL(), loeysing, Instant.now())
           }
           .getOrElse { exception ->
@@ -47,7 +51,7 @@ class CrawlerClient(val crawlerProperties: CrawlerProperties, val restTemplate: 
       fetchCrawlerStatus(crawlResultat.statusUrl.toURI(), crawlResultat.loeysing.id, maalingId)
 
   fun fetchCrawlerStatus(uri: URI, maalingId: Int, loeysingId: Int): Result<CrawlStatus> =
-      runCatching { restTemplate.getForObject(uri, CrawlStatus::class.java)!! }
+      runCatching { restClient.get().uri(uri).retrieve().body<CrawlStatus>()!! }
           .onFailure {
             logger.error(
                 "feilet da jeg forsøkte å hente status crawling $uri for måling id $maalingId løysing id $loeysingId",

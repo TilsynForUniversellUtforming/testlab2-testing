@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
-import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.body
 import org.springframework.web.util.UriComponentsBuilder
 
@@ -19,11 +18,9 @@ private const val FANT_INGEN_TESTREGLAR = "Fant ingen testreglar"
 
 @Service
 class TestregelClient(
-    restTemplate: RestTemplate,
+    private val restClient: RestClient,
     private val kravregisterProperties: KravRegisterProperties
 ) {
-
-  val restClient = RestClient.create(restTemplate)
   val testreglarUrl = "${kravregisterProperties.host}/v1/testreglar"
 
   private val logger = LoggerFactory.getLogger(TestregelClient::class.java)

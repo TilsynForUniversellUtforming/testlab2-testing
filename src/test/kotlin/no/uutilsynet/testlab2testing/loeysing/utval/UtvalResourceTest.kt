@@ -42,12 +42,11 @@ class UtvalResourceTest(
 
   @LocalServerPort var port: Int = 0
 
-    lateinit var client: RestTestClient
+  lateinit var client: RestTestClient
 
-
-    @BeforeEach
+  @BeforeEach
   fun setup(context: WebApplicationContext) {
-      client = RestTestClient.bindToApplicationContext(context).build()
+    client = RestTestClient.bindToApplicationContext(context).build()
     doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(loeysingList.map { it.id })
     doReturn(loeysingList[0])
         .`when`(loeysingsRegisterClient)
@@ -95,10 +94,9 @@ class UtvalResourceTest(
             .extract()
             .header("Location")
 
-      val utval: Utval = getUtval(location)
+    val utval: Utval = getUtval(location)
 
-
-      assertThat(utval.namn).isEqualTo(uuid)
+    assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir"))
     assertThat(utval.oppretta).isNotNull()
   }
@@ -136,9 +134,9 @@ class UtvalResourceTest(
             .extract()
             .header("Location")
 
-      val utval: Utval = getUtval(location)
+    val utval: Utval = getUtval(location)
 
-      assertThat(utval.namn).isEqualTo(uuid)
+    assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir", uuid))
   }
 
@@ -161,17 +159,16 @@ class UtvalResourceTest(
             .extract()
             .header("Location")
 
-      val utval: Utval = getUtval(location)
+    val utval: Utval = getUtval(location)
 
-
-      assertThat(utval.namn).isEqualTo(uuid)
+    assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.url })
         .containsAll(
             listOf(
                 URI("https://www.uutilsynet.no/").toURL(), URI("https://www.digdir.no/").toURL()))
   }
 
-    @DisplayName("vi skal kunne hente ei liste med alle utval")
+  @DisplayName("vi skal kunne hente ei liste med alle utval")
   @Test
   fun hentAlleUtval() {
     given()
@@ -205,14 +202,17 @@ class UtvalResourceTest(
     given().port(port).get(location).then().statusCode(404)
   }
 
-    private fun getUtval(location: String): Utval {
-        val utval: Utval = client.get()
+  private fun getUtval(location: String): Utval {
+    val utval: Utval =
+        client
+            .get()
             .uri(location)
             .exchange()
-            .expectStatus().isOk
+            .expectStatus()
+            .isOk
             .expectBody<Utval>()
             .returnResult()
             .responseBody!!
-        return utval
-    }
+    return utval
+  }
 }

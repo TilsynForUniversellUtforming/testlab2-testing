@@ -1,15 +1,15 @@
 package no.uutilsynet.testlab2testing.styringsdata
 
+import java.net.URI
+import java.time.Instant
+import java.time.LocalDate
+import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.BotOekningType
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.Reaksjonstype
 import no.uutilsynet.testlab2.constants.ResultatKlage
 import no.uutilsynet.testlab2.constants.Sakstype
 import no.uutilsynet.testlab2.constants.StyringsdataKontrollStatus
-import java.net.URI
-import java.time.Instant
-import java.time.LocalDate
-import kotlin.properties.Delegates
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Bot
@@ -46,19 +46,18 @@ class StyringsdataResourceTest(
   private lateinit var locationLoeysing: URI
   private lateinit var locationKontroll: URI
 
-    lateinit var client: RestTestClient
+  lateinit var client: RestTestClient
 
+  @BeforeEach
+  fun setupBeforeEach(context: WebApplicationContext) {
+    client = RestTestClient.bindToApplicationContext(context).build()
+  }
 
-    @BeforeEach
-    fun setupBeforeEach(context: WebApplicationContext) {
-        client = RestTestClient.bindToApplicationContext(context).build()
-    }
-
-    @BeforeAll
-    fun setUp() {
-        kontrollId = createTestKontroll()
-        styringsdataId = createStyringsdataLoeysing()
-    }
+  @BeforeAll
+  fun setUp() {
+    kontrollId = createTestKontroll()
+    styringsdataId = createStyringsdataLoeysing()
+  }
 
   @Test
   @Order(1)
@@ -83,50 +82,50 @@ class StyringsdataResourceTest(
             botKlage = null,
             sistLagra = Instant.now())
 
-      locationLoeysing = client.post()
-          .uri("/styringsdata")
-          .body(styringsdata)
-          .exchange()
-          .expectStatus().isCreated
-          .expectHeader().exists("Location")
-          .returnResult<Void>()
-          .responseHeaders.location!!
+    locationLoeysing =
+        client
+            .post()
+            .uri("/styringsdata")
+            .body(styringsdata)
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .expectHeader()
+            .exists("Location")
+            .returnResult<Void>()
+            .responseHeaders
+            .location!!
   }
 
   @Test
   @Order(2)
   @DisplayName("Skal kunne hente et eksisterende styringsdata objekt")
   fun getStyringsdata() {
-      val response = getStyringsdataLoeysing()
+    val response = getStyringsdataLoeysing()
 
-      assertThat(response.ansvarleg).isEqualTo("Test Ansvarleg")
+    assertThat(response.ansvarleg).isEqualTo("Test Ansvarleg")
   }
 
+  @Test
+  @Order(3)
+  @DisplayName("Skal kunne oppdatere et eksisterende styringsdata objekt med paalegg")
+  fun updateStyringsdataWithPaalegg() {
+    val original = getStyringsdataLoeysing()
 
-    @Test
-    @Order(3)
-    @DisplayName("Skal kunne oppdatere et eksisterende styringsdata objekt med paalegg")
-    fun updateStyringsdataWithPaalegg() {
-        val original = getStyringsdataLoeysing()
+    val updated =
+        original.copy(
+            paalegg =
+                Paalegg(
+                    id = null,
+                    vedtakDato = LocalDate.now().minusDays(10),
+                    frist = LocalDate.now().plusDays(20)))
 
-        val updated =
-            original.copy(
-                paalegg =
-                    Paalegg(
-                        id = null,
-                        vedtakDato = LocalDate.now().minusDays(10),
-                        frist = LocalDate.now().plusDays(20)
-                    )
-            )
+    client.put().uri(locationLoeysing).body(updated).exchange().expectStatus().isOk
 
-        client.put().uri(locationLoeysing).body(updated).exchange().expectStatus().isOk
+    val responseEntity = getStyringsdataLoeysing()
 
-
-        val responseEntity =
-            getStyringsdataLoeysing()
-
-        assertThat(responseEntity.paalegg).isNotNull
-    }
+    assertThat(responseEntity.paalegg).isNotNull
+  }
 
   @Test
   @Order(4)
@@ -145,11 +144,9 @@ class StyringsdataResourceTest(
                     klageDatoDepartement = LocalDate.now().plusDays(20),
                     resultatKlageDepartement = ResultatKlage.stadfesta))
 
-      client.put().uri(locationLoeysing).body(updated).exchange().expectStatus().isOk
+    client.put().uri(locationLoeysing).body(updated).exchange().expectStatus().isOk
 
-
-    val body =
-        getStyringsdataLoeysing()
+    val body = getStyringsdataLoeysing()
 
     assertThat(body.paaleggKlage).isNotNull
     assertThat(body.paaleggKlage!!.klageMottattDato).isEqualTo(LocalDate.now().minusDays(5))
@@ -177,7 +174,7 @@ class StyringsdataResourceTest(
 
     client.put().uri(locationLoeysing).body(updated).exchange().expectStatus().isOk
 
-    val body =getStyringsdataLoeysing()
+    val body = getStyringsdataLoeysing()
 
     assertThat(body.bot).isNotNull
     assertThat(body.bot!!.beloepDag).isEqualTo(100)
@@ -200,10 +197,9 @@ class StyringsdataResourceTest(
                     klageDatoDepartement = LocalDate.now().plusDays(20),
                     resultatKlageDepartement = ResultatKlage.stadfesta))
 
-      client.put().uri(locationLoeysing).body(updated).exchange().expectStatus().isOk
+    client.put().uri(locationLoeysing).body(updated).exchange().expectStatus().isOk
 
     val body = getStyringsdataLoeysing()
-
 
     assertThat(body.botKlage).isNotNull
     assertThat(body.botKlage!!.klageMottattDato).isEqualTo(LocalDate.now().minusDays(5))
@@ -229,24 +225,21 @@ class StyringsdataResourceTest(
             varselSendtDato = null,
             sistLagra = Instant.now())
 
-      val response = client.post().uri("/styringdata").body(styringsdata).exchange().expectStatus().isCreated
-      locationKontroll = response.returnResult<Void>().responseHeaders.location!!
-
+    val response =
+        client.post().uri("/styringdata").body(styringsdata).exchange().expectStatus().isCreated
+    locationKontroll = response.returnResult<Void>().responseHeaders.location!!
   }
 
   @Test
   @Order(8)
   @DisplayName("Skal kunne hente styringdata for kontroll")
   fun getStyringsdataForKontroll() {
-      val body = getStyringsdataKontroll()
+    val body = getStyringsdataKontroll()
 
-
-      assertThat(body.ansvarleg).isEqualTo("Test Ansvarleg Kontroll")
+    assertThat(body.ansvarleg).isEqualTo("Test Ansvarleg Kontroll")
   }
 
-
-
-    @Test
+  @Test
   @Order(9)
   @DisplayName("Skal kunne oppdatere styringdata for kontroll")
   fun updateStyringsdataForKontroll() {
@@ -265,8 +258,7 @@ class StyringsdataResourceTest(
             status = StyringsdataKontrollStatus.paagar,
         )
 
-        client.put().uri(locationKontroll).body(updated).exchange().expectStatus().isOk
-
+    client.put().uri(locationKontroll).body(updated).exchange().expectStatus().isOk
 
     val body = getStyringsdataKontroll()
     assertThat(body.status).isEqualTo(StyringsdataKontrollStatus.paagar)
@@ -284,9 +276,15 @@ class StyringsdataResourceTest(
   @DisplayName("Skal finne styringsdata for kontroll")
   fun findStyringsdataForKontroll() {
 
-      val result = client.get().uri("/styringsdata?kontrollId=$kontrollId").exchange().expectStatus().isOk
-          .returnResult<StyringsdataResult>().responseBody!!
-
+    val result =
+        client
+            .get()
+            .uri("/styringsdata?kontrollId=$kontrollId")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<StyringsdataResult>()
+            .responseBody!!
 
     val styringsdataKontrollId = locationKontroll.path.split("/").lastOrNull()
     val styringsdataLoeysingId = locationLoeysing.path.split("/").lastOrNull()
@@ -330,23 +328,29 @@ class StyringsdataResourceTest(
     return kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
   }
 
-    private fun getStyringsdataLoeysing(): Styringsdata.Loeysing {
-        val response = client.get()
+  private fun getStyringsdataLoeysing(): Styringsdata.Loeysing {
+    val response =
+        client
+            .get()
             .uri(locationLoeysing)
             .exchange()
-            .expectStatus().isOk
+            .expectStatus()
+            .isOk
             .returnResult<Styringsdata.Loeysing>()
             .responseBody!!
-        return response
-    }
+    return response
+  }
 
-    private fun getStyringsdataKontroll(): Styringsdata.Kontroll {
-        val body = client.get()
+  private fun getStyringsdataKontroll(): Styringsdata.Kontroll {
+    val body =
+        client
+            .get()
             .uri(locationKontroll)
             .exchange()
-            .expectStatus().isOk
+            .expectStatus()
+            .isOk
             .returnResult<Styringsdata.Kontroll>()
             .responseBody!!
-        return body
-    }
+    return body
+  }
 }

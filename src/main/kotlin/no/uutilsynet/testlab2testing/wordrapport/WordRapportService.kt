@@ -7,14 +7,12 @@ import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.http.*
-import org.springframework.http.converter.ByteArrayHttpMessageConverter
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
-import org.springframework.web.client.RestTemplate
 
 @Service
 class WordRapportService(
-    val restTemplate: RestTemplate,
+    val restClient: RestClient,
     val wordRapportBuilder: WordRapportBuilder,
     val testResultatDAO: TestResultatDAO,
     val testgrunnlagDAO: TestgrunnlagDAO,
@@ -48,9 +46,6 @@ class WordRapportService(
   }
 
   fun createWordRapport(wordRapport: WordRapport): ByteArray {
-    restTemplate.messageConverters.add(0, ByteArrayHttpMessageConverter())
-
-    val restClient = RestClient.builder(restTemplate).build()
 
     val requestBody =
         mapOf(

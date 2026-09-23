@@ -5,16 +5,11 @@ import java.time.Clock
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
-import org.springframework.boot.restclient.RestTemplateBuilder
 import org.springframework.boot.runApplication
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
-import org.springframework.http.client.BufferingClientHttpRequestFactory
-import org.springframework.http.client.SimpleClientHttpRequestFactory
-import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
 import org.springframework.scheduling.annotation.EnableScheduling
-import org.springframework.web.client.RestTemplate
 import org.springframework.web.filter.CommonsRequestLoggingFilter
 
 @SpringBootApplication(
@@ -25,28 +20,12 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter
 class Testlab2TestingApplication {
 
   @Bean
-  fun restTemplate(
-      restTemplateBuilder: RestTemplateBuilder,
-      jacksonJsonHttpMessageConverter: JacksonJsonHttpMessageConverter,
-  ): RestTemplate {
-    return restTemplateBuilder
-        .messageConverters(jacksonJsonHttpMessageConverter)
-        .requestFactory(::reqestFactory)
-        .build()
-  }
-
-  @Bean
   fun commonsRequestLoggingFilter(): CommonsRequestLoggingFilter {
     val filter = CommonsRequestLoggingFilter()
     filter.setIncludeQueryString(true)
     filter.setIncludePayload(true)
     filter.setMaxPayloadLength(1000)
     return filter
-  }
-
-  @Bean
-  fun reqestFactory(): BufferingClientHttpRequestFactory {
-    return BufferingClientHttpRequestFactory(SimpleClientHttpRequestFactory())
   }
 
   @Bean

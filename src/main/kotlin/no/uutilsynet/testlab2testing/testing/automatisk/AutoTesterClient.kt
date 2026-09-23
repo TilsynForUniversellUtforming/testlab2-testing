@@ -21,16 +21,13 @@ import org.springframework.http.HttpStatusCode
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
-import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.body
 
 @ConfigurationProperties(prefix = "autotester")
 data class AutoTesterProperties(val url: String, val code: String)
 
 @Component
-class AutoTesterClient(
-    val restTemplate: RestTemplate,
-    val autoTesterProperties: AutoTesterProperties
-) {
+class AutoTesterClient(val restClient: RestClient, val autoTesterProperties: AutoTesterProperties) {
 
   val logger: Logger = LoggerFactory.getLogger(AutoTesterClient::class.java)
 
@@ -52,8 +49,6 @@ class AutoTesterClient(
                   "actRegler" to actRegler.map { it.testregelSchema },
                   "loeysing" to loeysing)
 
-          val restClient = RestClient.builder(restTemplate).build()
-
           val statusUris =
               restClient
                   .post()
@@ -63,14 +58,14 @@ class AutoTesterClient(
                   .retrieve()
                   .onStatus(HttpStatusCode::isError) { _, response ->
                     logger.error(response.body.readAllBytes().contentToString())
-                    throw RuntimeException("mangler statusQueryGetUri i responsen")
+                    error("mangler statusQueryGetUri i responsen")
                   }
-                  .body(StatusUris::class.java)
+                  .body<StatusUris>()
 
           statusUris?.let {
             AutotestingStatus(loeysing, it.statusQueryGetUri.toURL(), nettsider.size)
           }
-              ?: throw RuntimeException("mangler statusQueryGetUri i responsen")
+              ?: error("mangler statusQueryGetUri i responsen")
         }
         .onFailure {
           logger.error(
@@ -87,7 +82,7 @@ class AutoTesterClient(
   }
 
   private fun fetchAutoTesterStatus(uri: URI) =
-      restTemplate.getForObject(uri, AutoTesterStatus::class.java)
+      restClient.get().uri(uri).retrieve().body<AutoTesterStatus>()
 
   @Observed(name = "AutoTesterClient.fetchResultat")
   suspend fun fetchResultat(
@@ -125,17 +120,14 @@ class AutoTesterClient(
       }
 
   private fun fetchResultatDetaljert(uri: URI): List<TestResultat> {
-    return restTemplate
-        .getForObject(uri, Array<Array<TestResultat>>::class.java)
-        ?.flatten()
-        ?.toList()
-        ?: throw RuntimeException(
+    return restClient.get().uri(uri).retrieve().body<List<TestResultat>>()
+        ?: throw NoSuchElementException(
             "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra $uri")
   }
 
   fun fetchResultatAggregering(uri: URI, resultatType: ResultatUrls): List<AutotesterTestresultat> {
-    return restTemplate.getForObject(uri, getAggregationClass(resultatType))?.toList()
-        ?: throw RuntimeException(
+    return restClient.get().uri(uri).retrieve().body(getAggregationClass(resultatType))?.toList()
+        ?: throw NoSuchElementException(
             "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra $uri")
   }
 

@@ -12,7 +12,6 @@ import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
-import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.body
 import org.springframework.web.util.UriComponentsBuilder
 
@@ -24,7 +23,7 @@ private const val LOEYSINGSREGISTER_NEW_NOT_FOUND =
 
 @Component
 class LoeysingsRegisterClient(
-    val restTemplate: RestTemplate,
+    val restClient: RestClient,
     val properties: LoeysingsRegisterProperties,
     val clockProvider: ClockProvider
 ) {
@@ -35,7 +34,7 @@ class LoeysingsRegisterClient(
   fun saveLoeysing(namn: String, url: URL, orgnummer: String): Loeysing =
       runCatching {
             val location =
-                RestClient.create()
+                restClient
                     .post()
                     .uri("${properties.host}/v1/loeysing")
                     .body(mapOf("namn" to namn, "url" to url.toString(), "orgnummer" to orgnummer))
@@ -45,7 +44,7 @@ class LoeysingsRegisterClient(
                     .location
                     ?: throw NoSuchElementException(LOEYSINGSREGISTER_NEW_NOT_FOUND)
 
-            RestClient.create().get().uri(location).retrieve().body<Loeysing.Simple>()?.toLoeysing()
+            restClient.get().uri(location).retrieve().body<Loeysing.Simple>()?.toLoeysing()
                 ?: throw NoSuchElementException(LOEYSINGSREGISTER_NEW_NOT_FOUND)
           }
           .getOrThrow()
@@ -77,7 +76,7 @@ class LoeysingsRegisterClient(
                 .build()
                 .toUri()
 
-        RestClient.create().get().uri(uri).retrieve().body<Array<Loeysing>>()?.toList()
+        restClient.get().uri(uri).retrieve().body<Array<Loeysing>>()?.toList()
             ?: throw NoSuchElementException(
                 "loeysingsregisteret returnerte null for id-ane ${idList.joinToString(",")}")
       }
@@ -93,20 +92,14 @@ class LoeysingsRegisterClient(
               .build()
               .toUriString()
 
-      RestClient.create().get().uri(uri).retrieve().body<Array<Loeysing.Simple>>()?.map {
-        it.toLoeysing()
-      }
+      restClient.get().uri(uri).retrieve().body<Array<Loeysing.Simple>>()?.map { it.toLoeysing() }
           ?: throw NoSuchElementException("loeysingsregisteret returnerte null for søk $search")
     }
   }
 
   @CacheEvict(key = "#id", cacheNames = ["loeysing", "loeysingar"])
   fun delete(id: Int): Result<Unit> = runCatching {
-    RestClient.create()
-        .delete()
-        .uri("${properties.host}/v1/loeysing/$id")
-        .retrieve()
-        .toBodilessEntity()
+    restClient.delete().uri("${properties.host}/v1/loeysing/$id").retrieve().toBodilessEntity()
   }
 
   @Cacheable("loeysing", unless = "#result==null")
@@ -137,7 +130,7 @@ class LoeysingsRegisterClient(
                 .build()
                 .toUri()
 
-        RestClient.create().get().uri(uri).retrieve().body<Array<Loeysing.Expanded>>()?.toList()
+        restClient.get().uri(uri).retrieve().body<Array<Loeysing.Expanded>>()?.toList()
             ?: throw NoSuchElementException(
                 "loeysingsregisteret returnerte null for id-ane ${unique.joinToString(",")}")
       }
@@ -160,7 +153,7 @@ class LoeysingsRegisterClient(
 
       logger.info("SearchVerkemd uri: $uri")
 
-      RestClient.create().get().uri(uri).retrieve().body<Array<Verksemd>>()?.toList()
+      restClient.get().uri(uri).retrieve().body<Array<Verksemd>>()?.toList()
           ?: throw NoSuchElementException(
               "loeysingsregisteret returnerte null for verksemdsøk $search")
     }
@@ -176,7 +169,7 @@ class LoeysingsRegisterClient(
               .build()
               .toUriString()
 
-      RestClient.create().get().uri(uri).retrieve().body<Array<Loeysing>>()?.toList()
+      restClient.get().uri(uri).retrieve().body<Array<Loeysing>>()?.toList()
           ?: throw NoSuchElementException(
               "loeysingsregisteret returnerte null for verksemdsøk $search")
     }

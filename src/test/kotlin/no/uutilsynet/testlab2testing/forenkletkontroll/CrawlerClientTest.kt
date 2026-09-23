@@ -5,6 +5,7 @@ import kotlinx.coroutines.*
 import no.uutilsynet.testlab2.constants.TestregelInnholdstype
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestregelStatus
+import no.uutilsynet.testlab2testing.config.RestClientConfig
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.restclient.test.autoconfigure.RestClientTest
+import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.web.client.ExpectedCount.manyTimes
 import org.springframework.test.web.client.MockRestServiceServer
@@ -27,6 +29,7 @@ import org.springframework.test.web.client.response.MockRestResponseCreators.wit
 import tools.jackson.module.kotlin.jacksonObjectMapper
 
 @RestClientTest(CrawlerClient::class, CrawlerProperties::class)
+@Import(RestClientConfig::class)
 @DisplayName("Crawler test")
 class CrawlerClientTest {
   @Autowired private lateinit var server: MockRestServiceServer
