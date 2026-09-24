@@ -26,6 +26,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.client.RestTestClient
 import org.springframework.test.web.servlet.client.expectBody
+import org.springframework.test.web.servlet.client.returnResult
 import org.springframework.web.context.WebApplicationContext
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -171,35 +172,37 @@ class UtvalResourceTest(
   @DisplayName("vi skal kunne hente ei liste med alle utval")
   @Test
   fun hentAlleUtval() {
-    given()
-        .port(port)
-        .contentType("application/json")
-        .get("/v1/utval")
-        .`as`(Array<UtvalListItem>::class.java)
-        .forEach {
-          assertThat(it.id).isNotNull()
-          assertThat(it.namn).isNotBlank()
-          assertThat(it.oppretta).isNotNull()
-        }
+      client.get()
+          .uri("/v1/utval")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody<List<UtvalListItem>>()
+          .returnResult()
+          .responseBody!!
+          .forEach {
+            assertThat(it.id).isNotNull()
+            assertThat(it.namn).isNotBlank()
+            assertThat(it.oppretta).isNotNull()
+          }
   }
 
   @DisplayName("vi skal kunne slette eit utval")
   @Test
   fun slettUtval() {
-    val location =
-        given()
-            .port(port)
-            .contentType("application/json")
-            .body(UtvalResource.NyttUtval(uuid, loeysingar))
-            .post("/v1/utval")
-            .then()
-            .statusCode(201)
-            .extract()
-            .header("Location")
+      val location = client.post().uri("/v1/utval")
+          .body(UtvalResource.NyttUtval(uuid, loeysingar))
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .expectHeader()
+          .exists("Location")
+          .returnResult<Void>()
+          .responseHeaders
+          .getLocation()!!
 
-    given().port(port).delete(location).then().statusCode(200)
-
-    given().port(port).get(location).then().statusCode(404)
+      client.delete().uri(location).exchange().expectStatus().isOk
+      client.get().uri(location).exchange().expectStatus().isNotFound
   }
 
   private fun getUtval(location: String): Utval {
