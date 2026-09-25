@@ -59,7 +59,7 @@ class KontrollService(
 
     fun getKontrollListByUser(userId: String?): Result<List<KontrollListItem>> {
 
-        return kontrollDAO.getKontrollListByUser(getUser(userId)).mapCatching { kontrollRows ->
+        return kontrollDAO.getKontrollListByUser(brukarService.getUser(userId)).mapCatching { kontrollRows ->
             kontrollRows.map { kontrollDB ->
                 val virksomheter = getVirksomheterForKontroll(kontrollDB)
 
@@ -74,14 +74,6 @@ class KontrollService(
                     kontrollDB.styringsdataId)
             }
         }
-    }
-
-    private fun getUser(userId:String?): Brukar {
-        if(userId!= null){
-            return brukarService.getBrukarByBrukarnamn(userId)
-                ?: throw NoSuchElementException("Bruker med brukarnamn $userId finnes ikkje")
-        }
-        return brukarService.getCurrentUser()
     }
 
     fun testingMetadata(@PathVariable kontrollId: Int): KontrollTestingMetadata {

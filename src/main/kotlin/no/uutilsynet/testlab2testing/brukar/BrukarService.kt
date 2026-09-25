@@ -49,4 +49,12 @@ class BrukarService(val brukarDAO: BrukarDAO) {
           it.brukarnamn != "test"
     }
   }
+
+  fun getUser(userId:String?): Brukar {
+    if(userId!= null){
+      return getBrukarByBrukarnamn(userId)
+        ?: throw NoSuchElementException("Bruker med brukarnamn $userId finnes ikkje")
+    }
+    return getCurrentUser()
+  }
 }
