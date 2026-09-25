@@ -5,6 +5,7 @@ import java.sql.ResultSet
 import java.time.Instant
 import kotlin.collections.filterIsInstance
 import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2testing.brukar.Brukar
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
@@ -440,14 +441,19 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         ?: throw IllegalArgumentException("Fant ikkje kontroll med id $kontrollId")
   }
 
-  fun hasKontrollerTestregel(testregelId: Int): Boolean {
-    val count =
-        jdbcTemplate.queryForObject(
-            """select count(*) from "testlab2_testing"."kontroll_testreglar" where testregel_id = :testregelId""",
-            mapOf("testregelId" to testregelId),
-            Int::class.java)
-            ?: 0
+    fun getKontrollListByUser(brukar: Brukar): Result<List<KontrollDB>> {
+        return runCatching {
+            val kontrollIds =
+                jdbcTemplate
+                    .queryForList(
+                        """select k.id from "testlab2_testing"."kontroll" k
+                        where k.saksbehandler = :userId""",
+                        mapOf("userId" to brukar.brukarnamn),
+                        Int::class.java)
+                    .filterIsInstance<Int>()
+                    .toList()
+            getKontroller(kontrollIds).getOrThrow()
+        }
+    }
 
-    return count > 0
-  }
 }

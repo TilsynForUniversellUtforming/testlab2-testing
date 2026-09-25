@@ -2,6 +2,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
 import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
+import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
@@ -17,8 +18,9 @@ class TestgrunnlagService(
     @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
     @Autowired val testResultatDAO: TestResultatDAO,
     @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
+    private val brukarService: BrukarService,
 ) {
-  val logger: Logger = LoggerFactory.getLogger(TestgrunnlagService::class.java)
+    val logger: Logger = LoggerFactory.getLogger(TestgrunnlagService::class.java)
 
   fun createOrUpdateFromKontroll(testgrunnlag: NyttTestgrunnlagFromKontroll): Result<Int> {
     val opprinneligTestgrunnlag =
@@ -177,4 +179,9 @@ class TestgrunnlagService(
   fun getTestgrunnlagForKontroll(kontrollId: Int): TestgrunnlagList {
     return testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId)
   }
+
+    fun getTestgrunnlagForBrukar(brukarId: String?): Result<List<TestgrunnlagKontroll>> {
+        return testgrunnlagDAO
+            .getTestgrunnlagForBrukar(brukarService.getUserId(brukarService.getUser(brukarId)))
+    }
 }
