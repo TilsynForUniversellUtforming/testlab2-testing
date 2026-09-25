@@ -3,11 +3,12 @@ package no.uutilsynet.testlab2testing.testregel.krav
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
-import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.RestClient
 
 @Service
-class KravregisterClient(val restTemplate: RestTemplate, val properties: KravRegisterProperties) {
+class KravregisterClient(val restClient: RestClient, val properties: KravRegisterProperties) {
 
   private val logger = LoggerFactory.getLogger(KravregisterClient::class.java)
 
@@ -17,9 +18,11 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
   fun getKrav(suksesskriterium: String): KravWcag2x {
     logger.info(
         "Henter krav fra ${properties.host}/v1/krav/wcag2krav/suksesskriterium/$suksesskriterium .")
-    return restTemplate.getForObject(
-        "${properties.host}/v1/krav/wcag2krav/suksesskriterium/$suksesskriterium",
-        KravWcag2x::class.java)
+    return restClient
+        .get()
+        .uri("${properties.host}/v1/krav/wcag2krav/suksesskriterium/$suksesskriterium")
+        .retrieve()
+        .body(KravWcag2x::class.java)
         ?: throw RuntimeException(
             "Kravregisteret returnerte null for suksesskriterium $suksesskriterium")
   }
@@ -44,13 +47,11 @@ class KravregisterClient(val restTemplate: RestTemplate, val properties: KravReg
 
   @Cacheable("kravList", unless = "#result==null")
   fun listKrav(): List<KravWcag2x> {
-    return restTemplate
-        .exchange(
-            "${properties.host}/v1/krav/wcag2krav",
-            org.springframework.http.HttpMethod.GET,
-            null,
-            object : org.springframework.core.ParameterizedTypeReference<List<KravWcag2x>>() {})
-        .body
+    return restClient
+        .get()
+        .uri("${properties.host}/v1/krav/wcag2krav")
+        .retrieve()
+        .body(object : ParameterizedTypeReference<List<KravWcag2x>>() {})
         ?: throw RuntimeException("Kravregisteret returnerte null for liste av krav")
   }
 

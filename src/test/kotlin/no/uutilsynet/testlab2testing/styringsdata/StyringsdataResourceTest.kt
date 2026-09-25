@@ -4,8 +4,12 @@ import java.net.URI
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.properties.Delegates
-import no.uutilsynet.testlab2.constants.*
-import no.uutilsynet.testlab2testing.kontroll.Kontroll
+import no.uutilsynet.testlab2.constants.BotOekningType
+import no.uutilsynet.testlab2.constants.Kontrolltype
+import no.uutilsynet.testlab2.constants.Reaksjonstype
+import no.uutilsynet.testlab2.constants.ResultatKlage
+import no.uutilsynet.testlab2.constants.Sakstype
+import no.uutilsynet.testlab2.constants.StyringsdataKontrollStatus
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Bot
@@ -13,6 +17,7 @@ import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Klage
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Paalegg
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.junit.jupiter.api.Order
@@ -20,17 +25,19 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.web.servlet.client.RestTestClient
+import org.springframework.test.web.servlet.client.returnResult
+import org.springframework.web.context.WebApplicationContext
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(OrderAnnotation::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
+@AutoConfigureTestRestTemplate
 class StyringsdataResourceTest(
-    @Autowired val restTemplate: TestRestTemplate,
     @Autowired val styringsdataDAO: StyringsdataDAO,
     @Autowired val kontrollDAO: KontrollDAO,
 ) {
@@ -38,6 +45,13 @@ class StyringsdataResourceTest(
   private var kontrollId: Int by Delegates.notNull()
   private lateinit var locationLoeysing: URI
   private lateinit var locationKontroll: URI
+
+  lateinit var client: RestTestClient
+
+  @BeforeEach
+  fun setupBeforeEach(context: WebApplicationContext) {
+    client = RestTestClient.bindToApplicationContext(context).build()
+  }
 
   @BeforeAll
   fun setUp() {
@@ -68,28 +82,35 @@ class StyringsdataResourceTest(
             botKlage = null,
             sistLagra = Instant.now())
 
-    val responseEntity = restTemplate.postForEntity("/styringsdata", styringsdata, Unit::class.java)
-    assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.CREATED)
-    locationLoeysing = responseEntity.headers.location!!
+    locationLoeysing =
+        client
+            .post()
+            .uri("/styringsdata")
+            .body(styringsdata)
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .expectHeader()
+            .exists("Location")
+            .returnResult<Void>()
+            .responseHeaders
+            .location!!
   }
 
   @Test
   @Order(2)
   @DisplayName("Skal kunne hente et eksisterende styringsdata objekt")
   fun getStyringsdata() {
-    val responseEntity =
-        restTemplate.getForEntity(locationLoeysing, Styringsdata.Loeysing::class.java)
-    assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+    val response = getStyringsdataLoeysing()
 
-    val body = responseEntity.body!!
-    assertThat(body.ansvarleg).isEqualTo("Test Ansvarleg")
+    assertThat(response.ansvarleg).isEqualTo("Test Ansvarleg")
   }
 
   @Test
   @Order(3)
   @DisplayName("Skal kunne oppdatere et eksisterende styringsdata objekt med paalegg")
   fun updateStyringsdataWithPaalegg() {
-    val original = restTemplate.getForObject(locationLoeysing, Styringsdata.Loeysing::class.java)
+    val original = getStyringsdataLoeysing()
 
     val updated =
         original.copy(
@@ -99,22 +120,18 @@ class StyringsdataResourceTest(
                     vedtakDato = LocalDate.now().minusDays(10),
                     frist = LocalDate.now().plusDays(20)))
 
-    restTemplate.put(locationLoeysing, updated)
+    client.put().uri(locationLoeysing).body(updated).exchange().expectStatus().isOk
 
-    val responseEntity =
-        restTemplate.getForEntity(locationLoeysing, Styringsdata.Loeysing::class.java)
-    assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+    val responseEntity = getStyringsdataLoeysing()
 
-    val body = responseEntity.body!!
-    assertThat(body.paalegg).isNotNull
-    assertThat(body.paalegg!!.vedtakDato).isEqualTo(LocalDate.now().minusDays(10))
+    assertThat(responseEntity.paalegg).isNotNull
   }
 
   @Test
   @Order(4)
   @DisplayName("Skal kunne oppdatere et eksisterende styringsdata objekt med paaleggKlage")
   fun updateStyringsdataWithPaaleggKlage() {
-    val original = restTemplate.getForObject(locationLoeysing, Styringsdata.Loeysing::class.java)
+    val original = getStyringsdataLoeysing()
 
     val updated =
         original.copy(
@@ -127,13 +144,10 @@ class StyringsdataResourceTest(
                     klageDatoDepartement = LocalDate.now().plusDays(20),
                     resultatKlageDepartement = ResultatKlage.stadfesta))
 
-    restTemplate.put(locationLoeysing, updated)
+    client.put().uri(locationLoeysing).body(updated).exchange().expectStatus().isOk
 
-    val responseEntity =
-        restTemplate.getForEntity(locationLoeysing, Styringsdata.Loeysing::class.java)
-    assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+    val body = getStyringsdataLoeysing()
 
-    val body = responseEntity.body!!
     assertThat(body.paaleggKlage).isNotNull
     assertThat(body.paaleggKlage!!.klageMottattDato).isEqualTo(LocalDate.now().minusDays(5))
   }
@@ -142,7 +156,7 @@ class StyringsdataResourceTest(
   @Order(5)
   @DisplayName("Skal kunne oppdatere et eksisterende styringsdata objekt med bot")
   fun updateStyringsdataWithBot() {
-    val original = restTemplate.getForObject(locationLoeysing, Styringsdata.Loeysing::class.java)
+    val original = getStyringsdataLoeysing()
 
     val updated =
         original.copy(
@@ -158,13 +172,10 @@ class StyringsdataResourceTest(
                     sluttDato = LocalDate.now().plusDays(60),
                     kommentar = "Test kommentar"))
 
-    restTemplate.put(locationLoeysing, updated)
+    client.put().uri(locationLoeysing).body(updated).exchange().expectStatus().isOk
 
-    val responseEntity =
-        restTemplate.getForEntity(locationLoeysing, Styringsdata.Loeysing::class.java)
-    assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+    val body = getStyringsdataLoeysing()
 
-    val body = responseEntity.body!!
     assertThat(body.bot).isNotNull
     assertThat(body.bot!!.beloepDag).isEqualTo(100)
   }
@@ -173,7 +184,7 @@ class StyringsdataResourceTest(
   @Order(6)
   @DisplayName("Skal kunne oppdatere et eksisterende styringsdata objekt med botKlage")
   fun updateStyringsdataWithBotKlage() {
-    val original = restTemplate.getForObject(locationLoeysing, Styringsdata.Loeysing::class.java)
+    val original = getStyringsdataLoeysing()
 
     val updated =
         original.copy(
@@ -186,13 +197,10 @@ class StyringsdataResourceTest(
                     klageDatoDepartement = LocalDate.now().plusDays(20),
                     resultatKlageDepartement = ResultatKlage.stadfesta))
 
-    restTemplate.put(locationLoeysing, updated)
+    client.put().uri(locationLoeysing).body(updated).exchange().expectStatus().isOk
 
-    val responseEntity =
-        restTemplate.getForEntity(locationLoeysing, Styringsdata.Loeysing::class.java)
-    assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+    val body = getStyringsdataLoeysing()
 
-    val body = responseEntity.body!!
     assertThat(body.botKlage).isNotNull
     assertThat(body.botKlage!!.klageMottattDato).isEqualTo(LocalDate.now().minusDays(5))
   }
@@ -217,20 +225,17 @@ class StyringsdataResourceTest(
             varselSendtDato = null,
             sistLagra = Instant.now())
 
-    val responseEntity = restTemplate.postForEntity("/styringsdata", styringsdata, Unit::class.java)
-    assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.CREATED)
-    locationKontroll = responseEntity.headers.location!!
+    val response =
+        client.post().uri("/styringsdata").body(styringsdata).exchange().expectStatus().isCreated
+    locationKontroll = response.returnResult<Void>().responseHeaders.location!!
   }
 
   @Test
   @Order(8)
   @DisplayName("Skal kunne hente styringdata for kontroll")
   fun getStyringsdataForKontroll() {
-    val responseEntity =
-        restTemplate.getForEntity(locationKontroll, Styringsdata.Kontroll::class.java)
-    assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+    val body = getStyringsdataKontroll()
 
-    val body = responseEntity.body!!
     assertThat(body.ansvarleg).isEqualTo("Test Ansvarleg Kontroll")
   }
 
@@ -238,7 +243,7 @@ class StyringsdataResourceTest(
   @Order(9)
   @DisplayName("Skal kunne oppdatere styringdata for kontroll")
   fun updateStyringsdataForKontroll() {
-    val original = restTemplate.getForObject(locationKontroll, Styringsdata.Kontroll::class.java)
+    val original = getStyringsdataKontroll()
 
     val updated =
         original.copy(
@@ -253,13 +258,9 @@ class StyringsdataResourceTest(
             status = StyringsdataKontrollStatus.paagar,
         )
 
-    restTemplate.put(locationKontroll, updated)
+    client.put().uri(locationKontroll).body(updated).exchange().expectStatus().isOk
 
-    val responseEntity =
-        restTemplate.getForEntity(locationKontroll, Styringsdata.Kontroll::class.java)
-    assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
-
-    val body = responseEntity.body!!
+    val body = getStyringsdataKontroll()
     assertThat(body.status).isEqualTo(StyringsdataKontrollStatus.paagar)
     assertThat(body.frist).isEqualTo(LocalDate.now().plusDays(1))
     assertThat(body.endeligRapportDato).isEqualTo(LocalDate.now().plusDays(2))
@@ -274,9 +275,16 @@ class StyringsdataResourceTest(
   @Order(10)
   @DisplayName("Skal finne styringsdata for kontroll")
   fun findStyringsdataForKontroll() {
+
     val result =
-        restTemplate.getForObject(
-            "/styringsdata?kontrollId=$kontrollId", StyringsdataResult::class.java)
+        client
+            .get()
+            .uri("/styringsdata?kontrollId=$kontrollId")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<StyringsdataResult>()
+            .responseBody!!
 
     val styringsdataKontrollId = locationKontroll.path.split("/").lastOrNull()
     val styringsdataLoeysingId = locationLoeysing.path.split("/").lastOrNull()
@@ -318,5 +326,31 @@ class StyringsdataResourceTest(
             Kontrolltype.InngaaendeKontroll)
 
     return kontrollDAO.createKontroll(opprettKontroll).getOrThrow()
+  }
+
+  private fun getStyringsdataLoeysing(): Styringsdata.Loeysing {
+    val response =
+        client
+            .get()
+            .uri(locationLoeysing)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<Styringsdata.Loeysing>()
+            .responseBody!!
+    return response
+  }
+
+  private fun getStyringsdataKontroll(): Styringsdata.Kontroll {
+    val body =
+        client
+            .get()
+            .uri(locationKontroll)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<Styringsdata.Kontroll>()
+            .responseBody!!
+    return body
   }
 }

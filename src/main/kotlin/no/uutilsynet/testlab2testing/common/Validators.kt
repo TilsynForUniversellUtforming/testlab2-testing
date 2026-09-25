@@ -1,10 +1,10 @@
 package no.uutilsynet.testlab2testing.common
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import java.net.URI
 import java.net.URL
 import no.uutilsynet.testlab2testing.forenkletkontroll.Status
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.json.JsonMapper
 
 fun validateOrgNummer(s: String?): Result<String> = runCatching {
   requireNotNull(s) { "Organisasjonsnummer kan ikkje vere null" }
@@ -69,6 +69,6 @@ fun validateURL(s: String): Result<URL> = runCatching {
 }
 
 fun validateJSONString(s: String): Result<JsonNode> = runCatching {
-  val mapper = ObjectMapper()
+  val mapper = JsonMapper()
   mapper.readTree(s)
 }

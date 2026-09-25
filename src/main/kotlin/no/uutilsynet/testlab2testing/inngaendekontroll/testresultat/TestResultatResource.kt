@@ -111,8 +111,8 @@ class TestResultatResource(
             require(resultat.status != ResultatManuellKontrollBase.Status.Ferdig) {
               "Resultat er ferdig og kan ikke slettes"
             }
-            testResultatDAO.delete(id).getOrThrow()
             bildeService.deleteBilder(id).getOrThrow()
+            testResultatDAO.delete(id).getOrThrow()
           }
           .fold(
               { ResponseEntity.ok().build() },

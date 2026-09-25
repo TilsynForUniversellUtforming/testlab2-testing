@@ -1,18 +1,17 @@
 package no.uutilsynet.testlab2testing.forenkletkontroll
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.net.URI
 import kotlinx.coroutines.*
 import no.uutilsynet.testlab2.constants.TestregelInnholdstype
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2.constants.TestregelStatus
+import no.uutilsynet.testlab2testing.config.RestClientConfig
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlParameters
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlResultat
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlerClient
 import no.uutilsynet.testlab2testing.sideutval.crawling.CrawlerProperties
-import no.uutilsynet.testlab2testing.testregel.TestConstants
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import no.uutilsynet.testlab2testing.testregel.model.Testregel.Companion.toTestregelBase
 import org.assertj.core.api.Assertions.assertThat
@@ -20,14 +19,17 @@ import org.hamcrest.CoreMatchers.startsWith
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest
+import org.springframework.boot.restclient.test.autoconfigure.RestClientTest
+import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.web.client.ExpectedCount.manyTimes
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
+import tools.jackson.module.kotlin.jacksonObjectMapper
 
 @RestClientTest(CrawlerClient::class, CrawlerProperties::class)
+@Import(RestClientConfig::class)
 @DisplayName("Crawler test")
 class CrawlerClientTest {
   @Autowired private lateinit var server: MockRestServiceServer

@@ -12,7 +12,7 @@ class MaalingCrawlingService(
     val crawlerClient: CrawlerClient,
     val maalingService: MaalingService,
     val maalingDAO: MaalingDAO,
-    val maalingReadDAO: MaalingReadDAO
+    val maalingReadService: MaalingReadService
 ) {
 
   fun restartCrawling(
@@ -20,7 +20,7 @@ class MaalingCrawlingService(
       maaling: Maaling.Kvalitetssikring
   ): ResponseEntity<Any> {
     val loeysingIdList = maalingService.getValidatedLoeysingList(statusDTO, maaling.id)
-    val crawlParameters = maalingReadDAO.getCrawlParameters(maaling.id)
+    val crawlParameters = maalingReadService.getCrawlParameters(maaling.id)
     val updated = restartCrawling(maaling, loeysingIdList, crawlParameters)
     maalingDAO.save(updated).getOrThrow()
     return ResponseEntity.ok().build()

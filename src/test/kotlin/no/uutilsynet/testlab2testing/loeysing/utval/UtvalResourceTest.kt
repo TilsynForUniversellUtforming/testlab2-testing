@@ -6,8 +6,6 @@ import java.net.URI
 import java.time.Clock
 import java.time.ZoneId
 import java.util.UUID
-import kotlin.collections.get
-import kotlin.text.get
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
@@ -21,17 +19,21 @@ import org.junit.jupiter.api.TestInstance
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.web.servlet.client.RestTestClient
+import org.springframework.test.web.servlet.client.expectBody
+import org.springframework.test.web.servlet.client.returnResult
+import org.springframework.web.context.WebApplicationContext
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
+@AutoConfigureTestRestTemplate
 class UtvalResourceTest(
-    @Autowired val restTemplate: TestRestTemplate,
     @Autowired val utvalDAO: UtvalDAO,
 ) {
   @MockitoBean lateinit var loeysingsRegisterClient: LoeysingsRegisterClient
@@ -41,8 +43,11 @@ class UtvalResourceTest(
 
   @LocalServerPort var port: Int = 0
 
+  lateinit var client: RestTestClient
+
   @BeforeEach
-  fun setup() {
+  fun setup(context: WebApplicationContext) {
+    client = RestTestClient.bindToApplicationContext(context).build()
     doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(loeysingList.map { it.id })
     doReturn(loeysingList[0])
         .`when`(loeysingsRegisterClient)
@@ -90,7 +95,7 @@ class UtvalResourceTest(
             .extract()
             .header("Location")
 
-    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
+    val utval: Utval = getUtval(location)
 
     assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir"))
@@ -130,7 +135,7 @@ class UtvalResourceTest(
             .extract()
             .header("Location")
 
-    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
+    val utval: Utval = getUtval(location)
 
     assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.namn }).containsAll(listOf("UUTilsynet", "Digdir", uuid))
@@ -154,7 +159,8 @@ class UtvalResourceTest(
             .statusCode(201)
             .extract()
             .header("Location")
-    val utval: Utval = restTemplate.getForObject(location, Utval::class.java)
+
+    val utval: Utval = getUtval(location)
 
     assertThat(utval.namn).isEqualTo(uuid)
     assertThat(utval.loeysingar.map { it.url })
@@ -166,11 +172,15 @@ class UtvalResourceTest(
   @DisplayName("vi skal kunne hente ei liste med alle utval")
   @Test
   fun hentAlleUtval() {
-    given()
-        .port(port)
-        .contentType("application/json")
-        .get("/v1/utval")
-        .`as`(Array<UtvalListItem>::class.java)
+    client
+        .get()
+        .uri("/v1/utval")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody<List<UtvalListItem>>()
+        .returnResult()
+        .responseBody!!
         .forEach {
           assertThat(it.id).isNotNull()
           assertThat(it.namn).isNotBlank()
@@ -182,18 +192,34 @@ class UtvalResourceTest(
   @Test
   fun slettUtval() {
     val location =
-        given()
-            .port(port)
-            .contentType("application/json")
+        client
+            .post()
+            .uri("/v1/utval")
             .body(UtvalResource.NyttUtval(uuid, loeysingar))
-            .post("/v1/utval")
-            .then()
-            .statusCode(201)
-            .extract()
-            .header("Location")
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .expectHeader()
+            .exists("Location")
+            .returnResult<Void>()
+            .responseHeaders
+            .getLocation()!!
 
-    given().port(port).delete(location).then().statusCode(200)
+    client.delete().uri(location).exchange().expectStatus().isOk
+    client.get().uri(location).exchange().expectStatus().isNotFound
+  }
 
-    given().port(port).get(location).then().statusCode(404)
+  private fun getUtval(location: String): Utval {
+    val utval: Utval =
+        client
+            .get()
+            .uri(location)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody<Utval>()
+            .returnResult()
+            .responseBody!!
+    return utval
   }
 }

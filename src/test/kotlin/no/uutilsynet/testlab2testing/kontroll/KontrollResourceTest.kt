@@ -2,7 +2,6 @@ package no.uutilsynet.testlab2testing.kontroll
 
 import io.restassured.RestAssured
 import io.restassured.RestAssured.get
-import io.restassured.RestAssured.given
 import io.restassured.parsing.Parser
 import io.restassured.path.json.JsonPath
 import io.restassured.path.json.JsonPath.from
@@ -22,7 +21,6 @@ import no.uutilsynet.testlab2testing.regelsett.Regelsett
 import no.uutilsynet.testlab2testing.regelsett.RegelsettCreate
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import org.assertj.core.api.Assertions.assertThat
-import org.hamcrest.CoreMatchers.equalTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -32,6 +30,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.web.servlet.client.RestTestClient
+import org.springframework.test.web.servlet.client.returnResult
+import org.springframework.web.context.WebApplicationContext
 
 @DisplayName("KontrollResource")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -44,8 +45,11 @@ class KontrollResourceTest(
   @MockitoBean lateinit var testregelClient: TestregelClient
   val testregel = testUtils.createTestregel()
 
+  lateinit var client: RestTestClient
+
   @BeforeEach
-  fun beforeEach() {
+  fun beforeEach(context: WebApplicationContext) {
+    client = RestTestClient.bindToApplicationContext(context).build()
     doReturn(Clock.fixed(maalingDateStart, ZoneId.systemDefault())).`when`(clockProvider).clock
     doReturn(listOf(loeysingList[0]))
         .`when`(loeysingsRegisterClient)
@@ -74,32 +78,20 @@ class KontrollResourceTest(
   @DisplayName("når vi oppretter en kontroll så skal vi få en URI som resultat i location")
   fun createKontroll() {
     val body = kontrollInitBody
-    given()
-        .port(port)
-        .body(body)
-        .contentType("application/json")
-        .post("/kontroller")
-        .then()
-        .statusCode(equalTo(201))
-        .header(
-            "Location", org.hamcrest.CoreMatchers.startsWith("http://localhost:$port/kontroller/"))
+
+    val location = createDefaultKontroll(body)
+
+    assertThat(location.toString()).startsWith("http://localhost/kontroller/")
   }
 
   @Test
   @DisplayName("gitt at vi har opprettet en kontroll, så skal vi kunne slette den")
   fun deleteKontroll() {
     val body = kontrollInitBody
-    val location =
-        given()
-            .port(port)
-            .body(body)
-            .contentType("application/json")
-            .post("/kontroller")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-    given().port(port).delete(location).then().statusCode(equalTo(204))
+
+    val location = createDefaultKontroll(body)
+
+    client.delete().uri(location).exchange().expectStatus().isNoContent
   }
 
   @Test
@@ -107,17 +99,16 @@ class KontrollResourceTest(
       "gitt at vi har opprettet en kontroll, så skal vi kunne hente den ut igjen med url-en i location")
   fun getKontrollById() {
     val body = kontrollInitBody
-    val location =
-        given()
-            .port(port)
-            .body(body)
-            .contentType("application/json")
-            .post("/kontroller")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-    val responseBody = get(location).asString()
+    val location = createDefaultKontroll(body)
+    val responseBody =
+        client
+            .get()
+            .uri(location)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody!!
     val json: JsonPath = from(responseBody)
 
     assertThat(json.get<String>("tittel")).isEqualTo("testkontroll")
@@ -133,46 +124,44 @@ class KontrollResourceTest(
   fun updateKontrollWithLoeysingar() {
     RestAssured.defaultParser = Parser.JSON
     val body = kontrollInitBody
-    val location =
-        given()
-            .port(port)
-            .body(body)
-            .contentType("application/json")
-            .post("/kontroller")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-    val opprettetKontroll = get(location).`as`(Kontroll::class.java)
+    val location = createDefaultKontroll(body)
+    val opprettetKontroll = getOpprettetKontroll(location)
 
     val loeysingar =
         listOf(Loeysing.External("UUTilsynet", "https://www.uutilsynet.no/", "991825827"))
     val nyttUtval = UtvalResource.NyttUtval("testutval", loeysingar)
+
     val utvalLocation =
-        given()
-            .port(port)
+        client
+            .post()
+            .uri("/v1/utval")
             .body(nyttUtval)
-            .contentType("application/json")
-            .post("/v1/utval")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-    val utval = get(utvalLocation).`as`(Utval::class.java)
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult()
+            .responseHeaders
+            .location!!
+
+    val utval =
+        client
+            .get()
+            .uri(utvalLocation)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<Utval>()
+            .responseBody!!
 
     val updateBody =
         mapOf(
             "kontroll" to opprettetKontroll,
             "utvalId" to utval.id,
             "kontrollSteg" to KontrollSteg.Utval)
-    given()
-        .port(port)
-        .body(updateBody)
-        .contentType("application/json")
-        .put(location)
-        .then()
-        .statusCode(equalTo(204))
-    val lagretKontroll = get(location).`as`(Kontroll::class.java)
+
+    client.put().uri(location).body(updateBody).exchange().expectStatus().isEqualTo(204)
+
+    val lagretKontroll = getOpprettetKontroll(location)
 
     assertThat(lagretKontroll.utval?.id).isEqualTo(utval.id)
     assertThat(lagretKontroll.utval?.namn).isEqualTo(utval.namn)
@@ -185,46 +174,45 @@ class KontrollResourceTest(
   fun oppdaterUtvalgFlereGanger() {
     RestAssured.defaultParser = Parser.JSON
     val body = kontrollInitBody
-    val location =
-        given()
-            .port(port)
-            .body(body)
-            .contentType("application/json")
-            .post("/kontroller")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-    val opprettetKontroll = get(location).`as`(Kontroll::class.java)
+
+    val location = createDefaultKontroll(body)
+
+    val opprettetKontroll = getOpprettetKontroll(location)
 
     val loeysingar =
         listOf(Loeysing.External("UUTilsynet", "https://www.uutilsynet.no/", "991825827"))
     val nyttUtval = UtvalResource.NyttUtval("testutval", loeysingar)
+
     val utvalLocation =
-        given()
-            .port(port)
+        client
+            .post()
+            .uri("/v1/utval")
             .body(nyttUtval)
-            .contentType("application/json")
-            .post("/v1/utval")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-    val utval = get(utvalLocation).`as`(Utval::class.java)
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult()
+            .responseHeaders
+            .location!!
+
+    val utval =
+        client
+            .get()
+            .uri(utvalLocation)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<Utval>()
+            .responseBody!!
 
     val updateBody =
         mapOf(
             "kontroll" to opprettetKontroll,
             "utvalId" to utval.id,
             "kontrollSteg" to KontrollSteg.Utval)
+
     (1..3).forEach { _ ->
-      given()
-          .port(port)
-          .body(updateBody)
-          .contentType("application/json")
-          .put(location)
-          .then()
-          .statusCode(equalTo(204))
+      client.put().uri(location).body(updateBody).exchange().expectStatus().isEqualTo(204)
     }
   }
 
@@ -237,17 +225,9 @@ class KontrollResourceTest(
     val body = kontrollInitBody
 
     /* Create default kontroll */
-    val location =
-        given()
-            .port(port)
-            .body(body)
-            .contentType("application/json")
-            .post("/kontroller")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-    val opprettetKontroll = get(location).`as`(Kontroll::class.java)
+    val location = createDefaultKontroll(body)
+
+    val opprettetKontroll = getOpprettetKontroll(location)
 
     /* Create regelsett */
     val nyttRegelsett =
@@ -258,16 +238,26 @@ class KontrollResourceTest(
             testregelIdList = listOf(testregel.id))
 
     val regelsettLocationForId =
-        given()
-            .port(port)
+        client
+            .post()
+            .uri("/v1/regelsett")
             .body(nyttRegelsett)
-            .contentType("application/json")
-            .post("/v1/regelsett")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-    val regelsett = get("http://localhost:$port$regelsettLocationForId").`as`(Regelsett::class.java)
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult()
+            .responseHeaders
+            .location!!
+
+    val regelsett =
+        client
+            .get()
+            .uri("http://localhost:$port$regelsettLocationForId")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<Regelsett>()
+            .responseBody!!
 
     val updateBody =
         mapOf(
@@ -277,18 +267,27 @@ class KontrollResourceTest(
                     "regelsettId" to regelsett.id,
                     "testregelIdList" to regelsett.testregelList.map { it.id }),
             "kontrollSteg" to KontrollSteg.Testreglar)
-    given()
-        .port(port)
-        .body(updateBody)
-        .contentType("application/json")
-        .put(location)
-        .then()
-        .statusCode(equalTo(204))
-    val lagretKontroll = get(location).`as`(Kontroll::class.java)
+
+    client.put().uri(location).body(updateBody).exchange().expectStatus().isEqualTo(204)
+
+    val lagretKontroll = getOpprettetKontroll(location)
 
     assertThat(lagretKontroll.testreglar?.regelsettId).isEqualTo(regelsett.id)
     assertThat(lagretKontroll.testreglar?.testregelIdList)
         .isEqualTo(regelsett.testregelList.map { it.id })
+  }
+
+  private fun getOpprettetKontroll(location: URI): Kontroll {
+    val opprettetKontroll =
+        client
+            .get()
+            .uri(location)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<Kontroll>()
+            .responseBody!!
+    return opprettetKontroll
   }
 
   @Test
@@ -300,17 +299,9 @@ class KontrollResourceTest(
     val body = kontrollInitBody
 
     /* Create default kontroll */
-    val location =
-        given()
-            .port(port)
-            .body(body)
-            .contentType("application/json")
-            .post("/kontroller")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-    val opprettetKontroll = get(location).`as`(Kontroll::class.java)
+    val location = createDefaultKontroll(body)
+
+    val opprettetKontroll = getOpprettetKontroll(location)
 
     val updateBody =
         mapOf(
@@ -318,33 +309,47 @@ class KontrollResourceTest(
             "testreglar" to mapOf("regelsettId" to null, "testregelIdList" to listOf(testregel.id)),
             "kontrollSteg" to KontrollSteg.Testreglar)
 
-    given()
-        .port(port)
-        .body(updateBody)
-        .contentType("application/json")
-        .put(location)
-        .then()
-        .statusCode(equalTo(204))
-    val lagretKontroll = get(location).`as`(Kontroll::class.java)
+    client.put().uri(location).body(updateBody).exchange().expectStatus().isEqualTo(204)
+
+    val lagretKontroll = getOpprettetKontroll(location)
 
     assertThat(lagretKontroll.testreglar?.testregelIdList).isEqualTo(listOf(testregel.id))
+  }
+
+  private fun createDefaultKontroll(body: Map<String, String>): URI {
+    val location =
+        client
+            .post()
+            .uri("/kontroller")
+            .body(body)
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult()
+            .responseHeaders
+            .location!!
+    return location
   }
 
   @Test
   @DisplayName("vi skal kunne hente ut en liste med alle kontroller")
   fun getKontrollerTest() {
     doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelList()
+    doReturn(Result.success(listOf(loeysingList[0])))
+        .`when`(loeysingsRegisterClient)
+        .getMany(listOf(loeysingList[0].id))
     RestAssured.defaultParser = Parser.JSON
+
     val kontroller =
-        given()
-            .port(port)
-            .accept("application/json")
-            .get("/kontroller")
-            .then()
-            .statusCode(equalTo(200))
-            .extract()
-            .body()
-            .`as`(Array<KontrollResource.KontrollListItem>::class.java)
+        client
+            .get()
+            .uri("/kontroller")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<Array<KontrollResource.KontrollListItem>>()
+            .responseBody!!
+
     assertThat(kontroller).isNotNull()
     kontroller.forEach { kontroll ->
       assertThat(kontroll).isInstanceOf(KontrollResource.KontrollListItem::class.java)
@@ -356,33 +361,33 @@ class KontrollResourceTest(
   fun updateKontrollWithSideutval() {
     RestAssured.defaultParser = Parser.JSON
     val body = kontrollInitBody
-    val location =
-        given()
-            .port(port)
-            .body(body)
-            .contentType("application/json")
-            .post("/kontroller")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-    val opprettetKontroll = get(location).`as`(Kontroll::class.java)
+    val location = createDefaultKontroll(body)
+    val opprettetKontroll = getOpprettetKontroll(location)
 
     /* Add loesying */
     val loeysingar =
         listOf(Loeysing.External("UUTilsynet", "https://www.uutilsynet.no/", "991825827"))
     val nyttUtval = UtvalResource.NyttUtval("testutval", loeysingar)
     val utvalLocation =
-        given()
-            .port(port)
+        client
+            .post()
+            .uri("/v1/utval")
             .body(nyttUtval)
-            .contentType("application/json")
-            .post("/v1/utval")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
-    val utval = get(utvalLocation).`as`(Utval::class.java)
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult()
+            .responseHeaders
+            .location!!
+    val utval =
+        client
+            .get()
+            .uri(utvalLocation)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<Utval>()
+            .responseBody!!
 
     val updateBodyUtval =
         mapOf(
@@ -390,13 +395,7 @@ class KontrollResourceTest(
             "utvalId" to utval.id,
             "kontrollSteg" to KontrollSteg.Utval)
 
-    given()
-        .port(port)
-        .body(updateBodyUtval)
-        .contentType("application/json")
-        .put(location)
-        .then()
-        .statusCode(equalTo(204))
+    client.put().uri(location).body(updateBodyUtval).exchange().expectStatus().isNoContent
 
     /* Add sideutval */
     val updateBody =
@@ -412,14 +411,8 @@ class KontrollResourceTest(
                         "egendefinertObjekt" to "")),
             "kontrollSteg" to KontrollSteg.Sideutval)
 
-    given()
-        .port(port)
-        .body(updateBody)
-        .contentType("application/json")
-        .put(location)
-        .then()
-        .statusCode(equalTo(204))
-    val lagretKontroll = get(location).`as`(Kontroll::class.java)
+    client.put().uri(location).body(updateBody).exchange().expectStatus().isNoContent
+    val lagretKontroll = getOpprettetKontroll(location)
 
     with(lagretKontroll.sideutvalList.first()) {
       assertThat(loeysingId).isEqualTo(utval.loeysingar.first().id)
@@ -434,22 +427,21 @@ class KontrollResourceTest(
   @DisplayName("en kontroll som ikke er startet skal gi riktig test-status")
   fun getKontrollStatus() {
     val body = kontrollInitBody
-    val location =
-        given()
-            .port(port)
-            .body(body)
-            .contentType("application/json")
-            .post("/kontroller")
-            .then()
-            .statusCode(equalTo(201))
-            .extract()
-            .header("Location")
+    val location = createDefaultKontroll(body)
 
-    val opprettetKontroll = get(location).`as`(Kontroll::class.java)
+    val opprettetKontroll = getOpprettetKontroll(location)
     val id = opprettetKontroll.id
 
-    val statusUrl = location.replace(Regex("/$id$"), "/test-status/$id")
-    val status = get(statusUrl).`as`(TestStatus::class.java)
+    val statusUrl = location.path.replace(Regex("/$id$"), "/test-status/$id")
+    val status =
+        client
+            .get()
+            .uri(statusUrl)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<TestStatus>()
+            .responseBody!!
     assertThat(status).isEqualTo(TestStatus.Pending)
   }
 }

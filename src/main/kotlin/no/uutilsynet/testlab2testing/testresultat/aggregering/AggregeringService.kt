@@ -1,7 +1,7 @@
 package no.uutilsynet.testlab2testing.testresultat.aggregering
 
 import java.net.URI
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingReadDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingReadService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
@@ -21,7 +21,7 @@ class AggregeringService(
     private val autoTesterClient: AutoTesterClient,
     private val aggregeringDAO: AggregeringDAO,
     private val testResultatDAO: TestResultatDAO,
-    private val maalingReadDAO: MaalingReadDAO,
+    private val maalingReadService: MaalingReadService,
     private val testgrunnlagService: TestgrunnlagService,
     private val aggregeringToDTOMapper: AggregeringToDTOMapper,
     private val aggregeringFromDTOMapper: AggregeringFromDTOMapper
@@ -222,7 +222,7 @@ class AggregeringService(
     val id = maalingId ?: testgrunnlagId ?: return emptyList()
     val loeysingList =
         if (maalingId != null) {
-          maalingReadDAO.getLoeysingarForMaaling(id)
+          maalingReadService.getLoeysingarForMaaling(id)
         } else {
           testgrunnlagService.getLoeysingForTestgrunnlag(id)
         }

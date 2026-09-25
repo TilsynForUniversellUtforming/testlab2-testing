@@ -14,19 +14,28 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 
 @Service
-class MaalingReadDAO(
+class MaalingReadService(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
     private val loeysingsRegisterClient: LoeysingsRegisterClient,
     private val testregelClient: TestregelClient,
 ) {
 
-  private val logger = LoggerFactory.getLogger(MaalingReadDAO::class.java)
+  private val logger = LoggerFactory.getLogger(MaalingReadService::class.java)
   private val crawlParametersRowmapper = DataClassRowMapper.newInstance(CrawlParameters::class.java)
 
   fun getLoeysingIdsForMaaling(maalingId: Int): List<Int> {
     val query =
         """select idloeysing from "testlab2_testing"."maalingloeysing" where idmaaling = :id"""
-    return jdbcTemplate.queryForList(query, mapOf("id" to maalingId), Int::class.java)
+    return runCatching {
+          jdbcTemplate.queryForList(query, mapOf("id" to maalingId), Int::class.java)
+        }
+        .getOrElse { exception ->
+          logger.error("Feil ved henting av løysings-IDer for maaling {}", maalingId, exception)
+          throw IllegalStateException(
+              "Kunne ikkje hente løysings-IDer for maaling $maalingId: ${exception.message}",
+              exception)
+        }
+        .filterIsInstance<Int>()
   }
 
   fun getLoeysingarForMaaling(maalingId: Int, datoStart: Instant): List<Loeysing> {
@@ -46,10 +55,18 @@ class MaalingReadDAO(
       getLoeysingarForMaaling(maalingId, Instant.now())
 
   fun getTestregelIdsForMaaling(maalingId: Int): List<Int> {
-    return jdbcTemplate.queryForList(
-        """select testregel_id from "testlab2_testing"."maaling_testregel" where maaling_id = :maalingId""",
-        mapOf("maalingId" to maalingId),
-        Int::class.java)
+    val query =
+        """select testregel_id from "testlab2_testing"."maaling_testregel" where maaling_id = :maalingId"""
+    return runCatching {
+          jdbcTemplate.queryForList(query, mapOf("maalingId" to maalingId), Int::class.java)
+        }
+        .getOrElse { exception ->
+          logger.error("Feil ved henting av testregel-IDer for maaling {}", maalingId, exception)
+          throw IllegalStateException(
+              "Kunne ikkje hente testregel-IDer for maaling $maalingId: ${exception.message}",
+              exception)
+        }
+        .filterIsInstance<Int>()
   }
 
   fun getTestregelBaseListForMaaling(maalingId: Int): List<TestregelBase> {
@@ -64,7 +81,6 @@ class MaalingReadDAO(
         """select m.max_lenker, m.tal_lenker from testlab2_testing."maalingv1" m where m.id = :id"""
     return runCatching {
           jdbcTemplate.queryForObject(query, mapOf("id" to maalingId), crawlParametersRowmapper)
-              ?: throw NoSuchElementException("Fant ikke crawlparametere for maaling $maalingId")
         }
         .getOrElse {
           logger.error(

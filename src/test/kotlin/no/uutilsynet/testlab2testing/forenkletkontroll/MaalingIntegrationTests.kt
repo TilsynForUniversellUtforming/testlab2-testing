@@ -31,20 +31,19 @@ import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.web.servlet.client.RestTestClient
+import org.springframework.test.web.servlet.client.expectBody
+import org.springframework.test.web.servlet.client.returnResult
+import org.springframework.web.context.WebApplicationContext
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
 class MaalingIntegrationTests(
-    @Autowired val restTemplate: TestRestTemplate,
     @Autowired val maalingDAO: MaalingDAO,
     @Autowired val utvalDAO: UtvalDAO,
     @Autowired val testUtils: TestUtils
@@ -53,13 +52,16 @@ class MaalingIntegrationTests(
   @MockitoBean lateinit var testregelClient: TestregelClient
   @MockitoBean lateinit var clockProvider: ClockProvider
 
+  lateinit var client: RestTestClient
+
   val utvalTestName = "testutval"
   val loeysingsIdList = loeysingList.map { it.id }
   val singleLoeysing = listOf(loeysingList[0])
   val testregel = testUtils.createTestregel()
 
   @BeforeEach
-  fun beforeEach() {
+  fun beforeEach(context: WebApplicationContext) {
+    client = RestTestClient.bindToApplicationContext(context).build()
     doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(loeysingList.map { it.id })
     doReturn(loeysingList)
         .`when`(loeysingsRegisterClient)
@@ -87,8 +89,9 @@ class MaalingIntegrationTests(
   @DisplayName("vi kan opprette en ny måling basert på ei liste med løsninger")
   fun postNewMaaling() {
     val locationPattern = """/v1/maalinger/\d+"""
-    val location = restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
-    assertThat(location.toString(), matchesPattern(locationPattern))
+    val location = createMaaling(maalingRequestBody)
+
+    assertThat(location?.toString(), matchesPattern(locationPattern))
   }
 
   @Test
@@ -102,10 +105,11 @@ class MaalingIntegrationTests(
             "utvalId" to utvalId,
             "testregelIdList" to testRegelList.map { it.id },
             "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10))
-    val location = restTemplate.postForLocation("/v1/maalinger", requestBody)
+    val location = createMaaling(requestBody)
+
     val locationPattern = """/v1/maalinger/\d+"""
-    assertThat(location, notNullValue())
-    assertThat(location.toString(), matchesPattern(locationPattern))
+    Assertions.assertThat(location).isNotNull
+    assertThat(location?.toString(), matchesPattern(locationPattern))
   }
 
   @Test
@@ -117,8 +121,14 @@ class MaalingIntegrationTests(
             "navn" to maalingTestName,
             "testregelIdList" to testRegelList.map { it.id },
             "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10))
-    val response = restTemplate.postForEntity("/v1/maalinger", requestBody, String::class.java)
-    assertThat(response.statusCode, equalTo(HttpStatus.BAD_REQUEST))
+    client
+        .post()
+        .uri("/v1/maalinger")
+        .body(requestBody)
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus()
+        .isBadRequest
   }
 
   @Test
@@ -136,8 +146,9 @@ class MaalingIntegrationTests(
             "utvalId" to utvalId,
             "testregelIdList" to testRegelList.map { it.id },
             "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10))
-    val location = restTemplate.postForLocation("/v1/maalinger", requestBody)
-    assertThat(location, notNullValue())
+    val location = createMaaling(requestBody)
+
+    Assertions.assertThat(location).isNotNull
 
     val maalingId = location!!.path.split("/").last().toInt()
     val utvalIdFromDatabase =
@@ -157,14 +168,23 @@ class MaalingIntegrationTests(
   @DisplayName("det er ikke mulig å opprette en ny måling hvis løsningen ikke finnes i databasen")
   fun postInvalidNewMaaling() {
     val requestBody = mapOf("navn" to maalingTestName, "loeysingIdList" to listOf(1, 2, 3, 11))
-    val response = restTemplate.postForEntity("/v1/maalinger", requestBody, String::class.java)
-    assertThat(response.statusCode, equalTo(HttpStatus.BAD_REQUEST))
+    val result =
+        client
+            .post()
+            .uri("/v1/maalinger")
+            .body(requestBody)
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .returnResult<String>()
+
+    assertThat(result.status, equalTo(HttpStatus.BAD_REQUEST))
   }
 
   @Nested
   @DisplayName("gitt at det finnes en måling i databasen")
-  inner class DatabaseHasAtLeastOneMaaling(@Autowired val restTemplate: TestRestTemplate) {
-    private var location: URI = getLocation()
+  inner class DatabaseHasAtLeastOneMaaling {
+    private val location: URI = getLocation()
 
     private fun getLocation(): URI {
       doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(loeysingList.map { it.id })
@@ -177,15 +197,27 @@ class MaalingIntegrationTests(
           .`when`(testregelClient)
           .getTestregelListFromIds(listOf(testregel.id))
       doReturn(Result.success(listOf(testregel))).`when`(testregelClient).getTestregelList()
-      return restTemplate.postForLocation("/v1/maalinger", maalingRequestBody)
+      val result =
+          client
+              .post()
+              .uri("/v1/maalinger")
+              .body(maalingRequestBody)
+              .exchange()
+              .expectStatus()
+              .isCreated
+              .returnResult<Void>()
+      return result.responseHeaders.location ?: error("No location header")
     }
 
     @Test
     @DisplayName("så skal vi klare å hente den ut")
     fun getMaaling() {
 
+      val response =
+          client.get().uri(location).exchange().expectStatus().isOk.expectBody<MaalingDTO>()
+
       val (id, navn, loeysingListFromApi) =
-          restTemplate.getForObject(location, MaalingDTO::class.java)
+          response.returnResult().responseBody ?: error("No response body")
 
       assertThat(id, instanceOf(Int::class.java))
       assertThat(navn, equalTo(maalingTestName))
@@ -196,12 +228,22 @@ class MaalingIntegrationTests(
     @Test
     @DisplayName("så skal vi kunne finne den i lista over alle målinger")
     fun listMaalinger() {
-      val (id) = restTemplate.getForObject(location, MaalingDTO::class.java)
-      val maalingList = object : ParameterizedTypeReference<List<MaalingListElement>>() {}
+      val response =
+          client.get().uri(location).exchange().expectStatus().isOk.expectBody<MaalingDTO>()
 
-      val maalinger: ResponseEntity<List<MaalingListElement>> =
-          restTemplate.exchange("/v1/maalinger", HttpMethod.GET, HttpEntity.EMPTY, maalingList)!!
-      val thisMaaling = maalinger.body?.find { it.id == id }!!
+      val (id) = response.returnResult().responseBody ?: error("No response body")
+
+      val maalingListResult =
+          client
+              .get()
+              .uri("/v1/maalinger")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult(object : ParameterizedTypeReference<List<MaalingListElement>>() {})
+
+      val maalinger = maalingListResult.responseBody ?: error("No response body")
+      val thisMaaling = maalinger.find { it.id == id }!!
 
       assertThat(thisMaaling.id, equalTo(id))
       assertThat(thisMaaling.navn, equalTo(maalingTestName))
@@ -210,7 +252,10 @@ class MaalingIntegrationTests(
     @Test
     @DisplayName("så skal den ha en status")
     fun shouldHaveStatus() {
-      val responseData = restTemplate.getForObject(location, String::class.java)
+      val response =
+          client.get().uri(location).exchange().expectStatus().isOk.returnResult<String>()
+
+      val responseData = response.responseBody ?: error("No response body")
       val maaling = JSONObject(responseData)
 
       assertThat(maaling["status"], equalTo("planlegging"))
@@ -219,8 +264,11 @@ class MaalingIntegrationTests(
     @Test
     @DisplayName("alle målinger skal ha en status")
     fun allShouldHaveStatus() {
-      val response = restTemplate.getForObject("/v1/maalinger", String::class.java)
-      val jsonArray = JSONArray(response)
+      val response =
+          client.get().uri("/v1/maalinger").exchange().expectStatus().isOk.returnResult<String>()
+
+      val responseData = response.responseBody ?: error("No response body")
+      val jsonArray = JSONArray(responseData)
       for (i in 0 until jsonArray.length()) {
         val item = jsonArray.getJSONObject(i)
         assertThat(
@@ -232,7 +280,10 @@ class MaalingIntegrationTests(
     @Test
     @DisplayName("så skal den ha en liste med overganger til gyldige tilstander")
     fun listTransitions() {
-      val maaling = restTemplate.getForObject(location, MaalingDTO::class.java)
+      val response =
+          client.get().uri(location).exchange().expectStatus().isOk.expectBody<MaalingDTO>()
+
+      val maaling = response.returnResult().responseBody ?: error("No response body")
       assertThat(maaling.aksjoner.size, greaterThan(0))
     }
 
@@ -240,8 +291,10 @@ class MaalingIntegrationTests(
     @DisplayName(
         "når målingen har status 'planlegging', så skal det være en aksjon for å gå til 'crawling'")
     fun actionFromPlanlegging() {
-      val maaling = restTemplate.getForObject(location, MaalingDTO::class.java)
-      restTemplate.getForObject(location, Map::class.java)
+      val response =
+          client.get().uri(location).exchange().expectStatus().isOk.expectBody<MaalingDTO>()
+
+      val maaling = response.returnResult().responseBody ?: error("No response body")
       assert(maaling.status == "planlegging")
       val expectedData = mapOf("status" to "crawling")
       val aksjon = maaling.aksjoner.first()
@@ -256,10 +309,16 @@ class MaalingIntegrationTests(
   @Test
   @DisplayName("en måling som ikke finnes i databasen skal returnere 404")
   fun getNonExisting() {
-    val entity =
-        restTemplate.exchange(
-            "/v1/maalinger/0", HttpMethod.GET, HttpEntity.EMPTY, MaalingDTO::class.java)
-    assertThat(entity.statusCode, equalTo(HttpStatus.NOT_FOUND))
+    val result =
+        client
+            .get()
+            .uri("/v1/maalinger/0")
+            .exchange()
+            .expectStatus()
+            .isNotFound
+            .returnResult<MaalingDTO>()
+
+    assertThat(result.status, equalTo(HttpStatus.NOT_FOUND))
   }
 
   @Test
@@ -279,26 +338,35 @@ class MaalingIntegrationTests(
     doReturn(updatedLoeysingList)
         .`when`(loeysingsRegisterClient)
         .getMany(updatedLoeysingList.map { it.id })
-    restTemplate.exchange(
-        "/v1/maalinger",
-        HttpMethod.PUT,
-        HttpEntity(
+    client
+        .put()
+        .uri("/v1/maalinger")
+        .body(
             EditMaalingDTO(
                 id = maaling.id,
                 navn = maalingTestName,
                 loeysingIdList = updatedLoeysingList.map { it.id },
                 testregelIdList = testRegelList.map { it.id },
-                crawlParameters = null)),
-        Unit::class.java)
+                crawlParameters = null))
+        .exchange()
+        .expectStatus()
+        .isOk
 
-    val updatedMaaling =
-        restTemplate.exchange(
-            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY, MaalingDTO::class.java)
+    val updatedMaalingResponse =
+        client
+            .get()
+            .uri("/v1/maalinger/${maaling.id}")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody<MaalingDTO>()
 
-    Assertions.assertThat(updatedMaaling?.body).isNotNull
-    Assertions.assertThat(updatedMaaling?.body).isInstanceOf(MaalingDTO::class.java)
+    val updatedMaaling = updatedMaalingResponse.returnResult().responseBody
 
-    val response: MaalingDTO = updatedMaaling.body!!
+    Assertions.assertThat(updatedMaaling).isNotNull
+    Assertions.assertThat(updatedMaaling).isInstanceOf(MaalingDTO::class.java)
+
+    val response: MaalingDTO = updatedMaaling!!
 
     Assertions.assertThat(response.navn).isEqualTo(maalingTestName)
     Assertions.assertThat(response.loeysingList).containsExactlyElementsOf(updatedLoeysingList)
@@ -317,20 +385,32 @@ class MaalingIntegrationTests(
                 CrawlParameters())
             .let { maalingDAO.getMaaling(it) as Maaling.Planlegging }
 
-    val existingMaaling =
-        restTemplate.exchange(
-            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY, MaalingDTO::class.java)
+    val existingMaalingResponse =
+        client
+            .get()
+            .uri("/v1/maalinger/${maaling.id}")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody<MaalingDTO>()
 
-    Assertions.assertThat(existingMaaling?.body).isNotNull
-    Assertions.assertThat(existingMaaling?.body).isInstanceOf(MaalingDTO::class.java)
+    val existingMaaling = existingMaalingResponse.returnResult().responseBody
 
-    restTemplate.delete("/v1/maalinger/${maaling.id}")
+    Assertions.assertThat(existingMaaling).isNotNull
+    Assertions.assertThat(existingMaaling).isInstanceOf(MaalingDTO::class.java)
 
-    val nonExistingMaaling =
-        restTemplate.exchange(
-            "/v1/maalinger/${maaling.id}", HttpMethod.GET, HttpEntity.EMPTY, MaalingDTO::class.java)
+    client.delete().uri("/v1/maalinger/${maaling.id}").exchange().expectStatus().isOk
 
-    Assertions.assertThat(nonExistingMaaling?.body).isNull()
+    val nonExistingMaalingResponse =
+        client
+            .get()
+            .uri("/v1/maalinger/${maaling.id}")
+            .exchange()
+            .expectStatus()
+            .isNotFound
+            .returnResult<MaalingDTO>()
+
+    Assertions.assertThat(nonExistingMaalingResponse.responseBody).isNull()
   }
 
   @Nested
@@ -342,7 +422,16 @@ class MaalingIntegrationTests(
     fun hasTidspunkt() {
       val (key, sistOppdatert) = createMaaling()
 
-      val maalingFraApi = restTemplate.getForObject("/v1/maalinger/$key", MaalingDTO::class.java)
+      val response =
+          client
+              .get()
+              .uri("/v1/maalinger/$key")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody<MaalingDTO>()
+
+      val maalingFraApi = response.returnResult().responseBody ?: error("No response body")
 
       // Vi mister noe nøyaktighet i noen tilfeller når vi har lagret tidspunktet i databasen og
       // hentet det tilbake. Derfor kutter vi nøyaktigheten til sekunder, som er godt nok her.
@@ -357,7 +446,16 @@ class MaalingIntegrationTests(
     fun hasTestingAction() {
       val (key, _) = createMaaling()
 
-      val actual = restTemplate.getForObject("/v1/maalinger/$key", MaalingDTO::class.java)
+      val response =
+          client
+              .get()
+              .uri("/v1/maalinger/$key")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody<MaalingDTO>()
+
+      val actual = response.returnResult().responseBody ?: error("No response body")
 
       Assertions.assertThat(actual.aksjoner).anyMatch { aksjon ->
         aksjon.data["status"] == "testing"
@@ -370,16 +468,16 @@ class MaalingIntegrationTests(
 
       val (key, _) = createMaaling()
 
-      val urlListType = object : ParameterizedTypeReference<List<URL>>() {}
+      val response =
+          client
+              .get()
+              .uri("/v1/maalinger/$key/crawlresultat/nettsider?loeysingId=${uutilsynetLoeysing.id}")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult(object : ParameterizedTypeReference<List<URL>>() {})
 
-      val urlList: ResponseEntity<List<URL>> =
-          restTemplate.exchange(
-              "/v1/maalinger/$key/crawlresultat/nettsider?loeysingId=${uutilsynetLoeysing.id}",
-              HttpMethod.GET,
-              HttpEntity.EMPTY,
-              urlListType)!!
-
-      Assertions.assertThat(urlList.body!!).containsExactly(uutilsynetLoeysing.url)
+      Assertions.assertThat(response.responseBody!!).containsExactly(uutilsynetLoeysing.url)
     }
 
     @DisplayName("så får man hentet nettsidene som er crawlet for gitt løysing")
@@ -387,16 +485,16 @@ class MaalingIntegrationTests(
     fun hasHasCorrectNumberOfNettsiderWithLoeysing() {
       val (key, _) = createMaaling()
 
-      val urlListType = object : ParameterizedTypeReference<List<URL>>() {}
+      val response =
+          client
+              .get()
+              .uri("/v1/maalinger/$key/crawlresultat/nettsider?loeysingId=${uutilsynetLoeysing.id}")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult(object : ParameterizedTypeReference<List<URL>>() {})
 
-      val urlList: ResponseEntity<List<URL>> =
-          restTemplate.exchange(
-              "/v1/maalinger/$key/crawlresultat/nettsider?loeysingId=${uutilsynetLoeysing.id}",
-              HttpMethod.GET,
-              HttpEntity.EMPTY,
-              urlListType)!!
-
-      Assertions.assertThat(urlList.body!!).containsExactly(uutilsynetLoeysing.url)
+      Assertions.assertThat(response.responseBody!!).containsExactly(uutilsynetLoeysing.url)
     }
 
     private fun createMaaling(): Pair<Int, Instant> {
@@ -427,6 +525,24 @@ class MaalingIntegrationTests(
       maalingDAO.save(kvalitetssikring).getOrThrow()
       return Pair(id, sistOppdatert)
     }
+  }
+
+  private fun createMaaling(requestBody: Map<String, Any>): URI? {
+    val location =
+        client
+            .post()
+            .uri("/v1/maalinger")
+            .body(requestBody)
+            .header("Content-Type", "application/json")
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .expectHeader()
+            .exists("Location")
+            .returnResult()
+            .responseHeaders
+            .location
+    return location
   }
 }
 

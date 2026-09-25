@@ -8,7 +8,7 @@ import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingDAO
-import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingReadDAO
+import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingReadService
 import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
@@ -36,8 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.postgresql.PostgreSQLContainer
 
 private val TEST_URL = URI("http://localhost:8080/").toURL()
 
@@ -64,15 +64,12 @@ class AggregeringServiceTest(
 
   @MockitoSpyBean lateinit var maalingDao: MaalingDAO
   @MockitoSpyBean lateinit var maalingService: MaalingService
-    @MockitoSpyBean lateinit var maalingReadDAO: MaalingReadDAO
+  @MockitoSpyBean lateinit var maalingReadService: MaalingReadService
 
-
-    @MockitoBean lateinit var testregelCache: TestregelCache
+  @MockitoBean lateinit var testregelCache: TestregelCache
 
   companion object {
-    @Container
-    @JvmStatic
-    var postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:15.3")
+    @Container @JvmStatic var postgres: PostgreSQLContainer = PostgreSQLContainer("postgres:15.3")
   }
 
   @Test
@@ -93,11 +90,9 @@ class AggregeringServiceTest(
         .thenReturn(listOf(aggregeringTestregel))
 
     Mockito.`when`(loeysingsRegisterClient.getLoeysingFromId(1)).thenReturn(testLoeysing)
-    Mockito.`when`(maalingReadDAO.getLoeysingarForMaaling(1)).thenReturn(listOf(testLoeysing))
+    Mockito.`when`(maalingReadService.getLoeysingarForMaaling(1)).thenReturn(listOf(testLoeysing))
 
-
-
-      Mockito.`when`(kravregisterClient.getKravIdFromSuksesskritterium("1.1.1")).thenReturn(1)
+    Mockito.`when`(kravregisterClient.getKravIdFromSuksesskritterium("1.1.1")).thenReturn(1)
     Mockito.`when`(kravregisterClient.getSuksesskriteriumFromKrav(1)).thenReturn("1.1.1")
     Mockito.`when`(kravregisterClient.listKrav()).thenReturn(listOf(testUtils.kravWcag2xObject()))
     Mockito.doReturn(listOf(testLoeysing)).`when`(maalingService).getLoeysingarForMaaling(maalingId)

@@ -2,7 +2,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import org.junit.Ignore
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -11,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest
 class BildeDataLakeClientTest(@Autowired val dataLakeClient: BildeDataLakeClient) {
 
   @Test
-  @Ignore
+  @Disabled
   fun testUpload() {
 
     val testdata = "testdatafile"

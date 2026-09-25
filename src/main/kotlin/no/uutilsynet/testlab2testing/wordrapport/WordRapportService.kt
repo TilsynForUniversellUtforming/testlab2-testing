@@ -5,23 +5,20 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultat
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.http.*
-import org.springframework.http.converter.ByteArrayHttpMessageConverter
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
-import org.springframework.web.client.RestTemplate
 
 @Service
 class WordRapportService(
-    @Autowired val restTemplate: RestTemplate,
-    @Autowired val wordRapportBuilder: WordRapportBuilder,
-    @Autowired val testResultatDAO: TestResultatDAO,
-    @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
-    @Autowired val kontrollDAO: KontrollDAO,
-    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
-    @Autowired val properties: RapportVerktoeyKlient
+    val restClient: RestClient,
+    val wordRapportBuilder: WordRapportBuilder,
+    val testResultatDAO: TestResultatDAO,
+    val testgrunnlagDAO: TestgrunnlagDAO,
+    val kontrollDAO: KontrollDAO,
+    val loeysingsRegisterClient: LoeysingsRegisterClient,
+    val properties: RapportVerktoeyKlient
 ) {
 
   private val logger = LoggerFactory.getLogger(WordRapportService::class.java)
@@ -49,9 +46,6 @@ class WordRapportService(
   }
 
   fun createWordRapport(wordRapport: WordRapport): ByteArray {
-    restTemplate.messageConverters.add(0, ByteArrayHttpMessageConverter())
-
-    val restClient = RestClient.builder(restTemplate).build()
 
     val requestBody =
         mapOf(

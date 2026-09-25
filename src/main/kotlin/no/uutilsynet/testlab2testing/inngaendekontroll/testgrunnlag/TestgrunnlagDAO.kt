@@ -59,6 +59,7 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 .trimMargin(),
             mapOf("testgrunnlagId" to testgrunnlagId),
             Int::class.java)
+        .filterIsInstance<Int>()
         .toList()
   }
 
@@ -116,14 +117,13 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   }
 
   private fun getTestgrunnlagIds(kontrollId: Int): List<Int> {
-    val testgrunnlagIds =
-        jdbcTemplate
-            .queryForList(
-                """select t.id from "testlab2_testing"."testgrunnlag" t where t.kontroll_id = :kontrollId""",
-                mapOf("kontrollId" to kontrollId),
-                Int::class.java)
-            .toList()
-    return testgrunnlagIds
+    return jdbcTemplate
+        .queryForList(
+            """select t.id from "testlab2_testing"."testgrunnlag" t where t.kontroll_id = :kontrollId""",
+            mapOf("kontrollId" to kontrollId),
+            Int::class.java)
+        .filterIsInstance<Int>()
+        .toList()
   }
 
   @Transactional
