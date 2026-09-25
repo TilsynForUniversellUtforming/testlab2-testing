@@ -89,22 +89,10 @@ class MaalingIntegrationTests(
   @DisplayName("vi kan opprette en ny måling basert på ei liste med løsninger")
   fun postNewMaaling() {
     val locationPattern = """/v1/maalinger/\d+"""
-    val location =
-        client
-            .post()
-            .uri("/v1/maalinger")
-            .body(maalingRequestBody)
-            .header("Content-Type", "application/json")
-            .exchange()
-            .expectStatus()
-            .isCreated
-            .expectHeader()
-            .exists("Location")
-            .returnResult()
-            .responseHeaders
-            .location
+      val location =
+          createMaaling(maalingRequestBody)
 
-    assertThat(location?.toString(), matchesPattern(locationPattern))
+      assertThat(location?.toString(), matchesPattern(locationPattern))
   }
 
   @Test
@@ -118,22 +106,10 @@ class MaalingIntegrationTests(
             "utvalId" to utvalId,
             "testregelIdList" to testRegelList.map { it.id },
             "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10))
-    val location =
-        client
-            .post()
-            .uri("/v1/maalinger")
-            .body(requestBody)
-            .header("Content-Type", "application/json")
-            .exchange()
-            .expectStatus()
-            .isCreated
-            .expectHeader()
-            .exists("Location")
-            .returnResult()
-            .responseHeaders
-            .location
+      val location =
+          createMaaling(requestBody)
 
-    val locationPattern = """/v1/maalinger/\d+"""
+      val locationPattern = """/v1/maalinger/\d+"""
     Assertions.assertThat(location).isNotNull
     assertThat(location?.toString(), matchesPattern(locationPattern))
   }
@@ -172,22 +148,10 @@ class MaalingIntegrationTests(
             "utvalId" to utvalId,
             "testregelIdList" to testRegelList.map { it.id },
             "crawlParameters" to mapOf("maxLenker" to 10, "talLenker" to 10))
-    val location =
-        client
-            .post()
-            .uri("/v1/maalinger")
-            .body(requestBody)
-            .header("Content-Type", "application/json")
-            .exchange()
-            .expectStatus()
-            .isCreated
-            .expectHeader()
-            .exists("Location")
-            .returnResult()
-            .responseHeaders
-            .location
+      val location =
+          createMaaling(requestBody)
 
-    Assertions.assertThat(location).isNotNull
+      Assertions.assertThat(location).isNotNull
 
     val maalingId = location!!.path.split("/").last().toInt()
     val utvalIdFromDatabase =
@@ -203,7 +167,9 @@ class MaalingIntegrationTests(
     assertThat(utvalIdFromDatabase, equalTo(utvalId.getOrThrow()))
   }
 
-  @Test
+
+
+    @Test
   @DisplayName("det er ikke mulig å opprette en ny måling hvis løsningen ikke finnes i databasen")
   fun postInvalidNewMaaling() {
     val requestBody = mapOf("navn" to maalingTestName, "loeysingIdList" to listOf(1, 2, 3, 11))
@@ -398,7 +364,7 @@ class MaalingIntegrationTests(
             .exchange()
             .expectStatus()
             .isOk
-            .expectBody(MaalingDTO::class.java)
+            .expectBody<MaalingDTO>()
 
     val updatedMaaling = updatedMaalingResponse.returnResult().responseBody
 
@@ -565,6 +531,24 @@ class MaalingIntegrationTests(
       return Pair(id, sistOppdatert)
     }
   }
+
+    private fun createMaaling(requestBody: Map<String, Any>): URI? {
+        val location =
+            client
+                .post()
+                .uri("/v1/maalinger")
+                .body(requestBody)
+                .header("Content-Type", "application/json")
+                .exchange()
+                .expectStatus()
+                .isCreated
+                .expectHeader()
+                .exists("Location")
+                .returnResult()
+                .responseHeaders
+                .location
+        return location
+    }
 }
 
 data class MaalingDTO(
