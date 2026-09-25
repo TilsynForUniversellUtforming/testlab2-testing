@@ -226,7 +226,7 @@ class StyringsdataResourceTest(
             sistLagra = Instant.now())
 
     val response =
-        client.post().uri("/styringdata").body(styringsdata).exchange().expectStatus().isCreated
+        client.post().uri("/styringsdata").body(styringsdata).exchange().expectStatus().isCreated
     locationKontroll = response.returnResult<Void>().responseHeaders.location!!
   }
 

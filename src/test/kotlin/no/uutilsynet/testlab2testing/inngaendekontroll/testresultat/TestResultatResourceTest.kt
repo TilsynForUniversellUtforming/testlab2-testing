@@ -221,7 +221,8 @@ class TestResultatResourceTest(
     val resultat = getTestresultat()
 
     val endretSvar = resultat.svar.map { if (it.steg == "3.4") it.copy(svar = "nei") else it }
-    client.put().uri(location).body(endretSvar).exchange().expectStatus().isOk
+
+    client.put().uri(location).body(resultat.copy(svar = endretSvar)).exchange().expectStatus().isOk
 
     val oppdatertResultat = getTestresultat()
 
