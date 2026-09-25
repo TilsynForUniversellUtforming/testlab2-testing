@@ -5,11 +5,13 @@ import no.uutilsynet.testlab2testing.testing.automatisk.TestResultat
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.KotlinModule
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import tools.jackson.module.kotlin.jsonMapper
 
-class TestResultatTest(val jsonMapper: JsonMapper) {
+class TestResultatTest() {
   @Test
   @DisplayName("\"3/23/2023, 11:15:54 AM\" should parse")
   fun parseLocalDateTime() {
@@ -43,7 +45,10 @@ class TestResultatTest(val jsonMapper: JsonMapper) {
         }
       """
             .trimIndent()
-    val objectMapper = jsonMapper
+    val objectMapper = JsonMapper.builder()
+        .addModule(KotlinModule.Builder().build())
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .build()
     val testResultat = objectMapper.readValue(json, TestResultat::class.java)
     assertThat(testResultat.elementOmtale).isNull()
   }
