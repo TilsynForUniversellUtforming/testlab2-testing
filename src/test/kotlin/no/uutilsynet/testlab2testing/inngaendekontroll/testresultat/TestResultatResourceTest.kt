@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
-import java.net.URI
-import java.time.Instant
-import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.Sakstype
 import no.uutilsynet.testlab2.constants.TestregelModus
@@ -22,18 +19,11 @@ import no.uutilsynet.testlab2testing.loeysing.utval.UtvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import no.uutilsynet.testlab2testing.testregel.model.TestregelAggregate
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
-import org.junit.jupiter.api.Order
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.TestMethodOrder
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -42,12 +32,14 @@ import org.springframework.test.web.servlet.client.RestTestClient
 import org.springframework.test.web.servlet.client.expectBody
 import org.springframework.test.web.servlet.client.returnResult
 import org.springframework.web.context.WebApplicationContext
+import java.net.URI
+import java.time.Instant
+import kotlin.properties.Delegates
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(OrderAnnotation::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
-@AutoConfigureTestRestTemplate
 class TestResultatResourceTest(
     @Autowired val kontrollDAO: KontrollDAO,
     @Autowired val utvalDAO: UtvalDAO,
