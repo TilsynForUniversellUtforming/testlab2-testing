@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.regelsett
 
-import java.net.URI
 import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettModus
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettName
@@ -9,14 +8,9 @@ import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettT
 import no.uutilsynet.testlab2testing.regelsett.RegelsettTestConstants.regelsettTestregelList
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.*
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.test.context.ActiveProfiles
@@ -24,13 +18,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.client.RestTestClient
 import org.springframework.test.web.servlet.client.returnResult
 import org.springframework.web.context.WebApplicationContext
+import java.net.URI
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///RegelsettTest-db"])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
-@AutoConfigureTestRestTemplate
 class RegelsettIntegrationTest(
     @Autowired val regelsettDAO: RegelsettDAO,
 ) {

@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
@@ -10,12 +9,12 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.restclient.RestTemplateBuilder
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
+import java.time.LocalDate
 
 @SpringBootTest(
     properties = ["spring.datasource.url= jdbc:tc:postgresql:16-alpine:///ResultatDAOTest-db"])
@@ -192,9 +191,4 @@ data class OpprettTestgrunnlag(
 @Bean
 fun namedParameterJdbcTemplate(jdbcTemplate: JdbcTemplate): NamedParameterJdbcTemplate {
   return NamedParameterJdbcTemplate(jdbcTemplate)
-}
-
-@Bean
-fun restTemlateBuilder(): RestTemplateBuilder {
-  return RestTemplateBuilder()
 }

@@ -1,42 +1,27 @@
 package no.uutilsynet.testlab2testing.styringsdata
 
-import java.net.URI
-import java.time.Instant
-import java.time.LocalDate
-import kotlin.properties.Delegates
-import no.uutilsynet.testlab2.constants.BotOekningType
-import no.uutilsynet.testlab2.constants.Kontrolltype
-import no.uutilsynet.testlab2.constants.Reaksjonstype
-import no.uutilsynet.testlab2.constants.ResultatKlage
-import no.uutilsynet.testlab2.constants.Sakstype
-import no.uutilsynet.testlab2.constants.StyringsdataKontrollStatus
+import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
-import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Bot
-import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Klage
-import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.Paalegg
+import no.uutilsynet.testlab2testing.styringsdata.Styringsdata.Loeysing.*
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
-import org.junit.jupiter.api.Order
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.client.RestTestClient
 import org.springframework.test.web.servlet.client.returnResult
 import org.springframework.web.context.WebApplicationContext
+import java.net.URI
+import java.time.Instant
+import java.time.LocalDate
+import kotlin.properties.Delegates
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(OrderAnnotation::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
-@AutoConfigureTestRestTemplate
 class StyringsdataResourceTest(
     @Autowired val styringsdataDAO: StyringsdataDAO,
     @Autowired val kontrollDAO: KontrollDAO,

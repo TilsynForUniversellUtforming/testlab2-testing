@@ -1,8 +1,5 @@
 package no.uutilsynet.testlab2testing.kontroll
 
-import java.net.URI
-import java.time.Instant
-import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Reaksjonstype
 import no.uutilsynet.testlab2testing.kontroll.delete.KontrollCleanupService
 import no.uutilsynet.testlab2testing.kontroll.delete.KontrollDeleteDAO
@@ -19,12 +16,12 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase
 import org.springframework.boot.jdbc.test.autoconfigure.JdbcTest
-import org.springframework.boot.restclient.RestTemplateBuilder
-import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
+import java.net.URI
+import java.time.Instant
+import java.time.LocalDate
 
 @JdbcTest(
     properties =
@@ -46,11 +43,6 @@ class KontrollCleanupServiceTest(
     @Autowired private val aggregeringDAO: AggregeringDAO,
     @Autowired private val jdbcTemplate: NamedParameterJdbcTemplate,
 ) {
-
-  @TestConfiguration
-  class Beans {
-    @Bean fun restTemplateBuilder(): RestTemplateBuilder = RestTemplateBuilder()
-  }
 
   @Test
   fun cleanupKontrollDataDeletesOnlyRowsForSelectedKontrollId() {
