@@ -38,6 +38,10 @@ class BrukarService(val brukarDAO: BrukarDAO) {
     return brukarDAO.getBrukarById(brukarId)
   }
 
+  fun getBrukarByBrukarnamn(brukarnamn: String): Brukar? {
+    return brukarDAO.getBrukar(brukarnamn)
+  }
+
   fun getBrukarList(): List<Brukar> {
     return brukarDAO.getBrukarList().filter {
       it.brukarnamn != "anonym" &&

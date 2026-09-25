@@ -1,6 +1,8 @@
 package no.uutilsynet.testlab2testing.kontroll
 
 import no.uutilsynet.testlab2.constants.Sakstype
+import no.uutilsynet.testlab2testing.brukar.Brukar
+import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource.KontrollListItem
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
@@ -17,6 +19,7 @@ class KontrollService(
     private val kontrollDAO: KontrollDAO,
     private val loeysingsRegisterClient: LoeysingsRegisterClient,
     private val testregelClient: TestregelClient,
+    private val brukarService: BrukarService
 ) {
 
   private val logger: Logger = LoggerFactory.getLogger(KontrollService::class.java)
@@ -54,7 +57,34 @@ class KontrollService(
         kontrollDB.sideutval)
   }
 
-  fun testingMetadata(@PathVariable kontrollId: Int): KontrollTestingMetadata {
+    fun getKontrollListByUser(userId: String?): Result<List<KontrollListItem>> {
+
+        return kontrollDAO.getKontrollListByUser(getUser(userId)).mapCatching { kontrollRows ->
+            kontrollRows.map { kontrollDB ->
+                val virksomheter = getVirksomheterForKontroll(kontrollDB)
+
+                KontrollListItem(
+                    kontrollDB.id,
+                    kontrollDB.tittel,
+                    kontrollDB.saksbehandler,
+                    Sakstype.valueOf(kontrollDB.sakstype),
+                    kontrollDB.arkivreferanse,
+                    kontrollDB.kontrolltype,
+                    virksomheter,
+                    kontrollDB.styringsdataId)
+            }
+        }
+    }
+
+    private fun getUser(userId:String?): Brukar {
+        if(userId!= null){
+            return brukarService.getBrukarByBrukarnamn(userId)
+                ?: throw NoSuchElementException("Bruker med brukarnamn $userId finnes ikkje")
+        }
+        return brukarService.getCurrentUser()
+    }
+
+    fun testingMetadata(@PathVariable kontrollId: Int): KontrollTestingMetadata {
     val kontroll = getKontrollAsResult(kontrollId).getOrThrow()
     val sideutvaltypar = kontrollDAO.getSideutvalType()
     val innholdtypeTestingList = testregelClient.getInnhaldstypeForTesting().getOrThrow()
