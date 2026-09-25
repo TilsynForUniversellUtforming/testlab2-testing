@@ -21,8 +21,8 @@ class RestClientConfig {
           builder.registerDefaults()
           builder.addCustomConverter(jacksonJsonHttpMessageConverter)
         }
-        .bufferContent({ _, _ -> true })
-        .requestInterceptor({ request, body, execution -> execution.execute(request, body) })
+        .bufferContent { _, _ -> true }
+        .requestInterceptor { request, body, execution -> execution.execute(request, body) }
         .build()
   }
 
