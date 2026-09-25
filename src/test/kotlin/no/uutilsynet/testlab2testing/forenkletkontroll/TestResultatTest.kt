@@ -11,7 +11,7 @@ import tools.jackson.module.kotlin.KotlinModule
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import tools.jackson.module.kotlin.jsonMapper
 
-class TestResultatTest() {
+class TestResultatTest {
   @Test
   @DisplayName("\"3/23/2023, 11:15:54 AM\" should parse")
   fun parseLocalDateTime() {

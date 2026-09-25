@@ -120,7 +120,8 @@ class AutoTesterClient(val restClient: RestClient, val autoTesterProperties: Aut
       }
 
   private fun fetchResultatDetaljert(uri: URI): List<TestResultat> {
-    return restClient.get().uri(uri).retrieve().body<List<TestResultat>>()
+    return restClient.get().uri(uri).retrieve().body<Array<Array<TestResultat>>>()
+        ?.flatten()?.toList()
         ?: throw NoSuchElementException(
             "Vi fikk ingen resultater da vi forsøkte å hente testresultater fra $uri")
   }

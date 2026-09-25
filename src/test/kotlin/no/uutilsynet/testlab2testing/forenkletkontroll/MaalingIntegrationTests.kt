@@ -184,7 +184,7 @@ class MaalingIntegrationTests(
   @Nested
   @DisplayName("gitt at det finnes en måling i databasen")
   inner class DatabaseHasAtLeastOneMaaling {
-    private var location: URI = getLocation()
+    private val location: URI = getLocation()
 
     private fun getLocation(): URI {
       doReturn(loeysingList).`when`(loeysingsRegisterClient).getMany(loeysingList.map { it.id })
