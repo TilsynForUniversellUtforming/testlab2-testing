@@ -172,37 +172,41 @@ class UtvalResourceTest(
   @DisplayName("vi skal kunne hente ei liste med alle utval")
   @Test
   fun hentAlleUtval() {
-      client.get()
-          .uri("/v1/utval")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody<List<UtvalListItem>>()
-          .returnResult()
-          .responseBody!!
-          .forEach {
-            assertThat(it.id).isNotNull()
-            assertThat(it.namn).isNotBlank()
-            assertThat(it.oppretta).isNotNull()
-          }
+    client
+        .get()
+        .uri("/v1/utval")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody<List<UtvalListItem>>()
+        .returnResult()
+        .responseBody!!
+        .forEach {
+          assertThat(it.id).isNotNull()
+          assertThat(it.namn).isNotBlank()
+          assertThat(it.oppretta).isNotNull()
+        }
   }
 
   @DisplayName("vi skal kunne slette eit utval")
   @Test
   fun slettUtval() {
-      val location = client.post().uri("/v1/utval")
-          .body(UtvalResource.NyttUtval(uuid, loeysingar))
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .expectHeader()
-          .exists("Location")
-          .returnResult<Void>()
-          .responseHeaders
-          .getLocation()!!
+    val location =
+        client
+            .post()
+            .uri("/v1/utval")
+            .body(UtvalResource.NyttUtval(uuid, loeysingar))
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .expectHeader()
+            .exists("Location")
+            .returnResult<Void>()
+            .responseHeaders
+            .getLocation()!!
 
-      client.delete().uri(location).exchange().expectStatus().isOk
-      client.get().uri(location).exchange().expectStatus().isNotFound
+    client.delete().uri(location).exchange().expectStatus().isOk
+    client.get().uri(location).exchange().expectStatus().isNotFound
   }
 
   private fun getUtval(location: String): Utval {

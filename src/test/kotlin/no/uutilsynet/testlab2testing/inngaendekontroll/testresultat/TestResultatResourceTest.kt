@@ -318,6 +318,7 @@ class TestResultatResourceTest(
     val resultat = getTestresultat()
     val endret = resultat.copy(status = ResultatManuellKontrollBase.Status.Ferdig)
     client.put().uri(location).body(endret).exchange().expectStatus().isOk
+    client.delete().uri(location).exchange().expectStatus().isBadRequest
   }
 
   @Test

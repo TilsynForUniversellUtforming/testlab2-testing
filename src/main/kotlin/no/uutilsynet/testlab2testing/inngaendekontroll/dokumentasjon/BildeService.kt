@@ -55,6 +55,7 @@ class BildeService(
 
   @CacheEvict(value = ["bildeCache"], key = "#testresultatId")
   fun deleteBilder(testresultatId: Int, bildeId: Int? = null) = runCatching {
+    testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
     val bildeStiList: List<BildeSti> = getBildeSti(bildeId, testresultatId)
 
     bildeStiList.forEach { bildeSti -> deleteBilde(bildeSti) }

@@ -4,7 +4,6 @@ import java.net.URI
 import java.time.Instant
 import kotlinx.coroutines.runBlocking
 import no.uutilsynet.testlab2testing.brukar.Brukar
-import no.uutilsynet.testlab2testing.config.CacheConfig
 import no.uutilsynet.testlab2testing.config.RestClientConfig
 import no.uutilsynet.testlab2testing.config.WebConfig
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.statusURL
@@ -31,7 +30,7 @@ import org.springframework.test.web.client.response.MockRestResponseCreators
 import tools.jackson.module.kotlin.jacksonObjectMapper
 
 @RestClientTest(AutoTesterClient::class, AutoTesterProperties::class)
-@Import(RestClientConfig::class,  WebConfig::class)
+@Import(RestClientConfig::class, WebConfig::class)
 class AutoTesterClientTest {
   @Autowired private lateinit var server: MockRestServiceServer
   @Autowired private lateinit var autoTesterClient: AutoTesterClient
