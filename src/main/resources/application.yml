@@ -40,7 +40,7 @@ spring:
         oauth2:
             resourceserver:
                 jwt:
-                    issuer-uri: https://user.difi.no/auth/realms/difi
+                    issuer-uri: https://localhost
     servlet:
         multipart:
             enabled: true
