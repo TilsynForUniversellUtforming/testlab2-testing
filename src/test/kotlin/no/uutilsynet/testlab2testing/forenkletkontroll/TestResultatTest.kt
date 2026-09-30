@@ -8,8 +8,6 @@ import org.junit.jupiter.api.Test
 import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.KotlinModule
-import tools.jackson.module.kotlin.jacksonObjectMapper
-import tools.jackson.module.kotlin.jsonMapper
 
 class TestResultatTest {
   @Test
@@ -45,10 +43,11 @@ class TestResultatTest {
         }
       """
             .trimIndent()
-    val objectMapper = JsonMapper.builder()
-        .addModule(KotlinModule.Builder().build())
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        .build()
+    val objectMapper =
+        JsonMapper.builder()
+            .addModule(KotlinModule.Builder().build())
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .build()
     val testResultat = objectMapper.readValue(json, TestResultat::class.java)
     assertThat(testResultat.elementOmtale).isNull()
   }

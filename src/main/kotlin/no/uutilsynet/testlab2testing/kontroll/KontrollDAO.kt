@@ -105,10 +105,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 createKontrollDB(resultSet, utval, testreglar, sideutvalList)
               }
               .toList()
-      if (result.size == ids.size) result
-      else
-          throw IllegalArgumentException(
-              "Noen av kontrollene med id-ene $ids finnes ikke i databasen")
+        require(result.size == ids.size)
+        result
     }
   }
 
@@ -166,7 +164,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 resultSet.getInt("regelsett_id").takeUnless { resultSet.wasNull() },
                 jdbcTemplate
                     .queryForList(
-                        """select testregel_id from "testlab2_testing"."kontroll_testreglar" where kontroll_id = :kontroll_id""",
+                        """select testregel_id from "testlab2_testing"."kontroll_testreglar"
+                            | where kontroll_id = :kontroll_id""".trimMargin(),
                         mapOf("kontroll_id" to kontrollId),
                         Int::class.java)
                     .filterIsInstance<Int>())
@@ -320,7 +319,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         testregelList.map { mapOf("kontrollId" to kontroll.id, "testregelId" to it) }
 
     jdbcTemplate.batchUpdate(
-        """insert into testlab2_testing."kontroll_testreglar" (kontroll_id, testregel_id) values (:kontrollId, :testregelId)""",
+        """insert into testlab2_testing."kontroll_testreglar" (kontroll_id, testregel_id)
+            | values (:kontrollId, :testregelId)""".trimMargin(),
         updateBatchValuesTestreglar.toTypedArray())
   }
 
@@ -441,19 +441,18 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         ?: throw IllegalArgumentException("Fant ikkje kontroll med id $kontrollId")
   }
 
-    fun getKontrollListByUser(brukar: Brukar): Result<List<KontrollDB>> {
-        return runCatching {
-            val kontrollIds =
-                jdbcTemplate
-                    .queryForList(
-                        """select k.id from "testlab2_testing"."kontroll" k
+  fun getKontrollListByUser(brukar: Brukar): Result<List<KontrollDB>> {
+    return runCatching {
+      val kontrollIds =
+          jdbcTemplate
+              .queryForList(
+                  """select k.id from "testlab2_testing"."kontroll" k
                         where k.saksbehandler = :userId""",
-                        mapOf("userId" to brukar.brukarnamn),
-                        Int::class.java)
-                    .filterIsInstance<Int>()
-                    .toList()
-            getKontroller(kontrollIds).getOrThrow()
-        }
+                  mapOf("userId" to brukar.brukarnamn),
+                  Int::class.java)
+              .filterIsInstance<Int>()
+              .toList()
+      getKontroller(kontrollIds).getOrThrow()
     }
-
+  }
 }

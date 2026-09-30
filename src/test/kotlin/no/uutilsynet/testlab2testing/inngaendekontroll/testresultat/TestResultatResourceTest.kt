@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
+import java.net.URI
+import java.time.Instant
+import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.Sakstype
 import no.uutilsynet.testlab2.constants.TestregelModus
@@ -32,9 +35,6 @@ import org.springframework.test.web.servlet.client.RestTestClient
 import org.springframework.test.web.servlet.client.expectBody
 import org.springframework.test.web.servlet.client.returnResult
 import org.springframework.web.context.WebApplicationContext
-import java.net.URI
-import java.time.Instant
-import kotlin.properties.Delegates
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(OrderAnnotation::class)

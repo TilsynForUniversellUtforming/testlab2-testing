@@ -15,12 +15,12 @@ import org.springframework.stereotype.Service
 
 @Service
 class TestgrunnlagService(
-    @Autowired val testgrunnlagDAO: TestgrunnlagDAO,
-    @Autowired val testResultatDAO: TestResultatDAO,
-    @Autowired val loeysingsRegisterClient: LoeysingsRegisterClient,
+    val testgrunnlagDAO: TestgrunnlagDAO,
+    val testResultatDAO: TestResultatDAO,
+    val loeysingsRegisterClient: LoeysingsRegisterClient,
     private val brukarService: BrukarService,
 ) {
-    val logger: Logger = LoggerFactory.getLogger(TestgrunnlagService::class.java)
+  val logger: Logger = LoggerFactory.getLogger(TestgrunnlagService::class.java)
 
   fun createOrUpdateFromKontroll(testgrunnlag: NyttTestgrunnlagFromKontroll): Result<Int> {
     val opprinneligTestgrunnlag =
@@ -105,7 +105,8 @@ class TestgrunnlagService(
 
     testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag).getOrElse {
       logger.error(
-          "Kunne ikkje opprette testgrunnlag for løysing $loeysingId i kontroll $kontrollId med opprinnelig testgrunnlag $originalTestgrunnlagId",
+          "Kunne ikkje opprette testgrunnlag for løysing $loeysingId i kontroll $kontrollId " +
+                  "med opprinnelig testgrunnlag $originalTestgrunnlagId",
           it)
       throw it
     }
@@ -180,8 +181,8 @@ class TestgrunnlagService(
     return testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId)
   }
 
-    fun getTestgrunnlagForBrukar(brukarId: String?): Result<List<TestgrunnlagKontroll>> {
-        return testgrunnlagDAO
-            .getTestgrunnlagForBrukar(brukarService.getUserId(brukarService.getUser(brukarId)))
-    }
+  fun getTestgrunnlagForBrukar(brukarId: String?): Result<List<TestgrunnlagKontroll>> {
+    return testgrunnlagDAO.getTestgrunnlagForBrukar(
+        brukarService.getUserId(brukarService.getUser(brukarId)))
+  }
 }

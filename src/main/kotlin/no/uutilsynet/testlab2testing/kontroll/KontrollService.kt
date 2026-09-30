@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.kontroll
 
 import no.uutilsynet.testlab2.constants.Sakstype
-import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.kontroll.Kontroll.Testreglar
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource.KontrollListItem
@@ -57,26 +56,27 @@ class KontrollService(
         kontrollDB.sideutval)
   }
 
-    fun getKontrollListByUser(userId: String?): Result<List<KontrollListItem>> {
+  fun getKontrollListByUser(userId: String?): Result<List<KontrollListItem>> {
 
-        return kontrollDAO.getKontrollListByUser(brukarService.getUser(userId)).mapCatching { kontrollRows ->
-            kontrollRows.map { kontrollDB ->
-                val virksomheter = getVirksomheterForKontroll(kontrollDB)
+    return kontrollDAO.getKontrollListByUser(brukarService.getUser(userId)).mapCatching {
+        kontrollRows ->
+      kontrollRows.map { kontrollDB ->
+        val virksomheter = getVirksomheterForKontroll(kontrollDB)
 
-                KontrollListItem(
-                    kontrollDB.id,
-                    kontrollDB.tittel,
-                    kontrollDB.saksbehandler,
-                    Sakstype.valueOf(kontrollDB.sakstype),
-                    kontrollDB.arkivreferanse,
-                    kontrollDB.kontrolltype,
-                    virksomheter,
-                    kontrollDB.styringsdataId)
-            }
-        }
+        KontrollListItem(
+            kontrollDB.id,
+            kontrollDB.tittel,
+            kontrollDB.saksbehandler,
+            Sakstype.valueOf(kontrollDB.sakstype),
+            kontrollDB.arkivreferanse,
+            kontrollDB.kontrolltype,
+            virksomheter,
+            kontrollDB.styringsdataId)
+      }
     }
+  }
 
-    fun testingMetadata(@PathVariable kontrollId: Int): KontrollTestingMetadata {
+  fun testingMetadata(@PathVariable kontrollId: Int): KontrollTestingMetadata {
     val kontroll = getKontrollAsResult(kontrollId).getOrThrow()
     val sideutvaltypar = kontrollDAO.getSideutvalType()
     val innholdtypeTestingList = testregelClient.getInnhaldstypeForTesting().getOrThrow()

@@ -9,6 +9,7 @@ data class TestingStatus(
     val loeysingId: Int,
     val loeysingNamn: String,
     val loeysingstype: Loeysingstype,
+    val kontrollId: Int,
     val kontrollType: Kontrolltype,
     val testgrunnlagType: TestgrunnlagType,
     val styringsdataId: Int?,

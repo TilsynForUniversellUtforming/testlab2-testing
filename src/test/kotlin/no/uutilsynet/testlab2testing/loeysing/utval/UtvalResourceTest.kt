@@ -2,6 +2,10 @@ package no.uutilsynet.testlab2testing.loeysing.utval
 
 import io.restassured.RestAssured.given
 import jakarta.validation.ClockProvider
+import java.net.URI
+import java.time.Clock
+import java.time.ZoneId
+import java.util.*
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.loeysingList
 import no.uutilsynet.testlab2testing.forenkletkontroll.TestConstants.maalingDateStart
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
@@ -19,10 +23,6 @@ import org.springframework.test.web.servlet.client.RestTestClient
 import org.springframework.test.web.servlet.client.expectBody
 import org.springframework.test.web.servlet.client.returnResult
 import org.springframework.web.context.WebApplicationContext
-import java.net.URI
-import java.time.Clock
-import java.time.ZoneId
-import java.util.*
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

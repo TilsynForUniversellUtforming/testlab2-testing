@@ -251,17 +251,20 @@ class TestgrunnlagDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     }
   }
 
-    fun getTestgrunnlagForBrukar(userId: Int): Result<List<TestgrunnlagKontroll>> {
-        return runCatching {
-            val testgrunnlagIds = jdbcTemplate.queryForList(
-                """select distinct tg.id from testlab2_testing.testresultat tr
+  fun getTestgrunnlagForBrukar(userId: Int): Result<List<TestgrunnlagKontroll>> {
+    return runCatching {
+      val testgrunnlagIds =
+          jdbcTemplate
+              .queryForList(
+                  """select distinct tg.id from testlab2_testing.testresultat tr
                         join testlab2_testing.testgrunnlag tg on tr.testgrunnlag_id=tg.id
                         where brukar_id=:userId""",
-                mapOf("userId" to userId),
-                Int::class.java
-            ).filterIsInstance<Int>().toList()
+                  mapOf("userId" to userId),
+                  Int::class.java)
+              .filterIsInstance<Int>()
+              .toList()
 
-            testgrunnlagIds.map { id -> getTestgrunnlag(id).getOrThrow() }
-        }
+      testgrunnlagIds.map { id -> getTestgrunnlag(id).getOrThrow() }
     }
+  }
 }
