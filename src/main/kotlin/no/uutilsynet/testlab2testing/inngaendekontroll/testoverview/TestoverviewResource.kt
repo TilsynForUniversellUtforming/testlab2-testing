@@ -18,4 +18,10 @@ class TestoverviewResource(val testoverviewService: TestoverviewService) {
   fun byUser(@PathVariable(required = false) userId: String?): List<TestingStatus> {
     return testoverviewService.listTestOverviewElementsByUser(userId)
   }
+
+  @GetMapping("/kontroll/{kontrollId}/organization/{orgnr}")
+    fun byKontrollAndOrganization(@PathVariable kontrollId: Int, @PathVariable orgnr: String): List<TestingStatus> {
+        return testoverviewService.listTestOverviewElementsByOrganization(kontrollId, orgnr)
+    }
+
 }

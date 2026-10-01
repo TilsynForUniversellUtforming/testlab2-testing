@@ -52,27 +52,12 @@ class TestoverviewService(
 
     fun listTestOverviewElementsByUser(userId: String?): List<TestingStatus> {
         val testgrunnlagList = testgrunnlagService.getTestgrunnlagForBrukar(userId).getOrThrow()
-        val loeysingar = getLoeysingMapFromTestgrunnlag(testgrunnlagList)
-
-
-        return testgrunnlagList.flatMap { testgrunnlagKontroll ->
-
-            val allResultat = testResultatDAO.getManyResultsByKontrollId(testgrunnlagKontroll.id).getOrThrow()
-            val styringsdataMap = styringsdataService.getStyringsdataMapForKontroll(testgrunnlagKontroll.id)
-            val kontroll = kontrollDAO.getKontroller(listOf(testgrunnlagKontroll.kontrollId)).getOrThrow().single()
-
-
-            processTestgrunnlagKontroll(
-                testgrunnlagKontroll,
-                loeysingar,
-                kontroll,
-                allResultat,
-                styringsdataMap,
-                testgrunnlagList.newestTestgrunnlagIds())
-        }
+        return testgrunnlagToTestingStatus(testgrunnlagList)
     }
 
-  private fun processTestgrunnlagKontroll(
+
+
+    private fun processTestgrunnlagKontroll(
       testgrunnlagKontroll: TestgrunnlagKontroll,
       loeysingarMap: Map<Int, Loeysing>,
       kontroll: KontrollDB,
@@ -169,5 +154,48 @@ class TestoverviewService(
         resultat.any { it.elementResultat == TestresultatUtfall.brot && it.status == Status.Ferdig }
     return harBrot && isNewest
   }
+
+    fun listTestOverviewElementsByOrganization(kontrollId:Int,orgnr:String): List<TestingStatus> {
+        val testgrunnlagList = testgrunnlagService.getTestgrunnlagForKontroll(kontrollId).toList()
+        val filteredTestgrunnlagList = filterTestgrunnlagByOrganization(testgrunnlagList, orgnr)
+
+        return testgrunnlagToTestingStatus(filteredTestgrunnlagList)
+    }
+
+    fun filterTestgrunnlagByOrganization(testgrunnlagList: List<TestgrunnlagKontroll>, orgnr: String):
+            List<TestgrunnlagKontroll> {
+        return testgrunnlagList.filter { testgrunnlagKontroll ->
+            testgrunnlagKontroll.sideutval.any { sideutval ->
+                isSideutvalInOrganization(sideutval.loeysingId, orgnr)
+            }
+        }
+    }
+
+    fun isSideutvalInOrganization(sideutvalId: Int, orgnr: String): Boolean {
+        val loeysing = loeysingsRegisterClient.getLoeysingFromId(sideutvalId)
+        return loeysing.orgnummer == orgnr
+    }
+
+    private fun testgrunnlagToTestingStatus(testgrunnlagList: List<TestgrunnlagKontroll>): List<TestingStatus> {
+        val loeysingar = getLoeysingMapFromTestgrunnlag(testgrunnlagList)
+
+
+        return testgrunnlagList.flatMap { testgrunnlagKontroll ->
+
+            val allResultat = testResultatDAO.getManyResultsByKontrollId(testgrunnlagKontroll.id).getOrThrow()
+            val styringsdataMap = styringsdataService.getStyringsdataMapForKontroll(testgrunnlagKontroll.id)
+            val kontroll = kontrollDAO.getKontroller(listOf(testgrunnlagKontroll.kontrollId)).getOrThrow().single()
+
+
+            processTestgrunnlagKontroll(
+                testgrunnlagKontroll,
+                loeysingar,
+                kontroll,
+                allResultat,
+                styringsdataMap,
+                testgrunnlagList.newestTestgrunnlagIds()
+            )
+        }
+    }
 
 }
