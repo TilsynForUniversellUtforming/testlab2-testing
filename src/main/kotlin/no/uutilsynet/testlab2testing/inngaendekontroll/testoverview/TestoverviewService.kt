@@ -11,10 +11,12 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManu
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase.Status
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
+import no.uutilsynet.testlab2testing.kontroll.KontrollDAO.KontrollDB
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.styringsdata.StyringsdataListElement
 import no.uutilsynet.testlab2testing.styringsdata.StyringsdataService
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Suppress("LongParameterList")
@@ -28,6 +30,8 @@ class TestoverviewService(
     val kontrollDAO: KontrollDAO,
 ) {
 
+    val logger = LoggerFactory.getLogger(this::class.java)
+
   fun listTestOverviewElements(kontrollId: Int): List<TestingStatus> {
     val kontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().single()
     val testgrunnlagList = testgrunnlagService.getTestgrunnlagForKontroll(kontrollId).toList()
@@ -39,17 +43,39 @@ class TestoverviewService(
       processTestgrunnlagKontroll(
           testgrunnlagKontroll,
           loeysingar,
-          kontroll.kontrolltype,
+          kontroll,
           allResultat,
           styringsdataMap,
           testgrunnlagList.newestTestgrunnlagIds())
     }
   }
 
+    fun listTestOverviewElementsByUser(userId: String?): List<TestingStatus> {
+        val testgrunnlagList = testgrunnlagService.getTestgrunnlagForBrukar(userId).getOrThrow()
+        val loeysingar = getLoeysingMapFromTestgrunnlag(testgrunnlagList)
+
+
+        return testgrunnlagList.flatMap { testgrunnlagKontroll ->
+
+            val allResultat = testResultatDAO.getManyResultsByKontrollId(testgrunnlagKontroll.id).getOrThrow()
+            val styringsdataMap = styringsdataService.getStyringsdataMapForKontroll(testgrunnlagKontroll.id)
+            val kontroll = kontrollDAO.getKontroller(listOf(testgrunnlagKontroll.kontrollId)).getOrThrow().single()
+
+
+            processTestgrunnlagKontroll(
+                testgrunnlagKontroll,
+                loeysingar,
+                kontroll,
+                allResultat,
+                styringsdataMap,
+                testgrunnlagList.newestTestgrunnlagIds())
+        }
+    }
+
   private fun processTestgrunnlagKontroll(
       testgrunnlagKontroll: TestgrunnlagKontroll,
       loeysingarMap: Map<Int, Loeysing>,
-      kontrolltype: Kontrolltype,
+      kontroll: KontrollDB,
       allResultat: Map<Int, List<ResultatManuellKontroll>>,
       styringsdataMap: Map<Int, StyringsdataListElement>,
       newestTestgrunnlagIds: Set<Int>
@@ -62,7 +88,7 @@ class TestoverviewService(
       mapToTestingStatus(
           loeysing,
           testgrunnlagKontroll,
-          kontrolltype,
+          kontroll,
           testresultatByLoeysing[loeysing.id] ?: emptyList(),
           styringsdataMap[loeysing.id],
           isNewest)
@@ -87,7 +113,7 @@ class TestoverviewService(
   private fun mapToTestingStatus(
       loeysing: Loeysing,
       testgrunnlagKontroll: TestgrunnlagKontroll,
-      kontrollType: Kontrolltype,
+      kontroll: KontrollDB,
       resultat: List<ResultatManuellKontroll>,
       styringsdata: StyringsdataListElement?,
       isNewest: Boolean
@@ -98,12 +124,14 @@ class TestoverviewService(
         statisticsService.getTestingStatusForLoeysing(
             loeysing.id, testgrunnlagKontroll.id, resultat, testregelIdList, sideutvalIdList)
 
+
     return TestingStatus(
         loeysingId = loeysing.id,
         loeysingNamn = loeysing.namn,
         testgrunnlagType = testgrunnlagKontroll.type,
         loeysingstype = Loeysingstype.NETT,
-        kontrollType = kontrollType,
+        kontrollId = kontroll.id,
+        kontrollType = kontroll.kontrolltype,
         teststatistics = testStatistics,
         status = getTeststatus(resultat),
         kanSlette = kanSlette(resultat, testgrunnlagKontroll.type),
@@ -141,4 +169,5 @@ class TestoverviewService(
         resultat.any { it.elementResultat == TestresultatUtfall.brot && it.status == Status.Ferdig }
     return harBrot && isNewest
   }
+
 }

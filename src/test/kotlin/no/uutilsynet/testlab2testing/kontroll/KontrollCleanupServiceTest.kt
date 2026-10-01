@@ -1,5 +1,8 @@
 package no.uutilsynet.testlab2testing.kontroll
 
+import java.net.URI
+import java.time.Instant
+import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Reaksjonstype
 import no.uutilsynet.testlab2testing.kontroll.delete.KontrollCleanupService
 import no.uutilsynet.testlab2testing.kontroll.delete.KontrollDeleteDAO
@@ -19,9 +22,6 @@ import org.springframework.boot.jdbc.test.autoconfigure.JdbcTest
 import org.springframework.context.annotation.Import
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
-import java.net.URI
-import java.time.Instant
-import java.time.LocalDate
 
 @JdbcTest(
     properties =

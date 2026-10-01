@@ -1,5 +1,9 @@
 package no.uutilsynet.testlab2testing.styringsdata
 
+import java.net.URI
+import java.time.Instant
+import java.time.LocalDate
+import kotlin.properties.Delegates
 import no.uutilsynet.testlab2.constants.*
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
@@ -13,10 +17,6 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.client.RestTestClient
 import org.springframework.test.web.servlet.client.returnResult
 import org.springframework.web.context.WebApplicationContext
-import java.net.URI
-import java.time.Instant
-import java.time.LocalDate
-import kotlin.properties.Delegates
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(OrderAnnotation::class)

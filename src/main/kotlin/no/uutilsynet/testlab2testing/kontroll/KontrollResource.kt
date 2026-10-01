@@ -175,6 +175,16 @@ class KontrollResource(
     return kontrollService.testingMetadata(kontrollId)
   }
 
+  @GetMapping(value= ["/byUser","/byUser/{userId}"])
+  fun getKontrollerByUser(@PathVariable(required = false) userId: String?)
+  : ResponseEntity<List<KontrollListItem>> {
+    return kontrollService
+        .getKontrollListByUser(userId)
+        .fold(
+            onSuccess = { ResponseEntity.ok().body(it) },
+            onFailure = { ResponseEntity.notFound().build() })
+  }
+
   fun createOrUpdateTestgrunnlag(kontrollId: Int): Result<Int> {
     val kontroll = kontrollService.getKontrollAsResult(kontrollId).getOrThrow()
 

@@ -100,13 +100,16 @@ class TestgrunnlagResource(
             })
   }
 
+  @GetMapping(value= ["byUser","byUser/{userId}"])
+  fun getTestgrunnlagListByUser(
+      @PathVariable(required = false) userId: String?
+  ): ResponseEntity<Result<List<TestgrunnlagKontroll>>> {
+    return ResponseEntity.ok(testgrunnlagService.getTestgrunnlagForBrukar(userId))
+  }
+
   private fun location(id: Int) =
       ServletUriComponentsBuilder.fromCurrentServletMapping()
           .path("testgrunnlag/kontroll/$id")
           .buildAndExpand(id)
           .toUri()
-
-  fun TestgrunnlagList.toList(): List<TestgrunnlagKontroll> {
-    return listOf<TestgrunnlagKontroll>(this.opprinneligTest) + this.restestar
-  }
 }

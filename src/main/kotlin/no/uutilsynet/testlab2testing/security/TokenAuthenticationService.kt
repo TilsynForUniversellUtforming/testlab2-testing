@@ -1,6 +1,7 @@
 package no.uutilsynet.testlab2testing.security
 
 import jakarta.servlet.http.HttpServletRequest
+import no.uutilsynet.testlab2securitylib.ApiKeyAuthenticationProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.core.Authentication
@@ -22,4 +23,6 @@ class TokenAuthenticationService(val properties: ApiKeyAuthenticationProperties)
 }
 
 @ConfigurationProperties(prefix = "api")
-data class ApiKeyAuthenticationProperties(val token: String)
+data class ApiKeyAuthenticationPropertiesImpl(override val token: String): ApiKeyAuthenticationProperties {
+  override val headerName: String = "X-API-KEY"
+}
