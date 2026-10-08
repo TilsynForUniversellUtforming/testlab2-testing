@@ -28,4 +28,12 @@ class WordRapportResource(val rapportService: WordRapportService) {
     response.outputStream.write(wordRapport)
     response.outputStream.flush()
   }
+
+    @GetMapping("/rapportdata/{kontrollId}/loeysing/{loeysingId}")
+    fun hentRapportData(
+        @PathVariable kontrollId: Int,
+        @PathVariable loeysingId: Int
+    ): WordRapport {
+        return rapportService.opprettRapport(kontrollId, loeysingId)
+    }
 }
