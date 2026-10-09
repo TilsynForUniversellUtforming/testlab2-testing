@@ -91,6 +91,7 @@ class TestResultatResource(
     require(testResultat.id == id) { "id i URL-en og id i dei innsendte dataene er ikkje den same" }
     val brukar = brukarService.getCurrentUser()
 
+
     return testResultatDAO
         .update(testResultat.copy(brukar = brukar))
         .fold(

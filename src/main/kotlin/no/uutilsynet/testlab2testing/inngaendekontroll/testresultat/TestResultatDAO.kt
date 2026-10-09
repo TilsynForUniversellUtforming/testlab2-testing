@@ -175,7 +175,7 @@ class TestResultatDAO(
                        b.brukarnamn as brukar_brukarnamn,
                        b.namn as brukar_namn,
                        ti.status,
-                       ti.utfall,
+                       ti.utfall_id
                 from testresultat ti
                          join brukar b on ti.brukar_id = b.id
                 where ${if (resultatId != null) "ti.id = :id" else "true"}
@@ -324,7 +324,9 @@ class TestResultatDAO(
             "status" to testResultat.status.name,
             "id" to testResultat.id,
             "kommentar" to testResultat.kommentar,
-            "sist_lagra" to now))
+            "sist_lagra" to now,
+            "utfallId" to testResultat.elementUtfallId
+            ))
   }
 
   private fun deleteGamleSvar(testResultat: ResultatManuellKontroll) {
