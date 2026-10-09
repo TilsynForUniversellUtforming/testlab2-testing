@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
+import java.time.Instant
 
 @Component
 class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -33,7 +34,8 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         elementOmtalePointer = rs.getString("element_omtale_pointer"),
         elmentOmtaleHtml = rs.getString("element_omtale_html"),
         elementOmtaleDescription = rs.getString("element_omtale"),
-        brukarId = rs.getInt("brukar_id"))
+        brukarId = rs.getInt("brukar_id"),
+        utfallId = rs.getInt("utfall_id"))
   }
 
   fun create(testresultat: TestresultatDBBase): Int {
@@ -42,11 +44,11 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             INSERT INTO testresultat (
             testgrunnlag_id, maaling_id,
                 testregel_id, loeysing_id, crawl_side_id, test_vart_utfoert, element_utfall, element_resultat,
-                element_omtale_pointer, element_omtale_html, element_omtale, brukar_id
+                element_omtale_pointer, element_omtale_html, element_omtale, brukar_id, utfall_id
             ) VALUES (
             :testgrunnlagId, :maalingId,
                 :testregelId, :loeysingId, :sideutvalId, :testUtfoert, :elementUtfall, :elementResultat,
-                :elementOmtalePointer, :elmentOmtalerHtml, :elementOmtalerDescription, :brukarid
+                :elementOmtalePointer, :elmentOmtalerHtml, :elementOmtalerDescription, :brukarid, :utfallId
             )
             RETURNING id
         """
@@ -121,7 +123,8 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   @Observed(name = "List<TestresultatDB> listBy maalingId and loeysingId brot")
   fun listBy(maalingId: Int, loeysingId: Int): List<TestresultatDB> {
     val sql =
-        "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and element_resultat= 'brot'"
+        "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id " +
+                "WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and element_resultat= 'brot'"
     val params =
         MapSqlParameterSource()
             .addValue(
@@ -165,7 +168,10 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       sortPaginationParams: SortPaginationParams
   ): List<TestresultatDB> {
     val sql =
-        "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id=:testregelId and element_resultat= 'brot' order by %s %s limit :limit offset :offset"
+        "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id " +
+                "WHERE maaling_id = :maalingId and loeysing_id= :loeysingId " +
+                "and testregel_Id=:testregelId and element_resultat= 'brot' " +
+                "order by %s %s limit :limit offset :offset"
 
     val formated =
         sql.format(
@@ -199,7 +205,9 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       sortPaginationParams: SortPaginationParams
   ): List<TestresultatDB> {
     val sql =
-        "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id in (:testregelIds) and element_resultat= 'brot' order by %s %s limit :limit offset :offset"
+        "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id " +
+                "WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id in (:testregelIds) " +
+                "AND element_resultat= 'brot' order by %s %s limit :limit offset :offset"
 
     val formated =
         sql.format(
@@ -327,12 +335,13 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           loeysingId = rs.getInt("loeysing_id"),
           sideutvalId = rs.getInt("crawl_side_id"),
           testUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant()
-                  ?: java.time.Instant.now(),
+              ?: Instant.now(),
           elementUtfall = rs.getString("element_utfall") ?: "",
           elementResultat = rs.getString("element_resultat")?.let { TestresultatUtfall.valueOf(it) }
-                  ?: TestresultatUtfall.ikkjeForekomst,
+              ?: TestresultatUtfall.ikkjeForekomst,
           elementOmtalePointer = rs.getString("element_omtale_pointer") ?: "",
           elementOmtaleHtml = rs.getString("element_omtale_html") ?: "",
           elementOmtaleDescription = rs.getString("element_omtale") ?: "",
-          brukarId = rs.getInt("brukar_id"))
+          brukarId = rs.getInt("brukar_id"),
+          utfallId = rs.getInt("utfall_id"))
 }

@@ -121,7 +121,8 @@ class AzureStorage2DbService(
           elementOmtalePointer = testresultat.elementOmtale?.pointer,
           elmentOmtaleHtml = testresultat.elementOmtale?.htmlCode,
           elementOmtaleDescription = testresultat.elementOmtale?.description,
-          brukarId = brukarId ?: 1)
+          brukarId = brukarId ?: 1,
+          utfallId = null)
     } else {
       TestresultatDBBase(
           null,
@@ -135,7 +136,8 @@ class AzureStorage2DbService(
           elementOmtalePointer = null,
           elmentOmtaleHtml = null,
           elementOmtaleDescription = null,
-          brukarId = brukarService.getUserId() ?: 0)
+          brukarId = brukarService.getUserId() ?: 0,
+          utfallId = null)
     }
   }
 }

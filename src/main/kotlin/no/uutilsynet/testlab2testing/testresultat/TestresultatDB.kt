@@ -20,6 +20,7 @@ data class TestresultatDB(
     val elmentOmtaleHtml: String?,
     val elementOmtaleDescription: String?,
     val brukarId: Int,
+    val utfallId: Int?
 )
 
 data class TestresultatDBBase(
@@ -35,6 +36,7 @@ data class TestresultatDBBase(
     val elmentOmtaleHtml: String?,
     val elementOmtaleDescription: String?,
     val brukarId: Int,
+    val utfallId: Int?
 ) {
   fun toTestresultatExport(testrunId: UUID): TestresultatExport {
     return TestresultatExport(
@@ -48,6 +50,8 @@ data class TestresultatDBBase(
         elementOmtalePointer = this.elementOmtalePointer ?: "",
         elementOmtaleHtml = this.elmentOmtaleHtml ?: "",
         elementOmtaleDescription = this.elementOmtaleDescription ?: "",
-        brukarId = this.brukarId)
+        brukarId = this.brukarId,
+        utfallId = this.utfallId
+    )
   }
 }

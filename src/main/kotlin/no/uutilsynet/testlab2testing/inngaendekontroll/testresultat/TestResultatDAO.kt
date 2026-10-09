@@ -24,9 +24,9 @@ class TestResultatDAO(
       jdbcTemplate.queryForObject(
           """
         insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
-                                     element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
+                                     element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra, utfall_id)
         values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementOmtaleHtml, :elementUtfall,
-                :testVartUtfoert,:status, :kommentar, :sist_lagra)
+                :testVartUtfoert,:status, :kommentar, :sist_lagra, :utfallId)
         returning id
       """
               .trimIndent(),
@@ -44,7 +44,8 @@ class TestResultatDAO(
               "testVartUtfoert" to createTestResultat.testVartUtfoert,
               "status" to ResultatManuellKontrollBase.Status.IkkjePaabegynt.name,
               "kommentar" to createTestResultat.kommentar,
-              "sist_lagra" to created),
+              "sist_lagra" to created,
+              "utfallId" to createTestResultat.elementUtfallId),
           Int::class.java)!!
     }
   }
@@ -80,6 +81,7 @@ class TestResultatDAO(
                            ti.test_vart_utfoert,
                            ti.kommentar,
                            ti.sist_lagra,
+                           ti.utfall_id,
                            b.brukarnamn as brukar_brukarnamn,
                            b.namn as brukar_namn,
                            ti.status
@@ -113,7 +115,8 @@ class TestResultatDAO(
                       status =
                           enumValueOf<ResultatManuellKontrollBase.Status>(rs.getString("status")),
                       kommentar = rs.getString("kommentar"),
-                      sistLagra = rs.getTimestamp("sist_lagra").toInstant())
+                      sistLagra = rs.getTimestamp("sist_lagra").toInstant(),
+                      elementUtfallId = rs.getInt("utfall_id").takeIf { !rs.wasNull() })
                 }
                 .toList()
 
@@ -171,7 +174,8 @@ class TestResultatDAO(
                        ti.sist_lagra,
                        b.brukarnamn as brukar_brukarnamn,
                        b.namn as brukar_namn,
-                       ti.status
+                       ti.status,
+                       ti.utfall,
                 from testresultat ti
                          join brukar b on ti.brukar_id = b.id
                 where ${if (resultatId != null) "ti.id = :id" else "true"}
@@ -200,7 +204,8 @@ class TestResultatDAO(
                   testVartUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant(),
                   status = enumValueOf<ResultatManuellKontrollBase.Status>(rs.getString("status")),
                   kommentar = rs.getString("kommentar"),
-                  sistLagra = rs.getTimestamp("sist_lagra").toInstant())
+                  sistLagra = rs.getTimestamp("sist_lagra").toInstant(),
+                  elementUtfallId = rs.getInt("utfall_id").takeIf { !rs.wasNull() })
             }
             .toList()
 
@@ -246,9 +251,9 @@ class TestResultatDAO(
         jdbcTemplate.queryForObject(
             """
         insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
-                                     element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra)
+                                     element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra,utfall_id)
         values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementOmtaleHtml, :elementUtfall,
-                :testVartUtfoert,:status, :kommentar, :sist_lagra)
+                :testVartUtfoert,:status, :kommentar, :sist_lagra, :utfallId)
         returning id
       """
                 .trimIndent(),
@@ -265,7 +270,8 @@ class TestResultatDAO(
                 "testVartUtfoert" to retestResultat.testVartUtfoert?.let { Timestamp.from(it) },
                 "status" to retestResultat.status.name,
                 "kommentar" to retestResultat.kommentar,
-                "sist_lagra" to sistlagra),
+                "sist_lagra" to sistlagra,
+                "utfallId" to retestResultat.elementUtfallId),
             Int::class.java)!!
 
     saveSvarBatch(id, retestResultat.svar)
@@ -304,7 +310,8 @@ class TestResultatDAO(
               test_vart_utfoert = :testVartUtfoert,
               status = :status,
               kommentar = :kommentar,
-              sist_lagra = :sist_lagra
+              sist_lagra = :sist_lagra,
+              utfall_id = :utfallId
           where id = :id
         """
             .trimIndent(),
