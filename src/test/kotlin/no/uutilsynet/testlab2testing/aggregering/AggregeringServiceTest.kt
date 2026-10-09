@@ -206,7 +206,9 @@ class AggregeringServiceTest(
             testVartUtfoert = Instant.now(),
             status = ResultatManuellKontrollBase.Status.Ferdig,
             kommentar = "Kommentar",
-            sistLagra = Instant.now())
+            sistLagra = Instant.now(),
+            elementUtfallId = null
+        )
 
     val resultatKontrol2 =
         ResultatManuellKontroll(

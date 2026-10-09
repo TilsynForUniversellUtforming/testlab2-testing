@@ -59,6 +59,7 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
                 null,
                 null,
                 null,
+                null,
                 listOf(ResultatManuellKontrollBase.Svar("1", "Kommentar")),
                 null,
                 ResultatManuellKontrollBase.Status.Ferdig,

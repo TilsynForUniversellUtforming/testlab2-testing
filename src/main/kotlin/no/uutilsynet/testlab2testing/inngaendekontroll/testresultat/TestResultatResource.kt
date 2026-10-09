@@ -6,8 +6,6 @@ import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
-import no.uutilsynet.testlab2testing.testing.automatisk.elementtesting.AutomaticTestingService
-import no.uutilsynet.testlab2testing.testing.automatisk.elementtesting.AutotesterPayload
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
@@ -29,9 +27,9 @@ class TestResultatResource(
     val testResultatDAO: TestResultatDAO,
     val brukarService: BrukarService,
     val bildeService: BildeService,
-    val automaticTestingService: AutomaticTestingService,
     val testregelCache: TestregelCache,
-    val dataUrlConverter: DataUrlConverter
+    val dataUrlConverter: DataUrlConverter,
+    val testresultatService:  TestresultatService
 ) {
   val logger: Logger = getLogger(TestResultatResource::class.java)
 
@@ -93,6 +91,7 @@ class TestResultatResource(
     require(testResultat.id == id) { "id i URL-en og id i dei innsendte dataene er ikkje den same" }
     val brukar = brukarService.getCurrentUser()
 
+
     return testResultatDAO
         .update(testResultat.copy(brukar = brukar))
         .fold(
@@ -126,26 +125,10 @@ class TestResultatResource(
                 }
               })
 
-  fun getResultAutomatic(ceateTestResultat: CreateTestResultat): CreateTestResultat {
-    val testregel = testregelCache.getTestregelById(ceateTestResultat.testregelId)
-    return automaticTestingService
-        .testElement(
-            AutotesterPayload(
-                htmlElement = ceateTestResultat.elementOmtaleHtml ?: "",
-                qualwebRule = testregel.testregelId))
-        .fold(
-            onSuccess = {
-              ceateTestResultat.copy(
-                  elementResultat = TestresultatUtfall.valueOf(it.elementResultat),
-                  elementUtfall = it.elementUtfall)
-            },
-            onFailure = { ceateTestResultat })
-  }
-
-  private fun resolveResultToSave(input: CreateTestResultat): CreateTestResultat {
+    private fun resolveResultToSave(input: CreateTestResultat): CreateTestResultat {
     if (!isTestregelAutomatic(input.testregelId)) return input
 
-    return getResultAutomatic(input).takeIf { it.elementResultat != null } ?: input
+    return testresultatService.getResultAutomatic(input).takeIf { it.elementResultat != null } ?: input
   }
 
   private fun saveImage(testresultatId: Int, bildeDataUrl: String) {
@@ -174,6 +157,7 @@ class TestResultatResource(
       val elementOmtaleHtml: String? = null,
       val elementResultat: TestresultatUtfall? = null,
       val elementUtfall: String? = null,
+      val elementUtfallId: Int? = null,
       val testVartUtfoert: Instant? = null,
       val kommentar: String? = null,
       val imageDataUrl: String? = null
