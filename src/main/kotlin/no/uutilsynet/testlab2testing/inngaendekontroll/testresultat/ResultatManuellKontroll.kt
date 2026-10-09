@@ -41,7 +41,7 @@ data class ResultatManuellKontroll(
     override val elementOmtale: String?,
     override val elementResultat: TestresultatUtfall?,
     override val elementUtfall: String?,
-    override val elementUtfallId: Int?,
+    override val elementUtfallId: Int? = null,
     override val svar: List<Svar>,
     override val testVartUtfoert: Instant?,
     override val status: Status = Status.IkkjePaabegynt,

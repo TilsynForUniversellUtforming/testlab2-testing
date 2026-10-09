@@ -196,11 +196,13 @@ class ResultatServiceTest(
             "Ein knapp",
             TestresultatUtfall.samsvar,
             "Alt ok",
+            null,
             emptyList(),
             Instant.now(),
             ResultatManuellKontrollBase.Status.UnderArbeid,
             null,
-            Instant.now())
+            Instant.now(),
+            null)
     val resultat2 =
         ResultatManuellKontroll(
             1,
@@ -210,6 +212,7 @@ class ResultatServiceTest(
             1,
             Brukar("testar", "testar"),
             "Eit bilde",
+            null,
             null,
             null,
             emptyList(),
