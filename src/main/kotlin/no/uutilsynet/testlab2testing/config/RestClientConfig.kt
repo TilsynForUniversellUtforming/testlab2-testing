@@ -13,13 +13,10 @@ import tools.jackson.module.kotlin.KotlinModule
 class RestClientConfig {
   @Bean
   fun restClient(
-      builder: RestClient.Builder,
-      jacksonJsonHttpMessageConverter: JacksonJsonHttpMessageConverter,
-  ): RestClient {
+      builder: RestClient.Builder): RestClient {
     return builder
         .configureMessageConverters { builder ->
           builder.registerDefaults()
-          builder.addCustomConverter(jacksonJsonHttpMessageConverter)
         }
         .bufferContent { _, _ -> true }
         .requestInterceptor { request, body, execution -> execution.execute(request, body) }
@@ -32,12 +29,5 @@ class RestClientConfig {
         .addModule(KotlinModule.Builder().build())
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         .build()
-  }
-
-  @Bean
-  fun jacksonJsonHttpMessageConverter(jsonMapper: JsonMapper): JacksonJsonHttpMessageConverter {
-    return JacksonJsonHttpMessageConverter(jsonMapper).apply {
-      supportedMediaTypes = listOf(MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM)
-    }
   }
 }
