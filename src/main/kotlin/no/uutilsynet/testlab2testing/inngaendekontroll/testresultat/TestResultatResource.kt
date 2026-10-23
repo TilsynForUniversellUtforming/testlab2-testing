@@ -158,8 +158,10 @@ class TestResultatResource(
       val elementResultat: TestresultatUtfall? = null,
       val elementUtfall: String? = null,
       val elementUtfallId: Int? = null,
+      val elementPlassering: String? = null,
       val testVartUtfoert: Instant? = null,
       val kommentar: String? = null,
-      val imageDataUrl: String? = null
-  )
+      val imageDataUrl: String? = null,
+      val ekstraSjekk: Boolean = false,
+      )
 }

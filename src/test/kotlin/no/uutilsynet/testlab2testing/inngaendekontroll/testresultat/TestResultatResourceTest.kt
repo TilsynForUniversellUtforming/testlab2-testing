@@ -303,7 +303,7 @@ class TestResultatResourceTest(
     val resultat = resultatForTestgrunnlag.resultat.first()
     assertThat(resultat.elementOmtale).isEqualTo("iframe nummer 1")
     assertThat(resultat.elementResultat).isEqualTo(resultat.elementResultat)
-    assertThat(resultat.elementUtfall)
+    assertThat(resultat.element?.elementUtfall)
         .isEqualTo(
             "Iframe har et tilgjengelig navn, som ikke beskriver formålet med innholdet i iframe.")
     assertThat(resultat.testVartUtfoert).isNotNull()

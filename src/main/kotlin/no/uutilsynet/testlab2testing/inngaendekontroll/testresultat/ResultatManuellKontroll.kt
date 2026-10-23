@@ -33,6 +33,9 @@ open class ResultatManuellKontrollBase(
   val elementOmtaleHtml: String?
     get() = element?.elementOmtaleHtml
 
+  val elementPlassering: String?
+    get() = element?.elementPlassering
+
   constructor(
       testgrunnlagId: Int,
       loeysingId: Int,
@@ -44,6 +47,7 @@ open class ResultatManuellKontrollBase(
       elementUtfall: String?,
       elementUtfallId: Int? = null,
       elementOmtaleHtml: String? = null,
+      elementPlassering: String? = null,
       svar: List<Svar>,
       testVartUtfoert: Instant?,
       status: ResultatStatus = ResultatStatus.IkkjePaabegynt,
@@ -62,6 +66,7 @@ open class ResultatManuellKontrollBase(
           elementUtfall = elementUtfall,
           elementUtfallId = elementUtfallId,
           elementOmtaleHtml = elementOmtaleHtml,
+          elementPlassering = elementPlassering,
       ),
       svar,
       testVartUtfoert,
@@ -140,6 +145,7 @@ data class ResultatManuellKontroll(
       sistLagra: Instant,
       elementOmtaleHtml: String? = null,
       ekstraSjekk: Boolean = false,
+      elementPlassering: String? = null,
   ) : this(
       id,
       testgrunnlagId,
@@ -153,6 +159,7 @@ data class ResultatManuellKontroll(
           elementUtfall = elementUtfall,
           elementUtfallId = elementUtfallId,
           elementOmtaleHtml = elementOmtaleHtml,
+          elementPlassering = elementPlassering,
       ),
       svar,
       testVartUtfoert,

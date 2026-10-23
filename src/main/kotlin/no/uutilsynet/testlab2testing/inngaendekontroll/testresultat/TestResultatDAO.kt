@@ -24,9 +24,9 @@ class TestResultatDAO(
       jdbcTemplate.queryForObject(
           """
         insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
-                                     element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra, utfall_id)
+                                     element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra, utfall_id, element_plassering, ekstra_sjekk)
         values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementOmtaleHtml, :elementUtfall,
-                :testVartUtfoert,:status, :kommentar, :sist_lagra, :utfallId)
+                :testVartUtfoert,:status, :kommentar, :sist_lagra, :utfallId, :elementPlassering, :ekstraSjekk)
         returning id
       """
               .trimIndent(),
@@ -40,13 +40,17 @@ class TestResultatDAO(
               "elementOmtaleHtml" to createTestResultat.elementOmtaleHtml,
               "elementResultat" to createTestResultat.elementResultat?.name,
               "elementUtfall" to createTestResultat.elementUtfall,
+              "elementPlassering" to createTestResultat.elementPlassering,
               "kommentar" to createTestResultat.kommentar,
               "testVartUtfoert" to createTestResultat.testVartUtfoert,
               "status" to ResultatStatus.IkkjePaabegynt.name,
               "kommentar" to createTestResultat.kommentar,
               "sist_lagra" to created,
-              "utfallId" to createTestResultat.elementUtfallId),
-          Int::class.java)!!
+              "utfallId" to createTestResultat.elementUtfallId,
+              "ekstraSjekk" to createTestResultat.ekstraSjekk
+          ),
+          Int::class.java
+      )!!
     }
   }
 
@@ -78,10 +82,12 @@ class TestResultatDAO(
                            ti.element_omtale_html,
                            ti.element_resultat,
                            ti.element_utfall,
+                           ti.element_plassering,
                            ti.test_vart_utfoert,
                            ti.kommentar,
                            ti.sist_lagra,
                            ti.utfall_id,
+                           ti.ekstra_sjekk,
                            b.brukarnamn as brukar_brukarnamn,
                            b.namn as brukar_namn,
                            ti.status
@@ -115,7 +121,8 @@ class TestResultatDAO(
                       status = enumValueOf<ResultatStatus>(rs.getString("status")),
                       kommentar = rs.getString("kommentar"),
                       sistLagra = rs.getTimestamp("sist_lagra").toInstant(),
-                      elementUtfallId = rs.getInt("utfall_id").takeIf { !rs.wasNull() })
+                      elementUtfallId = rs.getInt("utfall_id").takeIf { !rs.wasNull() },
+                      ekstraSjekk = rs.getBoolean("ekstra_sjekk"),)
                 }
                 .toList()
 
@@ -164,6 +171,8 @@ class TestResultatDAO(
                        ti.element_omtale_html,
                        ti.element_resultat,
                        ti.element_utfall,
+                       ti.element_plassering,
+                       ti.ekstra_sjekk,
                        ti.test_vart_utfoert,
                        ti.kommentar,
                        ti.sist_lagra,
@@ -200,7 +209,10 @@ class TestResultatDAO(
                   status = enumValueOf<ResultatStatus>(rs.getString("status")),
                   kommentar = rs.getString("kommentar"),
                   sistLagra = rs.getTimestamp("sist_lagra").toInstant(),
-                  elementUtfallId = rs.getInt("utfall_id").takeIf { !rs.wasNull() })
+                  elementUtfallId = rs.getInt("utfall_id").takeIf { !rs.wasNull() },
+                  elementPlassering = rs.getString("element_plassering"),
+                  ekstraSjekk = rs.getBoolean("ekstra_sjekk")
+                )
             }
             .toList()
 
@@ -244,9 +256,9 @@ class TestResultatDAO(
         jdbcTemplate.queryForObject(
             """
         insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
-                                     element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra,utfall_id)
+                                     element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra,utfall_id, element_plassering, ekstra_sjekk)
         values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementOmtaleHtml, :elementUtfall,
-                :testVartUtfoert,:status, :kommentar, :sist_lagra, :utfallId)
+                :testVartUtfoert,:status, :kommentar, :sist_lagra, :utfallId, :elementPlassering, :ekstraSjekk)
         returning id
       """
                 .trimIndent(),
@@ -256,15 +268,18 @@ class TestResultatDAO(
                 "testregelId" to retestResultat.testregelId,
                 "sideutvalId" to retestResultat.sideutvalId,
                 "brukarId" to brukarId,
-                "elementOmtale" to retestResultat.elementOmtale,
-                "elementOmtaleHtml" to retestResultat.elementOmtaleHtml,
-                "elementResultat" to retestResultat.elementResultat?.name,
-                "elementUtfall" to retestResultat.elementUtfall,
+                "elementOmtale" to retestResultat.element?.elementOmtale,
+                "elementOmtaleHtml" to retestResultat.element?.elementOmtaleHtml,
+                "elementResultat" to retestResultat.element?.elementResultat?.name,
+                "elementUtfall" to retestResultat.element?.elementUtfall,
                 "testVartUtfoert" to retestResultat.testVartUtfoert?.let { Timestamp.from(it) },
                 "status" to retestResultat.status.name,
                 "kommentar" to retestResultat.kommentar,
                 "sist_lagra" to sistlagra,
-                "utfallId" to retestResultat.elementUtfallId),
+                "utfallId" to retestResultat.element?.elementUtfallId,
+                "elementPlassering" to retestResultat.element?.elementPlassering,
+                "ekstraSjekk" to retestResultat.ekstraSjekk
+            ),
             Int::class.java)!!
 
     saveSvarBatch(id, retestResultat.svar)
@@ -300,6 +315,7 @@ class TestResultatDAO(
               element_omtale_html = :elementOmtaleHtml,
               element_resultat  = :elementResultat,
               element_utfall    = :elementUtfall,
+              element_plassering   = :elementPlassering,
               test_vart_utfoert = :testVartUtfoert,
               status = :status,
               kommentar = :kommentar,
@@ -309,16 +325,17 @@ class TestResultatDAO(
         """
             .trimIndent(),
         mapOf(
-            "elementOmtale" to testResultat.elementOmtale,
-            "elementOmtaleHtml" to testResultat.elementOmtaleHtml,
-            "elementResultat" to testResultat.elementResultat?.name,
-            "elementUtfall" to testResultat.elementUtfall,
+            "elementOmtale" to testResultat.element?.elementOmtale,
+            "elementOmtaleHtml" to testResultat.element?.elementOmtaleHtml,
+            "elementResultat" to testResultat.element?.elementResultat?.name,
+            "elementUtfall" to testResultat.element?.elementUtfall,
+            "elementPlassering" to testResultat.element?.elementPlassering,
             "testVartUtfoert" to testVartUtfoert,
             "status" to testResultat.status.name,
             "id" to testResultat.id,
             "kommentar" to testResultat.kommentar,
             "sist_lagra" to now,
-            "utfallId" to testResultat.elementUtfallId))
+            "utfallId" to testResultat.element?.elementUtfallId))
   }
 
   private fun deleteGamleSvar(testResultat: ResultatManuellKontroll) {
@@ -336,9 +353,9 @@ class TestResultatDAO(
       now: Timestamp?
   ): Timestamp? {
     val testVartUtfoert =
-        if (testResultat.elementOmtale != null &&
-            testResultat.elementResultat != null &&
-            testResultat.elementUtfall != null)
+        if (testResultat.element?.elementOmtale != null &&
+            testResultat.element.elementResultat != null &&
+            testResultat.element.elementUtfall != null)
             now
         else null
     return testVartUtfoert
