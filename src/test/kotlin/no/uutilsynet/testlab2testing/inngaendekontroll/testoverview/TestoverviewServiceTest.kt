@@ -11,6 +11,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatStatus
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.Sideutval
@@ -121,7 +122,7 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
           percentagePerSide = 0.0,
           percentagePerInnholdstype = 0.0)
 
-  private fun resultat(status: Status = Status.IkkjePaabegynt) =
+  private fun resultat(status: ResultatStatus = ResultatStatus.IkkjePaabegynt) =
       ResultatManuellKontroll(
           id = 1,
           testgrunnlagId = testgrunnlagId,
@@ -224,7 +225,7 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
   fun `status is FERDIG when all results are Ferdig`() {
     val tg = testgrunnlag()
     val testgrunnlagList = TestgrunnlagList(tg, emptyList())
-    val ferdigResultat = listOf(resultat(Status.Ferdig))
+    val ferdigResultat = listOf(resultat(ResultatStatus.Ferdig))
 
     `when`(kontrollDAO.getKontroller(listOf(kontrollId)))
         .thenReturn(Result.success(listOf(kontrollDB())))
@@ -249,7 +250,8 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
   fun `status is UNDER_ARBEID when results are mixed`() {
     val tg = testgrunnlag()
     val testgrunnlagList = TestgrunnlagList(tg, emptyList())
-    val mixedResultat = listOf(resultat(Status.Ferdig), resultat(Status.IkkjePaabegynt))
+    val mixedResultat =
+        listOf(resultat(ResultatStatus.Ferdig), resultat(ResultatStatus.IkkjePaabegynt))
 
     `when`(kontrollDAO.getKontroller(listOf(kontrollId)))
         .thenReturn(Result.success(listOf(kontrollDB())))

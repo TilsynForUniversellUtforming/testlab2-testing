@@ -227,7 +227,12 @@ class TestResultatResourceTest(
   fun oppdatereTestresultat() {
     val testresultat = getTestresultat()
 
-    val endret = testresultat.copy(elementOmtale = "iframe nummer 1")
+    val endret =
+        testresultat.copy(
+            element =
+                testresultat.element?.copy(
+                    elementOmtale = "iframe nummer 1",
+                ))
 
     client.put().uri(location).body(endret).exchange().expectStatus().isOk
 
@@ -247,8 +252,13 @@ class TestResultatResourceTest(
     val elementUtfall =
         "Iframe har et tilgjengelig navn, som ikke beskriver formålet med innholdet i iframe."
     val elementResultat = TestresultatUtfall.brot
-    val endret = testresultat.copy(elementResultat = elementResultat, elementUtfall = elementUtfall)
-
+    val endret =
+        testresultat.copy(
+            element =
+                testresultat.element?.copy(
+                    elementResultat = elementResultat,
+                    elementUtfall = elementUtfall,
+                ))
     client.put().uri(location).body(endret).exchange().expectStatus().isOk
 
     val oppdatert = getTestresultat()
