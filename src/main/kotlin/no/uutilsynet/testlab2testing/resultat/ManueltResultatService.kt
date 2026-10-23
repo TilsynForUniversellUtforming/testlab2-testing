@@ -9,7 +9,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeServic
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagList
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatStatus
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
@@ -180,10 +180,7 @@ class ManueltResultatService(
   }
 
   private fun percentageFerdig(result: List<ResultatManuellKontroll>): Int =
-      (result
-              .map { it.status }
-              .count { it == ResultatManuellKontrollBase.Status.Ferdig }
-              .toDouble() / result.size)
+      (result.map { it.status }.count { it == ResultatStatus.Ferdig }.toDouble() / result.size)
           .times(100)
           .toInt()
 

@@ -2,7 +2,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testoverview
 
 import kotlin.collections.distinctBy
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatStatus
 import no.uutilsynet.testlab2testing.testregel.TestregelClient
 import no.uutilsynet.testlab2testing.testregel.model.Testregel
 import org.springframework.stereotype.Service
@@ -22,15 +22,11 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
 
     // Sjekk kva som er riktig å vise når ein har retest
     val total = numSider * numTestregel
-    val ferdig =
-        uniqueTestKeyCount(
-            testresultat.filter { it.status == ResultatManuellKontrollBase.Status.Ferdig })
+    val ferdig = uniqueTestKeyCount(testresultat.filter { it.status == ResultatStatus.Ferdig })
     val underArbeid =
-        uniqueTestKeyCount(
-            testresultat.filter { it.status == ResultatManuellKontrollBase.Status.UnderArbeid })
+        uniqueTestKeyCount(testresultat.filter { it.status == ResultatStatus.UnderArbeid })
     val ikkjeStarta =
-        uniqueTestKeyCount(
-            testresultat.filter { it.status == ResultatManuellKontrollBase.Status.IkkjePaabegynt })
+        uniqueTestKeyCount(testresultat.filter { it.status == ResultatStatus.IkkjePaabegynt })
 
     val percentagePerSide = progresjonForSideutval(testregelIds, sideutvalIds, testresultat)
 
@@ -64,7 +60,7 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
   ): Double {
     val finshedTestsKeys =
         testresultat
-            .filter { it.status == ResultatManuellKontrollBase.Status.Ferdig }
+            .filter { it.status == ResultatStatus.Ferdig }
             .distinctBy { it.testregelId to it.sideutvalId }
             .toSet()
 
@@ -92,7 +88,7 @@ class TestOverviewStatisticsService(val testregelClient: TestregelClient) {
 
     val finshedTestsKeys =
         testresultat
-            .filter { it.status == ResultatManuellKontrollBase.Status.Ferdig }
+            .filter { it.status == ResultatStatus.Ferdig }
             .distinctBy { it.testregelId to it.sideutvalId }
             .toSet()
 

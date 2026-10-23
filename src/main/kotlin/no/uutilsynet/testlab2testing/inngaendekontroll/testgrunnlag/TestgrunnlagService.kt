@@ -10,7 +10,6 @@ import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
@@ -55,10 +54,11 @@ class TestgrunnlagService(
               loeysingId = retest.loeysingId,
               testregelId = it.testregelId,
               sideutvalId = it.sideutvalId,
-              elementOmtale = it.elementOmtale,
-              elementOmtaleHtml = it.elementOmtaleHtml,
-              elementResultat = it.elementResultat,
-              elementUtfall = it.elementUtfall,
+              elementOmtale = it.element?.elementOmtale,
+              elementOmtaleHtml = it.element?.elementOmtaleHtml,
+              elementResultat = it.element?.elementResultat,
+              elementUtfall = it.element?.elementUtfall,
+              elementPlassering = it.element?.elementPlassering,
               svar = it.svar,
               testVartUtfoert = null,
               kommentar = it.kommentar,
@@ -106,7 +106,7 @@ class TestgrunnlagService(
     testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag).getOrElse {
       logger.error(
           "Kunne ikkje opprette testgrunnlag for løysing $loeysingId i kontroll $kontrollId " +
-                  "med opprinnelig testgrunnlag $originalTestgrunnlagId",
+              "med opprinnelig testgrunnlag $originalTestgrunnlagId",
           it)
       throw it
     }

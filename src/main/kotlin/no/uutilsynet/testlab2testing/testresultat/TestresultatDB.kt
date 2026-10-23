@@ -51,7 +51,6 @@ data class TestresultatDBBase(
         elementOmtaleHtml = this.elmentOmtaleHtml ?: "",
         elementOmtaleDescription = this.elementOmtaleDescription ?: "",
         brukarId = this.brukarId,
-        utfallId = this.utfallId
-    )
+        utfallId = this.utfallId)
   }
 }

@@ -100,7 +100,7 @@ class TestgrunnlagResource(
             })
   }
 
-  @GetMapping(value= ["byUser","byUser/{userId}"])
+  @GetMapping(value = ["byUser", "byUser/{userId}"])
   fun getTestgrunnlagListByUser(
       @PathVariable(required = false) userId: String?
   ): ResponseEntity<Result<List<TestgrunnlagKontroll>>> {
