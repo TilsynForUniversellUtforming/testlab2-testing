@@ -23,6 +23,7 @@ class TokenAuthenticationService(val properties: ApiKeyAuthenticationProperties)
 }
 
 @ConfigurationProperties(prefix = "api")
-data class ApiKeyAuthenticationPropertiesImpl(override val token: String): ApiKeyAuthenticationProperties {
+data class ApiKeyAuthenticationPropertiesImpl(override val token: String) :
+    ApiKeyAuthenticationProperties {
   override val headerName: String = "X-API-KEY"
 }

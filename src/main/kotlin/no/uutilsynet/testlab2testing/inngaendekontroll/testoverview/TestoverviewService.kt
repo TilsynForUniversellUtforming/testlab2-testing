@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testoverview
 
-import no.uutilsynet.testlab2.constants.Kontrolltype
 import no.uutilsynet.testlab2.constants.Loeysingstype
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagKontroll
@@ -8,7 +7,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.newestTestgrunnlagIds
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase.Status
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatStatus
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO.KontrollDB
@@ -30,7 +29,7 @@ class TestoverviewService(
     val kontrollDAO: KontrollDAO,
 ) {
 
-    val logger = LoggerFactory.getLogger(this::class.java)
+  val logger = LoggerFactory.getLogger(this::class.java)
 
   fun listTestOverviewElements(kontrollId: Int): List<TestingStatus> {
     val kontroll = kontrollDAO.getKontroller(listOf(kontrollId)).getOrThrow().single()
@@ -50,27 +49,27 @@ class TestoverviewService(
     }
   }
 
-    fun listTestOverviewElementsByUser(userId: String?): List<TestingStatus> {
-        val testgrunnlagList = testgrunnlagService.getTestgrunnlagForBrukar(userId).getOrThrow()
-        val loeysingar = getLoeysingMapFromTestgrunnlag(testgrunnlagList)
+  fun listTestOverviewElementsByUser(userId: String?): List<TestingStatus> {
+    val testgrunnlagList = testgrunnlagService.getTestgrunnlagForBrukar(userId).getOrThrow()
+    val loeysingar = getLoeysingMapFromTestgrunnlag(testgrunnlagList)
 
+    return testgrunnlagList.flatMap { testgrunnlagKontroll ->
+      val allResultat =
+          testResultatDAO.getManyResultsByKontrollId(testgrunnlagKontroll.id).getOrThrow()
+      val styringsdataMap =
+          styringsdataService.getStyringsdataMapForKontroll(testgrunnlagKontroll.id)
+      val kontroll =
+          kontrollDAO.getKontroller(listOf(testgrunnlagKontroll.kontrollId)).getOrThrow().single()
 
-        return testgrunnlagList.flatMap { testgrunnlagKontroll ->
-
-            val allResultat = testResultatDAO.getManyResultsByKontrollId(testgrunnlagKontroll.id).getOrThrow()
-            val styringsdataMap = styringsdataService.getStyringsdataMapForKontroll(testgrunnlagKontroll.id)
-            val kontroll = kontrollDAO.getKontroller(listOf(testgrunnlagKontroll.kontrollId)).getOrThrow().single()
-
-
-            processTestgrunnlagKontroll(
-                testgrunnlagKontroll,
-                loeysingar,
-                kontroll,
-                allResultat,
-                styringsdataMap,
-                testgrunnlagList.newestTestgrunnlagIds())
-        }
+      processTestgrunnlagKontroll(
+          testgrunnlagKontroll,
+          loeysingar,
+          kontroll,
+          allResultat,
+          styringsdataMap,
+          testgrunnlagList.newestTestgrunnlagIds())
     }
+  }
 
   private fun processTestgrunnlagKontroll(
       testgrunnlagKontroll: TestgrunnlagKontroll,
@@ -124,7 +123,6 @@ class TestoverviewService(
         statisticsService.getTestingStatusForLoeysing(
             loeysing.id, testgrunnlagKontroll.id, resultat, testregelIdList, sideutvalIdList)
 
-
     return TestingStatus(
         loeysingId = loeysing.id,
         loeysingNamn = loeysing.namn,
@@ -142,8 +140,8 @@ class TestoverviewService(
 
   private fun getTeststatus(results: List<ResultatManuellKontroll>): ManuellTestStatus {
     return when {
-      results.all { it.status == Status.IkkjePaabegynt } -> ManuellTestStatus.IKKJE_STARTA
-      results.all { it.status == Status.Ferdig } -> ManuellTestStatus.FERDIG
+      results.all { it.status == ResultatStatus.IkkjePaabegynt } -> ManuellTestStatus.IKKJE_STARTA
+      results.all { it.status == ResultatStatus.Ferdig } -> ManuellTestStatus.FERDIG
       else -> ManuellTestStatus.UNDER_ARBEID
     }
   }
@@ -166,8 +164,9 @@ class TestoverviewService(
 
   private fun kanReteste(resultat: List<ResultatManuellKontroll>, isNewest: Boolean): Boolean {
     val harBrot =
-        resultat.any { it.elementResultat == TestresultatUtfall.brot && it.status == Status.Ferdig }
+        resultat.any {
+          it.elementResultat == TestresultatUtfall.brot && it.status == ResultatStatus.Ferdig
+        }
     return harBrot && isNewest
   }
-
 }

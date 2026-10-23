@@ -29,7 +29,7 @@ class TestResultatResource(
     val bildeService: BildeService,
     val testregelCache: TestregelCache,
     val dataUrlConverter: DataUrlConverter,
-    val testresultatService:  TestresultatService
+    val testresultatService: TestresultatService
 ) {
   val logger: Logger = getLogger(TestResultatResource::class.java)
 
@@ -91,7 +91,6 @@ class TestResultatResource(
     require(testResultat.id == id) { "id i URL-en og id i dei innsendte dataene er ikkje den same" }
     val brukar = brukarService.getCurrentUser()
 
-
     return testResultatDAO
         .update(testResultat.copy(brukar = brukar))
         .fold(
@@ -107,7 +106,7 @@ class TestResultatResource(
       runCatching {
             logger.info("Sletter testresultat med id $id")
             val resultat = testResultatDAO.getTestResultat(id).getOrThrow()
-            require(resultat.status != ResultatManuellKontrollBase.Status.Ferdig) {
+            require(resultat.status != ResultatStatus.Ferdig) {
               "Resultat er ferdig og kan ikke slettes"
             }
             bildeService.deleteBilder(id).getOrThrow()
@@ -125,10 +124,11 @@ class TestResultatResource(
                 }
               })
 
-    private fun resolveResultToSave(input: CreateTestResultat): CreateTestResultat {
+  private fun resolveResultToSave(input: CreateTestResultat): CreateTestResultat {
     if (!isTestregelAutomatic(input.testregelId)) return input
 
-    return testresultatService.getResultAutomatic(input).takeIf { it.elementResultat != null } ?: input
+    return testresultatService.getResultAutomatic(input).takeIf { it.elementResultat != null }
+        ?: input
   }
 
   private fun saveImage(testresultatId: Int, bildeDataUrl: String) {

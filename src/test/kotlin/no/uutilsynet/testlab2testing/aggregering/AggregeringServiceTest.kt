@@ -13,7 +13,8 @@ import no.uutilsynet.testlab2testing.forenkletkontroll.MaalingService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatStatus
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Svar
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
 import no.uutilsynet.testlab2testing.resultat.OpprettTestgrunnlag
@@ -202,13 +203,12 @@ class AggregeringServiceTest(
             elementOmtale = "Hovedoverskrift",
             elementResultat = TestresultatUtfall.brot,
             elementUtfall = "Feil",
-            svar = listOf(ResultatManuellKontrollBase.Svar("Steg 1", "Svar 1")),
+            svar = listOf(Svar("Steg 1", "Svar 1")),
             testVartUtfoert = Instant.now(),
-            status = ResultatManuellKontrollBase.Status.Ferdig,
+            status = ResultatStatus.Ferdig,
             kommentar = "Kommentar",
             sistLagra = Instant.now(),
-            elementUtfallId = null
-        )
+            elementUtfallId = null)
 
     val resultatKontrol2 =
         ResultatManuellKontroll(
@@ -221,9 +221,9 @@ class AggregeringServiceTest(
             elementOmtale = "Bilde",
             elementResultat = TestresultatUtfall.samsvar,
             elementUtfall = "Heilt ok",
-            svar = listOf(ResultatManuellKontrollBase.Svar("Steg 1", "Svar 1")),
+            svar = listOf(Svar("Steg 1", "Svar 1")),
             testVartUtfoert = Instant.now(),
-            status = ResultatManuellKontrollBase.Status.Ferdig,
+            status = ResultatStatus.Ferdig,
             kommentar = "Kommentar",
             sistLagra = Instant.now())
 
@@ -314,9 +314,9 @@ class AggregeringServiceTest(
                 elementOmtale = "Hovedoverskrift",
                 elementResultat = elementResultat,
                 elementUtfall = "elementUtfall",
-                svar = listOf(ResultatManuellKontrollBase.Svar("Steg 1", "Svar 1")),
+                svar = listOf(Svar("Steg 1", "Svar 1")),
                 testVartUtfoert = Instant.now(),
-                status = ResultatManuellKontrollBase.Status.Ferdig,
+                status = ResultatStatus.Ferdig,
                 kommentar = "Kommentar",
                 sistLagra = Instant.now()))
         id++

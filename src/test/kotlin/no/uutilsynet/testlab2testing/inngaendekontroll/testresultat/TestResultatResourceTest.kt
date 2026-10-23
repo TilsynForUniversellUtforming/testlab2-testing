@@ -13,7 +13,6 @@ import no.uutilsynet.testlab2testing.common.TestUtils
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.NyttTestgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase.Svar
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
 import no.uutilsynet.testlab2testing.kontroll.KontrollResource
@@ -308,7 +307,7 @@ class TestResultatResourceTest(
   @DisplayName("vi skal ikke kunne slette et testresultat hvis status er 'Ferdig'")
   fun sletteFerdigTestresultat() {
     val resultat = getTestresultat()
-    val endret = resultat.copy(status = ResultatManuellKontrollBase.Status.Ferdig)
+    val endret = resultat.copy(status = ResultatStatus.Ferdig)
     client.put().uri(location).body(endret).exchange().expectStatus().isOk
     client.delete().uri(location).exchange().expectStatus().isBadRequest
   }
@@ -318,7 +317,7 @@ class TestResultatResourceTest(
   @DisplayName("vi skal kunne slette et testresultat hvis status er noe annet enn 'Ferdig'")
   fun sletteTestresultat() {
     val resultat = getTestresultat()
-    val endret = resultat.copy(status = ResultatManuellKontrollBase.Status.UnderArbeid)
+    val endret = resultat.copy(status = ResultatStatus.UnderArbeid)
     client.put().uri(location).body(endret).exchange().expectStatus().isOk
 
     client.delete().uri(location).exchange().expectStatus().isOk

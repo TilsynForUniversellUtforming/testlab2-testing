@@ -15,7 +15,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagList
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatStatus
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
@@ -199,7 +199,7 @@ class ResultatServiceTest(
             null,
             emptyList(),
             Instant.now(),
-            ResultatManuellKontrollBase.Status.UnderArbeid,
+            ResultatStatus.UnderArbeid,
             null,
             Instant.now(),
             null)
@@ -217,7 +217,7 @@ class ResultatServiceTest(
             null,
             emptyList(),
             Instant.now(),
-            ResultatManuellKontrollBase.Status.UnderArbeid,
+            ResultatStatus.UnderArbeid,
             null,
             Instant.now())
 

@@ -105,8 +105,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 createKontrollDB(resultSet, utval, testreglar, sideutvalList)
               }
               .toList()
-        require(result.size == ids.size)
-        result
+      require(result.size == ids.size)
+      result
     }
   }
 
@@ -165,7 +165,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                 jdbcTemplate
                     .queryForList(
                         """select testregel_id from "testlab2_testing"."kontroll_testreglar"
-                            | where kontroll_id = :kontroll_id""".trimMargin(),
+                            | where kontroll_id = :kontroll_id"""
+                            .trimMargin(),
                         mapOf("kontroll_id" to kontrollId),
                         Int::class.java)
                     .filterIsInstance<Int>())
@@ -320,7 +321,8 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     jdbcTemplate.batchUpdate(
         """insert into testlab2_testing."kontroll_testreglar" (kontroll_id, testregel_id)
-            | values (:kontrollId, :testregelId)""".trimMargin(),
+            | values (:kontrollId, :testregelId)"""
+            .trimMargin(),
         updateBatchValuesTestreglar.toTypedArray())
   }
 

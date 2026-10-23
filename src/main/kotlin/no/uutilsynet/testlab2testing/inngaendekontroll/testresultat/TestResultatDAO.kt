@@ -42,7 +42,7 @@ class TestResultatDAO(
               "elementUtfall" to createTestResultat.elementUtfall,
               "kommentar" to createTestResultat.kommentar,
               "testVartUtfoert" to createTestResultat.testVartUtfoert,
-              "status" to ResultatManuellKontrollBase.Status.IkkjePaabegynt.name,
+              "status" to ResultatStatus.IkkjePaabegynt.name,
               "kommentar" to createTestResultat.kommentar,
               "sist_lagra" to created,
               "utfallId" to createTestResultat.elementUtfallId),
@@ -112,8 +112,7 @@ class TestResultatDAO(
                       elementUtfall = rs.getString("element_utfall"),
                       svar = emptyList(),
                       testVartUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant(),
-                      status =
-                          enumValueOf<ResultatManuellKontrollBase.Status>(rs.getString("status")),
+                      status = enumValueOf<ResultatStatus>(rs.getString("status")),
                       kommentar = rs.getString("kommentar"),
                       sistLagra = rs.getTimestamp("sist_lagra").toInstant(),
                       elementUtfallId = rs.getInt("utfall_id").takeIf { !rs.wasNull() })
@@ -126,9 +125,7 @@ class TestResultatDAO(
             .groupBy { it.testgrunnlagId }
       }
 
-  private fun getSvarMapByKontrollId(
-      kontrollId: Int
-  ): Map<Int, List<ResultatManuellKontrollBase.Svar>> =
+  private fun getSvarMapByKontrollId(kontrollId: Int): Map<Int, List<Svar>> =
       jdbcTemplate
           .query(
               """
@@ -144,13 +141,11 @@ class TestResultatDAO(
                   .trimIndent(),
               mapOf("kontrollId" to kontrollId),
           ) { rs, _ ->
-            SvarDB(
-                rs.getInt("id"),
-                ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar")))
+            SvarDB(rs.getInt("id"), Svar(rs.getString("steg"), rs.getString("svar")))
           }
           .groupBy({ it.resultatManuellKontrollId }, { it.svar })
 
-  data class SvarDB(val resultatManuellKontrollId: Int, val svar: ResultatManuellKontrollBase.Svar)
+  data class SvarDB(val resultatManuellKontrollId: Int, val svar: Svar)
 
   private fun getTestResultat(
       resultatId: Int? = null,
@@ -200,9 +195,9 @@ class TestResultatDAO(
                           }
                           .getOrNull(),
                   elementUtfall = rs.getString("element_utfall"),
-                  svar = emptyList<ResultatManuellKontrollBase.Svar>(),
+                  svar = emptyList<Svar>(),
                   testVartUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant(),
-                  status = enumValueOf<ResultatManuellKontrollBase.Status>(rs.getString("status")),
+                  status = enumValueOf<ResultatStatus>(rs.getString("status")),
                   kommentar = rs.getString("kommentar"),
                   sistLagra = rs.getTimestamp("sist_lagra").toInstant(),
                   elementUtfallId = rs.getInt("utfall_id").takeIf { !rs.wasNull() })
@@ -217,7 +212,7 @@ class TestResultatDAO(
   private fun getSvarMapForTestresultat(
       resultatId: Int?,
       testgrunnlagId: Int?
-  ): Map<Int, List<ResultatManuellKontrollBase.Svar>> {
+  ): Map<Int, List<Svar>> {
     val svarMap =
         jdbcTemplate
             .query(
@@ -234,9 +229,7 @@ class TestResultatDAO(
                 """
                     .trimIndent(),
                 mapOf("id" to resultatId, "testgrunnlag_id" to testgrunnlagId)) { rs, _ ->
-                  SvarDB(
-                      rs.getInt("id"),
-                      ResultatManuellKontrollBase.Svar(rs.getString("steg"), rs.getString("svar")))
+                  SvarDB(rs.getInt("id"), Svar(rs.getString("steg"), rs.getString("svar")))
                 }
             .groupBy({ it.resultatManuellKontrollId }, { it.svar })
     return svarMap
@@ -325,8 +318,7 @@ class TestResultatDAO(
             "id" to testResultat.id,
             "kommentar" to testResultat.kommentar,
             "sist_lagra" to now,
-            "utfallId" to testResultat.elementUtfallId
-            ))
+            "utfallId" to testResultat.elementUtfallId))
   }
 
   private fun deleteGamleSvar(testResultat: ResultatManuellKontroll) {
@@ -363,25 +355,21 @@ class TestResultatDAO(
         mapOf("id" to id))
   }
 
-  fun saveSvar(testresultatId: Int, stegOgSvar: ResultatManuellKontrollBase.Svar): Result<Unit> =
-      runCatching {
-        val (steg, svar) = stegOgSvar
+  fun saveSvar(testresultatId: Int, stegOgSvar: Svar): Result<Unit> = runCatching {
+    val (steg, svar) = stegOgSvar
 
-        jdbcTemplate.update(
-            """
+    jdbcTemplate.update(
+        """
             insert into testresultat_svar (testresultat_id, steg, svar)
             values (:testresultatId, :steg, :svar)
             on conflict (testresultat_id, steg) do update
             set svar = excluded.svar
         """
-                .trimIndent(),
-            mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar))
-      }
+            .trimIndent(),
+        mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar))
+  }
 
-  fun saveSvarBatch(
-      testresultatId: Int,
-      stegOgSvarList: List<ResultatManuellKontrollBase.Svar>
-  ): Result<Unit> = runCatching {
+  fun saveSvarBatch(testresultatId: Int, stegOgSvarList: List<Svar>): Result<Unit> = runCatching {
     val batchValues =
         stegOgSvarList.map { (steg, svar) ->
           mapOf("testresultatId" to testresultatId, "steg" to steg, "svar" to svar)
