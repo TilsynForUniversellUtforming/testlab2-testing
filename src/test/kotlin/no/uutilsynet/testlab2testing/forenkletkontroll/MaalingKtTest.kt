@@ -208,11 +208,11 @@ class MaalingKtTest {
               maalingDateStart,
               listOf(
                   TestKoeyring.Ferdig(
-                      TestConstants.uutilsynetLoeysing,
-                      Instant.now(),
-                      URI("https://status.url").toURL(),
-                      lenker,
-                      Brukar("test", "testar"),
+                      loeysing = TestConstants.uutilsynetLoeysing,
+                      sistOppdatert = Instant.now(),
+                      statusURL = URI("https://status.url").toURL(),
+                      lenker = testerLenker,
+                      brukar = Brukar("test", "testar"),
                       10)))
       val result = Maaling.toTestingFerdig(maaling)
       assertThat(result).isNotNull
@@ -234,11 +234,11 @@ class MaalingKtTest {
                       "autotester krasja",
                       Brukar("test", "testar")),
                   TestKoeyring.Ferdig(
-                      TestConstants.uutilsynetLoeysing,
-                      Instant.now(),
-                      URI("https://status.url").toURL(),
-                      lenker,
-                      Brukar("test", "testar"),
+                      loeysing = TestConstants.uutilsynetLoeysing,
+                      sistOppdatert = Instant.now(),
+                      statusURL = URI("https://status.url").toURL(),
+                      lenker = testerLenker,
+                      brukar = Brukar("test", "testar"),
                       10),
               ))
       val result = Maaling.toTestingFerdig(maaling)
@@ -256,18 +256,18 @@ class MaalingKtTest {
             maalingDateStart,
             listOf(
                 TestKoeyring.Ferdig(
-                    TestConstants.digdirLoeysing,
-                    Instant.now(),
-                    URI("https://www.status.url").toURL(),
-                    lenker,
-                    Brukar("test", "testar"),
+                    loeysing = TestConstants.digdirLoeysing,
+                    sistOppdatert = Instant.now(),
+                    statusURL = URI("https://www.status.url").toURL(),
+                    lenker = testerLenker,
+                    brukar = Brukar("test", "testar"),
                     10),
                 TestKoeyring.Ferdig(
-                    TestConstants.uutilsynetLoeysing,
-                    Instant.now(),
-                    URI("https://www.status.url").toURL(),
-                    lenker,
-                    Brukar("test", "testar"),
+                   loeysing =  TestConstants.uutilsynetLoeysing,
+                    sistOppdatert = Instant.now(),
+                    statusURL = URI("https://www.status.url").toURL(),
+                    lenker = testerLenker,
+                    brukar = Brukar("test", "testar"),
                     10)))
 
     @DisplayName(
@@ -287,15 +287,17 @@ class MaalingKtTest {
       assertThat(testKoeyringar[0].loeysing, equalTo(uutilsynetLoeysing))
     }
   }
+
+    val testerLenker =
+        AutoTesterClient.AutoTesterLenker(
+            URI("https://fullt.resultat").toURL(),
+            URI("https://brot.resultat").toURL(),
+            URI("https://aggregeringTR.resultat").toURL(),
+            URI("https://aggregeringSK.resultat").toURL(),
+            URI("https://aggregeringSide.resultat").toURL(),
+            URI("https://aggregeringSideTR.resultat").toURL(),
+            URI("https://aggregeringLoeysing.resultat").toURL(),
+        )
+
 }
 
-val lenker =
-    AutoTesterClient.AutoTesterLenker(
-        URI("https://fullt.resultat").toURL(),
-        URI("https://brot.resultat").toURL(),
-        URI("https://aggregeringTR.resultat").toURL(),
-        URI("https://aggregeringSK.resultat").toURL(),
-        URI("https://aggregeringSide.resultat").toURL(),
-        URI("https://aggregeringSideTR.resultat").toURL(),
-        URI("https://aggregeringLoeysing.resultat").toURL(),
-    )
