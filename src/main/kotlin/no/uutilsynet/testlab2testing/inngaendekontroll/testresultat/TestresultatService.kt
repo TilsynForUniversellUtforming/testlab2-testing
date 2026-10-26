@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatResource.CreateTestResultat
 import no.uutilsynet.testlab2testing.testing.automatisk.elementtesting.AutomaticTestingService
 import no.uutilsynet.testlab2testing.testing.automatisk.elementtesting.AutotesterPayload
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
@@ -28,10 +27,5 @@ class TestresultatService(
             },
             onFailure = { createTestResult })
   }
-
-  //    fun checkIfUtfallIsCustom(testResultat: ResultatManuellKontroll): Boolean {
-  //        val testregel = testregelCache.getTestregelById(testResultat.testregelId)
-  //        val canHaveCustomOutcome = testregel.modus == TestregelModus.manuellForenkla
-  //    }
 
 }

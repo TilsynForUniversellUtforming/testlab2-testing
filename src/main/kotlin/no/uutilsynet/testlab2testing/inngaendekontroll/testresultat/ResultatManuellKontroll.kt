@@ -4,22 +4,20 @@ import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 
-open class ResultatManuellKontrollBase(
-    open val testgrunnlagId: Int,
-    open val loeysingId: Int,
-    open val testregelId: Int,
-    open val sideutvalId: Int,
-    open val brukar: Brukar = Brukar("testesen@digdir.no", "Test Testesen"),
-    open val element: Element? = null,
-    open val svar: List<Svar>,
-    open val testVartUtfoert: Instant?,
-    open val status: ResultatStatus = ResultatStatus.IkkjePaabegynt,
-    open val kommentar: String?,
-    open val sistLagra: Instant,
-    open val ekstraSjekk: Boolean = false,
-) {
-  val elementOmtale: String?
-    get() = element?.elementOmtale
+interface ResultatManuellKontrollBase {
+  val testgrunnlagId: Int
+  val loeysingId: Int
+  val testregelId: Int
+  val sideutvalId: Int
+  val brukar: Brukar
+  val element: Element?
+  val svar: List<Svar>
+  val testVartUtfoert: Instant?
+  val status: ResultatStatus
+  val kommentar: String?
+  val sistLagra: Instant
+  val ekstraSjekk: Boolean
+
 
   val elementResultat: TestresultatUtfall?
     get() = element?.elementResultat
@@ -27,15 +25,25 @@ open class ResultatManuellKontrollBase(
   val elementUtfall: String?
     get() = element?.elementUtfall
 
-  val elementUtfallId: Int?
-    get() = element?.elementUtfallId
-
-  val elementOmtaleHtml: String?
+    val elementOmtaleHtml: String?
     get() = element?.elementOmtaleHtml
 
-  val elementPlassering: String?
-    get() = element?.elementPlassering
+}
 
+data class CreateRetestResultatManuellKontroll(
+    override val testgrunnlagId: Int,
+    override val loeysingId: Int,
+    override val testregelId: Int,
+    override val sideutvalId: Int,
+    override val brukar: Brukar = Brukar("testesen@digdir.no", "Test Testesen"),
+    override val element: Element? = null,
+    override val svar: List<Svar>,
+    override val testVartUtfoert: Instant?,
+    override val status: ResultatStatus = ResultatStatus.IkkjePaabegynt,
+    override val kommentar: String?,
+    override val sistLagra: Instant,
+    override val ekstraSjekk: Boolean = false,
+) : ResultatManuellKontrollBase {
   constructor(
       testgrunnlagId: Int,
       loeysingId: Int,
@@ -112,21 +120,7 @@ data class ResultatManuellKontroll(
     override val kommentar: String?,
     override val sistLagra: Instant,
     override val ekstraSjekk: Boolean = false,
-) :
-    ResultatManuellKontrollBase(
-        testgrunnlagId,
-        loeysingId,
-        testregelId,
-        sideutvalId,
-        brukar,
-        element,
-        svar,
-        testVartUtfoert,
-        status,
-        kommentar,
-        sistLagra,
-        ekstraSjekk,
-    ) {
+) : ResultatManuellKontrollBase {
   constructor(
       id: Int,
       testgrunnlagId: Int,

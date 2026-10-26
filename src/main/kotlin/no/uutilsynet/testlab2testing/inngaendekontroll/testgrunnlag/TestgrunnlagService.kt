@@ -4,7 +4,7 @@ import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.CreateRetestResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.loeysing.LoeysingsRegisterClient
@@ -49,7 +49,7 @@ class TestgrunnlagService(
     val created = Instant.now()
     originalResultatBrotList
         .map {
-          ResultatManuellKontrollBase(
+          CreateRetestResultatManuellKontroll(
               testgrunnlagId = retestTestgrunnlagId,
               loeysingId = retest.loeysingId,
               testregelId = it.testregelId,
@@ -128,8 +128,8 @@ class TestgrunnlagService(
         originalResultatList.filter {
           it.testgrunnlagId == originalTestgrunnlagId &&
               it.loeysingId == loeysingId &&
-              it.elementResultat != null &&
-              it.elementResultat == TestresultatUtfall.brot
+              it.element?.elementResultat != null &&
+              it.element.elementResultat == TestresultatUtfall.brot
         }
 
     if (brotResultat.isEmpty()) {

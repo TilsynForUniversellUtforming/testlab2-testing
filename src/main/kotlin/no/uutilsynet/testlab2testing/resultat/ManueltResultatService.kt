@@ -107,7 +107,7 @@ class ManueltResultatService(
         it.elementUtfall,
         it.elementResultat,
         TestresultatDetaljert.ElementOmtale(
-            htmlCode = null, pointer = null, description = it.elementOmtale),
+            htmlCode = null, pointer = null, description = it.element?.elementOmtale),
         it.brukar,
         it.kommentar,
         getBildeForTestresultat(it))

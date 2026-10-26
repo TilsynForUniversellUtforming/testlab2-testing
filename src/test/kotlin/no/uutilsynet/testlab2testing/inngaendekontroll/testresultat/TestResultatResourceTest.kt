@@ -238,7 +238,7 @@ class TestResultatResourceTest(
 
     val oppdatert = getTestresultat()
 
-    assertThat(oppdatert.elementOmtale).isEqualTo("iframe nummer 1")
+    assertThat(oppdatert.element?.elementOmtale).isEqualTo("iframe nummer 1")
   }
 
   @Test
@@ -301,8 +301,8 @@ class TestResultatResourceTest(
             .responseBody!!
     assertThat(resultatForTestgrunnlag.resultat).hasSize(1)
     val resultat = resultatForTestgrunnlag.resultat.first()
-    assertThat(resultat.elementOmtale).isEqualTo("iframe nummer 1")
-    assertThat(resultat.elementResultat).isEqualTo(resultat.elementResultat)
+    assertThat(resultat.element?.elementOmtale).isEqualTo("iframe nummer 1")
+    assertThat(resultat.element?.elementResultat).isEqualTo(resultat.elementResultat)
     assertThat(resultat.element?.elementUtfall)
         .isEqualTo(
             "Iframe har et tilgjengelig navn, som ikke beskriver formålet med innholdet i iframe.")

@@ -15,7 +15,7 @@ class TestResultatDAO(
     val brukarService: BrukarService
 ) {
   @Transactional
-  fun save(createTestResultat: TestResultatResource.CreateTestResultat): Result<Int> {
+  fun save(createTestResultat: CreateTestResultat): Result<Int> {
     return runCatching {
       val brukarId = getUserId()
 
@@ -248,7 +248,7 @@ class TestResultatDAO(
   }
 
   @Transactional
-  fun createRetest(retestResultat: ResultatManuellKontrollBase): Result<Unit> = runCatching {
+  fun createRetest(retestResultat: CreateRetestResultatManuellKontroll): Result<Unit> = runCatching {
     val brukarId = getUserId()
     val sistlagra = Timestamp.from(Instant.now())
 
