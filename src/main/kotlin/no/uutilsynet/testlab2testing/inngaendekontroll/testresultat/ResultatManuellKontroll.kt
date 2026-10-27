@@ -18,16 +18,14 @@ interface ResultatManuellKontrollBase {
   val sistLagra: Instant
   val ekstraSjekk: Boolean
 
-
   val elementResultat: TestresultatUtfall?
     get() = element?.elementResultat
 
   val elementUtfall: String?
     get() = element?.elementUtfall
 
-    val elementOmtaleHtml: String?
+  val elementOmtaleHtml: String?
     get() = element?.elementOmtaleHtml
-
 }
 
 data class CreateRetestResultatManuellKontroll(

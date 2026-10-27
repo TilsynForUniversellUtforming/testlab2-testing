@@ -47,10 +47,8 @@ class TestResultatDAO(
               "kommentar" to createTestResultat.kommentar,
               "sist_lagra" to created,
               "utfallId" to createTestResultat.elementUtfallId,
-              "ekstraSjekk" to createTestResultat.ekstraSjekk
-          ),
-          Int::class.java
-      )!!
+              "ekstraSjekk" to createTestResultat.ekstraSjekk),
+          Int::class.java)!!
     }
   }
 
@@ -122,7 +120,8 @@ class TestResultatDAO(
                       kommentar = rs.getString("kommentar"),
                       sistLagra = rs.getTimestamp("sist_lagra").toInstant(),
                       elementUtfallId = rs.getInt("utfall_id").takeIf { !rs.wasNull() },
-                      ekstraSjekk = rs.getBoolean("ekstra_sjekk"),)
+                      ekstraSjekk = rs.getBoolean("ekstra_sjekk"),
+                  )
                 }
                 .toList()
 
@@ -211,8 +210,7 @@ class TestResultatDAO(
                   sistLagra = rs.getTimestamp("sist_lagra").toInstant(),
                   elementUtfallId = rs.getInt("utfall_id").takeIf { !rs.wasNull() },
                   elementPlassering = rs.getString("element_plassering"),
-                  ekstraSjekk = rs.getBoolean("ekstra_sjekk")
-                )
+                  ekstraSjekk = rs.getBoolean("ekstra_sjekk"))
             }
             .toList()
 
@@ -248,42 +246,42 @@ class TestResultatDAO(
   }
 
   @Transactional
-  fun createRetest(retestResultat: CreateRetestResultatManuellKontroll): Result<Unit> = runCatching {
-    val brukarId = getUserId()
-    val sistlagra = Timestamp.from(Instant.now())
+  fun createRetest(retestResultat: CreateRetestResultatManuellKontroll): Result<Unit> =
+      runCatching {
+        val brukarId = getUserId()
+        val sistlagra = Timestamp.from(Instant.now())
 
-    val id =
-        jdbcTemplate.queryForObject(
-            """
+        val id =
+            jdbcTemplate.queryForObject(
+                """
         insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
                                      element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra,utfall_id, element_plassering, ekstra_sjekk)
         values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementOmtaleHtml, :elementUtfall,
                 :testVartUtfoert,:status, :kommentar, :sist_lagra, :utfallId, :elementPlassering, :ekstraSjekk)
         returning id
       """
-                .trimIndent(),
-            mapOf(
-                "testgrunnlagId" to retestResultat.testgrunnlagId,
-                "loeysingId" to retestResultat.loeysingId,
-                "testregelId" to retestResultat.testregelId,
-                "sideutvalId" to retestResultat.sideutvalId,
-                "brukarId" to brukarId,
-                "elementOmtale" to retestResultat.element?.elementOmtale,
-                "elementOmtaleHtml" to retestResultat.element?.elementOmtaleHtml,
-                "elementResultat" to retestResultat.element?.elementResultat?.name,
-                "elementUtfall" to retestResultat.element?.elementUtfall,
-                "testVartUtfoert" to retestResultat.testVartUtfoert?.let { Timestamp.from(it) },
-                "status" to retestResultat.status.name,
-                "kommentar" to retestResultat.kommentar,
-                "sist_lagra" to sistlagra,
-                "utfallId" to retestResultat.element?.elementUtfallId,
-                "elementPlassering" to retestResultat.element?.elementPlassering,
-                "ekstraSjekk" to retestResultat.ekstraSjekk
-            ),
-            Int::class.java)!!
+                    .trimIndent(),
+                mapOf(
+                    "testgrunnlagId" to retestResultat.testgrunnlagId,
+                    "loeysingId" to retestResultat.loeysingId,
+                    "testregelId" to retestResultat.testregelId,
+                    "sideutvalId" to retestResultat.sideutvalId,
+                    "brukarId" to brukarId,
+                    "elementOmtale" to retestResultat.element?.elementOmtale,
+                    "elementOmtaleHtml" to retestResultat.element?.elementOmtaleHtml,
+                    "elementResultat" to retestResultat.element?.elementResultat?.name,
+                    "elementUtfall" to retestResultat.element?.elementUtfall,
+                    "testVartUtfoert" to retestResultat.testVartUtfoert?.let { Timestamp.from(it) },
+                    "status" to retestResultat.status.name,
+                    "kommentar" to retestResultat.kommentar,
+                    "sist_lagra" to sistlagra,
+                    "utfallId" to retestResultat.element?.elementUtfallId,
+                    "elementPlassering" to retestResultat.element?.elementPlassering,
+                    "ekstraSjekk" to retestResultat.ekstraSjekk),
+                Int::class.java)!!
 
-    saveSvarBatch(id, retestResultat.svar)
-  }
+        saveSvarBatch(id, retestResultat.svar)
+      }
 
   @Transactional
   fun update(testResultat: ResultatManuellKontroll): Result<Unit> = runCatching {
@@ -320,7 +318,8 @@ class TestResultatDAO(
               status = :status,
               kommentar = :kommentar,
               sist_lagra = :sist_lagra,
-              utfall_id = :utfallId
+              utfall_id = :utfallId,
+              ekstra_sjekk = :ekstraSjekk
           where id = :id
         """
             .trimIndent(),
@@ -335,7 +334,9 @@ class TestResultatDAO(
             "id" to testResultat.id,
             "kommentar" to testResultat.kommentar,
             "sist_lagra" to now,
-            "utfallId" to testResultat.element?.elementUtfallId))
+            "utfallId" to testResultat.element?.elementUtfallId,
+            "ekstraSjekk" to testResultat.ekstraSjekk
+        ))
   }
 
   private fun deleteGamleSvar(testResultat: ResultatManuellKontroll) {

@@ -22,10 +22,17 @@ class TestresultatService(
         .fold(
             onSuccess = {
               createTestResult.copy(
-                  elementResultat = TestresultatUtfall.valueOf(it.elementResultat),
-                  elementUtfall = it.elementUtfall)
+                  element =
+                      createTestResult.element?.copy(
+                          elementResultat = TestresultatUtfall.valueOf(it.elementResultat),
+                          elementUtfall = it.elementUtfall,
+                      )
+                          ?: Element(
+                              elementOmtale = createTestResult.elementOmtale,
+                              elementResultat = TestresultatUtfall.valueOf(it.elementResultat),
+                              elementUtfall = it.elementUtfall,
+                          ))
             },
             onFailure = { createTestResult })
   }
-
 }

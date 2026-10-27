@@ -263,7 +263,7 @@ class MaalingKtTest {
                     brukar = Brukar("test", "testar"),
                     10),
                 TestKoeyring.Ferdig(
-                   loeysing =  TestConstants.uutilsynetLoeysing,
+                    loeysing = TestConstants.uutilsynetLoeysing,
                     sistOppdatert = Instant.now(),
                     statusURL = URI("https://www.status.url").toURL(),
                     lenker = testerLenker,
@@ -288,16 +288,14 @@ class MaalingKtTest {
     }
   }
 
-    val testerLenker =
-        AutoTesterClient.AutoTesterLenker(
-            URI("https://fullt.resultat").toURL(),
-            URI("https://brot.resultat").toURL(),
-            URI("https://aggregeringTR.resultat").toURL(),
-            URI("https://aggregeringSK.resultat").toURL(),
-            URI("https://aggregeringSide.resultat").toURL(),
-            URI("https://aggregeringSideTR.resultat").toURL(),
-            URI("https://aggregeringLoeysing.resultat").toURL(),
-        )
-
+  val testerLenker =
+      AutoTesterClient.AutoTesterLenker(
+          URI("https://fullt.resultat").toURL(),
+          URI("https://brot.resultat").toURL(),
+          URI("https://aggregeringTR.resultat").toURL(),
+          URI("https://aggregeringSK.resultat").toURL(),
+          URI("https://aggregeringSide.resultat").toURL(),
+          URI("https://aggregeringSideTR.resultat").toURL(),
+          URI("https://aggregeringLoeysing.resultat").toURL(),
+      )
 }
-

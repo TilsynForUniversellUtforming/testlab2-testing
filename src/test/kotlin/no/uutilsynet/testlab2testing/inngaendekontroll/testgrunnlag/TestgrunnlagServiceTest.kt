@@ -72,7 +72,8 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
     `when`(testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag))
         .thenReturn(Result.success(newTestgrunnlagId))
 
-      val restestResultatList = originalResultatBrotList.map {
+    val restestResultatList =
+        originalResultatBrotList.map {
           CreateRetestResultatManuellKontroll(
               testgrunnlagId = newTestgrunnlagId,
               loeysingId = it.loeysingId,
@@ -88,7 +89,7 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
               kommentar = it.kommentar,
               sistLagra = Instant.now(),
           )
-      }
+        }
 
     `when`(testResultatDAO.createRetest(restestResultatList.first()))
         .thenReturn(Result.success(Unit))
