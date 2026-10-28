@@ -244,7 +244,7 @@ class RegelsettIntegrationTest(
             .returnResult<String>()
             .responseBody
 
-    assertThat(response).isEqualTo("\"mangler navn\"")
+    assertThat(response).isEqualTo("mangler navn")
   }
 
   @Test
