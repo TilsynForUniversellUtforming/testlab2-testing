@@ -114,6 +114,7 @@ class TestResultatDAO(
                               }
                               .getOrNull(),
                       elementUtfall = rs.getString("element_utfall"),
+                      elementPlassering = rs.getString("element_plassering"),
                       svar = emptyList(),
                       testVartUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant(),
                       status = enumValueOf<ResultatStatus>(rs.getString("status")),
@@ -335,8 +336,7 @@ class TestResultatDAO(
             "kommentar" to testResultat.kommentar,
             "sist_lagra" to now,
             "utfallId" to testResultat.element?.elementUtfallId,
-            "ekstraSjekk" to testResultat.ekstraSjekk
-        ))
+            "ekstraSjekk" to testResultat.ekstraSjekk))
   }
 
   private fun deleteGamleSvar(testResultat: ResultatManuellKontroll) {

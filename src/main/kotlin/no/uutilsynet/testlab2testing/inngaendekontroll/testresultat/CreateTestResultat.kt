@@ -1,5 +1,7 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
@@ -16,41 +18,48 @@ data class CreateTestResultat(
     val imageDataUrl: String? = null,
     val ekstraSjekk: Boolean = false,
 ) {
-  constructor(
-      testgrunnlagId: Int,
-      loeysingId: Int,
-      testregelId: Int,
-      sideutvalId: Int,
-      brukar: Brukar? = null,
-      elementOmtale: String? = null,
-      elementResultat: TestresultatUtfall? = null,
-      elementUtfall: String? = null,
-      elementUtfallId: Int? = null,
-      elementOmtaleHtml: String? = null,
-      elementPlassering: String? = null,
-      testVartUtfoert: Instant? = null,
-      kommentar: String? = null,
-      imageDataUrl: String? = null,
-      ekstraSjekk: Boolean = false,
-  ) : this(
-      testgrunnlagId,
-      loeysingId,
-      testregelId,
-      sideutvalId,
-      brukar,
-      Element(
-          elementOmtale = elementOmtale,
-          elementResultat = elementResultat,
-          elementUtfall = elementUtfall,
-          elementUtfallId = elementUtfallId,
-          elementOmtaleHtml = elementOmtaleHtml,
-          elementPlassering = elementPlassering,
-      ),
-      testVartUtfoert,
-      kommentar,
-      imageDataUrl,
-      ekstraSjekk,
-  )
+  companion object {
+    @JsonCreator
+    @JvmStatic
+    fun create(
+        @JsonProperty("testgrunnlagId") testgrunnlagId: Int,
+        @JsonProperty("loeysingId") loeysingId: Int,
+        @JsonProperty("testregelId") testregelId: Int,
+        @JsonProperty("sideutvalId") sideutvalId: Int,
+        @JsonProperty("brukar") brukar: Brukar? = null,
+        @JsonProperty("element") element: Element? = null,
+        @JsonProperty("elementOmtale") elementOmtale: String? = null,
+        @JsonProperty("elementResultat") elementResultat: TestresultatUtfall? = null,
+        @JsonProperty("elementUtfall") elementUtfall: String? = null,
+        @JsonProperty("elementUtfallId") elementUtfallId: Int? = null,
+        @JsonProperty("elementOmtaleHtml") elementOmtaleHtml: String? = null,
+        @JsonProperty("elementPlassering") elementPlassering: String? = null,
+        @JsonProperty("testVartUtfoert") testVartUtfoert: Instant? = null,
+        @JsonProperty("kommentar") kommentar: String? = null,
+        @JsonProperty("imageDataUrl") imageDataUrl: String? = null,
+        @JsonProperty("ekstraSjekk") ekstraSjekk: Boolean = false,
+    ): CreateTestResultat =
+        CreateTestResultat(
+            testgrunnlagId = testgrunnlagId,
+            loeysingId = loeysingId,
+            testregelId = testregelId,
+            sideutvalId = sideutvalId,
+            brukar = brukar,
+            element = element
+                    ?: Element(
+                        elementOmtale = elementOmtale,
+                        elementResultat = elementResultat,
+                        elementUtfall = elementUtfall,
+                        elementUtfallId = elementUtfallId,
+                        elementOmtaleHtml = elementOmtaleHtml,
+                        elementPlassering = elementPlassering,
+                    ),
+            testVartUtfoert = testVartUtfoert,
+            kommentar = kommentar,
+            imageDataUrl = imageDataUrl,
+            ekstraSjekk = ekstraSjekk,
+        )
+  }
 
   val elementOmtale: String?
     get() = element?.elementOmtale

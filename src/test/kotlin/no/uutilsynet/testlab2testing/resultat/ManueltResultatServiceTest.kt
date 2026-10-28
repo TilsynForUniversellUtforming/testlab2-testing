@@ -51,21 +51,19 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
     val mockResult =
         listOf(
             ResultatManuellKontroll(
-                1,
-                1,
-                1,
-                1,
-                1,
-                Brukar("testbrukar", "testbrukar"),
-                null,
-                null,
-                null,
-                null,
-                listOf(Svar("1", "Kommentar")),
-                null,
-                ResultatStatus.Ferdig,
-                "kommentar",
-                Instant.now()))
+                id = 1,
+                testgrunnlagId = 1,
+                loeysingId = 1,
+                testregelId = 1,
+                sideutvalId = 1,
+                brukar = Brukar("testbrukar", "testbrukar"),
+                element = null,
+                svar = listOf(Svar("1", "Kommentar")),
+                testVartUtfoert = null,
+                status = ResultatStatus.Ferdig,
+                kommentar = "kommentar",
+                sistLagra = Instant.now(),
+            ))
 
     val testgrunnlagList = mock(TestgrunnlagKontroll::class.java)
 
