@@ -13,8 +13,7 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter
 
 @SpringBootApplication(
     exclude = [SecurityAutoConfiguration::class, HibernateJpaAutoConfiguration::class],
-            scanBasePackages =
-      ["no.uutilsynet.testlab2testing", "no.uutilsynet.testlab2securitylib"])
+    scanBasePackages = ["no.uutilsynet.testlab2testing", "no.uutilsynet.testlab2securitylib"])
 @ConfigurationPropertiesScan
 @EnableScheduling
 class Testlab2TestingApplication {

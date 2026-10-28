@@ -14,8 +14,9 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagList
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagType
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Element
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatStatus
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.kontroll.Kontroll
 import no.uutilsynet.testlab2testing.kontroll.KontrollDAO
@@ -187,39 +188,44 @@ class ResultatServiceTest(
 
     val resultat1 =
         ResultatManuellKontroll(
-            1,
-            1,
-            1,
-            1,
-            1,
-            Brukar("testar", "testar"),
-            "Ein knapp",
-            TestresultatUtfall.samsvar,
-            "Alt ok",
-            null,
-            emptyList(),
-            Instant.now(),
-            ResultatManuellKontrollBase.Status.UnderArbeid,
-            null,
-            Instant.now(),
-            null)
+            id = 1,
+            testgrunnlagId = 1,
+            loeysingId = 1,
+            testregelId = 1,
+            sideutvalId = 1,
+            brukar = Brukar("testar", "testar"),
+            element =
+                Element(
+                    elementOmtale = "Ein knapp",
+                    elementResultat = TestresultatUtfall.samsvar,
+                    elementUtfall = "Alt ok",
+                ),
+            svar = emptyList(),
+            testVartUtfoert = Instant.now(),
+            status = ResultatStatus.UnderArbeid,
+            kommentar = null,
+            sistLagra = Instant.now(),
+        )
     val resultat2 =
         ResultatManuellKontroll(
-            1,
-            1,
-            1,
-            1,
-            1,
-            Brukar("testar", "testar"),
-            "Eit bilde",
-            null,
-            null,
-            null,
-            emptyList(),
-            Instant.now(),
-            ResultatManuellKontrollBase.Status.UnderArbeid,
-            null,
-            Instant.now())
+            id = 1,
+            testgrunnlagId = 1,
+            loeysingId = 1,
+            testregelId = 1,
+            sideutvalId = 1,
+            brukar = Brukar("testar", "testar"),
+            element =
+                Element(
+                    elementOmtale = "Eit bilde",
+                    elementResultat = null,
+                    elementUtfall = null,
+                ),
+            svar = emptyList(),
+            testVartUtfoert = Instant.now(),
+            status = ResultatStatus.UnderArbeid,
+            kommentar = null,
+            sistLagra = Instant.now(),
+        )
 
     val sideUtvalList = mapOf(1 to URI.create("https://www.example.com").toURL())
 

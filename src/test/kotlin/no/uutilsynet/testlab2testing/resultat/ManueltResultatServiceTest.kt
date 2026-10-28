@@ -9,7 +9,8 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.Testgrunnlag
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagList
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatStatus
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Svar
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
 import no.uutilsynet.testlab2testing.testregel.TestregelCache
@@ -50,21 +51,19 @@ class ManueltResultatServiceTest(@Autowired val testUtils: TestUtils) {
     val mockResult =
         listOf(
             ResultatManuellKontroll(
-                1,
-                1,
-                1,
-                1,
-                1,
-                Brukar("testbrukar", "testbrukar"),
-                null,
-                null,
-                null,
-                null,
-                listOf(ResultatManuellKontrollBase.Svar("1", "Kommentar")),
-                null,
-                ResultatManuellKontrollBase.Status.Ferdig,
-                "kommentar",
-                Instant.now()))
+                id = 1,
+                testgrunnlagId = 1,
+                loeysingId = 1,
+                testregelId = 1,
+                sideutvalId = 1,
+                brukar = Brukar("testbrukar", "testbrukar"),
+                element = null,
+                svar = listOf(Svar("1", "Kommentar")),
+                testVartUtfoert = null,
+                status = ResultatStatus.Ferdig,
+                kommentar = "kommentar",
+                sistLagra = Instant.now(),
+            ))
 
     val testgrunnlagList = mock(TestgrunnlagKontroll::class.java)
 

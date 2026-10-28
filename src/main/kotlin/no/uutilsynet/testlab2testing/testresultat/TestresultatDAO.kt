@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.testresultat
 import io.micrometer.observation.annotation.Observed
 import java.sql.ResultSet
 import java.sql.Timestamp
+import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.common.SortPaginationParams
 import no.uutilsynet.testlab2testing.common.SortParamTestregel
@@ -12,7 +13,6 @@ import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
-import java.time.Instant
 
 @Component
 class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -124,7 +124,7 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun listBy(maalingId: Int, loeysingId: Int): List<TestresultatDB> {
     val sql =
         "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id " +
-                "WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and element_resultat= 'brot'"
+            "WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and element_resultat= 'brot'"
     val params =
         MapSqlParameterSource()
             .addValue(
@@ -169,9 +169,9 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   ): List<TestresultatDB> {
     val sql =
         "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id " +
-                "WHERE maaling_id = :maalingId and loeysing_id= :loeysingId " +
-                "and testregel_Id=:testregelId and element_resultat= 'brot' " +
-                "order by %s %s limit :limit offset :offset"
+            "WHERE maaling_id = :maalingId and loeysing_id= :loeysingId " +
+            "and testregel_Id=:testregelId and element_resultat= 'brot' " +
+            "order by %s %s limit :limit offset :offset"
 
     val formated =
         sql.format(
@@ -206,8 +206,8 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   ): List<TestresultatDB> {
     val sql =
         "SELECT * FROM testresultat t LEFT JOIN crawl_side cs ON t.crawl_side_id=cs.id " +
-                "WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id in (:testregelIds) " +
-                "AND element_resultat= 'brot' order by %s %s limit :limit offset :offset"
+            "WHERE maaling_id = :maalingId and loeysing_id= :loeysingId and testregel_Id in (:testregelIds) " +
+            "AND element_resultat= 'brot' order by %s %s limit :limit offset :offset"
 
     val formated =
         sql.format(
@@ -334,11 +334,10 @@ class TestresultatDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
           testregelId = rs.getInt("testregel_id"),
           loeysingId = rs.getInt("loeysing_id"),
           sideutvalId = rs.getInt("crawl_side_id"),
-          testUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant()
-              ?: Instant.now(),
+          testUtfoert = rs.getTimestamp("test_vart_utfoert")?.toInstant() ?: Instant.now(),
           elementUtfall = rs.getString("element_utfall") ?: "",
           elementResultat = rs.getString("element_resultat")?.let { TestresultatUtfall.valueOf(it) }
-              ?: TestresultatUtfall.ikkjeForekomst,
+                  ?: TestresultatUtfall.ikkjeForekomst,
           elementOmtalePointer = rs.getString("element_omtale_pointer") ?: "",
           elementOmtaleHtml = rs.getString("element_omtale_html") ?: "",
           elementOmtaleDescription = rs.getString("element_omtale") ?: "",

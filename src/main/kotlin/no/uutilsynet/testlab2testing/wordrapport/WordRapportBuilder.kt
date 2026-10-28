@@ -74,9 +74,9 @@ class WordRapportBuilder(
         resultatId = this.id,
         testregel = testregel.toTestregelRapport(),
         side = Side(side.first, side.second.begrunnelse, side.second.url),
-        elementOmtale = this.elementOmtale.toString(),
-        elementResultat = this.elementResultat.toString(),
-        elementUtfall = this.elementUtfall,
+        elementOmtale = this.element?.elementOmtale.toString(),
+        elementResultat = this.element?.elementResultat.toString(),
+        elementUtfall = this.element?.elementUtfall,
         tema = testregel.let { testregelCache.getTemaById(it.tema).tema })
   }
 

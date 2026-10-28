@@ -2,8 +2,9 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
 import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.CreateRetestResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
-import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontrollBase
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Svar
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -40,7 +41,7 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
                 elementOmtale = "Test omtale",
                 elementResultat = TestresultatUtfall.brot,
                 elementUtfall = "Feila",
-                svar = listOf(ResultatManuellKontrollBase.Svar("1.1", "Ja")),
+                svar = listOf(Svar("1.1", "Ja")),
                 kommentar = "Kommentar",
                 sistLagra = Instant.now(),
                 testVartUtfoert = null))
@@ -71,7 +72,26 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
     `when`(testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag))
         .thenReturn(Result.success(newTestgrunnlagId))
 
-    `when`(testResultatDAO.createRetest(originalResultatBrotList.first()))
+    val restestResultatList =
+        originalResultatBrotList.map {
+          CreateRetestResultatManuellKontroll(
+              testgrunnlagId = newTestgrunnlagId,
+              loeysingId = it.loeysingId,
+              testregelId = it.testregelId,
+              sideutvalId = it.sideutvalId,
+              elementOmtale = it.element?.elementOmtale,
+              elementOmtaleHtml = it.element?.elementOmtaleHtml,
+              elementResultat = it.element?.elementResultat,
+              elementUtfall = it.element?.elementUtfall,
+              elementPlassering = it.element?.elementPlassering,
+              svar = it.svar,
+              testVartUtfoert = null,
+              kommentar = it.kommentar,
+              sistLagra = Instant.now(),
+          )
+        }
+
+    `when`(testResultatDAO.createRetest(restestResultatList.first()))
         .thenReturn(Result.success(Unit))
 
     val result = testgrunnlagService.createRetest(retestRequest)
@@ -97,7 +117,7 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
                 elementOmtale = "Test omtale",
                 elementResultat = TestresultatUtfall.samsvar,
                 elementUtfall = "Samsvar",
-                svar = listOf(ResultatManuellKontrollBase.Svar("1.1", "Ja")),
+                svar = listOf(Svar("1.1", "Ja")),
                 kommentar = "Kommentar",
                 sistLagra = Instant.now(),
                 testVartUtfoert = null))
