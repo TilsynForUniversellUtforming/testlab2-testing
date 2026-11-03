@@ -94,7 +94,7 @@ class TestUtils(
 
     val sideUtval =
         loeysingId.map {
-          SideutvalBase(it, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null)
+          SideutvalBase(it, 1, "Begrunnelse", URI.create("https://www.digdir.no").toString(), null)
         }
 
     /* Add sideutval */

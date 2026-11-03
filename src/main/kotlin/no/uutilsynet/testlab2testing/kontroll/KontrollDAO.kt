@@ -151,7 +151,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
                       loeysingId = mapper.getInt("loeysing_id"),
                       typeId = mapper.getInt("sideutval_type_id"),
                       begrunnelse = mapper.getString("begrunnelse"),
-                      url = URI(mapper.getString("url")),
+                      url = mapper.getString("url"),
                       egendefinertType = mapper.getString("egendefinert_objekt"))
                 }
             .toList()
@@ -243,7 +243,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         mapOf(
             "tittel" to kontroll.tittel,
             "saksbehandler" to kontroll.saksbehandler,
-            "sakstype" to kontroll.sakstype.name,
+            "sakstype" to kontroll.sakstype?.name,
             "arkivreferanse" to kontroll.arkivreferanse,
             "kontrollId" to kontroll.id))
   }
@@ -301,7 +301,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         mapOf(
             "tittel" to kontroll.tittel,
             "saksbehandler" to kontroll.saksbehandler,
-            "sakstype" to kontroll.sakstype.name,
+            "sakstype" to kontroll.sakstype?.name,
             "arkivreferanse" to kontroll.arkivreferanse,
             "kontrollId" to kontroll.id,
             "utvalId" to utvalId))
@@ -347,7 +347,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         mapOf(
             "tittel" to kontroll.tittel,
             "saksbehandler" to kontroll.saksbehandler,
-            "sakstype" to kontroll.sakstype.name,
+            "sakstype" to kontroll.sakstype?.name,
             "arkivreferanse" to kontroll.arkivreferanse,
             "kontrollId" to kontroll.id,
             "regelsettId" to regelsettId))
@@ -423,7 +423,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
             loeysingId = mapper.getInt("loeysing_id"),
             typeId = mapper.getInt("sideutval_type_id"),
             begrunnelse = mapper.getString("begrunnelse"),
-            url = URI(mapper.getString("url")),
+            url = mapper.getString("url"),
             egendefinertType = mapper.getString("egendefinert_objekt"))
       }
 

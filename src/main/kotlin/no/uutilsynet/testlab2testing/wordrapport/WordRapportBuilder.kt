@@ -73,7 +73,7 @@ class WordRapportBuilder(
         nummer = index + 1,
         resultatId = this.id,
         testregel = testregel.toTestregelRapport(),
-        side = Side(side.first, side.second.begrunnelse, side.second.url),
+        side = Side(side.first, side.second.begrunnelse ?: side.second.url, side.second.url),
         elementOmtale = this.element?.elementOmtale.toString(),
         elementResultat = this.element?.elementResultat.toString(),
         elementUtfall = this.element?.elementUtfall,

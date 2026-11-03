@@ -418,7 +418,7 @@ class KontrollResourceTest(
       assertThat(loeysingId).isEqualTo(utval.loeysingar.first().id)
       assertThat(typeId).isEqualTo(1)
       assertThat(begrunnelse).isEqualTo("Side med elementer")
-      assertThat(url).isEqualTo(URI("https://www.uutilsynet.no"))
+      assertThat(url).isEqualTo(URI("https://www.uutilsynet.no").toString())
       assertThat(egendefinertType).isNull()
     }
   }

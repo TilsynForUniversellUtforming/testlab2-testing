@@ -114,10 +114,6 @@ class KontrollResource(
               }
               is KontrollUpdate.Sideutval -> {
                 val (kontroll, sideutvalList) = updateBody
-                if (sideutvalList.any { it.begrunnelse.isBlank() }) {
-                  logger.error("Ugyldig sideutval for kontroll: ${kontroll.id}")
-                  throw IllegalArgumentException("Ugyldige sider i sideutval")
-                }
                 kontrollDAO.updateKontroll(kontroll, sideutvalList).getOrThrow()
               }
             }
