@@ -31,4 +31,4 @@ data class TestregelRapport(
     val kravUrl: URL?
 )
 
-data class Side(val sideNr: Int, val sideTittel: String, val sideUrl: URI)
+data class Side(val sideNr: Int, val sideTittel: String, val sideUrl: String)

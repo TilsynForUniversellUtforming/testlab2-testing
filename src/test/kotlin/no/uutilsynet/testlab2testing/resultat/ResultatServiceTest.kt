@@ -166,7 +166,7 @@ class ResultatServiceTest(
     kontrollDAO.updateKontroll(
         kontroll,
         listOf(
-            SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no"), null),
+            SideutvalBase(loeysingId, 1, "Begrunnelse", URI.create("https://www.digdir.no").toString(), null),
         ))
 
     return kontrollId

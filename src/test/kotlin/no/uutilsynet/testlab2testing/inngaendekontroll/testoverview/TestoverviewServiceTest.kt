@@ -57,7 +57,7 @@ class TestoverviewServiceTest(@Autowired val testoverviewService: TestoverviewSe
           loeysingId = loeysingId,
           typeId = 1,
           begrunnelse = "Begrunnelse",
-          url = URI.create("https://example.com/side"),
+          url = URI.create("https://example.com/side").toString(),
           egendefinertType = null)
 
   private fun testgrunnlag(
