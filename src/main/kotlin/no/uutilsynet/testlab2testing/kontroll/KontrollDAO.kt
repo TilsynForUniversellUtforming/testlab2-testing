@@ -205,7 +205,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val id: Int,
       val tittel: String,
       val saksbehandler: String,
-      val sakstype: String,
+      val sakstype: String?,
       val arkivreferanse: String,
       val kontrolltype: Kontrolltype,
       val utval: Utval?,

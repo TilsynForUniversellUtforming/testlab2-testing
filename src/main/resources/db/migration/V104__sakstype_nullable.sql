@@ -1,0 +1,2 @@
+ALTER TABLE kontroll
+ALTER COLUMN sakstype DROP NOT NULL;
