@@ -202,7 +202,7 @@ class KontrollResource(
       val id: Int,
       val tittel: String,
       val saksbehandler: String,
-      val sakstype: Sakstype,
+      val sakstype: Sakstype?,
       val arkivreferanse: String,
       val kontrolltype: Kontrolltype,
       val virksomheter: List<String>, // liste med orgnummer
@@ -212,7 +212,7 @@ class KontrollResource(
   data class OpprettKontroll(
       val tittel: String,
       val saksbehandler: String,
-      val sakstype: Sakstype,
+      val sakstype: Sakstype?,
       val arkivreferanse: String,
       val kontrolltype: Kontrolltype,
   )
