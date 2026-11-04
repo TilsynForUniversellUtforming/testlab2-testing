@@ -25,7 +25,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
       val params = MapSqlParameterSource()
       params.addValue("tittel", kontroll.tittel)
       params.addValue("saksbehandler", kontroll.saksbehandler)
-      params.addValue("sakstype", kontroll.sakstype.name)
+      params.addValue("sakstype", kontroll.sakstype?.name)
       params.addValue("arkivreferanse", kontroll.arkivreferanse)
       params.addValue("kontrolltype", kontroll.kontrolltype.name)
 
