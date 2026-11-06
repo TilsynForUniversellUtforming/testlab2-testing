@@ -203,7 +203,7 @@ class AggregeringToDTOMapper(
     var talSiderIkkjeForekomst = 0
     var talSiderVarsel = 0
     var talSiderIkkjeTesta = 0
-    var talSiderIkkjeTestar = 0
+    var talSiderIkkjeTestbar = 0
 
     testresultat
         .groupBy { it.sideutvalId }
@@ -215,7 +215,7 @@ class AggregeringToDTOMapper(
             TestresultatUtfall.ikkjeForekomst -> talSiderIkkjeForekomst += 1
             TestresultatUtfall.varsel -> talSiderVarsel += 1
             TestresultatUtfall.ikkjeTesta -> talSiderIkkjeTesta += 1
-            TestresultatUtfall.ikkjeTestbart -> talSiderIkkjeTestar += 1
+            TestresultatUtfall.ikkjeTestbart -> talSiderIkkjeTestbar += 1
           }
         }
     return TalUtfall(
