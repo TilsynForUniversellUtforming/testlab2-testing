@@ -1,14 +1,18 @@
 package no.uutilsynet.testlab2testing.kontroll.delete
 
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDeleteDAO
 import no.uutilsynet.testlab2testing.styringsdata.StyringsdataCleanupDAO
 import no.uutilsynet.testlab2testing.testresultat.TestresultatCleanupDAO
 import org.springframework.stereotype.Component
 
 @Component
 class KontrollCleanupService(
-    private val kontrollDeleteDAO: KontrollDeleteDAO,
-    private val testresultatCleanupDAO: TestresultatCleanupDAO,
-    private val styringsdataCleanupDAO: StyringsdataCleanupDAO
+  private val kontrollDeleteDAO: KontrollDeleteDAO,
+  private val testresultatCleanupDAO: TestresultatCleanupDAO,
+  private val styringsdataCleanupDAO: StyringsdataCleanupDAO,
+  private val testgrunnlagDeleteDAO: TestgrunnlagDeleteDAO,
+  private var testgrunnlagDAO: TestgrunnlagDAO
 ) {
 
   fun cleanupKontrollData(kontrollId: Int) {
@@ -33,5 +37,18 @@ class KontrollCleanupService(
     kontrollDeleteDAO.deleteKontrollTestregelByKontrollId(kontrollId)
     kontrollDeleteDAO.deleteKontrollSideutvalByKontrollId(kontrollId)
     kontrollDeleteDAO.deleteKontrollByKontrollId(kontrollId)
+  }
+
+  fun cleanupTestgrunnlagData(testgrunnlagId: Int) {
+    testresultatCleanupDAO.deleteAggregeringSuksesskriteriumByTestgrunnlagId(testgrunnlagId)
+    testresultatCleanupDAO.deleteAggregeringTestregelByTestgrunnlagId(testgrunnlagId)
+    testresultatCleanupDAO.deleteAggregeringSideByTestgrunnlagId(testgrunnlagId)
+    testresultatCleanupDAO.deleteTestresultatByTestgrunnlagId(testgrunnlagId)
+
+    testgrunnlagDeleteDAO.deleteTestgrunnlagLoeysingByTestgrunnlagId(testgrunnlagId)
+    testgrunnlagDeleteDAO.deleteTestgrunnlagSideutvalKontrollByTestgrunnlagId(testgrunnlagId)
+    testgrunnlagDeleteDAO.deleteTestgrunnlagTestregelByTestgrunnlagId(testgrunnlagId)
+    testgrunnlagDAO.deleteTestgrunnlag(testgrunnlagId)
+
   }
 }
