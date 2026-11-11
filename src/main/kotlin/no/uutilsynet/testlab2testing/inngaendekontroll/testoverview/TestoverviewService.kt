@@ -55,7 +55,7 @@ class TestoverviewService(
 
     return testgrunnlagList.flatMap { testgrunnlagKontroll ->
       val allResultat =
-          testResultatDAO.getManyResultsByKontrollId(testgrunnlagKontroll.id).getOrThrow()
+          testResultatDAO.getManyResultsByKontrollId(testgrunnlagKontroll.kontrollId).getOrThrow()
       val styringsdataMap =
           styringsdataService.getStyringsdataMapForKontroll(testgrunnlagKontroll.id)
       val kontroll =
