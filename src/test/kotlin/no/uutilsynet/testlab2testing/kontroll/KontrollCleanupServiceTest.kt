@@ -4,6 +4,8 @@ import java.net.URI
 import java.time.Instant
 import java.time.LocalDate
 import no.uutilsynet.testlab2.constants.Reaksjonstype
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDAO
+import no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag.TestgrunnlagDeleteDAO
 import no.uutilsynet.testlab2testing.kontroll.delete.KontrollCleanupService
 import no.uutilsynet.testlab2testing.kontroll.delete.KontrollDeleteDAO
 import no.uutilsynet.testlab2testing.styringsdata.Styringsdata
@@ -36,13 +38,16 @@ import org.springframework.test.context.ActiveProfiles
     TestresultatCleanupDAO::class,
     StyringsdataCleanupDAO::class,
     StyringsdataDAO::class,
-    AggregeringDAO::class)
+    AggregeringDAO::class,
+    TestgrunnlagDAO::class,
+    TestgrunnlagDeleteDAO::class,)
 class KontrollCleanupServiceTest(
     @Autowired private val kontrollCleanupService: KontrollCleanupService,
     @Autowired private val styringsdataDAO: StyringsdataDAO,
     @Autowired private val aggregeringDAO: AggregeringDAO,
     @Autowired private val jdbcTemplate: NamedParameterJdbcTemplate,
 ) {
+
 
   @Test
   fun cleanupKontrollDataDeletesOnlyRowsForSelectedKontrollId() {
