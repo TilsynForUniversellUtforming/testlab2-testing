@@ -40,7 +40,7 @@ import org.springframework.test.context.ActiveProfiles
     StyringsdataDAO::class,
     AggregeringDAO::class,
     TestgrunnlagDAO::class,
-    TestgrunnlagDeleteDAO::class,)
+    TestgrunnlagDeleteDAO::class)
 class KontrollCleanupServiceTest(
     @Autowired private val kontrollCleanupService: KontrollCleanupService,
     @Autowired private val styringsdataDAO: StyringsdataDAO,
