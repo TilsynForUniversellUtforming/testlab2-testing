@@ -52,8 +52,6 @@ class TestgrunnlagService(
 
         val originalBildeBrotList = getBildeOriginalBrot(originalResultatBrotList)
 
-        logger.info("Original bilde brot list: $originalBildeBrotList")
-
         val created = Instant.now()
         originalResultatBrotList
             .map {
@@ -76,10 +74,7 @@ class TestgrunnlagService(
                 )
             }
             .forEach { resultat ->
-                val newTestresultat: Int = testResultatDAO.createRetest(resultat.second).getOrElse {
-                    logger.error("Kunne ikkje oppdatere resultat for retest", it)
-                    throw it
-                }
+                val newTestresultat: Int = testResultatDAO.createRetest(resultat.second)
                 originalBildeBrotList[resultat.first]?.let {
                     bildeService.createBilde(newTestresultat, it)
                 }
@@ -89,8 +84,12 @@ class TestgrunnlagService(
     }
 
     private fun getBildeOriginalBrot(originalResultatBrotList: List<ResultatManuellKontroll>): Map<Int, List<Bilde>> {
-        return originalResultatBrotList.associate {
-            it.id to bildeService.listBildeForTestresultat(it.id).getOrThrow()
+        return   originalResultatBrotList.associate { resultat ->
+            val bilder =
+                bildeService.listBildeForTestresultat(resultat.id)
+                    .getOrElse { emptyList() }
+
+            resultat.id to bilder
         }
     }
 

@@ -13,8 +13,12 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyList
+import org.mockito.Mockito.never
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -99,9 +103,9 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
         }
 
     `when`(testResultatDAO.createRetest(restestResultatList.first()))
-        .thenReturn(Result.success(anyInt()))
+        .thenReturn(5)
 
-      `when`(bildeService.listBildeForTestresultat(1))
+      `when`(bildeService.listBildeForTestresultat(originalResultatBrotList.first().id))
           .thenReturn(Result.success(emptyList()))
 
     val result = testgrunnlagService.createRetest(retestRequest)

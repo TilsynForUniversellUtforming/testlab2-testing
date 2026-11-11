@@ -117,8 +117,7 @@ class BildeService(
     testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
     val paths = bildeDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
 
-    val bilder = blobClient.getBildeStiList(paths)
-    return bilder
+    blobClient.getBildeStiList(paths).getOrThrow()
   }
 
   private fun createThumbnailImage(originalImage: BufferedImage): BufferedImage {
