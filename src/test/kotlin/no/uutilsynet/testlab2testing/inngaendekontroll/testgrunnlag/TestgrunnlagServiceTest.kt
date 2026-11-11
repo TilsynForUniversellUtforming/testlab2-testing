@@ -2,6 +2,9 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.testgrunnlag
 
 import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
+import no.uutilsynet.testlab2testing.brukar.BrukarService
+import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
+import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Bilde
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.CreateRetestResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.Svar
@@ -10,6 +13,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.ArgumentMatchers.anyList
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -22,6 +27,8 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
   @MockitoBean private lateinit var testgrunnlagDAO: TestgrunnlagDAO
 
   @MockitoBean private lateinit var testResultatDAO: TestResultatDAO
+
+  @MockitoBean private lateinit var bildeService: BildeService
 
   @Test
   fun `hvis vi har en ferdig test, skal vi kunne lage en retest`() {
@@ -92,7 +99,10 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
         }
 
     `when`(testResultatDAO.createRetest(restestResultatList.first()))
-        .thenReturn(Result.success(Unit))
+        .thenReturn(Result.success(anyInt()))
+
+      `when`(bildeService.listBildeForTestresultat(1))
+          .thenReturn(Result.success(emptyList()))
 
     val result = testgrunnlagService.createRetest(retestRequest)
 
@@ -100,7 +110,7 @@ class TestgrunnlagServiceTest(@Autowired val testgrunnlagService: TestgrunnlagSe
     assertEquals(newTestgrunnlagId, result.getOrNull())
   }
 
-  @Test
+    @Test
   fun `vi kan ikke lage en retest hvis testen er uten brot`() {
     val originalTestgrunnlagId = 1
     val loeysingId = 1

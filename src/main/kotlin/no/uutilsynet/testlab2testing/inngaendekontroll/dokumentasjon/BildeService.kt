@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.MimeTypeUtils
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.util.UriComponentsBuilder
+import java.io.InputStream
 
 private const val GJENNOPPRETT_BILDE_FEIL = "Kunne ikkje gjenopprette bilde"
 
@@ -37,21 +38,34 @@ class BildeService(
 
   @CacheEvict(value = ["bildeCache"], key = "#testresultatId")
   fun createBilde(testresultatId: Int, bilder: List<MultipartFile>) = runCatching {
-    val antallBilder = bildeDAO.getBildePathsForTestresultat(testresultatId).getOrThrow()
+    val antallBilder = bilder.size
     val kontrolInfo = testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
     val imageDetails =
-        multipartFilesToImageDetails(testresultatId, antallBilder.size, bilder, kontrolInfo)
+        multipartFilesToImageDetails(testresultatId, antallBilder, bilder, kontrolInfo)
             .getOrThrow()
 
-    blobClient.uploadBilder(imageDetails).forEach { bildeResultat ->
-      if (bildeResultat.isSuccess) {
-        val bildeDetalj = bildeResultat.getOrThrow()
-        bildeDAO
-            .saveBilde(testresultatId, bildeDetalj.fullFileName, bildeDetalj.fullThumbnailName)
-            .getOrThrow()
-      }
-    }
+      uploadBilder(imageDetails, testresultatId)
   }
+
+    private fun uploadBilder(
+        imageDetails: List<BildeRequest>,
+        testresultatId: Int
+    ) {
+        blobClient.uploadBilder(imageDetails).forEach { bildeResultat ->
+            if (bildeResultat.isSuccess) {
+                val bildeDetalj = bildeResultat.getOrThrow()
+                bildeDAO
+                    .saveBilde(testresultatId, bildeDetalj.fullFileName, bildeDetalj.fullThumbnailName)
+                    .getOrThrow()
+            }
+        }
+    }
+
+    fun createBilde(testresultatId: Int, bildeList: List<Bilde>) {
+            val kontrolInfo = testResultatDAO.getKontrollForTestresultat(testresultatId).getOrThrow()
+            val imageDetails = bildesToImageDetails(testresultatId, bildeList.size, bildeList, kontrolInfo).getOrThrow()
+            uploadBilder(imageDetails, testresultatId)
+    }
 
   @CacheEvict(value = ["bildeCache"], key = "#testresultatId")
   fun deleteBilder(testresultatId: Int, bildeId: Int? = null) = runCatching {
@@ -131,30 +145,80 @@ class BildeService(
         val originalFileName =
             bilde.originalFilename ?: throw IllegalArgumentException("Filnamn er tomt")
 
-        logger.info("Content type: ${bilde.contentType}")
-
-        require(allowedMIMETypes.contains(bilde.contentType)) {
+          require(allowedMIMETypes.contains(bilde.contentType)) {
           "$originalFileName har annen filtype enn ${allowedMIMETypes.joinToString(",")}"
         }
 
         val fileExtension = originalFileName.substringAfterLast('.').lowercase()
 
-        val image = ImageIO.read(bilde.inputStream)
+          createBildeRequest(indexOffset, index, kontrolInfo, testresultatId, fileExtension, bilde.inputStream)
+      }
+    }
+  }
+
+    private fun createBildeRequest(
+        indexOffset: Int,
+        index: Int,
+        kontrolInfo: KontrollDocumentation,
+        testresultatId: Int,
+        fileExtension: String,
+        stream: InputStream
+    ): BildeRequest {
+        val image = ImageIO.read(stream)
         val thumbnail = createThumbnailImage(image)
 
         val bildeIndex = indexOffset + index
         val directory = getDirectory(kontrolInfo)
         val newFileName = "${directory}${testresultatId}_${bildeIndex}"
 
-        BildeRequest(image, thumbnail, newFileName, fileExtension)
-      }
+        return BildeRequest(image, thumbnail, newFileName, fileExtension)
     }
-  }
 
-  private fun getDirectory(kontrolInfo: KontrollDocumentation) =
+    private fun getDirectory(kontrolInfo: KontrollDocumentation) =
       "${kontrolInfo.kontrollId}${kontrolInfo.tittel}/"
 
-  fun getBilde(bildesti: String): HttpURLConnection {
+  private fun bildesToImageDetails(
+      testresultatId: Int,
+      indexOffset: Int,
+      bildeList: List<Bilde>,
+      kontrolInfo: KontrollDocumentation
+  ): Result<List<BildeRequest>> {
+      return runCatching {
+          bildeList.mapIndexed { index, bilde ->
+              getBildeConnectionFromQueryParams(bilde)
+                  .let { bildeConnection ->
+                      createBildeRequest(
+                          indexOffset,
+                          index,
+                          kontrolInfo,
+                          testresultatId,
+                          getFileExtention(bildeConnection),
+                          bildeConnection.inputStream
+                      )
+                  }
+          }
+      }
+  }
+
+    private fun getFileExtention(bildeConnection: HttpURLConnection): String {
+        val contentType: String = bildeConnection.contentType ?: "image/jpeg"
+        val fileExtension =
+            when (contentType.lowercase()) {
+                "image/jpeg" -> "jpg"
+                "image/png" -> "png"
+                "image/bmp" -> "bmp"
+                else -> "jpg"
+            }
+        return fileExtension
+    }
+
+    private fun getBildeConnectionFromQueryParams(bilde: Bilde): HttpURLConnection {
+        val bildeSti = UriComponentsBuilder.fromUri(bilde.bildeURI).build().queryParams["bildesti"]
+            ?.firstOrNull() ?:throw NoSuchElementException("No sti found")
+        return getBilde(bildeSti)
+    }
+
+    fun getBilde(bildesti: String): HttpURLConnection {
     return blobClient.getBildeSti(bildesti)
   }
 

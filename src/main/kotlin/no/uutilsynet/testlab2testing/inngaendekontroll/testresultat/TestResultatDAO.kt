@@ -247,7 +247,7 @@ class TestResultatDAO(
   }
 
   @Transactional
-  fun createRetest(retestResultat: CreateRetestResultatManuellKontroll): Result<Unit> =
+  fun createRetest(retestResultat: CreateRetestResultatManuellKontroll): Result<Int> =
       runCatching {
         val brukarId = getUserId()
         val sistlagra = Timestamp.from(Instant.now())
@@ -282,6 +282,7 @@ class TestResultatDAO(
                 Int::class.java)!!
 
         saveSvarBatch(id, retestResultat.svar)
+          id
       }
 
   @Transactional

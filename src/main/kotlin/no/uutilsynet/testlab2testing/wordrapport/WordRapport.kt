@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.wordrapport
 
-import java.net.URI
 import java.net.URL
 
 data class WordRapport(

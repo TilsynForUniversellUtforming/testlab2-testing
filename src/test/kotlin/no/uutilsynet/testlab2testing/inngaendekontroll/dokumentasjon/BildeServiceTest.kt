@@ -9,6 +9,7 @@ import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeSti
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.KontrollDocumentation
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.TestResultatDAO
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -19,6 +20,8 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+import org.springframework.web.util.UriComponentsBuilder
+import java.net.URI
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -115,6 +118,14 @@ class BildeServiceTest(@Autowired val bildeService: BildeService) {
     verify(bildeDAO, times(1))
         .saveBilde(1, expectedBildeDetalj.fullFileName, expectedBildeDetalj.fullThumbnailName)
   }
+
+    @Test
+    fun testBildePathExtraction() {
+        val expectedString = "pathToImage"
+        val urlString = URI("http://localhost:8080/bilder/sti/?bildesti=$expectedString")
+        val stiPart = UriComponentsBuilder.fromUri(urlString).build().queryParams["bildesti"]?.firstOrNull()
+        assertEquals(expectedString, stiPart)
+    }
 
   private fun mockImageByteArray(): ByteArray {
     val baos = ByteArrayOutputStream()
