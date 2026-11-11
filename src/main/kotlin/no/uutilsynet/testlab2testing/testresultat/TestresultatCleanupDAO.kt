@@ -33,4 +33,32 @@ class TestresultatCleanupDAO(private val jdbcTemplate: NamedParameterJdbcTemplat
             "WHERE ask.testgrunnlag_id=tg.id AND kontroll_id = :kontrollId",
         mapOf("kontrollId" to kontrollId))
   }
+
+    fun deleteTestresultatByTestgrunnlagId(testgrunnlagId: Int): Int {
+        return jdbcTemplate.update(
+            "DELETE FROM testresultat t " +
+                    "WHERE t.testgrunnlag_id = :testgrunnlagId",
+            mapOf("testgrunnlagId" to testgrunnlagId))
+    }
+
+    fun deleteAggregeringSideByTestgrunnlagId(testgrunnlagId: Int): Int {
+        return jdbcTemplate.update(
+            "DELETE FROM aggregering_side AS asb " +
+                    "WHERE asb.testgrunnlag_id = :testgrunnlagId",
+            mapOf("testgrunnlagId" to testgrunnlagId))
+    }
+
+    fun deleteAggregeringTestregelByTestgrunnlagId(testgrunnlagId: Int): Int {
+        return jdbcTemplate.update(
+            "DELETE FROM aggregering_testregel AS at " +
+                    "WHERE at.testgrunnlag_id = :testgrunnlagId",
+            mapOf("testgrunnlagId" to testgrunnlagId))
+    }
+
+    fun deleteAggregeringSuksesskriteriumByTestgrunnlagId(testgrunnlagId: Int): Int {
+        return jdbcTemplate.update(
+            "DELETE FROM aggregering_suksesskriterium AS ask " +
+                    "WHERE ask.testgrunnlag_id = :testgrunnlagId",
+            mapOf("testgrunnlagId" to testgrunnlagId))
+    }
 }

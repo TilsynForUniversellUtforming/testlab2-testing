@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.kontroll
 
-import java.net.URI
 import java.sql.ResultSet
 import java.time.Instant
 import kotlin.collections.filterIsInstance

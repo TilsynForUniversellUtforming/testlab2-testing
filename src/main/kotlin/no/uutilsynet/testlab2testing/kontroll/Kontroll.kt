@@ -11,7 +11,7 @@ data class Kontroll(
     val kontrolltype: Kontrolltype,
     val tittel: String,
     val saksbehandler: String,
-    val sakstype: Sakstype?=null,
+    val sakstype: Sakstype? = null,
     val arkivreferanse: String,
     val utval: Utval? = null,
     val testreglar: Testreglar? = null,

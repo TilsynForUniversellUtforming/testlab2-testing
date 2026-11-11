@@ -5,6 +5,7 @@ import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
+import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -247,44 +248,47 @@ class TestResultatDAO(
   }
 
   @Transactional
-  fun createRetest(retestResultat: CreateRetestResultatManuellKontroll): Result<Unit> =
-      runCatching {
-        val brukarId = getUserId()
-        val sistlagra = Timestamp.from(Instant.now())
+  fun createRetest(retestResultat: CreateRetestResultatManuellKontroll): Int
+       {
+          val brukarId = getUserId()
+          val sistlagra = Timestamp.from(Instant.now())
 
-        val id =
-            jdbcTemplate.queryForObject(
-                """
+          val id =
+              jdbcTemplate.queryForObject(
+                  """
         insert into testresultat (testgrunnlag_id, loeysing_id, testregel_id, sideutval_id, brukar_id, element_omtale, element_resultat,
                                      element_omtale_html, element_utfall, test_vart_utfoert, status, kommentar, sist_lagra,utfall_id, element_plassering, ekstra_sjekk)
         values (:testgrunnlagId, :loeysingId, :testregelId, :sideutvalId, :brukarId, :elementOmtale, :elementResultat, :elementOmtaleHtml, :elementUtfall,
                 :testVartUtfoert,:status, :kommentar, :sist_lagra, :utfallId, :elementPlassering, :ekstraSjekk)
         returning id
       """
-                    .trimIndent(),
-                mapOf(
-                    "testgrunnlagId" to retestResultat.testgrunnlagId,
-                    "loeysingId" to retestResultat.loeysingId,
-                    "testregelId" to retestResultat.testregelId,
-                    "sideutvalId" to retestResultat.sideutvalId,
-                    "brukarId" to brukarId,
-                    "elementOmtale" to retestResultat.element?.elementOmtale,
-                    "elementOmtaleHtml" to retestResultat.element?.elementOmtaleHtml,
-                    "elementResultat" to retestResultat.element?.elementResultat?.name,
-                    "elementUtfall" to retestResultat.element?.elementUtfall,
-                    "testVartUtfoert" to retestResultat.testVartUtfoert?.let { Timestamp.from(it) },
-                    "status" to retestResultat.status.name,
-                    "kommentar" to retestResultat.kommentar,
-                    "sist_lagra" to sistlagra,
-                    "utfallId" to retestResultat.element?.elementUtfallId,
-                    "elementPlassering" to retestResultat.element?.elementPlassering,
-                    "ekstraSjekk" to retestResultat.ekstraSjekk),
-                Int::class.java)!!
+                      .trimIndent(),
+                  mapOf(
+                      "testgrunnlagId" to retestResultat.testgrunnlagId,
+                      "loeysingId" to retestResultat.loeysingId,
+                      "testregelId" to retestResultat.testregelId,
+                      "sideutvalId" to retestResultat.sideutvalId,
+                      "brukarId" to brukarId,
+                      "elementOmtale" to retestResultat.element?.elementOmtale,
+                      "elementOmtaleHtml" to retestResultat.element?.elementOmtaleHtml,
+                      "elementResultat" to retestResultat.element?.elementResultat?.name,
+                      "elementUtfall" to retestResultat.element?.elementUtfall,
+                      "testVartUtfoert" to retestResultat.testVartUtfoert?.let { Timestamp.from(it) },
+                      "status" to retestResultat.status.name,
+                      "kommentar" to retestResultat.kommentar,
+                      "sist_lagra" to sistlagra,
+                      "utfallId" to retestResultat.element?.elementUtfallId,
+                      "elementPlassering" to retestResultat.element?.elementPlassering,
+                      "ekstraSjekk" to retestResultat.ekstraSjekk
+                  ),
+                  Int::class.java
+              )!!
 
-        saveSvarBatch(id, retestResultat.svar)
+          saveSvarBatch(id, retestResultat.svar)
+          return id
       }
 
-  @Transactional
+    @Transactional
   fun update(testResultat: ResultatManuellKontroll): Result<Unit> = runCatching {
     val now = Timestamp.from(Instant.now())
 
