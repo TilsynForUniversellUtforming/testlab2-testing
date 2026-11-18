@@ -1,14 +1,20 @@
 package no.uutilsynet.testlab2testing.inngaendekontroll.testresultat
 
-import no.uutilsynet.testlab2.constants.TestregelModus
 import no.uutilsynet.testlab2testing.brukar.BrukarService
 import no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon.BildeService
-import no.uutilsynet.testlab2testing.testregel.TestregelCache
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.PathVariable
 
 @RestController
 @RequestMapping("/testresultat")
@@ -16,8 +22,6 @@ class TestResultatResource(
     val testResultatDAO: TestResultatDAO,
     val brukarService: BrukarService,
     val bildeService: BildeService,
-    val testregelCache: TestregelCache,
-    val dataUrlConverter: DataUrlConverter,
     val testresultatService: TestresultatService
 ) {
   val logger: Logger = getLogger(TestResultatResource::class.java)
@@ -26,19 +30,7 @@ class TestResultatResource(
   fun createTestResultat(
       @RequestBody createTestResultat: CreateTestResultat
   ): ResponseEntity<Unit> =
-      runCatching {
-            val brukar = brukarService.getCurrentUser()
-
-            val resultToSave = resolveResultToSave(createTestResultat)
-
-            val testresultatId =
-                testResultatDAO.save(resultToSave.copy(brukar = brukar)).getOrThrow()
-
-            if (!createTestResultat.imageDataUrl.isNullOrBlank()) {
-              saveImage(testresultatId, createTestResultat.imageDataUrl)
-            }
-            testresultatId
-          }
+      testresultatService.createTestresultat(createTestResultat)
           .fold(
               { id -> ResponseEntity.created(location(id)).build() },
               {
@@ -113,26 +105,8 @@ class TestResultatResource(
                 }
               })
 
-  private fun resolveResultToSave(input: CreateTestResultat): CreateTestResultat {
-    if (!isTestregelAutomatic(input.testregelId)) return input
 
-    return testresultatService.getResultAutomatic(input).takeIf { it.elementResultat != null }
-        ?: input
-  }
-
-  private fun saveImage(testresultatId: Int, bildeDataUrl: String) {
-    val bilde = dataUrlConverter.dataUrlToImage(bildeDataUrl)
-    bildeService.createBilde(testresultatId, listOf(bilde)).onFailure {
-      logger.error("Feil ved opplasting av bilder", it)
-      throw it
-    }
-  }
-
-  private fun location(id: Int) =
+    private fun location(id: Int) =
       ServletUriComponentsBuilder.fromCurrentRequest().path("/$id").buildAndExpand(id).toUri()
 
-  private fun isTestregelAutomatic(testregelId: Int): Boolean {
-    val testregel = testregelCache.getTestregelById(testregelId)
-    return testregel.modus == TestregelModus.automatisk
-  }
 }
