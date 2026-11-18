@@ -6,7 +6,7 @@ import java.io.ByteArrayInputStream
 import java.net.URI
 import java.time.Instant
 import java.time.OffsetDateTime
-import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
+import no.uutilsynet.testlab2testing.common.Constants.ZONEID_OSLO
 import org.springframework.stereotype.Component
 
 @Component

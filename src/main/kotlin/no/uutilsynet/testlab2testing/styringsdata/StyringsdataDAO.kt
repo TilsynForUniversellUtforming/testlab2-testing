@@ -9,7 +9,7 @@ import no.uutilsynet.testlab2.constants.Klagetype
 import no.uutilsynet.testlab2.constants.Reaksjonstype
 import no.uutilsynet.testlab2.constants.ResultatKlage
 import no.uutilsynet.testlab2.constants.StyringsdataKontrollStatus
-import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
+import no.uutilsynet.testlab2testing.common.Constants.ZONEID_OSLO
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component

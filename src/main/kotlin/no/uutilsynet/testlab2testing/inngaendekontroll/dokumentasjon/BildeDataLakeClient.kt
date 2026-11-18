@@ -10,7 +10,7 @@ import java.net.URI
 import java.net.URLConnection
 import java.time.Instant
 import java.time.OffsetDateTime
-import no.uutilsynet.testlab2testing.common.Constants.Companion.ZONEID_OSLO
+import no.uutilsynet.testlab2testing.common.Constants.ZONEID_OSLO
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 

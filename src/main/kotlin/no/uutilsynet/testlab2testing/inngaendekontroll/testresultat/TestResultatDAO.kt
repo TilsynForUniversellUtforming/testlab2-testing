@@ -5,7 +5,10 @@ import java.time.Instant
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
 import no.uutilsynet.testlab2testing.brukar.BrukarService
+import no.uutilsynet.testlab2testing.testresultat.TestresultatDB
 import org.slf4j.LoggerFactory
+import org.springframework.data.relational.core.sql.In
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -440,6 +443,30 @@ class TestResultatDAO(
       }
     }
   }
+
+    fun findByTestgrunnlagAndLoeysingAndTestregelAndSide(
+        testgrunnlagId: Int,
+        loeysingId: Int,
+        testregelId: Int,
+        sideutvalInt: Int
+    ): Result<List<Int>> {
+        return runCatching {
+            jdbcTemplate.queryForList(
+                """
+            SELECT id from testresultat
+            WHERE testgrunnlag_id = :testgrunnlagId
+            AND loeysing_id = :loeysingId
+            AND testregel_id = :testregelId
+            AND sideutval_id = :sideutval_id
+        """.trimIndent(), MapSqlParameterSource()
+                    .addValue("testgrunnlagId", testgrunnlagId)
+                    .addValue("loeysingId", loeysingId)
+                    .addValue("testregelId", testregelId)
+                    .addValue("sideutval_id", sideutvalInt), Int::class.java
+            ).filterNotNull().toList()
+        }.onFailure { throw it }
+    }
 }
+
 
 data class KontrollDocumentation(val tittel: String, val kontrollId: Int)
