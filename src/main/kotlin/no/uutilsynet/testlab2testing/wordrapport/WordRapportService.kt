@@ -59,7 +59,7 @@ class WordRapportService(
     val response =
         restClient
             .post()
-            .uri(properties.host + "/rapport/lagRapport")
+            .uri(properties.host + "/rapport/v2/lagRapport")
             .body(requestBody)
             .contentType(MediaType.APPLICATION_JSON)
             .accept(
