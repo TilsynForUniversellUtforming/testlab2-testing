@@ -13,7 +13,7 @@ import org.springframework.web.util.UriComponentsBuilder
 @Relation(collectionRelation = "testresultat")
 data class TestresultatDetaljertEkstern(
     val testregelNoekkel: String,
-    val side: URL,
+    val side: String,
     val suksesskriterium: String,
     val veiledning: URL?,
     val testregelTittel: String,

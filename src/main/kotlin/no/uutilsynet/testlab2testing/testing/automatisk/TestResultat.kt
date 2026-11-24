@@ -10,7 +10,7 @@ import no.uutilsynet.testlab2testing.testresultat.TestresultatDetaljert
 
 data class TestResultat(
     val suksesskriterium: List<String>,
-    val side: URL,
+    val side: String,
     val testregelId: String,
     val loeysingId: Int,
     val sideNivaa: Int,
@@ -25,7 +25,7 @@ data class TestResultat(
     @JvmStatic
     fun create(
         suksesskriterium: List<String>,
-        side: URL,
+        side: String,
         testregelId: String,
         loeysingId: Int,
         sideNivaa: Int,
