@@ -127,7 +127,7 @@ class ExcelWriter {
       rowNr: Int,
   ) {
     val dataRow = workSheet.createRow(rowNr)
-    dataRow.createCell(0).setCellValue(testresultat.side.toString())
+    dataRow.createCell(0).setCellValue(testresultat.side)
     dataRow.createCell(1).setCellValue(testresultat.suksesskriterium[0])
     dataRow.createCell(2).setCellValue(testresultat.testregelNoekkel)
     dataRow.createCell(3).setCellValue(testresultat.elementUtfall)

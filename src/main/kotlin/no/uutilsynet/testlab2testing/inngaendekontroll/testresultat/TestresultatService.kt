@@ -20,9 +20,9 @@ class TestresultatService(
     val brukarService: BrukarService,
     val dataUrlConverter: DataUrlConverter,
     val bildeService: BildeService,
-    ) {
+) {
 
-    val logger = LoggerFactory.getLogger(this::class.java)
+  val logger = LoggerFactory.getLogger(this::class.java)
 
   fun getResultAutomatic(createTestResult: CreateTestResultat): CreateTestResultat {
     val testregel = testregelCache.getTestregelById(createTestResult.testregelId)
@@ -48,62 +48,59 @@ class TestresultatService(
             onFailure = { createTestResult })
   }
 
-    fun deleteOldResultsAndUpdate(newResult: CreateTestResultat): Result<Int> {
-        return runCatching {
-            val existingResults = testResultatDAO.findByTestgrunnlagAndLoeysingAndTestregelAndSide(
-                newResult.testgrunnlagId,
-                newResult.loeysingId,
-                newResult.testregelId,
-                newResult.sideutvalId
-            ).getOrThrow()
+  fun deleteOldResultsAndUpdate(newResult: CreateTestResultat): Result<Int> {
+    return runCatching {
+          val existingResults =
+              testResultatDAO
+                  .findByTestgrunnlagAndLoeysingAndTestregelAndSide(
+                      newResult.testgrunnlagId,
+                      newResult.loeysingId,
+                      newResult.testregelId,
+                      newResult.sideutvalId)
+                  .getOrThrow()
 
-            existingResults.forEach { testResult ->
-                testResultatDAO.delete(testResult)
-            }
-            existingResults.size
-        }.onFailure { throw it }
-    }
-
-    @Transactional
-    fun createTestresultat(createTestResultat: CreateTestResultat): Result<Int> {
-        return runCatching {
-            val brukar = brukarService.getCurrentUser()
-
-            val resultToSave = resolveResultToSave(createTestResultat)
-
-            val testresultatId =
-                testResultatDAO.save(resultToSave.copy(brukar = brukar)).getOrThrow()
-
-            if (!createTestResultat.imageDataUrl.isNullOrBlank()) {
-                saveImage(testresultatId, createTestResultat.imageDataUrl)
-            }
-            testresultatId
+          existingResults.forEach { testResult -> testResultatDAO.delete(testResult) }
+          existingResults.size
         }
+        .onFailure { throw it }
+  }
+
+  @Transactional
+  fun createTestresultat(createTestResultat: CreateTestResultat): Result<Int> {
+    return runCatching {
+      val brukar = brukarService.getCurrentUser()
+
+      val resultToSave = resolveResultToSave(createTestResultat)
+
+      val testresultatId = testResultatDAO.save(resultToSave.copy(brukar = brukar)).getOrThrow()
+
+      if (!createTestResultat.imageDataUrl.isNullOrBlank()) {
+        saveImage(testresultatId, createTestResultat.imageDataUrl)
+      }
+      testresultatId
     }
+  }
 
-    private fun resolveResultToSave(input: CreateTestResultat): CreateTestResultat {
-        if (isTestregelAutomatic(input.testregelId)) {
-            return getResultAutomatic(input).takeIf { it.elementResultat != null }
-                ?: input
-        }
-        if (input.element?.elementOmtale == Constants.ELEMENT_OMTALE_SIDE) {
-            deleteOldResultsAndUpdate(input).onFailure { throw it }
-        }
-        return input
+  private fun resolveResultToSave(input: CreateTestResultat): CreateTestResultat {
+    if (isTestregelAutomatic(input.testregelId)) {
+      return getResultAutomatic(input).takeIf { it.elementResultat != null } ?: input
     }
-
-
-    private fun saveImage(testresultatId: Int, bildeDataUrl: String) {
-        val bilde = dataUrlConverter.dataUrlToImage(bildeDataUrl)
-        bildeService.createBilde(testresultatId, listOf(bilde)).onFailure {
-            logger.error("Feil ved opplasting av bilder", it)
-            throw it
-        }
+    if (input.element?.elementOmtale == Constants.ELEMENT_OMTALE_SIDE) {
+      deleteOldResultsAndUpdate(input).onFailure { throw it }
     }
+    return input
+  }
 
-    private fun isTestregelAutomatic(testregelId: Int): Boolean {
-        val testregel = testregelCache.getTestregelById(testregelId)
-        return testregel.modus == TestregelModus.automatisk
+  private fun saveImage(testresultatId: Int, bildeDataUrl: String) {
+    val bilde = dataUrlConverter.dataUrlToImage(bildeDataUrl)
+    bildeService.createBilde(testresultatId, listOf(bilde)).onFailure {
+      logger.error("Feil ved opplasting av bilder", it)
+      throw it
     }
+  }
 
+  private fun isTestregelAutomatic(testregelId: Int): Boolean {
+    val testregel = testregelCache.getTestregelById(testregelId)
+    return testregel.modus == TestregelModus.automatisk
+  }
 }

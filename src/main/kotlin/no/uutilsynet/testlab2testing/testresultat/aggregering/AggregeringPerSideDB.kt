@@ -1,11 +1,9 @@
 package no.uutilsynet.testlab2testing.testresultat.aggregering
 
-import java.net.URL
-
 data class AggregeringPerSideDB(
     val maalingId: Int?,
     val loeysingId: Int,
-    val sideUrl: URL,
+    val sideUrl: String,
     val sideNivaa: Int,
     val gjennomsnittligBruddProsentTR: Double?,
     val talElementSamsvar: Int,

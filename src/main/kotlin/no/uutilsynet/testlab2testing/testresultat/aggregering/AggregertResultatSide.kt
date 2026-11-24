@@ -1,13 +1,12 @@
 package no.uutilsynet.testlab2testing.testresultat.aggregering
 
-import java.net.URL
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testing.automatisk.AutotesterTestresultat
 
 data class AggregertResultatSide(
     val maalingId: Int?,
     val loeysing: Loeysing,
-    val sideUrl: URL,
+    val sideUrl: String,
     val sideNivaa: Int,
     val gjennomsnittligBruddProsentTR: Double?,
     val talElementSamsvar: Int,

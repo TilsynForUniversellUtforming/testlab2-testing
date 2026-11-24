@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.resultat
 
 import io.micrometer.observation.annotation.Observed
-import java.net.URI
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.stream.Collectors
@@ -37,7 +36,7 @@ class TestresultatDBConverter(
         testregelId,
         testregel.testregelId,
         this.maalingId ?: this.testgrunnlagId ?: 0,
-        URI(this.side).toURL(),
+        this.side,
         listOf(testregel.krav.suksesskriterium),
         LocalDateTime.ofInstant(this.testUtfoert, ZoneId.systemDefault()),
         this.elementUtfall,

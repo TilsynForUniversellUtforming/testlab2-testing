@@ -123,17 +123,7 @@ class KontrollResource(
               createOrUpdateTestgrunnlag(id)
             }
           }
-          .fold(
-              onSuccess = { ResponseEntity.noContent().build() },
-              onFailure = {
-                when (it) {
-                  is IllegalArgumentException -> ResponseEntity.badRequest().build()
-                  else -> {
-                    logger.error("Feil ved oppdatering av kontroll", it)
-                    ResponseEntity.internalServerError().build()
-                  }
-                }
-              })
+          .fold(onSuccess = { ResponseEntity.noContent().build() }, onFailure = { throw it })
 
   @GetMapping("sideutvaltype")
   fun getSideutvalType(): ResponseEntity<out Any> =

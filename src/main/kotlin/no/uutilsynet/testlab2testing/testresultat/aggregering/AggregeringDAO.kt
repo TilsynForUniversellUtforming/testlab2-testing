@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.testresultat.aggregering
 
-import java.net.URI
 import java.sql.ResultSet
 import java.sql.Types
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
@@ -112,7 +111,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
         mapOf(
             "maaling_id" to aggregertResultatSide.maalingId,
             "loeysing_id" to aggregertResultatSide.loeysingId,
-            "side" to aggregertResultatSide.sideUrl.toURI().toString(),
+            "side" to aggregertResultatSide.sideUrl,
             "side_nivaa" to aggregertResultatSide.sideNivaa,
             "tal_element_samsvar" to aggregertResultatSide.talElementSamsvar,
             "tal_element_brot" to aggregertResultatSide.talElementBrot,
@@ -124,7 +123,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     if (result < 1) {
       return Result.failure(
           RuntimeException(
-              "Kunne ikkje lagre aggregert resultat for side for testgrunnlag ${aggregertResultatSide.testgrunnlagId} og side ${aggregertResultatSide.sideUrl.toURI().toString()}"))
+              "Kunne ikkje lagre aggregert resultat for side for testgrunnlag ${aggregertResultatSide.testgrunnlagId} og side ${aggregertResultatSide.sideUrl}"))
     }
     return Result.success(result)
   }
@@ -159,7 +158,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return jdbcTemplate.update(
         sql,
         mapOf(
-            "side" to aggregering.sideUrl.toURI().toString(),
+            "side" to aggregering.sideUrl,
             "maalingId" to aggregering.maalingId,
             "loeysingId" to aggregering.loeysingId,
             "testgrunnlagId" to aggregering.testgrunnlagId))
@@ -297,7 +296,7 @@ class AggregeringDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return AggregeringPerSideDB(
         maalingId = rs.getInt("maaling_id").takeIf { it > 0 },
         loeysingId = rs.getInt("loeysing_id"),
-        sideUrl = URI(rs.getString("side")).toURL(),
+        sideUrl = rs.getString("side"),
         sideNivaa = rs.getInt("side_nivaa"),
         gjennomsnittligBruddProsentTR =
             floatNullVedIkkjeForekomst(

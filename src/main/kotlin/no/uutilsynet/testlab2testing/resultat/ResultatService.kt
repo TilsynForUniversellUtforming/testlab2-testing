@@ -148,7 +148,7 @@ class ResultatService(
   ): List<TestresultatDetaljert> {
     return getResultService(kontrollId)
         .getResultatBrotForKontroll(kontrollId, loeysingId)
-        .sortedBy { it.side.toString() }
+        .sortedBy { it.side }
   }
 
   private fun getResultat(

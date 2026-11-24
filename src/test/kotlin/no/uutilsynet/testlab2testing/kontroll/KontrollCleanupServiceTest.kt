@@ -48,7 +48,6 @@ class KontrollCleanupServiceTest(
     @Autowired private val jdbcTemplate: NamedParameterJdbcTemplate,
 ) {
 
-
   @Test
   fun cleanupKontrollDataDeletesOnlyRowsForSelectedKontrollId() {
     val testregelId =
@@ -253,7 +252,7 @@ class KontrollCleanupServiceTest(
             AggregeringPerSideDB(
                 maalingId = null,
                 loeysingId = 1,
-                sideUrl = URI("https://www.example.com").toURL(),
+                sideUrl = URI("https://www.example.com").toString(),
                 sideNivaa = 1,
                 gjennomsnittligBruddProsentTR = 10.0,
                 talElementSamsvar = 2,

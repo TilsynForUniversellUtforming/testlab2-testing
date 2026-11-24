@@ -8,11 +8,11 @@ import org.springframework.stereotype.Component
 
 @Component
 class KontrollCleanupService(
-  private val kontrollDeleteDAO: KontrollDeleteDAO,
-  private val testresultatCleanupDAO: TestresultatCleanupDAO,
-  private val styringsdataCleanupDAO: StyringsdataCleanupDAO,
-  private val testgrunnlagDeleteDAO: TestgrunnlagDeleteDAO,
-  private var testgrunnlagDAO: TestgrunnlagDAO
+    private val kontrollDeleteDAO: KontrollDeleteDAO,
+    private val testresultatCleanupDAO: TestresultatCleanupDAO,
+    private val styringsdataCleanupDAO: StyringsdataCleanupDAO,
+    private val testgrunnlagDeleteDAO: TestgrunnlagDeleteDAO,
+    private var testgrunnlagDAO: TestgrunnlagDAO
 ) {
 
   fun cleanupKontrollData(kontrollId: Int) {
@@ -49,6 +49,5 @@ class KontrollCleanupService(
     testgrunnlagDeleteDAO.deleteTestgrunnlagSideutvalKontrollByTestgrunnlagId(testgrunnlagId)
     testgrunnlagDeleteDAO.deleteTestgrunnlagTestregelByTestgrunnlagId(testgrunnlagId)
     testgrunnlagDAO.deleteTestgrunnlag(testgrunnlagId)
-
   }
 }

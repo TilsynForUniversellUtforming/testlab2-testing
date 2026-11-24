@@ -22,192 +22,184 @@ class TestgrunnlagService(
     private val brukarService: BrukarService,
     private val bildeService: BildeService,
 ) {
-    val logger: Logger = LoggerFactory.getLogger(TestgrunnlagService::class.java)
+  val logger: Logger = LoggerFactory.getLogger(TestgrunnlagService::class.java)
 
-    fun createOrUpdateFromKontroll(testgrunnlag: NyttTestgrunnlagFromKontroll): Result<Int> {
-        val opprinneligTestgrunnlag =
-            testgrunnlagDAO.getOpprinneligTestgrunnlag(testgrunnlag.kontrollId)
+  fun createOrUpdateFromKontroll(testgrunnlag: NyttTestgrunnlagFromKontroll): Result<Int> {
+    val opprinneligTestgrunnlag =
+        testgrunnlagDAO.getOpprinneligTestgrunnlag(testgrunnlag.kontrollId)
 
-        return if (opprinneligTestgrunnlag.isSuccess) {
-            opprinneligTestgrunnlag
-                .mapCatching { testgrunnlagDAO.getTestgrunnlag(it) }
-                .mapCatching { updateExisting(it.getOrThrow(), testgrunnlag) }
-                .map { it.getOrThrow().id }
-        } else {
-            testgrunnlagDAO.createTestgrunnlag(testgrunnlag.toNyttTestgrunnlag())
+    return if (opprinneligTestgrunnlag.isSuccess) {
+      opprinneligTestgrunnlag
+          .mapCatching { testgrunnlagDAO.getTestgrunnlag(it) }
+          .mapCatching { updateExisting(it.getOrThrow(), testgrunnlag) }
+          .map { it.getOrThrow().id }
+    } else {
+      testgrunnlagDAO.createTestgrunnlag(testgrunnlag.toNyttTestgrunnlag())
+    }
+  }
+
+  fun kontrollHasTestresultat(kontrollId: Int): Boolean =
+      testgrunnlagDAO.kontrollHasTestresultat(kontrollId)
+
+  fun createRetest(retest: RetestRequest): Result<Int> = runCatching {
+    logger.debug(
+        "Retest for originalt testgrunnlag ${retest.originalTestgrunnlagId} og løysing ${retest.loeysingId}")
+
+    val originalResultatBrotList = getOriginalBrotResultat(retest).getOrThrow()
+    val retestTestgrunnlagId =
+        createRetestTestgrunnlag(retest, originalResultatBrotList).getOrThrow()
+
+    val originalBildeBrotList = getBildeOriginalBrot(originalResultatBrotList)
+
+    val created = Instant.now()
+    originalResultatBrotList
+        .map {
+          Pair(
+              it.id,
+              CreateRetestResultatManuellKontroll(
+                  testgrunnlagId = retestTestgrunnlagId,
+                  loeysingId = retest.loeysingId,
+                  testregelId = it.testregelId,
+                  sideutvalId = it.sideutvalId,
+                  elementOmtale = it.element?.elementOmtale,
+                  elementOmtaleHtml = it.element?.elementOmtaleHtml,
+                  elementResultat = it.element?.elementResultat,
+                  elementUtfall = it.element?.elementUtfall,
+                  elementPlassering = it.element?.elementPlassering,
+                  svar = it.svar,
+                  testVartUtfoert = null,
+                  kommentar = it.kommentar,
+                  sistLagra = created,
+              ))
         }
-    }
-
-    fun kontrollHasTestresultat(kontrollId: Int): Boolean =
-        testgrunnlagDAO.kontrollHasTestresultat(kontrollId)
-
-    fun createRetest(retest: RetestRequest): Result<Int> = runCatching {
-        logger.debug(
-            "Retest for originalt testgrunnlag ${retest.originalTestgrunnlagId} og løysing ${retest.loeysingId}"
-        )
-
-        val originalResultatBrotList = getOriginalBrotResultat(retest).getOrThrow()
-        val retestTestgrunnlagId =
-            createRetestTestgrunnlag(retest, originalResultatBrotList).getOrThrow()
-
-        val originalBildeBrotList = getBildeOriginalBrot(originalResultatBrotList)
-
-        val created = Instant.now()
-        originalResultatBrotList
-            .map {
-                Pair(
-                    it.id, CreateRetestResultatManuellKontroll(
-                        testgrunnlagId = retestTestgrunnlagId,
-                        loeysingId = retest.loeysingId,
-                        testregelId = it.testregelId,
-                        sideutvalId = it.sideutvalId,
-                        elementOmtale = it.element?.elementOmtale,
-                        elementOmtaleHtml = it.element?.elementOmtaleHtml,
-                        elementResultat = it.element?.elementResultat,
-                        elementUtfall = it.element?.elementUtfall,
-                        elementPlassering = it.element?.elementPlassering,
-                        svar = it.svar,
-                        testVartUtfoert = null,
-                        kommentar = it.kommentar,
-                        sistLagra = created,
-                    )
-                )
-            }
-            .forEach { resultat ->
-                val newTestresultat: Int = testResultatDAO.createRetest(resultat.second)
-                originalBildeBrotList[resultat.first]?.let {
-                    bildeService.createBilde(newTestresultat, it)
-                }
-            }
-
-        retestTestgrunnlagId
-    }
-
-    private fun getBildeOriginalBrot(originalResultatBrotList: List<ResultatManuellKontroll>): Map<Int, List<Bilde>> {
-        return   originalResultatBrotList.associate { resultat ->
-            val bilder =
-                bildeService.listBildeForTestresultat(resultat.id)
-                    .getOrElse { emptyList() }
-
-            resultat.id to bilder
-        }
-    }
-
-    private fun createRetestTestgrunnlag(
-        retest: RetestRequest,
-        originalResultatBrotList: List<ResultatManuellKontroll>
-    ): Result<Int> = runCatching {
-        val (originalTestgrunnlagId, loeysingId) = retest
-
-        val originaltTestgrunnlag =
-            testgrunnlagDAO.getTestgrunnlag(originalTestgrunnlagId).getOrElse {
-                logger.error("Klarte ikkje å henta testgrunnlag for id $originalTestgrunnlagId: $it")
-                throw it
-            }
-
-        val kontrollId = originaltTestgrunnlag.kontrollId
-        val sideutvalIdsWithBrot = originalResultatBrotList.map { it.sideutvalId }.distinct()
-
-        val nyttTestgrunnlag =
-            NyttTestgrunnlag(
-                kontrollId = kontrollId,
-                namn = "Retest for kontroll $kontrollId",
-                type = TestgrunnlagType.RETEST,
-                // Vel kun sideutval med brot
-                sideutval =
-                    originaltTestgrunnlag.sideutval.filter {
-                        it.loeysingId == loeysingId && sideutvalIdsWithBrot.contains(it.id)
-                    },
-                // Vel kun testreglar med brot
-                testregelIdList = originalResultatBrotList.map { it.testregelId }.distinct()
-            )
-
-        testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag).getOrElse {
-            logger.error(
-                "Kunne ikkje opprette testgrunnlag for løysing $loeysingId i kontroll $kontrollId " +
-                        "med opprinnelig testgrunnlag $originalTestgrunnlagId",
-                it
-            )
-            throw it
-        }
-    }
-
-    private fun getOriginalBrotResultat(
-        retest: RetestRequest
-    ): Result<List<ResultatManuellKontroll>> = runCatching {
-        val (originalTestgrunnlagId, loeysingId) = retest
-
-        val originalResultatList =
-            testResultatDAO.getManyResults(originalTestgrunnlagId).getOrElse {
-                logger.error(
-                    "Klarte ikkje å henta testresultat for testgrunnlag $originalTestgrunnlagId: $it"
-                )
-                throw it
-            }
-
-        val brotResultat =
-            originalResultatList.filter {
-                it.testgrunnlagId == originalTestgrunnlagId &&
-                        it.loeysingId == loeysingId &&
-                        it.element?.elementResultat != null &&
-                        it.element.elementResultat == TestresultatUtfall.brot
-            }
-
-        if (brotResultat.isEmpty()) {
-            logger.info("Ingen resultat med brot, kan ikkje køyre retest")
-            throw IllegalArgumentException("Ingen resultat med brot, kan ikkje køyre retest")
+        .forEach { resultat ->
+          val newTestresultat: Int = testResultatDAO.createRetest(resultat.second)
+          originalBildeBrotList[resultat.first]?.let {
+            bildeService.createBilde(newTestresultat, it)
+          }
         }
 
-        brotResultat
+    retestTestgrunnlagId
+  }
+
+  private fun getBildeOriginalBrot(
+      originalResultatBrotList: List<ResultatManuellKontroll>
+  ): Map<Int, List<Bilde>> {
+    return originalResultatBrotList.associate { resultat ->
+      val bilder = bildeService.listBildeForTestresultat(resultat.id).getOrElse { emptyList() }
+
+      resultat.id to bilder
+    }
+  }
+
+  private fun createRetestTestgrunnlag(
+      retest: RetestRequest,
+      originalResultatBrotList: List<ResultatManuellKontroll>
+  ): Result<Int> = runCatching {
+    val (originalTestgrunnlagId, loeysingId) = retest
+
+    val originaltTestgrunnlag =
+        testgrunnlagDAO.getTestgrunnlag(originalTestgrunnlagId).getOrElse {
+          logger.error("Klarte ikkje å henta testgrunnlag for id $originalTestgrunnlagId: $it")
+          throw it
+        }
+
+    val kontrollId = originaltTestgrunnlag.kontrollId
+    val sideutvalIdsWithBrot = originalResultatBrotList.map { it.sideutvalId }.distinct()
+
+    val nyttTestgrunnlag =
+        NyttTestgrunnlag(
+            kontrollId = kontrollId,
+            namn = "Retest for kontroll $kontrollId",
+            type = TestgrunnlagType.RETEST,
+            // Vel kun sideutval med brot
+            sideutval =
+                originaltTestgrunnlag.sideutval.filter {
+                  it.loeysingId == loeysingId && sideutvalIdsWithBrot.contains(it.id)
+                },
+            // Vel kun testreglar med brot
+            testregelIdList = originalResultatBrotList.map { it.testregelId }.distinct())
+
+    testgrunnlagDAO.createTestgrunnlag(nyttTestgrunnlag).getOrElse {
+      logger.error(
+          "Kunne ikkje opprette testgrunnlag for løysing $loeysingId i kontroll $kontrollId " +
+              "med opprinnelig testgrunnlag $originalTestgrunnlagId",
+          it)
+      throw it
+    }
+  }
+
+  private fun getOriginalBrotResultat(
+      retest: RetestRequest
+  ): Result<List<ResultatManuellKontroll>> = runCatching {
+    val (originalTestgrunnlagId, loeysingId) = retest
+
+    val originalResultatList =
+        testResultatDAO.getManyResults(originalTestgrunnlagId).getOrElse {
+          logger.error(
+              "Klarte ikkje å henta testresultat for testgrunnlag $originalTestgrunnlagId: $it")
+          throw it
+        }
+
+    val brotResultat =
+        originalResultatList.filter {
+          it.testgrunnlagId == originalTestgrunnlagId &&
+              it.loeysingId == loeysingId &&
+              it.element?.elementResultat != null &&
+              it.element.elementResultat == TestresultatUtfall.brot
+        }
+
+    if (brotResultat.isEmpty()) {
+      logger.info("Ingen resultat med brot, kan ikkje køyre retest")
+      throw IllegalArgumentException("Ingen resultat med brot, kan ikkje køyre retest")
     }
 
-    private fun updateExisting(
-        eksisterendeTestgrunnlag: TestgrunnlagKontroll,
-        testgrunnlag: NyttTestgrunnlagFromKontroll
-    ) =
-        testgrunnlagDAO.updateTestgrunnlag(
-            eksisterendeTestgrunnlag.copy(
-                namn = testgrunnlag.namn,
-                testreglar = testgrunnlag.testregelIdList,
-                sideutval = testgrunnlag.sideutval,
-            )
-        )
+    brotResultat
+  }
 
-    fun NyttTestgrunnlagFromKontroll.toNyttTestgrunnlag(): NyttTestgrunnlag {
-        return NyttTestgrunnlag(
-            kontrollId = this.kontrollId,
-            namn = this.namn,
-            type = this.type,
-            sideutval = this.sideutval,
-            testregelIdList = this.testregelIdList
-        )
-    }
+  private fun updateExisting(
+      eksisterendeTestgrunnlag: TestgrunnlagKontroll,
+      testgrunnlag: NyttTestgrunnlagFromKontroll
+  ) =
+      testgrunnlagDAO.updateTestgrunnlag(
+          eksisterendeTestgrunnlag.copy(
+              namn = testgrunnlag.namn,
+              testreglar = testgrunnlag.testregelIdList,
+              sideutval = testgrunnlag.sideutval,
+          ))
 
-    fun getLoeysingForTestgrunnlag(testgrunnlagId: Int): List<Loeysing> {
-        val loeysingIdList =
-            testgrunnlagDAO.getSideutvalForTestgrunnlag(testgrunnlagId).map { it.loeysingId }
-        val loeysingList =
-            loeysingsRegisterClient
-                .getMany(loeysingIdList, Instant.now())
-                .fold(
-                    onSuccess = { it },
-                    onFailure = {
-                        logger.error(
-                            "Feil ved henting av løysingar $loeysingIdList for testgrunnlag $testgrunnlagId",
-                            it
-                        )
-                        throw it
-                    })
-        return loeysingList
-    }
+  fun NyttTestgrunnlagFromKontroll.toNyttTestgrunnlag(): NyttTestgrunnlag {
+    return NyttTestgrunnlag(
+        kontrollId = this.kontrollId,
+        namn = this.namn,
+        type = this.type,
+        sideutval = this.sideutval,
+        testregelIdList = this.testregelIdList)
+  }
 
-    fun getTestgrunnlagForKontroll(kontrollId: Int): TestgrunnlagList {
-        return testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId)
-    }
+  fun getLoeysingForTestgrunnlag(testgrunnlagId: Int): List<Loeysing> {
+    val loeysingIdList =
+        testgrunnlagDAO.getSideutvalForTestgrunnlag(testgrunnlagId).map { it.loeysingId }
+    val loeysingList =
+        loeysingsRegisterClient
+            .getMany(loeysingIdList, Instant.now())
+            .fold(
+                onSuccess = { it },
+                onFailure = {
+                  logger.error(
+                      "Feil ved henting av løysingar $loeysingIdList for testgrunnlag $testgrunnlagId",
+                      it)
+                  throw it
+                })
+    return loeysingList
+  }
 
-    fun getTestgrunnlagForBrukar(brukarId: String?): Result<List<TestgrunnlagKontroll>> {
-        return testgrunnlagDAO.getTestgrunnlagForBrukar(
-            brukarService.getUserId(brukarService.getUser(brukarId))
-        )
-    }
+  fun getTestgrunnlagForKontroll(kontrollId: Int): TestgrunnlagList {
+    return testgrunnlagDAO.getTestgrunnlagForKontroll(kontrollId)
+  }
+
+  fun getTestgrunnlagForBrukar(brukarId: String?): Result<List<TestgrunnlagKontroll>> {
+    return testgrunnlagDAO.getTestgrunnlagForBrukar(
+        brukarService.getUserId(brukarService.getUser(brukarId)))
+  }
 }

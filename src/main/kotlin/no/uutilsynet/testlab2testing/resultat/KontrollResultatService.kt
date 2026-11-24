@@ -95,7 +95,7 @@ sealed class KontrollResultatService(
 
     val sorted =
         when (sortPaginationParams.sortParam) {
-          SortParamTestregel.side -> this.sortedBy { it.side.toString() }
+          SortParamTestregel.side -> this.sortedBy { it.side }
           SortParamTestregel.testregel -> this.sortedBy { it.testregelNoekkel }
           SortParamTestregel.elementUtfall -> this.sortedBy { it.elementResultat?.name }
           SortParamTestregel.elementPointer -> this.sortedBy { it.elementOmtale?.pointer }

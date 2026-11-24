@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.testresultat.aggregering.mappers
 
-import java.net.URL
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO
@@ -152,7 +151,7 @@ class AggregeringToDTOMapper(
   ): List<AggregeringPerSideDB> {
     val testresultatMap = testresultatList.groupBy { it.sideutvalId }
 
-    val sideutvalIdUrlMap: Map<Int, URL> =
+    val sideutvalIdUrlMap: Map<Int, String> =
         sideutvalDAO.getSideutvalUrlMapKontroll(testresultatMap.keys.toList())
 
     // Alle sideutvalIder skal referere til en gyldig url
@@ -172,7 +171,7 @@ class AggregeringToDTOMapper(
               null,
               testresultat.first().loeysingId,
               entry.key!!,
-              entry.key!!.path.split("/").size,
+              entry.key!!.split("/").size,
               0.0,
               testresultat.count { it.elementResultat == TestresultatUtfall.samsvar },
               testresultat.count { it.elementResultat == TestresultatUtfall.brot },

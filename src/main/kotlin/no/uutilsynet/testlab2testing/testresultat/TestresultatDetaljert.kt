@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.testresultat
 
-import java.net.URL
 import java.time.LocalDateTime
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.brukar.Brukar
@@ -12,7 +11,7 @@ data class TestresultatDetaljert(
     val testregelId: Int,
     val testregelNoekkel: String,
     val testgrunnlagId: Int,
-    val side: URL,
+    val side: String,
     val suksesskriterium: List<String>,
     val testVartUtfoert: LocalDateTime?,
     val elementUtfall: String?,
