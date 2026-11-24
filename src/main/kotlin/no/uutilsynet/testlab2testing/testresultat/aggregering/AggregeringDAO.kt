@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.testresultat.aggregering
 
-import java.net.URI
 import java.sql.ResultSet
 import java.sql.Types
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource

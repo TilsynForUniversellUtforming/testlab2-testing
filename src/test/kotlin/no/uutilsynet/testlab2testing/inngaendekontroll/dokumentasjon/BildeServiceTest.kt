@@ -3,6 +3,7 @@ package no.uutilsynet.testlab2testing.inngaendekontroll.dokumentasjon
 import java.awt.Image
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
+import java.net.URI
 import java.time.Instant
 import javax.imageio.ImageIO
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.BildeRequest
@@ -21,7 +22,6 @@ import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.web.util.UriComponentsBuilder
-import java.net.URI
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -119,13 +119,14 @@ class BildeServiceTest(@Autowired val bildeService: BildeService) {
         .saveBilde(1, expectedBildeDetalj.fullFileName, expectedBildeDetalj.fullThumbnailName)
   }
 
-    @Test
-    fun testBildePathExtraction() {
-        val expectedString = "pathToImage"
-        val urlString = URI("http://localhost:8080/bilder/sti/?bildesti=$expectedString")
-        val stiPart = UriComponentsBuilder.fromUri(urlString).build().queryParams["bildesti"]?.firstOrNull()
-        assertEquals(expectedString, stiPart)
-    }
+  @Test
+  fun testBildePathExtraction() {
+    val expectedString = "pathToImage"
+    val urlString = URI("http://localhost:8080/bilder/sti/?bildesti=$expectedString")
+    val stiPart =
+        UriComponentsBuilder.fromUri(urlString).build().queryParams["bildesti"]?.firstOrNull()
+    assertEquals(expectedString, stiPart)
+  }
 
   private fun mockImageByteArray(): ByteArray {
     val baos = ByteArrayOutputStream()

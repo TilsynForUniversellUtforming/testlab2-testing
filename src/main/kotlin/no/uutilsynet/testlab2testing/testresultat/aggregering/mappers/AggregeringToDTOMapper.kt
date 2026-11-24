@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.testresultat.aggregering.mappers
 
-import java.net.URL
 import no.uutilsynet.testlab2.constants.TestresultatUtfall
 import no.uutilsynet.testlab2testing.inngaendekontroll.testresultat.ResultatManuellKontroll
 import no.uutilsynet.testlab2testing.sideutval.crawling.SideutvalDAO

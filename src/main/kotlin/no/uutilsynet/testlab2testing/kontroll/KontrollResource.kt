@@ -123,11 +123,7 @@ class KontrollResource(
               createOrUpdateTestgrunnlag(id)
             }
           }
-          .fold(
-              onSuccess = { ResponseEntity.noContent().build() },
-              onFailure = {
-                throw it
-              })
+          .fold(onSuccess = { ResponseEntity.noContent().build() }, onFailure = { throw it })
 
   @GetMapping("sideutvaltype")
   fun getSideutvalType(): ResponseEntity<out Any> =

@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.resultat
 
-import java.net.URL
 import java.time.Instant
 import java.time.LocalDateTime
 import no.uutilsynet.testlab2testing.common.Constants

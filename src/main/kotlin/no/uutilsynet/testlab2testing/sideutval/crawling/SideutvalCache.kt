@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.sideutval.crawling
 
 import io.micrometer.observation.annotation.Observed
-import java.net.URL
 import org.slf4j.LoggerFactory
 
 @Observed(name = "SideutvalCache")
@@ -21,8 +20,7 @@ class SideutvalCache(sideutvalDAO: SideutvalDAO, maalingId: Int, loeysingId: Int
   }
 
   fun getSideutvalId(url: String): Int {
-    return cacheKey[url]
-        ?: throw NoSuchElementException("No side url found for url: $url")
+    return cacheKey[url] ?: throw NoSuchElementException("No side url found for url: $url")
   }
 
   @Observed(name = "sideutvalcache.getsideutvalurl")

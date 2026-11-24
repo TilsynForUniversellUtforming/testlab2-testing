@@ -1,6 +1,5 @@
 package no.uutilsynet.testlab2testing.testresultat.aggregering
 
-import java.net.URL
 import no.uutilsynet.testlab2testing.loeysing.Loeysing
 import no.uutilsynet.testlab2testing.testing.automatisk.AutotesterTestresultat
 

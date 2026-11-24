@@ -1,7 +1,6 @@
 package no.uutilsynet.testlab2testing.testing.automatisk
 
 import com.fasterxml.jackson.annotation.JsonCreator
-import java.net.URL
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
