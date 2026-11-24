@@ -126,13 +126,7 @@ class KontrollResource(
           .fold(
               onSuccess = { ResponseEntity.noContent().build() },
               onFailure = {
-                when (it) {
-                  is IllegalArgumentException -> ResponseEntity.badRequest().build()
-                  else -> {
-                    logger.error("Feil ved oppdatering av kontroll", it)
-                    ResponseEntity.internalServerError().build()
-                  }
-                }
+                throw it
               })
 
   @GetMapping("sideutvaltype")

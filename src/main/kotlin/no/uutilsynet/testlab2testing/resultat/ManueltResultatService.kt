@@ -85,14 +85,14 @@ class ManueltResultatService(
   fun getResultatPrTestgrunnlag(testgrunnlagId: Int) =
       testResultatDAO.getManyResults(testgrunnlagId).getOrThrow()
 
-  private fun getSideutvalMap(testresultat: List<ResultatManuellKontroll>): Map<Int, URL> {
+  private fun getSideutvalMap(testresultat: List<ResultatManuellKontroll>): Map<Int, String> {
     val sideutvalIds = testresultat.map { it.sideutvalId }.distinct()
     return sideutvalDAO.getSideutvalUrlMapKontroll(sideutvalIds)
   }
 
   private fun resultatManuellKontrollTotestresultatDetaljert(
       it: ResultatManuellKontroll,
-      sideutvalIdUrlMap: Map<Int, URL>,
+      sideutvalIdUrlMap: Map<Int, String>,
   ): TestresultatDetaljert {
     val testregel: TestregelAggregate = getTesteregelFromId(it.testregelId)
     return TestresultatDetaljert(
@@ -114,9 +114,9 @@ class ManueltResultatService(
   }
 
   private fun getUrlFromSideutval(
-      sideutvalIdUrlMap: Map<Int, URL>,
+      sideutvalIdUrlMap: Map<Int, String>,
       it: ResultatManuellKontroll,
-  ): URL {
+  ): String {
     return sideutvalIdUrlMap[it.sideutvalId]
         ?: throw IllegalArgumentException("Ugyldig testresultat url manglar")
   }

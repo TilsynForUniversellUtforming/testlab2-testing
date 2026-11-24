@@ -252,11 +252,11 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
     return runCatching {
       updateKontrollTable(kontroll, utvalId)
       updateUtvalLoeysing(kontroll, utvalId)
-      updateKontrollLoeysing(kontroll, utvalId)
+      deleteFromKontrollLoeysing(kontroll, utvalId)
     }
   }
 
-  private fun updateKontrollLoeysing(kontroll: Kontroll, utvalId: Int) {
+  private fun deleteFromKontrollLoeysing(kontroll: Kontroll, utvalId: Int) {
     jdbcTemplate.update(
         """
                         delete
@@ -310,7 +310,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
   fun updateKontroll(kontroll: Kontroll, regelsettId: Int?, testregeList: List<Int>): Result<Unit> =
       runCatching {
         updateKontrollQuery(kontroll, regelsettId)
-        deleteFromKontrollTestreglar(kontroll, regelsettId)
+        deleteFromKontrollTestreglar(kontroll, testregeList)
         updateKontrollTestreglar(testregeList, kontroll)
       }
 
@@ -320,15 +320,16 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     jdbcTemplate.batchUpdate(
         """insert into testlab2_testing."kontroll_testreglar" (kontroll_id, testregel_id)
-            | values (:kontrollId, :testregelId)"""
+            | values (:kontrollId, :testregelId)
+            | on conflict do nothing"""
             .trimMargin(),
         updateBatchValuesTestreglar.toTypedArray())
   }
 
-  private fun deleteFromKontrollTestreglar(kontroll: Kontroll, regelsettId: Int?) {
+  private fun deleteFromKontrollTestreglar(kontroll: Kontroll, testregelList: List<Int>?) {
     jdbcTemplate.update(
-        """delete from "testlab2_testing"."kontroll_testreglar" where kontroll_id = :kontrollId""",
-        mapOf("kontrollId" to kontroll.id, "utvalId" to regelsettId))
+        """delete from "testlab2_testing"."kontroll_testreglar" where kontroll_id = :kontrollId and testregel_id not in (:testregelList)""",
+        mapOf("kontrollId" to kontroll.id, "testregelList" to testregelList))
   }
 
   private fun updateKontrollQuery(kontroll: Kontroll, regelsettId: Int?) {
@@ -366,7 +367,7 @@ class KontrollDAO(val jdbcTemplate: NamedParameterJdbcTemplate) {
               "sideutval_type_id" to side.typeId,
               "loeysing_id" to side.loeysingId,
               "egendefinert_objekt" to side.egendefinertType,
-              "url" to side.url.toString(),
+              "url" to side.url,
               "begrunnelse" to side.begrunnelse)
         }
     jdbcTemplate.batchUpdate(
